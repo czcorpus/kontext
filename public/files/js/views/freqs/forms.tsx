@@ -636,7 +636,7 @@ export function init(
                             className="FreqFormSelector"
                             defaultId={this.state.formType}
                             callback={this._handleFormSwitch}
-                            items={items} >
+                            items={items.toArray()} >
 
                             <MLFreqForm />
                             <TTFreqForm />

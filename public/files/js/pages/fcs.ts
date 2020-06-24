@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-declare var require:any;
+// declare var require:any; TODO why cannot this be active like before?!!
 // weback - ensure an individual style (even empty one) is created for the page
 require('styles/fcs.less');
 

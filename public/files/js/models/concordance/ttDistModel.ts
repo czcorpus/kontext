@@ -18,15 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import * as Immutable from 'immutable';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
-import {ConcLineModel} from './lines';
-import { Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { map, concatMap, tap } from 'rxjs/operators';
+
+import { Kontext } from '../../types/common';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { ConcLineModel } from './lines';
+import { ActionName as ConcActionName, Actions as ConcActions } from '../../models/concordance/actions';
+import { pipe, List, HTTP } from 'cnc-tskit';
+
 
 export type TTCrit = Array<[string, string]>;
 
@@ -90,8 +92,19 @@ export interface FreqBlock {
 }
 
 
+export interface TextTypesDistModelState {
+    ttCrit:TTCrit;
+    blocks:Array<FreqBlock>;
+    flimit:number;
+    sampleSize:number;
+    isBusy:boolean;
+    blockedByAsyncConc:boolean;
+    lastArgs:string;
+    maxBlockItems:number;
+}
 
-export class TextTypesDistModel extends StatefulModel {
+
+export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
 
     private static SAMPLE_SIZE = 100000;
 
@@ -102,73 +115,77 @@ export class TextTypesDistModel extends StatefulModel {
 
     private static DEFAULT_MAX_BLOCK_ITEMS = 10;
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
-    private ttCrit:TTCrit;
+    private readonly concLineModel:ConcLineModel;
 
-    private blocks:Immutable.List<FreqBlock>;
-
-    private flimit:number;
-
-    private sampleSize:number;
-
-    private isBusy:boolean;
-
-    private concLineModel:ConcLineModel;
-
-    private blockedByAsyncConc:boolean;
-
-    private lastArgs:string;
-
-    private maxBlockItems:number;
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                ttCrit: props.ttCrit,
+                blocks: [],
+                flimit: 100, // this is always recalculated according to data
+                sampleSize: 0,
+                maxBlockItems: TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS,
+                blockedByAsyncConc: concLineModel.isUnfinishedCalculation(),
+                isBusy: concLineModel.isUnfinishedCalculation(),
+                lastArgs: ''
+            }
+        );
         this.layoutModel = layoutModel;
         this.concLineModel = concLineModel;
-        this.ttCrit = props.ttCrit;
-        this.blocks = Immutable.List<FreqBlock>();
-        this.flimit = 100; // this is always recalculated according to data
-        this.sampleSize = 0;
-        this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
-        this.blockedByAsyncConc = this.concLineModel.isUnfinishedCalculation();
-        this.isBusy = this.concLineModel.isUnfinishedCalculation();
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    this.blockedByAsyncConc = action.payload['isUnfinished'];
-                    this.performDataLoad();
-                break;
-                case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':
-                    if (this.blocks.size === 0) {
-                        this.performDataLoad();
-                    }
-                break;
-                case 'REMOVE_CHART_ITEMS_LIMIT':
-                    this.maxBlockItems = -1;
-                    this.emitChange();
-                break;
-                case 'RESTORE_CHART_ITEMS_LIMIT':
-                    this.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
-                    this.emitChange();
-                break;
+
+        this.addActionHandler<ConcActions.AsyncCalculationUpdated>(
+            ConcActionName.AsyncCalculationUpdated,
+            action => {
+                this.state.blockedByAsyncConc = !action.payload.finished;
+                this.performDataLoad();
             }
-        });
+        );
+
+        this.addActionHandler<ConcActions.LoadTTDictOverview>(
+            ConcActionName.LoadTTDictOverview,
+            action => {
+                if (this.state.blocks.length === 0) {
+                    this.performDataLoad();
+                }
+            }
+        );
+
+        this.addActionHandler<ConcActions.RemoveChartItemsLimit>(
+            ConcActionName.RemoveChartItemsLimit,
+            action => {
+                this.state.maxBlockItems = -1;
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<ConcActions.RestoreChartItemsLimit>(
+            ConcActionName.RestoreChartItemsLimit,
+            action => {
+                this.state.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
+                this.emitChange();
+            }
+        );
     }
 
+    unregister():void {}
+
     private performDataLoad():void {
-        if (!this.blockedByAsyncConc && this.getConcSize() > 0) {
+        if (!this.state.blockedByAsyncConc && this.getConcSize() > 0) {
             const args = this.layoutModel.getConcArgs();
-            if (this.lastArgs !== args.head('q')) {
-                this.isBusy = true;
+            if (this.state.lastArgs !== args.head('q')) {
+                this.state.isBusy = true;
                 this.emitChange();
                 this.loadData(args).subscribe(
                     (ans) => {
-                        this.isBusy = false;
+                        this.state.isBusy = false;
                         this.emitChange();
                     },
                     (err) => {
-                        this.isBusy = false;
+                        this.state.isBusy = false;
                         this.layoutModel.showMessage('error', err);
                         this.emitChange();
                     }
@@ -187,9 +204,9 @@ export class TextTypesDistModel extends StatefulModel {
             if (this.getConcSize() > TextTypesDistModel.SAMPLE_SIZE) {
                 args.set('rlines', TextTypesDistModel.SAMPLE_SIZE);
                 args.set('format', 'json');
-                this.lastArgs = args.head('q');
+                this.state.lastArgs = args.head('q');
                 return this.layoutModel.ajax$<Response.Reduce>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.layoutModel.createActionUrl('reduce'),
                     args
                 );
@@ -200,25 +217,27 @@ export class TextTypesDistModel extends StatefulModel {
         })().pipe(
             map((reduceAns) => [reduceAns, this.layoutModel.getConcArgs()] as [Response.Reduce, MultiDict]),
             concatMap(([reduceAns, args]) => {  // TODO side effects here
-                this.ttCrit.forEach(v => args.add(v[0], v[1]));
-                this.flimit = this.concLineModel.getRecommOverviewMinFreq();
+                this.state.ttCrit.forEach(v => args.add(v[0], v[1]));
+                this.state.flimit = this.concLineModel.getRecommOverviewMinFreq();
                 args.set('ml', 0);
-                args.set('flimit', this.flimit);
+                args.set('flimit', this.state.flimit);
                 args.set('force_cache', '1');
                 args.set('format', 'json');
                 if (reduceAns.conc_persistence_op_id) {
-                    this.sampleSize = reduceAns.sampled_size;
+                    this.state.sampleSize = reduceAns.sampled_size;
                     args.set('q', `~${reduceAns.conc_persistence_op_id}`);
                 }
                 return this.layoutModel.ajax$<Response.FreqData>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.layoutModel.createActionUrl('freqs'),
                     args
                 );
             }),
             tap((data) => {
-                this.blocks = Immutable.List<FreqBlock>(
-                    data.Blocks.filter(block => block.Items.length > 0).map(block => {
+                this.state.blocks = pipe(
+                    data.Blocks,
+                    List.filter(block => block.Items.length > 0),
+                    List.map(block => {
                         const sumRes = block.Items.reduce((r, v) => r + v.rel, 0);
                         return {
                             label: block.Head && block.Head[0] ? block.Head.length > 0 && block.Head[0].n : null,
@@ -239,35 +258,18 @@ export class TextTypesDistModel extends StatefulModel {
         );
     }
 
-    getBlocks():Immutable.List<FreqBlock> {
-        return this.blocks;
+    static getDisplayableBlocks(state:TextTypesDistModelState):Array<FreqBlock> {
+        return List.filter(
+            block => block.items.length <= state.maxBlockItems || state.maxBlockItems === -1,
+            state.blocks
+        );
     }
 
-    getDisplayableBlocks():Immutable.List<FreqBlock> {
-        return this.blocks.filter(block => block.items.length <= this.maxBlockItems || this.maxBlockItems === -1).toList();
+    static isDisplayedBlocksSubset(state:TextTypesDistModelState):boolean {
+        return state.blocks.length > TextTypesDistModel.getDisplayableBlocks(state).length;
     }
 
-    isDisplayedBlocksSubset():boolean {
-        return this.getBlocks().size > this.getDisplayableBlocks().size;
-    }
-
-    shouldDisplayBlocksSubset():boolean {
-        return this.blocks.find(block => block.items.length > this.maxBlockItems) !== undefined;
-    }
-
-    getMaxChartItems():number {
-        return this.maxBlockItems;
-    }
-
-    getIsBusy():boolean {
-        return this.isBusy;
-    }
-
-    getMinFreq():number {
-        return this.flimit;
-    }
-
-    getSampleSize():number {
-        return this.sampleSize;
+    static shouldDisplayBlocksSubset(state:TextTypesDistModelState):boolean {
+        return List.find(block => block.items.length > state.maxBlockItems, state.blocks) !== undefined;
     }
 }

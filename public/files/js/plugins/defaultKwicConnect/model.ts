@@ -172,7 +172,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 newState.freqType = action.payload['freqType'];
                 this.mergeDataOfProviders(newState, action.payload['data']);
                 return newState;
-            case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+            case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
                 // Please note that this action breaks (de facto) the 'no side effect chain'
                 // rule (it is produced by async action of a StatefulModel and triggers a side
                 // effect here). But currently we have no solution to this.

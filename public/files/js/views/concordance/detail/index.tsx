@@ -19,14 +19,18 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext} from '../../../types/common';
-import {PluginInterfaces} from '../../../types/plugins';
-import {init as initSpeechViews} from './speech';
-import { ConcDetailModel, RefsDetailModel, RefsColumn } from '../../../models/concordance/detail';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { List } from 'cnc-tskit';
+
+import { Kontext } from '../../../types/common';
+import { PluginInterfaces } from '../../../types/plugins';
+import { init as initSpeechViews } from './speech';
+import { ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
 import { ConcLineModel } from '../../../models/concordance/lines';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordance/refsDetail';
+import { Actions, ActionName } from '../../../models/concordance/actions';
+
+
 
 
 export interface RefDetailProps {
@@ -34,36 +38,14 @@ export interface RefDetailProps {
 }
 
 
-interface RefDetailState {
-    isWaiting:boolean;
-    data:Immutable.List<[RefsColumn, RefsColumn]>;
-}
-
-
-export interface TokenConnectProps {
+export interface ConcordanceDetailProps {
     closeClickHandler:()=>void;
-}
-
-interface TokenConnectState {
-    mode:string;
-    supportsSpeechView:boolean;
-    data:Array<{str:string; class:string}>;
-    hasConcDetailData:boolean;
-    hasExpandLeft:boolean;
-    hasExpandRight:boolean;
-    canDisplayWholeDocument:boolean;
-    expandingSide:string;
-    modelIsBusy:boolean;
-    tokenConnectIsBusy:boolean;
-    tokenConnectData:PluginInterfaces.TokenConnect.TCData;
-    hasTokenConnectData:boolean;
-    supportsTokenConnect:boolean;
 }
 
 
 export interface DetailViews {
     RefDetail:React.ComponentClass<RefDetailProps>;
-    TokenConnect:React.ComponentClass<TokenConnectProps>;
+    ConcordanceDetail:React.ComponentClass<ConcordanceDetailProps>;
 }
 
 
@@ -132,49 +114,23 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     // ------------------------- <RefDetail /> ---------------------------
 
-    class RefDetail extends React.Component<RefDetailProps, RefDetailState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                data: refsDetailModel.getData(),
-                isWaiting: refsDetailModel.getIsBusy()
-            }
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = refsDetailModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class RefDetail extends React.PureComponent<RefDetailProps & RefsDetailModelState> {
 
         _renderContents() {
-            if (this.state.isWaiting) {
+            if (this.props.isBusy) {
                 return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
 
-            } else if (this.state.data.size === 0) {
+            } else if (this.props.data.length === 0) {
                 return <p><strong>{he.translate('global__no_data_avail')}</strong></p>;
 
             } else {
                 return(
                     <table className="full-ref">
                         <tbody>
-                            {this.state.data.map(
-                                (item, i) => <RefLine key={i} colGroups={item} />)
-                            }
+                            {List.map(
+                                (item, i) => <RefLine key={i} colGroups={item} />,
+                                this.props.data
+                            )}
                         </tbody>
                     </table>
                 );
@@ -192,6 +148,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
             );
         }
     }
+
+    const BoundRefDetail = BoundWithProps<RefDetailProps, RefsDetailModelState>(RefDetail, refsDetailModel);
 
     // ------------------------- <ExpandConcDetail /> ---------------------------
 
@@ -289,7 +247,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     const TokenExternalKWICView:React.SFC<{
         tokenConnectIsBusy:boolean;
-        tokenConnectData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+        tokenConnectData:Array<PluginInterfaces.TokenConnect.DataAndRenderer>;
         viewMode:string;
 
     }> = (props) => {
@@ -333,8 +291,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         };
 
         const expandClickHandler = (position) => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_EXPAND_KWIC_DETAIL',
+            dispatcher.dispatch<Actions.ExpandKwicDetail>({
+                name: ActionName.ExpandKwicDetail,
                 payload: {
                     position: position
                 }
@@ -342,9 +300,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         };
 
         const handleDisplayWholeDocumentClick = () => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
-                payload: {}
+            dispatcher.dispatch<Actions.ShowWholeDocument>({
+                name: ActionName.ShowWholeDocument
             });
         };
 
@@ -383,19 +340,16 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     const DefaultView:React.SFC<{
         data:Array<{str:string; class:string}>;
-        hasConcDetailData:boolean;
         hasExpandLeft:boolean;
         hasExpandRight:boolean;
         canDisplayWholeDocument:boolean;
         expandingSide:string;
         modelIsBusy:boolean;
-        tokenConnectIsBusy:boolean;
-        tokenConnectData:PluginInterfaces.TokenConnect.TCData;
 
     }> = (props) => {
         return (
             <div className="concordance_DefaultView">
-                {props.hasConcDetailData ?
+                {props.data.length > 0 ?
                     <KwicDetailView modelIsBusy={props.modelIsBusy}
                                     expandingSide={props.expandingSide}
                                     hasExpandLeft={props.hasExpandLeft}
@@ -438,17 +392,20 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
     const ConcDetailMenu:React.SFC<{
         supportsSpeechView:boolean;
         mode:string; // TODO enum
-        tcData:Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>;
+        tcData:Array<PluginInterfaces.TokenConnect.DataAndRenderer>;
+
     }> = (props) => {
 
         const handleMenuClick = (mode) => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_DETAIL_SWITCH_MODE',
-                payload: {value: mode}
+            dispatcher.dispatch<Actions.DetailSwitchMode>({
+                name: ActionName.DetailSwitchMode,
+                payload: {
+                    value: mode
+                }
             });
         };
 
-        if (props.supportsSpeechView || props.tcData.size > 0) {
+        if (props.supportsSpeechView || props.tcData.length > 0) {
             return (
                 <ul className="view-mode">
                     <li className={props.mode === 'default' ? 'current' : null}>
@@ -463,16 +420,15 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                                 active={props.mode === 'speech'} />
                         </li> : null
                     }
-                    {props.tcData.size > 0 ?
-                        props.tcData.map(d => (
-                            <li key={`tcItem:${d.heading}`}>
-                                <MenuLink clickHandler={handleMenuClick.bind(null, d.heading)}
-                                    label={d.heading}
-                                    active={props.mode === d.heading}
-                                    />
-                            </li>
-                        )) : null
-                    }
+                    {List.map(d => (
+                        <li key={`tcItem:${d.heading}`}>
+                            <MenuLink clickHandler={handleMenuClick.bind(null, d.heading)}
+                                label={d.heading}
+                                active={props.mode === d.heading}
+                                />
+                        </li>),
+                        props.tcData
+                    )}
                 </ul>
             );
 
@@ -481,86 +437,55 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
         }
     };
 
-    // ------------------------- <TokenConnect /> ---------------------------
+    // ------------------------- <ConcordanceDetail /> ---------------------------
 
-    class TokenConnect extends React.Component<TokenConnectProps, TokenConnectState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                mode: concDetailModel.getViewMode(),
-                supportsSpeechView: concDetailModel.supportsSpeechView(),
-                data: concDetailModel.getConcDetail(),
-                hasConcDetailData: concDetailModel.hasConcDetailData(),
-                hasExpandLeft: concDetailModel.hasExpandLeft(),
-                hasExpandRight: concDetailModel.hasExpandRight(),
-                canDisplayWholeDocument: concDetailModel.canDisplayWholeDocument(),
-                expandingSide: concDetailModel.getExpaningSide(),
-                modelIsBusy: concDetailModel.getIsBusy(),
-                tokenConnectIsBusy: concDetailModel.getTokenConnectIsBusy(),
-                tokenConnectData: concDetailModel.getTokenConnectData(),
-                hasTokenConnectData: concDetailModel.hasTokenConnectData(),
-                supportsTokenConnect: concDetailModel.supportsTokenConnect()
-            };
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = concDetailModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class ConcordanceDetail extends React.PureComponent<ConcordanceDetailProps & ConcDetailModelState> {
 
         _renderContents() {
-            switch (this.state.mode) {
+            switch (this.props.mode) {
                 case 'default':
-                    return <DefaultView {...this.state} />;
+                    return <DefaultView data={this.props.concDetail}
+                                hasExpandLeft={ConcDetailModel.hasExpandLeft(this.props)}
+                                hasExpandRight={ConcDetailModel.hasExpandRight(this.props)}
+                                canDisplayWholeDocument={ConcDetailModel.canDisplayWholeDocument(this.props)}
+                                expandingSide={this.props.expandingSide}
+                                modelIsBusy={this.props.isBusy} />;
                 case 'speech':
                     return <SpeechView />;
                 default:
-                    return <TokenExternalKWICView tokenConnectIsBusy={this.state.modelIsBusy}
-                                tokenConnectData={this.state.tokenConnectData.renders} viewMode={this.state.mode}  />;
+                    return <TokenExternalKWICView tokenConnectIsBusy={this.props.isBusy}
+                                tokenConnectData={this.props.tokenConnectData.renders} viewMode={this.props.mode}  />;
             }
         }
 
         render() {
-            const kwicViewRenders = this.state.tokenConnectData.renders.filter(r => r.isKwicView).toList();
+            const kwicViewRenders = List.filter(r => r.isKwicView, this.props.tokenConnectData.renders);
             const customCSS:React.CSSProperties = {overflowY: 'auto'};
             return (
                 <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler}
-                        customClass={`conc-detail${kwicViewRenders.size > 0 ? ' custom' : ''}`}
+                        customClass={`conc-detail${kwicViewRenders.length > 0 ? ' custom' : ''}`}
                         customStyle={customCSS}
                         takeFocus={true}>
                     <div>
-                        <ConcDetailMenu supportsSpeechView={this.state.supportsSpeechView} mode={this.state.mode}
+                        <ConcDetailMenu supportsSpeechView={ConcDetailModel.supportsSpeechView(this.props)} mode={this.props.mode}
                                 tcData={kwicViewRenders} />
                         {this._renderContents()}
-                        {this.state.hasConcDetailData && (this.state.hasTokenConnectData || this.state.tokenConnectIsBusy) ?
+                        {this.props.concDetail.length > 0 && (this.props.tokenConnectData || this.props.tokenConnectIsBusy) ?
                         <hr /> : null}
-                        {this.state.supportsTokenConnect || this.state.tokenConnectIsBusy ?
-                            <TokenExternalInfo tokenConnectData={this.state.tokenConnectData}
-                                tokenConnectIsBusy={this.state.tokenConnectIsBusy} /> : null}
+                        {concDetailModel.supportsTokenConnect() || this.props.tokenConnectIsBusy ?
+                            <TokenExternalInfo tokenConnectData={this.props.tokenConnectData}
+                                tokenConnectIsBusy={this.props.tokenConnectIsBusy} /> : null}
                     </div>
                 </layoutViews.PopupBox>
             );
         }
     }
 
+    const BoundConcordanceDetail = BoundWithProps<ConcordanceDetailProps, ConcDetailModelState>(ConcordanceDetail, concDetailModel);
+
 
     return {
-        RefDetail: RefDetail,
-        TokenConnect: TokenConnect
+        RefDetail: BoundRefDetail,
+        ConcordanceDetail: BoundConcordanceDetail
     };
 }

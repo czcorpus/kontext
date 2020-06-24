@@ -634,7 +634,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <layoutViews.TabView
                                     className="ActionMenu"
                                     callback={this.handleActionSelect}
-                                    items={items} >
+                                    items={items.toArray()} >
                                 {children.toArray()}
                             </layoutViews.TabView>
                             <div className="loader-wrapper">

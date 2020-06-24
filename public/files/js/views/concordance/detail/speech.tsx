@@ -19,11 +19,12 @@
  */
 
 import * as React from 'react';
-import { Speech, ConcDetailModel } from '../../../models/concordance/detail';
-import { Subscription } from 'rxjs';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, Bound } from 'kombo';
+
+import { Speech, ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
 import { Kontext } from '../../../types/common';
-import { Color, pipe } from 'cnc-tskit';
+import { Actions, ActionName } from '../../../models/concordance/actions';
+import { Color, pipe, List } from 'cnc-tskit';
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
@@ -53,8 +54,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleExpandClick = (position) => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
+            dispatcher.dispatch<Actions.ExpandSpeechDetail>({
+                name: ActionName.ExpandSpeechDetail,
                 payload: {
                     position: position
                 }
@@ -319,42 +320,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------- <SpeechView /> ---------------------------
 
-    class SpeechView extends React.Component<{
-    },
-    {
-        data:Array<Array<Speech>>;
-        hasExpandLeft:boolean;
-        hasExpandRight:boolean;
-        playerWaitingIdx:number;
-        modelIsBusy:boolean;
-        expandingSide:string;
-    }> {
-
-        private modelSubscription:Subscription;
+    class SpeechView extends React.PureComponent<ConcDetailModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
             this._handlePlayClick = this._handlePlayClick.bind(this);
             this._handleStopClick = this._handleStopClick.bind(this);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
 
-        }
-
-        _fetchModelState() {
-            return {
-                data: concDetailModel.getSpeechesDetail(),
-                hasExpandLeft: concDetailModel.hasExpandLeft(),
-                hasExpandRight: concDetailModel.hasExpandRight(),
-                playerWaitingIdx: concDetailModel.getPlayingRowIdx(),
-                modelIsBusy: concDetailModel.getIsBusy(),
-                expandingSide: concDetailModel.getExpaningSide()
-            };
         }
 
         _handlePlayClick(segments, rowIdx) {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_PLAY_SPEECH',
+            dispatcher.dispatch<Actions.PlaySpeech>({
+                name: ActionName.PlaySpeech,
                 payload: {
                     segments: segments,
                     rowIdx: rowIdx
@@ -363,26 +340,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleStopClick() {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_STOP_SPEECH',
-                payload: {}
+            dispatcher.dispatch<Actions.StopSpeech>({
+                name: ActionName.StopSpeech
             });
         }
 
-        _modelChangeHandler() {
-            this.setState(this._fetchModelState());
-        }
-
         _isWaitingExpand(side) {
-            return this.state.modelIsBusy && this.state.expandingSide === side;
-        }
-
-        componentDidMount() {
-            this.modelSubscription = concDetailModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
+            return this.props.isBusy && this.props.expandingSide === side;
         }
 
         _canStartPlayback(speechPart) {
@@ -391,31 +355,34 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _renderSpeechLines() {
-            return (this.state.data || []).map((item, i) => {
-                if (item.length === 1) {
-                    return <TRSingleSpeech
-                                key={`sp-line-${i}`}
-                                speech={item[0]}
-                                idx={i}
-                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
-                                handleStopClick={this._handleStopClick}
-                                isPlaying={this.state.playerWaitingIdx === i}
-                                canStartPlayback={this._canStartPlayback(item[0])} />;
+            return List.map(
+                (item, i) => {
+                    if (item.length === 1) {
+                        return <TRSingleSpeech
+                                    key={`sp-line-${i}`}
+                                    speech={item[0]}
+                                    idx={i}
+                                    handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
+                                    handleStopClick={this._handleStopClick}
+                                    isPlaying={this.props.playingRowIdx === i}
+                                    canStartPlayback={this._canStartPlayback(item[0])} />;
 
-                } else if (item.length > 1) {
-                    return <TROverlappingSpeeches
-                                key={`sp-line-${i}`}
-                                speeches={item}
-                                idx={i}
-                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
-                                handleStopClick={this._handleStopClick}
-                                isPlaying={this.state.playerWaitingIdx === i}
-                                canStartPlayback={this._canStartPlayback(item[0])} />;
+                    } else if (item.length > 1) {
+                        return <TROverlappingSpeeches
+                                    key={`sp-line-${i}`}
+                                    speeches={item}
+                                    idx={i}
+                                    handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
+                                    handleStopClick={this._handleStopClick}
+                                    isPlaying={this.props.playingRowIdx === i}
+                                    canStartPlayback={this._canStartPlayback(item[0])} />;
 
-                } else {
-                    return null;
-                }
-            });
+                    } else {
+                        return null;
+                    }
+                },
+                this.props.speechDetail
+            );
         }
 
         render() {
@@ -425,7 +392,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <tbody>
                             <tr className="expand">
                                 <th>
-                                    {this.state.hasExpandLeft ?
+                                    {ConcDetailModel.hasExpandLeft(this.props) ?
                                         <ExpandSpeechesButton position="top"
                                             isWaiting={this._isWaitingExpand('left')} />
                                     : null}
@@ -435,7 +402,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             {this._renderSpeechLines()}
                             <tr className="expand">
                                 <th>
-                                    {this.state.hasExpandRight ?
+                                    {ConcDetailModel.hasExpandRight(this.props) ?
                                         <ExpandSpeechesButton position="bottom"
                                             isWaiting={this._isWaitingExpand('right')} />
                                     : null}
@@ -449,6 +416,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
-    return SpeechView;
+    return Bound(SpeechView, concDetailModel);
 
 }

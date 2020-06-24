@@ -430,7 +430,7 @@ export namespace PluginInterfaces {
 
         export interface TCData {
             token:string;
-            renders:Immutable.List<DataAndRenderer>;
+            renders:Array<DataAndRenderer>;
         }
 
         export interface IPlugin {

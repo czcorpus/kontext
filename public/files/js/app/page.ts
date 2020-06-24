@@ -742,7 +742,8 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                 this.dispatcher,
                 this,
                 disableMenuItems(
-                    this.getConf<InitialMenuData>('menuData')
+                    this.getConf<InitialMenuData>('menuData'),
+                    ...disabledMenuItems
                 ),
                 this.getConf<Array<[string, string]>>('currentArgs')
             );

@@ -19,10 +19,12 @@
  */
 
 import * as Immutable from 'immutable';
+import { Action, IFullActionControl } from 'kombo';
+import { tap, share } from 'rxjs/operators';
+
 import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel} from '../app/page';
-import {ConcLinesStorage, openStorage} from '../conclines';
 import {TextTypesModel} from '../models/textTypes/main';
 import {FirstQueryFormModel} from '../models/query/first';
 import {CQLEditorModel} from '../models/query/cqleditor/model';
@@ -33,16 +35,15 @@ import {UsageTipsModel} from '../models/usageTips';
 import {init as queryFormInit, QueryFormProps} from '../views/query/first';
 import {init as corpnameLinkInit} from '../views/overview';
 import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
+import { StatefulModel } from '../models/base';
+import { PluginInterfaces } from '../types/plugins';
+import { PluginName } from '../app/plugin';
+import { KontextPage } from '../app/main';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import { StatefulModel } from '../models/base';
-import { Action, IFullActionControl } from 'kombo';
-import { PluginInterfaces } from '../types/plugins';
-import { PluginName } from '../app/plugin';
-import { KontextPage } from '../app/main';
-import { tap, share } from 'rxjs/operators';
+import { ConcLinesStorage, openStorage } from '../models/concordance/selectionStorage';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page

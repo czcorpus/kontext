@@ -20,29 +20,17 @@
 
 /// <reference path="../../vendor.d.ts/d3-color.d.ts" />
 
-import {Kontext} from '../../types/common';
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {TextTypesDistModel, FreqItem, FreqBlock} from '../../models/concordance/ttDistModel';
-import {IActionDispatcher} from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher } from 'kombo';
 
+import { Kontext } from '../../types/common';
+import { TextTypesDistModel, FreqItem, FreqBlock, TextTypesDistModelState } from '../../models/concordance/ttDistModel';
+import { Actions, ActionName } from '../../models/concordance/actions';
+import { TextTypesModelState } from '../../models/textTypes/main';
 
-export interface TextTypesProps {
-}
-
-interface TextTypesState {
-    blocks:Immutable.List<FreqBlock>;
-    minFreq:number;
-    isBusy:boolean;
-    sampleSize:number;
-    getMaxChartItems:number;
-    isDisplayedBlocksSubset:boolean;
-    shouldDisplayBlocksSubset:boolean;
-}
 
 export interface TtOverviewViews {
-    TextTypesDist:React.ComponentClass<TextTypesProps>
+    TextTypesDist:React.ComponentClass<{}>
 }
 
 
@@ -78,7 +66,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ------------------------- <FreqsNotes /> ----------------------------------
 
     const FreqsNotes:React.SFC<{
-        blocks:Immutable.List<FreqBlock>;
+        blocks:Array<FreqBlock>;
         isDisplayedBlocksSubset:boolean;
         shouldDisplayBlocksSubset:boolean;
         maxChartItems:number;
@@ -88,20 +76,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleLimitRemove = () => {
-            dispatcher.dispatch({
-                name: 'REMOVE_CHART_ITEMS_LIMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.RemoveChartItemsLimit>({
+                name: ActionName.RemoveChartItemsLimit
             });
         };
 
         const handleLimitRestore = () => {
-            dispatcher.dispatch({
-                name: 'RESTORE_CHART_ITEMS_LIMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.RestoreChartItemsLimit>({
+                name: ActionName.RestoreChartItemsLimit
             });
         };
 
-        return props.blocks.size > 0 ?
+        return props.blocks.length > 0 ?
                 <p className="note">
                     {he.translate('concview__charts_units_are')}: <strong>i.p.m.</strong>{'\u00a0|\u00a0'}
                     {he.translate('concview__using_min_freq')}: <strong>{props.minFreq}</strong>
@@ -132,63 +118,34 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     /**
      *
      */
-    class TextTypesDist extends React.Component<TextTypesProps, TextTypesState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props:TextTypesProps) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
-        }
-
-        _fetchModelState():TextTypesState {
-            return {
-                blocks: ttDistModel.getDisplayableBlocks(),
-                isBusy: ttDistModel.getIsBusy(),
-                minFreq: ttDistModel.getMinFreq(),
-                sampleSize: ttDistModel.getSampleSize(),
-                getMaxChartItems: ttDistModel.getMaxChartItems(),
-                isDisplayedBlocksSubset: ttDistModel.isDisplayedBlocksSubset(),
-                shouldDisplayBlocksSubset: ttDistModel.shouldDisplayBlocksSubset()
-            };
-        }
-
-        _handleModelChange():void {
-            this.setState(this._fetchModelState());
-        }
+    class TextTypesDist extends React.PureComponent<TextTypesDistModelState> {
 
         componentDidMount() {
-            this.modelSubscription = ttDistModel.addListener(this._handleModelChange);
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
-                payload: {}
+            dispatcher.dispatch<Actions.LoadTTDictOverview>({
+                name: ActionName.LoadTTDictOverview
             });
 
         }
 
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
+            const blocks = TextTypesDistModel.getDisplayableBlocks(this.props);
             return (
                 <div className="TextTypesDist">
                     <h3 className="block">
                         {he.translate('concview__freqs_overview_heading')}
                     </h3>
-                    <FreqsNotes blocks={this.state.blocks}
-                                minFreq={this.state.minFreq}
-                                sampleSize={this.state.sampleSize}
-                                maxChartItems={this.state.getMaxChartItems}
-                                isDisplayedBlocksSubset={this.state.isDisplayedBlocksSubset}
-                                shouldDisplayBlocksSubset={this.state.shouldDisplayBlocksSubset} />
+                    <FreqsNotes blocks={blocks}
+                                minFreq={this.props.flimit}
+                                sampleSize={this.props.sampleSize}
+                                maxChartItems={this.props.maxBlockItems}
+                                isDisplayedBlocksSubset={TextTypesDistModel.isDisplayedBlocksSubset(this.props)}
+                                shouldDisplayBlocksSubset={TextTypesDistModel.shouldDisplayBlocksSubset(this.props)} />
                     <hr />
                     <div className="contents">
-                        {this.state.isBusy ?
+                        {this.props.isBusy ?
                             <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
                             <div>
-                                {this.state.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
+                                {blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
                             </div>
                         }
                     </div>
