@@ -241,7 +241,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 syntaxBoxData: null,
                 emptyRefValPlaceholder: '\u2014',
                 catColors: [], // TODO !!!!
-                saveFormVisible: false
+                saveFormVisible: true
             }
         );
         this.layoutModel = layoutModel;

@@ -19,25 +19,14 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
-import { ConcSaveModel } from '../../models/concordance/save';
-import { Subscription } from 'rxjs';
+import {ConcSaveModel, ConcSaveModelState} from '../../models/concordance/save';
 import {ActionName, Actions} from '../../models/concordance/actions';
 
 
 export interface ConcSaveFormProps {
-}
-
-
-interface ConcSaveFormState {
-    fromLine:Kontext.FormValue<string>;
-    toLine:Kontext.FormValue<string>;
-    saveFormat:string; // TODO enum
-    alignKwic:boolean;
-    includeLineNumbers:boolean;
-    includeHeading:boolean;
 }
 
 
@@ -73,10 +62,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 </th>
                 <td>
                     <select value={props.value} onChange={handleSelect}>
-                        <option value="csv">CSV</option>
-                        <option value="xlsx">XLSX (Excel)</option>
-                        <option value="xml">XML</option>
-                        <option value="text">Text</option>
+                        <option value={SaveData.Format.CSV}>CSV</option>
+                        <option value={SaveData.Format.XLSX}>XLSX (Excel)</option>
+                        <option value={SaveData.Format.XML}>XML</option>
+                        <option value={SaveData.Format.TEXT}>Text</option>
                     </select>
                 </td>
             </tr>
@@ -225,32 +214,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ------------------- <ConcSaveForm /> -------
 
 
-    class ConcSaveForm extends React.Component<ConcSaveFormProps, ConcSaveFormState> {
-
-        private modelSubscription:Subscription;
+    class ConcSaveForm extends React.Component<ConcSaveFormProps & ConcSaveModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                fromLine: concSaveModel.getFromLine(),
-                toLine: concSaveModel.getToLine(),
-                saveFormat: concSaveModel.getSaveFormat(),
-                alignKwic: concSaveModel.getAlignKwic(),
-                includeLineNumbers: concSaveModel.getIncludeLineNumbers(),
-                includeHeading: concSaveModel.getIncludeHeading()
-            };
-        }
-
-        _handleModelChange() {
-            if (concSaveModel.getFormIsActive()) {
-                this.setState(this._fetchModelState());
-            }
         }
 
         _handleCloseClick() {
@@ -260,25 +228,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = concSaveModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderFormatDependentOptions() {
-            switch (this.state.saveFormat) {
+            switch (this.props.saveformat) {
             case SaveData.Format.TEXT:
                 return <>
-                        <TRAlignKwicCheckbox key="opt-ak" value={this.state.alignKwic} />
-                        <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />
+                        <TRAlignKwicCheckbox key="opt-ak" value={this.props.alignKwic} />
+                        <TRIncludeHeadingCheckbox key="opt-ih" value={this.props.includeHeading} />
                 </>;
             case SaveData.Format.XML:
             case SaveData.Format.XLSX:
             case SaveData.Format.CSV:
-                return <TRIncludeHeadingCheckbox key="opt-ih" value={this.state.includeHeading} />;
+                return <TRIncludeHeadingCheckbox key="opt-ih" value={this.props.includeHeading} />;
             default:
                 return null;
             }
@@ -299,11 +259,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <form action="saveconc">
                             <table className="form">
                                 <tbody>
-                                    <TRFormatSelect value={this.state.saveFormat} />
-                                    <TRIncludeLineNumbersCheckbox value={this.state.includeLineNumbers} />
+                                    <TRFormatSelect value={this.props.saveformat} />
+                                    <TRIncludeLineNumbersCheckbox value={this.props.includeLineNumbers} />
                                     {this._renderFormatDependentOptions()}
-                                    <TRLineRangeInput fromLine={this.state.fromLine}
-                                            toLine={this.state.toLine} />
+                                    <TRLineRangeInput fromLine={this.props.fromLine}
+                                            toLine={this.props.toLine} />
                                 </tbody>
                             </table>
                             <div className="buttons">
@@ -320,7 +280,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }
 
     return {
-        ConcSaveForm: ConcSaveForm
+        ConcSaveForm: BoundWithProps(ConcSaveForm, concSaveModel)
     };
 
 }

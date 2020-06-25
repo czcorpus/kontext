@@ -20,6 +20,7 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes } from './common';
+import { SaveData } from '../../app/navigation';
 
 export enum ActionName {
     ChangeMainCorpus = 'CONCORDANCE_CHANGE_MAIN_CORPUS',
@@ -239,7 +240,7 @@ export namespace Actions {
     }
 
     export interface SaveFormSetFormat extends Action<{
-        value:string;
+        value:SaveData.Format;
     }> {
         name:ActionName.SaveFormSetFormat;
     }
@@ -249,7 +250,7 @@ export namespace Actions {
     }> {
         name:ActionName.SaveFormSetHeading;
     }
-    
+
     export interface SaveFormSetInclLineNumbers extends Action<{
         value:boolean;
     }> {
