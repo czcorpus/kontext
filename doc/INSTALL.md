@@ -511,7 +511,7 @@ To provide access to the new corpus for an existing user, you can use script `li
 E.g. to add a new corpus 'foo' to a user with ID = 3:
 
 ```bash
-python lib/plugins/default_auth/scripts/usercorp.py 3 add foo
+python3 lib/plugins/default_auth/scripts/usercorp.py 3 add foo
 
 ```
 
