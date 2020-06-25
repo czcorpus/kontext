@@ -280,7 +280,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }
 
     return {
-        ConcSaveForm: BoundWithProps(ConcSaveForm, concSaveModel)
+        ConcSaveForm: BoundWithProps<ConcSaveFormProps, ConcSaveModelState>(ConcSaveForm, concSaveModel)
     };
 
 }

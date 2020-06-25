@@ -241,7 +241,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 syntaxBoxData: null,
                 emptyRefValPlaceholder: '\u2014',
                 catColors: [], // TODO !!!!
-                saveFormVisible: true
+                saveFormVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -463,14 +463,16 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         this.addActionHandler(
             'MAIN_MENU_SHOW_SAVE_FORM',
             action => {
-                this.changeState(state => {state.saveFormVisible = true})
+                this.changeState(state => {state.saveFormVisible = true});
+                this.emitChange();
             }
         );
 
         this.addActionHandler<Actions.ResultCloseSaveForm>(
             ActionName.ResultCloseSaveForm,
             action => {
-                this.changeState(state => {state.saveFormVisible = false})
+                this.changeState(state => {state.saveFormVisible = false});
+                this.emitChange();
             }
         );
     }
