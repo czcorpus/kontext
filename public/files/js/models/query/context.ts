@@ -74,7 +74,7 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState> {
             ans.fc_lemword_wsize = data.fc_lemword_wsize;
         }
         if (data.fc_pos) {
-            ans.fc_pos = data.fc_pos;
+            ans.fc_pos = (data.fc_pos as string[]).join(',');  // TODO not sure about this
             ans.fc_pos_type = data.fc_pos_type;
             ans.fc_pos_window_type = data.fc_pos_window_type;
             ans.fc_pos_wsize = ans.fc_pos_wsize;
