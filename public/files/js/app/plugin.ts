@@ -66,7 +66,7 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.createStaticUrl(path);
     }
 
-    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict) {
+    createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string {
         return this.pageModel.createActionUrl(path, args);
     }
 

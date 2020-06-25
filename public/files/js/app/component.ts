@@ -48,7 +48,7 @@ export class ComponentTools {
         return this.pageModel.translate(s, values);
     }
 
-    createActionLink(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string {
+    createActionLink<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string{
         return this.pageModel.createActionUrl(path, args);
     }
 

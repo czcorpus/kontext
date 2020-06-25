@@ -26,7 +26,7 @@ import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {Kontext} from '../types/common';
 import {MultiDict} from '../multidict';
-import { HTTP, Dict } from 'cnc-tskit';
+import { HTTP, Dict, pipe, List } from 'cnc-tskit';
 
 
 /**
@@ -224,7 +224,7 @@ export class AppNavigation implements Kontext.IURLHandler {
      * @param params
      * @returns {string}
      */
-    encodeURLParameters(params:MultiDict):string {
+    encodeURLParameters<T>(params:MultiDict<T>):string {
         function exportValue(v) {
             return v === null || v === undefined ? '' : encodeURIComponent(v);
         }
@@ -252,17 +252,18 @@ export class AppNavigation implements Kontext.IURLHandler {
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string {
+    createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string {
         if (typeof path !== 'string') {
             throw new Error(`Cannot create action url. Invalid path: ${path}`);
         }
         let urlArgs = '';
         if (args !== undefined) {
             const nArgs = Array.isArray(args) ? args : args.items();
-            urlArgs = nArgs
-                .filter(item => item[1] !== null && item[1] !== undefined)
-                .map(item => encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]))
-                .join('&');
+            urlArgs = pipe(
+                nArgs,
+                List.filter(([, value]) => value !== null && value !== undefined),
+                List.map(([key, value]) => encodeURIComponent(key + '') + '=' + encodeURIComponent(value + ''))
+            ).join('&');
         }
         return this.conf.getConf('rootPath') +
                 (path.indexOf('/') === 0 ? path.substr(1) : path) +

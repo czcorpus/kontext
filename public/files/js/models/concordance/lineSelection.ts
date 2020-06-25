@@ -27,10 +27,11 @@ import { MultiDict } from '../../multidict';
 import { ConcLinesStorage } from './selectionStorage';
 import { PageModel } from '../../app/page';
 import { ConcLineModel } from './lines';
-import { HTTP, Dict } from 'cnc-tskit';
+import { HTTP, Dict, List, Color, pipe, tuple } from 'cnc-tskit';
 import { LineSelections, LineSelectionModes } from './common';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
+import { Line } from '../../types/concordance';
 
 
 interface ReenableEditResponse extends Kontext.AjaxConcResponse {
@@ -67,6 +68,8 @@ export interface LineSelectionModelState {
     lastCheckpointUrl:string;
 
     renameLabelDialogVisible:boolean;
+
+    catColors:Array<[string, string]>; // bg, fg
 }
 
 function determineMode(clStorage:ConcLinesStorage, concLineModel:ConcLineModel):'simple'|'groups' {
@@ -103,6 +106,14 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
     private readonly onLeavePage:()=>void;
 
+    static ensureCatColor(state:LineSelectionModelState, catIdx:number):[string, string] {
+        const cat = state.catColors[catIdx];
+        if (cat !== undefined) {
+            return tuple(cat[0], cat[1]);
+        }
+        return tuple('#eeeeee', '#111111');
+    }
+
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
             concLineModel:ConcLineModel, userInfoModel:Kontext.IUserInfoModel, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(
@@ -116,7 +127,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
                 data: {},
                 numItemsInLockedGroups: concLineModel.getNumItemsInLockedGroups(),
                 lastCheckpointUrl: layoutModel.createActionUrl('view', layoutModel.getConcArgs().items()),
-                renameLabelDialogVisible: false
+                renameLabelDialogVisible: false,
+                catColors: [] // TODO
             }
         );
         this.layoutModel = layoutModel;
@@ -299,15 +311,6 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SetLineSelectionMode>(
-            ActionName.SetLineSelectionMode,
-            action => {
-                if (this.setMode(action.payload.mode)) {
-                    this.emitChange();
-                }
-            }
-        );
-
         this.addActionHandler<Actions.LoadUserCredentials>(
             ActionName.LoadUserCredentials,
             action => {
@@ -338,6 +341,18 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
     }
 
     unregister():void {}
+
+
+    private getCatColors(dataItem:Line) {
+        const tmp = this.state.data[List.head(dataItem.languages).tokenNumber];
+        const cat = tmp ? tmp[1] : dataItem.lineGroup;
+        if (cat >= 1) {
+            const [bgColor,] = this.state.catColors[cat % this.state.catColors.length];
+            const fgColor = pipe(bgColor, Color.importColor(0.1), Color.textColorFromBg(), Color.color2str());
+            return [pipe(bgColor, Color.importColor(0.9), Color.color2str()), fgColor];
+        }
+        return [null, null];
+    }
 
 
     private validateGroupId(value:string|number):boolean {

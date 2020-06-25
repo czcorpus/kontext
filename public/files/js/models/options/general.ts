@@ -21,7 +21,7 @@
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { IFullActionControl, StatelessModel } from 'kombo';
-import { HTTP, List, Dict, pipe } from 'cnc-tskit';
+import { HTTP, List } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { validateGzNumber } from '../base';
@@ -94,7 +94,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.loadData(state).subscribe(
+                this.loadData().subscribe(
                     (data) => {
                         dispatch<Actions.GeneralInitalDataLoaded>({
                             name: ActionName.GeneralInitalDataLoaded,
@@ -293,7 +293,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         this.submitResponseHandlers.push(fn);
     }
 
-    loadData(state:GeneralViewOptionsModelState):Observable<ViewOptsResponse> {
+    loadData():Observable<ViewOptsResponse> {
         return this.layoutModel.ajax$<ViewOptsResponse>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('options/viewopts'),
@@ -318,9 +318,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             args
 
         ).pipe(
-            tap((d) => {
+            tap(d => {
                 this.layoutModel.replaceConcArg('pagesize', [state.pageSize.value]);
-                return d;
             })
         );
     }
