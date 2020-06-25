@@ -23,6 +23,7 @@ import {SaveData} from '../../app/navigation';
 import {StatefulModel, validateNumber} from '../base';
 import {PageModel} from '../../app/page';
 import { Action, IFullActionControl } from 'kombo';
+import { ActionName } from './actions';
 
 
 export interface ConcSaveModelArgs {
@@ -90,31 +91,31 @@ export class ConcSaveModel extends StatefulModel {
                     this.emitChange();
                 }
             break;
-            case 'CONCORDANCE_RESULT_CLOSE_SAVE_FORM':
+            case ActionName.ResultCloseSaveForm:
                 this.formIsActive = false;
                 this.emitChange();
             break;
-            case 'CONCORDANCE_SAVE_FORM_SET_FORMAT':
+            case ActionName.SaveFormSetFormat:
                 this.saveformat = action.payload['value'];
                 this.emitChange();
             break;
-            case 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE':
+            case ActionName.SaveFormSetFromLine:
                  this.fromLine.value = action.payload['value'];
                  this.emitChange();
             break;
-            case 'CONCORDANCE_SAVE_FORM_SET_TO_LINE':
+            case ActionName.SaveFormSetToLine:
                 this.toLine.value = action.payload['value'];
                 this.emitChange();
             break;
-            case 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC':
+            case ActionName.SaveFormSetAlignKwic:
                 this.alignKwic = action.payload['value'];
                 this.emitChange();
             break;
-            case 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS':
+            case ActionName.SaveFormSetInclLineNumbers:
                 this.includeLineNumbers = action.payload['value'];
                 this.emitChange();
             break;
-            case 'CONCORDANCE_SAVE_FORM_SET_HEADING':
+            case ActionName.SaveFormSetHeading:
                 this.includeHeading = action.payload['value'];
                 this.emitChange();
             break;

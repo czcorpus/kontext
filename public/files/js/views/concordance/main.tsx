@@ -697,7 +697,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             <paginationViews.Paginator {...this.props} />
                         </div>
                     </div>
-                    <concSaveViews.ConcSaveForm />
+                    {this.props.saveFormVisible ? <concSaveViews.ConcSaveForm /> : null}
                 </div>
             );
         }

@@ -176,6 +176,8 @@ export interface ConclineModelState {
     catColors:Array<string>;
 
     emptyRefValPlaceholder:string;
+
+    saveFormVisible:boolean;
 }
 
 
@@ -238,7 +240,8 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
                 syntaxBoxData: null,
                 emptyRefValPlaceholder: '\u2014',
-                catColors: [] // TODO !!!!
+                catColors: [], // TODO !!!!
+                saveFormVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -269,8 +272,8 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
             }
             return interval(1000).subscribe(
                 (idx) => {
-                    dispatcher.dispatch({
-                        name: 'CONCORDANCE_DATA_WAIT_TIME_INC',
+                    dispatcher.dispatch<Actions.DataWaitTimeInc>({
+                        name: ActionName.DataWaitTimeInc,
                         payload: {
                             idx: idx
                         }
@@ -455,7 +458,21 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
             action => {
                 this.emitChange(); // TODO do we need this? TEST
             }
-        )
+        );
+
+        this.addActionHandler(
+            'MAIN_MENU_SHOW_SAVE_FORM',
+            action => {
+                this.changeState(state => {state.saveFormVisible = true})
+            }
+        );
+
+        this.addActionHandler<Actions.ResultCloseSaveForm>(
+            ActionName.ResultCloseSaveForm,
+            action => {
+                this.changeState(state => {state.saveFormVisible = false})
+            }
+        );
     }
 
     unregister():void {}

@@ -24,6 +24,7 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import { ConcSaveModel } from '../../models/concordance/save';
 import { Subscription } from 'rxjs';
+import {ActionName, Actions} from '../../models/concordance/actions';
 
 
 export interface ConcSaveFormProps {
@@ -57,8 +58,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleSelect = (evt) => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SAVE_FORM_SET_FORMAT',
+            dispatcher.dispatch<Actions.SaveFormSetFormat>({
+                name: ActionName.SaveFormSetFormat,
                 payload: {
                     value: evt.target.value
                 }
@@ -90,8 +91,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SAVE_FORM_SET_HEADING',
+            dispatcher.dispatch<Actions.SaveFormSetHeading>({
+                name: ActionName.SaveFormSetHeading,
                 payload: {value: !props.value}
             });
         }
@@ -120,8 +121,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS',
+            dispatcher.dispatch<Actions.SaveFormSetInclLineNumbers>({
+                name: ActionName.SaveFormSetInclLineNumbers,
                 payload: {value: !props.value}
             });
         };
@@ -150,8 +151,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC',
+            dispatcher.dispatch<Actions.SaveFormSetAlignKwic>({
+                name: ActionName.SaveFormSetAlignKwic,
                 payload: {value: !props.value}
             });
         };
@@ -181,8 +182,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleFromInput = (evt) => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE',
+            dispatcher.dispatch<Actions.SaveFormSetFromLine>({
+                name: ActionName.SaveFormSetFromLine,
                 payload: {
                     value: evt.target.value
                 }
@@ -190,8 +191,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleToInput = (evt) => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SAVE_FORM_SET_TO_LINE',
+            dispatcher.dispatch<Actions.SaveFormSetToLine>({
+                name: ActionName.SaveFormSetToLine,
                 payload: {
                     value: evt.target.value
                 }
@@ -253,8 +254,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_RESULT_CLOSE_SAVE_FORM',
+            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
+                name: ActionName.ResultCloseSaveForm,
                 payload: {}
             });
         }

@@ -48,6 +48,13 @@ export enum ActionName {
     PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
     StopSpeech = 'CONCORDANCE_STOP_SPEECH',
     RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL',
+    SaveFormSetHeading = 'CONCORDANCE_SAVE_FORM_SET_HEADING',
+    SaveFormSetAlignKwic = 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC',
+    SaveFormSetFromLine = 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE',
+    SaveFormSetToLine = 'CONCORDANCE_SAVE_FORM_SET_TO_LINE',
+    SaveFormSetInclLineNumbers = 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS',
+    SaveFormSetFormat = 'CONCORDANCE_SAVE_FORM_SET_FORMAT',
+    ResultCloseSaveForm =  'CONCORDANCE_RESULT_CLOSE_SAVE_FORM',
     SelectLine = 'LINE_SELECTION_SELECT_LINE',
     LineSelectionStatusRequest = 'LINE_SELECTION_STATUS_REQUEST',
     LineSelectionReset = 'LINE_SELECTION_RESET',
@@ -229,6 +236,47 @@ export namespace Actions {
     export interface RefResetDetail extends Action<{
     }> {
         name:ActionName.RefResetDetail;
+    }
+
+    export interface SaveFormSetFormat extends Action<{
+        value:string;
+    }> {
+        name:ActionName.SaveFormSetFormat;
+    }
+
+    export interface SaveFormSetHeading extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.SaveFormSetHeading;
+    }
+    
+    export interface SaveFormSetInclLineNumbers extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.SaveFormSetInclLineNumbers;
+    }
+
+    export interface SaveFormSetAlignKwic extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.SaveFormSetAlignKwic;
+    }
+
+    export interface SaveFormSetFromLine extends Action<{
+        value:string;
+    }> {
+        name:ActionName.SaveFormSetFromLine;
+    }
+
+    export interface SaveFormSetToLine extends Action<{
+        value:string;
+    }> {
+        name:ActionName.SaveFormSetToLine;
+    }
+
+    export interface ResultCloseSaveForm extends Action<{
+    }> {
+        name:ActionName.ResultCloseSaveForm;
     }
 
     export interface SelectLine extends Action<{
