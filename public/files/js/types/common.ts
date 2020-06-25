@@ -335,23 +335,23 @@ export namespace Kontext {
      * A dictionary allowing multiple values per-key.
      * It is mostly used to carry URL arguments.
      */
-    export interface IMultiDict {
-        head(key:string):string;
-        getList(key:string):Array<string>;
-        set(key:string, value:number|boolean|string):void;
-        replace(key:string, values:Array<string>):void;
-        remove(key:string):void;
-        add(key:string, value:any):void;
+    export interface IMultiDict<T={[k:string]:string|number|boolean}> {
+        head<K extends keyof T>(key:K):string;
+        getList<K extends keyof T>(key:K):Array<string>;
+        set<K extends keyof T>(key:K, value:T[K]):Kontext.IMultiDict<T>;
+        replace<K extends keyof T>(key:K, values:Array<T[K]>):Kontext.IMultiDict<T>;
+        remove<K extends keyof T>(key:K):Kontext.IMultiDict<T>;
+        add<K extends keyof T>(key:K, value:T[K]):Kontext.IMultiDict<T>;
         items():Array<[string, string]>;
         toDict():{[key:string]:string};
-        has(key:string):boolean;
+        has<K extends keyof T>(key:K):boolean;
         size():number;
     }
 
     export interface IURLHandler {
         createStaticUrl(path:string):string;
-        createActionUrl(path:string, args?:Array<Array<string>>|IMultiDict):string;
-        encodeURLParameters(params:IMultiDict):string
+        createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string;
+        encodeURLParameters<T>(params:IMultiDict<T>):string
     }
 
     export interface IConcArgsHandler {

@@ -72,7 +72,7 @@ export class WordlistPage extends StatefulModel  {
     }
 
     private startWatching():Observable<AsyncProcessStatus> {
-        const args = new MultiDict([
+        const args = new MultiDict<{corpname:string; usesubcorp:string; attrname:string; worker_tasks:string}>([
             ['corpname', this.layoutModel.getCorpusIdent().id],
             ['usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp],
             ['attrname', this.layoutModel.getConf<string>('attrname')]

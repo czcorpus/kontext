@@ -34,7 +34,7 @@ export interface IPluginApi extends ITranslator {
     getConf<T>(key:string):T;
     getNestedConf<T>(...keys:Array<string>):T;
     createStaticUrl(path:string):string;
-    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
+    createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string;
     ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
     userIsAnonymous():boolean;

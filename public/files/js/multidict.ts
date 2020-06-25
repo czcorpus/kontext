@@ -21,35 +21,29 @@ import { Kontext } from './types/common';
 
 
 /**
- * A dictionary which mimics Werkzeug's Multidict
- * type. It provides:
- * 1) traditional d[k] access to a single value
- * 2) access to a list of values via getlist(k)
- *
- * Values can be also modifed but the only
- * reliable way is to use set(k, v), add(k, v) methods
- * (d[k] = v cannot set internal dict containing lists
- * of values).
+ * MultiDict is a multi-value dictionary which converts
+ * all the incoming values into strings. Its main purpose
+ * is to collect params for HTTP requests.
  */
-export class MultiDict implements Kontext.IMultiDict {
+export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.IMultiDict<T> {
 
-    private readonly _data:{[key:string]:Array<string>};
+    private readonly data:{[K in keyof T]?:Array<string>};
 
-    constructor(data?:Array<[string, string|number|boolean]>) {
-        this._data = {};
+    constructor(data?:Array<[keyof T, T[keyof T]]>) {
+        this.data = {};
         if (data !== undefined) {
             for (let i = 0; i < data.length; i += 1) {
                 const [k, v] = data[i];
-                if (this._data[k] === undefined) {
-                    this._data[k] = [];
+                if (this.data[k] === undefined) {
+                    this.data[k] = [];
                 }
-                this._data[k].push(this.importValue(v));
+                this.data[k].push(this.importValue(v));
             }
         }
     }
 
-    private importValue(v:string|number|boolean):string|undefined {
-        if (v === '' || v === null || v === undefined) {
+    private importValue(v:T[keyof T]):string|undefined {
+        if ((typeof v === 'string' && v === '') || v === null || v === undefined) {
             return undefined;
 
         } else if (typeof v === 'boolean') {
@@ -59,15 +53,15 @@ export class MultiDict implements Kontext.IMultiDict {
     }
 
     size():number {
-        return Object.keys(this._data).length;
+        return Object.keys(this.data).length;
     }
 
-    head(key:string):string {
-        return this._data[key] !== undefined ? this._data[key][0] : undefined;
+    head<K extends keyof T>(key:K):string {
+        return this.data[key] !== undefined ? this.data[key][0] : undefined;
     }
 
-    getList(key:string):Array<string> {
-        return this._data[key] !== undefined ? this._data[key] : [];
+    getList<K extends keyof T>(key:K):Array<string> {
+        return this.data[key] !== undefined ? this.data[key] : [];
     }
 
     /**
@@ -75,8 +69,9 @@ export class MultiDict implements Kontext.IMultiDict {
      * already a value present it is removed
      * first.
      */
-    set(key:string, value:number|boolean|string):void {
-        this._data[key] = [this.importValue(value)];
+    set<K extends keyof T>(key:K, value:T[K]):Kontext.IMultiDict<T> {
+        this.data[key] = [this.importValue(value)];
+        return this;
     }
 
     /**
@@ -84,17 +79,19 @@ export class MultiDict implements Kontext.IMultiDict {
      * associated with the specified key
      * with a provided list of values.
      */
-    replace(key:string, values:Array<string|number|boolean>):void {
+    replace<K extends keyof T>(key:K, values:Array<T[K]>):Kontext.IMultiDict<T> {
         if (values.length > 0) {
-            this._data[key] = values.map(this.importValue);
+            this.data[key] = values.map(this.importValue);
 
         } else {
             this.remove(key);
         }
+        return this;
     }
 
-    remove(key:string):void {
-        delete this._data[key];
+    remove<K extends keyof T>(key:K):Kontext.IMultiDict<T> {
+        delete this.data[key];
+        return this;
     }
 
     /**
@@ -103,12 +100,12 @@ export class MultiDict implements Kontext.IMultiDict {
      * but the 'multi-value' mode appends the
      * value to the list of existing ones.
      */
-    add(key:string, value:number|string|boolean):void {
-        this[key] = value;
-        if (this._data[key] === undefined) {
-            this._data[key] = [];
+    add<K extends keyof T>(key:K, value:T[K]):Kontext.IMultiDict<T> {
+        if (this.data[key] === undefined) {
+            this.data[key] = [];
         }
-        this._data[key].push(this.importValue(value));
+        this.data[key].push(this.importValue(value));
+        return this;
     }
 
     /**
@@ -116,10 +113,10 @@ export class MultiDict implements Kontext.IMultiDict {
      */
     items():Array<[string, string]> {
         let ans = [];
-        for (let p in this._data) {
-            for (let i = 0; i < this._data[p].length; i += 1) {
-                if (this._data[p][i] !== undefined) {
-                    ans.push([p, this._data[p][i]]);
+        for (let p in this.data) {
+            for (let i = 0; i < this.data[p].length; i += 1) {
+                if (this.data[p][i] !== undefined) {
+                    ans.push([p, this.data[p][i]]);
                 }
             }
         }
@@ -127,21 +124,23 @@ export class MultiDict implements Kontext.IMultiDict {
     }
 
     /**
-     * Return a copy of internal dictionary holding last
-     * value of each key. If you expect keys with multiple
-     * values you should use items() instead.
+     * Return a copy of internal dictionary. If there
+     * is more than one value for a key then first item is
+     * returned.
+     * If you expect keys with multiple values you should
+     * use items() instead.
      */
     toDict():{[key:string]:string} {
-        const ans:{[key:string]:string} = {}; // TODO: type mess here
-        for (let k in this._data) {
-            if (this._data.hasOwnProperty(k)) {
-                ans[k] = this._data[k][0];
+        const ans:{[key:string]:string} = {};
+        for (let k in this.data) {
+            if (this.data.hasOwnProperty(k)) {
+                ans[k] = this.data[k][0];
             }
         }
         return ans;
     }
 
-    has(key:string) {
-        return this._data.hasOwnProperty(key);
+    has<K extends keyof T>(key:K):boolean {
+        return this.data.hasOwnProperty(key);
     }
 }

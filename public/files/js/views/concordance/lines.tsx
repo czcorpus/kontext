@@ -24,6 +24,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
+import { Line as ConcLine } from '../../types/concordance';
 import { Color, pipe } from 'cnc-tskit';
 import { init as lineExtrasViewsInit } from './lineExtras';
 import { ConcLineModel, ConclineModelState } from '../../models/concordance/lines';
@@ -486,7 +487,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // ------------------------- <Line /> ---------------------------
 
-    class Line extends React.Component<{
+    class Line extends React.PureComponent<{
         lineIdx:number;
         baseCorpname:string;
         mainCorp:string;
@@ -502,24 +503,11 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         supportsSyntaxView:boolean;
         numItemsInLockedGroups:number;
         emptyRefValPlaceholder:string;
-        data: {
-            kwicLength:number;
-            hasFocus:boolean;
-            lineNumber:number;
-            languages:Array<KWICSection>;
-            lineGroup:number;
-        };
-    },
-    {
-        selectionValue:LineSelValue;
+        data:ConcLine;
     }> {
-
-        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._refsDetailClickHandler = this._refsDetailClickHandler.bind(this);
         }
@@ -559,12 +547,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                     });
                 }
             }
-        }
-
-        _fetchModelState() {
-            return {
-                selectionValue: lineSelectionModel.getLine(List.head(this.props.data.languages).tokenNumber)
-            };
         }
 
         _exportTextElmClass(corpname, ...customClasses) {
@@ -662,28 +644,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             });
         }
 
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        shouldComponentUpdate(nextProps, nextState) {
-            return this.state.selectionValue !== nextState.selectionValue ||
-                    this.props.data !== nextProps.data ||
-                    this.props.lineSelMode !== nextProps.lineSelMode ||
-                    this.props.catBgColor != nextProps.catBgColor ||
-                    this.props.cols !== nextProps.cols ||
-                    this.props.viewMode !== nextProps.viewMode;
-        }
-
-        componentDidMount() {
-            this.modelSubscription = lineSelectionModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
+            // TODO !!!!!! lineSelValue is NULL
             const primaryLang = List.head(this.props.data.languages);
             const alignedCorpora = List.tail(this.props.data.languages);
             const htmlClasses = [];
@@ -701,7 +663,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         lockedGroupId={this.props.numItemsInLockedGroups > 0 ? this.props.data.lineGroup : null}
                         catBgColor={this.props.catBgColor}
                         catTextColor={this.props.catTextColor}
-                        selectionValue={this.state.selectionValue} />
+                        selectionValue={null} />
                     <td className="syntax-tree">
                         {this.props.supportsSyntaxView ?
                             <extras.SyntaxTreeButton tokenNumber={primaryLang.tokenNumber}
@@ -756,42 +718,32 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     class LinesWithSelection extends React.PureComponent<ConclineModelState & LineSelectionModelState> {
 
-        _getCatColors(dataItem) {
-            const tmp = this.props.data[dataItem.languages.first().tokenNumber];
-            const cat = tmp ? tmp[1] : dataItem.lineGroup;
-            if (cat >= 1) {
-                const bgColor = this.props.catColors[cat % this.props.catColors.length];
-                const fgColor = pipe(bgColor, Color.importColor(0), Color.textColorFromBg(), Color.color2str());
-                return [pipe(bgColor, Color.importColor(0.9), Color.color2str()), fgColor];
-            }
-            return [null, null];
-        }
-
-        _renderLine(item, i) {
-            const catColor = this._getCatColors(item);
-            return <Line key={String(i) + ':' + item.languages.first().tokenNumber}
-                         lineIdx={i}
-                         data={item}
-                         cols={this.props.corporaColumns}
-                         viewMode={this.props.viewMode}
-                         attrViewMode={ConcLineModel.getViewAttrsVmode(this.props)}
-                         baseCorpname={this.props.baseCorpname}
-                         mainCorp={this.props.maincorp}
-                         corpsWithKwic={this.props.kwicCorps}
-                         showLineNumbers={this.props.showLineNumbers}
-                         lineSelMode={this.props.mode}
-                         numItemsInLockedGroups={this.props.numItemsInLockedGroups}
-                         emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
-                         catBgColor={catColor[0]}
-                         catTextColor={catColor[1]}
-                         supportsSyntaxView={this.props.supportsSyntaxView}
-                         supportsTokenConnect={this.props.supportsTokenConnect} />;
-        }
 
         render() {
             return (
                 <>
-                    {this.props.lines.map(this._renderLine.bind(this))}
+                    {List.map(
+                        (line, i) => (
+                            <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
+                                    lineIdx={i}
+                                    data={line}
+                                    cols={this.props.corporaColumns}
+                                    viewMode={this.props.viewMode}
+                                    attrViewMode={ConcLineModel.getViewAttrsVmode(this.props)}
+                                    baseCorpname={this.props.baseCorpname}
+                                    mainCorp={this.props.maincorp}
+                                    corpsWithKwic={this.props.kwicCorps}
+                                    showLineNumbers={this.props.showLineNumbers}
+                                    lineSelMode={this.props.mode}
+                                    numItemsInLockedGroups={this.props.numItemsInLockedGroups}
+                                    emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
+                                    catBgColor={LineSelectionModel.ensureCatColor(this.props, line.lineGroup)[0]}
+                                    catTextColor={LineSelectionModel.ensureCatColor(this.props, line.lineGroup)[1]}
+                                    supportsSyntaxView={this.props.supportsSyntaxView}
+                                    supportsTokenConnect={this.props.supportsTokenConnect} />
+                        ),
+                        this.props.lines
+                    )}
                 </>
             );
         }

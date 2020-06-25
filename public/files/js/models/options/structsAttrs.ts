@@ -21,16 +21,19 @@
 import { IFullActionControl, StatelessModel, SEDispatcher } from 'kombo';
 import { tap, concatMap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { pipe, List, Dict, HTTP, tuple } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
-import { pipe, List, Dict, HTTP, tuple } from 'cnc-tskit';
 
-
-export const transformVmode = (vmode:string, attrAllPos:ViewOptions.PosAttrViewScope):ViewOptions.AttrViewMode => {
+/**
+ * Transform server-side two-value-encoded view mode into
+ * client-side format represented by a single value
+ */
+export const transformVmode = (vmode:ViewOptions.PosAttrViewMode, attrAllPos:ViewOptions.PosAttrViewScope):ViewOptions.AttrViewMode => {
     if (vmode === ViewOptions.PosAttrViewMode.MULTILINE && attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
         return ViewOptions.AttrViewMode.VISIBLE_MULTILINE;
 
@@ -75,7 +78,10 @@ export interface CorpusViewOptionsModelState {
     basePosAttr:string;
 }
 
-
+/**
+ * CorpusViewOptionsModel model handles corpus-related options
+ * (e.g. which attributes to display in concordances).
+ */
 export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsModelState> {
 
     private readonly layoutModel:PageModel;
@@ -303,9 +309,10 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 state.extendedVmode = value;
             break;
             default:
-                throw new Error('Unknown view mode');
+                throw new Error(`Unknown view mode: ${value}`);
         }
     }
+
 
     private serialize(state:CorpusViewOptionsModelState):any {
 

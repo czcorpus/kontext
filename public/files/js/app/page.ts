@@ -470,7 +470,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string {
+    createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string {
         return this.appNavig.createActionUrl(path, args);
     }
 
@@ -485,7 +485,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
     /**
      *
      */
-    encodeURLParameters(params:MultiDict):string {
+    encodeURLParameters<T>(params:MultiDict<T>):string {
         return this.appNavig.encodeURLParameters(params);
     }
 
@@ -523,7 +523,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * are preserved.
      * Output format: [[k1, v1_1], [k1, v1_2], ...., [kn, vn_1], ..., [kn, vn_m]]
      */
-    getConcArgs():MultiDict {
+    getConcArgs():MultiDict { // TODO type T
         return new MultiDict(this.getConf<Kontext.ListOfPairs>('currentArgs'));
     }
 
