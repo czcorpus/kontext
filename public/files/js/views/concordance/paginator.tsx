@@ -24,6 +24,7 @@ import {Kontext} from '../../types/common';
 import {Keyboard} from 'cnc-tskit';
 import {ConcLineModel} from '../../models/concordance/lines';
 import { Subscription } from 'rxjs';
+import {Actions, ActionName} from '../../models/concordance/actions'
 
 
 export interface PaginatorProps {
@@ -66,8 +67,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             if (typeof props.clickHandler === 'function') {
                 props.clickHandler();
             }
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_CHANGE_PAGE',
+            dispatcher.dispatch<Actions.ChangePage>({
+                name: ActionName.ChangePage,
                 payload: {
                     action: 'customPage',
                     pageNum: Number(event.currentTarget.value)
@@ -103,10 +104,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             if (typeof props.clickHandler === 'function') {
                 props.clickHandler(evt);
             }
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_CHANGE_PAGE',
+            dispatcher.dispatch<Actions.ChangePage>({
+                name: ActionName.ChangePage,
                 payload: {
-                    action: props.action
+                    action: props.action,
+                    pageNum: null
                 }
             });
         };
@@ -267,11 +269,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         _inputKeyDownHandler(evt:React.KeyboardEvent<{}>) {
             if (evt.keyCode === Keyboard.Code.ENTER) {
                this._navigActionHandler();
-                dispatcher.dispatch({
-                    name: 'CONCORDANCE_CHANGE_PAGE',
+                dispatcher.dispatch<Actions.ChangePage>({
+                    name: ActionName.ChangePage,
                     payload: {
                         action: 'customPage',
-                        pageNum: this.state.currentPageInput
+                        pageNum: Number(this.state.currentPageInput)
                     }
                 });
                 evt.preventDefault();

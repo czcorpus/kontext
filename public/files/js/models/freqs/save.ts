@@ -26,6 +26,8 @@ import {MultiDict} from '../../multidict';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
 import { Action, IFullActionControl } from 'kombo';
+import { ActionName as MainMenuActionName } from '../mainMenu/actions';
+
 
 
 
@@ -80,12 +82,12 @@ export class FreqResultsSaveModel extends StatefulModel {
 
         dispatcher.registerActionListener((action:Action) => {
             switch (action.name) {
-                case 'MAIN_MENU_SHOW_SAVE_FORM':
+                case MainMenuActionName.ShowSaveForm:
                     this.formIsActive = true;
                     this.toLine.value = '';
                     this.emitChange();
                 break;
-                case 'MAIN_MENU_DIRECT_SAVE':
+                case MainMenuActionName.DirectSave:
                     if (window.confirm(this.layoutModel.translate(
                         'global__quicksave_limit_warning_{format}{lines}',
                         {format: action.payload['saveformat'], lines: this.quickSaveRowLimit}
@@ -221,7 +223,7 @@ export class FreqCTResultsSaveModel extends StatefulModel {
                 case 'FREQ_CT_SET_SAVE_MODE':
                     this.saveMode = action.payload['value'];
                 break;
-                case 'MAIN_MENU_DIRECT_SAVE':
+                case MainMenuActionName.DirectSave:
                     if (this.saveMode === 'table') {
                         this.ctTableModel.submitDataConversion(action.payload['saveformat']);
 

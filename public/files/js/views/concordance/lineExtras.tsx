@@ -25,6 +25,7 @@ import { ConcLineModel } from '../../models/concordance/lines';
 import {TextChunk} from '../../types/concordance';
 import {LineSelValue} from '../../models/concordance/lineSelection';
 import {init as initMediaViews} from './media';
+import {Actions, ActionName} from '../../models/concordance/actions'
 
 
 export interface LineExtrasViews {
@@ -77,8 +78,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
+            dispatcher.dispatch<Actions.PlayAudioSegment>({
+                name: ActionName.PlayAudioSegment,
                 payload: {
                     chunksIds: props.chunks.map(v => v.id),
                 }
@@ -129,11 +130,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const checkboxChangeHandler = (event) => {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_SELECT_LINE',
+            dispatcher.dispatch<Actions.SelectLine>({
+                name: ActionName.SelectLine,
                 payload: {
                     value: event.currentTarget.checked ? 1 : null,
-                    lineNumber: props.lineNumber,
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength
                 }
@@ -155,11 +155,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const textChangeHandler = (event) => {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_SELECT_LINE',
+            dispatcher.dispatch<Actions.SelectLine>({
+                name: ActionName.SelectLine,
                 payload: {
                     value: event.currentTarget.value ? Number(event.currentTarget.value) : -1,
-                    lineNumber: props.lineNumber,
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength
                 }

@@ -66,6 +66,8 @@ export enum ActionName {
     RemoveLinesNotInGroups = 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
     UnlockLineSelection = 'LINE_SELECTION_REENABLE_EDIT',
     RenameSelectionGroup = 'LINE_SELECTION_GROUP_RENAME',
+    RenameGroupCancel = 'LINE_SELECTION_RENAME_GROUP_CANCEL',
+    ChangeEmail = 'LINE_SELECTION_CHANGE_EMAIL',
     SendLineSelectionToEmail = 'LINE_SELECTION_SEND_URL_TO_EMAIL',
     SortLineSelection = 'LINE_SELECTION_SORT_LINES',
     SetLineSelectionMode = 'CONCORDANCE_SET_LINE_SELECTION_MODE',
@@ -108,7 +110,7 @@ export namespace Actions {
     }
 
     export interface AsyncCalculationUpdated extends Action<{
-        finished:number;
+        finished:boolean;
         concsize:number;
         fullsize:number;
         relconcsize:number;
@@ -333,6 +335,17 @@ export namespace Actions {
         dstGroupNum:number;
     }> {
         name:ActionName.RenameSelectionGroup;
+    }
+
+    export interface RenameGroupCancel extends Action<{
+    }> {
+        name:ActionName.RenameGroupCancel;
+    }
+
+    export interface ChangeEmail extends Action<{
+        email:string;
+    }> {
+        name:ActionName.ChangeEmail;
     }
 
     export interface SendLineSelectionToEmail extends Action<{

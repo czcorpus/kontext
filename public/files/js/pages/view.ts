@@ -75,6 +75,7 @@ import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { openStorage } from '../models/concordance/selectionStorage';
+import {Actions, ActionName} from '../models/concordance/actions';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -252,8 +253,8 @@ export class ViewPage {
                     this.layoutModel.dispatcher.dispatch(event.state['modalAction']);
 
                 } else if (event.state['pagination']) {
-                    this.layoutModel.dispatcher.dispatch({
-                        name: 'CONCORDANCE_REVISIT_PAGE',
+                    this.layoutModel.dispatcher.dispatch<Actions.RevisitPage>({
+                        name: ActionName.RevisitPage,
                         payload: {
                             action: 'customPage',
                             pageNum: event.state['pageNum']
@@ -290,16 +291,15 @@ export class ViewPage {
     reloadHits():void {
         const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
         const applyData = (data:AjaxResponse.ConcStatus) => {
-            this.layoutModel.dispatcher.dispatch({
-                name: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+            this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationUpdated>({
+                name: ActionName.AsyncCalculationUpdated,
                 payload: {
                     finished: !!data.finished,
                     concsize: data.concsize,
                     relconcsize: data.relconcsize,
                     arf: data.arf,
                     fullsize: data.fullsize,
-                    availPages: Math.ceil(data.concsize / linesPerPage),
-                    error: null
+                    availPages: Math.ceil(data.concsize / linesPerPage)
                 }
             });
         };
@@ -319,8 +319,8 @@ export class ViewPage {
 
             ws.onclose = (x) => {
                 if (x.code > 1000) {
-                    this.layoutModel.dispatcher.dispatch({
-                        name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                    this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
+                        name: ActionName.AsyncCalculationFailed,
                         payload: {}
                     });
                     this.layoutModel.showMessage('error', x.reason);
@@ -353,8 +353,8 @@ export class ViewPage {
                     applyData(response);
                 },
                 (err) => {
-                    this.layoutModel.dispatcher.dispatch({
-                        name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                    this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
+                        name: ActionName.AsyncCalculationFailed,
                         payload: {}
                     });
                     this.layoutModel.showMessage('error', err);

@@ -19,6 +19,7 @@
  */
 
 import { Action } from 'kombo';
+import { SaveData } from '../../app/navigation';
 
 export enum ActionName {
     SetVisibleSubmenu = 'MAIN_MENU_SET_VISIBLE_SUBMENU',
@@ -36,11 +37,12 @@ export enum ActionName {
     FilterApplyFirstOccurrences = 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
     ShowFreqForm = 'MAIN_MENU_SHOW_FREQ_FORM',
     ShowCollForm = 'MAIN_MENU_SHOW_COLL_FORM',
-    SwitchKwicSentMode = 'CONCORDANCE_SWITCH_KWIC_SENT_MODE',
     ShowAttrsViewOptions = 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
     ShowGeneralViewOptions = 'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS',
     ShowCitationInfo = 'OVERVIEW_SHOW_CITATION_INFO',
-    ShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS'
+    ShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS',
+    ShowSaveForm = 'MAIN_MENU_SHOW_SAVE_FORM',
+    DirectSave = 'MAIN_MENU_DIRECT_SAVE',
 }
 
 
@@ -122,11 +124,6 @@ export namespace Actions {
         name: ActionName.ShowCollForm;
     }
 
-    export interface SwitchKwicSentMode extends Action<{
-    }> {
-        name: ActionName.SwitchKwicSentMode;
-    }
-
     export interface ShowAttrsViewOptions extends Action<{
     }> {
         name: ActionName.ShowAttrsViewOptions;
@@ -145,6 +142,17 @@ export namespace Actions {
     export interface ShowKeyShortcuts extends Action<{
     }> {
         name: ActionName.ShowKeyShortcuts;
+    }
+
+    export interface ShowSaveForm extends Action<{
+    }> {
+        name: ActionName.ShowSaveForm;
+    }
+
+    export interface DirectSave extends Action<{
+        saveformat:SaveData.Format;
+    }> {
+        name: ActionName.DirectSave;
     }
 
 }

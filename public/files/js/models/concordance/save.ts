@@ -24,6 +24,8 @@ import {validateNumber} from '../base';
 import {PageModel} from '../../app/page';
 import {IFullActionControl, StatefulModel} from 'kombo';
 import {Actions, ActionName} from './actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+
 
 
 export interface ConcSaveModelArgs {
@@ -73,16 +75,16 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
         this.saveLinkFn = saveLinkFn;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
-        this.addActionHandler(
-            'MAIN_MENU_SHOW_SAVE_FORM',
+        this.addActionHandler<MainMenuActions.ShowSaveForm>(
+            MainMenuActionName.ShowSaveForm,
             action => {
                 this.changeState(state => {state.formIsActive = true});
                 this.emitChange();
             }
         );
 
-        this.addActionHandler(
-            'MAIN_MENU_DIRECT_SAVE',
+        this.addActionHandler<MainMenuActions.DirectSave>(
+            MainMenuActionName.DirectSave,
             action => {
                 if (window.confirm(this.layoutModel.translate(
                     'global__quicksave_limit_warning_{format}{lines}',
@@ -90,7 +92,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
                 ))) {
                     const tmp = this.state.toLine;
                     this.changeState(state => {
-                        state.saveformat = action.payload['saveformat'];
+                        state.saveformat = action.payload.saveformat;
                         state.toLine.value = String(Math.min(this.quickSaveRowLimit, this.concSize));
                     });
                     this.submit();

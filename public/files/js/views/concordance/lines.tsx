@@ -514,8 +514,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
             if (this.props.viewMode === 'speech') {
-                dispatcher.dispatch({
-                    name: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
+                dispatcher.dispatch<Actions.ShowSpeechDetail>({
+                    name: ActionName.ShowSpeechDetail,
                     payload: {
                         corpusId: corpusId,
                         tokenNumber: tokenNumber,
@@ -526,8 +526,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
             } else { // = default and custom modes
                 if (kwicLength > 0) {
-                    dispatcher.dispatch({
-                        name: 'CONCORDANCE_SHOW_KWIC_DETAIL',
+                    dispatcher.dispatch<Actions.ShowKwicDetail>({
+                        name: ActionName.ShowKwicDetail,
                         payload: {
                             corpusId: corpusId,
                             tokenNumber: tokenNumber,
@@ -537,8 +537,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                     });
 
                 } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
-                    dispatcher.dispatch({
-                        name: 'CONCORDANCE_SHOW_TOKEN_DETAIL',
+                    dispatcher.dispatch<Actions.ShowTokenDetail>({
+                        name: ActionName.ShowTokenDetail,
                         payload: {
                             corpusId: corpusId,
                             tokenNumber: tokenNumber,
@@ -634,8 +634,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
 
         _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SHOW_REF_DETAIL',
+            dispatcher.dispatch<Actions.ShowRefDetail>({
+                name: ActionName.ShowRefDetail,
                 payload: {
                     corpusId: corpusId,
                     tokenNumber: tokenNumber,

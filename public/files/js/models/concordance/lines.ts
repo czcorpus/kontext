@@ -36,6 +36,7 @@ import { transformVmode } from '../options/structsAttrs';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
 import { ServerLineData, ServerTextChunk, CorpColumn, ServerPagination, ConcSummary, ViewConfiguration, AudioPlayerActions } from './common';
 import { Actions, ActionName } from './actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
 
 
@@ -463,34 +464,18 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
             }
         );
 
-        this.addActionHandler(
-            'MAIN_MENU_SHOW_SAVE_FORM',
+        this.addActionHandler<MainMenuActions.ShowSaveForm|Actions.ResultCloseSaveForm>(
+            [MainMenuActionName.ShowSaveForm, ActionName.ResultCloseSaveForm],
             action => {
-                this.changeState(state => {state.saveFormVisible = true});
+                this.changeState(state => {state.saveFormVisible = action.name === MainMenuActionName.ShowSaveForm});
                 this.emitChange();
             }
         );
 
-        this.addActionHandler<Actions.ResultCloseSaveForm>(
-            ActionName.ResultCloseSaveForm,
+        this.addActionHandler<Actions.ShowKwicDetail|Actions.ResetDetail>(
+            [ActionName.ShowKwicDetail, ActionName.ResetDetail],
             action => {
-                this.changeState(state => {state.saveFormVisible = false});
-                this.emitChange();
-            }
-        );
-
-        this.addActionHandler<Actions.ResetDetail>(
-            ActionName.ResetDetail,
-            action => {
-                this.changeState(state => {state.kwicDetailVisible = false});
-                this.emitChange();
-            }
-        );
-
-        this.addActionHandler<Actions.ShowKwicDetail>(
-            ActionName.ShowKwicDetail,
-            action => {
-                this.changeState(state => {state.kwicDetailVisible = true});
+                this.changeState(state => {state.kwicDetailVisible = action.name === ActionName.ShowKwicDetail});
                 this.emitChange();
             }
         );

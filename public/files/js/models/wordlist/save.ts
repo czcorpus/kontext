@@ -23,9 +23,10 @@ import { concatMap } from 'rxjs/operators';
 import { Kontext } from '../../types/common';
 import { SaveData } from '../../app/navigation';
 import { PageModel } from '../../app/page';
-import { Action, IFullActionControl, StatelessModel } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions, ActionName } from '../wordlist/actions';
 import { MultiDict } from '../../multidict';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
 
 export interface WordlistSaveModelArgs {
@@ -67,8 +68,8 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
 
-        this.addActionHandler(
-            'MAIN_MENU_SHOW_SAVE_FORM',
+        this.addActionHandler<MainMenuActions.ShowSaveForm>(
+            MainMenuActionName.ShowSaveForm,
             (state, action) => {
                 state.formIsActive = true;
             }
@@ -152,10 +153,10 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             }
         );
 
-        this.addActionHandler(
-            'MAIN_MENU_DIRECT_SAVE',
+        this.addActionHandler<MainMenuActions.DirectSave>(
+            MainMenuActionName.DirectSave,
             (state, action) => {
-                state.saveFormat = action.payload['saveformat'];
+                state.saveFormat = action.payload.saveformat;
                 state.toLine.value = `${state.quickSaveRowLimit}`;
                 state.toLine.value = '';
             },

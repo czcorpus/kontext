@@ -24,6 +24,7 @@ import { List, tuple, pipe } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
+import { ActionName as ConcActionName } from '../concordance/actions';
 import { Actions as GeneralOptsActions, ActionName as GeneralOptsActionName } from '../options/actions';
 
 
@@ -223,7 +224,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             ActionName.FilterApplyFirstOccurrences,
             ActionName.ShowFreqForm,
             ActionName.ShowCollForm,
-            ActionName.SwitchKwicSentMode,
+            ConcActionName.SwitchKwicSentMode,
             ActionName.ShowAttrsViewOptions,
             ActionName.ShowGeneralViewOptions,
             ActionName.ShowCitationInfo,

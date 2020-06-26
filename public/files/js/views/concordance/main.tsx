@@ -187,8 +187,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _selectChangeHandler(event) {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SET_LINE_SELECTION_MODE',
+            dispatcher.dispatch<Actions.SetLineSelectionMode>({
+                name: ActionName.SetLineSelectionMode,
                 payload: {
                     mode: event.currentTarget.value
                 }
@@ -383,8 +383,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             const userConfirm = props.fastAdHocIpm ?
                     true : window.confirm(he.translate('global__ipm_calc_may_take_time'));
             if (userConfirm) {
-                dispatcher.dispatch({
-                    name: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
+                dispatcher.dispatch<Actions.CalculateIpmForAdHocSubc>({
+                    name: ActionName.CalculateIpmForAdHocSubc,
                     payload: {}
                 });
             }
