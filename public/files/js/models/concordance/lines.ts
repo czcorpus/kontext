@@ -178,6 +178,8 @@ export interface ConclineModelState {
     emptyRefValPlaceholder:string;
 
     saveFormVisible:boolean;
+
+    kwicDetailVisible:boolean;
 }
 
 
@@ -241,7 +243,8 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 syntaxBoxData: null,
                 emptyRefValPlaceholder: '\u2014',
                 catColors: [], // TODO !!!!
-                saveFormVisible: false
+                saveFormVisible: false,
+                kwicDetailVisible: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -472,6 +475,22 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
             ActionName.ResultCloseSaveForm,
             action => {
                 this.changeState(state => {state.saveFormVisible = false});
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ResetDetail>(
+            ActionName.ResetDetail,
+            action => {
+                this.changeState(state => {state.kwicDetailVisible = false});
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ShowKwicDetail>(
+            ActionName.ShowKwicDetail,
+            action => {
+                this.changeState(state => {state.kwicDetailVisible = true});
                 this.emitChange();
             }
         );

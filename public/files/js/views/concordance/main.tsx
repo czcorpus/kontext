@@ -623,8 +623,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _handleRefsDetailCloseClick() {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_REF_RESET_DETAIL',
+            dispatcher.dispatch<Actions.RefResetDetail>({
+                name: ActionName.RefResetDetail,
                 payload: {}
             });
         }
@@ -643,7 +643,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     || this.props.concDetailModelIsBusy
                     || this.props.tokenConnectIsBusy;
                     */
-            return false; // TODO
+            return this.props.kwicDetailVisible; // TODO
         }
 
         render() {
@@ -657,8 +657,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 onClose={this.props.onSyntaxPaneClose} /> : null}
                     {this._shouldDisplayConcDetailBox() ?
                         <concDetailViews.ConcordanceDetail closeClickHandler={this._handleDetailCloseClick} />
-                        : null
-                    }
+                        : null}
                     <concDetailViews.RefDetail
                         closeClickHandler={this._handleRefsDetailCloseClick} />
                     <div id="conc-top-bar">
