@@ -20,6 +20,7 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes } from './common';
+import { SaveData } from '../../app/navigation';
 
 export enum ActionName {
     ChangeMainCorpus = 'CONCORDANCE_CHANGE_MAIN_CORPUS',
@@ -48,6 +49,13 @@ export enum ActionName {
     PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
     StopSpeech = 'CONCORDANCE_STOP_SPEECH',
     RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL',
+    SaveFormSetHeading = 'CONCORDANCE_SAVE_FORM_SET_HEADING',
+    SaveFormSetAlignKwic = 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC',
+    SaveFormSetFromLine = 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE',
+    SaveFormSetToLine = 'CONCORDANCE_SAVE_FORM_SET_TO_LINE',
+    SaveFormSetInclLineNumbers = 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS',
+    SaveFormSetFormat = 'CONCORDANCE_SAVE_FORM_SET_FORMAT',
+    ResultCloseSaveForm =  'CONCORDANCE_RESULT_CLOSE_SAVE_FORM',
     SelectLine = 'LINE_SELECTION_SELECT_LINE',
     LineSelectionStatusRequest = 'LINE_SELECTION_STATUS_REQUEST',
     LineSelectionReset = 'LINE_SELECTION_RESET',
@@ -58,6 +66,8 @@ export enum ActionName {
     RemoveLinesNotInGroups = 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
     UnlockLineSelection = 'LINE_SELECTION_REENABLE_EDIT',
     RenameSelectionGroup = 'LINE_SELECTION_GROUP_RENAME',
+    RenameGroupCancel = 'LINE_SELECTION_RENAME_GROUP_CANCEL',
+    ChangeEmail = 'LINE_SELECTION_CHANGE_EMAIL',
     SendLineSelectionToEmail = 'LINE_SELECTION_SEND_URL_TO_EMAIL',
     SortLineSelection = 'LINE_SELECTION_SORT_LINES',
     SetLineSelectionMode = 'CONCORDANCE_SET_LINE_SELECTION_MODE',
@@ -100,7 +110,7 @@ export namespace Actions {
     }
 
     export interface AsyncCalculationUpdated extends Action<{
-        finished:number;
+        finished:boolean;
         concsize:number;
         fullsize:number;
         relconcsize:number;
@@ -231,6 +241,47 @@ export namespace Actions {
         name:ActionName.RefResetDetail;
     }
 
+    export interface SaveFormSetFormat extends Action<{
+        value:SaveData.Format;
+    }> {
+        name:ActionName.SaveFormSetFormat;
+    }
+
+    export interface SaveFormSetHeading extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.SaveFormSetHeading;
+    }
+
+    export interface SaveFormSetInclLineNumbers extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.SaveFormSetInclLineNumbers;
+    }
+
+    export interface SaveFormSetAlignKwic extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.SaveFormSetAlignKwic;
+    }
+
+    export interface SaveFormSetFromLine extends Action<{
+        value:string;
+    }> {
+        name:ActionName.SaveFormSetFromLine;
+    }
+
+    export interface SaveFormSetToLine extends Action<{
+        value:string;
+    }> {
+        name:ActionName.SaveFormSetToLine;
+    }
+
+    export interface ResultCloseSaveForm extends Action<{
+    }> {
+        name:ActionName.ResultCloseSaveForm;
+    }
+
     export interface SelectLine extends Action<{
         value:number;
         tokenNumber:number;
@@ -284,6 +335,17 @@ export namespace Actions {
         dstGroupNum:number;
     }> {
         name:ActionName.RenameSelectionGroup;
+    }
+
+    export interface RenameGroupCancel extends Action<{
+    }> {
+        name:ActionName.RenameGroupCancel;
+    }
+
+    export interface ChangeEmail extends Action<{
+        email:string;
+    }> {
+        name:ActionName.ChangeEmail;
     }
 
     export interface SendLineSelectionToEmail extends Action<{

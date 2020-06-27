@@ -36,6 +36,7 @@ import { transformVmode } from '../options/structsAttrs';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
 import { ServerLineData, ServerTextChunk, CorpColumn, ServerPagination, ConcSummary, ViewConfiguration, AudioPlayerActions } from './common';
 import { Actions, ActionName } from './actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
 
 
@@ -176,6 +177,10 @@ export interface ConclineModelState {
     catColors:Array<string>;
 
     emptyRefValPlaceholder:string;
+
+    saveFormVisible:boolean;
+
+    kwicDetailVisible:boolean;
 }
 
 
@@ -238,7 +243,9 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
                 syntaxBoxData: null,
                 emptyRefValPlaceholder: '\u2014',
-                catColors: [] // TODO !!!!
+                catColors: [], // TODO !!!!
+                saveFormVisible: false,
+                kwicDetailVisible: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -269,8 +276,8 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
             }
             return interval(1000).subscribe(
                 (idx) => {
-                    dispatcher.dispatch({
-                        name: 'CONCORDANCE_DATA_WAIT_TIME_INC',
+                    dispatcher.dispatch<Actions.DataWaitTimeInc>({
+                        name: ActionName.DataWaitTimeInc,
                         payload: {
                             idx: idx
                         }
@@ -455,7 +462,23 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
             action => {
                 this.emitChange(); // TODO do we need this? TEST
             }
-        )
+        );
+
+        this.addActionHandler<MainMenuActions.ShowSaveForm|Actions.ResultCloseSaveForm>(
+            [MainMenuActionName.ShowSaveForm, ActionName.ResultCloseSaveForm],
+            action => {
+                this.changeState(state => {state.saveFormVisible = action.name === MainMenuActionName.ShowSaveForm});
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ShowKwicDetail|Actions.ResetDetail>(
+            [ActionName.ShowKwicDetail, ActionName.ResetDetail],
+            action => {
+                this.changeState(state => {state.kwicDetailVisible = action.name === ActionName.ShowKwicDetail});
+                this.emitChange();
+            }
+        );
     }
 
     unregister():void {}

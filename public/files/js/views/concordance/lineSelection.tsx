@@ -22,7 +22,7 @@ import * as React from 'react';
 import {IActionDispatcher, Bound} from 'kombo';
 import {Kontext} from '../../types/common';
 import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
-import { Subscription } from 'rxjs';
+import { ActionName, Actions } from '../../models/concordance/actions';
 
 
 export interface LineBinarySelectionMenuProps {
@@ -93,10 +93,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         _actionChangeHandler(evt:React.ChangeEvent<{value:string}>) {
             const actionMap = {
-                clear: 'LINE_SELECTION_RESET',
-                remove: 'LINE_SELECTION_REMOVE_LINES',
-                remove_inverted: 'LINE_SELECTION_REMOVE_OTHER_LINES',
-                apply: 'LINE_SELECTION_MARK_LINES'
+                clear: ActionName.LineSelectionReset,
+                remove: ActionName.RemoveSelectedLines,
+                remove_inverted: ActionName.RemoveNonSelectedLines,
+                apply: ActionName.MarkLines
             };
             const eventId = actionMap[evt.target.value] || null;
 
@@ -109,8 +109,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidMount() {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_STATUS_REQUEST',
+            dispatcher.dispatch<Actions.LineSelectionStatusRequest>({
+                name: ActionName.LineSelectionStatusRequest,
                 payload: {}
             });
         }
@@ -204,8 +204,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         _handleConfirmClick() {
             const newState = he.cloneState(this.state);
             this.setState(newState);
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_GROUP_RENAME',
+            dispatcher.dispatch<Actions.RenameSelectionGroup>({
+                name: ActionName.RenameSelectionGroup,
                 payload: {
                     srcGroupNum: Number(this.state.srcGroupNum),
                     dstGroupNum: this.state.dstGroupNum ? Number(this.state.dstGroupNum) : -1
@@ -331,26 +331,26 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         _actionSwitchHandler(evt) {
             switch (evt.target.value) {
                 case 'edit-groups':
-                    dispatcher.dispatch({
-                        name: 'LINE_SELECTION_REENABLE_EDIT',
+                    dispatcher.dispatch<Actions.UnlockLineSelection>({
+                        name: ActionName.UnlockLineSelection,
                         payload: {}
                     });
                     break;
                 case 'sort-groups':
-                    dispatcher.dispatch({
-                        name: 'LINE_SELECTION_SORT_LINES',
+                    dispatcher.dispatch<Actions.SortLineSelection>({
+                        name: ActionName.SortLineSelection,
                         payload: {}
                     });
                     break;
                 case 'clear-groups':
-                    dispatcher.dispatch({
-                        name: 'LINE_SELECTION_RESET_ON_SERVER',
+                    dispatcher.dispatch<Actions.LineSelectionResetOnServer>({
+                        name: ActionName.LineSelectionResetOnServer,
                         payload: {}
                     });
                     break;
                 case 'remove-other-lines':
-                    dispatcher.dispatch({
-                        name: 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
+                    dispatcher.dispatch<Actions.RemoveLinesNotInGroups>({
+                        name: ActionName.RemoveLinesNotInGroups,
                         payload: {}
                     });
                     break;
@@ -361,24 +361,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleEmailDialogButton(evt:React.FormEvent<{value:string}>) {
             if (evt.currentTarget.value === 'cancel') {
-                dispatcher.dispatch({
-                    name: 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
+                dispatcher.dispatch<Actions.ClearUserCredentials>({
+                    name: ActionName.ClearUserCredentials,
                     payload: {}
                 });
 
             } else if (evt.currentTarget.value === 'send') {
-                dispatcher.dispatch({
-                    name: 'LINE_SELECTION_SEND_URL_TO_EMAIL',
+                dispatcher.dispatch<Actions.SendLineSelectionToEmail>({
+                    name: ActionName.SendLineSelectionToEmail,
                     payload: {
-                        email: this.props.emailDialogCredentials
+                        email: this.props.emailDialogCredentials.email
                     }
                 })
             }
         }
 
         _emailChangeHandler(evt:React.ChangeEvent<{value:string}>) {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_CHANGE_EMAIL',
+            dispatcher.dispatch<Actions.ChangeEmail>({
+                name: ActionName.ChangeEmail,
                 payload: {
                     email: evt.target.value
                 }
@@ -386,22 +386,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleDialogShowClick(evt:React.MouseEvent<{}>) {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_LOAD_USER_CREDENTIALS',
+            dispatcher.dispatch<Actions.LoadUserCredentials>({
+                name: ActionName.LoadUserCredentials,
                 payload: {}
             });
         }
 
         _handleRenameCancel() {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_RENAME_GROUP_CANCEL',
+            dispatcher.dispatch<Actions.RenameGroupCancel>({
+                name: ActionName.RenameGroupCancel,
                 payload: {}
             });
         }
 
         componentDidMount() {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_STATUS_REQUEST',
+            dispatcher.dispatch<Actions.LineSelectionStatusRequest>({
+                name: ActionName.LineSelectionStatusRequest,
                 payload: {
                     email: this.props.emailDialogCredentials.email
                 }

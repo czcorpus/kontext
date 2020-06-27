@@ -187,8 +187,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _selectChangeHandler(event) {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_SET_LINE_SELECTION_MODE',
+            dispatcher.dispatch<Actions.SetLineSelectionMode>({
+                name: ActionName.SetLineSelectionMode,
                 payload: {
                     mode: event.currentTarget.value
                 }
@@ -383,8 +383,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             const userConfirm = props.fastAdHocIpm ?
                     true : window.confirm(he.translate('global__ipm_calc_may_take_time'));
             if (userConfirm) {
-                dispatcher.dispatch({
-                    name: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
+                dispatcher.dispatch<Actions.CalculateIpmForAdHocSubc>({
+                    name: ActionName.CalculateIpmForAdHocSubc,
                     payload: {}
                 });
             }
@@ -623,8 +623,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _handleRefsDetailCloseClick() {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_REF_RESET_DETAIL',
+            dispatcher.dispatch<Actions.RefResetDetail>({
+                name: ActionName.RefResetDetail,
                 payload: {}
             });
         }
@@ -643,7 +643,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     || this.props.concDetailModelIsBusy
                     || this.props.tokenConnectIsBusy;
                     */
-            return false; // TODO
+            return this.props.kwicDetailVisible; // TODO
         }
 
         render() {
@@ -657,8 +657,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 onClose={this.props.onSyntaxPaneClose} /> : null}
                     {this._shouldDisplayConcDetailBox() ?
                         <concDetailViews.ConcordanceDetail closeClickHandler={this._handleDetailCloseClick} />
-                        : null
-                    }
+                        : null}
                     <concDetailViews.RefDetail
                         closeClickHandler={this._handleRefsDetailCloseClick} />
                     <div id="conc-top-bar">
@@ -697,7 +696,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             <paginationViews.Paginator {...this.props} />
                         </div>
                     </div>
-                    <concSaveViews.ConcSaveForm />
+                    {this.props.saveFormVisible ? <concSaveViews.ConcSaveForm /> : null}
                 </div>
             );
         }

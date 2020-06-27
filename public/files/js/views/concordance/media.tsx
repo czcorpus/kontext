@@ -24,6 +24,7 @@ import {Kontext} from '../../types/common';
 import { ConcLineModel } from '../../models/concordance/lines';
 import { AudioPlayerStatus } from '../../models/concordance/media';
 import { Subscription } from 'rxjs';
+import {Actions, ActionName} from '../../models/concordance/actions';
 
 
 export interface AudioPlayerProps {
@@ -55,8 +56,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleControlClick(action) {
             this.setState({playerStatus: action});
-            dispatcher.dispatch({
-                name: 'AUDIO_PLAYER_CLICK_CONTROL',
+            dispatcher.dispatch<Actions.AudioPlayerClickControl>({
+                name: ActionName.AudioPlayerClickControl,
                 payload: {
                     action: action
                 }

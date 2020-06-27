@@ -23,7 +23,7 @@ import { PageModel } from '../../app/page';
 import { SaveData } from '../../app/navigation';
 import { Kontext } from '../../types/common';
 import { Actions, ActionName } from './actions';
-import { concatMap } from 'rxjs/operators';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
 
 export interface COllResultsSaveModelArgs {
@@ -73,18 +73,18 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
 
-        this.addActionHandler(
-            'MAIN_MENU_SHOW_SAVE_FORM',
+        this.addActionHandler<MainMenuActions.ShowSaveForm>(
+            MainMenuActionName.ShowSaveForm,
             (state, action) => {
                 state.formIsActive = true;
                 state.toLine.value = '';
             }
         );
 
-        this.addActionHandler(
-            'MAIN_MENU_DIRECT_SAVE',
+        this.addActionHandler<MainMenuActions.DirectSave>(
+            MainMenuActionName.DirectSave,
             (state, action) => {
-                state.saveformat = action.payload['saveformat'];
+                state.saveformat = action.payload.saveformat;
                 state.toLine.value = state.quickSaveRowLimit + '';
 
             },

@@ -22,6 +22,7 @@ import * as Immutable from 'immutable';
 import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { Kontext } from '../../types/common';
 import { Response as TTDistResponse } from '../../models/concordance/ttDistModel';
+import { ActionName as ConcActionName } from '../../models/concordance/actions';
 import { MultiDict } from '../../multidict';
 import { IConcLinesProvider } from '../../types/concordance';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
@@ -172,12 +173,12 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 newState.freqType = action.payload['freqType'];
                 this.mergeDataOfProviders(newState, action.payload['data']);
                 return newState;
-            case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+            case ConcActionName.AsyncCalculationUpdated:
                 // Please note that this action breaks (de facto) the 'no side effect chain'
                 // rule (it is produced by async action of a StatefulModel and triggers a side
                 // effect here). But currently we have no solution to this.
                 newState = this.copyState(state);
-                newState.blockedByAsyncConc = action.payload['isUnfinished'];
+                newState.blockedByAsyncConc = !action.payload['finished'];
                 return newState;
             default:
                 return state;

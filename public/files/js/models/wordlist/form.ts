@@ -29,6 +29,7 @@ import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { ActionName, Actions } from './actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { FileTarget, WlnumsTypes, WlTypes } from './common';
 
 
@@ -183,7 +184,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         ).sideEffectAlsoOn(
             ActionName.WordlistSaveFormSubmit,
-            'MAIN_MENU_DIRECT_SAVE',
+            MainMenuActionName.DirectSave,
             ActionName.WordlistResultNextPage,
             ActionName.WordlistResultPrevPage,
             ActionName.WordlistGoToLastPage,

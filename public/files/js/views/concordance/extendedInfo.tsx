@@ -26,6 +26,7 @@ import {ConcDashboard, ConcDashboardState} from '../../models/concordance/dashbo
 import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import { PluginInterfaces } from '../../types/plugins';
 import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
+import { Actions, ActionName } from '../../models/concordance/actions';
 
 
 export interface ConcExtendedInfoProps {
@@ -126,8 +127,8 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
         componentDidMount() {
             if (!this.props.expanded) { // we are doing a pre-load here
-                dispatcher.dispatch({
-                    name: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
+                dispatcher.dispatch<Actions.LoadTTDictOverview>({
+                    name: ActionName.LoadTTDictOverview,
                     payload: {}
                 });
             }
