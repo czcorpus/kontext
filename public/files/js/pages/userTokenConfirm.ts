@@ -29,7 +29,7 @@ require('styles/userTokenConfirm.less');
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new KontextPage(conf);
 
-    layoutModel.init(() => {
+    layoutModel.init(true, [], () => {
         const link = document.getElementById('try-login');
         if (link) {
             link.addEventListener('click', () => {
@@ -41,5 +41,5 @@ export function init(conf:Kontext.Conf):void {
                 });
             });
         }
-    }, []);
+    });
 }

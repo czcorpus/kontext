@@ -21,6 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { Subscription } from 'rxjs';
+import { Dict } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
@@ -30,8 +31,9 @@ import { init as linesViewInit } from './lines';
 import { init as concDetailViewsInit } from './detail/index';
 import { init as concSaveViewsInit } from './save';
 import { init as extendedInfoViewsInit } from './extendedInfo';
-import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
-import { ConcLineModel, ConclineModelState } from '../../models/concordance/lines';
+import { LineSelectionModel, LineSelectionModelState }
+    from '../../models/concordance/lineSelection';
+import { ConcordanceModel, ConcordanceModelState } from '../../models/concordance/main';
 import { ConcDetailModel } from '../../models/concordance/detail';
 import { RefsDetailModel } from '../../models/concordance/refsDetail';
 import { CollFormModel } from '../../models/coll/collForm';
@@ -39,13 +41,12 @@ import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
 import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
 import { UsageTipsModel } from '../../models/usageTips';
 import { MainMenuModelState } from '../../models/mainMenu';
-import { Dict } from 'cnc-tskit';
 import { Actions, ActionName } from '../../models/concordance/actions';
 
 
 export class ViewPageModels {
     lineSelectionModel:LineSelectionModel;
-    lineViewModel:ConcLineModel;
+    lineViewModel:ConcordanceModel;
     concDetailModel:ConcDetailModel;
     refsDetailModel:RefsDetailModel;
     userInfoModel:Kontext.IUserInfoModel;
@@ -598,7 +599,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     // ------------------------- <ConcordanceView /> ---------------------------
 
     class ConcordanceView extends React.Component<
-    ConcordanceDashboardProps['concViewProps'] & ConclineModelState> {
+    ConcordanceDashboardProps['concViewProps'] & ConcordanceModelState> {
 
         constructor(props) {
             super(props);
@@ -677,7 +678,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
-                                viewMode={ConcLineModel.getViewAttrsVmode(this.props)} />
+                                viewMode={ConcordanceModel.getViewAttrsVmode(this.props)} />
                         {this.props.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
@@ -704,7 +705,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
 
     const BoundConcordanceView = BoundWithProps<ConcordanceDashboardProps['concViewProps'],
-            ConclineModelState>(ConcordanceView, lineViewModel)
+            ConcordanceModelState>(ConcordanceView, lineViewModel)
 
 
     // ------------------------- <ConcordanceDashboard /> ---------------------------

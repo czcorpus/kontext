@@ -19,8 +19,8 @@
  */
 
 import { PageModel } from '../app/page';
-import {init as viewInit} from '../views/subcorp/listPublic';
-import {PublicSubcorpListModel, DataItem} from '../models/subcorp/listPublic';
+import { init as viewInit } from '../views/subcorp/listPublic';
+import { PublicSubcorpListModel, DataItem } from '../models/subcorp/listPublic';
 import { KontextPage } from '../app/main';
 
 declare var require:any;
@@ -36,7 +36,7 @@ class PubSubcorpPage {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             const model = new PublicSubcorpListModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
@@ -53,7 +53,7 @@ class PubSubcorpPage {
                 views.List,
                 document.getElementById('published-subcorpora-mount')
             );
-        }, []);
+        });
     }
 }
 

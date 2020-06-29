@@ -108,8 +108,8 @@ export class SubcorpForm {
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
             {
-                ttComponent: ttComponent,
-                ttProps: ttProps
+                ttComponent,
+                ttProps
             }
         );
     }
@@ -135,7 +135,9 @@ export class SubcorpForm {
             true, // manual aligned corp. selection mode
             {
                 bibAttr: textTypesData['bib_attr'],
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
+                    'availableAlignedCorpora'
+                ),
                 refineEnabled: true,
                 manualAlignCorporaMode: true
             }
@@ -160,7 +162,8 @@ export class SubcorpForm {
                 subcMixerComponent = subcmixerPlg.getWidgetView();
 
             } else {
-                throw new Error('Subcmixer plug-in requires live_attributes plug-in to be operational');
+                throw new Error(
+                    'Subcmixer plug-in requires live_attributes plug-in to be operational');
             }
 
         } else {
@@ -178,8 +181,10 @@ export class SubcorpForm {
         return {
             component: ttViewComponents.TextTypesPanel,
             props: {
-                liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
-                liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
+                liveAttrsView: 'LiveAttrsView' in liveAttrsViews ?
+                    liveAttrsViews['LiveAttrsView'] : null,
+                liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ?
+                    liveAttrsViews['LiveAttrsCustomTT'] : null,
                 attributes: this.textTypesModel.getAttributes(),
                 alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
                 manualAlignCorporaMode: true
@@ -207,7 +212,7 @@ export class SubcorpForm {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             const ttComponent = this.createTextTypesComponents(
                 this.layoutModel.getConf<SelectedTextTypes>('SelectedTextTypes')
             );
@@ -245,10 +250,18 @@ export class SubcorpForm {
                                 () => {
                                     // all the components must be deleted to prevent memory leaks
                                     // and unwanted action handlers from previous instance
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('subcorp-form-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('general-overview-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
+                                    this.layoutModel.unmountReactComponent(
+                                        window.document.getElementById('subcorp-form-mount')
+                                    );
+                                    this.layoutModel.unmountReactComponent(
+                                        window.document.getElementById('view-options-mount')
+                                    );
+                                    this.layoutModel.unmountReactComponent(
+                                        window.document.getElementById('general-overview-mount')
+                                    );
+                                    this.layoutModel.unmountReactComponent(
+                                        window.document.getElementById('query-overview-mount')
+                                    );
                                     this.init();
                                 }
                             )
@@ -267,7 +280,7 @@ export class SubcorpForm {
                 subcorpWithinFormModel: this.subcorpWithinFormModel
             });
             this.initSubcorpForm(ttComponent.component, ttComponent.props);
-        }, []);
+        });
     }
 }
 

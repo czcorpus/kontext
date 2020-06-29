@@ -65,8 +65,10 @@ class WordlistFormPage {
                             () => {
                                 // all the components must be deleted to prevent memory leaks
                                 // and unwanted action handlers from previous instance
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('wordlist-form-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
+                                this.layoutModel.unmountReactComponent(
+                                    window.document.getElementById('wordlist-form-mount'));
+                                this.layoutModel.unmountReactComponent(
+                                    window.document.getElementById('query-overview-mount'));
                                 this.init();
                             }
                         )
@@ -77,7 +79,7 @@ class WordlistFormPage {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             this.corpusIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
             this.subcorpSel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
@@ -86,7 +88,9 @@ class WordlistFormPage {
                 origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 corpora: [this.layoutModel.getCorpusIdent().id],
-                availSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList')
+                availSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>(
+                    'SubcorpList'
+                )
             });
             this.wordlistFormModel = new WordlistFormModel(
                 this.layoutModel.dispatcher,
@@ -139,7 +143,7 @@ class WordlistFormPage {
                 {}
             );
             this.layoutModel.restoreModelsDataAfterSwitch();
-        }, []);
+        });
     }
 }
 

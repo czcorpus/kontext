@@ -28,7 +28,7 @@ import { init as wordlistFormInit, WordlistFormExportViews } from '../views/word
 import { init as wordlistResultViewInit } from '../views/wordlist/result';
 import { init as wordlistSaveViewInit } from '../views/wordlist/save';
 import { StatefulModel } from '../models/base';
-import { WordlistFormModel, WordlistModelInitialArgs, WordlistFormState } from '../models/wordlist/form';
+import { WordlistFormModel, WordlistModelInitialArgs } from '../models/wordlist/form';
 import { WordlistSaveModel } from '../models/wordlist/save';
 import { KontextPage } from '../app/main';
 import { WordlistResultModel } from '../models/wordlist/main';
@@ -72,7 +72,12 @@ export class WordlistPage extends StatefulModel  {
     }
 
     private startWatching():Observable<AsyncProcessStatus> {
-        const args = new MultiDict<{corpname:string; usesubcorp:string; attrname:string; worker_tasks:string}>([
+        const args = new MultiDict<{
+            corpname:string;
+            usesubcorp:string;
+            attrname:string;
+            worker_tasks:string}>
+        ([
             ['corpname', this.layoutModel.getCorpusIdent().id],
             ['usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp],
             ['attrname', this.layoutModel.getConf<string>('attrname')]
@@ -145,7 +150,7 @@ export class WordlistPage extends StatefulModel  {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             if (this.layoutModel.getConf<boolean>('IsUnfinished')) {
                 const updateStream = this.startWatching();
                 updateStream.subscribe(
@@ -274,8 +279,7 @@ export class WordlistPage extends StatefulModel  {
                     });
                 }
             });
-
-        }, []);
+        });
     }
 }
 

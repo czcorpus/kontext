@@ -296,7 +296,7 @@ export class CollPage {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             this.subcorpSel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
                 dispatcher: this.layoutModel.dispatcher,
@@ -346,7 +346,7 @@ export class CollPage {
             });
             this.initAnalysisViews();
             this.initQueryOpNavigation();
-        }, []);
+        });
     }
 }
 

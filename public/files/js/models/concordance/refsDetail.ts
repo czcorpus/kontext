@@ -21,7 +21,7 @@
 import { StatefulModel, IFullActionControl } from 'kombo';
 
 import { PageModel } from '../../app/page';
-import { ConcLineModel } from './lines';
+import { ConcordanceModel } from './main';
 import { Actions, ActionName } from './actions';
 import { tuple, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
@@ -47,9 +47,9 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly linesModel:ConcLineModel;
+    private readonly concModel:ConcordanceModel;
 
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcLineModel) {
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcordanceModel) {
         super(
             dispatcher,
             {
@@ -59,17 +59,22 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
             }
         );
         this.layoutModel = layoutModel;
-        this.linesModel = linesModel;
+        this.concModel = linesModel;
 
         this.addActionHandler<Actions.ShowRefDetail>(
             ActionName.ShowRefDetail,
             action => {
                 this.state.isBusy = true;
                 this.emitChange();
-                this.loadRefs(action.payload.corpusId, action.payload.tokenNumber, action.payload.lineIdx).subscribe(
+                this.loadRefs(
+                    action.payload.corpusId,
+                    action.payload.tokenNumber,
+                    action.payload.lineIdx
+
+                ).subscribe(
                     () => {
-                        this.linesModel.setLineFocus(action.payload['lineIdx'], true);
-                        this.linesModel.emitChange();
+                        this.concModel.setLineFocus(action.payload['lineIdx'], true);
+                        this.concModel.emitChange();
                         this.state.isBusy = false;
                         this.emitChange();
                     },
@@ -91,10 +96,10 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
             ],
             action => {
                 if (this.state.lineIdx !== null) {
-                    this.linesModel.setLineFocus(this.state.lineIdx, false);
+                    this.concModel.setLineFocus(this.state.lineIdx, false);
                     this.state.lineIdx = null;
                     this.emitChange();
-                    this.linesModel.emitChange();
+                    this.concModel.emitChange();
                 }
             }
         );

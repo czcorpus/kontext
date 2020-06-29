@@ -66,7 +66,7 @@ class QueryHistoryPage {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             const corpSelModel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
                 dispatcher: this.layoutModel.dispatcher,
@@ -95,7 +95,7 @@ class QueryHistoryPage {
                 {}
             );
             this.initCorpnameLink();
-        }, []);
+        });
     }
 }
 

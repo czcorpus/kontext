@@ -18,16 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { map, concatMap, tap } from 'rxjs/operators';
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
-import { ConcLineModel } from './lines';
-import { ActionName as ConcActionName, Actions as ConcActions } from '../../models/concordance/actions';
-import { pipe, List, HTTP } from 'cnc-tskit';
+import { ConcordanceModel } from './main';
+import {
+    ActionName as ConcActionName,
+    Actions as ConcActions } from '../../models/concordance/actions';
+import { pipe, List, HTTP, tuple } from 'cnc-tskit';
 
 
 export type TTCrit = Array<[string, string]>;
@@ -97,10 +99,10 @@ export interface TextTypesDistModelState {
     blocks:Array<FreqBlock>;
     flimit:number;
     sampleSize:number;
+    maxBlockItems:number;
     isBusy:boolean;
     blockedByAsyncConc:boolean;
     lastArgs:string;
-    maxBlockItems:number;
 }
 
 
@@ -110,17 +112,18 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
 
     private static IPM_BAR_WIDTH = 400;
 
-    private static COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-                             "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+    private static COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+                             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
 
     private static DEFAULT_MAX_BLOCK_ITEMS = 10;
 
     private readonly layoutModel:PageModel;
 
-    private readonly concLineModel:ConcLineModel;
+    private readonly concLineModel:ConcordanceModel;
 
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, concLineModel:ConcLineModel, props:TextTypesDistModelProps) {
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel,
+            concLineModel:ConcordanceModel, props:TextTypesDistModelProps) {
         super(
             dispatcher,
             {
@@ -212,10 +215,12 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                 );
 
             } else {
-                return rxOf({});
+                return rxOf({sampled_size: 0, conc_persistence_op_id: ''});
             }
         })().pipe(
-            map((reduceAns) => [reduceAns, this.layoutModel.getConcArgs()] as [Response.Reduce, MultiDict]),
+            map(
+                (reduceAns) => tuple(reduceAns, this.layoutModel.getConcArgs())
+            ),
             concatMap(([reduceAns, args]) => {  // TODO side effects here
                 this.state.ttCrit.forEach(v => args.add(v[0], v[1]));
                 this.state.flimit = this.concLineModel.getRecommOverviewMinFreq();
@@ -240,16 +245,22 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                     List.map(block => {
                         const sumRes = block.Items.reduce((r, v) => r + v.rel, 0);
                         return {
-                            label: block.Head && block.Head[0] ? block.Head.length > 0 && block.Head[0].n : null,
-                            items: block.Items.sort((v1, v2) => v2.rel - v1.rel).map((v, i) => {
-                                return {
+                            label: block.Head && block.Head[0] ?
+                                block.Head.length > 0 && block.Head[0].n :
+                                null,
+                            items: pipe(
+                                block.Items,
+                                List.sortBy(v => v.rel),
+                                List.map((v, i) => ({
                                     value: v.Word.map(v => v.n).join(', '),
                                     ipm: v.rel,
                                     abs: v.freq,
-                                    barWidth: ~~Math.round(v.rel / sumRes * TextTypesDistModel.IPM_BAR_WIDTH),
-                                    color: TextTypesDistModel.COLORS[i % TextTypesDistModel.COLORS.length]
-                                };
-                            })
+                                    barWidth: Math.round(
+                                        v.rel / sumRes * TextTypesDistModel.IPM_BAR_WIDTH),
+                                    color: TextTypesDistModel.COLORS[
+                                        i % TextTypesDistModel.COLORS.length]
+                                }))
+                            )
                         };
                     })
                 );
@@ -270,6 +281,9 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
     }
 
     static shouldDisplayBlocksSubset(state:TextTypesDistModelState):boolean {
-        return List.find(block => block.items.length > state.maxBlockItems, state.blocks) !== undefined;
+        return List.some(
+            block => block.items.length > state.maxBlockItems,
+            state.blocks
+        );
     }
 }
