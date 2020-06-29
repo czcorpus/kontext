@@ -64,7 +64,7 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
         this.addActionHandler<Actions.ShowRefDetail>(
             ActionName.ShowRefDetail,
             action => {
-                this.state.isBusy = true;
+                this.changeState(state => {state.isBusy = true});
                 this.emitChange();
                 this.loadRefs(
                     action.payload.corpusId,
@@ -75,12 +75,12 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
                     () => {
                         this.concModel.setLineFocus(action.payload['lineIdx'], true);
                         this.concModel.emitChange();
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.emitChange();
                     },
                     (err) => {
                         this.layoutModel.showMessage('error', err);
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.emitChange();
                     }
                 );
@@ -97,7 +97,7 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
             action => {
                 if (this.state.lineIdx !== null) {
                     this.concModel.setLineFocus(this.state.lineIdx, false);
-                    this.state.lineIdx = null;
+                    this.changeState(state => {state.lineIdx = null});
                     this.emitChange();
                     this.concModel.emitChange();
                 }
@@ -124,8 +124,10 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
         ).pipe(
             tap(
                 (data) => {
-                    this.state.lineIdx = lineIdx;
-                    this.state.data = this.importData(data);
+                    this.changeState(state => {
+                        state.lineIdx = lineIdx;
+                        state.data = this.importData(data);
+                    });
                 }
             ),
             map(data => !!data)
