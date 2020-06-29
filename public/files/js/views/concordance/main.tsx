@@ -659,8 +659,9 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     {this._shouldDisplayConcDetailBox() ?
                         <concDetailViews.ConcordanceDetail closeClickHandler={this._handleDetailCloseClick} />
                         : null}
-                    <concDetailViews.RefDetail
-                        closeClickHandler={this._handleRefsDetailCloseClick} />
+                    {this.props.refDetailVisible ?
+                        <concDetailViews.RefDetail closeClickHandler={this._handleRefsDetailCloseClick} />
+                        : null}
                     <div id="conc-top-bar">
                         <div className="info-level">
                             <paginationViews.Paginator {...this.props} />

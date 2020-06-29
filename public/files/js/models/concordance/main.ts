@@ -183,6 +183,8 @@ export interface ConcordanceModelState {
     saveFormVisible:boolean;
 
     kwicDetailVisible:boolean;
+
+    refDetailVisible:boolean;
 }
 
 
@@ -249,6 +251,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 catColors: [], // TODO !!!!
                 saveFormVisible: false,
                 kwicDetailVisible: false,
+                refDetailVisible: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -485,6 +488,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             action => {
                 this.changeState(state => {
                     state.kwicDetailVisible = action.name === ActionName.ShowKwicDetail
+                });
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ShowRefDetail|Actions.RefResetDetail>(
+            [ActionName.ShowRefDetail, ActionName.RefResetDetail],
+            action => {
+                this.changeState(state => {
+                    state.refDetailVisible = action.name === ActionName.ShowRefDetail
                 });
                 this.emitChange();
             }
