@@ -183,6 +183,8 @@ export interface ConcordanceModelState {
     saveFormVisible:boolean;
 
     kwicDetailVisible:boolean;
+
+    refDetailVisible:boolean;
 }
 
 
@@ -249,6 +251,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 catColors: [], // TODO !!!!
                 saveFormVisible: false,
                 kwicDetailVisible: false,
+                refDetailVisible: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -338,12 +341,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ActionName.AsyncCalculationUpdated,
             action => {
                 const prevConcSize = this.state.concSummary.concSize;
-                this.state.unfinishedCalculation = !action.payload.finished;
-                this.state.concSummary.concSize = action.payload.concsize;
-                this.state.concSummary.fullSize = action.payload.fullsize;
-                this.state.concSummary.ipm = action.payload.relconcsize;
-                this.state.concSummary.arf = action.payload.arf;
-                this.state.pagination.lastPage = action.payload.availPages;
+                this.changeState(state => {
+                    state.unfinishedCalculation = !action.payload.finished;
+                    state.concSummary.concSize = action.payload.concsize;
+                    state.concSummary.fullSize = action.payload.fullsize;
+                    state.concSummary.ipm = action.payload.relconcsize;
+                    state.concSummary.arf = action.payload.arf;
+                    state.pagination.lastPage = action.payload.availPages;
+                });
                 if (this.state.concSummary.concSize > 0) {
                     if (prevConcSize === 0) {
                         this.changePage('customPage', 1).subscribe(
@@ -370,13 +375,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ActionName.AsyncCalculationFailed,
             action => {
                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                this.state.unfinishedCalculation = false;
-                this.state.concSummary.concSize = 0;
-                this.state.concSummary.fullSize = 0;
-                this.state.concSummary.ipm = 0;
-                this.state.concSummary.arf = 0;
-                this.state.pagination.lastPage = 0;
-                this.state.lines = [];
+                this.changeState(state => {
+                    state.unfinishedCalculation = false;
+                    state.concSummary.concSize = 0;
+                    state.concSummary.fullSize = 0;
+                    state.concSummary.ipm = 0;
+                    state.concSummary.arf = 0;
+                    state.pagination.lastPage = 0;
+                    state.lines = [];
+                });
                 this.emitChange();
             }
         );
@@ -431,7 +438,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<Actions.DataWaitTimeInc>(
             ActionName.DataWaitTimeInc,
             action => {
-                this.state.busyWaitSecs = action.payload['idx'];
+                this.changeState(state => {state.busyWaitSecs = action.payload['idx']});
                 this.emitChange();
             }
         );
@@ -439,7 +446,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<ViewOptionsActions.SaveSettingsDone>(
             ViewOptionsActionName.SaveSettingsDone,
             action => {
-                this.state.baseViewAttr = action.payload.baseViewAttr;
+                this.changeState(state => {state.baseViewAttr = action.payload.baseViewAttr});
                 this.emitChange();
             }
         );
@@ -448,8 +455,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ViewOptionsActionName.GeneralSubmitDone,
             action => {
                 if (!action.error) {
-                    this.state.showLineNumbers = action.payload.showLineNumbers;
-                    this.state.currentPage = 1;
+                    this.changeState(state => {
+                        state.showLineNumbers = action.payload.showLineNumbers;
+                        state.currentPage = 1;
+                    });
                     this.reloadPage().subscribe(
                         (data) => {
                             this.pushHistoryState(this.state.currentPage);
@@ -489,6 +498,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 this.emitChange();
             }
         );
+
+        this.addActionHandler<Actions.ShowRefDetail|Actions.RefResetDetail>(
+            [ActionName.ShowRefDetail, ActionName.RefResetDetail],
+            action => {
+                this.changeState(state => {
+                    state.refDetailVisible = action.name === ActionName.ShowRefDetail
+                });
+                this.emitChange();
+            }
+        );
     }
 
     unregister():void {}
@@ -504,11 +523,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         const srchIdx = this.state.corporaColumns.findIndex(v => v.n === corpusId);
         if (srchIdx > -1) {
             const srch = this.state.corporaColumns[srchIdx];
-            this.state.corporaColumns[srchIdx] = {
-                n: srch.n,
-                label: srch.label,
-                visible: status
-            };
+            this.changeState(state => {
+                state.corporaColumns[srchIdx] = {
+                    n: srch.n,
+                    label: srch.label,
+                    visible: status
+                };
+            });
 
         } else {
             throw new Error(`column for ${corpusId} not found`);
@@ -516,8 +537,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     private updateOnCorpViewOptsChange():void { // TODO !!
-        this.state.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
-        this.state.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
+        this.changeState(state => {
+            state.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
+            state.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
+        });
 
         this.reloadPage().subscribe(
             (data) => {
@@ -594,7 +617,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         ).pipe(
             tap((data) => {
                 this.importData(data);
-                this.state.currentPage = pageNum;
+                this.changeState(state => {state.currentPage = pageNum});
             }),
             map(_ => this.layoutModel.getConcArgs())
         );
@@ -602,13 +625,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     private importData(data:Kontext.AjaxResponse):void { // TODO data type is too general
         try {
-            this.state.lines = importLines(
-                data['Lines'],
-                this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
-            );
-            this.state.numItemsInLockedGroups = data['num_lines_in_groups'];
-            this.state.pagination = data['pagination'];
-            this.state.unfinishedCalculation = data['running_calc'];
+            this.changeState(state => {
+                state.lines = importLines(
+                    data['Lines'],
+                    this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
+                );
+                state.numItemsInLockedGroups = data['num_lines_in_groups'];
+                state.pagination = data['pagination'];
+                state.unfinishedCalculation = data['running_calc'];
+            });
 
         } catch (e) {
             console.error(e);
@@ -624,7 +649,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         } else {
             mode = {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
         }
-        this.state.viewMode = mode;
+        this.changeState(state => {state.viewMode = mode});
         this.layoutModel.replaceConcArg('viewmode', [this.state.viewMode]);
         const args = this.layoutModel.getConcArgs();
         args.set('format', 'json');
@@ -697,11 +722,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     private playAudio(chunksIds:Array<string>):void {
         this.setStopStatus(); // stop anything playing right now
         const activeChunkId = chunksIds[chunksIds.length - 1];
-        this.state.playerAttachedChunk = activeChunkId;
+        this.changeState(state => {state.playerAttachedChunk = activeChunkId});
         // let's get an active line - there can be only one even if we play multiple chunks
         const activeLine = this.findActiveLineIdx(activeChunkId);
         const fakeChangedLine = this.state.lines[activeLine];
-        this.state.lines[activeLine] = fakeChangedLine;
+        this.changeState(state => {state.lines[activeLine] = fakeChangedLine});
 
         const playChunks = this.findChunks(...chunksIds);
         if (playChunks.length > 0) {
@@ -722,11 +747,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             this.audioPlayer.stop();
             const playingLineIdx = this.findActiveLineIdx(this.state.playerAttachedChunk);
             const modLine = this.state.lines[playingLineIdx]; // TODO clone?
-            this.state.lines[playingLineIdx] = modLine;
+            this.changeState(state => {state.lines[playingLineIdx] = modLine});
             const playingChunk = this.findChunks(this.state.playerAttachedChunk)[0];
             if (playingChunk) {
                 playingChunk.showAudioPlayer = false;
-                this.state.playerAttachedChunk = null;
+                this.changeState(state => {state.playerAttachedChunk = null});
 
             } else {
                 throw new Error(`Failed to find playing chunk "${this.state.playerAttachedChunk}"`);
@@ -764,7 +789,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
         ).pipe(
             tap((data) => {
-                this.state.adHocIpm = this.state.concSummary.fullSize / data.total * 1e6;
+                this.changeState(state => {state.adHocIpm = this.state.concSummary.fullSize / data.total * 1e6});
             }),
             map(_ => this.state.adHocIpm)
         );
@@ -787,19 +812,21 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     setLineFocus(lineIdx:number, focus:boolean) {
-        this.state.lines = List.map(
-            item => {
-                if (item.hasFocus) {
-                    const ans = item.clone();
-                    ans.hasFocus = false;
-                    return ans;
+        this.changeState(state => {
+            state.lines = List.map(
+                item => {
+                    if (item.hasFocus) {
+                        const ans = item.clone();
+                        ans.hasFocus = false;
+                        return ans;
 
-                } else {
-                    return item;
-                }
-            },
-            this.state.lines
-        );
+                    } else {
+                        return item;
+                    }
+                },
+                this.state.lines
+            )
+        });
 
         if (focus === true) {
             const oldLine = this.state.lines[lineIdx];
@@ -807,7 +834,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 const idx = this.state.lines.indexOf(oldLine);
                 const newVal = oldLine.clone();
                 newVal.hasFocus = focus;
-                this.state.lines[idx] = newVal;
+                this.changeState(state => {state.lines[idx] = newVal});
             }
         }
     }
