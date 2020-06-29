@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
+import { Kontext } from '../types/common';
 import { KontextPage } from '../app/main';
 
 declare var require:any;
@@ -29,11 +29,11 @@ require('styles/userProfile.less');
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new KontextPage(conf);
 
-    layoutModel.init(() => {
+    layoutModel.init(true, [], () => {
         layoutModel.renderReactComponent(
             layoutModel.getAuthPlugin().getProfileView(),
             document.getElementById('user-administration-mount'),
             {}
         );
-    }, []);
+    });
 }

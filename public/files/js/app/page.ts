@@ -66,7 +66,8 @@ export enum DownloadType {
  * on any KonText page before any of page's own functionalities are
  * inited/involved.
  */
-export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler, Kontext.IConfHandler, ITranslator {
+export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
+        Kontext.IConfHandler, ITranslator {
 
     /**
      * KonText configuration (per-page dynamic object)
@@ -120,7 +121,8 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
     /**
      *
      */
-    constructor(conf:Kontext.IConfHandler, dispatcher:IFullActionControl, l10n:L10n, appNavig:AppNavigation, userSettings:UserSettings) {
+    constructor(conf:Kontext.IConfHandler, dispatcher:IFullActionControl, l10n:L10n,
+            appNavig:AppNavigation, userSettings:UserSettings) {
         this.conf = conf;
         this.l10n = l10n;
         this.appNavig = appNavig;
@@ -301,7 +303,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
 
     dispatchSideEffect(name:string, props:Kontext.GeneralProps):void {
         this.dispatcher.dispatch({
-            name: name,
+            name,
             payload: props,
             isSideEffect: true
         });
@@ -320,7 +322,8 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                 const form = document.getElementById('language-switch-form');
                 form.addEventListener('click', () => {
                     (<HTMLInputElement>form.querySelector('input.language')).value = lang;
-                    (<HTMLInputElement>form.querySelector('input.continue')).value = window.location.href;
+                    (<HTMLInputElement>form.querySelector('input.continue')).value =
+                        window.location.href;
                     (<HTMLFormElement>form).submit();
                 });
             }
@@ -393,7 +396,8 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                     break;
                     case 'text':
                     case '':
-                        outMsg = `${message.status}: ${message.statusText} (${String(message.responseText).substr(0, 100)}...)`;
+                        outMsg = `${message.status}: ${message.statusText} (${(
+                            message.responseText).substr(0, 100)}...)`;
                     break;
                     default:
                         outMsg = `${message.status}: ${message.statusText}`
@@ -615,7 +619,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
             helpers: this.getComponentHelpers(),
             generalOptionsModel: generalViewOptionsModel,
             viewOptionsModel: corpViewOptionsModel,
-            mainMenuModel: mainMenuModel
+            mainMenuModel
         });
 
         this.renderReactComponent(
@@ -643,7 +647,10 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
                 return true;
 
             } else {
-                console.warn('Cannot init issue reporting plug-in as footer-bar plug-in does not provide a mount point');
+                console.warn(
+                    'Cannot init issue reporting plug-in as footer-bar ' +
+                    'plug-in does not provide a mount point'
+                );
             }
         }
         return false;
@@ -670,7 +677,7 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
         this.userSettings.set(k, val);
     }
 
-    getLocal<T = string|number|boolean>(k:string, dflt:T=undefined):T {
+    getLocal<T = string|number|boolean>(k:string, dflt?:T):T {
         const ans = this.userSettings.get<T>(k);
         return ans !== undefined ? ans : dflt;
     }
@@ -680,10 +687,11 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
             this.dispatcher.dispatch({
                 name: 'CORPUS_SWITCH_MODEL_RESTORE',
                 payload: {
-                    key: key,
-                    data: data,
+                    key,
+                    data,
                     prevCorpora: this.appNavig.getSwitchCorpPreviousCorpora(),
-                    currCorpora: Immutable.List([this.getCorpusIdent().id].concat(this.getConf<Array<string>>('alignedCorpora')))
+                    currCorpora: Immutable.List([this.getCorpusIdent().id].concat(
+                        this.getConf<Array<string>>('alignedCorpora')))
                 }
             });
         });
@@ -691,7 +699,8 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
 
     openWebSocket(args:MultiDict):WebSocket|null {
         if (window['WebSocket'] !== undefined && this.getConf('webSocketUrl')) {
-            const ans = new WebSocket(this.getConf('webSocketUrl') + '?' + this.encodeURLParameters(args));
+            const ans = new WebSocket(this.getConf('webSocketUrl') + '?' +
+                this.encodeURLParameters(args));
             ans.onerror = (evt:Event) => {
                 this.showMessage('error', 'WebSocket error.');
             };
@@ -717,7 +726,8 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
      * expected to be synchronous. Any implicit asynchronous initialization
      * should be performed as a side effect of a respective model.
      */
-    init(pageInitFn:()=>void, disabledMenuItems:Array<[string, string|null]>, popupMessages:boolean=true):void {
+    init(popupMessages:boolean, disabledMenuItems:Array<[string, string|null]>,
+            pageInitFn:()=>void):void {
         try {
             this.asyncTaskChecker = new AsyncTaskChecker(
                 this.dispatcher,

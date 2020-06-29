@@ -22,28 +22,29 @@ import * as Immutable from 'immutable';
 import { Action, IFullActionControl } from 'kombo';
 import { tap, share } from 'rxjs/operators';
 
-import {Kontext} from '../types/common';
-import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel} from '../app/page';
-import {TextTypesModel} from '../models/textTypes/main';
-import {FirstQueryFormModel} from '../models/query/first';
-import {CQLEditorModel} from '../models/query/cqleditor/model';
-import {WithinBuilderModel} from '../models/query/withinBuilder';
-import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
-import {QueryContextModel} from '../models/query/context';
-import {UsageTipsModel} from '../models/usageTips';
-import {init as queryFormInit, QueryFormProps} from '../views/query/first';
-import {init as corpnameLinkInit} from '../views/overview';
-import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
+import { Kontext } from '../types/common';
+import { AjaxResponse } from '../types/ajaxResponses';
+import { PageModel } from '../app/page';
+import { TextTypesModel } from '../models/textTypes/main';
+import { FirstQueryFormModel } from '../models/query/first';
+import { CQLEditorModel } from '../models/query/cqleditor/model';
+import { WithinBuilderModel } from '../models/query/withinBuilder';
+import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
+import { QueryContextModel } from '../models/query/context';
+import { UsageTipsModel } from '../models/usageTips';
+import { init as queryFormInit, QueryFormProps } from '../views/query/first';
+import { init as corpnameLinkInit } from '../views/overview';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
 import { StatefulModel } from '../models/base';
 import { PluginInterfaces } from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
+import { ConcLinesStorage, openStorage } from '../models/concordance/selectionStorage';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import { ConcLinesStorage, openStorage } from '../models/concordance/selectionStorage';
+import { Dict, List } from 'cnc-tskit';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -65,12 +66,18 @@ class ConfigWrapper extends StatefulModel {
             switch (action.name) {
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS': {
                     const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.concat([action.payload['corpname']]));
+                    this.layoutModel.setConf<Array<string>>(
+                        'alignedCorpora',
+                        ac.concat([action.payload['corpname']])
+                    );
                 }
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': {
                     const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.filter(v => v !== action.payload['corpname']));
+                    this.layoutModel.setConf<Array<string>>(
+                        'alignedCorpora',
+                        ac.filter(v => v !== action.payload['corpname'])
+                    );
                 }
                 break;
             }
@@ -133,9 +140,12 @@ export class FirstFormPage {
                                 this.withinBuilderModel.unregister();
                                 this.virtualKeyboardModel.unregister();
                                 this.layoutModel.unregisterAllModels();
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('query-form-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
+                                this.layoutModel.unmountReactComponent(
+                                    window.document.getElementById('view-options-mount'));
+                                this.layoutModel.unmountReactComponent(
+                                    window.document.getElementById('query-form-mount'));
+                                this.layoutModel.unmountReactComponent(
+                                    window.document.getElementById('query-overview-mount'));
                                 this.init();
                             }
                         ),
@@ -147,7 +157,9 @@ export class FirstFormPage {
     }
 
     createTTViews():QueryFormProps {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
@@ -168,9 +180,12 @@ export class FirstFormPage {
             false,
             {
                 bibAttr: textTypesData['bib_attr'],
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
-                refineEnabled: this.layoutModel.getConf<Array<string>>('alignedCorpora').length > 0 ||
-                                    Object.keys(queryFormArgs.selected_text_types).length > 0,
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
+                    'availableAlignedCorpora'
+                ),
+                refineEnabled: this.layoutModel.getConf<Array<string>>(
+                    'alignedCorpora').length > 0 ||
+                    Dict.keys(queryFormArgs.selected_text_types).length > 0,
                 manualAlignCorporaMode: false
             }
         );
@@ -178,15 +193,18 @@ export class FirstFormPage {
         let liveAttrsViews;
         if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
             this.textTypesModel.enableAutoCompleteSupport();
-            liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel); // TODO 'this' reference = antipattern
+            // TODO 'this' reference = antipattern
+            liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel);
 
         } else {
             liveAttrsViews = {};
         }
         return {
             formType:Kontext.ConcFormTypes.QUERY,
-            liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
-            liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
+            liveAttrsView: 'LiveAttrsView' in liveAttrsViews ?
+                liveAttrsViews['LiveAttrsView'] : null,
+            liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ?
+                liveAttrsViews['LiveAttrsCustomTT'] : null,
             attributes: this.textTypesModel.getAttributes(),
             tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
             queryStorageView: null,
@@ -196,7 +214,9 @@ export class FirstFormPage {
     }
 
     private initQueryModel():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
         this.queryModel = new FirstQueryFormModel(
             this.layoutModel.dispatcher,
@@ -206,7 +226,9 @@ export class FirstFormPage {
             {
                 corpora: [this.layoutModel.getCorpusIdent().id].concat(
                     this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
+                    'availableAlignedCorpora'
+                ),
                 currQueryTypes: queryFormArgs.curr_query_types,
                 currQueries: queryFormArgs.curr_queries,
                 currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
@@ -214,7 +236,9 @@ export class FirstFormPage {
                 currLposValues: queryFormArgs.curr_lpos_values,
                 currQmcaseValues: queryFormArgs.curr_qmcase_values,
                 currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-                subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
+                subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>(
+                    'SubcorpList'
+                ),
                 currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
                 origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
@@ -226,7 +250,9 @@ export class FirstFormPage {
                 lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
+                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>(
+                    'InputLanguages'
+                ),
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
@@ -243,7 +269,8 @@ export class FirstFormPage {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             structList: this.layoutModel.getConf<Array<string>>('StructList'),
-            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.layoutModel.getConf<string>('tagAttr') : null,
+            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ?
+                this.layoutModel.getConf<string>('tagAttr') : null,
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             currQueries: queryFormArgs.curr_queries
         });
@@ -293,7 +320,7 @@ export class FirstFormPage {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             this.queryHintModel = new UsageTipsModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel.translate.bind(this.layoutModel)
@@ -312,12 +339,20 @@ export class FirstFormPage {
 
             const ttAns = this.createTTViews();
 
-            const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
+            const qsPlugin = queryStoragePlugin(
+                this.layoutModel.pluginApi(),
+                0,
+                pageSize,
+                pageSize
+            );
             ttAns.queryStorageView = qsPlugin.getWidgetView();
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,
-                ...this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora').map(v => v.n)
+                ...List.map(
+                    v => v.n,
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora')
+                )
             ];
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
             ttAns.tagHelperViews = Immutable.Map(
@@ -326,7 +361,9 @@ export class FirstFormPage {
                         corpus,
                         tagHelperPlg.getWidgetView(
                             corpus,
-                            this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                            this.layoutModel.getNestedConf<
+                            Array<PluginInterfaces.TagHelper.TagsetInfo>>(
+                                'pluginData', 'taghelper', 'corp_tagsets')
                         )
                 ])
             );
@@ -339,10 +376,10 @@ export class FirstFormPage {
             this.attachQueryForm(ttAns, corparchWidget);
             this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
             this.initCorpnameLink();
-            new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
+            const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
 
             this.layoutModel.restoreModelsDataAfterSwitch();
-        }, []);
+        });
     }
 }
 

@@ -29,8 +29,9 @@ require('styles/corplist.less');
  */
 export function init(conf:Kontext.Conf, corplistData:any):void {
     const layoutModel = new KontextPage(conf);
-    layoutModel.init(() => {
-        const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
+    layoutModel.init(true, [], () => {
+        const pagePlugin = corparch(
+            layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
         layoutModel.renderReactComponent(
             pagePlugin.getForm(),
             <HTMLElement>document.getElementById('content').querySelector('form.filter'),
@@ -44,5 +45,5 @@ export function init(conf:Kontext.Conf, corplistData:any):void {
                 anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
             }
         );
-    }, []);
+    });
 }

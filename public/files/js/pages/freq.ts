@@ -25,7 +25,8 @@ import { AjaxResponse, FreqResultResponse } from '../types/ajaxResponses';
 import { PageModel, DownloadType } from '../app/page';
 import { MultiDict } from '../multidict';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
-import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
+import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
+    from '../models/freqs/freqForms';
 import { Freq2DTableModel } from '../models/freqs/ctable';
 import { Freq2DFlatViewModel } from '../models/freqs/flatCtable';
 import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
@@ -303,7 +304,9 @@ class FreqPage {
                 );
             break;
             case 'ct':
-                const data = this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>('CTFreqResultData');
+                const data = this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>(
+                    'CTFreqResultData'
+                );
                 this.ctFreqModel.importData(data);
                 this.ctFlatFreqModel.importData(data);
                 this.ctFreqModel.addOnNewDataHandler((newData) =>
@@ -340,7 +343,9 @@ class FreqPage {
     }
 
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
         const ttModel = new TextTypesModel(
             this.layoutModel.dispatcher,
@@ -381,7 +386,7 @@ class FreqPage {
     }
 
     init() {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             const subcorpSel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
                 dispatcher: this.layoutModel.dispatcher,
@@ -435,7 +440,7 @@ class FreqPage {
             this.initQueryOpNavigation();
             this.initFreqResult();
             this.setupBackButtonListening();
-        }, []);
+        });
     }
 }
 

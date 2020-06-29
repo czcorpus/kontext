@@ -1116,7 +1116,7 @@ export class ViewPage {
                 tuple('menu-concordance', 'sample')
             ];
 
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, disabledMenuItems, () => {
             const ttModel = this.initTextTypesModel();
             let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin =
                 syntaxViewerInit(this.layoutModel.pluginApi());
@@ -1181,8 +1181,7 @@ export class ViewPage {
                 () => undefined,
                 (err) => this.layoutModel.showMessage('error', err)
             );
-        },
-        disabledMenuItems);
+        });
     }
 }
 
