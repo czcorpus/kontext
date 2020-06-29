@@ -49,6 +49,7 @@ export enum ActionName {
     PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
     StopSpeech = 'CONCORDANCE_STOP_SPEECH',
     RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL',
+    SaveFormSubmit = 'CONCORDANCE_SAVE_FORM_SUBMIT',
     SaveFormSetHeading = 'CONCORDANCE_SAVE_FORM_SET_HEADING',
     SaveFormSetAlignKwic = 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC',
     SaveFormSetFromLine = 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE',
@@ -239,6 +240,11 @@ export namespace Actions {
     export interface RefResetDetail extends Action<{
     }> {
         name:ActionName.RefResetDetail;
+    }
+
+    export interface SaveFormSubmit extends Action<{
+    }> {
+        name:ActionName.SaveFormSubmit;
     }
 
     export interface SaveFormSetFormat extends Action<{
