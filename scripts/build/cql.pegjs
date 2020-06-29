@@ -55,7 +55,7 @@ UnionOp =
 
 // -------------------- regular expression query --------------------
 Sequence =
-    Seq / Seq (_ BINOR _ Seq)*
+    Seq (_ BINOR _ Seq)* / Seq
 
 Seq =
     NOT? Repetition (_ Repetition)*
@@ -85,7 +85,7 @@ AttValAnd =
     AttVal (_ BINAND _ AttVal)*
 
 AttVal =
-    AttName (_ NOT)? (EQ / LEQ / GEQ / TEQ NUMBER?) _ RegExp
+    AttName (_ NOT)? _ (EQ / LEQ / GEQ / TEQ NUMBER?) _ RegExp
     / POSNUM NUMBER DASH NUMBER
     / POSNUM NUMBER
     / NOT AttVal
@@ -204,5 +204,4 @@ KW_TERM = 'term'
 KW_SWAP = 'swap'
 KW_CCOLL = 'ccoll'
 
-_ "whitespace"
-  = [ \t\n\r]*
+_ = [ \t\n\r]*
