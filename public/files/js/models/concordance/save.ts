@@ -158,8 +158,8 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             }
         );
 
-        this.addActionHandler(
-            'COLL_SAVE_FORM_SUBMIT',
+        this.addActionHandler<Actions.SaveFormSubmit>(
+            ActionName.SaveFormSubmit,
             action => {
                 const err = this.validateForm();
                 if (err) {

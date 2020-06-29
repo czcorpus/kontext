@@ -245,8 +245,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'COLL_SAVE_FORM_SUBMIT',
+            dispatcher.dispatch<Actions.SaveFormSubmit>({
+                name: ActionName.SaveFormSubmit,
                 payload: {}
             });
         }
