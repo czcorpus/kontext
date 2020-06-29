@@ -178,17 +178,17 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         this.addActionHandler<Actions.LineSelectionResetOnServer>(
             ActionName.LineSelectionResetOnServer,
             action => {
-                this.state.isBusy = true;
+                this.changeState(state => {state.isBusy = true});
                 this.emitChange();
                 this.resetServerLineGroups().subscribe(
                     (args:MultiDict) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.concLineModel.emitChange();
                         this.emitChange();
                         this.layoutModel.getHistory().replaceState('view', args);
                     },
                     (err) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.emitChange();
                         this.layoutModel.showMessage('error', err);
                     }
@@ -215,17 +215,17 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         this.addActionHandler<Actions.MarkLines>(
             ActionName.MarkLines,
             action => {
-                this.state.isBusy = true;
+                this.changeState(state => {state.isBusy = true});
                 this.emitChange();
                 this.markLines().subscribe(
                     (args:MultiDict) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.emitChange();
                         this.concLineModel.emitChange();
                         this.layoutModel.getHistory().replaceState('view', args);
                     },
                     (err) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.emitChange();
                         this.layoutModel.showMessage('error', err);
                     }
@@ -243,17 +243,17 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         this.addActionHandler<Actions.UnlockLineSelection>(
             ActionName.UnlockLineSelection,
             action => {
-                this.state.isBusy = true;
+                this.changeState(state => {state.isBusy = true});
                 this.emitChange();
                 this.reenableEdit().subscribe(
                     (args:MultiDict) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.concLineModel.emitChange();
                         this.emitChange();
                         this.layoutModel.getHistory().replaceState('view', args);
                     },
                     (err) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.emitChange();
                         this.layoutModel.showMessage('error', err);
                     }
@@ -264,7 +264,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         this.addActionHandler<Actions.RenameSelectionGroup>(
             ActionName.RenameSelectionGroup,
             action => {
-                this.state.isBusy = true;
+                this.changeState(state => {state.isBusy = true});
                 this.emitChange();
                 this.renameLineGroup(
                     action.payload.srcGroupNum,
@@ -272,13 +272,13 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
                 ).subscribe(
                     (args:MultiDict) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.concLineModel.emitChange();
                         this.emitChange();
                         this.layoutModel.getHistory().replaceState('view', args);
                     },
                     (err) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.layoutModel.showMessage('error', err);
                         this.emitChange();
                     }
@@ -289,15 +289,15 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         this.addActionHandler<Actions.SendLineSelectionToEmail>(
             ActionName.SendLineSelectionToEmail,
             action => {
-                this.state.isBusy = true;
+                this.changeState(state => {state.isBusy = true});
                 this.emitChange();
                 this.sendSelectionUrlToEmail(action.payload.email).subscribe(
                     (data) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.emitChange();
                     },
                     (err) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {state.isBusy = false});
                         this.emitChange();
                         this.layoutModel.showMessage('error', err);
                     }
@@ -326,7 +326,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
             action => {
                 this.userInfoModel.loadUserInfo(false).subscribe(
                     () => {
-                        this.state.emailDialogCredentials = this.userInfoModel.getCredentials();
+                        this.changeState(state => {state.emailDialogCredentials = this.userInfoModel.getCredentials()});
                         this.emitChange();
                     },
                     (err) => {
@@ -340,7 +340,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         this.addActionHandler<Actions.ClearUserCredentials>(
             ActionName.ClearUserCredentials,
             action => {
-                this.state.emailDialogCredentials = null;
+                this.changeState(state => {state.emailDialogCredentials = null});
                 this.emitChange();
             }
         );
@@ -442,7 +442,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
                 }
             ).pipe(
                 tap((data) => {
-                    this.state.currentGroupIds = data.lines_groups_numbers;
+                    this.changeState(state => {state.currentGroupIds = data.lines_groups_numbers});
                     this.updateGlobalArgs(data);
                 }),
                 concatMap(_ => this.concLineModel.reloadPage())
@@ -533,7 +533,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         ).pipe(
             tap((data) => {
                 this.updateGlobalArgs(data);
-                this.state.currentGroupIds = data.lines_groups_numbers;
+                this.changeState(state => {state.currentGroupIds = data.lines_groups_numbers});
             }),
             concatMap(_ => this.concLineModel.reloadPage())
         );
@@ -604,7 +604,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         if (this.state.mode !== mode) {
             this.clStorage.setMode(mode);
             this.clStorage.serialize();
-            this.state.mode = mode;
+            this.changeState(state => {state.mode = mode});
             return true;
 
         } else {
@@ -625,7 +625,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         data.forEach((item) => {
             this.addLine(String(item[0]), item[1], item[2]);
         });
-        this.state.mode = this.clStorage.getMode();
+        this.changeState(state => {state.mode = this.clStorage.getMode()});
         this.clStorage.serialize();
     }
 
