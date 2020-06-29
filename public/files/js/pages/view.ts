@@ -32,26 +32,31 @@ import { PageModel, DownloadType } from '../app/page';
 import { PluginInterfaces } from '../types/plugins';
 import { parseUrlArgs } from '../app/navigation';
 import { MultiDict } from '../multidict';
-import { init as concViewsInit, ViewPageModels, MainViews as ConcViews } from '../views/concordance/main';
+import { init as concViewsInit, ViewPageModels, MainViews as ConcViews }
+    from '../views/concordance/main';
 import { LineSelectionModel } from '../models/concordance/lineSelection';
 import { ConcDetailModel } from '../models/concordance/detail';
-import { ConcLineModel } from '../models/concordance/lines';
-import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs } from '../models/query/first';
+import { ConcordanceModel } from '../models/concordance/main';
+import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs }
+    from '../models/query/first';
 import { UsageTipsModel } from '../models/usageTips';
 import { CQLEditorModel } from '../models/query/cqleditor/model';
 import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay';
 import { ActionName as QueryActionName } from '../models/query/actions';
 import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter';
 import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../models/query/sample';
-import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs } from '../models/query/switchmc';
+import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs }
+    from '../models/query/switchmc';
 import { QuerySaveAsFormModel } from '../models/query/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { WithinBuilderModel } from '../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
 import { QueryContextModel } from '../models/query/context';
-import { ConcSortModel, MultiLevelConcSortModel, SortFormProperties, fetchSortFormArgs, importMultiLevelArg } from '../models/query/sort';
+import { ConcSortModel, MultiLevelConcSortModel, SortFormProperties, fetchSortFormArgs,
+    importMultiLevelArg } from '../models/query/sort';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
-import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
+import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
+    from '../models/freqs/freqForms';
 import { FirstHitsModel } from '../models/query/firstHits';
 import { Freq2DFormModel, CTFormInputs, CTFormProperties } from '../models/freqs/ctFreqForm';
 import { ConcSaveModel } from '../models/concordance/save';
@@ -59,7 +64,8 @@ import { ConcDashboard } from '../models/concordance/dashboard';
 import { TextTypesDistModel, TTCrit } from '../models/concordance/ttDistModel';
 import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first';
 import { init as filterFormInit, FilterFormViews } from '../views/query/filter';
-import { init as queryOverviewInit, OverviewViews as QueryOverviewViews } from '../views/query/overview';
+import { init as queryOverviewInit, OverviewViews as QueryOverviewViews }
+    from '../views/query/overview';
 import { init as sortFormInit, SortViews } from '../views/query/sort';
 import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActions';
 import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
@@ -75,7 +81,7 @@ import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { openStorage } from '../models/concordance/selectionStorage';
-import {Actions, ActionName} from '../models/concordance/actions';
+import { Actions, ActionName } from '../models/concordance/actions';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -265,7 +271,8 @@ export class ViewPage {
         });
     }
 
-    renderLines(renderDeps:RenderLinesDeps, kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):Observable<RenderLinesDeps> {
+    renderLines(renderDeps:RenderLinesDeps,
+            kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):Observable<RenderLinesDeps> {
         return new Observable(observer => {
             renderDeps.lvprops.onReady = () => {
                 observer.next(renderDeps);
@@ -277,7 +284,7 @@ export class ViewPage {
                     window.document.getElementById('conc-dashboard-mount'),
                     {
                         concViewProps: renderDeps.lvprops,
-                        kwicConnectView: kwicConnectView
+                        kwicConnectView
                     }
                 );
 
@@ -345,7 +352,8 @@ export class ViewPage {
                     )
                 ),
                 takeWhile(
-                    ([response, interval]) => interval < ViewPage.CHECK_CONC_MAX_WAIT && !response.finished,
+                    ([response, interval]) => interval < ViewPage.CHECK_CONC_MAX_WAIT &&
+                        !response.finished,
                     true // true => emit also the last item (which already breaks the predicate)
                 ),
             ).subscribe(
@@ -430,7 +438,9 @@ export class ViewPage {
      *
      */
     private initQueryForm():void {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
 
         this.queryModels.queryHintModel = new UsageTipsModel(
@@ -439,8 +449,10 @@ export class ViewPage {
         );
         this.queryModels.withinBuilderModel = new WithinBuilderModel(this.layoutModel.dispatcher,
                 this.layoutModel);
-        this.queryModels.virtualKeyboardModel = new VirtualKeyboardModel(this.layoutModel.dispatcher,
-                this.layoutModel);
+        this.queryModels.virtualKeyboardModel = new VirtualKeyboardModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel
+        );
         this.queryModels.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
         this.queryModels.saveAsFormModel = new QuerySaveAsFormModel(
             this.layoutModel.dispatcher,
@@ -452,7 +464,9 @@ export class ViewPage {
 
         const queryFormProps:QueryFormProperties = {
             corpora: this.getActiveCorpora(),
-            availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
+            availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
+                'availableAlignedCorpora'
+            ),
             currQueryTypes: queryFormArgs.curr_query_types,
             currQueries: queryFormArgs.curr_queries,
             currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
@@ -515,8 +529,11 @@ export class ViewPage {
     }
 
     private initFilterForm(firstHitsModel:FirstHitsModel):void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, this.concFormsInitialArgs.filter, key);
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
+        const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(
+            concFormsArgs, this.concFormsInitialArgs.filter, key);
         const filterFormProps:FilterFormProperties = {
             filters: Object.keys(concFormsArgs)
                         .filter(k => concFormsArgs[k].form_type === 'filter'),
@@ -541,7 +558,9 @@ export class ViewPage {
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),
             tagsetDoc: fetchArgs<string>(item => item.tagset_doc),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-            inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getCorpusIdent().id],
+            inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>(
+                'InputLanguages'
+            )[this.layoutModel.getCorpusIdent().id],
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
             useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
@@ -570,8 +589,11 @@ export class ViewPage {
     }
 
     private initSortForm():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>fetchSortFormArgs(concFormsArgs, key);
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
+        const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>
+            fetchSortFormArgs(concFormsArgs, key);
         const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
 
         const sortModelProps:SortFormProperties = {
@@ -584,11 +606,16 @@ export class ViewPage {
             spos: fetchArgs<string>(item => item.spos),
             sortlevel : fetchArgs<number>(item => item.sortlevel),
             defaultFormAction : fetchSortFormArgs<string>(concFormsArgs, item => item.form_action),
-            mlxattr : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxattr', item, (n)=>availAttrs[0].n)),
-            mlxicase : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxicase', item)),
-            mlxbward : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxbward', item)),
-            mlxctx : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxctx', item)),
-            mlxpos : fetchArgs<Array<number>>(item => importMultiLevelArg<number>('mlxpos', item)),
+            mlxattr : fetchArgs<Array<string>>(
+                item => importMultiLevelArg<string>('mlxattr', item, (n)=>availAttrs[0].n)),
+            mlxicase : fetchArgs<Array<string>>(
+                item => importMultiLevelArg<string>('mlxicase', item)),
+            mlxbward : fetchArgs<Array<string>>(
+                item => importMultiLevelArg<string>('mlxbward', item)),
+            mlxctx : fetchArgs<Array<string>>(
+                item => importMultiLevelArg<string>('mlxctx', item)),
+            mlxpos : fetchArgs<Array<number>>(
+                item => importMultiLevelArg<number>('mlxpos', item)),
         };
 
         this.queryModels.sortModel = new ConcSortModel(
@@ -612,8 +639,11 @@ export class ViewPage {
     }
 
     private initSampleForm(switchMcModel:SwitchMainCorpModel):void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArg = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>fetchSampleFormArgs(concFormsArgs, key);
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
+        const fetchArg = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>
+            fetchSampleFormArgs(concFormsArgs, key);
 
         const sampleModelProps:SampleFormProperties = {
             rlines: fetchArg<string>(item => item.rlines)
@@ -634,8 +664,10 @@ export class ViewPage {
     }
 
     private initSwitchMainCorpForm():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArg = <T>(key:(item:AjaxResponse.SwitchMainCorpArgs)=>T):Array<[string, T]>=>fetchSwitchMainCorpFormArgs(concFormsArgs, key);
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs');
+        const fetchArg = <T>(key:(item:AjaxResponse.SwitchMainCorpArgs)=>T):Array<[string, T]>=>
+            fetchSwitchMainCorpFormArgs(concFormsArgs, key);
 
         const switchMainCorpProps:SwitchMainCorpFormProperties = {
             maincorp: fetchArg<string>(item => item.maincorp)
@@ -711,7 +743,9 @@ export class ViewPage {
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
-                                this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                                this.layoutModel.getNestedConf<
+                                    Array<PluginInterfaces.TagHelper.TagsetInfo>>(
+                                        'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
@@ -723,7 +757,9 @@ export class ViewPage {
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
-                                this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                                this.layoutModel.getNestedConf<
+                                Array<PluginInterfaces.TagHelper.TagsetInfo>>(
+                                    'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
@@ -734,7 +770,8 @@ export class ViewPage {
                     formType: Kontext.ConcFormTypes.SUBHITS,
                     submitFn:() => {
                         const args = this.layoutModel.getConcArgs();
-                        window.location.href = this.layoutModel.createActionUrl('filter_subhits', args.items());
+                        window.location.href = this.layoutModel.createActionUrl(
+                            'filter_subhits', args.items());
                     },
                     opKey: undefined
                 },
@@ -749,10 +786,13 @@ export class ViewPage {
                 shuffleFormProps: {
                     formType: Kontext.ConcFormTypes.SHUFFLE,
                     lastOpSize: 0,
-                    shuffleMinResultWarning: this.layoutModel.getConf<number>('ShuffleMinResultWarning'),
+                    shuffleMinResultWarning: this.layoutModel.getConf<number>(
+                        'ShuffleMinResultWarning'
+                    ),
                     shuffleSubmitFn: () => {
                         const args = this.layoutModel.getConcArgs();
-                        window.location.href = this.layoutModel.createActionUrl('shuffle', args.items());
+                        window.location.href = this.layoutModel.createActionUrl(
+                            'shuffle', args.items());
                     }
                 },
                 switchMcFormProps: {
@@ -886,7 +926,9 @@ export class ViewPage {
             this.layoutModel.pluginApi(),
             this.layoutModel.getConf<any>('textTypesData')
         );
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
         // the pop-up query form does not display text-types form (yet the values are still
@@ -907,7 +949,8 @@ export class ViewPage {
         }
     }
 
-    private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
+    private initModels(ttModel:TextTypes.ITextTypesModel,
+                syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
                 tokenConnect:PluginInterfaces.TokenConnect.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
@@ -928,8 +971,10 @@ export class ViewPage {
             AttrViewMode: this.layoutModel.getConf<ViewOptions.PosAttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
-            CorporaColumns: this.layoutModel.getConf<Array<Kontext.AttrItem>>('CorporaColumns').map(v =>
-                        ({n: v.n, label: v.label, visible: true})),
+            CorporaColumns: List.map(
+                v => ({n: v.n, label: v.label, visible: true}),
+                this.layoutModel.getConf<Array<Kontext.AttrItem>>('CorporaColumns')
+            ),
             SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
             baseCorpname: this.layoutModel.getCorpusIdent().id,
@@ -955,7 +1000,9 @@ export class ViewPage {
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
             supportsTokenConnect: tokenConnect ? tokenConnect.providesAnyTokenInfo() : false,
-            anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>('anonymousUserConcLoginPrompt'),
+            anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
+                'anonymousUserConcLoginPrompt'
+            ),
             onSyntaxPaneReady: (tokenNumber, kwicLength) => {
                 syntaxViewer.render(
                     document.getElementById('syntax-view-pane'),
@@ -972,7 +1019,7 @@ export class ViewPage {
         this.viewModels = new ViewPageModels();
         this.viewModels.userInfoModel = this.layoutModel.getModels().userInfoModel;
         this.viewModels.mainMenuModel = this.layoutModel.getModels().mainMenuModel;
-        this.viewModels.lineViewModel = new ConcLineModel(
+        this.viewModels.lineViewModel = new ConcordanceModel(
                 this.layoutModel,
                 this.layoutModel.dispatcher,
                 new ConcSaveModel({
@@ -1001,7 +1048,9 @@ export class ViewPage {
                     window.removeEventListener('beforeunload', this.handleBeforeUnload);
                 }
         );
-        this.viewModels.lineSelectionModel.registerQuery(this.layoutModel.getConf<Array<string>>('compiledQuery'));
+        this.viewModels.lineSelectionModel.registerQuery(
+            this.layoutModel.getConf<Array<string>>('compiledQuery')
+        );
         this.viewModels.concDetailModel = new ConcDetailModel(
             this.layoutModel,
             this.layoutModel.dispatcher,
@@ -1025,12 +1074,13 @@ export class ViewPage {
         );
 
         const showFreqInfo = this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&
-                this.layoutModel.getConf<Array<string>>('ConcDashboardModules').indexOf('freqs') > -1;
+                this.layoutModel.getConf<Array<string>>(
+                    'ConcDashboardModules').indexOf('freqs') > -1;
         this.viewModels.dashboardModel = new ConcDashboard(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
-                showFreqInfo: showFreqInfo,
+                showFreqInfo,
                 hasKwicConnect: this.layoutModel.pluginIsActive('kwic_connect')
             }
         );
@@ -1054,12 +1104,22 @@ export class ViewPage {
     init():void {
         const numLinesInGroups = this.layoutModel.getConf<number>('NumLinesInGroups');
         const disabledMenuItems = numLinesInGroups > 0 ?
-            [ tuple('menu-filter', null), tuple('menu-concordance', 'sorting'), tuple('menu-concordance', 'shuffle'), tuple('menu-concordance', 'sample') ] :
-            [ tuple('menu-concordance', 'sorting'), tuple('menu-concordance', 'shuffle'), tuple('menu-concordance', 'sample') ];
+            [
+                tuple('menu-filter', null),
+                tuple('menu-concordance', 'sorting'),
+                tuple('menu-concordance', 'shuffle'),
+                tuple('menu-concordance', 'sample')
+            ] :
+            [
+                tuple('menu-concordance', 'sorting'),
+                tuple('menu-concordance', 'shuffle'),
+                tuple('menu-concordance', 'sample')
+            ];
 
         this.layoutModel.init(() => {
             const ttModel = this.initTextTypesModel();
-            let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
+            let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin =
+                syntaxViewerInit(this.layoutModel.pluginApi());
             if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
                 syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher, {});
             }
@@ -1104,7 +1164,7 @@ export class ViewPage {
             }
             this.renderLines(
                 {
-                    ttModel: ttModel,
+                    ttModel,
                     lvprops: lineViewProps,
                     qs: queryStoragePlg,
                     tagh: tagHelperPlg
@@ -1121,7 +1181,8 @@ export class ViewPage {
                 () => undefined,
                 (err) => this.layoutModel.showMessage('error', err)
             );
-        }, disabledMenuItems);
+        },
+        disabledMenuItems);
     }
 }
 

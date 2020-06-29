@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 
@@ -26,10 +26,9 @@ import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
 import { ConcLinesStorage } from './selectionStorage';
 import { PageModel } from '../../app/page';
-import { ConcLineModel } from './lines';
-import { HTTP, Dict, List, Color, pipe, tuple } from 'cnc-tskit';
+import { ConcordanceModel } from './main';
+import { HTTP, List, Color, pipe, tuple } from 'cnc-tskit';
 import { LineSelections, LineSelectionModes } from './common';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
 import { Line } from '../../types/concordance';
 
@@ -72,7 +71,8 @@ export interface LineSelectionModelState {
     catColors:Array<[string, string]>; // bg, fg
 }
 
-function determineMode(clStorage:ConcLinesStorage, concLineModel:ConcLineModel):'simple'|'groups' {
+function determineMode(clStorage:ConcLinesStorage,
+        concLineModel:ConcordanceModel):'simple'|'groups' {
     if (clStorage.size() > 0) {
         return this.clStorage.getMode();
 
@@ -100,7 +100,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
     private readonly userInfoModel:Kontext.IUserInfoModel;
 
-    private readonly concLineModel:ConcLineModel;
+    private readonly concLineModel:ConcordanceModel;
 
     private readonly clStorage:ConcLinesStorage;
 
@@ -115,7 +115,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
     }
 
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
-            concLineModel:ConcLineModel, userInfoModel:Kontext.IUserInfoModel, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
+            concLineModel:ConcordanceModel, userInfoModel:Kontext.IUserInfoModel,
+            clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(
             dispatcher,
             {
@@ -126,7 +127,10 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
                 emailDialogCredentials: null,
                 data: {},
                 numItemsInLockedGroups: concLineModel.getNumItemsInLockedGroups(),
-                lastCheckpointUrl: layoutModel.createActionUrl('view', layoutModel.getConcArgs().items()),
+                lastCheckpointUrl: layoutModel.createActionUrl(
+                    'view',
+                    layoutModel.getConcArgs().items()
+                ),
                 renameLabelDialogVisible: false,
                 catColors: [] // TODO
             }
@@ -147,8 +151,10 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
                 } else {
                     this.layoutModel.showMessage('error',
-                            this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
-                                    {max_group: this.state.maxGroupId})
+                            this.layoutModel.translate(
+                                'linesel__error_group_name_please_use{max_group}',
+                                {max_group: this.state.maxGroupId}
+                            )
                     );
                 }
             }
@@ -260,7 +266,11 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
             action => {
                 this.state.isBusy = true;
                 this.emitChange();
-                this.renameLineGroup(action.payload.srcGroupNum, action.payload.dstGroupNum).subscribe(
+                this.renameLineGroup(
+                    action.payload.srcGroupNum,
+                    action.payload.dstGroupNum
+
+                ).subscribe(
                     (args:MultiDict) => {
                         this.state.isBusy = false;
                         this.concLineModel.emitChange();
@@ -348,7 +358,12 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         const cat = tmp ? tmp[1] : dataItem.lineGroup;
         if (cat >= 1) {
             const [bgColor,] = this.state.catColors[cat % this.state.catColors.length];
-            const fgColor = pipe(bgColor, Color.importColor(0.1), Color.textColorFromBg(), Color.color2str());
+            const fgColor = pipe(
+                bgColor,
+                Color.importColor(0.1),
+                Color.textColorFromBg(),
+                Color.color2str()
+            );
             return [pipe(bgColor, Color.importColor(0.9), Color.color2str()), fgColor];
         }
         return [null, null];
@@ -399,14 +414,16 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
     private renameLineGroup(srcGroupNum:number, dstGroupNum:number):Observable<MultiDict> {
         if (!this.validateGroupId(srcGroupNum) || !this.validateGroupId(dstGroupNum)) {
-            return throwError(new Error(this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
-                        {max_group: this.state.maxGroupId})));
+            return throwError(new Error(this.layoutModel.translate(
+                    'linesel__error_group_name_please_use{max_group}',
+                    {max_group: this.state.maxGroupId})));
 
         } else if (!srcGroupNum) {
             return throwError(new Error(this.layoutModel.translate('linesel__group_missing')));
 
         } else if (this.state.currentGroupIds.indexOf(srcGroupNum) < 0) {
-            return throwError(new Error(this.layoutModel.translate('linesel__group_does_not_exist_{group}',
+            return throwError(new Error(this.layoutModel.translate(
+                    'linesel__group_does_not_exist_{group}',
                     {group: srcGroupNum})));
 
         } else {
@@ -435,7 +452,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
     private sendSelectionUrlToEmail(email:string):Observable<boolean> {
         return this.layoutModel.ajax$<SendSelToMailResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_send_group_selection_link_to_mail',
                 [
@@ -484,7 +501,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
     public resetServerLineGroups():Observable<MultiDict> {
         return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                     'ajax_unset_lines_groups',
                     this.layoutModel.getConcArgs().items()

@@ -26,7 +26,7 @@ import { Kontext } from '../../../types/common';
 import { PluginInterfaces } from '../../../types/plugins';
 import { init as initSpeechViews } from './speech';
 import { ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
-import { ConcLineModel } from '../../../models/concordance/lines';
+import { ConcordanceModel } from '../../../models/concordance/main';
 import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordance/refsDetail';
 import { Actions, ActionName } from '../../../models/concordance/actions';
 
@@ -54,7 +54,7 @@ export interface DetailModuleArgs {
     he:Kontext.ComponentHelpers;
     concDetailModel:ConcDetailModel;
     refsDetailModel:RefsDetailModel;
-    lineModel:ConcLineModel;
+    lineModel:ConcordanceModel;
 }
 
 export function init({dispatcher, he, concDetailModel, refsDetailModel, lineModel}:DetailModuleArgs):DetailViews {

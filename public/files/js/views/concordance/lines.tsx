@@ -19,28 +19,27 @@
  */
 
 import * as React from 'react';
-import { Subscription } from 'rxjs';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { Line as ConcLine } from '../../types/concordance';
-import { Color, pipe } from 'cnc-tskit';
 import { init as lineExtrasViewsInit } from './lineExtras';
-import { ConcLineModel, ConclineModelState } from '../../models/concordance/lines';
-import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
+import { ConcordanceModel, ConcordanceModelState } from '../../models/concordance/main';
+import { LineSelectionModel, LineSelectionModelState }
+    from '../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../models/concordance/detail';
-import { LineSelValue } from '../../models/concordance/lineSelection';
 import { KWICSection } from '../../models/concordance/line';
 import { TextChunk, ConcToken } from '../../types/concordance';
 import { Actions, ActionName } from '../../models/concordance/actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName }
+    from '../../models/mainMenu/actions';
 
 
 export interface LinesModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    lineModel:ConcLineModel;
+    lineModel:ConcordanceModel;
     lineSelectionModel:LineSelectionModel;
     concDetailModel:ConcDetailModel;
 }
@@ -716,44 +715,45 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // --------------------------- <LinesWithSelection /> ------------------------------
 
-    class LinesWithSelection extends React.PureComponent<ConclineModelState & LineSelectionModelState> {
-
+    class LinesWithSelection extends React.PureComponent<ConcordanceModelState &
+            LineSelectionModelState> {
 
         render() {
-            return (
-                <>
-                    {List.map(
-                        (line, i) => (
-                            <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
-                                    lineIdx={i}
-                                    data={line}
-                                    cols={this.props.corporaColumns}
-                                    viewMode={this.props.viewMode}
-                                    attrViewMode={ConcLineModel.getViewAttrsVmode(this.props)}
-                                    baseCorpname={this.props.baseCorpname}
-                                    mainCorp={this.props.maincorp}
-                                    corpsWithKwic={this.props.kwicCorps}
-                                    showLineNumbers={this.props.showLineNumbers}
-                                    lineSelMode={this.props.mode}
-                                    numItemsInLockedGroups={this.props.numItemsInLockedGroups}
-                                    emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
-                                    catBgColor={LineSelectionModel.ensureCatColor(this.props, line.lineGroup)[0]}
-                                    catTextColor={LineSelectionModel.ensureCatColor(this.props, line.lineGroup)[1]}
-                                    supportsSyntaxView={this.props.supportsSyntaxView}
-                                    supportsTokenConnect={this.props.supportsTokenConnect} />
-                        ),
-                        this.props.lines
-                    )}
-                </>
-            );
+            return (<>
+                {List.map(
+                    (line, i) => (
+                        <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
+                            lineIdx={i}
+                            data={line}
+                            cols={this.props.corporaColumns}
+                            viewMode={this.props.viewMode}
+                            attrViewMode={ConcordanceModel.getViewAttrsVmode(this.props)}
+                            baseCorpname={this.props.baseCorpname}
+                            mainCorp={this.props.maincorp}
+                            corpsWithKwic={this.props.kwicCorps}
+                            showLineNumbers={this.props.showLineNumbers}
+                            lineSelMode={this.props.mode}
+                            numItemsInLockedGroups={this.props.numItemsInLockedGroups}
+                            emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
+                            catBgColor={LineSelectionModel.ensureCatColor(
+                                this.props, line.lineGroup)[0]}
+                            catTextColor={LineSelectionModel.ensureCatColor(
+                                this.props, line.lineGroup)[1]}
+                            supportsSyntaxView={this.props.supportsSyntaxView}
+                            supportsTokenConnect={this.props.supportsTokenConnect} />
+                ),
+                    this.props.lines
+                )}
+            </>);
         }
     }
 
-    const BoundLinesWithSelection = BoundWithProps<ConclineModelState, LineSelectionModelState>(LinesWithSelection, lineSelectionModel);
+    const BoundLinesWithSelection = BoundWithProps<ConcordanceModelState,
+            LineSelectionModelState>(LinesWithSelection, lineSelectionModel);
 
     // ------------------------- <ConcLines /> ---------------------------
 
-    class ConcLines extends React.PureComponent<ConcLinesProps & ConclineModelState> {
+    class ConcLines extends React.PureComponent<ConcLinesProps & ConcordanceModelState> {
 
         _getLineSelMode() {
             if (lineModel.getNumItemsInLockedGroups() > 0) {
@@ -771,12 +771,17 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
 
         render() {
-            const numVisibleCols = this.props.corporaColumns.reduce((prev, c) => prev + (c.visible ? 1 : 0), 0);
+            const numVisibleCols = List.reduce(
+                (prev, c) => prev + (c.visible ? 1 : 0),
+                0,
+                this.props.corporaColumns
+            );
             return (
                 <table id="conclines" className={this.props.useSafeFont ? 'safe' : null}>
                     <tbody>
                         {this.props.corporaColumns.length > 1 ?
-                            <ConcColsHeading cols={this.props.corporaColumns} corpsWithKwic={this.props.kwicCorps}
+                            <ConcColsHeading cols={this.props.corporaColumns}
+                                    corpsWithKwic={this.props.kwicCorps}
                                     viewMode={this.props.viewMode} hideable={numVisibleCols > 1} />
                             : null
                         }

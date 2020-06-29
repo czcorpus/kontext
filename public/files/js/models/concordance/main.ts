@@ -33,8 +33,10 @@ import { Line, TextChunk, IConcLinesProvider } from '../../types/concordance';
 import { AudioPlayer, AudioPlayerStatus} from './media';
 import { ConcSaveModel } from './save';
 import { transformVmode } from '../options/structsAttrs';
-import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
-import { ServerLineData, ServerTextChunk, CorpColumn, ServerPagination, ConcSummary, ViewConfiguration, AudioPlayerActions } from './common';
+import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
+    from '../options/actions';
+import { ServerLineData, ServerTextChunk, CorpColumn, ServerPagination, ConcSummary,
+    ViewConfiguration, AudioPlayerActions } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
@@ -49,7 +51,7 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
     function importTextChunk(item:ServerTextChunk, id:string):TextChunk {
         if (mainAttrIdx === -1) {
             return {
-                id: id,
+                id,
                 className: item.class,
                 text: item.str.trim().split(' '),
                 openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
@@ -64,7 +66,7 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
             const text = item.class === 'strc' ?  item.str : tailPosattrs[mainAttrIdx];
             tailPosattrs.splice(mainAttrIdx, 1, item.str.trim());
             return {
-                id: id,
+                id,
                 className: item.class,
                 text: [text],
                 openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
@@ -110,7 +112,7 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
 }
 
 
-export interface ConclineModelState {
+export interface ConcordanceModelState {
 
     lines:Array<Line>;
 
@@ -187,7 +189,8 @@ export interface ConclineModelState {
 /**
  *
  */
-export class ConcLineModel extends StatefulModel<ConclineModelState> implements IConcLinesProvider {
+export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
+    implements IConcLinesProvider {
 
     private readonly layoutModel:PageModel;
 
@@ -230,7 +233,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                 concSummary: lineViewProps.concSummary,
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
-                viewAttrs: viewAttrs,
+                viewAttrs,
                 numItemsInLockedGroups: lineViewProps.NumItemsInLockedGroups,
                 pagination: lineViewProps.pagination, // TODO possible mutable mess
                 currentPage: lineViewProps.currentPage || 1,
@@ -279,7 +282,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                     dispatcher.dispatch<Actions.DataWaitTimeInc>({
                         name: ActionName.DataWaitTimeInc,
                         payload: {
-                            idx: idx
+                            idx
                         }
                     });
                 }
@@ -392,7 +395,10 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
                         this.busyTimer = this.stopBusyTimer(this.busyTimer);
                         this.emitChange();
                         console.error(err);
-                        this.layoutModel.showMessage('error', this.layoutModel.translate('global__failed_to_calc_ipm'));
+                        this.layoutModel.showMessage(
+                            'error',
+                            this.layoutModel.translate('global__failed_to_calc_ipm')
+                        );
                     }
                 );
             }
@@ -467,7 +473,9 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         this.addActionHandler<MainMenuActions.ShowSaveForm|Actions.ResultCloseSaveForm>(
             [MainMenuActionName.ShowSaveForm, ActionName.ResultCloseSaveForm],
             action => {
-                this.changeState(state => {state.saveFormVisible = action.name === MainMenuActionName.ShowSaveForm});
+                this.changeState(state => {
+                    state.saveFormVisible = action.name === MainMenuActionName.ShowSaveForm
+                });
                 this.emitChange();
             }
         );
@@ -475,7 +483,9 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         this.addActionHandler<Actions.ShowKwicDetail|Actions.ResetDetail>(
             [ActionName.ShowKwicDetail, ActionName.ResetDetail],
             action => {
-                this.changeState(state => {state.kwicDetailVisible = action.name === ActionName.ShowKwicDetail});
+                this.changeState(state => {
+                    state.kwicDetailVisible = action.name === ActionName.ShowKwicDetail
+                });
                 this.emitChange();
             }
         );
@@ -524,7 +534,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         return this.layoutModel.getConcArgs().head('attrs').split(',');
     }
 
-    static getViewAttrsVmode(state:ConclineModelState):ViewOptions.AttrViewMode {
+    static getViewAttrsVmode(state:ConcordanceModelState):ViewOptions.AttrViewMode {
         return transformVmode(state.attrViewMode, state.attrAllpos);
     }
 
@@ -536,7 +546,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
         const args = this.layoutModel.getConcArgs();
         args.set('fromp', pageNum);
         this.layoutModel.getHistory().pushState(
-            'view', args, { pagination: true, pageNum: pageNum });
+            'view', args, { pagination: true, pageNum });
     }
 
     /**
@@ -563,9 +573,10 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
      * currently displayed data page.
      */
     private changePage(action:string, pageNumber?:number, concId?:string):Observable<MultiDict> {
-        const pageNum:number = Number(action === 'customPage' ? pageNumber : this.state.pagination[action]);
+        const pageNum:number = action === 'customPage' ? pageNumber : this.state.pagination[action];
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
-            return throwError(new Error(this.layoutModel.translate('concview__invalid_page_num_err')));
+            return throwError(new Error(this.layoutModel.translate(
+                'concview__invalid_page_num_err')));
         }
 
         const args = this.layoutModel.getConcArgs();
@@ -591,7 +602,10 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
 
     private importData(data:Kontext.AjaxResponse):void { // TODO data type is too general
         try {
-            this.state.lines = importLines(data['Lines'], this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1);
+            this.state.lines = importLines(
+                data['Lines'],
+                this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
+            );
             this.state.numItemsInLockedGroups = data['num_lines_in_groups'];
             this.state.pagination = data['pagination'];
             this.state.unfinishedCalculation = data['running_calc'];
@@ -744,7 +758,7 @@ export class ConcLineModel extends StatefulModel<ConclineModelState> implements 
             args.replace(`sca_${p}`, selections[p]);
         }
         return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('ajax_get_within_max_hits'),
             args
 

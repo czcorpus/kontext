@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import {Keyboard} from 'cnc-tskit';
-import {ConcLineModel} from '../../models/concordance/lines';
+import { IActionDispatcher } from 'kombo';
+import { Keyboard } from 'cnc-tskit';
 import { Subscription } from 'rxjs';
+
+import {ConcordanceModel} from '../../models/concordance/main';
 import {Actions, ActionName} from '../../models/concordance/actions'
+import { Kontext } from '../../types/common';
 
 
 export interface PaginatorProps {
@@ -49,7 +50,7 @@ export interface PaginatorViews {
 
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcordanceModel) {
 
     const layoutViews = he.getLayoutViews();
 

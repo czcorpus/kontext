@@ -19,13 +19,14 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import { ConcLineModel } from '../../models/concordance/lines';
-import {TextChunk} from '../../types/concordance';
-import {LineSelValue} from '../../models/concordance/lineSelection';
-import {init as initMediaViews} from './media';
-import {Actions, ActionName} from '../../models/concordance/actions'
+import { IActionDispatcher } from 'kombo';
+
+import { Kontext} from '../../types/common';
+import { ConcordanceModel } from '../../models/concordance/main';
+import { TextChunk } from '../../types/concordance';
+import { LineSelValue } from '../../models/concordance/lineSelection';
+import { init as initMediaViews } from './media';
+import { Actions, ActionName } from '../../models/concordance/actions'
 
 
 export interface LineExtrasViews {
@@ -63,7 +64,7 @@ export interface LineExtrasViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcordanceModel) {
 
     const mediaViews = initMediaViews(dispatcher, he, lineModel);
     const layoutViews = he.getLayoutViews();

@@ -28,10 +28,9 @@ import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
-import { ConcLineModel } from './lines';
+import { ConcordanceModel } from './main';
 import { AudioPlayer } from './media';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
 import { DetailExpandPositions } from './common';
 
@@ -151,14 +150,14 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly linesModel:ConcLineModel;
+    private readonly concModel:ConcordanceModel;
 
     private readonly audioPlayer:AudioPlayer;
 
     private readonly tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin;
 
 
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcLineModel,
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcordanceModel,
             structCtx:string, speechOpts:SpeechOptions, speakerColors:Array<string>,
             wideCtxGlobals:Array<[string, string]>,
             tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin) {
@@ -198,7 +197,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
         this.layoutModel = layoutModel;
-        this.linesModel = linesModel;
+        this.concModel = linesModel;
         this.tokenConnectPlg = tokenConnectPlg;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -234,8 +233,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 ).subscribe(
                     () => {
                         this.state.isBusy = false;
-                        this.linesModel.setLineFocus(this.state.lineIdx, true);
-                        this.linesModel.emitChange();
+                        this.concModel.setLineFocus(this.state.lineIdx, true);
+                        this.concModel.emitChange();
                         this.emitChange();
                     },
                     (err) => {
@@ -275,8 +274,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     () => {
                         this.state.isBusy = false;
                         this.state.tokenConnectIsBusy = false;
-                        this.linesModel.setLineFocus(action.payload['lineIdx'], true);
-                        this.linesModel.emitChange();
+                        this.concModel.setLineFocus(action.payload['lineIdx'], true);
+                        this.concModel.emitChange();
                         this.emitChange();
                     },
                     (err) => {
@@ -349,8 +348,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                             this.state.expandRightArgs.length > 1 ? 'reload' : null).subscribe(
                     () => {
                         this.state.isBusy = false;
-                        this.linesModel.setLineFocus(action.payload['lineIdx'], true);
-                        this.linesModel.emitChange();
+                        this.concModel.setLineFocus(action.payload['lineIdx'], true);
+                        this.concModel.emitChange();
                         this.emitChange();
                     },
                     (err) => {
@@ -376,8 +375,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         action.payload['position']).subscribe(
                     () => {
                         this.state.isBusy = false;
-                        this.linesModel.setLineFocus(this.state.lineIdx, true);
-                        this.linesModel.emitChange();
+                        this.concModel.setLineFocus(this.state.lineIdx, true);
+                        this.concModel.emitChange();
                         this.emitChange();
                     },
                     (err) => {
@@ -446,7 +445,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 this.resetKwicDetail();
                 this.resetTokenConnect();
                 this.emitChange();
-                this.linesModel.emitChange();
+                this.concModel.emitChange();
             }
         );
 
@@ -498,7 +497,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
 
     private resetKwicDetail():void {
         if (this.state.lineIdx !== null) {
-            this.linesModel.setLineFocus(this.state.lineIdx, false);
+            this.concModel.setLineFocus(this.state.lineIdx, false);
             this.state.lineIdx = null;
             this.state.corpusId = null;
             this.state.kwicTokenNum = null;
