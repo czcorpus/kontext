@@ -1019,38 +1019,44 @@ export class ViewPage {
         this.viewModels = new ViewPageModels();
         this.viewModels.userInfoModel = this.layoutModel.getModels().userInfoModel;
         this.viewModels.mainMenuModel = this.layoutModel.getModels().mainMenuModel;
-        this.viewModels.lineViewModel = new ConcordanceModel(
-                this.layoutModel,
-                this.layoutModel.dispatcher,
-                new ConcSaveModel({
-                    dispatcher: this.layoutModel.dispatcher,
-                    layoutModel: this.layoutModel,
-                    concSize: this.layoutModel.getConf<number>('ConcSize'),
-                    saveLinkFn: this.setDownloadLink.bind(this),
-                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
-                }),
-                syntaxViewer,
-                ttModel,
-                lineViewProps,
-                this.layoutModel.getConf<Array<ServerLineData>>('Lines')
-        );
+
         this.viewModels.usageTipsModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
             s => this.layoutModel.translate(s)
         );
-        this.viewModels.lineSelectionModel = new LineSelectionModel(
-                this.layoutModel,
-                this.layoutModel.dispatcher,
-                this.viewModels.lineViewModel,
-                this.layoutModel.getModels().userInfoModel,
-                openStorage(()=>{}),
-                () => {
-                    window.removeEventListener('beforeunload', this.handleBeforeUnload);
-                }
+
+        this.viewModels.lineViewModel = new ConcordanceModel(
+            this.layoutModel,
+            this.layoutModel.dispatcher,
+            new ConcSaveModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                concSize: this.layoutModel.getConf<number>('ConcSize'),
+                saveLinkFn: this.setDownloadLink.bind(this),
+                quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
+            }),
+            syntaxViewer,
+            ttModel,
+            lineViewProps,
+            this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
-        this.viewModels.lineSelectionModel.registerQuery(
+
+        this.viewModels.lineSelectionModel = new LineSelectionModel({
+            layoutModel: this.layoutModel,
+            dispatcher: this.layoutModel.dispatcher,
+            concLineModel: this.viewModels.lineViewModel,
+            userInfoModel: this.layoutModel.getModels().userInfoModel,
+            clStorage: openStorage(()=>{}),
+            onLeavePage: () => {
+                window.removeEventListener('beforeunload', this.handleBeforeUnload);
+            }
+        });
+        const currSelection = this.viewModels.lineSelectionModel.registerQuery(
             this.layoutModel.getConf<Array<string>>('compiledQuery')
         );
+
+
+
         this.viewModels.concDetailModel = new ConcDetailModel(
             this.layoutModel,
             this.layoutModel.dispatcher,

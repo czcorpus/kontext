@@ -26,7 +26,19 @@ import { PluginInterfaces } from '../../types/plugins';
 
 export type LineSelectionModes = 'simple'|'groups';
 
-export type LineSelections = {[key:string]:[number, number]};
+export type LineSelValue = [number, number, number];
+
+export interface ConcLineSelection {
+    created:number;
+    mode:LineSelectionModes;
+    //             [tokenId, kwicLen, group num]
+    selections:Array<LineSelValue>;
+}
+
+/**
+ *
+ */
+export type LineSelections = {[queryHash:string]:ConcLineSelection};
 
 export type AudioPlayerActions = 'play'|'pause'|'stop';
 
@@ -236,7 +248,8 @@ export interface ViewConfiguration {
 /**
  *
  */
-export class DummySyntaxViewModel extends StatefulModel<{}> implements PluginInterfaces.SyntaxViewer.IPlugin {
+export class DummySyntaxViewModel extends StatefulModel<{}>
+    implements PluginInterfaces.SyntaxViewer.IPlugin {
 
     render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {}
 

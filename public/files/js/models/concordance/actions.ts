@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes } from './common';
+import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue } from './common';
 import { SaveData } from '../../app/navigation';
 
 export enum ActionName {
@@ -66,6 +66,7 @@ export enum ActionName {
     MarkLines = 'LINE_SELECTION_MARK_LINES',
     RemoveLinesNotInGroups = 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
     UnlockLineSelection = 'LINE_SELECTION_REENABLE_EDIT',
+    UnlockLineSelectionDone = 'LINE_SELECTION_REENABLE_EDIT_DONE',
     RenameSelectionGroup = 'LINE_SELECTION_GROUP_RENAME',
     RenameGroupCancel = 'LINE_SELECTION_RENAME_GROUP_CANCEL',
     ChangeEmail = 'LINE_SELECTION_CHANGE_EMAIL',
@@ -288,7 +289,7 @@ export namespace Actions {
         name:ActionName.ResultCloseSaveForm;
     }
 
-    export interface SelectLine extends Action<{
+    export interface SelectLines extends Action<{
         value:number;
         tokenNumber:number;
         kwicLength:number;
@@ -334,6 +335,14 @@ export namespace Actions {
     export interface UnlockLineSelection extends Action<{
     }> {
         name:ActionName.UnlockLineSelection;
+    }
+
+    export interface UnlockLineSelectionDone extends Action<{
+        selection:Array<LineSelValue>;
+        query:Array<string>;
+
+    }> {
+        name:ActionName.UnlockLineSelectionDone;
     }
 
     export interface RenameSelectionGroup extends Action<{

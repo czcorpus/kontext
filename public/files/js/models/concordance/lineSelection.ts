@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 
@@ -28,20 +28,18 @@ import { ConcLinesStorage } from './selectionStorage';
 import { PageModel } from '../../app/page';
 import { ConcordanceModel } from './main';
 import { HTTP, List, Color, pipe, tuple } from 'cnc-tskit';
-import { LineSelections, LineSelectionModes } from './common';
+import { LineSelections, LineSelectionModes, LineSelValue } from './common';
 import { Actions, ActionName } from './actions';
 import { Line } from '../../types/concordance';
 
 
 interface ReenableEditResponse extends Kontext.AjaxConcResponse {
-    selection:Array<[number, number, number]>;
+    selection:Array<LineSelValue>;
 }
 
 interface SendSelToMailResponse extends Kontext.AjaxConcResponse {
     ok:boolean;
 }
-
-export type LineSelValue = [number, number];
 
 
 export interface LineSelectionModelState {
@@ -51,6 +49,8 @@ export interface LineSelectionModelState {
      * [kwic_token_id, [line_number, ]]
      */
     data:LineSelections;
+
+    queryId:string;
 
     mode:LineSelectionModes;
 
@@ -71,9 +71,9 @@ export interface LineSelectionModelState {
     catColors:Array<[string, string]>; // bg, fg
 }
 
-function determineMode(clStorage:ConcLinesStorage,
-        concLineModel:ConcordanceModel):'simple'|'groups' {
-    if (clStorage.size() > 0) {
+function determineMode(state:LineSelectionModelState,
+            concLineModel:ConcordanceModel):'simple'|'groups' {
+    if (state.data[state.queryId].selections.length > 0) {
         return this.clStorage.getMode();
 
     } else if (concLineModel.getNumItemsInLockedGroups() > 0) {
@@ -84,13 +84,22 @@ function determineMode(clStorage:ConcLinesStorage,
     }
 }
 
+export interface LineSelectionModelArgs {
+    layoutModel:PageModel;
+    dispatcher:IFullActionControl;
+    concLineModel:ConcordanceModel;
+    userInfoModel:Kontext.IUserInfoModel;
+    clStorage:ConcLinesStorage<LineSelectionModelState>;
+    onLeavePage:()=>void;
+}
+
 /**
  * This class handles state of selected concordance lines.
  * The selection can have one of two modes:
  * - binary (checked/unchecked)
  * - categorical (0,1,2,3,4)
  */
-export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
+export class LineSelectionModel extends StatelessModel<LineSelectionModelState> {
 
     static FILTER_NEGATIVE = 'n';
 
@@ -100,9 +109,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
     private readonly userInfoModel:Kontext.IUserInfoModel;
 
-    private readonly concLineModel:ConcordanceModel;
-
-    private readonly clStorage:ConcLinesStorage;
+    private readonly clStorage:ConcLinesStorage<LineSelectionModelState>;
 
     private readonly onLeavePage:()=>void;
 
@@ -114,18 +121,18 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         return tuple('#eeeeee', '#111111');
     }
 
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
-            concLineModel:ConcordanceModel, userInfoModel:Kontext.IUserInfoModel,
-            clStorage:ConcLinesStorage, onLeavePage:()=>void) {
+    constructor({layoutModel, dispatcher, concLineModel, userInfoModel,
+            clStorage, onLeavePage}:LineSelectionModelArgs) {
         super(
             dispatcher,
             {
-                mode: determineMode(clStorage, concLineModel),
+                mode: 'simple',
                 currentGroupIds: layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
                 maxGroupId: layoutModel.getConf<number>('concLineMaxGroupNum'),
                 isBusy: false,
                 emailDialogCredentials: null,
                 data: {},
+                queryId: '',
                 numItemsInLockedGroups: concLineModel.getNumItemsInLockedGroups(),
                 lastCheckpointUrl: layoutModel.createActionUrl(
                     'view',
@@ -136,24 +143,22 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
             }
         );
         this.layoutModel = layoutModel;
-        this.concLineModel = concLineModel;
         this.userInfoModel = userInfoModel;
         this.clStorage = clStorage;
         this.onLeavePage = onLeavePage;
 
-        this.addActionHandler<Actions.SelectLine>(
+        this.addActionHandler<Actions.SelectLines>(
             ActionName.SelectLine,
-            action => {
+            (state, action) => {
                 const val = action.payload.value;
                 if (this.validateGroupId(val)) {
                     this.selectLine(val, action.payload.tokenNumber, action.payload.kwicLength);
-                    this.emitChange();
 
                 } else {
                     this.layoutModel.showMessage('error',
                             this.layoutModel.translate(
                                 'linesel__error_group_name_please_use{max_group}',
-                                {max_group: this.state.maxGroupId}
+                                {max_group: this.getInitialState().maxGroupId}
                             )
                     );
                 }
@@ -162,16 +167,15 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
         this.addActionHandler<Actions.LineSelectionStatusRequest>(
             ActionName.LineSelectionStatusRequest,
-            action => {
-                this.emitChange(); // TODO is there any change here ???
+            (state, action) => {
+                // TODO is there any change here ???
             }
         );
 
         this.addActionHandler<Actions.LineSelectionReset>(
             ActionName.LineSelectionReset,
-            action => {
+            (state, action) => {
                 this.clearSelection();
-                this.emitChange();
             }
         );
 
@@ -242,24 +246,40 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
         this.addActionHandler<Actions.UnlockLineSelection>(
             ActionName.UnlockLineSelection,
-            action => {
-                this.state.isBusy = true;
-                this.emitChange();
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
                 this.reenableEdit().subscribe(
-                    (args:MultiDict) => {
-                        this.state.isBusy = false;
-                        this.concLineModel.emitChange();
-                        this.emitChange();
-                        this.layoutModel.getHistory().replaceState('view', args);
+                    (data:ReenableEditResponse) => {
+                        dispatch<Actions.UnlockLineSelectionDone>({
+                            name: ActionName.UnlockLineSelectionDone,
+                            payload: {
+                                selection: data.selection,
+                                query: data.Q
+                            }
+                        });
+
                     },
                     (err) => {
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        dispatch<Actions.UnlockLineSelectionDone>({
+                            name: ActionName.UnlockLineSelectionDone,
+                            error: err
+                        });
                         this.layoutModel.showMessage('error', err);
                     }
                 );
             }
         );
+
+        this.addActionHandler<Actions.UnlockLineSelectionDone>(
+            ActionName.UnlockLineSelectionDone,
+            (state, action) => {
+                state.isBusy = false;
+                this.registerQuery(action.payload.selection.map(v => v));
+                this.importData(data.selection);
+            }
+        )
 
         this.addActionHandler<Actions.RenameSelectionGroup>(
             ActionName.RenameSelectionGroup,
@@ -370,35 +390,23 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
     }
 
 
-    private validateGroupId(value:string|number):boolean {
-        const v = typeof value === 'string' ? parseInt(value) : value;
-        if (isNaN(v)) {
-            return false;
+    private validateGroupId(value:number|undefined):boolean {
+        if (value === undefined) {
+            return true;
         }
         if (this.state.mode === 'groups') {
-            return v >= 1 && v <= this.state.maxGroupId || v === -1;
+            return value >= 1 && value <= this.state.maxGroupId;
         }
-        return v === 1 || v === null;
+        return value === ConcLinesStorage.DEFAULT_GROUP_ID;
     }
 
-    private selectLine(value:number, tokenNumber:number, kwiclen:number) {
-        if (this.state.mode === 'simple') {
-            if (value === 1) {
-                this.clStorage.addLine(tokenNumber + '', kwiclen, null);
+    private selectLine(state:LineSelectionModelState, value:number, tokenNumber:number,
+            kwiclen:number) {
+        if (value === undefined) {
+            this.clStorage.removeLine(state, tokenNumber);
 
-            } else {
-                this.clStorage.removeLine(tokenNumber + '');
-            }
-            this.clStorage.serialize();
-
-        } else if (this.state.mode === 'groups') {
-            if (value !== -1) {
-                this.clStorage.addLine(tokenNumber + '', kwiclen, value);
-
-            } else {
-                this.clStorage.removeLine(tokenNumber + '');
-            }
-            this.clStorage.serialize();
+        } else {
+            this.clStorage.addLine(state, tokenNumber, kwiclen, value);
         }
     }
 
@@ -408,20 +416,21 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         this.layoutModel.replaceConcArg('q', data.Q);
     }
 
-    private clearSelection():void {
-        this.clStorage.clear();
+    private clearSelection(state:LineSelectionModelState):void {
+        this.clStorage.clear(state);
     }
 
-    private renameLineGroup(srcGroupNum:number, dstGroupNum:number):Observable<MultiDict> {
+    private renameLineGroup(state:LineSelectionModelState, srcGroupNum:number,
+            dstGroupNum:number):Observable<MultiDict> {
         if (!this.validateGroupId(srcGroupNum) || !this.validateGroupId(dstGroupNum)) {
             return throwError(new Error(this.layoutModel.translate(
                     'linesel__error_group_name_please_use{max_group}',
-                    {max_group: this.state.maxGroupId})));
+                    {max_group: state.maxGroupId})));
 
         } else if (!srcGroupNum) {
             return throwError(new Error(this.layoutModel.translate('linesel__group_missing')));
 
-        } else if (this.state.currentGroupIds.indexOf(srcGroupNum) < 0) {
+        } else if (state.currentGroupIds.indexOf(srcGroupNum) < 0) {
             return throwError(new Error(this.layoutModel.translate(
                     'linesel__group_does_not_exist_{group}',
                     {group: srcGroupNum})));
@@ -442,7 +451,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
                 }
             ).pipe(
                 tap((data) => {
-                    this.state.currentGroupIds = data.lines_groups_numbers;
+                    state.currentGroupIds = data.lines_groups_numbers;
                     this.updateGlobalArgs(data);
                 }),
                 concatMap(_ => this.concLineModel.reloadPage())
@@ -520,7 +529,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         );
     }
 
-    private markLines():Observable<MultiDict> {
+    private markLines(state:LineSelectionModelState):Observable<MultiDict> {
         return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
@@ -533,7 +542,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         ).pipe(
             tap((data) => {
                 this.updateGlobalArgs(data);
-                this.state.currentGroupIds = data.lines_groups_numbers;
+                state.currentGroupIds = data.lines_groups_numbers;
             }),
             concatMap(_ => this.concLineModel.reloadPage())
         );
@@ -550,7 +559,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         ));
     }
 
-    private reenableEdit():Observable<MultiDict> {
+    private reenableEdit():Observable<ReenableEditResponse> {
         return this.layoutModel.ajax$<ReenableEditResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
@@ -561,11 +570,9 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
 
         ).pipe(
             tap((data) => {
-                this.registerQuery(data.Q);
-                this.importData(data.selection);
+                this.layoutModel.getHistory().replaceState('view', args);
                 this.updateGlobalArgs(data);
-            }),
-            concatMap(_ => this.concLineModel.reloadPage())
+            })
         );
     }
 
@@ -590,21 +597,20 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
      * the selection.
      */
     registerQuery(query:Array<string>):void {
-        this.clStorage.init(this.state, query);
+        // TODO return this.clStorage.init(this.state, query);
     }
 
-    getMode():LineSelectionModes {
-        return this.state.mode;
+    getMode(state:LineSelectionModelState):LineSelectionModes {
+        return state.mode;
     }
 
     /**
      * @return true if mode has been changed, false otherwise
      */
-    setMode(mode:LineSelectionModes):boolean {
-        if (this.state.mode !== mode) {
-            this.clStorage.setMode(mode);
-            this.clStorage.serialize();
-            this.state.mode = mode;
+    setMode(state:LineSelectionModelState, mode:LineSelectionModes):boolean {
+        if (state.mode !== mode) {
+            this.clStorage.setMode(state, mode);
+            state.mode = mode;
             return true;
 
         } else {
@@ -621,42 +627,35 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState> {
         ));
     }
 
-    private importData(data:Array<[number, number, number]>):void {
-        data.forEach((item) => {
-            this.addLine(String(item[0]), item[1], item[2]);
+    private importData(state:LineSelectionModelState, data:Array<[number, number, number]>):void {
+        data.forEach(([tokenId, kwicLen, cat]) => {
+            this.addLine(state, tokenId, kwicLen, cat);
         });
-        this.state.mode = this.clStorage.getMode();
-        this.clStorage.serialize();
+        state.mode = this.clStorage.getMode(state);
     }
 
-    addLine(id:string, kwiclen:number, category:number):void {
-        this.clStorage.addLine(id, kwiclen, category);
-        this.clStorage.serialize();
+    addLine(state:LineSelectionModelState, id:number, kwiclen:number, category:number):void {
+        this.clStorage.addLine(state, id, kwiclen, category);
     }
 
-    removeLine(id):void {
-        this.clStorage.removeLine(id);
-        this.clStorage.serialize();
+    removeLine(state:LineSelectionModelState, id:number):void {
+        this.clStorage.removeLine(state, id);
     }
 
-    containsLine(id:string):boolean {
-        return this.clStorage.containsLine(id);
+    containsLine(state:LineSelectionModelState, id:number):boolean {
+        return this.clStorage.containsLine(state, id);
     }
 
-    getLine(id:number):LineSelValue {
-        return this.clStorage.getLine(String(id));
+    getLine(state:LineSelectionModelState, id:number):LineSelValue {
+        return this.clStorage.getLine(state, id);
     }
 
-    clear():void {
-        return this.clStorage.clear();
+    clear(state:LineSelectionModelState):void {
+        return this.clStorage.clear(state);
     }
 
     supportsSessionStorage():boolean {
         return this.clStorage.supportsSessionStorage();
-    }
-
-    serialize():void {
-        this.clStorage.serialize();
     }
 
 }

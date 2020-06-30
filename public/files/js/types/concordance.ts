@@ -53,22 +53,12 @@ export abstract class LangSection {
     abstract findChunk(chunkId:string):TextChunk;
 }
 
-export class Line {
-    lineGroup:number;
+export interface Line {
+    lineGroup:number|undefined;
     lineNumber:number;
     kwicLength:number;
     hasFocus:boolean;
     languages:Array<LangSection>;
-
-    clone():Line {
-        const copy = new Line();
-        copy.lineGroup = this.lineGroup;
-        copy.lineNumber = this.lineNumber;
-        copy.kwicLength = this.kwicLength;
-        copy.hasFocus = this.hasFocus;
-        copy.languages = this.languages;
-        return copy;
-    }
 }
 
 

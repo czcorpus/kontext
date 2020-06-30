@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, Color } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { Line as ConcLine } from '../../types/concordance';
@@ -496,8 +496,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         attrViewMode:ViewOptions.AttrViewMode;
         lineSelMode:string; // TODO enum
         cols:Array<{n:string; visible:boolean;}>;
-        catTextColor:string;
-        catBgColor:string;
         showLineNumbers:boolean;
         supportsSyntaxView:boolean;
         numItemsInLockedGroups:number;
@@ -644,7 +642,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
 
         render() {
-            // TODO !!!!!! lineSelValue is NULL
             const primaryLang = List.head(this.props.data.languages);
             const alignedCorpora = List.tail(this.props.data.languages);
             const htmlClasses = [];
@@ -657,12 +654,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                     <extras.TdLineSelection
                         kwicLength={this.props.data.kwicLength}
                         tokenNumber={primaryLang.tokenNumber}
-                        lineNumber={this.props.data.lineNumber}
                         mode={this.props.lineSelMode}
                         lockedGroupId={this.props.numItemsInLockedGroups > 0 ? this.props.data.lineGroup : null}
-                        catBgColor={this.props.catBgColor}
-                        catTextColor={this.props.catTextColor}
-                        selectionValue={null} />
+                        groupId={this.props.data.lineGroup} />
                     <td className="syntax-tree">
                         {this.props.supportsSyntaxView ?
                             <extras.SyntaxTreeButton tokenNumber={primaryLang.tokenNumber}
@@ -715,37 +709,29 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // --------------------------- <LinesWithSelection /> ------------------------------
 
-    class LinesWithSelection extends React.PureComponent<ConcordanceModelState &
-            LineSelectionModelState> {
-
-        render() {
-            return (<>
-                {List.map(
-                    (line, i) => (
-                        <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
-                            lineIdx={i}
-                            data={line}
-                            cols={this.props.corporaColumns}
-                            viewMode={this.props.viewMode}
-                            attrViewMode={ConcordanceModel.getViewAttrsVmode(this.props)}
-                            baseCorpname={this.props.baseCorpname}
-                            mainCorp={this.props.maincorp}
-                            corpsWithKwic={this.props.kwicCorps}
-                            showLineNumbers={this.props.showLineNumbers}
-                            lineSelMode={this.props.mode}
-                            numItemsInLockedGroups={this.props.numItemsInLockedGroups}
-                            emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
-                            catBgColor={LineSelectionModel.ensureCatColor(
-                                this.props, line.lineGroup)[0]}
-                            catTextColor={LineSelectionModel.ensureCatColor(
-                                this.props, line.lineGroup)[1]}
-                            supportsSyntaxView={this.props.supportsSyntaxView}
-                            supportsTokenConnect={this.props.supportsTokenConnect} />
-                ),
-                    this.props.lines
-                )}
-            </>);
-        }
+    const LinesWithSelection:React.SFC<ConcordanceModelState & LineSelectionModelState> = (props) => {
+        return (<>
+            {List.map(
+                (line, i) => (
+                    <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
+                        lineIdx={i}
+                        data={line}
+                        cols={props.corporaColumns}
+                        viewMode={props.viewMode}
+                        attrViewMode={ConcordanceModel.getViewAttrsVmode(props)}
+                        baseCorpname={props.baseCorpname}
+                        mainCorp={props.maincorp}
+                        corpsWithKwic={props.kwicCorps}
+                        showLineNumbers={props.showLineNumbers}
+                        lineSelMode={props.mode}
+                        numItemsInLockedGroups={props.numItemsInLockedGroups}
+                        emptyRefValPlaceholder={props.emptyRefValPlaceholder}
+                        supportsSyntaxView={props.supportsSyntaxView}
+                        supportsTokenConnect={props.supportsTokenConnect} />
+            ),
+                props.lines
+            )}
+        </>);
     }
 
     const BoundLinesWithSelection = BoundWithProps<ConcordanceModelState,

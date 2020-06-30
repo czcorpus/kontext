@@ -16,18 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { List, pipe, tuple, Ident } from 'cnc-tskit';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
-import { LineSelections, LineSelectionModes } from './common';
+
+import { LineSelections, LineSelectionModes, ConcLineSelection } from './common';
 
 
-const accessKey = 'concLines';
-const queryKey = '__query__';
-
-const queryKeyFilter = List.filter<[string, [number, number]]>(([k,]) => k !== queryKey);
 
 export interface StorageUsingState {
     data:LineSelections;
+    queryHash:string;
 }
 
 /**
@@ -36,29 +36,74 @@ export interface StorageUsingState {
  * are not stored immediately. It is up to programmer to use method serialize()
  * (e.g. using window's unload event) to make changes session-permanent.
  */
-export class ConcLinesStorage {
+export class ConcLinesStorage<T extends StorageUsingState> {
 
+    private static ACC_KEY = 'concLines';
 
-    private state:StorageUsingState; // we expect mutable state here (see LineSelectionModel)
-
-    private queryId:number;
+    private static MAX_SELECTION_AGE_SECS = 3600 * 24 * 7;
 
     errorHandler:any; // TODO type
 
-    static DEFAULT_GROUP_ID = 1;
+    public static DEFAULT_GROUP_ID = 1;
+
+    private static WRITE_THROTTLE_INTERVAL = 1000;
+
+    private writeEvents:Subject<T>;
 
     constructor(errorHandler) {
         this.errorHandler = errorHandler;
-        this.state = {data: {}};
+        this.writeEvents = new Subject<T>();
+        this.writeEvents.pipe(
+            debounceTime(ConcLinesStorage.WRITE_THROTTLE_INTERVAL)
+        ).subscribe(
+            (data) => {
+                console.log('>> should write ', data);
+                this.serialize(data);
+            }
+        )
     }
 
-    init(state:StorageUsingState, query:Array<string>):void {
-        this.queryId = this.queryChecksum(query.join(''));
-        if (this.state.data[queryKey] && this.state.data[queryKey][0] !== this.queryId) {
-            this.clear();
+    init(state:T, query:Array<string>):T {
+        state.queryHash = Ident.hashCode(query.join(''));
+        try {
+            const curr = JSON.parse(window.sessionStorage.getItem(
+                ConcLinesStorage.ACC_KEY));
+            state.data = {... curr, ...state.data};
+
+        } catch (e) {
+            console.error('Failed to deserialize line selection data, removing');
+            window.sessionStorage.removeItem(
+                ConcLinesStorage.ACC_KEY);
         }
-        this.state.data[queryKey] = tuple(this.queryId, -1);
-        this.serialize();
+
+        if (this.recIsExpired(state)) {
+            this.clear(state);
+        }
+        if (state.data[state.queryHash] === undefined) {
+            state.data[state.queryHash] = {
+                created: new Date().getTime() / 1000,
+                mode: 'simple',
+                selections: []
+            };
+            this.serialize(state);
+        }
+        return state;
+    }
+
+    private recIsExpired(state:T):boolean {
+        if (state.data[state.queryHash]) {
+            const age = (new Date()).getTime() / 1000 - this.actualData(state).created;
+            return age > ConcLinesStorage.MAX_SELECTION_AGE_SECS;
+        }
+        return false;
+    }
+
+    private actualData(state:T):ConcLineSelection {
+        return state.data[state.queryHash] || {
+            created: new Date().getTime() / 1000,
+            mode: 'simple',
+            selections: []
+        };
     }
 
     /**
@@ -81,94 +126,105 @@ export class ConcLinesStorage {
      * @param kwiclen number of kwic words
      * @param category category number
      */
-    addLine(id:string, kwiclen:number, category:number):void {
-        this.state.data[id] = tuple(kwiclen, category);
+    addLine(state:T, tokenId:number, kwiclen:number, category:number):void {
+        if (!List.some(([tokId,,]) => tokId === tokenId, this.actualData(state).selections)) {
+            state.data[state.queryHash].selections.push(tuple(tokenId, kwiclen, category));
+            this.writeEvents.next(state);
+        }
     }
 
-    removeLine(id):void {
-        delete this.state.data[id];
+    removeLine(state:T, tokenId:number):void {
+        const srchIdx = List.findIndex(
+            ([tokId,,]) => tokId === tokenId,
+            this.actualData(state).selections
+        );
+        if (srchIdx > -1) {
+            this.actualData(state).selections.splice(srchIdx, 1);
+            this.writeEvents.next(state);
+        }
     }
 
-    containsLine(id:string):boolean {
-        return this.state.data[id] !== undefined;
+    containsLine(state:T, tokenId:number):boolean {
+        return List.some(([tokId,,]) => tokId === tokenId, this.actualData(state).selections);
     }
 
-    getLine(id:string):any { // TODO return type
-        return this.state.data[id] || null;
+    getLine(state:T, tokenId:number):[number, number, number]|undefined {
+        return List.find(([tokId,,]) => tokId === tokenId, this.actualData(state).selections);
     }
 
     /**
      * Returns all the selected lines. Each line
-     * is encoded like this: [kwic_token_id, kwic_len, line_number, category].
+     * is encoded like this: [kwic_token_id, kwic_len, category].
      */
-    exportAll():Array<[number, number, number]> {
-        return pipe(
-            this.state.data,
-            Dict.toEntries(),
-            queryKeyFilter,
-            List.map(([p, [line, grp]]) => tuple(parseInt(p), line, grp))
-        )
+    exportAll(state:T):Array<[number, number, number]> {
+        return this.actualData(state).selections;
     }
 
     /**
-     * Removes all the elements and writes the change into sessionStorage
+     * Removes all the elements for a queryHash or for all stored queries
      */
-    clear():void {
-        this.state.data = {};
-        window.sessionStorage.removeItem(accessKey);
-    }
+    clear(state:T, queryHash?:string):void {
+        if (queryHash) {
+            delete state.data[queryHash];
+            this.serialize(state);
 
-    /**
-     * Returns number of selected rows
-     *List.filter(([k,]) => k !== queryKey)
-     * @returns {number}
-     */
-    size():number {
-        return Dict.size(this.state.data) - 1; // 1 <= spec. __query__ key
-    }
-
-    getMode():LineSelectionModes {
-        return pipe(
-            this.state.data,
-            Dict.toEntries(),
-            queryKeyFilter,
-            List.some(([,[,grp]]) => !!grp)
-        ) ? 'groups' : 'simple';
-    }
-
-    setMode(mode:LineSelectionModes):void {
-        if (mode === 'simple') {
-            this.state.data = pipe(
-                this.state.data,
-                Dict.map(([line,], k) => k !== queryKey ?
-                    tuple(line, null) : tuple(this.queryId, -1))
-            );;
-
-        } else if (mode === 'groups') {
-            this.state.data = pipe(
-                this.state.data,
-                Dict.map(
-                    ([line,], k) => k !== queryKey ?
-                        tuple(line, ConcLinesStorage.DEFAULT_GROUP_ID) :
-                        tuple(this.queryId, -1)
-                )
-            );
+        } else {
+            state.data = {};
+            window.sessionStorage.removeItem(ConcLinesStorage.ACC_KEY);
         }
     }
 
-    toJSON():string {
-        return JSON.stringify(this.state.data);
+    /**
+     */
+    size(state:T):number {
+        return this.actualData(state).selections.length;
+    }
+
+    getMode(state:T):LineSelectionModes {
+        return this.actualData(state).mode;
+    }
+
+    setMode(state:T, mode:LineSelectionModes):void {
+        if (mode === 'simple') {
+            state.data[state.queryHash].mode = 'simple';
+            state.data[state.queryHash].selections = pipe(
+                this.actualData(state).selections,
+                List.map(([tokenId, kwicLen,]) => tuple(
+                    tokenId,
+                    kwicLen,
+                    ConcLinesStorage.DEFAULT_GROUP_ID
+                ))
+            );
+            this.writeEvents.next(state);
+
+        } else if (mode === 'groups') {
+            state.data[state.queryHash].mode = 'groups';
+            state.data[state.queryHash].selections = pipe(
+                this.actualData(state).selections,
+                List.map(([tokenId, kwicLen,]) => tuple(
+                        tokenId,
+                        kwicLen,
+                        ConcLinesStorage.DEFAULT_GROUP_ID
+                ))
+            );
+            this.writeEvents.next(state);
+        }
+    }
+
+    toJSON(state:T):string {
+        return JSON.stringify(state.data);
     }
 
     /**
      * Stores data into a sessionStorage as a JSON object
      */
-    serialize():void {
+    serialize(state:T):void {
         try {
-            window.sessionStorage[accessKey] = this.toJSON();
+            window.sessionStorage[ConcLinesStorage.ACC_KEY] = this.toJSON(state);
         } catch (e) {
             if (e.name === 'QUOTA_EXCEEDED_ERR') {
-                console.error('Failed to store selected concordance lines due to exceeded data limit.');
+                console.error(
+                    'Failed to store selected concordance lines due to exceeded data limit.');
                 if (typeof this.errorHandler === 'function') {
                     this.errorHandler.call(this, e);
                 }
@@ -176,20 +232,10 @@ export class ConcLinesStorage {
         }
     }
 
-    private queryChecksum(q:string):number {
-        let cc = 0;
-        for(let i = 0; i < q.length; i += 1) {
-            cc = (cc << 5) - cc + q.charCodeAt(i);
-            cc &= cc;
-        }
-        return cc;
-    }
 }
 
 /**
- * @param {function} [errorHandler] see ConcLinesStorage documentation
- * @returns {ConcLinesStorage}
  */
-export function openStorage(errorHandler):ConcLinesStorage {
+export function openStorage<T extends StorageUsingState>(errorHandler):ConcLinesStorage<T> {
     return new ConcLinesStorage(errorHandler);
 }

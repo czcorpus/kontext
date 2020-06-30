@@ -99,13 +99,13 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
                 List.map((v, j) => importTextChunk(v, `C${i}:A${k}:R${j}`), item.Right)
             );
         }));
-
-        const ansItem:Line = new Line();
-        ansItem.lineNumber = item.linenum;
-        ansItem.lineGroup = item.linegroup;
-        ansItem.kwicLength = item.kwiclen;
-        ansItem.languages = line;
-        ans.push(ansItem); // TODO
+        ans.push({
+            lineNumber: item.linenum,
+            lineGroup: item.linegroup >= 0 ? item.linegroup : undefined,
+            kwicLength: item.kwiclen,
+            languages: line,
+            hasFocus: false
+        });
     });
 
     return ans;
@@ -499,15 +499,22 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             }
         );
 
-        this.addActionHandler<Actions.ShowRefDetail|Actions.RefResetDetail>(
-            [ActionName.ShowRefDetail, ActionName.RefResetDetail],
+        this.addActionHandler<Actions.SelectLines>(
+            ActionName.SelectLine,
             action => {
                 this.changeState(state => {
-                    state.refDetailVisible = action.name === ActionName.ShowRefDetail
+                    state.lines = List.map(
+                        line => ({
+                            ...line,
+                            lineGroup: action.payload.tokenNumber ===
+                                    line.languages[0].tokenNumber ?
+                                        action.payload.value : line.lineGroup}),
+                        state.lines
+                    );
                 });
                 this.emitChange();
             }
-        );
+        )
     }
 
     unregister():void {}
@@ -789,7 +796,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
         ).pipe(
             tap((data) => {
-                this.changeState(state => {state.adHocIpm = this.state.concSummary.fullSize / data.total * 1e6});
+                this.changeState(state => {
+                    state.adHocIpm = this.state.concSummary.fullSize / data.total * 1e6});
             }),
             map(_ => this.state.adHocIpm)
         );
@@ -812,27 +820,21 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     setLineFocus(lineIdx:number, focus:boolean) {
-        this.changeState(state => {
-            state.lines = List.map(
-                item => {
-                    if (item.hasFocus) {
-                        const ans = item.clone();
-                        ans.hasFocus = false;
-                        return ans;
-
-                    } else {
-                        return item;
-                    }
-                },
-                this.state.lines
-            )
-        });
+        this.state.lines = List.map(
+            item => {
+                if (item.hasFocus) {
+                    return {...item, hasFocus: false};
+                }
+                return item;
+            },
+            this.state.lines
+        );
 
         if (focus === true) {
             const oldLine = this.state.lines[lineIdx];
             if (oldLine) {
                 const idx = this.state.lines.indexOf(oldLine);
-                const newVal = oldLine.clone();
+                const newVal = {...oldLine};
                 newVal.hasFocus = focus;
                 this.changeState(state => {state.lines[idx] = newVal});
             }

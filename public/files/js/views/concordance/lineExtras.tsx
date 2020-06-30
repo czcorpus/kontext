@@ -21,10 +21,10 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext} from '../../types/common';
+import { Kontext } from '../../types/common';
 import { ConcordanceModel } from '../../models/concordance/main';
 import { TextChunk } from '../../types/concordance';
-import { LineSelValue } from '../../models/concordance/lineSelection';
+import { ConcLinesStorage } from '../../models/concordance/selectionStorage';
 import { init as initMediaViews } from './media';
 import { Actions, ActionName } from '../../models/concordance/actions'
 
@@ -39,13 +39,10 @@ export interface LineExtrasViews {
 
     TdLineSelection:React.SFC<{
         lockedGroupId:number;
+        groupId:number;
         mode:string; // TODO enum
-        lineNumber:number;
         tokenNumber:number;
         kwicLength:number;
-        selectionValue:LineSelValue;
-        catTextColor:string;
-        catBgColor:string;
     }>;
 
     SyntaxTreeButton:React.SFC<{
@@ -123,50 +120,49 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ------------------------- <LineSelCheckbox /> ---------------------------
 
     const LineSelCheckbox:React.SFC<{
-        lineNumber:number;
         tokenNumber:number;
         kwicLength:number;
-        selectionValue:LineSelValue;
+        groupId:number|undefined;
 
     }> = (props) => {
 
         const checkboxChangeHandler = (event) => {
-            dispatcher.dispatch<Actions.SelectLine>({
+            dispatcher.dispatch<Actions.SelectLines>({
                 name: ActionName.SelectLine,
                 payload: {
-                    value: event.currentTarget.checked ? 1 : null,
+                    value: event.currentTarget.checked ?
+                        ConcLinesStorage.DEFAULT_GROUP_ID : undefined,
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength
                 }
             });
         };
 
-        return <input type="checkbox" checked={props.selectionValue ? true : false}
+        return <input type="checkbox" checked={props.groupId !== undefined}
                         onChange={checkboxChangeHandler} />;
     };
 
     // ------------------------- <LineSelInput /> ---------------------------
 
     const LineSelInput:React.SFC<{
-        lineNumber:number;
         tokenNumber:number;
         kwicLength:number;
-        selectionValue:LineSelValue;
+        groupId:number;
 
     }> = (props) => {
 
         const textChangeHandler = (event) => {
-            dispatcher.dispatch<Actions.SelectLine>({
+            dispatcher.dispatch<Actions.SelectLines>({
                 name: ActionName.SelectLine,
                 payload: {
-                    value: event.currentTarget.value ? Number(event.currentTarget.value) : -1,
+                    value: event.currentTarget.value ? parseInt(event.currentTarget.value) : undefined,
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength
                 }
             });
         };
         return <input type="text" inputMode="numeric" style={{width: '1.4em'}}
-                        value={props.selectionValue ? props.selectionValue[1] : ''} onChange={textChangeHandler} />;
+                        value={props.groupId !== undefined ? props.groupId : ''} onChange={textChangeHandler} />;
     };
 
     // ------------------------- <TdLineSelection /> ---------------------------
@@ -175,7 +171,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         const renderInput = () => {
             if (props.lockedGroupId) {
-                const groupLabel = props.lockedGroupId > -1 ? `#${props.lockedGroupId}` : '';
+                const groupLabel = props.lockedGroupId >= 0 ? `#${props.lockedGroupId}` : '';
                 return <span className="group-id">{groupLabel}</span>;
 
             } else if (props.mode === 'simple') {
@@ -188,14 +184,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 return null;
             }
         };
-
         const css = {};
+        /*  TODO
         if (props.catTextColor) {
             css['color'] = props.catTextColor
         }
         if (props.catBgColor) {
             css['backgroundColor'] = props.catBgColor;
         }
+        */
         return (
             <td className="manual-selection" style={css}>
                 {renderInput()}
