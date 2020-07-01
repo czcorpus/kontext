@@ -185,6 +185,8 @@ export interface ConcordanceModelState {
     kwicDetailVisible:boolean;
 
     refDetailVisible:boolean;
+
+    lineSelOptionsVisible:boolean;
 }
 
 
@@ -252,6 +254,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 saveFormVisible: false,
                 kwicDetailVisible: false,
                 refDetailVisible: false,
+                lineSelOptionsVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -514,7 +517,27 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 });
                 this.emitChange();
             }
-        )
+        );
+
+        this.addActionHandler<Actions.ApplyStoredLineSelectionsDone>(
+            ActionName.ApplyStoredLineSelectionsDone,
+            action => {
+                this.changeState(state => {
+                    state.lines = List.map(
+                        line => {
+                            const srch = List.find(
+                                ([tokenNum,,]) => line.languages[0].tokenNumber === tokenNum,
+                                action.payload.selections
+                            );
+                            const lineGroup = srch ? srch[2] : line.lineGroup;
+                            return {...line, lineGroup};
+                        },
+                        state.lines
+                    );
+                });
+                this.emitChange();
+            }
+        );
     }
 
     unregister():void {}

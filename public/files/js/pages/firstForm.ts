@@ -21,6 +21,7 @@
 import * as Immutable from 'immutable';
 import { Action, IFullActionControl } from 'kombo';
 import { tap, share } from 'rxjs/operators';
+import { Dict, List } from 'cnc-tskit';
 
 import { Kontext } from '../types/common';
 import { AjaxResponse } from '../types/ajaxResponses';
@@ -39,12 +40,11 @@ import { StatefulModel } from '../models/base';
 import { PluginInterfaces } from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
-import { ConcLinesStorage, openStorage } from '../models/concordance/selectionStorage';
+import { ConcLinesStorage, StorageUsingState, openStorage } from '../models/concordance/selectionStorage';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import { Dict, List } from 'cnc-tskit';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -107,7 +107,7 @@ export class FirstFormPage {
     private queryContextModel:QueryContextModel;
 
 
-    constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
+    constructor(layoutModel:PageModel, clStorage:ConcLinesStorage<StorageUsingState>) {
         this.layoutModel = layoutModel;
     }
 
@@ -386,10 +386,12 @@ export class FirstFormPage {
 
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new KontextPage(conf);
-    const clStorage:ConcLinesStorage = openStorage((err) => {
-        layoutModel.showMessage('error', err);
-    });
-    clStorage.clear();
+    const clStorage:ConcLinesStorage<StorageUsingState> = openStorage(
+        layoutModel.dispatcher,
+        (err:Error) => {
+            layoutModel.showMessage('error', err);
+        }
+    );
     const pageModel = new FirstFormPage(layoutModel, clStorage);
     pageModel.init();
 }

@@ -19,10 +19,11 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher, Bound} from 'kombo';
-import {Kontext} from '../../types/common';
+import { IActionDispatcher, Bound } from 'kombo';
+import { Kontext } from '../../types/common';
 import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
 import { ActionName, Actions } from '../../models/concordance/actions';
+import { ActionName as UserActionName, Actions as UserActions } from '../../models/user/actions';
 
 
 export interface LineBinarySelectionMenuProps {
@@ -106,13 +107,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     payload: {}
                 });
             }
-        }
-
-        componentDidMount() {
-            dispatcher.dispatch<Actions.LineSelectionStatusRequest>({
-                name: ActionName.LineSelectionStatusRequest,
-                payload: {}
-            });
         }
 
         render() {
@@ -386,26 +380,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleDialogShowClick(evt:React.MouseEvent<{}>) {
-            dispatcher.dispatch<Actions.LoadUserCredentials>({
-                name: ActionName.LoadUserCredentials,
-                payload: {}
+            dispatcher.dispatch<UserActions.UserInfoRequested>({
+                name: UserActionName.UserInfoRequested
             });
         }
 
         _handleRenameCancel() {
             dispatcher.dispatch<Actions.RenameGroupCancel>({
-                name: ActionName.RenameGroupCancel,
-                payload: {}
+                name: ActionName.RenameGroupCancel
             });
         }
 
         componentDidMount() {
-            dispatcher.dispatch<Actions.LineSelectionStatusRequest>({
-                name: ActionName.LineSelectionStatusRequest,
-                payload: {
-                    email: this.props.emailDialogCredentials.email
-                }
-            });
             if (typeof this.props.chartCallback === 'function') {
                 this.props.chartCallback(false);
             }

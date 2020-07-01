@@ -58,23 +58,29 @@ export enum ActionName {
     SaveFormSetFormat = 'CONCORDANCE_SAVE_FORM_SET_FORMAT',
     ResultCloseSaveForm =  'CONCORDANCE_RESULT_CLOSE_SAVE_FORM',
     SelectLine = 'LINE_SELECTION_SELECT_LINE',
-    LineSelectionStatusRequest = 'LINE_SELECTION_STATUS_REQUEST',
     LineSelectionReset = 'LINE_SELECTION_RESET',
     LineSelectionResetOnServer = 'LINE_SELECTION_RESET_ON_SERVER',
+    LineSelectionResetOnServerDone = 'LINE_SELECTION_RESET_ON_SERVER_DONE',
     RemoveSelectedLines = 'LINE_SELECTION_REMOVE_LINES',
     RemoveNonSelectedLines = 'LINE_SELECTION_REMOVE_OTHER_LINES',
     MarkLines = 'LINE_SELECTION_MARK_LINES',
+    MarkLinesDone = 'LINE_SELECTION_MARK_LINES_DONE',
     RemoveLinesNotInGroups = 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
     UnlockLineSelection = 'LINE_SELECTION_REENABLE_EDIT',
     UnlockLineSelectionDone = 'LINE_SELECTION_REENABLE_EDIT_DONE',
     RenameSelectionGroup = 'LINE_SELECTION_GROUP_RENAME',
+    RenameSelectionGroupDone = 'LINE_SELECTION_GROUP_RENAME_DONE',
     RenameGroupCancel = 'LINE_SELECTION_RENAME_GROUP_CANCEL',
     ChangeEmail = 'LINE_SELECTION_CHANGE_EMAIL',
     SendLineSelectionToEmail = 'LINE_SELECTION_SEND_URL_TO_EMAIL',
+    SendLineSelectionToEmailDone = 'LINE_SELECTION_SEND_URL_TO_EMAIL_DONE',
     SortLineSelection = 'LINE_SELECTION_SORT_LINES',
     SetLineSelectionMode = 'CONCORDANCE_SET_LINE_SELECTION_MODE',
-    LoadUserCredentials = 'LINE_SELECTION_LOAD_USER_CREDENTIALS',
-    ClearUserCredentials = 'LINE_SELECTION_CLEAR_USER_CREDENTIALS'
+    ClearUserCredentials = 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
+    ToggleLineSelOptions = 'CONCORDANCE_TOGGLE_LINE_SEL_OPTIONS',
+    SaveLineSelection = 'LINE_SELECTION_SAVE',
+    ApplyStoredLineSelections = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS',
+    ApplyStoredLineSelectionsDone = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS_DONE'
 }
 
 export namespace Actions {
@@ -297,11 +303,6 @@ export namespace Actions {
         name:ActionName.SelectLine;
     }
 
-    export interface LineSelectionStatusRequest extends Action<{
-    }> {
-        name:ActionName.LineSelectionStatusRequest;
-    }
-
     export interface LineSelectionReset extends Action<{
     }> {
         name:ActionName.LineSelectionReset;
@@ -310,6 +311,11 @@ export namespace Actions {
     export interface LineSelectionResetOnServer extends Action<{
     }> {
         name:ActionName.LineSelectionResetOnServer;
+    }
+
+    export interface LineSelectionResetOnServerDone extends Action<{
+    }> {
+        name:ActionName.LineSelectionResetOnServerDone;
     }
 
     export interface RemoveSelectedLines extends Action<{
@@ -325,6 +331,11 @@ export namespace Actions {
     export interface MarkLines extends Action<{
     }> {
         name:ActionName.MarkLines;
+    }
+
+    export interface MarkLinesDone extends Action<{
+    }> {
+        name:ActionName.MarkLinesDone;
     }
 
     export interface RemoveLinesNotInGroups extends Action<{
@@ -352,6 +363,11 @@ export namespace Actions {
         name:ActionName.RenameSelectionGroup;
     }
 
+    export interface RenameSelectionGroupDone extends Action<{
+    }> {
+        name:ActionName.RenameSelectionGroupDone;
+    }
+
     export interface RenameGroupCancel extends Action<{
     }> {
         name:ActionName.RenameGroupCancel;
@@ -369,6 +385,11 @@ export namespace Actions {
         name:ActionName.SendLineSelectionToEmail;
     }
 
+    export interface SendLineSelectionToEmailDone extends Action<{
+    }> {
+        name:ActionName.SendLineSelectionToEmailDone;
+    }
+
     export interface SortLineSelection extends Action<{
     }> {
         name:ActionName.SortLineSelection;
@@ -380,13 +401,30 @@ export namespace Actions {
         name:ActionName.SetLineSelectionMode;
     }
 
-    export interface LoadUserCredentials extends Action<{
-    }> {
-        name:ActionName.LoadUserCredentials;
-    }
-
     export interface ClearUserCredentials extends Action<{
     }> {
         name:ActionName.ClearUserCredentials;
+    }
+
+    export interface ToggleLineSelOptions extends Action<{
+    }> {
+        name:ActionName.ToggleLineSelOptions;
+    }
+
+    export interface SaveLineSelection extends Action<{
+    }> {
+        name:ActionName.SaveLineSelection;
+    }
+
+    export interface ApplyStoredLineSelections extends Action<{
+    }> {
+        name:ActionName.ApplyStoredLineSelections;
+    }
+
+    export interface ApplyStoredLineSelectionsDone extends Action<{
+        selections:Array<LineSelValue>;
+        mode:LineSelectionModes;
+    }> {
+        name:ActionName.ApplyStoredLineSelectionsDone;
     }
 }

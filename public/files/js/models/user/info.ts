@@ -18,63 +18,77 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import { Action, IFullActionControl } from 'kombo';
+import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+
+import { Kontext } from '../../types/common';
+import { PageModel } from '../../app/page';
+import { Actions, ActionName } from  './actions';
+import { HTTP } from 'cnc-tskit';
+
+export interface UserInfoModelState {
+    userData:Kontext.UserCredentials|null;
+    isBusy:boolean;
+}
 
 /**
  */
-export class UserInfo extends StatefulModel implements Kontext.IUserInfoModel {
+export class UserInfo extends StatelessModel<UserInfoModelState> {
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
-    private userData:Kontext.UserCredentials;
-
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
-        super(dispatcher);
-        this.layoutModel = layoutModel;
-        this.userData = null;
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'USER_INFO_REQUESTED':
-                    this.loadUserInfo().subscribe(
-                        (_) => {
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.layoutModel.showMessage('error', err);
-                            this.emitChange();
-                        }
-                    );
-                break;
+    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel) {
+        super(
+            dispatcher,
+            {
+                userData: null,
+                isBusy: true
             }
-        });
-    }
+        );
+        this.layoutModel = layoutModel;
 
+        this.addActionHandler<Actions.UserInfoLoaded>(
+            ActionName.UserInfoLoaded,
+            (state, action) => {
+                state.isBusy = false;
+                state.userData = action.payload.data;
+            }
+        );
 
-    loadUserInfo(forceReload:boolean=false):Observable<boolean> {
-        return (
-            !this.userData || forceReload ?
-                this.layoutModel.ajax$<{user:Kontext.UserCredentials}>(
-                    'GET',
-                    this.layoutModel.createActionUrl('user/ajax_user_info'),
-                    {}
-                ) :
-                rxOf({user: this.userData})
-        ).pipe(
-            tap((data) => {
-                this.userData = data.user;
-            }),
-            map(_ => true)
+        this.addActionHandler<Actions.UserInfoRequested>(
+            ActionName.UserInfoRequested,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.loadUserInfo(state).subscribe(
+                    (data) => {
+                        dispatch<Actions.UserInfoLoaded>({
+                            name: ActionName.UserInfoLoaded,
+                            payload: {
+                                data: data.user
+                            }
+                        });
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                        dispatch<Actions.UserInfoLoaded>({
+                            name: ActionName.UserInfoLoaded,
+                            error: err
+                        });
+                    }
+                );
+            }
         );
     }
 
-    getCredentials():Kontext.UserCredentials {
-        return this.userData;
+    loadUserInfo(state:UserInfoModelState, forceReload:boolean=false):Observable<{user:Kontext.UserCredentials}> {
+        return !state.userData || forceReload ?
+            this.layoutModel.ajax$<{user:Kontext.UserCredentials}>(
+                HTTP.Method.GET,
+                this.layoutModel.createActionUrl('user/ajax_user_info'),
+                {}
+            ) :
+            rxOf({user: state.userData});
     }
-
 }

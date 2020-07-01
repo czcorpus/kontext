@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { Subscription } from 'rxjs';
-import { Dict } from 'cnc-tskit';
+import { Dict, tuple } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
@@ -49,7 +49,7 @@ export class ViewPageModels {
     lineViewModel:ConcordanceModel;
     concDetailModel:ConcDetailModel;
     refsDetailModel:RefsDetailModel;
-    userInfoModel:Kontext.IUserInfoModel;
+    userInfoModel:IModel<{}>;
     collFormModel:CollFormModel;
     mainMenuModel:IModel<MainMenuModelState>;
     ttDistModel:TextTypesDistModel;
@@ -163,28 +163,18 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <LineSelectionOps /> ---------------------------
 
-    class LineSelectionOps extends React.Component<{
-        numItemsInLockedGroups:number;
-        numSelected:number;
-        canSendEmail:boolean;
+    interface LileSelectionOpsProps {
         onChartFrameReady?:()=>void;
+        visible:boolean;
+    }
 
-    },
-    {
-        menuVisible:boolean;
-    }> {
-
-        private modelSubscription:Subscription;
+    class LineSelectionOps extends React.PureComponent<LileSelectionOpsProps & LineSelectionModelState> {
 
         constructor(props) {
             super(props);
             this._selectChangeHandler = this._selectChangeHandler.bind(this);
             this._selectMenuTriggerHandler = this._selectMenuTriggerHandler.bind(this);
             this._closeMenuHandler = this._closeMenuHandler.bind(this);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = {
-                menuVisible: false
-            };
         }
 
         _selectChangeHandler(event) {
@@ -197,53 +187,39 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _selectMenuTriggerHandler() {
-            this.setState({
-                menuVisible: true
+            dispatcher.dispatch<Actions.ToggleLineSelOptions>({
+                name: ActionName.ToggleLineSelOptions
             });
         }
 
         _closeMenuHandler() {
-            this.setState({
-                menuVisible: false
+            dispatcher.dispatch<Actions.ToggleLineSelOptions>({
+                name: ActionName.ToggleLineSelOptions
             });
-        }
-
-        _modelChangeHandler() {
-            this.setState({
-                menuVisible: false // <- data of lines changed => no need for menu
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = lineViewModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _getMsgStatus() {
             if (this.props.numItemsInLockedGroups > 0) {
-                return [
+                return tuple(
                     he.createStaticUrl('img/info-icon.svg'),
                     he.translate('linesel__you_have_saved_line_groups')
-                ];
+                );
 
-            } else if (this.props.numSelected > 0) {
-                return [
+            } else if (LineSelectionModel.numSelectedItems(this.props) > 0) {
+                return tuple(
                     he.createStaticUrl('/img/warning-icon.svg'),
                     he.translate('linesel__you_have_unsaved_line_sel')
-                ];
+                );
 
             } else {
-                return ['', null];
+                return tuple('', null);
             }
         }
 
         _renderNumSelected() {
+            const numSel = LineSelectionModel.numSelectedItems(this.props);
             const [statusImg, elmTitle] = this._getMsgStatus();
-            const numSelected = this.props.numSelected > 0 ?
-                    this.props.numSelected : this.props.numItemsInLockedGroups;
+            const numSelected = numSel > 0 ? numSel : this.props.numItemsInLockedGroups;
             if (numSelected > 0) {
                 return (
                     <span className="lines-selection" title={elmTitle}>
@@ -263,7 +239,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         render() {
-            const mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : lineSelectionModel.getMode();
+            const mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : this.props.mode;
             return (
                 <div className="lines-selection-controls">
                     {he.translate('concview__line_sel')}:{'\u00A0'}
@@ -276,18 +252,20 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         <option value="groups">{he.translate('concview__line_sel_groups')}</option>
                     </select>
                     {this._renderNumSelected()}
-                    {this.state.menuVisible ?
+                    {this.props.visible ?
                         <LineSelectionMenu
                                 mode={mode}
                                 onCloseClick={this._closeMenuHandler}
                                 numItemsInLockedGroups={this.props.numItemsInLockedGroups}
                                 onChartFrameReady={this.props.onChartFrameReady}
-                                canSendEmail={this.props.canSendEmail} />
+                                canSendEmail={!!this.props.emailDialogCredentials} />
                         :  null}
                 </div>
             );
         }
     }
+
+    const BoundLineSelectionOps = BoundWithProps<LileSelectionOpsProps, LineSelectionModelState>(LineSelectionOps, lineSelectionModel);
 
 
     // ------------------------- <ConcSummary /> ---------------------------
@@ -476,6 +454,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         showConcToolbar:boolean;
         canSendEmail:boolean;
         viewMode:ViewOptions.AttrViewMode;
+        lineSelOpsVisible:boolean;
         onChartFrameReady?:()=>void;
     }
 
@@ -484,11 +463,9 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         render() {
             return (
                 <div className="toolbar-level">
-                    <LineSelectionOps
-                            numSelected={Dict.size(this.props.data) - 1} // TODO abstraction leaking
-                            numItemsInLockedGroups={this.props.numItemsInLockedGroups}
-                            onChartFrameReady={this.props.onChartFrameReady}
-                            canSendEmail={this.props.canSendEmail} />
+                    <BoundLineSelectionOps
+                            visible={this.props.lineSelOpsVisible}
+                            onChartFrameReady={this.props.onChartFrameReady} />
                     {this.props.showConcToolbar ?
                         <ConcOptions viewMode={this.props.viewMode} />
                         : null}
@@ -676,6 +653,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                     isWaiting={this.props.unfinishedCalculation} />
                         </div>
                         <BoundConcToolbarWrapper
+                                lineSelOpsVisible={this.props.lineSelOptionsVisible}
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}

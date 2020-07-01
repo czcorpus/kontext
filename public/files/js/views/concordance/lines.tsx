@@ -709,29 +709,38 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // --------------------------- <LinesWithSelection /> ------------------------------
 
-    const LinesWithSelection:React.SFC<ConcordanceModelState & LineSelectionModelState> = (props) => {
-        return (<>
-            {List.map(
-                (line, i) => (
-                    <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
-                        lineIdx={i}
-                        data={line}
-                        cols={props.corporaColumns}
-                        viewMode={props.viewMode}
-                        attrViewMode={ConcordanceModel.getViewAttrsVmode(props)}
-                        baseCorpname={props.baseCorpname}
-                        mainCorp={props.maincorp}
-                        corpsWithKwic={props.kwicCorps}
-                        showLineNumbers={props.showLineNumbers}
-                        lineSelMode={props.mode}
-                        numItemsInLockedGroups={props.numItemsInLockedGroups}
-                        emptyRefValPlaceholder={props.emptyRefValPlaceholder}
-                        supportsSyntaxView={props.supportsSyntaxView}
-                        supportsTokenConnect={props.supportsTokenConnect} />
-            ),
-                props.lines
-            )}
-        </>);
+    class LinesWithSelection extends React.PureComponent<ConcordanceModelState & LineSelectionModelState> {
+
+        componentDidMount() {
+            dispatcher.dispatch<Actions.ApplyStoredLineSelections>({
+                name: ActionName.ApplyStoredLineSelections
+            });
+        }
+
+        render() {
+            return (<>
+                {List.map(
+                    (line, i) => (
+                        <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
+                            lineIdx={i}
+                            data={line}
+                            cols={this.props.corporaColumns}
+                            viewMode={this.props.viewMode}
+                            attrViewMode={ConcordanceModel.getViewAttrsVmode(this.props)}
+                            baseCorpname={this.props.baseCorpname}
+                            mainCorp={this.props.maincorp}
+                            corpsWithKwic={this.props.kwicCorps}
+                            showLineNumbers={this.props.showLineNumbers}
+                            lineSelMode={this.props.mode}
+                            numItemsInLockedGroups={this.props.numItemsInLockedGroups}
+                            emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
+                            supportsSyntaxView={this.props.supportsSyntaxView}
+                            supportsTokenConnect={this.props.supportsTokenConnect} />
+                ),
+                    this.props.lines
+                )}
+            </>);
+        }
     }
 
     const BoundLinesWithSelection = BoundWithProps<ConcordanceModelState,
@@ -741,14 +750,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     class ConcLines extends React.PureComponent<ConcLinesProps & ConcordanceModelState> {
 
-        _getLineSelMode() {
-            if (lineModel.getNumItemsInLockedGroups() > 0) {
-                return 'groups';
-
-            } else {
-                return lineSelectionModel.getMode();
-            }
-        }
 
         componentDidMount() {
             if (typeof this.props.onReady === 'function') { // <-- a glue with legacy code

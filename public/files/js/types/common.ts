@@ -140,14 +140,6 @@ export namespace Kontext {
         (corpora:Array<string>, subcorpId:string):Observable<any>;
     }
 
-    /**
-     * managing access to a user information
-     */
-    export interface IUserInfoModel extends IEventEmitter {
-        getCredentials():UserCredentials;
-        loadUserInfo(forceReload:boolean):Observable<boolean>;
-    }
-
     export interface ICorpusInfoModel extends IEventEmitter {
         getCurrentInfoData():any; // TODO
         isLoading():boolean;
@@ -293,7 +285,7 @@ export namespace Kontext {
 
     export interface LayoutModel {
         corpusInfoModel:ICorpusInfoModel,
-        userInfoModel:IUserInfoModel,
+        userInfoModel:IModel<{}>,
         corpusViewOptionsModel:CorpusViewOptionsModel,
         generalViewOptionsModel:StatelessModel<GeneralViewOptionsModelState>;
         asyncTaskInfoModel:AsyncTaskChecker,

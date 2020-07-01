@@ -22,6 +22,9 @@ import { debounceTime } from 'rxjs/operators';
 
 
 import { LineSelections, LineSelectionModes, ConcLineSelection } from './common';
+import { IActionDispatcher } from 'kombo';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions, ActionName } from './actions';
 
 
 
@@ -42,23 +45,25 @@ export class ConcLinesStorage<T extends StorageUsingState> {
 
     private static MAX_SELECTION_AGE_SECS = 3600 * 24 * 7;
 
-    errorHandler:any; // TODO type
+    errorHandler:(err:Error)=>void;
 
     public static DEFAULT_GROUP_ID = 1;
 
     private static WRITE_THROTTLE_INTERVAL = 1000;
 
-    private writeEvents:Subject<T>;
+    private writeEvents:Subject<number>;
 
-    constructor(errorHandler) {
+    constructor(dispatcher:IActionDispatcher, errorHandler:(err:Error)=>void) {
         this.errorHandler = errorHandler;
-        this.writeEvents = new Subject<T>();
+        this.writeEvents = new Subject<number>();
         this.writeEvents.pipe(
             debounceTime(ConcLinesStorage.WRITE_THROTTLE_INTERVAL)
+
         ).subscribe(
-            (data) => {
-                console.log('>> should write ', data);
-                this.serialize(data);
+            () => {
+                dispatcher.dispatch<Actions.SaveLineSelection>({
+                    name: ActionName.SaveLineSelection
+                })
             }
         )
     }
@@ -85,7 +90,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
                 mode: 'simple',
                 selections: []
             };
-            this.serialize(state);
+            this.serialize(state.data);
         }
         return state;
     }
@@ -129,7 +134,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
     addLine(state:T, tokenId:number, kwiclen:number, category:number):void {
         if (!List.some(([tokId,,]) => tokId === tokenId, this.actualData(state).selections)) {
             state.data[state.queryHash].selections.push(tuple(tokenId, kwiclen, category));
-            this.writeEvents.next(state);
+            this.writeEvents.next(new Date().getTime());
         }
     }
 
@@ -140,7 +145,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
         );
         if (srchIdx > -1) {
             this.actualData(state).selections.splice(srchIdx, 1);
-            this.writeEvents.next(state);
+            this.writeEvents.next(new Date().getTime());
         }
     }
 
@@ -166,7 +171,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
     clear(state:T, queryHash?:string):void {
         if (queryHash) {
             delete state.data[queryHash];
-            this.serialize(state);
+            this.serialize(state.data);
 
         } else {
             state.data = {};
@@ -195,7 +200,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
                     ConcLinesStorage.DEFAULT_GROUP_ID
                 ))
             );
-            this.writeEvents.next(state);
+            this.writeEvents.next(new Date().getTime());
 
         } else if (mode === 'groups') {
             state.data[state.queryHash].mode = 'groups';
@@ -207,20 +212,20 @@ export class ConcLinesStorage<T extends StorageUsingState> {
                         ConcLinesStorage.DEFAULT_GROUP_ID
                 ))
             );
-            this.writeEvents.next(state);
+            this.writeEvents.next(new Date().getTime());
         }
     }
 
-    toJSON(state:T):string {
-        return JSON.stringify(state.data);
+    toJSON(selections:LineSelections):string {
+        return JSON.stringify(selections);
     }
 
     /**
      * Stores data into a sessionStorage as a JSON object
      */
-    serialize(state:T):void {
+    serialize(selections:LineSelections):void {
         try {
-            window.sessionStorage[ConcLinesStorage.ACC_KEY] = this.toJSON(state);
+            window.sessionStorage[ConcLinesStorage.ACC_KEY] = this.toJSON(selections);
         } catch (e) {
             if (e.name === 'QUOTA_EXCEEDED_ERR') {
                 console.error(
@@ -236,6 +241,6 @@ export class ConcLinesStorage<T extends StorageUsingState> {
 
 /**
  */
-export function openStorage<T extends StorageUsingState>(errorHandler):ConcLinesStorage<T> {
-    return new ConcLinesStorage(errorHandler);
+export function openStorage<T extends StorageUsingState>(dispatcher:IActionDispatcher, errorHandler:any):ConcLinesStorage<T> {
+    return new ConcLinesStorage(dispatcher, errorHandler);
 }

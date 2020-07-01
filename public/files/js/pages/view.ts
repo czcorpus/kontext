@@ -34,7 +34,7 @@ import { parseUrlArgs } from '../app/navigation';
 import { MultiDict } from '../multidict';
 import { init as concViewsInit, ViewPageModels, MainViews as ConcViews }
     from '../views/concordance/main';
-import { LineSelectionModel } from '../models/concordance/lineSelection';
+import { LineSelectionModel, LineSelectionModelState } from '../models/concordance/lineSelection';
 import { ConcDetailModel } from '../models/concordance/detail';
 import { ConcordanceModel } from '../models/concordance/main';
 import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs }
@@ -80,7 +80,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import { openStorage } from '../models/concordance/selectionStorage';
+import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
 import { Actions, ActionName } from '../models/concordance/actions';
 
 declare var require:any;
@@ -233,10 +233,11 @@ export class ViewPage {
     }
 
     private handleBeforeUnload(event:any):void {
+        /*
         if (this.viewModels.lineSelectionModel.hasSelectedLines()) {
             event.returnValue = this.translate('global__are_you_sure_to_leave');
             return event.returnValue;
-        }
+        } TODO !!! */
         return undefined; // !! any other value will cause the dialog window to be shown
     }
 
@@ -1025,6 +1026,11 @@ export class ViewPage {
             s => this.layoutModel.translate(s)
         );
 
+        const lineSelStorage:ConcLinesStorage<LineSelectionModelState> = openStorage(
+            this.layoutModel.dispatcher,
+            (err:Error)=>{}
+        );
+
         this.viewModels.lineViewModel = new ConcordanceModel(
             this.layoutModel,
             this.layoutModel.dispatcher,
@@ -1045,17 +1051,11 @@ export class ViewPage {
             layoutModel: this.layoutModel,
             dispatcher: this.layoutModel.dispatcher,
             concLineModel: this.viewModels.lineViewModel,
-            userInfoModel: this.layoutModel.getModels().userInfoModel,
-            clStorage: openStorage(()=>{}),
+            clStorage: lineSelStorage,
             onLeavePage: () => {
                 window.removeEventListener('beforeunload', this.handleBeforeUnload);
             }
         });
-        const currSelection = this.viewModels.lineSelectionModel.registerQuery(
-            this.layoutModel.getConf<Array<string>>('compiledQuery')
-        );
-
-
 
         this.viewModels.concDetailModel = new ConcDetailModel(
             this.layoutModel,
