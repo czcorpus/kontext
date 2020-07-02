@@ -1686,7 +1686,7 @@ class Actions(Querying):
         ans = defaultdict(lambda: 0)
         for item in self._lines_groups:
             ans[item[2]] += 1
-        return ans
+        return dict(groups=ans)
 
     @exposed(return_type='json', http_method='POST', mutates_conc=True)
     def ajax_rename_line_group(self, request):

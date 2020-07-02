@@ -35,8 +35,8 @@ import { ConcSaveModel } from './save';
 import { transformVmode } from '../options/structsAttrs';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
-import { ServerLineData, ServerTextChunk, CorpColumn, ServerPagination, ConcSummary,
-    ViewConfiguration, AudioPlayerActions } from './common';
+import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse, ServerPagination,
+    ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds, mapIdToIdWithColors } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
@@ -176,8 +176,6 @@ export interface ConcordanceModelState {
 
     supportsTokenConnect:boolean;
 
-    catColors:Array<string>;
-
     emptyRefValPlaceholder:string;
 
     saveFormVisible:boolean;
@@ -187,6 +185,8 @@ export interface ConcordanceModelState {
     refDetailVisible:boolean;
 
     lineSelOptionsVisible:boolean;
+
+    lineGroupIds:Array<LineGroupId>;
 }
 
 
@@ -250,7 +250,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
                 syntaxBoxData: null,
                 emptyRefValPlaceholder: '\u2014',
-                catColors: [], // TODO !!!!
+                lineGroupIds: attachColorsToIds(
+                    layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
+                    mapIdToIdWithColors
+                ),
                 saveFormVisible: false,
                 kwicDetailVisible: false,
                 refDetailVisible: false,
@@ -450,7 +453,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ViewOptionsActionName.SaveSettingsDone,
             action => {
                 this.changeState(state => {state.baseViewAttr = action.payload.baseViewAttr});
-                this.emitChange();
+                this.reloadPage().subscribe(
+                    (data) => {
+                        this.pushHistoryState(this.state.currentPage);
+                        this.emitChange();
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
             }
         );
 
@@ -478,7 +489,24 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<Actions.LineSelectionReset>(
             ActionName.LineSelectionReset,
             action => {
-                this.emitChange(); // TODO do we need this? TEST
+                this.changeState(state => {
+                    state.lines = List.map(
+                        v => ({...v, lineGroup: undefined}),
+                        state.lines
+                    );
+                    state.lineSelOptionsVisible = false;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.UnlockLineSelectionDone>(
+            ActionName.UnlockLineSelectionDone,
+            action => {
+                this.changeState(state => {
+                    state.numItemsInLockedGroups = 0;
+                    state.lineGroupIds = [];
+                    state.lineSelOptionsVisible = false;
+                });
             }
         );
 
@@ -488,17 +516,48 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 this.changeState(state => {
                     state.saveFormVisible = action.name === MainMenuActionName.ShowSaveForm
                 });
-                this.emitChange();
             }
         );
 
-        this.addActionHandler<Actions.ShowKwicDetail|Actions.ResetDetail>(
-            [ActionName.ShowKwicDetail, ActionName.ResetDetail],
+        this.addActionHandler<Actions.ShowKwicDetail>(
+            ActionName.ShowKwicDetail,
             action => {
                 this.changeState(state => {
-                    state.kwicDetailVisible = action.name === ActionName.ShowKwicDetail
+                    state.kwicDetailVisible = true;
+                    state.refDetailVisible = false;
+                    this.setLineFocus(state, action.payload.lineIdx, true);
                 });
-                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ResetDetail>(
+            ActionName.ResetDetail,
+            action => {
+                this.changeState(state => {
+                    state.kwicDetailVisible = false;
+                    this.resetLineFocus(state);
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.ShowRefDetail>(
+            ActionName.ShowRefDetail,
+            action => {
+                this.changeState(state => {
+                    state.refDetailVisible = true;
+                    state.kwicDetailVisible = false;
+                    this.setLineFocus(state, action.payload.lineIdx, true);
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.RefResetDetail>(
+            ActionName.RefResetDetail,
+            action => {
+                this.changeState(state => {
+                    state.refDetailVisible = false;
+                    this.resetLineFocus(state);
+                });
             }
         );
 
@@ -515,7 +574,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                         state.lines
                     );
                 });
-                this.emitChange();
             }
         );
 
@@ -535,7 +593,32 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                         state.lines
                     );
                 });
-                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ToggleLineSelOptions>(
+            ActionName.ToggleLineSelOptions,
+            action => {
+                this.changeState(state => {
+                    state.lineSelOptionsVisible = !state.lineSelOptionsVisible;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.MarkLinesDone>(
+            ActionName.MarkLinesDone,
+            action => {
+                this.reloadPage(action.payload.data.conc_persistence_op_id).subscribe(
+                    (data) => {
+                        this.changeState(state => {
+                            state.lineSelOptionsVisible = false;
+                            state.lineGroupIds = action.payload.groupIds;
+                        });
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
             }
         );
     }
@@ -566,23 +649,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         }
     }
 
-    private updateOnCorpViewOptsChange():void { // TODO !!
-        this.changeState(state => {
-            state.attrAllpos = this.layoutModel.getConcArgs()['attr_allpos'];
-            state.attrViewMode = this.layoutModel.getConcArgs()['attr_vmode'];
-        });
-
-        this.reloadPage().subscribe(
-            (data) => {
-                this.pushHistoryState(this.state.currentPage);
-                this.emitChange();
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        );
-    }
-
     getViewAttrs():Array<string> {
         return this.layoutModel.getConcArgs().head('attrs').split(',');
     }
@@ -607,8 +673,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      * The returned promise passes URL argument matching
      * currently displayed data page.
      */
-    reloadPage(concId?:string):Observable<MultiDict> {
-        return this.changePage('customPage', this.state.currentPage, concId);
+    private reloadPage(concId?:string):Observable<MultiDict> {
+        return this.changePage('customPage', this.state.currentPage, concId ? `~${concId}` : undefined);
     }
 
     private pageIsInRange(num:number):boolean {
@@ -639,7 +705,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             args.set('q', concId);
         }
 
-        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('view'),
             args
@@ -653,14 +719,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         );
     }
 
-    private importData(data:Kontext.AjaxResponse):void { // TODO data type is too general
+    private importData(data:AjaxConcResponse):void {
         try {
             this.changeState(state => {
                 state.lines = importLines(
-                    data['Lines'],
+                    data.Lines,
                     this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
                 );
-                state.numItemsInLockedGroups = data['num_lines_in_groups'];
+                state.numItemsInLockedGroups = data.num_lines_in_groups;
                 state.pagination = data['pagination'];
                 state.unfinishedCalculation = data['running_calc'];
             });
@@ -800,7 +866,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             case 'stop':
                 this.audioPlayer.stop();
                 this.setStopStatus();
-                this.emitChange();
             break;
         }
     }
@@ -826,10 +891,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         );
     }
 
-    getLines():Array<Line> {
-        return this.state.lines;
-    }
-
     isUnfinishedCalculation():boolean {
         return this.state.unfinishedCalculation;
     }
@@ -842,54 +903,29 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         return this.state.currentPage;
     }
 
-    setLineFocus(lineIdx:number, focus:boolean) {
-        this.state.lines = List.map(
+    private resetLineFocus(state:ConcordanceModelState):void {
+        state.lines = List.map(
             item => {
                 if (item.hasFocus) {
                     return {...item, hasFocus: false};
                 }
                 return item;
             },
-            this.state.lines
+            state.lines
         );
+    }
 
-        if (focus === true) {
-            const oldLine = this.state.lines[lineIdx];
-            if (oldLine) {
-                const idx = this.state.lines.indexOf(oldLine);
-                const newVal = {...oldLine};
-                newVal.hasFocus = focus;
-                this.changeState(state => {state.lines[idx] = newVal});
-            }
-        }
+    private setLineFocus(state:ConcordanceModelState, lineIdx:number, focus:boolean):void {
+        this.resetLineFocus(state);
+        state.lines[lineIdx].hasFocus = focus;
     }
 
     getConcSummary():ConcSummary {
         return this.state.concSummary;
     }
 
-    getAdHocIpm():number {
-        return this.state.adHocIpm;
-    }
-
-    getFastAdHocIpm():boolean {
-        return this.state.fastAdHocIpm;
-    }
-
-    getSubCorpName():string {
-        return this.state.subCorpName;
-    }
-
-    getCurrentSubcorpusOrigName():string {
-        return this.state.origSubcorpName;
-    }
-
     getAudioPlayerStatus():AudioPlayerStatus {
         return this.audioPlayer.getStatus();
-    }
-
-    getUseSafeFont():boolean {
-        return this.state.useSafeFont;
     }
 
     getSaveModel():ConcSaveModel {
@@ -898,30 +934,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     getSyntaxViewModel():PluginInterfaces.SyntaxViewer.IPlugin {
         return this.syntaxViewModel;
-    }
-
-    getSupportsSyntaxView():boolean {
-        return this.state.supportsSyntaxView;
-    }
-
-    getBaseCorpname():string {
-        return this.state.baseCorpname;
-    }
-
-    getCorporaColumns():Array<CorpColumn> {
-        return this.state.corporaColumns;
-    }
-
-    getViewMode():string {
-        return this.state.viewMode;
-    }
-
-    getShowLineNumbers():boolean {
-        return this.state.showLineNumbers;
-    }
-
-    getIsBusy():boolean {
-        return this.busyTimer !== null;
     }
 
     // TODO pick a good heuristics here
@@ -933,10 +945,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             return 10;
         }
         return 1;
-    }
-
-    getNumWaitingSecs():number {
-        return this.state.busyWaitSecs;
     }
 }
 

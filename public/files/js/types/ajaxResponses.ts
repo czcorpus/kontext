@@ -19,6 +19,9 @@
  */
 
 import {Kontext, TextTypes} from '../types/common';
+import { AjaxConcResponse } from '../models/concordance/common';
+
+// TODO !! this should be broken and moved into respective modules
 
 export namespace AjaxResponse {
 
@@ -203,7 +206,7 @@ export namespace AjaxResponse {
         switchmc:SwitchMainCorpArgs;
     }
 
-    export interface CorpusSwitchResponse extends Kontext.AjaxConcResponse {
+    export interface CorpusSwitchResponse extends AjaxConcResponse {
         corpname:string; // deprecated
         humanCorpname:string; // deprecated
         corpusIdent:Kontext.FullCorpusIdent;
@@ -264,7 +267,7 @@ export namespace FreqResultResponse {
         Total:number;
     }
 
-    export interface FreqResultResponse extends Kontext.AjaxConcResponse {
+    export interface FreqResultResponse extends AjaxConcResponse {
         Blocks:Array<Block>;
         lastpage:number; // 0|1 TODO type
         paging:number;
@@ -284,7 +287,7 @@ export namespace FreqResultResponse {
         full_size:number;
     }
 
-    export interface CTFreqResultResponse extends Kontext.AjaxConcResponse {
+    export interface CTFreqResultResponse extends AjaxConcResponse {
         data:CTFreqResultData;
         attr1:string;
         attr2:string;

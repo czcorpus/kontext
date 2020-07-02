@@ -36,6 +36,7 @@ import { FirstHitsModel } from '../../query/firstHits';
 import { QueryInfoModel } from './info';
 import { Actions, ActionName } from '../actions';
 import { ExtendedQueryOperation, importEncodedOperations, QueryPipelineResponse } from './common';
+import { AjaxConcResponse } from '../../concordance/common';
 
 
 /*
@@ -338,7 +339,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * @param formType a form type used to enter data to this operation (query, filter, sort)
      */
     private createOperation({state, opIdx, opKey, changedOpIdx, numOps, formType}:{state:QueryReplayModelState, opIdx:number,
-            opKey:string, changedOpIdx:number, numOps:number, formType:string}):Observable<Kontext.AjaxConcResponse|null> {
+            opKey:string, changedOpIdx:number, numOps:number, formType:string}):Observable<AjaxConcResponse|null> {
         const prepareFormData:Observable<AjaxResponse.ConcFormArgs|null> = changedOpIdx !== opIdx ? this.syncFormData(state, opIdx) : rxOf(null);
         if (opIdx === 0) {
             return rxOf([]).pipe(
@@ -362,7 +363,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     () => {
                         const url = this.queryModel.getSubmitUrl();
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
+                            return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
                                 url,
                                 {
@@ -416,7 +417,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             activeModel = this.mlConcSortModel;
                         }
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
+                            return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
                                 activeModel.getSubmitUrl(opKey),
                                 {format: 'json'}
@@ -437,7 +438,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     () => {
                         const url = this.sampleModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
+                            return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
                                 url,
                                 {format: 'json'}
@@ -459,7 +460,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 concatMap(
                     (targetUrl) => {
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
+                            return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
                                 targetUrl,
                                 {format: 'json'}
@@ -483,7 +484,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 concatMap(
                     (url) => {
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
+                            return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
                                 url,
                                 {format: 'json'}
@@ -508,7 +509,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     () => {
                         const targetUrl = this.pageModel.createActionUrl('filter_subhits', this.pageModel.getConcArgs().items());
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
+                            return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
                                 targetUrl,
                                 {format: 'json'}
@@ -533,7 +534,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     () => {
                         const targetUrl = this.firstHitsModel.getSubmitUrl(opKey);
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
+                            return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
                                 targetUrl,
                                 {format: 'json'}
@@ -563,7 +564,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 concatMap(
                     (targetUrl) => {
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<Kontext.AjaxConcResponse>(
+                            return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
                                 targetUrl,
                                 {format: 'json'}
@@ -599,7 +600,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * containing a side-effect local action (typically - the last operation contains something
      * like observable.pipe(tap(foo)=>sideEffect(foo)).
      */
-    private branchQuery(state:QueryReplayModelState, dispatch:SEDispatcher, changedOpIdx:number):Observable<Kontext.AjaxConcResponse|null> {
+    private branchQuery(state:QueryReplayModelState, dispatch:SEDispatcher, changedOpIdx:number):Observable<AjaxConcResponse|null> {
         const args = this.pageModel.getConcArgs();
         return this.pageModel.ajax$<QueryPipelineResponse>(
             HTTP.Method.GET,
@@ -648,7 +649,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 })
             ),
             tap(
-                (data:Kontext.AjaxConcResponse|null) => {
+                (data:AjaxConcResponse|null) => {
                     const newQVal = data !== null && data.Q ? data.Q || [] : [];
                     this.pageModel.replaceConcArg('q', newQVal);
                 }

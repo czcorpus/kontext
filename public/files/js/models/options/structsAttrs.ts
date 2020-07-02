@@ -333,7 +333,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         const ans = {
             setattrs: pipe(
                 state.attrList,
-                List.sort(attrCmp),
+                List.sorted(attrCmp),
                 List.filter(item => item.selected),
                 List.map(item => item.n)
             ),

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { List, Color } from 'cnc-tskit';
+import { List } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { Line as ConcLine } from '../../types/concordance';
@@ -34,6 +34,7 @@ import { TextChunk, ConcToken } from '../../types/concordance';
 import { Actions, ActionName } from '../../models/concordance/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName }
     from '../../models/mainMenu/actions';
+import { LineSelectionModes } from '../../models/concordance/common';
 
 
 export interface LinesModuleArgs {
@@ -45,13 +46,8 @@ export interface LinesModuleArgs {
 }
 
 
-export interface ConcLinesProps {
-    onReady:()=>void;
-}
-
-
 export interface LinesViews {
-    ConcLines:React.ComponentClass<ConcLinesProps>;
+    ConcLines:React.ComponentClass<{}>;
 }
 
 const ATTR_SEPARATOR = '/';
@@ -494,13 +490,15 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         corpsWithKwic:Array<string>;
         viewMode:string; // TODO enum
         attrViewMode:ViewOptions.AttrViewMode;
-        lineSelMode:string; // TODO enum
+        lineSelMode:LineSelectionModes;
         cols:Array<{n:string; visible:boolean;}>;
         showLineNumbers:boolean;
         supportsSyntaxView:boolean;
         numItemsInLockedGroups:number;
         emptyRefValPlaceholder:string;
         data:ConcLine;
+        groupColor:string|undefined;
+        groupTextColor:string|undefined;
     }> {
 
         constructor(props) {
@@ -656,7 +654,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         tokenNumber={primaryLang.tokenNumber}
                         mode={this.props.lineSelMode}
                         lockedGroupId={this.props.numItemsInLockedGroups > 0 ? this.props.data.lineGroup : null}
-                        groupId={this.props.data.lineGroup} />
+                        groupId={this.props.data.lineGroup}
+                        groupColor={this.props.groupColor}
+                        groupTextColor={this.props.groupTextColor} />
                     <td className="syntax-tree">
                         {this.props.supportsSyntaxView ?
                             <extras.SyntaxTreeButton tokenNumber={primaryLang.tokenNumber}
@@ -717,13 +717,21 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             });
         }
 
+        private findGroupColor(id:number):[string, string]|[undefined, undefined] {
+            const groupId = List.find(v => v.id === id, this.props.lineGroupIds);
+            return groupId ? [groupId.bgColor, groupId.fgColor] : [undefined, undefined];
+        }
+
         render() {
             return (<>
                 {List.map(
-                    (line, i) => (
-                        <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
+                    (line, i) => {
+                        const [bgColor, fgColor] = this.findGroupColor(line.lineGroup);
+                        return <Line key={`${i}:${List.head(line.languages).tokenNumber}`}
                             lineIdx={i}
                             data={line}
+                            groupColor={bgColor}
+                            groupTextColor={fgColor}
                             cols={this.props.corporaColumns}
                             viewMode={this.props.viewMode}
                             attrViewMode={ConcordanceModel.getViewAttrsVmode(this.props)}
@@ -731,12 +739,12 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                             mainCorp={this.props.maincorp}
                             corpsWithKwic={this.props.kwicCorps}
                             showLineNumbers={this.props.showLineNumbers}
-                            lineSelMode={this.props.mode}
+                            lineSelMode={LineSelectionModel.actualSelection(this.props).mode}
                             numItemsInLockedGroups={this.props.numItemsInLockedGroups}
                             emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
                             supportsSyntaxView={this.props.supportsSyntaxView}
                             supportsTokenConnect={this.props.supportsTokenConnect} />
-                ),
+                    },
                     this.props.lines
                 )}
             </>);
@@ -748,14 +756,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // ------------------------- <ConcLines /> ---------------------------
 
-    class ConcLines extends React.PureComponent<ConcLinesProps & ConcordanceModelState> {
+    class ConcLines extends React.PureComponent<ConcordanceModelState> {
 
-
-        componentDidMount() {
-            if (typeof this.props.onReady === 'function') { // <-- a glue with legacy code
-                this.props.onReady();
-            }
-        }
 
         render() {
             const numVisibleCols = List.reduce(

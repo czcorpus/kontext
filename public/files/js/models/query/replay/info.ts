@@ -18,17 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../../types/common';
-import { PageModel } from '../../../app/page';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { List } from 'cnc-tskit';
 import { Observable } from 'rxjs';
-import { ActionName, Actions } from '../actions';
-import { QueryOverviewResponseRow } from './common';
 import { map } from 'rxjs/operators';
 
+import { Kontext } from '../../../types/common';
+import { PageModel } from '../../../app/page';
+import { ActionName, Actions } from '../actions';
+import { QueryOverviewResponseRow } from './common';
+import { AjaxConcResponse } from '../../concordance/common';
 
-interface QueryOverviewResponse extends Kontext.AjaxConcResponse {
+
+interface QueryOverviewResponse extends AjaxConcResponse {
     Desc:Array<QueryOverviewResponseRow>;
 }
 

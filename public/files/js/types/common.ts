@@ -283,6 +283,10 @@ export namespace Kontext {
         browserInfo:IBrowserInfo;
     }
 
+    export interface AjaxResponse {
+        messages:Array<[string, string]>;
+    }
+
     export interface LayoutModel {
         corpusInfoModel:ICorpusInfoModel,
         userInfoModel:IModel<{}>,
@@ -296,17 +300,6 @@ export namespace Kontext {
         contentType?:string;
         responseType?:string;
         accept?:string;
-    }
-
-    export interface AjaxResponse {
-        messages:Array<[string, string]>;
-    }
-
-    export interface AjaxConcResponse extends AjaxResponse {
-        Q:Array<string>;
-        conc_persistence_op_id:string;
-        num_lines_in_groups:number;
-        lines_groups_numbers:Array<number>;
     }
 
     export interface AsyncTaskInfo {

@@ -19,8 +19,10 @@
  */
 
 import { Action } from 'kombo';
-import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue } from './common';
+import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue, AjaxConcResponse, LineGroupId, RefsColumn } from './common';
 import { SaveData } from '../../app/navigation';
+import { Kontext } from '../../types/common';
+import { Line } from '../../types/concordance';
 
 export enum ActionName {
     ChangeMainCorpus = 'CONCORDANCE_CHANGE_MAIN_CORPUS',
@@ -46,6 +48,7 @@ export enum ActionName {
     DetailSwitchMode = 'CONCORDANCE_DETAIL_SWITCH_MODE',
     ResetDetail = 'CONCORDANCE_RESET_DETAIL',
     ShowRefDetail = 'CONCORDANCE_SHOW_REF_DETAIL',
+    ShowRefDetailDone = 'CONCORDANCE_SHOW_REF_DETAIL_DONE',
     PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
     StopSpeech = 'CONCORDANCE_STOP_SPEECH',
     RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL',
@@ -232,6 +235,13 @@ export namespace Actions {
         name:ActionName.ShowRefDetail;
     }
 
+    export interface ShowRefDetailDone extends Action<{
+        data:Array<[RefsColumn, RefsColumn]>;
+        lineIdx:number;
+    }> {
+        name:ActionName.ShowRefDetailDone;
+    }
+
     export interface PlaySpeech extends Action<{
         rowIdx:number;
         segments:Array<string>;
@@ -334,6 +344,8 @@ export namespace Actions {
     }
 
     export interface MarkLinesDone extends Action<{
+        data:AjaxConcResponse;
+        groupIds:Array<LineGroupId>;
     }> {
         name:ActionName.MarkLinesDone;
     }
@@ -351,6 +363,7 @@ export namespace Actions {
     export interface UnlockLineSelectionDone extends Action<{
         selection:Array<LineSelValue>;
         query:Array<string>;
+        mode:LineSelectionModes;
 
     }> {
         name:ActionName.UnlockLineSelectionDone;

@@ -990,14 +990,12 @@ export class ViewPage {
             canSendEmail: this.layoutModel.getConf<boolean>('canSendMail'),
             ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
-            SpeakerColors: this.lineGroupsChart.extendBaseColorPalette(1),
             SpeechSegment: this.layoutModel.getConf<[string, string]>('SpeechSegment'),
             SpeechOverlapAttr: this.layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
             SpeechOverlapVal: this.layoutModel.getConf<string>('SpeechOverlapVal'),
             SpeechAttrs: this.layoutModel.getConf<Array<string>>('SpeechAttrs'),
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
-            catColors: this.lineGroupsChart.extendBaseColorPalette(),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
             supportsTokenConnect: tokenConnect ? tokenConnect.providesAnyTokenInfo() : false,
@@ -1050,7 +1048,6 @@ export class ViewPage {
         this.viewModels.lineSelectionModel = new LineSelectionModel({
             layoutModel: this.layoutModel,
             dispatcher: this.layoutModel.dispatcher,
-            concLineModel: this.viewModels.lineViewModel,
             clStorage: lineSelStorage,
             onLeavePage: () => {
                 window.removeEventListener('beforeunload', this.handleBeforeUnload);
@@ -1069,14 +1066,12 @@ export class ViewPage {
                 speechOverlapAttr: lineViewProps.SpeechOverlapAttr,
                 speechOverlapVal: lineViewProps.SpeechOverlapVal
             },
-            lineViewProps.SpeakerColors,
             lineViewProps.WideCtxGlobals,
             tokenConnect
         );
         this.viewModels.refsDetailModel = new RefsDetailModel(
             this.layoutModel,
-            this.layoutModel.dispatcher,
-            this.viewModels.lineViewModel
+            this.layoutModel.dispatcher
         );
 
         const showFreqInfo = this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&

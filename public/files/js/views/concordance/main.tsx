@@ -42,6 +42,7 @@ import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dash
 import { UsageTipsModel } from '../../models/usageTips';
 import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/concordance/actions';
+import { LineSelectionModes } from '../../models/concordance/common';
 
 
 export class ViewPageModels {
@@ -71,7 +72,6 @@ export interface ConcordanceDashboardProps {
         anonymousUser:boolean;
         SortIdx:Array<{page:number; label:string}>;
         NumItemsInLockedGroups:number;
-        catColors:Array<string>;
         KWICCorps:Array<string>;
         canSendEmail:boolean;
         ShowConcToolbar:boolean;
@@ -132,43 +132,45 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     // ------------------------- <LineSelectionMenu /> ---------------------------
 
     const LineSelectionMenu:React.SFC<{
-        numItemsInLockedGroups:number;
+        isLocked:boolean;
         canSendEmail:boolean;
-        mode:string;
+        mode:LineSelectionModes;
+        isBusy:boolean;
         onChartFrameReady?:()=>void;
         onCloseClick:()=>void;
 
     }> = (props) => {
 
         const renderContents = () => {
-            if (props.numItemsInLockedGroups > 0) {
+            if (props.isLocked) {
                 return <lineSelViews.LockedLineGroupsMenu
                         chartCallback={props.onChartFrameReady}
                         canSendEmail={props.canSendEmail}
                         mode={props.mode} />;
 
             } else {
-                return <lineSelViews.LineBinarySelectionMenu />;
+                return <lineSelViews.UnsavedLineSelectionMenu mode={props.mode} isBusy={props.isBusy} />;
             }
         };
 
         return (
-            <layoutViews.PopupBox onCloseClick={props.onCloseClick}
-                    customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
-                    takeFocus={true}>
-                {renderContents()}
-            </layoutViews.PopupBox>
+            <layoutViews.ModalOverlay onCloseKey={props.onCloseClick}>
+                <layoutViews.CloseableFrame onCloseClick={props.onCloseClick} label={he.translate('linesel__operations_modal_heading')}>
+                    {renderContents()}
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
         );
     }
 
     // ------------------------- <LineSelectionOps /> ---------------------------
 
-    interface LileSelectionOpsProps {
+    interface LineSelectionOpsProps {
         onChartFrameReady?:()=>void;
+        numLinesInLockedGroups:number;
         visible:boolean;
     }
 
-    class LineSelectionOps extends React.PureComponent<LileSelectionOpsProps & LineSelectionModelState> {
+    class LineSelectionOps extends React.PureComponent<LineSelectionOpsProps & LineSelectionModelState> {
 
         constructor(props) {
             super(props);
@@ -199,7 +201,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _getMsgStatus() {
-            if (this.props.numItemsInLockedGroups > 0) {
+            if (this.props.isLocked) {
                 return tuple(
                     he.createStaticUrl('img/info-icon.svg'),
                     he.translate('linesel__you_have_saved_line_groups')
@@ -217,15 +219,15 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _renderNumSelected() {
-            const numSel = LineSelectionModel.numSelectedItems(this.props);
+            const numSel = this.props.numLinesInLockedGroups > 0 ?
+                this.props.numLinesInLockedGroups : LineSelectionModel.numSelectedItems(this.props);
             const [statusImg, elmTitle] = this._getMsgStatus();
-            const numSelected = numSel > 0 ? numSel : this.props.numItemsInLockedGroups;
-            if (numSelected > 0) {
+            if (numSel > 0) {
                 return (
                     <span className="lines-selection" title={elmTitle}>
                         {'\u00A0'}
                         (<a key="numItems" onClick={this._selectMenuTriggerHandler}>
-                        <span className="value">{numSelected}</span>
+                        <span className="value">{numSel}</span>
                         {'\u00A0'}{he.translate('concview__num_sel_lines')}</a>
                         )
                         {statusImg ?
@@ -239,24 +241,23 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         render() {
-            const mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : this.props.mode;
             return (
                 <div className="lines-selection-controls">
                     {he.translate('concview__line_sel')}:{'\u00A0'}
-                    {/* TODO remove id */}
-                    <select id="selection-mode-switch"
-                            disabled={this.props.numItemsInLockedGroups > 0 ? true : false}
+                    <select className="selection-mode-switch"
+                            disabled={this.props.isLocked}
                             onChange={this._selectChangeHandler}
-                            defaultValue={mode}>
+                            defaultValue={LineSelectionModel.actualSelection(this.props).mode}>
                         <option value="simple">{he.translate('concview__line_sel_simple')}</option>
                         <option value="groups">{he.translate('concview__line_sel_groups')}</option>
                     </select>
                     {this._renderNumSelected()}
                     {this.props.visible ?
                         <LineSelectionMenu
-                                mode={mode}
+                                mode={LineSelectionModel.actualSelection(this.props).mode}
+                                isBusy={this.props.isBusy}
+                                isLocked={this.props.isLocked}
                                 onCloseClick={this._closeMenuHandler}
-                                numItemsInLockedGroups={this.props.numItemsInLockedGroups}
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={!!this.props.emailDialogCredentials} />
                         :  null}
@@ -265,7 +266,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
     }
 
-    const BoundLineSelectionOps = BoundWithProps<LileSelectionOpsProps, LineSelectionModelState>(LineSelectionOps, lineSelectionModel);
+    const BoundLineSelectionOps = BoundWithProps<LineSelectionOpsProps, LineSelectionModelState>(LineSelectionOps, lineSelectionModel);
 
 
     // ------------------------- <ConcSummary /> ---------------------------
@@ -455,6 +456,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         canSendEmail:boolean;
         viewMode:ViewOptions.AttrViewMode;
         lineSelOpsVisible:boolean;
+        numLinesInLockedGroups:number;
         onChartFrameReady?:()=>void;
     }
 
@@ -465,7 +467,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 <div className="toolbar-level">
                     <BoundLineSelectionOps
                             visible={this.props.lineSelOpsVisible}
-                            onChartFrameReady={this.props.onChartFrameReady} />
+                            onChartFrameReady={this.props.onChartFrameReady}
+                            numLinesInLockedGroups={this.props.numLinesInLockedGroups} />
                     {this.props.showConcToolbar ?
                         <ConcOptions viewMode={this.props.viewMode} />
                         : null}
@@ -614,16 +617,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             });
         }
 
-        _shouldDisplayConcDetailBox() {
-            /* TODO !!!
-            return this.props.hasConcDetailData
-                    || this.props.tokenConnectData.renders.size > 0
-                    || this.props.concDetailModelIsBusy
-                    || this.props.tokenConnectIsBusy;
-                    */
-            return this.props.kwicDetailVisible; // TODO
-        }
-
         render() {
             return (
                 <div className="ConcordanceView">
@@ -633,7 +626,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 kwicLength={this.props.syntaxBoxData.kwicLength}
                                 onReady={this.props.onSyntaxPaneReady}
                                 onClose={this.props.onSyntaxPaneClose} /> : null}
-                    {this._shouldDisplayConcDetailBox() ?
+                    {this.props.kwicDetailVisible ?
                         <concDetailViews.ConcordanceDetail closeClickHandler={this._handleDetailCloseClick} />
                         : null}
                     {this.props.refDetailVisible ?
@@ -657,6 +650,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
+                                numLinesInLockedGroups={this.props.numItemsInLockedGroups}
                                 viewMode={ConcordanceModel.getViewAttrsVmode(this.props)} />
                         {this.props.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}

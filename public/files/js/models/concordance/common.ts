@@ -20,9 +20,14 @@
 
 import { StatefulModel, Action } from 'kombo';
 
-import { ViewOptions } from '../../types/common';
+import { ViewOptions, Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
+import { Color, pipe, List } from 'cnc-tskit';
 
+export interface RefsColumn {
+    name:string;
+    val:string;
+}
 
 export type LineSelectionModes = 'simple'|'groups';
 
@@ -44,6 +49,14 @@ export type AudioPlayerActions = 'play'|'pause'|'stop';
 
 export type DetailExpandPositions = 'left'|'right';
 
+
+export interface LineGroupId {
+    id:number;
+    fgColor:string;
+    bgColor:string;
+}
+
+
 export interface ServerTextChunk {
     class:string;
     str:string;
@@ -51,13 +64,6 @@ export interface ServerTextChunk {
     close_link?:{speech_path:string};
     continued?:boolean;
     tail_posattrs?:Array<string>;
-}
-
-export interface ServerPagination {
-    firstPage:number;
-    prevPage:number;
-    nextPage:number;
-    lastPage:number;
 }
 
 export interface SingleCorpServerLineData {
@@ -79,6 +85,28 @@ export interface SingleCorpServerLineData {
 export interface ServerLineData extends SingleCorpServerLineData {
     Align:Array<SingleCorpServerLineData>;
 }
+
+export interface ServerPagination {
+    firstPage:number;
+    prevPage:number;
+    nextPage:number;
+    lastPage:number;
+}
+
+export interface AjaxConcResponse extends Kontext.AjaxResponse {
+    Q:Array<string>;
+    conc_persistence_op_id:string;
+    num_lines_in_groups:number;
+    lines_groups_numbers:Array<number>;
+    Lines:Array<ServerLineData>;
+    conc_use_safe_font:number; // TODO should be boolean
+    concsize:number;
+    finished:boolean;
+    fast_adhoc_ipm:boolean;
+    pagination:ServerPagination;
+}
+
+
 
 export interface ConcSummary {
     concSize: number;
@@ -218,16 +246,12 @@ export interface ViewConfiguration {
      */
     SpeechSegment:[string, string];
 
-    SpeakerColors:Array<string>;
-
     /**
      * A structure used to show whole document. It is optional (null is ok).
      */
     StructCtx:string;
 
     WideCtxGlobals:Array<[string,string]>;
-
-    catColors:Array<string>;
 
     supportsSyntaxView:boolean;
 
@@ -266,4 +290,38 @@ export class DummySyntaxViewModel extends StatefulModel<{}>
     unregister():void {}
 
     registerOnError(fn:(e:Error)=>void):void {}
+}
+
+
+function getDynamicColor(idx:number, size:number, baseColor:Color.RGBA):Color.RGBA {
+    const [hue, sat, lig] = Color.rgb2Hsl(baseColor)
+
+    const newHue = hue + idx/size;
+    return pipe(
+        [newHue > 1 ? newHue - 1 : newHue, sat, lig],
+        Color.hsl2Rgb()
+    );
+}
+
+
+export function attachColorsToIds<T, U>(ids:Array<T>, mapper:(item:T, fgColor:string, bgColor:string)=>U):Array<U> {
+    return pipe(
+        ids,
+        List.map((v, i) => {
+            const bgColor = getDynamicColor(i, ids.length, Color.importColor(1, '#009EE0'));
+            return mapper(
+                v,
+                pipe(
+                    bgColor,
+                    Color.textColorFromBg(),
+                    Color.color2str()
+                ),
+                Color.color2str(bgColor)
+            );
+        })
+    );
+}
+
+export function mapIdToIdWithColors(id:number, fgColor:string, bgColor:string):LineGroupId {
+    return {id, fgColor, bgColor};
 }

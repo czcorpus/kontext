@@ -19,16 +19,12 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, Bound } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
 import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
 import { ActionName, Actions } from '../../models/concordance/actions';
 import { ActionName as UserActionName, Actions as UserActions } from '../../models/user/actions';
-
-
-export interface LineBinarySelectionMenuProps {
-
-}
+import { LineSelectionModes } from '../../models/concordance/common';
 
 
 export interface LockedLineGroupsMenuProps {
@@ -38,7 +34,7 @@ export interface LockedLineGroupsMenuProps {
 }
 
 export interface LineSelectionViews {
-    LineBinarySelectionMenu:React.ComponentClass<LineBinarySelectionMenuProps>;
+    UnsavedLineSelectionMenu:React.SFC<{mode:LineSelectionModes; isBusy:boolean}>;
     LockedLineGroupsMenu:React.ComponentClass<LockedLineGroupsMenuProps>;
 }
 
@@ -83,16 +79,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ----------------------------- <LineBinarySelectionMenu /> --------------------------
+    // ----------------------------- <UnsavedLineSelectionMenu /> --------------------------
 
-    class LineBinarySelectionMenu extends React.PureComponent<LineSelectionModelState> {
+    const UnsavedLineSelectionMenu:React.SFC<{mode:LineSelectionModes; isBusy:boolean}> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._actionChangeHandler = this._actionChangeHandler.bind(this);
-        }
-
-        _actionChangeHandler(evt:React.ChangeEvent<{value:string}>) {
+        const actionChangeHandler = (evt:React.ChangeEvent<{value:string}>) => {
             const actionMap = {
                 clear: ActionName.LineSelectionReset,
                 remove: ActionName.RemoveSelectedLines,
@@ -107,44 +98,40 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     payload: {}
                 });
             }
+        };
+
+        let switchComponent = null;
+        if (props.mode === 'simple') {
+            switchComponent = <SimpleSelectionModeSwitch initialAction="-"
+                                switchHandler={actionChangeHandler} />;
+
+        } else if (props.mode === 'groups') {
+            switchComponent = <GroupsSelectionModelSwitch initialAction="-"
+                                switchHandler={actionChangeHandler} />;
         }
 
-        render() {
-            let switchComponent = null;
-            if (this.props.mode === 'simple') {
-                switchComponent = <SimpleSelectionModeSwitch initialAction="-"
-                                    switchHandler={this._actionChangeHandler} />;
+        let heading;
+        if (props.mode === 'simple') {
+            heading = he.translate('linesel__unsaved_line_selection_heading');
 
-            } else if (this.props.mode === 'groups') {
-                switchComponent = <GroupsSelectionModelSwitch initialAction="-"
-                                    switchHandler={this._actionChangeHandler} />;
-            }
-
-            let heading;
-            if (this.props.mode === 'simple') {
-                heading = he.translate('linesel__unsaved_line_selection_heading');
-
-            } else if (this.props.mode === 'groups') {
-                heading = he.translate('linesel__unsaved_line_groups_heading');
-            }
-
-            return (
-                <div id="selection-actions">
-                    <h3>{heading}</h3>
-                    {he.translate('global__actions')}:{'\u00A0'}
-                    {switchComponent}
-                    {this.props.isBusy ?
-                        <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={he.translate('global__loading')} />
-                        : null}
-                    {this.props.mode === 'groups' ?
-                        <p style={{marginTop: '1em'}}>({he.translate('linesel__no_ops_after_groups_save_info')}.)</p> : null}
-                </div>
-            );
+        } else if (props.mode === 'groups') {
+            heading = he.translate('linesel__unsaved_line_groups_heading');
         }
-    }
 
-    const BoundLineBinarySelectionMenu = Bound(LineBinarySelectionMenu, lineSelectionModel);
+        return (
+            <div id="selection-actions">
+                <h3>{heading}</h3>
+                {he.translate('global__actions')}:{'\u00A0'}
+                {switchComponent}
+                {props.isBusy ?
+                    <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                            title={he.translate('global__loading')} />
+                    : null}
+                {props.mode === 'groups' ?
+                    <p style={{marginTop: '1em'}}>({he.translate('linesel__no_ops_after_groups_save_info')}.)</p> : null}
+            </div>
+        );
+    };
 
     // --------------------------- <EmailDialog /> ----------------------------
 
@@ -431,8 +418,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
+    const BoundLockedLineGroupsMenu = BoundWithProps<LockedLineGroupsMenuProps, LineSelectionModelState>(LockedLineGroupsMenu, lineSelectionModel);
+
     return {
-        LineBinarySelectionMenu: BoundLineBinarySelectionMenu,
-        LockedLineGroupsMenu: LockedLineGroupsMenu
+        UnsavedLineSelectionMenu: UnsavedLineSelectionMenu,
+        LockedLineGroupsMenu: BoundLockedLineGroupsMenu
     };
 }

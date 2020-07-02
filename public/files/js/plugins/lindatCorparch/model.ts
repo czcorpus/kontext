@@ -27,6 +27,7 @@ import * as Immutable from 'immutable';
 import { Action } from 'kombo';
 import { forkJoin, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import { AjaxConcResponse } from '../../models/concordance/common';
 
 export enum ParallelType {
     DEFAULT = 'default',
@@ -72,7 +73,7 @@ function isCorplistNodeServer(n:CorplistNodeServer|CorplistNodeServerResponse|Co
 /**
  * A server response containing corplist data
  */
-export interface CorplistNodeServerResponse extends Kontext.AjaxConcResponse {
+export interface CorplistNodeServerResponse extends AjaxConcResponse {
     corplist:Array<CorplistNodeServer>;
     sort_corplist:Array<CorplistNodeServer>; // TODO this can be generated on client (=> 50% less data via network)
 }
@@ -80,7 +81,7 @@ export interface CorplistNodeServerResponse extends Kontext.AjaxConcResponse {
 /**
  * A response containing list of permitted corpora
  */
-interface PermittedCorporaResponse extends Kontext.AjaxConcResponse {
+interface PermittedCorporaResponse extends AjaxConcResponse {
     permitted_corpora:{[corpusId:string]:string}; // corpus ID => corpus variant
 }
 

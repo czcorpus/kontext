@@ -25,19 +25,17 @@ import { tap, map } from 'rxjs/operators';
 import { Kontext } from '../../types/common';
 import { ConcLinesStorage } from './selectionStorage';
 import { PageModel } from '../../app/page';
-import { ConcordanceModel } from './main';
-import { HTTP, List, Color, pipe, tuple } from 'cnc-tskit';
-import { LineSelections, LineSelectionModes, LineSelValue } from './common';
+import { HTTP, List } from 'cnc-tskit';
+import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse, LineGroupId, attachColorsToIds, mapIdToIdWithColors } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as UserInfoActions, ActionName as UserInfoActionName } from '../user/actions';
-import { Line } from '../../types/concordance';
 
 
-interface ReenableEditResponse extends Kontext.AjaxConcResponse {
+interface ReenableEditResponse extends AjaxConcResponse {
     selection:Array<LineSelValue>;
 }
 
-interface SendSelToMailResponse extends Kontext.AjaxConcResponse {
+interface SendSelToMailResponse extends AjaxConcResponse {
     ok:boolean;
 }
 
@@ -46,15 +44,24 @@ export interface LineSelectionModelState {
 
     /**
      * Selected lines information. Encoding is as follows:
-     * [kwic_token_id, [line_number, ]]
+     * query_hash => [kwic_token_id, kwic_length, cat_num]
+     * where query_hash is an internal hash of provided query
+     * (i.e. in case KonText provides 'q' argument as has already
+     * it is hashed here again)
      */
     data:LineSelections;
 
+    /**
+     * An internal hash of actual query. It hashes
+     * whatever is provided in the 'q' argument
+     * (which can be a list of Manatee operations but
+     * also a query ID).
+     */
     queryHash:string;
 
-    mode:LineSelectionModes;
+    isLocked:boolean;
 
-    currentGroupIds:Array<number>;
+    currentGroupIds:Array<LineGroupId>;
 
     maxGroupId:number;
 
@@ -62,32 +69,14 @@ export interface LineSelectionModelState {
 
     emailDialogCredentials:Kontext.UserCredentials|null;
 
-    numItemsInLockedGroups:number;
-
     lastCheckpointUrl:string;
 
     renameLabelDialogVisible:boolean;
-
-    catColors:Array<[string, string]>; // bg, fg
-}
-
-function determineMode(state:LineSelectionModelState,
-            concLineModel:ConcordanceModel):'simple'|'groups' {
-    if (state.data[state.queryHash].selections.length > 0) {
-        return this.clStorage.getMode();
-
-    } else if (concLineModel.getNumItemsInLockedGroups() > 0) {
-        return 'groups';
-
-    } else {
-        return 'simple';
-    }
 }
 
 export interface LineSelectionModelArgs {
     layoutModel:PageModel;
     dispatcher:IFullActionControl;
-    concLineModel:ConcordanceModel;
     clStorage:ConcLinesStorage<LineSelectionModelState>;
     onLeavePage:()=>void;
 }
@@ -110,14 +99,6 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
 
     private readonly onLeavePage:()=>void;
 
-    static ensureCatColor(state:LineSelectionModelState, catIdx:number):[string, string] {
-        const cat = state.catColors[catIdx];
-        if (cat !== undefined) {
-            return tuple(cat[0], cat[1]);
-        }
-        return tuple('#eeeeee', '#111111');
-    }
-
     static numSelectedItems(state:LineSelectionModelState):number {
         return state.data[state.queryHash] ? state.data[state.queryHash].selections.length : 0;
     }
@@ -131,23 +112,35 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         clStorage.init(state, query);
     }
 
-    constructor({layoutModel, dispatcher, concLineModel, clStorage, onLeavePage}:LineSelectionModelArgs) {
+    static actualSelection(state:LineSelectionModelState):ConcLineSelection {
+        const ans = state.data[state.queryHash];
+        return ans ?
+            ans :
+            {
+                created: new Date().getTime() / 1000,
+                selections: [],
+                mode: 'simple'
+            };
+    }
+
+    constructor({layoutModel, dispatcher, clStorage, onLeavePage}:LineSelectionModelArgs) {
         const query = layoutModel.getConf<Array<string>>('compiledQuery');
         const initState:LineSelectionModelState = {
-            mode: 'simple',
-            currentGroupIds: layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
+            currentGroupIds: attachColorsToIds(
+                layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
+                mapIdToIdWithColors
+            ),
             maxGroupId: layoutModel.getConf<number>('concLineMaxGroupNum'),
+            isLocked: layoutModel.getConf<number>('NumLinesInGroups') > 0,
             isBusy: false,
             emailDialogCredentials: null,
             data: {},
             queryHash: '',
-            numItemsInLockedGroups: concLineModel.getNumItemsInLockedGroups(),
             lastCheckpointUrl: layoutModel.createActionUrl(
                 'view',
                 layoutModel.getConcArgs().items()
             ),
-            renameLabelDialogVisible: false,
-            catColors: [] // TODO
+            renameLabelDialogVisible: false
         };
         LineSelectionModel.registerQuery(initState, clStorage, query);
         super(
@@ -169,7 +162,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                     this.layoutModel.showMessage('error',
                             this.layoutModel.translate(
                                 'linesel__error_group_name_please_use{max_group}',
-                                {max_group: this.getInitialState().maxGroupId}
+                                {max_group: this.getState().maxGroupId}
                             )
                     );
                 }
@@ -188,6 +181,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             (state, action) => {
                 if (!action.error) {
                     state.isBusy = false;
+                    state.currentGroupIds = [];
                 }
             }
         );
@@ -217,15 +211,17 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
 
         this.addActionHandler<Actions.RemoveSelectedLines>(
             ActionName.RemoveSelectedLines,
-            (state, action) => {
-                this.removeLines(state, LineSelectionModel.FILTER_NEGATIVE);
+            null,
+            (state, action, dispatch) => {
+                this.removeLines(state, LineSelectionModel.FILTER_NEGATIVE); // we leave the page here
             }
         );
 
         this.addActionHandler<Actions.RemoveNonSelectedLines>(
             ActionName.RemoveNonSelectedLines,
-            (state, action) => {
-                this.removeLines(state, LineSelectionModel.FILTER_POSITIVE);
+            null,
+            (state, action, dispatch) => {
+                this.removeLines(state, LineSelectionModel.FILTER_POSITIVE); // we leave the page here
             }
         );
 
@@ -233,6 +229,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             ActionName.MarkLinesDone,
             (state, action) => {
                 state.isBusy = false;
+                state.currentGroupIds = action.payload.groupIds;
+                state.isLocked = true;
             }
         );
 
@@ -242,10 +240,17 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.markLines(state).subscribe(
-                    (args) => {
+                this.saveGroupsToServerConc(state).subscribe(
+                    (response) => {
                         dispatch<Actions.MarkLinesDone>({
-                            name: ActionName.MarkLinesDone
+                            name: ActionName.MarkLinesDone,
+                            payload: {
+                                data: response,
+                                groupIds: attachColorsToIds(
+                                    response.lines_groups_numbers,
+                                    mapIdToIdWithColors
+                                )
+                            }
                         });
                     },
                     (err) => {
@@ -261,8 +266,9 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
 
         this.addActionHandler<Actions.RemoveLinesNotInGroups>(
             ActionName.RemoveLinesNotInGroups,
-            (state, action) => {
-                this.removeNonGroupLines(state); // we leave the page here ...
+            null,
+            (state, action, dispatch) => {
+                this.removeNonGroupLines(); // we leave the page here ...
             }
         );
 
@@ -278,7 +284,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                             name: ActionName.UnlockLineSelectionDone,
                             payload: {
                                 selection: data.selection,
-                                query: data.Q
+                                query: data.Q,
+                                mode: 'groups'
                             }
                         });
 
@@ -298,8 +305,9 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             ActionName.UnlockLineSelectionDone,
             (state, action) => {
                 state.isBusy = false;
+                state.isLocked = false;
                 LineSelectionModel.registerQuery(state, this.clStorage, action.payload.query);
-                this.importData(state, action.payload.selection);
+                this.importData(state, action.payload.selection, action.payload.mode);
             }
         );
 
@@ -373,7 +381,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             ActionName.SortLineSelection,
             null,
             (state, action, dispatch) => {
-                this.sortLines(state); // we leave the page here ...
+                this.sortLines(); // we leave the page here ...
             }
         );
 
@@ -431,29 +439,11 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         );
     }
 
-
-    private getCatColors(state:LineSelectionModelState, dataItem:Line) {
-        const tmp = state.data[List.head(dataItem.languages).tokenNumber];
-        const cat = tmp ? tmp[1] : dataItem.lineGroup;
-        if (cat >= 1) {
-            const [bgColor,] = state.catColors[cat % state.catColors.length];
-            const fgColor = pipe(
-                bgColor,
-                Color.importColor(0.1),
-                Color.textColorFromBg(),
-                Color.color2str()
-            );
-            return [pipe(bgColor, Color.importColor(0.9), Color.color2str()), fgColor];
-        }
-        return [null, null];
-    }
-
-
     private validateGroupId(state:LineSelectionModelState, value:number|undefined):boolean {
         if (value === undefined) {
             return true;
         }
-        if (state.mode === 'groups') {
+        if (this.clStorage.actualData(state).mode === 'groups') {
             return value >= 1 && value <= state.maxGroupId;
         }
         return value === ConcLinesStorage.DEFAULT_GROUP_ID;
@@ -469,18 +459,18 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         }
     }
 
-    private updateGlobalArgs(data:Kontext.AjaxConcResponse):void {
+    private updateGlobalArgs(data:AjaxConcResponse):void {
         this.layoutModel.setConf<number>('NumLinesInGroups', data.num_lines_in_groups);
         this.layoutModel.setConf<Array<number>>('LinesGroupsNumbers', data.lines_groups_numbers);
         this.layoutModel.replaceConcArg('q', data.Q);
     }
 
     private clearSelection(state:LineSelectionModelState):void {
-        this.clStorage.clear(state);
+        this.clStorage.clear(state, state.queryHash);
     }
 
     private renameLineGroup(state:LineSelectionModelState, srcGroupNum:number,
-            dstGroupNum:number):Observable<Kontext.AjaxConcResponse> {
+            dstGroupNum:number):Observable<AjaxConcResponse> {
         if (!this.validateGroupId(state, srcGroupNum) || !this.validateGroupId(state, dstGroupNum)) {
             return throwError(new Error(this.layoutModel.translate(
                     'linesel__error_group_name_please_use{max_group}',
@@ -489,13 +479,13 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         } else if (!srcGroupNum) {
             return throwError(new Error(this.layoutModel.translate('linesel__group_missing')));
 
-        } else if (state.currentGroupIds.indexOf(srcGroupNum) < 0) {
+        } else if (!List.some(v => v.id === srcGroupNum, state.currentGroupIds)) {
             return throwError(new Error(this.layoutModel.translate(
                     'linesel__group_does_not_exist_{group}',
                     {group: srcGroupNum})));
 
         } else {
-            return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
+            return this.layoutModel.ajax$<AjaxConcResponse>(
                 HTTP.Method.POST,
                 this.layoutModel.createActionUrl(
                     'ajax_rename_line_group',
@@ -504,13 +494,13 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                 {
                     'from_num': srcGroupNum,
                     'to_num': dstGroupNum
-                },
-                {
-                    contentType : 'application/x-www-form-urlencoded'
                 }
             ).pipe(
                 tap((data) => {
-                    state.currentGroupIds = data.lines_groups_numbers;
+                    state.currentGroupIds = attachColorsToIds(
+                        data.lines_groups_numbers,
+                        mapIdToIdWithColors
+                    );
                     this.updateGlobalArgs(data);
                     this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
                 })
@@ -546,20 +536,19 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         );
     }
 
-    private finishAjaxActionWithRedirect(state:LineSelectionModelState, src:Observable<Kontext.AjaxConcResponse>):void {
+    private finishAjaxActionWithRedirect(src:Observable<AjaxConcResponse>):void {
         /*
          * please note that we do not have to update layout model
          * query code or any other state parameter here because client
          * is redirected to a new URL once the action is done
          */
         src.subscribe(
-            (data:Kontext.AjaxConcResponse) => { // TODO type
-                this.clStorage.clear(state);
+            (data:AjaxConcResponse) => {
                 const args = this.layoutModel.getConcArgs();
                 args.replace('q', data.Q);
                 const nextUrl = this.layoutModel.createActionUrl('view', args.items());
                 this.onLeavePage();
-                window.location.href = nextUrl; // we're leaving Flux world here so it's ok
+                window.location.href = nextUrl;
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);
@@ -567,8 +556,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         );
     }
 
-    public resetServerLineGroups(state:LineSelectionModelState):Observable<Kontext.AjaxConcResponse> {
-        return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
+    public resetServerLineGroups(state:LineSelectionModelState):Observable<AjaxConcResponse> {
+        return this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                     'ajax_unset_lines_groups',
@@ -588,8 +577,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         );
     }
 
-    private markLines(state:LineSelectionModelState):Observable<Kontext.AjaxConcResponse> {
-        return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
+    private saveGroupsToServerConc(state:LineSelectionModelState):Observable<AjaxConcResponse> {
+        return this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_apply_lines_groups',
@@ -601,14 +590,13 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         ).pipe(
             tap(data => {
                 this.updateGlobalArgs(data);
-                // TODO !!!! state.currentGroupIds = data.lines_groups_numbers;
                 this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
             })
         );
     }
 
-    private removeNonGroupLines(state:LineSelectionModelState):void {
-        this.finishAjaxActionWithRedirect(state, this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
+    private removeNonGroupLines():void {
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_remove_non_group_lines',
@@ -638,7 +626,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
     private removeLines(state:LineSelectionModelState, filter:string):void {
         const args = this.layoutModel.getConcArgs();
         args.set('pnfilter', filter);
-        this.finishAjaxActionWithRedirect(state, this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_remove_selected_lines',
@@ -650,17 +638,13 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         ));
     }
 
-    getMode(state:LineSelectionModelState):LineSelectionModes {
-        return state.mode;
-    }
-
     /**
      * @return true if mode has been changed, false otherwise
      */
-    setMode(state:LineSelectionModelState, mode:LineSelectionModes):boolean {
-        if (state.mode !== mode) {
+    private setMode(state:LineSelectionModelState, mode:LineSelectionModes):boolean {
+        if (this.clStorage.actualData(state).mode !== mode) {
             this.clStorage.setMode(state, mode);
-            state.mode = mode;
+            this.clStorage.actualData(state).mode = mode;
             return true;
 
         } else {
@@ -668,8 +652,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         }
     }
 
-    sortLines(state:LineSelectionModelState):void {
-        this.finishAjaxActionWithRedirect(state, this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
+    private sortLines():void {
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('ajax_sort_group_lines',
                     this.layoutModel.getConcArgs().items()),
@@ -677,11 +661,11 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         ));
     }
 
-    private importData(state:LineSelectionModelState, data:Array<[number, number, number]>):void {
+    private importData(state:LineSelectionModelState, data:Array<[number, number, number]>, mode:LineSelectionModes):void {
         data.forEach(([tokenId, kwicLen, cat]) => {
             this.addLine(state, tokenId, kwicLen, cat);
         });
-        state.mode = this.clStorage.getMode(state);
+        this.clStorage.actualData(state).mode = mode;
     }
 
     addLine(state:LineSelectionModelState, id:number, kwiclen:number, category:number):void {

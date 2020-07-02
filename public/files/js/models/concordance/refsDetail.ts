@@ -18,21 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatefulModel, IFullActionControl } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
-import { ConcordanceModel } from './main';
 import { Actions, ActionName } from './actions';
 import { tuple, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { tap, map } from 'rxjs/operators';
+import { RefsColumn } from './common';
 
-
-export interface RefsColumn {
-    name:string;
-    val:string;
-}
 
 export interface RefsDetailModelState {
     data:Array<[RefsColumn, RefsColumn]>;
@@ -43,13 +38,11 @@ export interface RefsDetailModelState {
 /**
  * Model providing structural attribute information (aka "text types") related to a specific token
  */
-export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
+export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly concModel:ConcordanceModel;
-
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcordanceModel) {
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl) {
         super(
             dispatcher,
             {
@@ -59,49 +52,60 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
             }
         );
         this.layoutModel = layoutModel;
-        this.concModel = linesModel;
 
         this.addActionHandler<Actions.ShowRefDetail>(
             ActionName.ShowRefDetail,
-            action => {
-                this.state.isBusy = true;
-                this.emitChange();
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
                 this.loadRefs(
                     action.payload.corpusId,
                     action.payload.tokenNumber,
                     action.payload.lineIdx
 
                 ).subscribe(
-                    () => {
-                        this.concModel.setLineFocus(action.payload['lineIdx'], true);
-                        this.concModel.emitChange();
-                        this.state.isBusy = false;
-                        this.emitChange();
+                    (data) => {
+                        dispatch<Actions.ShowRefDetailDone>({
+                            name: ActionName.ShowRefDetailDone,
+                            payload: {
+                                data: data,
+                                lineIdx: action.payload.lineIdx
+                            }
+                        });
                     },
                     (err) => {
                         this.layoutModel.showMessage('error', err);
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        dispatch<Actions.ShowRefDetailDone>({
+                            name: ActionName.ShowRefDetailDone,
+                            error: err
+                        });
                     }
                 );
             }
         );
 
+        this.addActionHandler<Actions.ShowRefDetailDone>(
+            ActionName.ShowRefDetailDone,
+            (state, action) => {
+                state.isBusy = false;
+                state.data = action.payload.data;
+                state.lineIdx = action.payload.lineIdx;
+            }
+        );
+
         this.addActionHandler<Actions.RefResetDetail>(
-            [
-                ActionName.RefResetDetail,
-                ActionName.ShowSpeechDetail,
-                ActionName.ShowKwicDetail,
-                ActionName.ShowTokenDetail
-            ],
-            action => {
-                if (this.state.lineIdx !== null) {
-                    this.concModel.setLineFocus(this.state.lineIdx, false);
-                    this.state.lineIdx = null;
-                    this.emitChange();
-                    this.concModel.emitChange();
+            ActionName.RefResetDetail,
+            (state, action) => {
+                if (state.lineIdx !== null) {
+                    state.lineIdx = null;
+                    state.data = [];
                 }
             }
+        ).reduceAlsoOn(
+            ActionName.ShowSpeechDetail,
+            ActionName.ShowKwicDetail,
+            ActionName.ShowTokenDetail
         );
     }
 
@@ -115,20 +119,16 @@ export class RefsDetailModel extends StatefulModel<RefsDetailModelState> {
         return ans;
     }
 
-    private loadRefs(corpusId:string, tokenNum:number, lineIdx:number):Observable<boolean> {
+    private loadRefs(corpusId:string, tokenNum:number, lineIdx:number):Observable<Array<[RefsColumn, RefsColumn]>> {
         return this.layoutModel.ajax$<AjaxResponse.FullRef>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('fullref'),
             {corpname: corpusId, pos: tokenNum}
 
         ).pipe(
-            tap(
-                (data) => {
-                    this.state.lineIdx = lineIdx;
-                    this.state.data = this.importData(data);
-                }
-            ),
-            map(data => !!data)
+            map(
+                (data) => this.importData(data)
+            )
         );
     }
 }

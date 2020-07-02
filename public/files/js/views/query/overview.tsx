@@ -659,7 +659,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         constructor(props) {
             super(props);
-            this.state = querySaveAsModel.getInitialState();
+            this.state = querySaveAsModel.getState();
             this.handleCloseEvent = this.handleCloseEvent.bind(this);
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleSubmit = this.handleSubmit.bind(this);

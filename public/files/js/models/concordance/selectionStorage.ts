@@ -23,7 +23,6 @@ import { debounceTime } from 'rxjs/operators';
 
 import { LineSelections, LineSelectionModes, ConcLineSelection } from './common';
 import { IActionDispatcher } from 'kombo';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
 
 
@@ -49,7 +48,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
 
     public static DEFAULT_GROUP_ID = 1;
 
-    private static WRITE_THROTTLE_INTERVAL = 1000;
+    private static WRITE_THROTTLE_INTERVAL = 400;
 
     private writeEvents:Subject<number>;
 
@@ -103,7 +102,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
         return false;
     }
 
-    private actualData(state:T):ConcLineSelection {
+    actualData(state:T):ConcLineSelection {
         return state.data[state.queryHash] || {
             created: new Date().getTime() / 1000,
             mode: 'simple',
@@ -170,7 +169,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
      */
     clear(state:T, queryHash?:string):void {
         if (queryHash) {
-            delete state.data[queryHash];
+            state.data[queryHash] = {...state.data[queryHash], selections: []};
             this.serialize(state.data);
 
         } else {

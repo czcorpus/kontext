@@ -27,6 +27,7 @@ import { TextChunk } from '../../types/concordance';
 import { ConcLinesStorage } from '../../models/concordance/selectionStorage';
 import { init as initMediaViews } from './media';
 import { Actions, ActionName } from '../../models/concordance/actions'
+import { LineSelectionModes } from '../../models/concordance/common';
 
 
 export interface LineExtrasViews {
@@ -40,7 +41,9 @@ export interface LineExtrasViews {
     TdLineSelection:React.SFC<{
         lockedGroupId:number;
         groupId:number;
-        mode:string; // TODO enum
+        groupColor:string;
+        groupTextColor:string;
+        mode:LineSelectionModes;
         tokenNumber:number;
         kwicLength:number;
     }>;
@@ -184,15 +187,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 return null;
             }
         };
-        const css = {};
-        /*  TODO
-        if (props.catTextColor) {
-            css['color'] = props.catTextColor
+        const css = {
+            color: props.groupTextColor,
+            backgroundColor: props.groupColor
         }
-        if (props.catBgColor) {
-            css['backgroundColor'] = props.catBgColor;
-        }
-        */
+
         return (
             <td className="manual-selection" style={css}>
                 {renderInput()}

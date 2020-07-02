@@ -202,6 +202,7 @@
         "linesel__rename_drop_heading": "Přejmenovat/odstranit označení skupiny",
         "linesel__group_does_not_exist_{group}": "Zdrojová skupina '{group}' neexistuje.",
         "linesel__group_missing": "Zdrojová skupina nemůže být prázdná.",
+        "linesel__operations_modal_heading": "Operace nad výběrem řádků",
         "query__qt_basic": "Základní",
         "query__qt_lemma": "Lemma",
         "query__qt_phrase": "Fráze",

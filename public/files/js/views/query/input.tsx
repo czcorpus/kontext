@@ -144,7 +144,7 @@ export function init({
             super(props);
             this._changeListener = this._changeListener.bind(this);
             this._clickHandler = this._clickHandler.bind(this);
-            this.state = queryHintModel.getInitialState();
+            this.state = queryHintModel.getState();
         }
 
         _changeListener(state) {

@@ -63,7 +63,6 @@ export interface Line {
 
 
 export interface IConcLinesProvider {
-    getLines():Array<Line>;
     isUnfinishedCalculation():boolean;
     getRecommOverviewMinFreq():number;
 }
