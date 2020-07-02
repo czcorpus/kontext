@@ -61,29 +61,29 @@ export enum ActionName {
     SaveFormSetFormat = 'CONCORDANCE_SAVE_FORM_SET_FORMAT',
     ResultCloseSaveForm =  'CONCORDANCE_RESULT_CLOSE_SAVE_FORM',
     SelectLine = 'LINE_SELECTION_SELECT_LINE',
-    LineSelectionReset = 'LINE_SELECTION_RESET',
-    LineSelectionResetOnServer = 'LINE_SELECTION_RESET_ON_SERVER',
-    LineSelectionResetOnServerDone = 'LINE_SELECTION_RESET_ON_SERVER_DONE',
     RemoveSelectedLines = 'LINE_SELECTION_REMOVE_LINES',
     RemoveNonSelectedLines = 'LINE_SELECTION_REMOVE_OTHER_LINES',
     MarkLines = 'LINE_SELECTION_MARK_LINES',
     MarkLinesDone = 'LINE_SELECTION_MARK_LINES_DONE',
     RemoveLinesNotInGroups = 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
-    UnlockLineSelection = 'LINE_SELECTION_REENABLE_EDIT',
-    UnlockLineSelectionDone = 'LINE_SELECTION_REENABLE_EDIT_DONE',
     RenameSelectionGroup = 'LINE_SELECTION_GROUP_RENAME',
     RenameSelectionGroupDone = 'LINE_SELECTION_GROUP_RENAME_DONE',
-    RenameGroupCancel = 'LINE_SELECTION_RENAME_GROUP_CANCEL',
     ChangeEmail = 'LINE_SELECTION_CHANGE_EMAIL',
+    ClearUserCredentials = 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
+    ToggleLineSelOptions = 'CONCORDANCE_TOGGLE_LINE_SEL_OPTIONS',
     SendLineSelectionToEmail = 'LINE_SELECTION_SEND_URL_TO_EMAIL',
     SendLineSelectionToEmailDone = 'LINE_SELECTION_SEND_URL_TO_EMAIL_DONE',
     SortLineSelection = 'LINE_SELECTION_SORT_LINES',
     SetLineSelectionMode = 'CONCORDANCE_SET_LINE_SELECTION_MODE',
-    ClearUserCredentials = 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
-    ToggleLineSelOptions = 'CONCORDANCE_TOGGLE_LINE_SEL_OPTIONS',
+    UnlockLineSelection = 'LINE_SELECTION_REENABLE_EDIT',
+    UnlockLineSelectionDone = 'LINE_SELECTION_REENABLE_EDIT_DONE',
+    LineSelectionReset = 'LINE_SELECTION_RESET',
+    LineSelectionResetOnServer = 'LINE_SELECTION_RESET_ON_SERVER',
+    LineSelectionResetOnServerDone = 'LINE_SELECTION_RESET_ON_SERVER_DONE',
     SaveLineSelection = 'LINE_SELECTION_SAVE',
     ApplyStoredLineSelections = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS',
-    ApplyStoredLineSelectionsDone = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS_DONE'
+    ApplyStoredLineSelectionsDone = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS_DONE',
+    ToggleLineGroupRenameForm = 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME'
 }
 
 export namespace Actions {
@@ -313,21 +313,6 @@ export namespace Actions {
         name:ActionName.SelectLine;
     }
 
-    export interface LineSelectionReset extends Action<{
-    }> {
-        name:ActionName.LineSelectionReset;
-    }
-
-    export interface LineSelectionResetOnServer extends Action<{
-    }> {
-        name:ActionName.LineSelectionResetOnServer;
-    }
-
-    export interface LineSelectionResetOnServerDone extends Action<{
-    }> {
-        name:ActionName.LineSelectionResetOnServerDone;
-    }
-
     export interface RemoveSelectedLines extends Action<{
     }> {
         name:ActionName.RemoveSelectedLines;
@@ -355,20 +340,6 @@ export namespace Actions {
         name:ActionName.RemoveLinesNotInGroups;
     }
 
-    export interface UnlockLineSelection extends Action<{
-    }> {
-        name:ActionName.UnlockLineSelection;
-    }
-
-    export interface UnlockLineSelectionDone extends Action<{
-        selection:Array<LineSelValue>;
-        query:Array<string>;
-        mode:LineSelectionModes;
-
-    }> {
-        name:ActionName.UnlockLineSelectionDone;
-    }
-
     export interface RenameSelectionGroup extends Action<{
         srcGroupNum:number;
         dstGroupNum:number;
@@ -381,15 +352,49 @@ export namespace Actions {
         name:ActionName.RenameSelectionGroupDone;
     }
 
-    export interface RenameGroupCancel extends Action<{
-    }> {
-        name:ActionName.RenameGroupCancel;
-    }
-
     export interface ChangeEmail extends Action<{
         email:string;
     }> {
         name:ActionName.ChangeEmail;
+    }
+
+    export interface ClearUserCredentials extends Action<{
+    }> {
+        name:ActionName.ClearUserCredentials;
+    }
+
+    export interface ToggleLineSelOptions extends Action<{
+    }> {
+        name:ActionName.ToggleLineSelOptions;
+    }
+
+    export interface LineSelectionReset extends Action<{
+    }> {
+        name:ActionName.LineSelectionReset;
+    }
+
+    export interface LineSelectionResetOnServer extends Action<{
+    }> {
+        name:ActionName.LineSelectionResetOnServer;
+    }
+
+    export interface LineSelectionResetOnServerDone extends Action<{
+    }> {
+        name:ActionName.LineSelectionResetOnServerDone;
+    }
+
+    export interface UnlockLineSelection extends Action<{
+    }> {
+        name:ActionName.UnlockLineSelection;
+    }
+
+    export interface UnlockLineSelectionDone extends Action<{
+        selection:Array<LineSelValue>;
+        query:Array<string>;
+        mode:LineSelectionModes;
+
+    }> {
+        name:ActionName.UnlockLineSelectionDone;
     }
 
     export interface SendLineSelectionToEmail extends Action<{
@@ -414,16 +419,6 @@ export namespace Actions {
         name:ActionName.SetLineSelectionMode;
     }
 
-    export interface ClearUserCredentials extends Action<{
-    }> {
-        name:ActionName.ClearUserCredentials;
-    }
-
-    export interface ToggleLineSelOptions extends Action<{
-    }> {
-        name:ActionName.ToggleLineSelOptions;
-    }
-
     export interface SaveLineSelection extends Action<{
     }> {
         name:ActionName.SaveLineSelection;
@@ -439,5 +434,10 @@ export namespace Actions {
         mode:LineSelectionModes;
     }> {
         name:ActionName.ApplyStoredLineSelectionsDone;
+    }
+
+    export interface ToggleLineGroupRenameForm extends Action<{
+    }> {
+        name:ActionName.ToggleLineGroupRenameForm;
     }
 }

@@ -128,6 +128,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         const initState:LineSelectionModelState = {
             currentGroupIds: attachColorsToIds(
                 layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
+                v => v,
                 mapIdToIdWithColors
             ),
             maxGroupId: layoutModel.getConf<number>('concLineMaxGroupNum'),
@@ -248,6 +249,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                                 data: response,
                                 groupIds: attachColorsToIds(
                                     response.lines_groups_numbers,
+                                    v => v,
                                     mapIdToIdWithColors
                                 )
                             }
@@ -437,6 +439,13 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                 })
             }
         );
+
+        this.addActionHandler<Actions.ToggleLineGroupRenameForm>(
+            ActionName.ToggleLineGroupRenameForm,
+            (state, action) => {
+                state.renameLabelDialogVisible = !state.renameLabelDialogVisible;
+            }
+        );
     }
 
     private validateGroupId(state:LineSelectionModelState, value:number|undefined):boolean {
@@ -499,6 +508,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                 tap((data) => {
                     state.currentGroupIds = attachColorsToIds(
                         data.lines_groups_numbers,
+                        v => v,
                         mapIdToIdWithColors
                     );
                     this.updateGlobalArgs(data);

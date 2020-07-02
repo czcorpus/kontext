@@ -252,6 +252,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 emptyRefValPlaceholder: '\u2014',
                 lineGroupIds: attachColorsToIds(
                     layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
+                    v => v,
                     mapIdToIdWithColors
                 ),
                 saveFormVisible: false,

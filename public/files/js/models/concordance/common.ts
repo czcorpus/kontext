@@ -304,12 +304,13 @@ function getDynamicColor(idx:number, size:number, baseColor:Color.RGBA):Color.RG
 }
 
 
-export function attachColorsToIds<T, U>(ids:Array<T>, mapper:(item:T, fgColor:string, bgColor:string)=>U):Array<U> {
+export function attachColorsToIds<T, U>(ids:Array<T>, idMapper:(item:T)=>number, outMapper:(item:T, fgColor:string, bgColor:string)=>U):Array<U> {
     return pipe(
         ids,
+        List.sortedBy(idMapper),
         List.map((v, i) => {
             const bgColor = getDynamicColor(i, ids.length, Color.importColor(1, '#009EE0'));
-            return mapper(
+            return outMapper(
                 v,
                 pipe(
                     bgColor,
