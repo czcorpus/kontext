@@ -358,6 +358,27 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             }
         );
 
+        this.addActionHandler<Actions.LineSelectionResetOnServer>(
+            ActionName.LineSelectionResetOnServer,
+            action => {
+                this.suspend({}, (action, syncData) => {
+                    return action.name === ActionName.LineSelectionResetOnServerDone ? null : syncData;
+
+                }).pipe(
+                    concatMap(v => this.reloadPage())
+
+                ).subscribe(
+                    (data) => {
+                        this.pushHistoryState(this.state.currentPage);
+                        this.emitChange();
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
+            }
+        )
+
         this.addActionHandler<Actions.AsyncCalculationUpdated>(
             ActionName.AsyncCalculationUpdated,
             action => {

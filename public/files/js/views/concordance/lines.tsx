@@ -654,6 +654,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         tokenNumber={primaryLang.tokenNumber}
                         mode={this.props.lineSelMode}
                         lockedGroupId={this.props.numItemsInLockedGroups > 0 ? this.props.data.lineGroup : null}
+                        isEditLocked={this.props.numItemsInLockedGroups > 0}
                         groupId={this.props.data.lineGroup}
                         groupColor={this.props.groupColor}
                         groupTextColor={this.props.groupTextColor} />

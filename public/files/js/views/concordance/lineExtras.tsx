@@ -46,6 +46,7 @@ export interface LineExtrasViews {
         mode:LineSelectionModes;
         tokenNumber:number;
         kwicLength:number;
+        isEditLocked:boolean;
     }>;
 
     SyntaxTreeButton:React.SFC<{
@@ -173,19 +174,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TdLineSelection:LineExtrasViews['TdLineSelection'] = (props) => {
 
         const renderInput = () => {
-            if (props.lockedGroupId) {
-                const groupLabel = props.lockedGroupId >= 0 ? `#${props.lockedGroupId}` : '';
-                return <span className="group-id">{groupLabel}</span>;
+            if (props.isEditLocked) {
+                if (props.lockedGroupId) {
+                    const groupLabel = props.lockedGroupId >= 0 ? `#${props.lockedGroupId}` : '';
+                    return <span className="group-id">{groupLabel}</span>;
+
+                } else {
+                    return null;
+                }
 
             } else if (props.mode === 'simple') {
                 return <LineSelCheckbox {...props} />;
 
             } else if (props.mode === 'groups') {
                 return <LineSelInput {...props} />;
-
-            } else {
-                return null;
             }
+            return null;
         };
         const css = {
             color: props.groupTextColor,
