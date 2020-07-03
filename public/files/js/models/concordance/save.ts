@@ -79,7 +79,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             MainMenuActionName.ShowSaveForm,
             action => {
                 this.changeState(state => {state.formIsActive = true});
-                this.emitChange();
             }
         );
 
@@ -97,7 +96,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
                     });
                     this.submit();
                     this.changeState(state => {state.toLine = tmp});
-                    this.emitChange();
                 }
             }
         );
@@ -106,7 +104,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             ActionName.ResultCloseSaveForm,
             action => {
                 this.changeState(state => {state.formIsActive = false});
-                this.emitChange();
             }
         );
 
@@ -114,7 +111,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             ActionName.SaveFormSetFormat,
             action => {
                 this.changeState(state => {state.saveformat = action.payload.value});
-                this.emitChange();
             }
         );
 
@@ -122,7 +118,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             ActionName.SaveFormSetFromLine,
             action => {
                 this.changeState(state => {state.fromLine.value = action.payload.value});
-                this.emitChange();
             }
         );
 
@@ -130,7 +125,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             ActionName.SaveFormSetToLine,
             action => {
                 this.changeState(state => {state.toLine.value = action.payload.value});
-                this.emitChange();
             }
         );
 
@@ -138,7 +132,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             ActionName.SaveFormSetAlignKwic,
             action => {
                 this.changeState(state => {state.alignKwic = action.payload.value});
-                this.emitChange();
             }
         );
 
@@ -146,7 +139,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             ActionName.SaveFormSetInclLineNumbers,
             action => {
                 this.changeState(state => {state.includeLineNumbers = action.payload.value});
-                this.emitChange();
             }
         );
 
@@ -154,7 +146,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             ActionName.SaveFormSetHeading,
             action => {
                 this.changeState(state => {state.includeHeading = action.payload.value});
-                this.emitChange();
             }
         );
 
