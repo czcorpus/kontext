@@ -21,7 +21,6 @@
 /// <reference path="../vendor.d.ts/intl-messageformat.d.ts" />
 /// <reference path="../vendor.d.ts/translations.d.ts" />
 
-import * as Immutable from 'immutable';
 import * as translations from 'translations';
 import * as IntlMessageFormat from '../vendor/intl-messageformat';
 import { ITranslator } from 'kombo';
@@ -35,7 +34,7 @@ export class L10n implements ITranslator {
 
     private translations:{[key:string]:string};
 
-    private helpLinks:Immutable.Map<string, string>;
+    private helpLinks:{[key:string]:string};
 
     /**
      *
@@ -43,7 +42,7 @@ export class L10n implements ITranslator {
     constructor(uiLang:string, helpLinks:{[key:string]:string}) {
         this.uiLang = uiLang;
         this.translations = translations[uiLang] || {};
-        this.helpLinks = Immutable.Map<string, string>(helpLinks);
+        this.helpLinks = {...helpLinks};
     }
 
     /**
@@ -99,6 +98,6 @@ export class L10n implements ITranslator {
      *
      */
     getHelpLink(ident:string):string {
-        return this.helpLinks.get(ident);
+        return this.helpLinks[ident];
     }
 }

@@ -104,9 +104,40 @@ export interface AjaxConcResponse extends Kontext.AjaxResponse {
     finished:boolean;
     fast_adhoc_ipm:boolean;
     pagination:ServerPagination;
+    running_calc:number; // TODO should be boolean
+    user_owns_conc:boolean;
 }
 
+export interface AjaxLineGroupRenameResponse extends Kontext.AjaxResponse {
+    Q:Array<string>;
+    conc_persistence_op_id:string;
+    lines_groups_numbers:Array<number>;
+    num_lines_in_groups:number;
+    user_owns_conc:boolean;
+}
 
+export interface ConcGroupChangePayload {
+    concId:string;
+    numLinesInGroups:number;
+    lineGroupIds:Array<LineGroupId>;
+    prevId:number;
+    newId:number;
+}
+
+export interface ConcUpdatePayload {
+    concId:string;
+    numLinesInGroups:number;
+    linesGroupsNumbers:Array<number>;
+    Lines:Array<ServerLineData>;
+    concsize:number;
+    pagination:ServerPagination;
+    isUnfinished:boolean;
+}
+
+export interface PublishLineSelectionPayload {
+    selections:Array<LineSelValue>;
+    mode:LineSelectionModes;
+}
 
 export interface ConcSummary {
     concSize: number;

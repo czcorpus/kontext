@@ -20,7 +20,6 @@
 
 /// <reference path="../types/compat.d.ts" />
 
-import * as Immutable from 'immutable';
 import { IPluginApi } from '../types/plugins';
 import { Kontext } from '../types/common';
 import { PluginApi } from './plugin';
@@ -30,6 +29,7 @@ import { L10n } from './l10n';
 import { UserSettings } from './userSettings';
 import { AppNavigation } from './navigation';
 import { ActionDispatcher } from 'kombo';
+import { Dict, List } from 'cnc-tskit';
 
 declare var require:any; // webpack's require
 require('styles/layout.less');
@@ -52,11 +52,11 @@ class KontextConf implements Kontext.IConfHandler {
      * Functions listening for change in app config (triggered by
      * setConf()).
      */
-    confChangeHandlers:Immutable.Map<string, Immutable.List<(v:any)=>void>>;
+    confChangeHandlers:{[key:string]:Array<(v:any)=>void>};
 
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
-        this.confChangeHandlers = Immutable.Map<string, Immutable.List<(v:any)=>void>>();
+        this.confChangeHandlers = {};
     }
 
     /**
@@ -87,8 +87,11 @@ class KontextConf implements Kontext.IConfHandler {
      */
     setConf<T>(key:string, value:T):void {
         this.conf[key] = value;
-        if (this.confChangeHandlers.has(key)) {
-            this.confChangeHandlers.get(key).forEach(item => item(value));
+        if (Dict.hasKey(key, this.confChangeHandlers)) {
+            List.forEach(
+                item => item(value),
+                this.confChangeHandlers[key]
+            );
         }
     }
 }

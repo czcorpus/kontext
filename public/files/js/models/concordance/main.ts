@@ -19,8 +19,8 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { throwError, Observable, interval, Subscription } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
+import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP } from 'cnc-tskit';
 
 import { Kontext, TextTypes, ViewOptions } from '../../types/common';
@@ -36,7 +36,8 @@ import { transformVmode } from '../options/structsAttrs';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
 import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse, ServerPagination,
-    ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds, mapIdToIdWithColors } from './common';
+    ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds, mapIdToIdWithColors, ConcUpdatePayload, ConcGroupChangePayload,
+    PublishLineSelectionPayload } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
@@ -329,7 +330,20 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 ActionName.RevisitPage
             ],
             action => {
-                this.changePage(action.payload.action, action.payload.pageNum).subscribe(
+                forkJoin(
+                    this.suspend({}, (action, syncData) => {
+                        return action.name === ActionName.PublishStoredLineSelections ? null : syncData;
+                    }).pipe(
+                        map(v => (v as Actions.PublishStoredLineSelections).payload)
+                    ),
+                    this.changePage(action.payload.action, action.payload.pageNum)
+
+                ).pipe(
+                    tap(([wakePayload, change]) => {
+                        this.applyLineSelections(wakePayload);
+                    })
+
+                ).subscribe(
                     (data) => {
                         if (action.name === ActionName.ChangePage) {
                             this.pushHistoryState(this.state.currentPage);
@@ -453,16 +467,18 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<ViewOptionsActions.SaveSettingsDone>(
             ViewOptionsActionName.SaveSettingsDone,
             action => {
-                this.changeState(state => {state.baseViewAttr = action.payload.baseViewAttr});
-                this.reloadPage().subscribe(
-                    (data) => {
-                        this.pushHistoryState(this.state.currentPage);
-                        this.emitChange();
-                    },
-                    (err) => {
-                        this.layoutModel.showMessage('error', err);
-                    }
-                );
+                if (!action.error) {
+                    this.changeState(state => {state.baseViewAttr = action.payload.baseViewAttr});
+                    this.reloadPage().subscribe(
+                        (data) => {
+                            this.pushHistoryState(this.state.currentPage);
+                            this.emitChange();
+                        },
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+                }
             }
         );
 
@@ -503,11 +519,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<Actions.UnlockLineSelectionDone>(
             ActionName.UnlockLineSelectionDone,
             action => {
-                this.changeState(state => {
-                    state.numItemsInLockedGroups = 0;
-                    state.lineGroupIds = [];
-                    state.lineSelOptionsVisible = false;
-                });
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.numItemsInLockedGroups = 0;
+                        state.lineGroupIds = [];
+                        state.lineSelOptionsVisible = false;
+                    });
+                }
             }
         );
 
@@ -581,19 +599,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<Actions.ApplyStoredLineSelectionsDone>(
             ActionName.ApplyStoredLineSelectionsDone,
             action => {
-                this.changeState(state => {
-                    state.lines = List.map(
-                        line => {
-                            const srch = List.find(
-                                ([tokenNum,,]) => line.languages[0].tokenNumber === tokenNum,
-                                action.payload.selections
-                            );
-                            const lineGroup = srch ? srch[2] : line.lineGroup;
-                            return {...line, lineGroup};
-                        },
-                        state.lines
-                    );
-                });
+                this.applyLineSelections(action.payload);
             }
         );
 
@@ -609,19 +615,30 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<Actions.MarkLinesDone>(
             ActionName.MarkLinesDone,
             action => {
-                this.reloadPage(action.payload.data.conc_persistence_op_id).subscribe(
-                    (data) => {
-                        this.changeState(state => {
-                            state.lineSelOptionsVisible = false;
-                            state.lineGroupIds = action.payload.groupIds;
-                        });
-                    },
-                    (err) => {
-                        this.layoutModel.showMessage('error', err);
-                    }
-                );
+                if (!action.error) {
+                    this.reloadPage(action.payload.data.conc_persistence_op_id).subscribe(
+                        (data) => {
+                            this.changeState(state => {
+                                state.lineSelOptionsVisible = false;
+                                state.lineGroupIds = action.payload.groupIds;
+                            });
+                        },
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+                }
             }
         );
+
+        this.addActionHandler<Actions.RenameSelectionGroupDone>(
+            ActionName.RenameSelectionGroupDone,
+            action => {
+                if (!action.error) {
+                    this.changeGroupNaming(action.payload)
+                }
+            }
+        )
     }
 
     unregister():void {}
@@ -631,6 +648,22 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             subs.unsubscribe();
         }
         return null;
+    }
+
+    private applyLineSelections(data:PublishLineSelectionPayload):void {
+        this.changeState(state => {
+            state.lines = List.map(
+                line => {
+                    const srch = List.find(
+                        ([tokenNum,,]) => line.languages[0].tokenNumber === tokenNum,
+                        data.selections
+                    );
+                    const lineGroup = srch ? srch[2] : line.lineGroup;
+                    return {...line, lineGroup};
+                },
+                state.lines
+            );
+        });
     }
 
     private changeColVisibility(corpusId:string, status:boolean):void {
@@ -712,30 +745,46 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             args
 
         ).pipe(
-            tap((data) => {
-                this.importData(data);
+            map(
+                resp => ({
+                    concId: resp.conc_persistence_op_id,
+                    numLinesInGroups: resp.num_lines_in_groups,
+                    linesGroupsNumbers: resp.lines_groups_numbers,
+                    Lines: resp.Lines,
+                    concsize: resp.concsize,
+                    pagination: resp.pagination,
+                    isUnfinished: !!resp.running_calc
+                })
+            ),
+            tap(update => {
+                this.importData(update);
                 this.changeState(state => {state.currentPage = pageNum});
             }),
             map(_ => this.layoutModel.getConcArgs())
         );
     }
 
-    private importData(data:AjaxConcResponse):void {
-        try {
-            this.changeState(state => {
-                state.lines = importLines(
-                    data.Lines,
-                    this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
-                );
-                state.numItemsInLockedGroups = data.num_lines_in_groups;
-                state.pagination = data['pagination'];
-                state.unfinishedCalculation = data['running_calc'];
-            });
+    private importData(data:ConcUpdatePayload):void {
+        this.changeState(state => {
+            state.lines = importLines(
+                data.Lines,
+                this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
+            );
+            state.numItemsInLockedGroups = data.numLinesInGroups;
+            state.pagination = data.pagination;
+            state.unfinishedCalculation = data.isUnfinished;
+        });
+    }
 
-        } catch (e) {
-            console.error(e);
-            throw e;
-        }
+    private changeGroupNaming(data:ConcGroupChangePayload):void {
+        this.changeState(state => {
+            state.lines = List.map(
+                line => ({...line, lineGroup: line.lineGroup === data.prevId ? data.newId : line.lineGroup}),
+                state.lines
+            );
+            state.numItemsInLockedGroups = data.numLinesInGroups;
+            state.lineGroupIds = data.lineGroupIds;
+        })
     }
 
     private changeViewMode():Observable<any> {

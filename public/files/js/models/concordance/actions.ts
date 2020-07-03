@@ -19,10 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue, AjaxConcResponse, LineGroupId, RefsColumn } from './common';
+import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue, AjaxConcResponse,
+    LineGroupId, RefsColumn, ConcGroupChangePayload, PublishLineSelectionPayload } from './common';
 import { SaveData } from '../../app/navigation';
-import { Kontext } from '../../types/common';
-import { Line } from '../../types/concordance';
 
 export enum ActionName {
     ChangeMainCorpus = 'CONCORDANCE_CHANGE_MAIN_CORPUS',
@@ -83,6 +82,7 @@ export enum ActionName {
     SaveLineSelection = 'LINE_SELECTION_SAVE',
     ApplyStoredLineSelections = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS',
     ApplyStoredLineSelectionsDone = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS_DONE',
+    PublishStoredLineSelections = 'CONCORDANCE_PUBLISH_STORED_LINE_SELECTIONS',
     ToggleLineGroupRenameForm = 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME'
 }
 
@@ -347,8 +347,7 @@ export namespace Actions {
         name:ActionName.RenameSelectionGroup;
     }
 
-    export interface RenameSelectionGroupDone extends Action<{
-    }> {
+    export interface RenameSelectionGroupDone extends Action<ConcGroupChangePayload> {
         name:ActionName.RenameSelectionGroupDone;
     }
 
@@ -429,11 +428,12 @@ export namespace Actions {
         name:ActionName.ApplyStoredLineSelections;
     }
 
-    export interface ApplyStoredLineSelectionsDone extends Action<{
-        selections:Array<LineSelValue>;
-        mode:LineSelectionModes;
-    }> {
+    export interface ApplyStoredLineSelectionsDone extends Action<PublishLineSelectionPayload> {
         name:ActionName.ApplyStoredLineSelectionsDone;
+    }
+
+    export interface PublishStoredLineSelections extends Action<PublishLineSelectionPayload> {
+        name:ActionName.PublishStoredLineSelections;
     }
 
     export interface ToggleLineGroupRenameForm extends Action<{
