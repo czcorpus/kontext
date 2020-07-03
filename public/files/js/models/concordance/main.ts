@@ -487,7 +487,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ViewOptionsActionName.SaveSettingsDone,
             action => {
                 if (!action.error) {
-                    this.changeState(state => {state.baseViewAttr = action.payload.baseViewAttr});
+                    this.changeState(state => {
+                        state.baseViewAttr = action.payload.baseViewAttr;
+                        state.attrAllpos = action.payload.attrAllpos;
+                        state.attrViewMode = action.payload.attrVmode;
+                    });
                     this.reloadPage().subscribe(
                         (data) => {
                             this.pushHistoryState(this.state.currentPage);
