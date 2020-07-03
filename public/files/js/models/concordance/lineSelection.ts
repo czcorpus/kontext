@@ -182,7 +182,6 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             (state, action) => {
                 if (!action.error) {
                     state.isBusy = false;
-                    state.currentGroupIds = [];
                 }
             }
         );
@@ -191,17 +190,19 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             ActionName.LineSelectionResetOnServer,
             (state, action) => {
                 state.isBusy = true;
+                state.currentGroupIds = [];
+                this.clStorage.clear(state);
             },
             (state, action, dispatch) => {
                 this.resetServerLineGroups(state).subscribe(
                     (args) => {
                         dispatch({
-                            name: ActionName.LineSelectionResetOnServer
+                            name: ActionName.LineSelectionResetOnServerDone
                         });
                     },
                     (err) => {
                         dispatch({
-                            name: ActionName.LineSelectionResetOnServer,
+                            name: ActionName.LineSelectionResetOnServerDone,
                             error: err
                         });
                         this.layoutModel.showMessage('error', err);
@@ -590,7 +591,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         );
     }
 
-    public resetServerLineGroups(state:LineSelectionModelState):Observable<AjaxConcResponse> {
+    private resetServerLineGroups(state:LineSelectionModelState):Observable<AjaxConcResponse> {
         return this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
@@ -604,7 +605,6 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
 
         ).pipe(
             tap((data) => {
-                this.clStorage.clear(state);
                 this.updateGlobalArgs(data);
                 this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
             })
