@@ -24,6 +24,11 @@ import { ViewOptions, Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { Color, pipe, List } from 'cnc-tskit';
 
+/**
+ * RefsColumn describes a meta-data information
+ * item as shown when clicking on the left
+ * concordance column.
+ */
 export interface RefsColumn {
     name:string;
     val:string;
