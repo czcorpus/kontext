@@ -405,7 +405,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                     state.pagination.lastPage = 0;
                     state.lines = [];
                 });
-                this.emitChange();
             }
         );
 
@@ -460,7 +459,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ActionName.DataWaitTimeInc,
             action => {
                 this.changeState(state => {state.busyWaitSecs = action.payload['idx']});
-                this.emitChange();
             }
         );
 

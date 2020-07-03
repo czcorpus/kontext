@@ -237,7 +237,6 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState> impleme
         switch (action.name) {
             case 'OVERVIEW_CLOSE':
                 this.changeState(state => {state.currentInfoType = null})
-                this.emitChange();
             break;
             case 'OVERVIEW_CORPUS_INFO_REQUIRED':
                 this.changeState(state => {state.isWaiting = true})
@@ -246,7 +245,6 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState> impleme
                     null,
                     (err) => {
                         this.changeState(state => {state.isWaiting = false});
-                        this.emitChange();
                         this.pluginApi.showMessage('error', err);
                     },
                     () => {
@@ -255,13 +253,11 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState> impleme
                             state.currentInfoType = CorpusInfoType.CORPUS;
                             state.isWaiting = false;
                         });
-                        this.emitChange();
                     },
                 )
             break;
             case 'OVERVIEW_SHOW_CITATION_INFO':
                 this.changeState(state => {state.isWaiting = true})
-                this.emitChange();
                 this.loadCorpusInfo(action.payload['corpusId']).subscribe(
                     null,
                     (err) => {
@@ -275,18 +271,15 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState> impleme
                             state.currentInfoType = CorpusInfoType.CITATION;
                             state.isWaiting = false;
                         });
-                        this.emitChange();
                     },
                 )
             break;
             case 'OVERVIEW_SHOW_SUBCORPUS_INFO':
                 this.changeState(state => {state.isWaiting = true})
-                this.emitChange();
                 this.loadSubcorpusInfo(action.payload['corpusId'], action.payload['subcorpusId']).subscribe(
                     null,
                     (err) => {
                         this.changeState(state => {state.isWaiting = false});
-                        this.emitChange();
                         this.pluginApi.showMessage('error', err);
                     },
                     () => {
@@ -296,13 +289,11 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState> impleme
                             state.currentInfoType = CorpusInfoType.SUBCORPUS;
                             state.isWaiting = false;
                         });
-                        this.emitChange();
                     }
                 )
             break;
             case 'OVERVIEW_SHOW_KEY_SHORTCUTS':
                 this.changeState(state => {state.currentInfoType = CorpusInfoType.KEY_SHORTCUTS})
-                this.emitChange();
             break;
         }
     }
