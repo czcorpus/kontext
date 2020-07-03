@@ -77,6 +77,7 @@ export class LineSelGroupsRatiosChart {
     private renderChart(rootElm:d3.Selection<any>, data:LineGroupChartData):Array<string> {
         const coloredData = attachColorsToIds(
             data,
+            item => item.groupId,
             (item, fgColor, bgColor) => ({
                 ...item,
                 fgColor,

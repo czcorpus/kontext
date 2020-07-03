@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
@@ -178,7 +177,7 @@ export class AppNavigation implements Kontext.IURLHandler {
 
     private switchCorpStateStorage:{[ident:string]:{}};
 
-    private switchCorpPreviousCorpora:Immutable.List<string>;
+    private switchCorpPreviousCorpora:Array<string>;
 
     private history:Kontext.IHistory;
 
@@ -186,7 +185,7 @@ export class AppNavigation implements Kontext.IURLHandler {
         this.conf = conf;
         this.switchCorpAwareObjects = {};
         this.switchCorpStateStorage = {};
-        this.switchCorpPreviousCorpora = Immutable.List<string>();
+        this.switchCorpPreviousCorpora = [];
         this.history = createHistory(this);
     }
 
@@ -434,8 +433,9 @@ export class AppNavigation implements Kontext.IURLHandler {
      */
     switchCorpus(corpora:Array<string>, subcorpus:string):Observable<any> {
         this.switchCorpAwareObjects = {};
-        this.switchCorpPreviousCorpora = Immutable.List<string>(
-            [this.conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id].concat(this.conf.getConf<Array<string>>('alignedCorpora'))
+        this.switchCorpPreviousCorpora = List.concat(
+            this.conf.getConf<Array<string>>('alignedCorpora'),
+            [this.conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
         );
         return this.ajax$<AjaxResponse.CorpusSwitchResponse>(
             HTTP.Method.POST,
@@ -524,7 +524,7 @@ export class AppNavigation implements Kontext.IURLHandler {
         return this.encodeURLParameters(tmp);
     }
 
-    getSwitchCorpPreviousCorpora():Immutable.List<string> {
+    getSwitchCorpPreviousCorpora():Array<string> {
         return this.switchCorpPreviousCorpora;
     }
 

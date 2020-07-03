@@ -30,6 +30,7 @@ import { Actions, ActionName } from './actions';
 export interface StorageUsingState {
     data:LineSelections;
     queryHash:string;
+    isLocked:boolean;
 }
 
 /**
@@ -62,7 +63,7 @@ export class ConcLinesStorage<T extends StorageUsingState> {
             () => {
                 dispatcher.dispatch<Actions.SaveLineSelection>({
                     name: ActionName.SaveLineSelection
-                })
+                });
             }
         )
     }
@@ -90,6 +91,10 @@ export class ConcLinesStorage<T extends StorageUsingState> {
                 selections: []
             };
             this.serialize(state.data);
+
+        }
+        if (state.isLocked) {
+            state.data[state.queryHash].mode = 'groups';
         }
         return state;
     }

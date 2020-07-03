@@ -313,29 +313,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             switch (evt.target.value) {
                 case 'edit-groups':
                     dispatcher.dispatch<Actions.UnlockLineSelection>({
-                        name: ActionName.UnlockLineSelection,
-                        payload: {}
+                        name: ActionName.UnlockLineSelection
                     });
                     break;
                 case 'sort-groups':
                     dispatcher.dispatch<Actions.SortLineSelection>({
-                        name: ActionName.SortLineSelection,
-                        payload: {}
+                        name: ActionName.SortLineSelection
                     });
                     break;
                 case 'clear-groups':
                     dispatcher.dispatch<Actions.LineSelectionResetOnServer>({
-                        name: ActionName.LineSelectionResetOnServer,
-                        payload: {}
+                        name: ActionName.LineSelectionResetOnServer
                     });
                     break;
                 case 'remove-other-lines':
                     dispatcher.dispatch<Actions.RemoveLinesNotInGroups>({
-                        name: ActionName.RemoveLinesNotInGroups,
-                        payload: {}
+                        name: ActionName.RemoveLinesNotInGroups
                     });
                     break;
-                case 'rename-group-label': // TODO !!!!
+                case 'rename-group-label':
+                    dispatcher.dispatch<Actions.ToggleLineGroupRenameForm>({
+                        name: ActionName.ToggleLineGroupRenameForm
+                    });
                     break;
             }
         }
@@ -373,8 +372,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleRenameCancel() {
-            dispatcher.dispatch<Actions.RenameGroupCancel>({
-                name: ActionName.RenameGroupCancel
+            dispatcher.dispatch<Actions.ToggleLineGroupRenameForm>({
+                name: ActionName.ToggleLineGroupRenameForm
             });
         }
 

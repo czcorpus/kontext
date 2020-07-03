@@ -26,7 +26,7 @@ import { Kontext } from '../../types/common';
 import { ConcLinesStorage } from './selectionStorage';
 import { PageModel } from '../../app/page';
 import { HTTP, List } from 'cnc-tskit';
-import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse, LineGroupId, attachColorsToIds, mapIdToIdWithColors } from './common';
+import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse, LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as UserInfoActions, ActionName as UserInfoActionName } from '../user/actions';
 
@@ -128,6 +128,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         const initState:LineSelectionModelState = {
             currentGroupIds: attachColorsToIds(
                 layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
+                v => v,
                 mapIdToIdWithColors
             ),
             maxGroupId: layoutModel.getConf<number>('concLineMaxGroupNum'),
@@ -248,6 +249,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                                 data: response,
                                 groupIds: attachColorsToIds(
                                     response.lines_groups_numbers,
+                                    v => v,
                                     mapIdToIdWithColors
                                 )
                             }
@@ -315,6 +317,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             ActionName.RenameSelectionGroupDone,
             (state, action) => {
                 state.isBusy = false;
+                state.currentGroupIds = action.payload.lineGroupIds;
             }
         );
 
@@ -330,9 +333,20 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                     action.payload.dstGroupNum
 
                 ).subscribe(
-                    (args) => {
+                    (resp) => {
                         dispatch<Actions.RenameSelectionGroupDone>({
-                            name: ActionName.RenameSelectionGroupDone
+                            name: ActionName.RenameSelectionGroupDone,
+                            payload: {
+                                concId: resp.conc_persistence_op_id,
+                                numLinesInGroups: resp.num_lines_in_groups,
+                                lineGroupIds: attachColorsToIds(
+                                    resp.lines_groups_numbers,
+                                    v => v,
+                                    mapIdToIdWithColors
+                                ),
+                                prevId: action.payload.srcGroupNum,
+                                newId: action.payload.dstGroupNum
+                            }
                         });
 
                     },
@@ -344,6 +358,23 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                         });
                     }
                 );
+            }
+        );
+
+
+        this.addActionHandler<Actions.ChangePage>(
+            ActionName.ChangePage,
+            null,
+            (state, action, dispatch) => {
+                dispatch<Actions.PublishStoredLineSelections>({
+                    name: ActionName.PublishStoredLineSelections,
+                    payload: {
+                        selections: state.data[state.queryHash] ?
+                            state.data[state.queryHash].selections : [],
+                        mode: state.data[state.queryHash] ?
+                            state.data[state.queryHash].mode : 'simple'
+                    }
+                })
             }
         );
 
@@ -437,6 +468,13 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                 })
             }
         );
+
+        this.addActionHandler<Actions.ToggleLineGroupRenameForm>(
+            ActionName.ToggleLineGroupRenameForm,
+            (state, action) => {
+                state.renameLabelDialogVisible = !state.renameLabelDialogVisible;
+            }
+        );
     }
 
     private validateGroupId(state:LineSelectionModelState, value:number|undefined):boolean {
@@ -459,7 +497,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         }
     }
 
-    private updateGlobalArgs(data:AjaxConcResponse):void {
+    private updateGlobalArgs(data:AjaxLineGroupRenameResponse):void {
         this.layoutModel.setConf<number>('NumLinesInGroups', data.num_lines_in_groups);
         this.layoutModel.setConf<Array<number>>('LinesGroupsNumbers', data.lines_groups_numbers);
         this.layoutModel.replaceConcArg('q', data.Q);
@@ -470,7 +508,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
     }
 
     private renameLineGroup(state:LineSelectionModelState, srcGroupNum:number,
-            dstGroupNum:number):Observable<AjaxConcResponse> {
+            dstGroupNum:number):Observable<AjaxLineGroupRenameResponse> {
         if (!this.validateGroupId(state, srcGroupNum) || !this.validateGroupId(state, dstGroupNum)) {
             return throwError(new Error(this.layoutModel.translate(
                     'linesel__error_group_name_please_use{max_group}',
@@ -496,11 +534,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                     'to_num': dstGroupNum
                 }
             ).pipe(
-                tap((data) => {
-                    state.currentGroupIds = attachColorsToIds(
-                        data.lines_groups_numbers,
-                        mapIdToIdWithColors
-                    );
+                tap(data => {
                     this.updateGlobalArgs(data);
                     this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
                 })
