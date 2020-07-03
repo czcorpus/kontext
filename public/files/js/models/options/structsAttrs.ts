@@ -398,7 +398,9 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     name: ActionName.SaveSettingsDone,
                     payload: {
                         widectxGlobals: data.widectx_globals,
-                        baseViewAttr: state.baseViewAttr
+                        baseViewAttr: state.baseViewAttr,
+                        attrAllPos: state.attrAllpos,
+                        attrVmode: state.attrVmode
                     }
                 });
                 this.layoutModel.showMessage('info', this.layoutModel.translate('options__options_saved'));
