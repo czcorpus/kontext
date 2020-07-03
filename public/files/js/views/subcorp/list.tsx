@@ -24,6 +24,7 @@ import {Kontext} from '../../types/common';
 import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem, SubcorpListModelState} from '../../models/subcorp/list';
 import { CoreViews } from '../../types/coreViews';
 import { List } from 'cnc-tskit';
+import { Actions, ActionName } from '../../models/subcorp/actions';
 
 
 export interface SubcorpListProps {
@@ -85,8 +86,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmit = () => {
             if (window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
-                dispatcher.dispatch({
-                    name: 'SUBCORP_LIST_DELETE_SUBCORPUS',
+                dispatcher.dispatch<Actions.DeleteSubcorpus>({
+                    name: ActionName.DeleteSubcorpus,
                     payload: {
                         rowIdx: props.rowIdx
                     }
@@ -186,8 +187,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleSortClick = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_SORT_LINES',
+            dispatcher.dispatch<Actions.SortLines>({
+                name: ActionName.SortLines,
                 payload: {
                     colName: props.ident,
                     reverse: props.sortKey ? !props.sortKey.reverse : false
@@ -235,8 +236,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handlePublishCheckbox(corpname:string, subcname:string):void {
             if (window.confirm(he.translate('subclist__publish_warning'))) {
-                dispatcher.dispatch({
-                    name: 'SUBCORP_LIST_PUBLISH_ITEM',
+                dispatcher.dispatch<Actions.PublishItem>({
+                    name: ActionName.PublishItem,
                     payload: {
                         corpname: corpname,
                         subcname: subcname
@@ -279,21 +280,21 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleShowDeleted = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_UPDATE_FILTER',
+            dispatcher.dispatch<Actions.UpdateFilter>({
+                name: ActionName.UpdateFilter,
                 payload: {
-                    corpname: props.filter['corpname'],
-                    show_deleted: !props.filter['show_deleted']
+                    corpname: props.filter.corpname,
+                    show_deleted: !props.filter.show_deleted
                 }
             });
         };
 
         const handleCorpusSelection = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_UPDATE_FILTER',
+            dispatcher.dispatch<Actions.UpdateFilter>({
+                name: ActionName.UpdateFilter,
                 payload: {
                     corpname: evt.target.value,
-                    show_deleted: props.filter['show_deleted']
+                    show_deleted: props.filter.show_deleted
                 }
             });
         };
@@ -361,8 +362,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmit() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_REUSE_QUERY',
+            dispatcher.dispatch<Actions.ReuseQuery>({
+                name: ActionName.ReuseQuery,
                 payload: {
                     idx: this.props.idx,
                     newName: this.state.newName,
@@ -421,8 +422,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmit = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_WIPE_SUBCORPUS',
+            dispatcher.dispatch<Actions.WipeSubcorpus>({
+                name: ActionName.WipeSubcorpus,
                 payload: {
                     idx: props.idx
                 }
@@ -449,8 +450,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmit = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_RESTORE_SUBCORPUS',
+            dispatcher.dispatch<Actions.RestoreSubcorpus>({
+                name: ActionName.RestoreSubcorpus,
                 payload: {
                     idx: props.idx
                 }
@@ -502,8 +503,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleSubmitPublish() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS',
+            dispatcher.dispatch<Actions.PublishSubcorpus>({
+                name: ActionName.PublishSubcorpus,
                 payload: {
                     rowIdx: this.props.rowIdx,
                     description: this.props.description
@@ -512,8 +513,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleSubmitUpdateDesc() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT',
+            dispatcher.dispatch<Actions.SubmitPublicDescription>({
+                name: ActionName.SubmitPublicDescription,
                 payload: {
                     rowIdx: this.props.rowIdx
                 }
@@ -521,8 +522,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleTextAreaChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION',
+            dispatcher.dispatch<Actions.UpdatePublicDescription>({
+                name: ActionName.UpdatePublicDescription,
                 payload: {
                     rowIdx: this.props.rowIdx,
                     description: evt.target.value
@@ -572,8 +573,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         handleActionSelect(action) {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE',
+            dispatcher.dispatch<Actions.SetActionBoxType>({
+                name: ActionName.SetActionBoxType,
                 payload: {value: action}
             });
         }
@@ -632,8 +633,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleActionButton(action:string, idx:number) {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_SHOW_ACTION_WINDOW',
+            dispatcher.dispatch<Actions.ShowActionWindow>({
+                name: ActionName.ShowActionWindow,
                 payload: {
                     value: idx,
                     action: action
@@ -642,8 +643,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleActionsClose() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_HIDE_ACTION_WINDOW',
+            dispatcher.dispatch<Actions.HideActionWindow>({
+                name: ActionName.HideActionWindow,
                 payload: {}
             });
         }
