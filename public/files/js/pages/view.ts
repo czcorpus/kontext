@@ -1057,7 +1057,6 @@ export class ViewPage {
         this.viewModels.concDetailModel = new ConcDetailModel(
             this.layoutModel,
             this.layoutModel.dispatcher,
-            this.viewModels.lineViewModel,
             lineViewProps.StructCtx,
             {
                 speakerIdAttr: lineViewProps.SpeakerIdAttr,

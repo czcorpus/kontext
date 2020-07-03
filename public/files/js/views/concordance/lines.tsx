@@ -759,7 +759,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     class ConcLines extends React.PureComponent<ConcordanceModelState> {
 
-
         render() {
             const numVisibleCols = List.reduce(
                 (prev, c) => prev + (c.visible ? 1 : 0),

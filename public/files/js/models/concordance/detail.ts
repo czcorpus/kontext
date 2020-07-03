@@ -28,7 +28,6 @@ import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
-import { ConcordanceModel } from './main';
 import { AudioPlayer } from './media';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
 import { Actions, ActionName } from './actions';
@@ -150,17 +149,13 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly concModel:ConcordanceModel;
-
     private readonly audioPlayer:AudioPlayer;
 
     private readonly tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin;
 
 
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, linesModel:ConcordanceModel,
-            structCtx:string, speechOpts:SpeechOptions,
-            wideCtxGlobals:Array<[string, string]>,
-            tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin) {
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, structCtx:string, speechOpts:SpeechOptions,
+            wideCtxGlobals:Array<[string, string]>, tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin) {
         super(
             dispatcher,
             {
@@ -197,7 +192,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
         this.layoutModel = layoutModel;
-        this.concModel = linesModel;
         this.tokenConnectPlg = tokenConnectPlg;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -205,13 +199,15 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 this.emitChange();
             },
             () => {
-                this.state.playingRowIdx = -1;
-                this.emitChange();
+                this.changeState(state => {
+                    state.playingRowIdx = -1;
+                });
             },
             () => {
-                this.state.playingRowIdx = -1;
+                this.changeState(state => {
+                    state.playingRowIdx = -1;
+                });
                 this.audioPlayer.stop();
-                this.emitChange();
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             }
@@ -220,24 +216,23 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.addActionHandler<Actions.ExpandKwicDetail>(
             ActionName.ExpandKwicDetail,
             action => {
-                this.state.expandingSide = action.payload.position;
-                this.state.isBusy = true;
-                this.emitChange();
+                this.changeState(state => {
+                    state.expandingSide = action.payload.position;
+                    state.isBusy = true;
+                });
                 this.loadConcDetail(
-                        this.state.corpusId,
-                        this.state.kwicTokenNum,
-                        this.state.kwicLength,
-                        this.state.lineIdx,
                         [],
                         action.payload['position']
                 ).subscribe(
                     () => {
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                     },
                     (err) => {
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                         this.layoutModel.showMessage('error', err);
                     }
                 );
@@ -247,16 +242,19 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.addActionHandler<Actions.ShowKwicDetail>(
             ActionName.ShowKwicDetail,
             action => {
-                this.state.isBusy = true;
-                this.state.tokenConnectIsBusy = true;
-                this.state.expandLeftArgs = Array<ExpandArgs>();
-                this.state.expandRightArgs = Array<ExpandArgs>();
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.tokenConnectIsBusy = true;
+                    state.expandLeftArgs = Array<ExpandArgs>();
+                    state.expandRightArgs = Array<ExpandArgs>();
+                    state.corpusId = action.payload.corpusId;
+                    state.kwicTokenNum = action.payload.tokenNumber;
+                    state.kwicLength = action.payload.kwicLength;
+                    state.lineIdx = action.payload.lineIdx;
+                    state.wholeDocumentLoaded = false;
+                });
                 forkJoin(
                     this.loadConcDetail(
-                        action.payload.corpusId,
-                        action.payload.tokenNumber,
-                        action.payload.kwicLength,
-                        action.payload.lineIdx,
                         [],
                         this.state.expandLeftArgs.length > 1 &&
                                 this.state.expandRightArgs.length > 1 ? 'reload' : null
@@ -270,14 +268,16 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
 
                 ).subscribe(
                     () => {
-                        this.state.isBusy = false;
-                        this.state.tokenConnectIsBusy = false;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.isBusy = false;
+                            state.tokenConnectIsBusy = false;
+                        });
                     },
                     (err) => {
-                        this.state.isBusy = false;
-                        this.state.tokenConnectIsBusy = false;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.isBusy = false;
+                            state.tokenConnectIsBusy = false;
+                        });
                         this.layoutModel.showMessage('error', err);
                     }
                 );
@@ -287,10 +287,11 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.addActionHandler<Actions.ShowTokenDetail>(
             ActionName.ShowTokenDetail,
             action => {
-                this.resetKwicDetail();
-                this.resetTokenConnect();
-                this.state.tokenConnectIsBusy = true;
-                this.emitChange();
+                this.changeState(state => {
+                    this.resetKwicDetail(state);
+                    this.resetTokenConnect(state);
+                    state.tokenConnectIsBusy = true;
+                });
                 this.loadTokenConnect(
                     action.payload.corpusId,
                     action.payload.tokenNumber,
@@ -299,12 +300,14 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
 
                 ).subscribe(
                     () => {
-                        this.state.tokenConnectIsBusy = false;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.tokenConnectIsBusy = false;
+                        });
                     },
                     (err) => {
-                        this.emitChange();
-                        this.state.tokenConnectIsBusy = false;
+                        this.changeState(state => {
+                            state.tokenConnectIsBusy = false;
+                        });
                         this.layoutModel.showMessage('error', err);
                     }
                 );
@@ -329,26 +332,26 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.addActionHandler<Actions.ShowSpeechDetail>(
             ActionName.ShowSpeechDetail,
             action => {
-                this.state.mode = 'speech';
-                this.state.expandLeftArgs = [];
-                this.state.expandRightArgs = [];
-                this.state.speakerColorsAttachments = {};
-                this.state.isBusy = true;
-                this.emitChange();
-                this.loadSpeechDetail(
-                        action.payload.corpusId,
-                        action.payload.tokenNumber,
-                        action.payload.kwicLength,
-                        action.payload.lineIdx,
-                        this.state.expandLeftArgs.length > 1 &&
-                            this.state.expandRightArgs.length > 1 ? 'reload' : null).subscribe(
+                this.changeState(state => {
+                    state.mode = 'speech';
+                    state.expandLeftArgs = [];
+                    state.expandRightArgs = [];
+                    state.speakerColorsAttachments = {};
+                    state.isBusy = true;
+                });
+                this.loadSpeechDetail(this.state.expandLeftArgs.length > 1 &&
+                            this.state.expandRightArgs.length > 1 ? 'reload' : null
+                ).subscribe(
                     () => {
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        console.log('we have speech det: ', this.state.speechDetail)
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                     },
                     (err) => {
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                         this.layoutModel.showMessage('error', err);
                     }
                 );
@@ -358,21 +361,20 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.addActionHandler<Actions.ExpandSpeechDetail>(
             ActionName.ExpandSpeechDetail,
             action => {
-                this.state.expandingSide = action.payload.position;
-                this.state.isBusy = true;
-                this.emitChange();
-                this.loadSpeechDetail(
-                        this.state.corpusId,
-                        this.state.kwicTokenNum,
-                        this.state.kwicLength,
-                        this.state.lineIdx,
-                        action.payload['position']).subscribe(
+                this.changeState(state => {
+                    state.expandingSide = action.payload.position;
+                    state.isBusy = true;
+                });
+                this.loadSpeechDetail(action.payload.position).subscribe(
                     () => {
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                     },
                     (err) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                         this.layoutModel.showMessage('error', err);
                     }
                 );
@@ -384,45 +386,50 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             action => {
                 (() => {
                     if (action.payload.value === 'default') {
-                        this.state.mode = 'default';
-                        this.state.expandLeftArgs = Array<ExpandArgs>();
-                        this.state.expandRightArgs = Array<ExpandArgs>();
-                        this.state.expandingSide = null;
-                        this.state.concDetail = [];
-                        this.state.isBusy = true;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.mode = 'default';
+                            state.expandLeftArgs = Array<ExpandArgs>();
+                            state.expandRightArgs = Array<ExpandArgs>();
+                            state.expandingSide = null;
+                            state.concDetail = [];
+                            state.isBusy = true;
+                        });
                         return this.reloadConcDetail();
 
                     } else if (action.payload['value'] === 'speech') {
-                        this.state.mode = 'speech';
-                        this.state.expandLeftArgs = [];
-                        this.state.expandRightArgs = [];
-                        this.state.speakerColorsAttachments = {};
-                        this.state.expandingSide = null;
-                        this.state.concDetail = null;
-                        this.state.isBusy = true;
-                        this.emitChange();
-                        return this.reloadSpeechDetail();
+                        this.changeState(state => {
+                            state.mode = 'speech';
+                            state.expandLeftArgs = [];
+                            state.expandRightArgs = [];
+                            state.speakerColorsAttachments = {};
+                            state.expandingSide = null;
+                            state.concDetail = null;
+                            state.isBusy = true;
+                        });
+                        return this.loadSpeechDetail();
 
                     } else {
-                        this.state.mode = action.payload.value;
-                        this.state.expandLeftArgs = [];
-                        this.state.expandRightArgs = [];
-                        this.state.expandingSide = null;
-                        this.state.concDetail = [];
-                        this.state.isBusy = true;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.mode = action.payload.value;
+                            state.expandLeftArgs = [];
+                            state.expandRightArgs = [];
+                            state.expandingSide = null;
+                            state.concDetail = [];
+                            state.isBusy = true;
+                        });
                         return rxOf(null);
                     }
                 })().subscribe(
                     () => {
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                     },
                     (err) => {
-                        this.state.isBusy = false;
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                         this.layoutModel.showMessage('error', err);
-                        this.emitChange();
                     }
                 );
             }
@@ -434,9 +441,10 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 ActionName.ShowRefDetail
             ],
             action => {
-                this.resetKwicDetail();
-                this.resetTokenConnect();
-                this.emitChange();
+                this.changeState(state => {
+                    this.resetKwicDetail(state);
+                    this.resetTokenConnect(state);
+                });
             }
         );
 
@@ -444,11 +452,14 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             ActionName.PlaySpeech,
             action => {
                 if (this.state.playingRowIdx > -1) {
-                    this.state.playingRowIdx = null;
+                    this.changeState(state => {
+                        state.playingRowIdx = null;
+                    });
                     this.audioPlayer.stop();
-                    this.emitChange();
                 }
-                this.state.playingRowIdx = action.payload.rowIdx;
+                this.changeState(state => {
+                    state.playingRowIdx = action.payload.rowIdx;
+                });
                 const itemsToPlay = List.map(
                         item => this.layoutModel.createActionUrl(
                             `audio?corpname=${this.state.corpusId}&chunk=${item}`),
@@ -458,10 +469,11 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     this.audioPlayer.start(itemsToPlay);
 
                 } else {
-                    this.state.playingRowIdx = -1;
+                    this.changeState(state => {
+                        state.playingRowIdx = -1;
+                    });
                     this.layoutModel.showMessage('error',
                             this.layoutModel.translate('concview__nothing_to_play'));
-                    this.emitChange();
                 }
             }
         );
@@ -470,9 +482,10 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             ActionName.StopSpeech,
             action => {
                 if (this.state.playingRowIdx > -1) {
-                    this.state.playingRowIdx = null;
+                    this.changeState(state => {
+                        state.playingRowIdx = null;
+                    });
                     this.audioPlayer.stop();
-                    this.emitChange();
                 }
             }
         );
@@ -480,28 +493,29 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.addActionHandler<ViewOptionsActions.SaveSettingsDone>(
             ViewOptionsActionName.SaveSettingsDone,
             action => {
-                this.state.wideCtxGlobals = action.payload.widectxGlobals;
-                this.emitChange();
+                this.changeState(state => {
+                    state.wideCtxGlobals = action.payload.widectxGlobals;
+                });
             }
         );
     }
 
-    private resetKwicDetail():void {
-        if (this.state.lineIdx !== null) {
-            this.state.lineIdx = null;
-            this.state.corpusId = null;
-            this.state.kwicTokenNum = null;
-            this.state.kwicLength = null;
-            this.state.wholeDocumentLoaded = false;
-            this.state.expandLeftArgs = [];
-            this.state.expandRightArgs = [];
-            this.state.speakerColorsAttachments = {};
-            this.state.concDetail = [];
+    private resetKwicDetail(state:ConcDetailModelState):void {
+        if (state.lineIdx !== null) {
+            state.lineIdx = null;
+            state.corpusId = null;
+            state.kwicTokenNum = null;
+            state.kwicLength = null;
+            state.wholeDocumentLoaded = false;
+            state.expandLeftArgs = [];
+            state.expandRightArgs = [];
+            state.speakerColorsAttachments = {};
+            state.concDetail = [];
         }
     }
 
-    private resetTokenConnect():void {
-        this.state.tokenConnectData = {
+    private resetTokenConnect(state:ConcDetailModelState):void {
+        state.tokenConnectData = {
             token: null,
             renders: []
         };
@@ -510,7 +524,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     unregister():void {}
 
 
-    private generateSpeechesDetail():SpeechLines {
+    private generateSpeechesDetail(state:ConcDetailModelState):SpeechLines {
 
         const parseTag = (name:string, s:string):{[key:string]:string} => {
             const srch = new RegExp(`<${name}(\\s+[^>]+)>`).exec(s);
@@ -530,8 +544,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     metadata:{[attr:string]:string}):Speech => {
             const importedMetadata = pipe(
                 metadata,
-                Dict.filter((val, attr) => attr !== this.state.speechOpts.speechSegment[1] &&
-                                attr !== this.state.speechOpts.speakerIdAttr[1]),
+                Dict.filter((val, attr) => attr !== state.speechOpts.speechSegment[1] &&
+                                attr !== state.speechOpts.speakerIdAttr[1]),
             );
             return {
                 text: [],
@@ -543,11 +557,11 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         };
 
         const isOverlap = (s1:Speech, s2:Speech):boolean => {
-            if (s1 && s2 && this.state.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_FULL) {
-                const flag1 = s1.metadata[this.state.speechOpts.speechOverlapAttr[1]];
-                const flag2 = s2.metadata[this.state.speechOpts.speechOverlapAttr[1]];
+            if (s1 && s2 && state.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_FULL) {
+                const flag1 = s1.metadata[state.speechOpts.speechOverlapAttr[1]];
+                const flag2 = s2.metadata[state.speechOpts.speechOverlapAttr[1]];
                 if (flag1 === flag2
-                        && flag2 === this.state.speechOpts.speechOverlapVal
+                        && flag2 === state.speechOpts.speechOverlapVal
                         && s1.segments[0] === s2.segments[0]) {
                     return true;
                 }
@@ -585,40 +599,40 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         let prevSpeech:Speech = null;
         const tmp:Array<Speech> = [];
 
-        (this.state.concDetail || []).forEach((item, i) => {
+        (state.concDetail || []).forEach((item, i) => {
             if (item.class === 'strc') {
-                const attrs = parseTag(this.state.speechOpts.speakerIdAttr[0], item.str);
-                if (attrs !== null && attrs[this.state.speechOpts.speakerIdAttr[1]]) {
+                const attrs = parseTag(state.speechOpts.speakerIdAttr[0], item.str);
+                if (attrs !== null && attrs[state.speechOpts.speakerIdAttr[1]]) {
                         tmp.push(currSpeech);
-                        const newSpeakerId = attrs[this.state.speechOpts.speakerIdAttr[1]];
-                        if (!Dict.hasKey(newSpeakerId, this.state.speakerColorsAttachments)) {
-                            this.state.speakerColorsAttachments[newSpeakerId] =
-                                this.state.speakerColors[Dict.size(
-                                    this.state.speakerColorsAttachments)]
+                        const newSpeakerId = attrs[state.speechOpts.speakerIdAttr[1]];
+                        if (!Dict.hasKey(newSpeakerId, state.speakerColorsAttachments)) {
+                            state.speakerColorsAttachments[newSpeakerId] =
+                                state.speakerColors[Dict.size(
+                                    state.speakerColorsAttachments)]
                         }
                         prevSpeech = currSpeech;
                         currSpeech = createNewSpeech(
                             newSpeakerId,
-                            this.state.speakerColorsAttachments[newSpeakerId],
+                            state.speakerColorsAttachments[newSpeakerId],
                             attrs
                         );
                 }
-                if (item.str.indexOf(`<${this.state.speechOpts.speechSegment[0]}`) > -1) {
-                    const attrs = parseTag(this.state.speechOpts.speechSegment[0], item.str);
+                if (item.str.indexOf(`<${state.speechOpts.speechSegment[0]}`) > -1) {
+                    const attrs = parseTag(state.speechOpts.speechSegment[0], item.str);
                     if (attrs) {
-                        currSpeech.segments.push(attrs[this.state.speechOpts.speechSegment[1]]);
+                        currSpeech.segments.push(attrs[state.speechOpts.speechSegment[1]]);
                     }
 
                 }
-                if (this.state.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE) {
+                if (state.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE) {
                     const overlapSrch = new RegExp(
-                        `</?(${this.state.speechOpts.speechOverlapAttr[0]})(>|[^>]+>)`, 'g');
+                        `</?(${state.speechOpts.speechOverlapAttr[0]})(>|[^>]+>)`, 'g');
                     let srch = overlapSrch.exec(item.str);
                     let i = 0;
                     while (srch !== null) {
                         if (srch[0].indexOf('</') === 0
                                 && item.str.indexOf(
-                                    `<${this.state.speechOpts.speakerIdAttr[0]}`) > 0) {
+                                    `<${state.speechOpts.speakerIdAttr[0]}`) > 0) {
                             prevSpeech.text.push({str: srch[0], class: item.class});
 
                         } else {
@@ -646,7 +660,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
      *
      */
     private loadWholeDocument():Observable<any> {
-
+        // TODO if mode speeches or a custom one, throw an error here
         return this.layoutModel.ajax$<AjaxResponse.WideCtx>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('structctx'),
@@ -661,9 +675,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             tap(
                 (data) => {
                     this.state.concDetail = data.content;
-                    if (this.state.mode === 'speech') {
-                        this.state.speechDetail = this.generateSpeechesDetail();
-                    }
                     this.state.wholeDocumentLoaded = true;
                     this.state.expandLeftArgs = [];
                     this.state.expandRightArgs = [];
@@ -675,8 +686,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     /**
      *
      */
-    private loadSpeechDetail(corpusId:string, tokenNum:number, kwicLength:number, lineIdx:number,
-            expand?:string):Observable<boolean> {
+    private loadSpeechDetail(expand?:string):Observable<boolean> {
         const structs = this.layoutModel.getConcArgs().getList('structs');
         const args = this.state.speechAttrs
                 .map(x => `${this.state.speechOpts.speakerIdAttr[0]}.${x}`)
@@ -693,12 +703,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 args.push(overlapStruct);
             }
         }
-        return this.loadConcDetail(corpusId, tokenNum, kwicLength, lineIdx, args, expand);
-    }
-
-    private reloadSpeechDetail():Observable<boolean> {
-        return this.loadSpeechDetail(this.state.corpusId, this.state.kwicTokenNum,
-            this.state.kwicLength, this.state.lineIdx);
+        return this.loadConcDetail(args, expand);
     }
 
     private loadTokenConnect(corpusId:string, tokenNum:number, numTokens:number,
@@ -731,20 +736,14 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     /**
      *
      */
-    private loadConcDetail(corpusId:string, tokenNum:number, kwicLength:number, lineIdx:number,
-            structs:Array<string>, expand?:string):Observable<boolean> {
-        this.state.corpusId = corpusId;
-        this.state.kwicTokenNum = tokenNum;
-        this.state.kwicLength = kwicLength;
-        this.state.lineIdx = lineIdx;
-        this.state.wholeDocumentLoaded = false;
+    private loadConcDetail(structs:Array<string>, expand?:string):Observable<boolean> {
 
         const args = new MultiDict(this.state.wideCtxGlobals);
-        args.set('corpname', corpusId); // just for sure (is should be already in args)
+        args.set('corpname', this.state.corpusId); // just for sure (is should be already in args)
         // we must delete 'usesubcorp' as the server API does not need it
         // and in case of an aligned corpus it even produces an error
         args.remove('usesubcorp');
-        args.set('pos', String(tokenNum));
+        args.set('pos', String(this.state.kwicTokenNum));
         args.set('format', 'json');
         if (this.state.kwicLength && this.state.kwicLength > 1) {
             args.set('hitlen', this.state.kwicLength);
@@ -775,9 +774,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             args.set('detail_right_ctx', List.get(-1, this.state.expandLeftArgs)[1]);
         }
 
-        this.state.isBusy = true;
-        this.emitChange();
-
         return this.layoutModel.ajax$<AjaxResponse.WideCtx>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('widectx'),
@@ -787,25 +783,30 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         ).pipe(
             tap(
                 (data) => {
-                    this.state.concDetail = data.content;
-                    if (data.expand_left_args) {
-                        this.state.expandLeftArgs.push([
-                            data.expand_left_args.detail_left_ctx,
-                            data.expand_left_args.detail_right_ctx
-                        ]);
+                    this.changeState(state => {
+                        state.concDetail = data.content;
+                        if (state.mode === 'speech') {
+                            state.speechDetail = this.generateSpeechesDetail(state);
+                        }
+                        if (data.expand_left_args) {
+                            state.expandLeftArgs.push([
+                                data.expand_left_args.detail_left_ctx,
+                                data.expand_left_args.detail_right_ctx
+                            ]);
 
-                    } else {
-                        this.state.expandLeftArgs.push(null);
-                    }
-                    if (data.expand_right_args) {
-                        this.state.expandRightArgs.push([
-                            data.expand_right_args.detail_left_ctx,
-                            data.expand_right_args.detail_right_ctx
-                        ]);
+                        } else {
+                            state.expandLeftArgs.push(null);
+                        }
+                        if (data.expand_right_args) {
+                            state.expandRightArgs.push([
+                                data.expand_right_args.detail_left_ctx,
+                                data.expand_right_args.detail_right_ctx
+                            ]);
 
-                    } else {
-                        this.state.expandRightArgs.push(null);
-                    }
+                        } else {
+                            state.expandRightArgs.push(null);
+                        }
+                    });
                 }
             ),
             map(d =>  !!d)
@@ -813,8 +814,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     }
 
     private reloadConcDetail():Observable<boolean> {
-        return this.loadConcDetail(this.state.corpusId, this.state.kwicTokenNum,
-            this.state.kwicLength, this.state.lineIdx, [], 'reload');
+        return this.loadConcDetail([], 'reload');
     }
 
     static hasExpandLeft(state:ConcDetailModelState):boolean {
