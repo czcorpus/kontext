@@ -91,6 +91,10 @@ export const appendQuery = (origQuery:string, query:string, prependSpace:boolean
     return origQuery + (origQuery && prependSpace ? ' ' : '') + query;
 };
 
+export interface WithinBuilderData extends Kontext.AjaxResponse {
+    structattrs:{[attr:string]:Array<string>};
+}
+
 /**
  *
  */

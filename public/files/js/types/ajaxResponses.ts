@@ -96,10 +96,6 @@ export namespace AjaxResponse {
         Refs:Array<{name:string; val:string}>;
     }
 
-    export interface WithinBuilderData extends Kontext.AjaxResponse {
-        structattrs:{[attr:string]:Array<string>};
-    }
-
     export interface ConcFormArgs {
         form_type:string;
         op_key:string; // an ID used by conc_persistence

@@ -21,6 +21,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
+import { WithinBuilderData } from './common';
 
 
 export enum ActionName {
@@ -45,7 +46,11 @@ export enum ActionName {
     QueryInputToggleVirtualKeyboardCaps = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_CAPS',
     QueryInputSelectContextFormItem = 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
     QueryContextToggleForm = 'QUERY_CONTEXT_TOGGLE_FORM',
-    QueryTextTypesToggleForm = 'QUERY_TEXT_TYPES_TOGGLE_FORM'
+    QueryTextTypesToggleForm = 'QUERY_TEXT_TYPES_TOGGLE_FORM',
+    LoadWithinBuilderData = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
+    LoadWithinBuilderDataDone = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA_DONE',
+    SetWithinValue = 'QUERY_INPUT_SET_WITHIN_VALUE',
+    SetWithinAttr = 'QUERY_INPUT_SET_WITHIN_ATTR'
 }
 
 export namespace Actions {
@@ -170,5 +175,29 @@ export namespace Actions {
     export interface QueryTextTypesToggleForm extends Action<{
     }> {
         name:ActionName.QueryTextTypesToggleForm;
+    }
+
+    export interface LoadWithinBuilderData extends Action<{
+        sourceId:string;
+    }> {
+        name:ActionName.LoadWithinBuilderData;
+    }
+
+    export interface LoadWithinBuilderDataDone extends Action<{
+        data:WithinBuilderData;
+    }> {
+        name:ActionName.LoadWithinBuilderDataDone;
+    }
+
+    export interface SetWithinValue extends Action<{
+        value:string;
+    }> {
+        name:ActionName.SetWithinValue;
+    }
+
+    export interface SetWithinAttr extends Action<{
+        idx:number;
+    }> {
+        name:ActionName.SetWithinAttr;
     }
 }
