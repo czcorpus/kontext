@@ -25,8 +25,9 @@ import { MultiDict } from '../../multidict';
 import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
+import { ActionName, Actions } from './actions';
 
-interface LoadDataResponse extends Kontext.AjaxResponse {
+export interface LoadDataResponse extends Kontext.AjaxResponse {
     data:Array<DataItem>;
     corpora:Array<CorpusItem>;
 }
@@ -59,15 +60,6 @@ export interface PublicSubcorpListState {
     inputPrefixThrottleTimer:number;
 }
 
-export enum Actions {
-    SET_SEARCH_TYPE = 'PUBSUBC_SET_SEARCH_TYPE',
-    SET_SEARCH_QUERY = 'PUBSUBC_SET_SEARCH_QUERY',
-    SET_INPUT_PREFIX_THROTTLE = 'PUBSUBC_SET_INPUT_PREFIX_THROTTLE',
-    SET_CODE_PREFIX_DONE = 'PUBSUBC_SET_CODE_PREFIX_DONE',
-    DATA_LOAD_DONE = 'PUBSUBC_DATA_LOAD_DONE',
-    USE_IN_QUERY = 'PUBSUBC_USE_IN_QUERY'
-}
-
 export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListState> {
 
 
@@ -98,27 +90,27 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
     reduce(state:PublicSubcorpListState, action:Action):PublicSubcorpListState {
         let newState:PublicSubcorpListState;
         switch (action.name) {
-            case Actions.SET_SEARCH_TYPE:
+            case ActionName.SetSearchType:
                 newState = this.copyState(state);
                 newState.searchType = action.payload['value'];
                 newState.minQuerySize = this.queryTypeMinPrefixMapping.get(action.payload['value']);
                 return newState;
-            case Actions.SET_SEARCH_QUERY:
+            case ActionName.SetSearchQuery:
                 newState = this.copyState(state);
                 newState.searchQuery = action.payload['value'];
                 if (newState.inputPrefixThrottleTimer) {
                     window.clearTimeout(newState.inputPrefixThrottleTimer);
                 }
                 return newState;
-            case Actions.SET_INPUT_PREFIX_THROTTLE:
+            case ActionName.SetInputPrefixThrottle:
                 newState = this.copyState(state);
                 newState.inputPrefixThrottleTimer = action.payload['timerId'];
                 return newState;
-            case Actions.SET_CODE_PREFIX_DONE:
+            case ActionName.SetCodePrefixDone:
                 newState = this.copyState(state);
                 newState.isBusy = true;
                 return newState;
-            case Actions.DATA_LOAD_DONE:
+            case ActionName.DataLoadDone:
                 newState = this.copyState(state);
                 newState.isBusy = false;
                 newState.data = Immutable.List<DataItem>(action.payload['data']['data']);
@@ -130,19 +122,19 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
     sideEffects(state:PublicSubcorpListState, action:Action, dispatch:SEDispatcher):void {
         switch (action.name) {
-            case Actions.SET_SEARCH_TYPE:
-            case Actions.SET_SEARCH_QUERY:
+            case ActionName.SetSearchType:
+            case ActionName.SetSearchQuery:
                 const timerId = window.setTimeout(
                     () => {
                         if (state.searchQuery.length >= state.minQuerySize) {
-                            dispatch({
-                                name: Actions.SET_CODE_PREFIX_DONE,
+                            dispatch<Actions.SetCodePrefixDone>({
+                                name: ActionName.SetCodePrefixDone,
                                 payload: {}
                             });
                             this.loadData(state).subscribe(
                                 (data) => {
-                                    dispatch({
-                                        name: Actions.DATA_LOAD_DONE,
+                                    dispatch<Actions.DataLoadDone>({
+                                        name: ActionName.DataLoadDone,
                                         payload: {
                                             data: data
                                         }
@@ -150,9 +142,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                                 },
                                 (err) => {
                                     this.pageModel.showMessage('error', err);
-                                    dispatch({
-                                        name: Actions.DATA_LOAD_DONE,
-                                        payload: {},
+                                    dispatch<Actions.DataLoadDone>({
+                                        name: ActionName.DataLoadDone,
                                         error: err
                                     });
                                 }
@@ -162,14 +153,14 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                     },
                     250
                 );
-                dispatch({
-                    name: Actions.SET_INPUT_PREFIX_THROTTLE,
+                dispatch<Actions.SetInputPrefixThrottle>({
+                    name: ActionName.SetInputPrefixThrottle,
                     payload: {
                         timerId: timerId
                     }
                 });
             break;
-            case Actions.USE_IN_QUERY:
+            case ActionName.UseInQuery:
                 const args = new MultiDict();
                 args.set('corpname', action.payload['corpname']);
                 args.set('usesubcorp', action.payload['id']);

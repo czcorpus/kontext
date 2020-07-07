@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { SubcListFilter } from './list';
 import { InputMode } from './common';
 import { TextTypes } from '../../types/common';
+import { LoadDataResponse } from './listPublic';
 
 
 export enum ActionName {
@@ -44,6 +45,12 @@ export enum ActionName {
     FormSetDescription = 'SUBCORP_FORM_SET_DESCRIPTION',
     FormSubmit = 'SUBCORP_FORM_SUBMIT',
     FormSetAlignedCorpora = 'SUBCORP_FORM_SET_ALIGNED_CORPORA',
+    SetSearchType = 'PUBSUBC_SET_SEARCH_TYPE',
+    SetSearchQuery = 'PUBSUBC_SET_SEARCH_QUERY',
+    SetInputPrefixThrottle = 'PUBSUBC_SET_INPUT_PREFIX_THROTTLE',
+    SetCodePrefixDone = 'PUBSUBC_SET_CODE_PREFIX_DONE',
+    DataLoadDone = 'PUBSUBC_DATA_LOAD_DONE',
+    UseInQuery = 'PUBSUBC_USE_IN_QUERY'
 
 }
 
@@ -159,4 +166,41 @@ export namespace Actions {
     }> {
         name:ActionName.FormSetAlignedCorpora;
     }
+
+    export interface SetSearchType extends Action<{
+        value:string;
+    }> {
+        name:ActionName.SetSearchType;
+    }
+
+    export interface SetSearchQuery extends Action<{
+        value:string;
+    }> {
+        name:ActionName.SetSearchQuery;
+    }
+
+    export interface SetInputPrefixThrottle extends Action<{
+        timerId:number;
+    }> {
+        name:ActionName.SetInputPrefixThrottle;
+    }
+
+    export interface SetCodePrefixDone extends Action<{
+    }> {
+        name:ActionName.SetCodePrefixDone;
+    }
+
+    export interface DataLoadDone extends Action<{
+        data:LoadDataResponse;
+    }> {
+        name:ActionName.DataLoadDone;
+    }
+
+    export interface UseInQuery extends Action<{
+        corpname:string;
+        id:string;
+    }> {
+        name:ActionName.UseInQuery;
+    }
+
 }
