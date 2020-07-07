@@ -25,7 +25,7 @@ import { Kontext, TextTypes } from '../types/common';
 import { PluginInterfaces } from '../types/plugins';
 import { PageModel } from '../app/page';
 import { init as subcorpViewsInit } from '../views/subcorp/forms';
-import { SubcorpFormModel } from '../models/subcorp/form';
+import { SubcorpFormModel, SubcorpFormModelState } from '../models/subcorp/form';
 import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
 import { TextTypesModel, SelectedTextTypes } from '../models/textTypes/main';
 import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
@@ -37,6 +37,7 @@ import subcMixer from 'plugins/subcmixer/init';
 import { InputMode } from '../models/subcorp/common';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
+import { IStateChangeListener } from 'kombo';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -151,7 +152,7 @@ export class SubcorpForm {
                 getDescription: () => this.subcorpFormModel.getDescription(),
                 getSubcName: () => this.subcorpFormModel.getSubcname(),
                 validateForm: () => this.subcorpFormModel.validateForm(false),
-                addListener: (fn:Kontext.ModelListener) => this.subcorpFormModel.addListener(fn)
+                addListener: (fn:IStateChangeListener<SubcorpFormModelState>) => this.subcorpFormModel.addListener(fn)
             },
             this.layoutModel.getConf<string>('CorpusIdAttr')
         );

@@ -18,13 +18,13 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {IActionDispatcher, Bound} from 'kombo';
-import {Subscription} from 'rxjs';
+import {IActionDispatcher, Bound, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
-import { SubcorpFormModel } from '../../models/subcorp/form';
+import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/form';
 import {SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine} from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';
+import { ActionName, Actions } from '../../models/subcorp/actions';
 
 export interface FormsModuleArgs {
     dispatcher:IActionDispatcher;
@@ -330,8 +330,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleCheckbox = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
+            dispatcher.dispatch<Actions.FormSetSubcAsPublic>({
+                name: ActionName.FormSetSubcAsPublic,
                 payload: {
                     value: !props.value
                 }
@@ -429,42 +429,17 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     /**
      *
      */
-    class SubcorpForm extends React.Component<SubcorpFormProps, {
-        subcname:Kontext.FormValue<string>;
-        isPublic:boolean;
-        inputMode:string;
-        description:Kontext.FormValue<string>;
-        isBusy:boolean;
-
-    }> {
-
-        private modelSubscription:Subscription;
+    class SubcorpForm extends React.Component<SubcorpFormProps & SubcorpFormModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleInputModeChange = this._handleInputModeChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
         }
 
-        _fetchModelState() {
-            return {
-                subcname: subcorpFormModel.getSubcname(),
-                inputMode: subcorpFormModel.getInputMode(),
-                isPublic: subcorpFormModel.getIsPublic(),
-                description: subcorpFormModel.getDescription(),
-                isBusy: subcorpFormModel.getIsBusy()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
         _handleInputModeChange(v) {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_INPUT_MODE',
+            dispatcher.dispatch<Actions.FormSetInputMode>({
+                name: ActionName.FormSetInputMode,
                 payload: {
                     value: v
                 }
@@ -472,22 +447,14 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SUBMIT',
+            dispatcher.dispatch<Actions.FormSubmit>({
+                name: ActionName.FormSubmit,
                 payload: {}
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = subcorpFormModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderTextTypeSelection() {
-            switch (this.state.inputMode) {
+            switch (this.props.inputMode) {
                 case 'raw':
                     return <BoundTRWithinBuilderWrapper  />;
                 case 'gui':
@@ -522,7 +489,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                     {he.translate('global__new_subcorpus_name_lab')}:
                                 </th>
                                 <td style={{width: '80%'}}>
-                                    <SubcNameInput value={this.state.subcname} />
+                                    <SubcNameInput value={this.props.subcname} />
                                 </td>
                             </tr>
                             <tr>
@@ -534,14 +501,14 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                     </layoutViews.InlineHelp>
                                 </th>
                                 <td>
-                                    <SubcNamePublicCheckbox value={this.state.isPublic} />
+                                    <SubcNamePublicCheckbox value={this.props.isPublic} />
                                 </td>
                             </tr>
-                            {this.state.isPublic ?
+                            {this.props.isPublic ?
                                 (<tr>
                                     <th>{he.translate('subcform__public_description')}:</th>
                                     <td>
-                                        <SubcDescription value={this.state.description} />
+                                        <SubcDescription value={this.props.description} />
                                     </td>
                                 </tr>) : null
                             }
@@ -549,7 +516,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                 <th>
                                     {he.translate('subcform__specify_subc_using')}:
                                 </th>
-                                <TDInputModeSelection inputMode={this.state.inputMode}
+                                <TDInputModeSelection inputMode={this.props.inputMode}
                                         onModeChange={this._handleInputModeChange} />
                             </tr>
                             {this._renderTextTypeSelection()}
@@ -559,7 +526,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                             </tr>
                         </tbody>
                     </table>
-                    {this.state.isBusy ?
+                    {this.props.isBusy ?
                         <layoutViews.AjaxLoaderBarImage /> :
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>
@@ -572,7 +539,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }
 
     return {
-        SubcorpForm: SubcorpForm,
+        SubcorpForm: BoundWithProps(SubcorpForm, subcorpFormModel),
         SubcNamePublicCheckbox: SubcNamePublicCheckbox,
         SubcDescription: SubcDescription
     };

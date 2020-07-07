@@ -20,6 +20,8 @@
 
 import { Action } from 'kombo';
 import { SubcListFilter } from './list';
+import { InputMode } from './common';
+import { TextTypes } from '../../types/common';
 
 
 export enum ActionName {
@@ -37,6 +39,12 @@ export enum ActionName {
     UpdatePublicDescription = 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION',
     SubmitPublicDescription = 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT',
     PublishItem = 'SUBCORP_LIST_PUBLISH_ITEM',
+    FormSetInputMode = 'SUBCORP_FORM_SET_INPUT_MODE',
+    FormSetSubcAsPublic = 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
+    FormSetDescription = 'SUBCORP_FORM_SET_DESCRIPTION',
+    FormSubmit = 'SUBCORP_FORM_SUBMIT',
+    FormSetAlignedCorpora = 'SUBCORP_FORM_SET_ALIGNED_CORPORA',
+
 }
 
 export namespace Actions {
@@ -123,4 +131,32 @@ export namespace Actions {
         name:ActionName.PublishItem;
     }
 
+    export interface FormSetInputMode extends Action<{
+        value:InputMode;
+    }> {
+        name:ActionName.FormSetInputMode;
+    }
+
+    export interface FormSetSubcAsPublic extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.FormSetSubcAsPublic;
+    }
+
+    export interface FormSetDescription extends Action<{
+        value:string;
+    }> {
+        name:ActionName.FormSetDescription;
+    }
+
+    export interface FormSubmit extends Action<{
+    }> {
+        name:ActionName.FormSubmit;
+    }
+
+    export interface FormSetAlignedCorpora extends Action<{
+        alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
+    }> {
+        name:ActionName.FormSetAlignedCorpora;
+    }
 }
