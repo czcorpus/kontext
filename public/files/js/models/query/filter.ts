@@ -22,6 +22,7 @@ import * as Immutable from 'immutable';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
@@ -30,9 +31,8 @@ import { MultiDict } from '../../multidict';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
-import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery, WidgetsMap, shouldDownArrowTriggerHistory } from './common';
+import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery, WidgetsMap, shouldDownArrowTriggerHistory, FilterServerArgs, QueryTypes, AnyQuery } from './common';
 import { ActionName } from './actions';
-import { tuple } from 'cnc-tskit';
 
 
 /**
@@ -111,7 +111,7 @@ export interface FilterFormModelState extends QueryFormModelState {
 
     maincorps:Immutable.Map<string, string>;
 
-    queryTypes:Immutable.Map<string, string>;
+    queryTypes:Immutable.Map<string, QueryTypes>;
 
     lposValues:Immutable.Map<string, string>;
 
@@ -176,7 +176,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             props:FilterFormProperties,
             syncInitialArgs:AjaxResponse.FilterFormArgs) {
         const queries = Immutable.Map<string, string>([['__new__', '']]);
-        const queryTypes = Immutable.Map<string, string>(props.currQueryTypes).set('__new__', 'iquery');
+        const queryTypes = Immutable.Map<string, QueryTypes>(props.currQueryTypes).set('__new__', 'iquery');
         const tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'filter-form-model', {
             forcedAttr: '', // TODO
@@ -406,7 +406,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     if (data.form_type === 'filter') {
                         this.state.queries = this.state.queries.set(filterId, data.query);
                         this.state.queryTypes = this.state.queryTypes.set(filterId, data.query_type);
-                        this.state.maincorps = this.state.queryTypes.set(filterId, data.maincorp);
+                        this.state.maincorps = this.state.maincorps.set(filterId, data.maincorp);
                         this.state.pnFilterValues = this.state.pnFilterValues.set(filterId, data.pnfilter);
                         this.state.filflValues = this.state.filflValues.set(filterId, data.filfl);
                         this.state.filfposValues = this.state.filfposValues.set(filterId, {
@@ -434,8 +434,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         );
     }
 
-    private createSubmitArgs(filterId:string):MultiDict {
-        const args = this.pageModel.getConcArgs();
+    private createSubmitArgs(filterId:string):MultiDict<FilterServerArgs> {
+        const args = this.pageModel.getConcArgs() as MultiDict<FilterServerArgs & AnyQuery>;
         args.set('pnfilter', this.state.pnFilterValues.get(filterId));
         args.set('filfl', this.state.filflValues.get(filterId));
         args.set('filfpos', this.state.filfposValues.get(filterId).value);

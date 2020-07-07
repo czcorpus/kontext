@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ITranslator, IFullActionControl, StatefulModel, StatelessModel } from 'kombo';
+import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { AjaxError } from 'rxjs/ajax';
 import * as Immutable from 'immutable';
@@ -45,6 +45,7 @@ import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/main
 import { AppNavigation, AjaxArgs } from './navigation';
 import { EmptyPlugin } from '../plugins/empty/init';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../models/mainMenu/actions';
+import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
@@ -66,7 +67,7 @@ export enum DownloadType {
  * on any KonText page before any of page's own functionalities are
  * inited/involved.
  */
-export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
+export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler,
         Kontext.IConfHandler, ITranslator {
 
     /**
@@ -525,10 +526,9 @@ export abstract class PageModel implements Kontext.IURLHandler, Kontext.IConcArg
     /**
      * Return a list of concordance arguments and their values. Multi-value keys
      * are preserved.
-     * Output format: [[k1, v1_1], [k1, v1_2], ...., [kn, vn_1], ..., [kn, vn_m]]
      */
-    getConcArgs():MultiDict { // TODO type T
-        return new MultiDict(this.getConf<Kontext.ListOfPairs>('currentArgs'));
+    getConcArgs():MultiDict<ConcServerArgs> {
+        return new MultiDict(this.getConf<Array<[keyof ConcServerArgs, ConcServerArgs[keyof ConcServerArgs]]>>('currentArgs'));
     }
 
     /**

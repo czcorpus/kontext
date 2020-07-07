@@ -19,7 +19,8 @@
  */
 
 import {Kontext, TextTypes} from '../types/common';
-import { AjaxConcResponse } from '../models/concordance/common';
+import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../models/concordance/common';
+import { QueryTypes } from '../models/query/common';
 
 // TODO !! this should be broken and moved into respective modules
 
@@ -126,7 +127,7 @@ export namespace AjaxResponse {
     export interface QueryFormArgsResponse extends QueryFormArgs, Kontext.AjaxResponse {}
 
     export interface FilterFormArgs extends ConcFormArgs {
-        query_type:string;
+        query_type:QueryTypes;
         query:string;
         maincorp:string;
         pnfilter:string;
@@ -243,8 +244,8 @@ export namespace FreqResultResponse {
 
     export interface Item {
         Word:Array<{n:string}>;
-        pfilter:Array<[string, string]>;
-        nfilter:Array<[string, string]>;
+        pfilter:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
+        nfilter:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
         fbar:number;
         freqbar:number;
         rel:number;

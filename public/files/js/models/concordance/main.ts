@@ -23,7 +23,7 @@ import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP } from 'cnc-tskit';
 
-import { Kontext, TextTypes, ViewOptions } from '../../types/common';
+import { TextTypes, ViewOptions } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PluginInterfaces } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
@@ -36,10 +36,11 @@ import { transformVmode } from '../options/structsAttrs';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
 import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse, ServerPagination,
-    ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds, mapIdToIdWithColors, ConcUpdatePayload, ConcGroupChangePayload,
-    PublishLineSelectionPayload } from './common';
-import { Actions, ActionName } from './actions';
+    ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds, mapIdToIdWithColors,
+    ConcServerArgs} from './common';
+import { Actions, ActionName, ConcGroupChangePayload, PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { SwitchMainCorpServerArgs } from '../query/common';
 
 
 
@@ -730,7 +731,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      * The returned promise passes URL argument matching
      * currently displayed data page.
      */
-    private reloadPage(concId?:string):Observable<MultiDict> {
+    private reloadPage(concId?:string):Observable<MultiDict<ConcServerArgs>> {
         return this.changePage('customPage', this.state.currentPage, concId ? `~${concId}` : undefined);
     }
 
@@ -748,7 +749,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      * The returned promise passes URL argument matching
      * currently displayed data page.
      */
-    private changePage(action:string, pageNumber?:number, concId?:string):Observable<MultiDict> {
+    private changePage(action:string, pageNumber?:number, concId?:string):Observable<MultiDict<ConcServerArgs>> {
         const pageNum:number = action === 'customPage' ? pageNumber : this.state.pagination[action];
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
             return throwError(new Error(this.layoutModel.translate(
@@ -768,34 +769,25 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             args
 
         ).pipe(
-            map(
-                resp => ({
-                    concId: resp.conc_persistence_op_id,
-                    numLinesInGroups: resp.num_lines_in_groups,
-                    linesGroupsNumbers: resp.lines_groups_numbers,
-                    Lines: resp.Lines,
-                    concsize: resp.concsize,
-                    pagination: resp.pagination,
-                    isUnfinished: !!resp.running_calc
-                })
-            ),
             tap(update => {
                 this.importData(update);
-                this.changeState(state => {state.currentPage = pageNum});
+                this.changeState(state => {
+                    state.currentPage = pageNum
+                });
             }),
             map(_ => this.layoutModel.getConcArgs())
         );
     }
 
-    private importData(data:ConcUpdatePayload):void {
+    private importData(data:AjaxConcResponse):void {
         this.changeState(state => {
             state.lines = importLines(
                 data.Lines,
                 this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
             );
-            state.numItemsInLockedGroups = data.numLinesInGroups;
+            state.numItemsInLockedGroups = data.num_lines_in_groups;
             state.pagination = data.pagination;
-            state.unfinishedCalculation = data.isUnfinished;
+            state.unfinishedCalculation = !!data.running_calc;
         });
     }
 
@@ -823,7 +815,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         const args = this.layoutModel.getConcArgs();
         args.set('format', 'json');
 
-        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('view'),
             args
@@ -849,7 +841,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     private changeMainCorpus(corpusId:string) {
-        const args:MultiDict = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.getConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
         if (this.state.kwicCorps.indexOf(corpusId) > -1) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');

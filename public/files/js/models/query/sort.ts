@@ -28,6 +28,7 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { StatefulModel } from '../base';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
+import { ConcSortServerArgs } from './common';
 
 
 export interface SortFormProperties {
@@ -235,10 +236,10 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
         return this.pageModel.createActionUrl('sortx', this.createSubmitArgs(sortId).items());
     }
 
-    private createSubmitArgs(sortId:string):MultiDict {
+    private createSubmitArgs(sortId:string):MultiDict<ConcSortServerArgs> {
         const val2List = (v) => v ? [v] : [];
 
-        const args = this.pageModel.getConcArgs();
+        const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
         args.replace('sattr', val2List(this.sattrValues.get(sortId)));
         args.replace('skey', val2List(this.skeyValues.get(sortId)));
         args.replace('sbward', val2List(this.sbwardValues.get(sortId)));
@@ -454,8 +455,8 @@ export class MultiLevelConcSortModel extends StatefulModel implements ISubmitabl
         window.location.href = url;
     }
 
-    private createSubmitArgs(sortId:string):MultiDict {
-        const args = this.pageModel.getConcArgs();
+    private createSubmitArgs(sortId:string):MultiDict<ConcSortServerArgs> {
+        const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
         for (let i = 0; i < this.sortlevelValues.get(sortId); i += 1) {
             args.replace('sortlevel', [String(this.sortlevelValues.get(sortId))]);
             args.replace(`ml${i+1}attr`, [this.mlxattrValues.get(sortId).get(i)]);

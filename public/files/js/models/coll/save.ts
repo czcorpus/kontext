@@ -196,8 +196,8 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
                 args.set('saveformat', state.saveformat);
                 args.set('colheaders', state.includeColHeaders ? '1' : '0');
                 args.set('heading', state.includeHeading ? '1' : '0');
-                args.set('from_line', state.fromLine.value);
-                args.set('to_line', state.toLine.value);
+                args.set('from_line', parseInt(state.fromLine.value));
+                args.set('to_line', parseInt(state.toLine.value));
                 this.saveLinkFn(
                     `collocation.${SaveData.formatToExt(state.saveformat)}`,
                     this.layoutModel.createActionUrl('savecoll', args.items())

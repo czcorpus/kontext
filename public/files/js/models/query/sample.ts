@@ -27,6 +27,7 @@ import { StatefulModel } from '../base';
 import { PageModel } from '../../app/page';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
+import { SampleServerArgs } from './common';
 
 
 export interface SampleFormProperties {
@@ -109,9 +110,9 @@ export class ConcSampleModel extends StatefulModel {
         );
     }
 
-    private createSubmitArgs(sortId:string):MultiDict {
-        const args = this.pageModel.getConcArgs();
-        args.replace('rlines', [String(this.rlinesValues.get(sortId))]);
+    private createSubmitArgs(sortId:string):MultiDict<SampleServerArgs> {
+        const args = this.pageModel.getConcArgs() as MultiDict<SampleServerArgs>;
+        args.set('rlines', parseInt(this.rlinesValues.get(sortId)));
         return args;
     }
 

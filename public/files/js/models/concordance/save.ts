@@ -25,6 +25,8 @@ import {PageModel} from '../../app/page';
 import {IFullActionControl, StatefulModel} from 'kombo';
 import {Actions, ActionName} from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { MultiDict } from '../../multidict';
+import { ConcSaveServerArgs } from './common';
 
 
 
@@ -190,7 +192,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
     }
 
     private submit():void {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.getConcArgs() as MultiDict<ConcSaveServerArgs>;
         args.set('saveformat', this.state.saveformat);
         args.set('from_line', this.state.fromLine.value);
         args.set('to_line', this.state.toLine.value);

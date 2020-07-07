@@ -20,7 +20,8 @@
 
 import { Action } from 'kombo';
 import { MultiDict } from '../../multidict';
-import { AjaxResponse } from './common';
+import { AjaxResponse, CollSaveServerArgs } from './common';
+import { ConcQuickFilterServerArgs } from '../concordance/common';
 
 export enum ActionName {
     ResultSetPageInputVal = 'COLL_RESULT_SET_PAGE_INPUT_VAL',
@@ -90,7 +91,7 @@ export namespace Actions {
     }
 
     export interface ResultApplyQuickFilter extends Action<{
-        args:Array<[string, string]>;
+        args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
     }> {
         name:ActionName.ResultApplyQuickFilter;
     }
@@ -154,7 +155,7 @@ export namespace Actions {
     }
 
     export interface FormPrepareSubmitArgsDone extends Action<{
-        args:MultiDict;
+        args:MultiDict<CollSaveServerArgs>;
     }> {
         name:ActionName.FormPrepareSubmitArgsDone;
     }

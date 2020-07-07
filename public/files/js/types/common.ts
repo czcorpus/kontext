@@ -339,21 +339,9 @@ export namespace Kontext {
         encodeURLParameters<T>(params:IMultiDict<T>):string
     }
 
-    export interface IConcArgsHandler {
-        getConcArgs():IMultiDict;
-        replaceConcArg(name:string, values:Array<string>):void;
-
-        /**
-         * Export current conc args to a URL with additional
-         * argument updates. Original arguments stored in model
-         * are unchanged.
-         */
-        exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string;
-    }
-
     export interface IHistory {
-        pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
-        replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
+        pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void;
+        replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void;
         setOnPopState(fn:(event:PopStateEvent)=>void):void;
     }
 

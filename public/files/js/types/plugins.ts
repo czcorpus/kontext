@@ -24,6 +24,7 @@ import {Kontext, TextTypes} from '../types/common';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
 import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
+import { ConcServerArgs } from '../models/concordance/common';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -46,7 +47,7 @@ export interface IPluginApi extends ITranslator {
     getModels():Kontext.LayoutModel;
     getViews():CoreViews.Runtime;
     pluginIsActive(name:string):boolean;
-    getConcArgs():Kontext.IMultiDict;
+    getConcArgs():Kontext.IMultiDict<ConcServerArgs>;
     getCorpusIdent():Kontext.FullCorpusIdent;
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void;
     resetMenuActiveItemAndNotify():void;

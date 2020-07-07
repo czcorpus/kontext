@@ -24,6 +24,7 @@ import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
+import { CTFreqServerArgs } from './common';
 
 
 export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
@@ -289,8 +290,8 @@ export class Freq2DFormModel extends StatefulModel {
         return isStructAttr(attr) ? '0' : this.getAttrCtx(dim);
     }
 
-    private getSubmitArgs():MultiDict {
-        const args = this.pageModel.getConcArgs();
+    private getSubmitArgs():MultiDict<CTFreqServerArgs> {
+        const args = this.pageModel.getConcArgs() as MultiDict<CTFreqServerArgs>;
         args.set('ctfcrit1', this.generateCrit(1));
         args.set('ctfcrit2', this.generateCrit(2));
         args.set('ctattr1', this.attr1);

@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue, AjaxConcResponse,
-    LineGroupId, RefsColumn, ConcGroupChangePayload, PublishLineSelectionPayload } from './common';
+    LineGroupId, RefsColumn } from './common';
 import { SaveData } from '../../app/navigation';
 
 export enum ActionName {
@@ -84,6 +84,19 @@ export enum ActionName {
     ApplyStoredLineSelectionsDone = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS_DONE',
     PublishStoredLineSelections = 'CONCORDANCE_PUBLISH_STORED_LINE_SELECTIONS',
     ToggleLineGroupRenameForm = 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME'
+}
+
+export interface ConcGroupChangePayload {
+    concId:string;
+    numLinesInGroups:number;
+    lineGroupIds:Array<LineGroupId>;
+    prevId:number;
+    newId:number;
+}
+
+export interface PublishLineSelectionPayload {
+    selections:Array<LineSelValue>;
+    mode:LineSelectionModes;
 }
 
 export namespace Actions {

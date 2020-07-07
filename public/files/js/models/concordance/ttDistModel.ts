@@ -21,6 +21,7 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { map, concatMap, tap } from 'rxjs/operators';
+import { pipe, List, HTTP, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
@@ -29,7 +30,8 @@ import { ConcordanceModel } from './main';
 import {
     ActionName as ConcActionName,
     Actions as ConcActions } from '../../models/concordance/actions';
-import { pipe, List, HTTP, tuple } from 'cnc-tskit';
+import { SampleServerArgs } from '../query/common';
+import { FreqServerArgs } from '../freqs/common';
 
 
 export type TTCrit = Array<[string, string]>;
@@ -201,7 +203,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         return this.concLineModel.getConcSummary().concSize;
     }
 
-    private loadData(args:MultiDict):Observable<boolean> {
+    private loadData(args:MultiDict<SampleServerArgs>):Observable<boolean> {
 
         return (() => {
             if (this.getConcSize() > TextTypesDistModel.SAMPLE_SIZE) {
@@ -219,10 +221,10 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             }
         })().pipe(
             map(
-                (reduceAns) => tuple(reduceAns, this.layoutModel.getConcArgs())
+                (reduceAns) => tuple(reduceAns, this.layoutModel.getConcArgs() as MultiDict<FreqServerArgs>)
             ),
             concatMap(([reduceAns, args]) => {  // TODO side effects here
-                this.state.ttCrit.forEach(v => args.add(v[0], v[1]));
+                this.state.ttCrit.forEach(([key, value]) => args.add(key, value));
                 this.state.flimit = this.concLineModel.getRecommOverviewMinFreq();
                 args.set('ml', 0);
                 args.set('flimit', this.state.flimit);

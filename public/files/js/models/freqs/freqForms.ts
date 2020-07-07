@@ -24,6 +24,8 @@ import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
 import {AlignTypes} from './ctFreqForm';
 import { Action, IFullActionControl } from 'kombo';
+import { FreqServerArgs } from './common';
+import { MultiDict } from '../../multidict';
 
 
 export interface FreqFormInputs {
@@ -208,8 +210,8 @@ export class MLFreqFormModel extends StatefulModel {
     }
 
     private submit():void {
-        const args = this.pageModel.getConcArgs();
-        args.set('flimit', this.flimit.value);
+        const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
+        args.set('flimit', parseInt(this.flimit.value));
         this.mlxattr.forEach((item, i) => {
             args.set(`ml${i+1}attr`, item);
         });
@@ -335,10 +337,10 @@ export class TTFreqFormModel extends StatefulModel {
     }
 
     private submit():void {
-        const args = this.pageModel.getConcArgs();
+        const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
         args.replace('fttattr', this.fttattr.toArray());
         args.set('ftt_include_empty', this.fttIncludeEmpty ? '1' : '0');
-        args.set('flimit', this.flimit.value);
+        args.set('flimit', parseInt(this.flimit.value));
         args.set('freq_sort', this.freqSort);
         window.location.href = this.pageModel.createActionUrl('freqtt', args.items());
     }

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, StatelessModel, SEDispatcher, IActionDispatcher } from 'kombo';
+import { StatelessModel, SEDispatcher, IActionDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 
@@ -28,8 +28,10 @@ import { CollFormModel } from '../../models/coll/collForm';
 import { MultiDict } from '../../multidict';
 import { Actions, ActionName } from './actions';
 import { HTTP, List } from 'cnc-tskit';
-import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell, AjaxResponse } from './common';
+import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell, AjaxResponse, CollServerArgs } from './common';
 import { CalcWatchdog } from './calc';
+import { ConcQuickFilterServerArgs } from '../concordance/common';
+import { ConcSaveFormProps } from '../../views/concordance/save';
 
 
 
@@ -235,8 +237,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         );
     }
 
-    private applyQuickFilter(args:Array<[string, string]>) {
-        const submitArgs = this.layoutModel.getConcArgs();
+    private applyQuickFilter(args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>) {
+        const submitArgs = this.layoutModel.getConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
         submitArgs.remove('q2');
         args.forEach(item => submitArgs.add(item[0], item[1]));
         window.location.href = this.layoutModel.createActionUrl('quick_filter', submitArgs.items());
@@ -253,7 +255,6 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             concatMap(
                 action => {
                     const payload = (action as Actions.FormPrepareSubmitArgsDone).payload;
-                    console.log('payload: ' , payload);
                     return this.loadData(state, payload.args);
                 }
             )
@@ -279,14 +280,14 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         );
     }
 
-    private getSubmitArgs(state:CollResultModelState, formArgs:MultiDict):MultiDict {
+    private getSubmitArgs(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):MultiDict<CollServerArgs> {
         formArgs.set('format', 'json');
         formArgs.set('csortfn', state.sortFn);
         formArgs.set('collpage', state.currPage);
         return formArgs;
     }
 
-    private loadData(state:CollResultModelState, formArgs:MultiDict):Observable<AjaxResponse> {
+    private loadData(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):Observable<AjaxResponse> {
         const args = this.getSubmitArgs(state, formArgs);
         return this.layoutModel.ajax$<AjaxResponse>(
             HTTP.Method.GET,

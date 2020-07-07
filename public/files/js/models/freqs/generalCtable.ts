@@ -18,15 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {TextTypes} from '../../types/common';
-import {FreqResultResponse} from '../../types/ajaxResponses';
+import { TextTypes } from '../../types/common';
+import { FreqResultResponse } from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import {availConfLevels} from './confIntervalCalc';
-import {isStructAttr, CTFormProperties, validateMinAbsFreqAttr,
-    FreqFilterQuantities} from './ctFreqForm';
+import { StatefulModel } from '../base';
+import { PageModel } from '../../app/page';
+import { availConfLevels } from './confIntervalCalc';
+import { isStructAttr, CTFormProperties, validateMinAbsFreqAttr,
+    FreqFilterQuantities } from './ctFreqForm';
 import { IFullActionControl } from 'kombo';
+import { MultiDict } from '../../multidict';
+import { CTFreqServerArgs } from './common';
+import { ConcQuickFilterServerArgs } from '../concordance/common';
 
 /**
  * This type represents a single data item containing
@@ -48,8 +51,8 @@ export interface CTFreqCell {
  * Supported frequency quantities
  */
 export const enum FreqQuantities {
-    ABS = "abs",
-    IPM = "ipm"
+    ABS = 'abs',
+    IPM = 'ipm'
 }
 
 /**
@@ -173,7 +176,7 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
      * @param v2
      */
     protected generatePFilter(v1:string, v2:string):string {
-        const args = this.pageModel.getConcArgs();
+        const args = this.pageModel.getConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
 
         if (this.isStructAttr(this.attr1) && this.isStructAttr(this.attr2)) {
             const [s1, a1] = this.attr1.split('.');
@@ -185,8 +188,6 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
             const begin1 = this.ctFcrit1;
             const end1 = this.ctFcrit1;
             const icase2 = ''; // TODO - optionally (?i)
-            const begin2 = this.ctFcrit2;
-            const end2 = this.ctFcrit2;
             args.set('q2', `p${begin1} ${end1} 0 [${this.attr1}="${icase1}${v1}" & ${this.attr2}="${icase2}${v2}"]`);
 
         } else if (this.isStructAttr(this.attr1) && !this.isStructAttr(this.attr2)) {

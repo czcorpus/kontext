@@ -26,6 +26,8 @@ import * as Immutable from 'immutable';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { StatefulModel } from '../base';
 import { PageModel } from '../../app/page';
+import { FirstHitsServerArgs } from './common';
+import { MultiDict } from '../../multidict';
 
 
 
@@ -58,7 +60,7 @@ export class FirstHitsModel extends StatefulModel {
     }
 
     getSubmitUrl(opKey:string):string {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.getConcArgs() as MultiDict<FirstHitsServerArgs>;
         args.set('fh_struct', this.docStructValues.get(opKey));
         return this.layoutModel.createActionUrl('filter_firsthits', args);
     }
