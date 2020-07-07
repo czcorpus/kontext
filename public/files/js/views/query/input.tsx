@@ -23,10 +23,10 @@ import * as Immutable from 'immutable';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {init as keyboardInit} from './virtualKeyboard';
 import {init as cqlEditoInit} from './cqlEditor';
-import {WithinBuilderModel} from '../../models/query/withinBuilder';
+import {WithinBuilderModel, WithinBuilderModelState} from '../../models/query/withinBuilder';
 import {PluginInterfaces} from '../../types/plugins';
 import {Kontext} from '../../types/common';
-import {Keyboard} from 'cnc-tskit';
+import {Keyboard, List} from 'cnc-tskit';
 import {QueryFormModel, SetQueryInputAction, AppendQueryInputAction, QueryFormModelState} from '../../models/query/common';
 import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
 import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
@@ -368,47 +368,25 @@ export function init({
 
     // ------------------- <WithinWidget /> --------------------------------
 
-    class WithinWidget extends React.Component<{
+    interface WithinWidgetProps {
         actionPrefix:string;
         sourceId:string;
         closeClickHandler:()=>void;
+    }
 
-    }, {
-        exportedQuery:string;
-        data:Immutable.List<[string, string]>;
-        attr:number;
-        query:string;
-    }> {
-
-        private modelSubscription:Subscription;
+    class WithinWidget extends React.PureComponent<WithinWidgetProps & WithinBuilderModelState> {
 
         constructor(props) {
             super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleInputChange = this._handleInputChange.bind(this);
             this._handleKeyDown = this._handleKeyDown.bind(this);
             this._handleAttrChange = this._handleAttrChange.bind(this);
             this._handleInsert = this._handleInsert.bind(this);
-            this.state = {
-                data: withinBuilderModel.getData(),
-                query: withinBuilderModel.getQuery(),
-                attr: withinBuilderModel.getCurrAttrIdx(),
-                exportedQuery: withinBuilderModel.exportQuery()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState({
-                data: withinBuilderModel.getData(),
-                query: withinBuilderModel.getQuery(),
-                attr: withinBuilderModel.getCurrAttrIdx(),
-                exportedQuery: withinBuilderModel.exportQuery()
-            });
         }
 
         _handleInputChange(evt) {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SET_WITHIN_VALUE',
+            dispatcher.dispatch<Actions.SetWithinValue>({
+                name: ActionName.SetWithinValue,
                 payload: {
                     value: evt.target.value
                 }
@@ -424,8 +402,8 @@ export function init({
         }
 
         _handleAttrChange(evt) {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SET_WITHIN_ATTR',
+            dispatcher.dispatch<Actions.SetWithinAttr>({
+                name: ActionName.SetWithinAttr,
                 payload: {
                     idx: evt.target.value
                 }
@@ -437,7 +415,7 @@ export function init({
                 name: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                 payload: {
                     sourceId: this.props.sourceId,
-                    query: this.state.exportedQuery,
+                    query: WithinBuilderModel.exportQuery(this.props),
                     prependSpace: true,
                     closeWhenDone: true
                 }
@@ -445,17 +423,12 @@ export function init({
         }
 
         componentDidMount() {
-            this.modelSubscription = withinBuilderModel.addListener(this._handleModelChange);
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
+            dispatcher.dispatch<Actions.LoadWithinBuilderData>({
+                name: ActionName.LoadWithinBuilderData,
                 payload: {
                     sourceId: this.props.sourceId
                 }
             });
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -465,28 +438,38 @@ export function init({
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
                     <div onKeyDown={this._handleKeyDown}>
                         <h3>{he.translate('query__create_within')}</h3>
-                        <div className="within-widget">
-                            <select onChange={this._handleAttrChange} value={this.state.attr}>
-                                {this.state.data.map((item, i) => {
-                                    return <option key={item.join('-')} value={i}>{`${item[0]}.${item[1]}`}</option>;
-                                })}
-                            </select>
-                            {'\u00a0'}={'\u00a0'}
-                            <input type="text" value={this.state.query} onChange={this._handleInputChange}
-                                    ref={item => item ? item.focus() : null} />
-                            {'\u00a0'}
-                        </div>
-                        <p>
-                            <button type="button" className="util-button"
-                                    onClick={this._handleInsert}>
-                                {he.translate('query__insert_within')}
-                            </button>
-                        </p>
+                        {this.props.isBusy ?
+                            <layoutViews.AjaxLoaderImage /> :
+                            <>
+                                <div className="within-widget">
+                                    <select onChange={this._handleAttrChange} value={this.props.currAttrIdx}>
+                                        {List.map(
+                                            ([struct, attr], i) => (
+                                                <option key={`${struct}-${attr}`} value={i}>{WithinBuilderModel.ithValue(this.props, i)}</option>
+                                            ),
+                                            this.props.data
+                                        )}
+                                    </select>
+                                    {'\u00a0'}={'\u00a0'}
+                                    <input type="text" value={this.props.query} onChange={this._handleInputChange}
+                                            ref={item => item ? item.focus() : null} />
+                                    {'\u00a0'}
+                                </div>
+                                <p>
+                                    <button type="button" className="util-button"
+                                            onClick={this._handleInsert}>
+                                        {he.translate('query__insert_within')}
+                                    </button>
+                                </p>
+                            </>
+                        }
                     </div>
                 </layoutViews.PopupBox>
             );
         }
     }
+
+    const BoundWithinWidget = BoundWithProps<WithinWidgetProps, WithinBuilderModelState>(WithinWidget, withinBuilderModel);
 
     // ------------------- <HistoryWidget /> -----------------------------
 
@@ -605,7 +588,7 @@ export function init({
                                 actionPrefix={this.props.actionPrefix}
                                 args={this.props.widgetArgs} />;
                 case 'within':
-                    return <WithinWidget closeClickHandler={this._handleCloseWidget}
+                    return <BoundWithinWidget closeClickHandler={this._handleCloseWidget}
                                 sourceId={this.props.sourceId} actionPrefix={this.props.actionPrefix} />;
                 case 'keyboard':
                     return <KeyboardWidget closeClickHandler={this._handleCloseWidget}
