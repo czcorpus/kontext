@@ -25,6 +25,7 @@ import { CommonViews } from '../views/common';
 import { CoreViews } from '../types/coreViews';
 import { Observable } from 'rxjs';
 import { PageModel } from './page';
+import { ConcServerArgs } from '../models/concordance/common';
 
 
 export enum PluginName {
@@ -127,7 +128,7 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.pluginIsActive(name);
     }
 
-    getConcArgs():MultiDict {
+    getConcArgs():MultiDict<ConcServerArgs> {
         return this.pageModel.getConcArgs();
     }
 

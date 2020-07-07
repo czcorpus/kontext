@@ -27,6 +27,8 @@ import * as Immutable from 'immutable';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { StatefulModel } from '../base';
 import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { SwitchMainCorpServerArgs } from './common';
 
 
 
@@ -75,7 +77,7 @@ export class SwitchMainCorpModel extends StatefulModel {
     }
 
     getSubmitUrl(opId:string):string {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.getConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
         args.set('maincorp', this.maincorpValues.get(opId));
         return this.layoutModel.createActionUrl('switch_main_corp', args);
     }

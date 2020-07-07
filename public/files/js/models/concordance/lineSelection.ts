@@ -26,9 +26,10 @@ import { Kontext } from '../../types/common';
 import { ConcLinesStorage } from './selectionStorage';
 import { PageModel } from '../../app/page';
 import { HTTP, List } from 'cnc-tskit';
-import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse, LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse } from './common';
+import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse, LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse, ConcServerArgs } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as UserInfoActions, ActionName as UserInfoActionName } from '../user/actions';
+import { MultiDict } from '../../multidict';
 
 
 interface ReenableEditResponse extends AjaxConcResponse {
@@ -658,7 +659,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
     }
 
     private removeLines(state:LineSelectionModelState, filter:string):void {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.getConcArgs() as MultiDict<ConcServerArgs & {pnfilter:string}>;
         args.set('pnfilter', filter);
         this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,

@@ -25,6 +25,7 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { Actions, ActionName } from './actions';
 import { tuple, Dict, pipe, List } from 'cnc-tskit';
+import { CollServerArgs } from './common';
 
 
 /**
@@ -262,8 +263,8 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
         return !!/^([1-9]\d*)?$/.exec(s);
     }
 
-    getSubmitArgs(state:CollFormModelState):MultiDict {
-        const args = this.pageModel.getConcArgs();
+    getSubmitArgs(state:CollFormModelState):MultiDict<CollServerArgs> {
+        const args = this.pageModel.getConcArgs() as MultiDict<CollServerArgs>;
         args.set('cattr', state.cattr);
         args.set('cfromw', state.cfromw.value);
         args.set('ctow', state.ctow.value);

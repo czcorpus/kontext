@@ -30,6 +30,7 @@ import {DataPoint} from '../../charts/confIntervals';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import { CTFreqServerArgs } from './common';
 
 /**
  * A representation of 2D freq table.
@@ -495,8 +496,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
         this.data = this.origData;
     }
 
-    getSubmitArgs():MultiDict {
-        const args = this.pageModel.getConcArgs();
+    getSubmitArgs():MultiDict<CTFreqServerArgs> {
+        const args = this.pageModel.getConcArgs() as MultiDict<CTFreqServerArgs>;
         args.set('ctfcrit1', this.ctFcrit1);
         args.set('ctfcrit2', this.ctFcrit2);
         args.set('ctattr1', this.attr1);

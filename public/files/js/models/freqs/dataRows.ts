@@ -28,6 +28,9 @@ import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { FreqServerArgs } from './common';
+import { HTTP } from 'cnc-tskit';
+import { ConcQuickFilterServerArgs } from '../concordance/common';
 
 
 export interface ResultItem {
@@ -184,23 +187,23 @@ export class FreqDataRowsModel extends StatefulModel {
     }
 
     getSubmitArgs():MultiDict {
-        const args = this.pageModel.getConcArgs();
+        const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
         args.remove('fcrit');
         this.freqCrit.forEach((item) => {
             args.add(item[0], item[1]);
         });
-        args.set('flimit', this.flimit);
+        args.set('flimit', parseInt(this.flimit));
         args.set('freq_sort', this.sortColumn);
         // fpage: for client, null means 'multi-block' output, for server '1' must be filled in
         args.set('fpage', this.currentPage !== null ? this.currentPage : '1');
-        args.set('ftt_include_empty', this.ftt_include_empty);
+        args.set('ftt_include_empty', this.ftt_include_empty ? '1' : '0');
         args.set('format', 'json');
         return args;
     }
 
     loadPage():Observable<FreqResultResponse.FreqResultResponse> {
         return this.pageModel.ajax$<FreqResultResponse.FreqResultResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pageModel.createActionUrl('freqs'),
             this.getSubmitArgs()
 
@@ -242,11 +245,11 @@ export class FreqDataRowsModel extends StatefulModel {
         }
     }
 
-    private createQuickFilterUrl(args:Array<[string, string]>):string {
+    private createQuickFilterUrl(args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>):string {
         if (args && args.length > 0) {
-            const submitArgs = this.pageModel.getConcArgs();
+            const submitArgs = this.pageModel.getConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
             submitArgs.remove('q2');
-            args.forEach(item => submitArgs.add(item[0], item[1]));
+            args.forEach(([key, value]) => submitArgs.add(key, value));
             return this.pageModel.createActionUrl('quick_filter', submitArgs.items());
 
         } else {

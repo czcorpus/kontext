@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatefulModel, Action } from 'kombo';
-
-import { ViewOptions, Kontext } from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
 import { Color, pipe, List } from 'cnc-tskit';
+import { ViewOptions, Kontext } from '../../types/common';
+import { SaveData } from '../../app/navigation';
 
 /**
  * RefsColumn describes a meta-data information
@@ -34,10 +32,27 @@ export interface RefsColumn {
     val:string;
 }
 
+/**
+ * LineSelectionModes specify two distinct manual
+ * concordance line categorization modes where
+ * 'simple' adds just a checkbox to each line while
+ * 'groups' allows attaching a number to each line.
+ */
 export type LineSelectionModes = 'simple'|'groups';
 
+/**
+ * LineSelValue defines a manual line selection
+ * like this: [token ID, KWIC length, category ID]
+ * where category ID is 1 in case of the 'simple'
+ * selection mode.
+ */
 export type LineSelValue = [number, number, number];
 
+/**
+ * ConcLineSelection defines a list of manually
+ * selected lines along with some additional info
+ * (sel. mode, creation datetime).
+ */
 export interface ConcLineSelection {
     created:number;
     mode:LineSelectionModes;
@@ -46,22 +61,39 @@ export interface ConcLineSelection {
 }
 
 /**
- *
+ * LineSelections describes multiple ConcLineSelection instances
+ * for different concordances. The 'queryHash' key is derived
+ * from the 'q' URL argument.
  */
 export type LineSelections = {[queryHash:string]:ConcLineSelection};
 
+/**
+ * AudioPlayerActions specifies status of the audio player.
+ */
 export type AudioPlayerActions = 'play'|'pause'|'stop';
 
+/**
+ * DetailExpandPositions defines which side of
+ * a respective KWIC detail is expanded (left vs. right).
+ */
 export type DetailExpandPositions = 'left'|'right';
 
-
+/**
+ * LineGroupId defines a line selection category/group
+ * ID (= a number user attached to it or 1 in case of the
+ * 'simple' mode) along with some color coding used for
+ * rendering.
+ */
 export interface LineGroupId {
     id:number;
     fgColor:string;
     bgColor:string;
 }
 
-
+/**
+ * ServerTextChunk describes a concordance text
+ * chunk as provided by the server-side.
+ */
 export interface ServerTextChunk {
     class:string;
     str:string;
@@ -71,6 +103,11 @@ export interface ServerTextChunk {
     tail_posattrs?:Array<string>;
 }
 
+/**
+ * SingleCorpServerLineData defines a single
+ * concordance line for a single (or unaligned)
+ * corpus.
+ */
 export interface SingleCorpServerLineData {
     Left:Array<ServerTextChunk>;
     Right:Array<ServerTextChunk>;
@@ -87,10 +124,19 @@ export interface SingleCorpServerLineData {
     toknum:number;
 }
 
+/**
+ * ServerLineData is a general concordance line with
+ * support for aligned corpora.
+ */
 export interface ServerLineData extends SingleCorpServerLineData {
     Align:Array<SingleCorpServerLineData>;
 }
 
+/**
+ * ServerPagination keeps all the data needed to
+ * paginate through concordance lines. The attributes
+ * are in the form understood by the server-side.
+ */
 export interface ServerPagination {
     firstPage:number;
     prevPage:number;
@@ -98,6 +144,72 @@ export interface ServerPagination {
     lastPage:number;
 }
 
+/**
+ * ConcServerArgs defines a set of arguments needed
+ * to address a specific concordance (including required
+ * structs & attrs to display and pagination).
+ */
+export interface ConcServerArgs {
+    corpname:string;
+    usesubcorp:string;
+    viewmode:'kwic'|'sen'|'align';
+    format:'plain'|'json'|'template'|'xml';
+    pagesize:number;
+    attrs:string;
+    attr_vmode:ViewOptions.PosAttrViewMode;
+    attr_allpos:ViewOptions.PosAttrViewScope;
+    base_viewattr:string;
+    ctxattrs:string; // comma-separated values
+    structs:string; // comma-separated values
+    refs:string; //comma-separated values
+    q:string;
+    maincorp?:string;
+    align?:string;
+    fromp?:number;
+}
+
+/**
+ * ConcQuickFilterServerArgs specifies "quick filter"
+ * concordance page (this is typically used when going
+ * from a collocation/frequency page to a concrete concordance).
+ */
+export interface ConcQuickFilterServerArgs extends ConcServerArgs {
+    q2:string;
+}
+
+/**
+ * ConcSaveServerArgs defines arguments needed to
+ * save a concordance to a file.
+ */
+export interface ConcSaveServerArgs extends ConcServerArgs {
+    saveformat:SaveData.Format;
+    from_line:string;
+    to_line:string;
+    heading:'0'|'1';
+    numbering:'0'|'1';
+    align_kwic:'0'|'1';
+}
+
+/**
+ * IConcArgsHandler defines an object which is able to
+ * provide and update concordance page parameters.
+ */
+export interface IConcArgsHandler {
+    getConcArgs():Kontext.IMultiDict<ConcServerArgs> ;
+    replaceConcArg(name:string, values:Array<string>):void;
+
+    /**
+     * Export current conc args to a URL with additional
+     * argument updates. Original arguments stored in model
+     * are unchanged.
+     */
+    exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string;
+}
+
+/**
+ * AjaxConcResponse defines a server response when
+ * providing a concordance.
+ */
 export interface AjaxConcResponse extends Kontext.AjaxResponse {
     Q:Array<string>;
     conc_persistence_op_id:string;
@@ -113,6 +225,11 @@ export interface AjaxConcResponse extends Kontext.AjaxResponse {
     user_owns_conc:boolean;
 }
 
+/**
+ * AjaxLineGroupRenameResponse is a response from the server
+ * in case user changes a manual group/category ID (e.g.
+ * "change all lines with category  '3' to '4'")
+ */
 export interface AjaxLineGroupRenameResponse extends Kontext.AjaxResponse {
     Q:Array<string>;
     conc_persistence_op_id:string;
@@ -121,29 +238,10 @@ export interface AjaxLineGroupRenameResponse extends Kontext.AjaxResponse {
     user_owns_conc:boolean;
 }
 
-export interface ConcGroupChangePayload {
-    concId:string;
-    numLinesInGroups:number;
-    lineGroupIds:Array<LineGroupId>;
-    prevId:number;
-    newId:number;
-}
-
-export interface ConcUpdatePayload {
-    concId:string;
-    numLinesInGroups:number;
-    linesGroupsNumbers:Array<number>;
-    Lines:Array<ServerLineData>;
-    concsize:number;
-    pagination:ServerPagination;
-    isUnfinished:boolean;
-}
-
-export interface PublishLineSelectionPayload {
-    selections:Array<LineSelValue>;
-    mode:LineSelectionModes;
-}
-
+/**
+ * ConcSummary defines a (mostly) numeric
+ * overview of a concordance (size, ipm,...)
+ */
 export interface ConcSummary {
     concSize: number;
     fullSize: number;
@@ -153,12 +251,20 @@ export interface ConcSummary {
     isShuffled: boolean;
 }
 
+/**
+ * CorpColumn defines a single language/alignment of a concordance
+ * (i.e. all the parts of lines belonging to a concrete language - typically)
+ */
 export interface CorpColumn {
     n:string;
     label:string;
     visible:boolean;
 }
 
+/**
+ * ViewConfiguration specifies props for the root React component
+ * providing concordances.
+ */
 export interface ViewConfiguration {
 
     /**
@@ -180,9 +286,9 @@ export interface ViewConfiguration {
     anonymousUser:boolean;
 
     /**
-     * Determine concordance view mode (kwic/sen/align)
+     * Determine concordance view mode
      */
-    ViewMode:string;
+    ViewMode:'kwic'|'sen'|'align';
 
     /**
      * Where we should display additional positional attributes
@@ -304,29 +410,6 @@ export interface ViewConfiguration {
     onChartFrameReady?:(usePrevData:boolean)=>void;
 }
 
-
-/**
- *
- */
-export class DummySyntaxViewModel extends StatefulModel<{}>
-    implements PluginInterfaces.SyntaxViewer.IPlugin {
-
-    render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {}
-
-    close():void {}
-
-    onPageResize():void {}
-
-    isWaiting():boolean {
-        return false;
-    }
-
-    onAction(action:Action) {}
-
-    unregister():void {}
-
-    registerOnError(fn:(e:Error)=>void):void {}
-}
 
 
 function getDynamicColor(idx:number, size:number, baseColor:Color.RGBA):Color.RGBA {

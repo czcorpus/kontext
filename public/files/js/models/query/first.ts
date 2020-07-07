@@ -32,7 +32,7 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
-import { GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery, QueryFormModelState, shouldDownArrowTriggerHistory } from './common';
+import { GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery, QueryFormModelState, shouldDownArrowTriggerHistory, ConcQueryArgs } from './common';
 import { QueryContextArgs } from './context';
 import { ActionName } from './actions';
 import { GeneralViewOptionsModel } from '../options/general';
@@ -565,7 +565,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     private createSubmitArgs():MultiDict {
         const primaryCorpus = this.state.corpora.get(0);
-        const args = this.pageModel.getConcArgs();
+        const args = this.pageModel.getConcArgs() as MultiDict<ConcQueryArgs>;
         args.set('corpname', primaryCorpus);
         args.set('usesubcorp', this.state.currentSubcorp);
 

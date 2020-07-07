@@ -79,8 +79,8 @@ export namespace SaveData {
  * case of outdated browsers)
  */
 export class NullHistory implements Kontext.IHistory {
-    replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
-    pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
+    replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void {}
+    pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void {}
     setOnPopState(fn:(event:PopStateEvent)=>void):void {}
 }
 
@@ -116,7 +116,7 @@ export class History implements Kontext.IHistory {
      * @param stateData (just like in window.history.replaceState)
      * @param title (just like in window.history.replaceState), default is window.document.title
      */
-    replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {
+    replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void {
         if (/^https?:\/\//.exec(action)) {
             throw new Error('Invalid action specifier (cannot use URL here)');
         }
@@ -135,7 +135,7 @@ export class History implements Kontext.IHistory {
      * @param stateData (just like in window.history.replaceState)
      * @param title (just like in window.history.replaceState), default is window.document.title
      */
-    pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {
+    pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void {
         if (/^https?:\/\//.exec(action)) {
             throw new Error('Invalid action specifier (cannot use URL here)');
         }

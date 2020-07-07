@@ -19,6 +19,8 @@
  */
 
 import { Kontext } from '../../types/common';
+import { ConcServerArgs } from '../concordance/common';
+import { SaveData } from '../../app/navigation';
 
 
 export interface CollResultRow {
@@ -39,4 +41,23 @@ export interface AjaxResponse extends Kontext.AjaxResponse {
     Head:CollResultHeading;
     Items:CollResultData;
     lastpage:number;
+}
+
+export interface CollServerArgs extends ConcServerArgs {
+    cattr:string;
+    cfromw:string;
+    ctow:string;
+    cminfreq:string;
+    cminbgr:string;
+    cbgrfns:string;
+    csortfn:string;
+    collpage:number;
+}
+
+export interface CollSaveServerArgs extends CollServerArgs {
+    saveformat:SaveData.Format;
+    colheaders:'0'|'1';
+    heading:'0'|'1';
+    from_line:number;
+    to_line:number;
 }

@@ -25,7 +25,56 @@ import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
 import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { ConcServerArgs } from '../concordance/common';
 
+
+export type QueryTypes = 'iquery'|'phrase'|'lemma'|'word'|'cql';
+
+export type AnyQuery = {
+    iquery?:string;
+    phrase?:string;
+    lemma?:string;
+    word?:string;
+    cql?:string
+}
+
+export interface ConcQueryArgs extends ConcServerArgs, AnyQuery {
+    shuffle:0|1;
+    [sca:string]:string|number;
+}
+
+
+export interface ConcSortServerArgs extends ConcServerArgs {
+    sattr:string;
+    skey:string;
+    sbward:string;
+    sicase:string;
+    spos:string;
+    sortlevel:string;
+    [other:string]:string|number;
+}
+
+export interface SampleServerArgs extends ConcServerArgs {
+    rlines:number;
+}
+
+export interface SwitchMainCorpServerArgs extends ConcServerArgs {
+    maincorp:string;
+}
+
+export interface FirstHitsServerArgs extends ConcServerArgs {
+    fh_struct:string;
+}
+
+export interface FilterServerArgs extends ConcServerArgs {
+    pnfilter:string;
+    filfl:string;
+    filfpos:string;
+    filtpos:string;
+    inclkwic:'1'|'0';
+    queryselector:string; // TODO more specific type here
+    within:'1'|'0';
+}
 
 export interface GeneralQueryFormProperties {
     forcedAttr:string;

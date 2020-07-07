@@ -62,6 +62,7 @@ import { Freq2DFormModel, CTFormInputs, CTFormProperties } from '../models/freqs
 import { ConcSaveModel } from '../models/concordance/save';
 import { ConcDashboard } from '../models/concordance/dashboard';
 import { TextTypesDistModel, TTCrit } from '../models/concordance/ttDistModel';
+import { DummySyntaxViewModel } from '../models/concordance/syntax';
 import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first';
 import { init as filterFormInit, FilterFormViews } from '../views/query/filter';
 import { init as queryOverviewInit, OverviewViews as QueryOverviewViews }
@@ -72,8 +73,7 @@ import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
 import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
-import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData,
-    DummySyntaxViewModel } from '../models/concordance/common';
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData } from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
@@ -967,7 +967,7 @@ export class ViewPage {
             baseViewAttr: this.layoutModel.getConcArgs().head('base_viewattr'),
             activePosAttrs: this.layoutModel.getConcArgs().head('attrs').split(','),
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
-            ViewMode: this.layoutModel.getConf<string>('ViewMode'),
+            ViewMode: this.layoutModel.getConf<'kwic'|'sen'|'align'>('ViewMode'),
             AttrAllpos: this.layoutModel.getConf<ViewOptions.PosAttrViewScope>('AttrAllpos'),
             AttrViewMode: this.layoutModel.getConf<ViewOptions.PosAttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),

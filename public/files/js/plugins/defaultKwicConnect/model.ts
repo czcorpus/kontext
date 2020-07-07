@@ -28,6 +28,9 @@ import { IConcLinesProvider } from '../../types/concordance';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { concatMap, concat } from 'rxjs/operators';
+import { FilterServerArgs } from '../../models/query/common';
+import { FreqServerArgs } from '../../models/freqs/common';
+import { HTTP } from 'cnc-tskit';
 
 
 export enum KnownRenderers {
@@ -391,7 +394,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
     }
 
     private fetchUniqValues(fDistType:FreqDistType):Observable<Array<string>> {
-        const args = this.pluginApi.getConcArgs();
+        const args = this.pluginApi.getConcArgs() as MultiDict<FreqServerArgs>;
         args.set('fcrit', `${fDistType}/ie 0~0>0`);
         args.set('ml', 0);
         args.set('flimit', this.concLinesProvider.getRecommOverviewMinFreq());
@@ -399,7 +402,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         args.set('fmaxitems', KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE);
         args.set('format', 'json');
         return this.pluginApi.ajax$<TTDistResponse.FreqData>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('freqs'),
             args
         ).pipe(
