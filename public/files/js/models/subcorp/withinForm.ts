@@ -26,6 +26,8 @@ import {SubcorpFormModel} from './form';
 import { MultiDict } from '../../multidict';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
+import { List } from 'cnc-tskit';
+import { ActionName } from './actions';
 
 /**
  *
@@ -91,7 +93,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         let newState:SubcorpWithinFormModelState;
 
         switch (action.name) {
-            case 'SUBCORP_FORM_SET_INPUT_MODE':
+            case ActionName.FormSetInputMode:
                 newState = this.copyState(state);
                 newState.inputMode = action.payload['value'];
             break;
@@ -136,7 +138,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
 
     sideEffects(state:SubcorpWithinFormModelState, action:Action, dispatch:SEDispatcher):void {
         switch (action.name) {
-            case 'SUBCORP_FORM_SUBMIT':
+            case ActionName.FormSubmit:
                 if (state.inputMode === InputMode.RAW) {
                     const args = this.getSubmitArgs(state);
                     const err = this.validateForm(state);
@@ -244,9 +246,9 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         args.set('publish', this.subcFormModel.getIsPublic() ? '1' : '0');
         args.set('description', this.subcFormModel.getDescription().value);
         args.set('method', state.inputMode);
-        const alignedCorpora = this.subcFormModel.getAlignedCorpora().map(v => v.value).toArray();
+        const alignedCorpora = List.map(v => v.value, this.subcFormModel.getAlignedCorpora());
         if (alignedCorpora.length > 0) {
-            args.replace('aligned_corpora', this.subcFormModel.getAlignedCorpora().map(v => v.value).toArray());
+            args.replace('aligned_corpora', List.map(v => v.value, this.subcFormModel.getAlignedCorpora()));
             args.set('attrs', JSON.stringify(this.subcFormModel.getTTSelections()));
         }
         args.set(

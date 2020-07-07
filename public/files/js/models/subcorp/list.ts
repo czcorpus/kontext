@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import { Action, IFullActionControl } from 'kombo';
-import { Observable, throwError, of as rxOf } from 'rxjs';
+import { IFullActionControl, StatefulModel} from 'kombo';
+import { Observable, throwError, of as rxOf, pipe as rxPipe } from 'rxjs';
 import { tap, concatMap } from 'rxjs/operators';
 
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
-import { StatefulModel } from '../base';
 import { MultiDict } from '../../multidict';
 import { AsyncTaskStatus } from '../asyncTask';
+import { pipe, List } from 'cnc-tskit';
+import { Actions, ActionName } from './actions';
 
 
 
@@ -63,40 +63,46 @@ export interface SortKey {
     reverse:boolean;
 }
 
-export class SubcorpListModel extends StatefulModel {
+export interface SubcorpListModelState {
+    lines:Array<SubcorpListItem>;
+    unfinished:Array<UnfinishedSubcorp>;
+    relatedCorpora:Array<string>;
+    sortKey:SortKey;
+    filter:SubcListFilter;
+    isBusy:boolean;
+    actionBoxVisibleRow:number;
+    actionBoxActionType:string;
+    usesSubcRestore:boolean;
+}
+
+export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
     private layoutModel:PageModel;
-
-    private lines:Immutable.List<SubcorpListItem>;
-
-    private unfinished:Immutable.List<UnfinishedSubcorp>;
-
-    private relatedCorpora:Immutable.List<string>;
-
-    private sortKey:SortKey;
-
-    private filter:SubcListFilter;
-
-    private isBusy:boolean;
-
-    private actionBoxVisibleRow:number;
-
-    private actionBoxActionType:string;
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
             unfinished:Array<Kontext.AsyncTaskInfo>,
             initialFilter:SubcListFilter) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                lines: [],
+                unfinished: [],
+                relatedCorpora: relatedCorpora,
+                sortKey: sortKey,
+                filter: initialFilter || {show_deleted: false, corpname: ''},
+                actionBoxVisibleRow: -1,
+                actionBoxActionType: 'pub',
+                isBusy: false,
+                usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore')
+            }
+        );
         this.layoutModel = layoutModel;
-        this.importLines(data);
-        this.importProcessed(unfinished);
-        this.relatedCorpora = Immutable.List<string>(relatedCorpora);
-        this.sortKey = sortKey;
-        this.filter = initialFilter || {show_deleted: false, corpname: ''};
-        this.actionBoxVisibleRow = -1;
-        this.actionBoxActionType = 'pub';
+        this.changeState(state => {
+            state.lines = this.importLines(data);
+            state.unfinished = this.importProcessed(unfinished);
+        })
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
             const subcTasks = itemList.filter(item => item.category == 'subcorpus');
@@ -115,169 +121,180 @@ export class SubcorpListModel extends StatefulModel {
             }
         });
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'SUBCORP_LIST_SORT_LINES':
-                    this.sortItems(action.payload['colName'], action.payload['reverse']).subscribe(
-                        (data) => {
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    )
-                break;
-                case 'SUBCORP_LIST_DELETE_SUBCORPUS':
-                    this.deleteSubcorpus(action.payload['rowIdx']).subscribe(
-                        (data) => {
-                            this.emitChange();
-                            this.layoutModel.showMessage(
-                                'info',
-                                this.layoutModel.translate('subclist__subc_deleted')
-                            );
-                        },
-                        (err) => {
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
-                break;
-                case 'SUBCORP_LIST_UPDATE_FILTER':
-                    this.filterItems(<SubcListFilter>action.payload).subscribe(
-                        (data) => {
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    )
-                break;
-                case 'SUBCORP_LIST_SHOW_ACTION_WINDOW':
-                    this.actionBoxVisibleRow = action.payload['value'];
-                    this.actionBoxActionType = action.payload['action'];
+        this.addActionHandler<Actions.SortLines>(
+            ActionName.SortLines,
+            action => this.sortItems(action.payload.colName, action.payload.reverse).subscribe(
+                (data) => {
                     this.emitChange();
-                break;
-                case 'SUBCORP_LIST_HIDE_ACTION_WINDOW':
-                    this.actionBoxVisibleRow = -1;
+                },
+                (err) => {
                     this.emitChange();
-                break;
-                case 'SUBCORP_LIST_SET_ACTION_BOX_TYPE':
-                    this.actionBoxActionType = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'SUBCORP_LIST_WIPE_SUBCORPUS':
-                    this.wipeSubcorpus(action.payload['idx']).subscribe(
-                        (data) => {
-                            this.layoutModel.showMessage('info',
-                                    this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
-                                    this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.layoutModel.showMessage('error', err);
-                            this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        }
-                    );
-                break;
-                case 'SUBCORP_LIST_RESTORE_SUBCORPUS':
-                    this.createSubcorpus(action.payload['idx'], true).subscribe(
-                        (data) => {
-                            this.layoutModel.showMessage('info',
-                                    this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
-                            this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.layoutModel.showMessage('error', err);
-                            this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        }
-                    );
-                break;
-                case 'SUBCORP_LIST_REUSE_QUERY':
-                    this.createSubcorpus(
-                        action.payload['idx'],
-                        false,
-                        action.payload['newName'],
-                        action.payload['newCql']
-                    ).subscribe(
-                        (data) => {
-                            this.layoutModel.showMessage('info',
-                                    this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
-                            this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.actionBoxVisibleRow = -1;
-                            this.layoutModel.showMessage('error', err);
-                            this.emitChange();
-                        }
-                    );
-                break;
-                case 'SUBCORP_LIST_PUBLISH_SUBCORPUS':
-                    this.isBusy = true;
-                    this.emitChange();
-                    this.publishSubcorpus(
-                                action.payload['rowIdx'],
-                                action.payload['description']).subscribe(
-                        (_) => {
-                            this.isBusy = false;
-                            this.layoutModel.showMessage(
-                                'info',
-                                this.layoutModel.translate('subclist__subc_published')
-                            );
-                            this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.isBusy = false;
-                            this.layoutModel.showMessage('error', err);
-                            this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        }
-                    );
-                break;
-                case 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION': {
-                    try {
-                        this.updateSubcDesc(action.payload['rowIdx'], action.payload['description']);
-
-                    } catch (e) {
-                        this.layoutModel.showMessage('error', e);
-                    }
-                    this.emitChange();
+                    this.layoutModel.showMessage('error', err);
                 }
-                break;
-                case 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT':
-                    this.isBusy = true;
+            )
+        );
+
+        this.addActionHandler<Actions.DeleteSubcorpus>(
+            ActionName.DeleteSubcorpus,
+            action => this.deleteSubcorpus(action.payload.rowIdx).subscribe(
+                (data) => {
                     this.emitChange();
-                    this.updateSubcorpusDescSubmit(
-                            action.payload['rowIdx']).subscribe(
-                        (_) => {
-                            this.isBusy = false;
-                            this.layoutModel.showMessage(
-                                'info',
-                                this.layoutModel.translate('subclist__subc_desc_updated')
-                            );
-                            this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.isBusy = false;
-                            this.layoutModel.showMessage('error', err);
-                            this.actionBoxVisibleRow = -1;
-                            this.emitChange();
-                        }
+                    this.layoutModel.showMessage(
+                        'info',
+                        this.layoutModel.translate('subclist__subc_deleted')
                     );
-                break;
+                },
+                (err) => {
+                    this.emitChange();
+                    this.layoutModel.showMessage('error', err);
+                }
+            )
+        );
+
+        this.addActionHandler<Actions.UpdateFilter>(
+            ActionName.UpdateFilter,
+            action => this.filterItems(action.payload).subscribe(
+                (data) => {
+                    this.emitChange();
+                },
+                (err) => {
+                    this.emitChange();
+                    this.layoutModel.showMessage('error', err);
+                }
+            )
+        );
+
+        this.addActionHandler<Actions.ShowActionWindow>(
+            ActionName.ShowActionWindow,
+            action => this.changeState(state => {
+                state.actionBoxVisibleRow = action.payload.value;
+                state.actionBoxActionType = action.payload.action;
+            })
+        );
+
+        this.addActionHandler<Actions.HideActionWindow>(
+            ActionName.HideActionWindow,
+            action => this.changeState(state => {
+                state.actionBoxVisibleRow = -1;
+            })
+        );
+
+        this.addActionHandler<Actions.SetActionBoxType>(
+            ActionName.SetActionBoxType,
+            action => this.changeState(state => {
+                state.actionBoxActionType = action.payload.value;
+            })
+        );
+
+        this.addActionHandler<Actions.WipeSubcorpus>(
+            ActionName.WipeSubcorpus,
+            action => this.wipeSubcorpus(action.payload.idx).subscribe(
+                (data) => {
+                    this.layoutModel.showMessage('info',
+                    this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
+                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                },
+                (err) => {
+                    this.layoutModel.showMessage('error', err);
+                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                }
+            )
+        );
+
+        this.addActionHandler<Actions.RestoreSubcorpus>(
+            ActionName.RestoreSubcorpus,
+            action => this.createSubcorpus(action.payload.idx, true).subscribe(
+                (data) => {
+                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
+                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                },
+                (err) => {
+                    this.layoutModel.showMessage('error', err);
+                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                }
+            )
+        );
+
+        this.addActionHandler<Actions.ReuseQuery>(
+            ActionName.ReuseQuery,
+            action => this.createSubcorpus(
+                action.payload.idx,
+                false,
+                action.payload.newName,
+                action.payload.newCql
+            ).subscribe(
+                (data) => {
+                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
+                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                },
+                (err) => {
+                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                    this.layoutModel.showMessage('error', err);
+                }
+            )
+        );
+
+        this.addActionHandler<Actions.PublishSubcorpus>(
+            ActionName.PublishSubcorpus,
+            action => {
+                this.changeState(state => state.isBusy = true);
+                this.publishSubcorpus(action.payload.rowIdx, action.payload.description).subscribe(
+                    (_) => {
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_published'));
+                        this.changeState(state => {
+                            state.isBusy = false;
+                            state.actionBoxVisibleRow = -1;
+                        });
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                        this.changeState(state => {
+                            state.isBusy = false;
+                            state.actionBoxVisibleRow = -1;
+                        });
+                    }
+                );
             }
-        });
+        );
+
+        this.addActionHandler<Actions.UpdatePublicDescription>(
+            ActionName.UpdatePublicDescription,
+            action => {
+                try {
+                    this.updateSubcDesc(action.payload.rowIdx, action.payload.description);
+
+                } catch (e) {
+                    this.layoutModel.showMessage('error', e);
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitPublicDescription>(
+            ActionName.SubmitPublicDescription,
+            action => {
+                this.changeState(state => state.isBusy = true);
+                this.updateSubcorpusDescSubmit(action.payload.rowIdx).subscribe(
+                    (_) => {
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_desc_updated'));
+                        this.changeState(state => {
+                            state.isBusy = false;
+                            state.actionBoxVisibleRow = -1;
+                        });
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                        this.changeState(state => {
+                            state.isBusy = false;
+                            state.actionBoxVisibleRow = -1;
+                        });
+                    }
+                );
+            }
+        );
     }
 
     private updateSubcorpusDescSubmit(rowIdx:number):Observable<any> {
-        const data = this.lines.get(rowIdx);
+        const data = this.state.lines[rowIdx];
         const args = new MultiDict();
         args.set('corpname', data.corpname);
         args.set('usesubcorp', data.usesubcorp);
@@ -291,30 +308,32 @@ export class SubcorpListModel extends StatefulModel {
     }
 
     private updateSubcDesc(idx:number, desc:string):void {
-        const data = this.lines.get(idx);
+        const data = this.state.lines[idx];
         if (data.deleted) {
             throw new Error('Cannot change public description of a deleted subcorpus');
         }
-        this.lines = this.lines.set(idx, {
-            name: data.name,
-            corpname: data.corpname,
-            usesubcorp: data.usesubcorp,
-            origSubcName: data.origSubcName,
-            deleted: data.deleted,
-            created: data.created,
-            cql: data.cql,
-            size: data.size,
-            published: data.published,
-            description: desc
-        });
+        this.changeState(state =>
+            state.lines[idx] = {
+                name: data.name,
+                corpname: data.corpname,
+                usesubcorp: data.usesubcorp,
+                origSubcName: data.origSubcName,
+                deleted: data.deleted,
+                created: data.created,
+                cql: data.cql,
+                size: data.size,
+                published: data.published,
+                description: desc
+            }
+        )
     }
 
     private publishSubcorpus(rowIdx:number, description:string):Observable<any> {
-        const srchIdx = this.lines.findIndex((_, i) => i === this.actionBoxVisibleRow);
+        const srchIdx = List.findIndex((_, i) => i === this.state.actionBoxVisibleRow, this.state.lines);
         if (srchIdx === -1) {
             throw new Error('Row not found');
         }
-        const data = this.lines.get(srchIdx);
+        const data = this.state.lines[srchIdx];
         if (data.deleted) {
             return throwError(new Error('Cannot publish deleted subcorpus'));
         }
@@ -330,24 +349,26 @@ export class SubcorpListModel extends StatefulModel {
 
         ).pipe(
             tap((_) => {
-                this.lines = this.lines.set(srchIdx, {
-                    name: data.name,
-                    corpname: data.corpname,
-                    usesubcorp: data.usesubcorp,
-                    origSubcName: data.origSubcName,
-                    deleted: data.deleted,
-                    created: data.created,
-                    cql: data.cql,
-                    size: data.size,
-                    published: true,
-                    description: description
-                });
+                this.changeState(state =>
+                    state.lines[srchIdx] = {
+                        name: data.name,
+                        corpname: data.corpname,
+                        usesubcorp: data.usesubcorp,
+                        origSubcName: data.origSubcName,
+                        deleted: data.deleted,
+                        created: data.created,
+                        cql: data.cql,
+                        size: data.size,
+                        published: true,
+                        description: description
+                    }
+                )
             })
         );
     }
 
     private createSubcorpus(idx:number, removeOrig:boolean, subcname?:string, cql?:string):Observable<any> {
-        const srcRow = this.lines.get(idx);
+        const srcRow = this.state.lines[idx];
         const params = new MultiDict();
         params.set('corpname', srcRow.corpname);
         params.set('subcname', subcname !== undefined ? subcname : srcRow.usesubcorp);
@@ -371,15 +392,17 @@ export class SubcorpListModel extends StatefulModel {
                         error: item.error,
                         args: item.args
                     });
-                    this.unfinished = this.unfinished.push({
-                        ident: item.ident,
-                        name: item.label,
-                        created: new Date(item.created * 1000),
-                        failed: false
-                    });
-                    if (removeOrig) {
-                        this.lines = this.lines.remove(idx);
-                    }
+                    this.changeState(state => {
+                        state.unfinished.push({
+                            ident: item.ident,
+                            name: item.label,
+                            created: new Date(item.created * 1000),
+                            failed: false
+                        });
+                        if (removeOrig) {
+                            state.lines = List.filter((v, i) => i !== idx, state.lines);
+                        }
+                    });                    
                 });
             }),
             concatMap((data) => data.processed_subc.length > 0 ?
@@ -389,7 +412,7 @@ export class SubcorpListModel extends StatefulModel {
     }
 
     private wipeSubcorpus(lineIdx:number):Observable<any> {
-        const delRow = this.lines.get(lineIdx);
+        const delRow = this.state.lines[lineIdx];
         return this.layoutModel.ajax$(
             'POST',
             this.layoutModel.createActionUrl('subcorpus/ajax_wipe_subcorpus'),
@@ -400,43 +423,42 @@ export class SubcorpListModel extends StatefulModel {
 
         ).pipe(
             tap((_) => {
-                this.lines = this.lines.remove(lineIdx);
+                this.changeState(state => state.lines = List.filter((v, i) => i !== lineIdx, state.lines));
             })
         );
     }
 
-    private importLines(data:Array<AjaxResponse.ServerSubcorpListItem>):void {
-        this.lines = Immutable.List<SubcorpListItem>(data.map<SubcorpListItem>(item => {
-            return {
-                name: decodeURIComponent(item.name),
-                corpname: item.corpname,
-                usesubcorp: decodeURIComponent(item.usesubcorp),
-                origSubcName: decodeURIComponent(item.orig_subcname),
-                deleted: item.deleted,
-                size: item.size,
-                cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
-                created: new Date(item.created * 1000),
-                selected: false,
-                published: item.published,
-                description: item.description
-            }
-        }));
+    private importLines(data:Array<AjaxResponse.ServerSubcorpListItem>):Array<SubcorpListItem> {
+        return List.map(item => ({
+            name: decodeURIComponent(item.name),
+            corpname: item.corpname,
+            usesubcorp: decodeURIComponent(item.usesubcorp),
+            origSubcName: decodeURIComponent(item.orig_subcname),
+            deleted: item.deleted,
+            size: item.size,
+            cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
+            created: new Date(item.created * 1000),
+            selected: false,
+            published: item.published,
+            description: item.description
+        }), data);
     }
 
-    private importProcessed(data:Array<Kontext.AsyncTaskInfo>):void {
-        this.unfinished = Immutable.List<UnfinishedSubcorp>(
-            data
-                .filter(v => v.status !== AsyncTaskStatus.SUCCESS)
-                .map<UnfinishedSubcorp>(item => ({
-                    ident: item.ident,
-                    name: item.label,
-                    created: new Date(item.created * 1000),
-                    failed: item.status === AsyncTaskStatus.FAILURE
-                })));
+    private importProcessed(data:Array<Kontext.AsyncTaskInfo>):Array<UnfinishedSubcorp> {
+        return pipe(
+            data,
+            List.filter(v => v.status !== AsyncTaskStatus.SUCCESS),
+            List.map(item => ({
+                ident: item.ident,
+                name: item.label,
+                created: new Date(item.created * 1000),
+                failed: item.status === AsyncTaskStatus.FAILURE
+            }))
+        )
     }
 
     private deleteSubcorpus(rowIdx:number):Observable<any> {
-        const item = this.lines.get(rowIdx);
+        const item = this.state.lines[rowIdx];
         if (!item) {
             return throwError(new Error(`Cannot delete item. Row ${rowIdx} not found.`));
         }
@@ -449,7 +471,7 @@ export class SubcorpListModel extends StatefulModel {
             args,
 
         ).pipe(
-            concatMap((data) => this.reloadItems())
+            concatMap(data => this.reloadItems())
         );
     }
 
@@ -458,7 +480,7 @@ export class SubcorpListModel extends StatefulModel {
             format: 'json',
             sort: (reverse ? '-' : '') + name
         }
-        this.mergeFilter(args, this.filter);
+        this.mergeFilter(args, this.state.filter);
 
         return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
             'GET',
@@ -467,13 +489,15 @@ export class SubcorpListModel extends StatefulModel {
 
         ).pipe(
             tap((data) => {
-                this.importLines(data.subcorp_list);
-                this.importProcessed(data.processed_subc);
-                this.relatedCorpora = Immutable.List<string>(data.related_corpora);
-                this.sortKey = {
-                    name: data.sort_key.name,
-                    reverse: data.sort_key.reverse
-                };
+                this.changeState(state => {
+                    state.lines = this.importLines(data.subcorp_list);
+                    state.unfinished = this.importProcessed(data.processed_subc);
+                    state.relatedCorpora = data.related_corpora;
+                    state.sortKey = {
+                        name: data.sort_key.name,
+                        reverse: data.sort_key.reverse
+                    };
+                })
             })
         );
     }
@@ -493,13 +517,13 @@ export class SubcorpListModel extends StatefulModel {
     }
 
     private reloadItems():Observable<any> {
-        return this.filterItems(this.filter);
+        return this.filterItems(this.state.filter);
     }
 
     private filterItems(filter:SubcListFilter):Observable<any> {
         const args:{[key:string]:string} = {
             format: 'json',
-            sort: (this.sortKey.reverse ? '-' : '') + this.sortKey.name,
+            sort: (this.state.sortKey.reverse ? '-' : '') + this.state.sortKey.name,
         }
         this.mergeFilter(args, filter);
         return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
@@ -508,57 +532,21 @@ export class SubcorpListModel extends StatefulModel {
             args
 
         ).pipe(
-            tap((data) => {
-                this.importLines(data.subcorp_list);
-                this.importProcessed(data.processed_subc);
-                this.relatedCorpora = Immutable.List<string>(data.related_corpora);
-                for (let p in filter) {
-                    if (filter.hasOwnProperty(p)) {
-                        this.filter[p] = filter[p];
+            tap(data => {
+                this.changeState(state => {
+                    state.lines = this.importLines(data.subcorp_list);
+                    state.unfinished = this.importProcessed(data.processed_subc);
+                    state.relatedCorpora = data.related_corpora;
+                    for (let p in filter) {
+                        if (filter.hasOwnProperty(p)) {
+                            state.filter[p] = filter[p];
+                        }
                     }
-                }
+                })
             })
         );
     }
 
-    getLines():Immutable.List<SubcorpListItem> {
-        return this.lines;
-    }
-
-    getSortKey():SortKey {
-        return this.sortKey;
-    }
-
-    getFilter():SubcListFilter {
-        return this.filter;
-    }
-
-    getUnfinished():Immutable.List<UnfinishedSubcorp> {
-        return this.unfinished;
-    }
-
-    getRow(num:number):SubcorpListItem {
-        return this.lines.get(num);
-    }
-
-    getRelatedCorpora():Immutable.List<string> {
-        return this.relatedCorpora;
-    }
-
-    getActionBoxVisibleRow():number {
-        return this.actionBoxVisibleRow;
-    }
-
-    getActionBoxActionType():string {
-        return this.actionBoxActionType;
-    }
-
-    getIsBusy():boolean {
-        return this.isBusy;
-    }
-
-    getUsesSubcRestore():boolean {
-        return this.layoutModel.getConf<boolean>('UsesSubcRestore');
-    }
+    unregister() {};
 }
 
