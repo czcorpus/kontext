@@ -21,7 +21,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { WithinBuilderData } from './common';
+import { WithinBuilderData, QueryTypes } from './common';
 
 
 export enum ActionName {
@@ -50,7 +50,32 @@ export enum ActionName {
     LoadWithinBuilderData = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
     LoadWithinBuilderDataDone = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA_DONE',
     SetWithinValue = 'QUERY_INPUT_SET_WITHIN_VALUE',
-    SetWithinAttr = 'QUERY_INPUT_SET_WITHIN_ATTR'
+    SetWithinAttr = 'QUERY_INPUT_SET_WITHIN_ATTR',
+    SetActiveInputWidget = 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+    CQLEditorDisable = 'CQL_EDITOR_DISABLE',
+    QueryInputSelectType = 'QUERY_INPUT_SELECT_TYPE',
+    QueryInputSelectSubcorp = 'QUERY_INPUT_SELECT_SUBCORP',
+    QueryInputMoveCursor = 'QUERY_INPUT_MOVE_CURSOR',
+    QueryInputSetQuery = 'QUERY_INPUT_SET_QUERY',
+    QueryInputAppendQuery = 'QUERY_INPUT_APPEND_QUERY',
+    QueryInputRemoveLastChar = 'QUERY_INPUT_REMOVE_LAST_CHAR',
+    QueryInputSetLpos = 'QUERY_INPUT_SET_LPOS',
+    QueryInputSetMatchCase = 'QUERY_INPUT_SET_MATCH_CASE',
+    QueryInputSetDefaultAttr = 'QUERY_INPUT_SET_DEFAULT_ATTR',
+    QueryInputAddAlignedCorpus = 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+    QueryInputRemoveAlignedCorpus = 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+    QueryInputSetPCQPosNeg = 'QUERY_INPUT_SET_PCQ_POS_NEG',
+    QueryInputSetIncludeEmpty = 'QUERY_INPUT_SET_INCLUDE_EMPTY',
+    QueryInputMakeCorpusPrimary = 'QUERY_MAKE_CORPUS_PRIMARY',
+    QuerySubmit = 'QUERY_INPUT_SUBMIT',
+    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE'
+}
+
+export interface CorpusSwitchModelRestorePayload<T> {
+    key:string;
+    data:T,
+    prevCorpora:Array<string>;
+    currCorpora:Array<string>;
 }
 
 export namespace Actions {
@@ -199,5 +224,128 @@ export namespace Actions {
         idx:number;
     }> {
         name:ActionName.SetWithinAttr;
+    }
+
+    export interface SetActiveInputWidget extends Action<{
+        sourceId:string;
+        value:string;
+        widgetArgs:{[key:string]:string|number|boolean};
+    }> {
+        name:ActionName.SetActiveInputWidget;
+    }
+
+    export interface CQLEditorDisable extends Action<{
+    }> {
+        name:ActionName.CQLEditorDisable;
+    }
+
+    export interface QueryInputSelectType extends Action<{
+        sourceId:string;
+        queryType:QueryTypes;
+    }> {
+        name:ActionName.QueryInputSelectType;
+    }
+
+    export interface QueryInputSelectSubcorp extends Action<{
+        pubName:string;
+        subcorp:string;
+        foreign:boolean;
+    }> {
+        name:ActionName.QueryInputSelectSubcorp;
+    }
+
+    export interface QueryInputMoveCursor extends Action<{
+        sourceId:string;
+        rawAnchorIdx:number;
+        rawFocusIdx:number;
+    }> {
+        name:ActionName.QueryInputMoveCursor;
+    }
+
+    export interface QueryInputSetQuery extends Action<{
+        sourceId:string;
+        query:string;
+        insertRange:[number, number]|null;
+        rawAnchorIdx:number;
+        rawFocusIdx:number;
+    }> {
+        name:ActionName.QueryInputSetQuery;
+    }
+
+    export interface QueryInputAppendQuery extends Action<{
+        sourceId:string;
+        query:string;
+        prependSpace:boolean;
+        closeWhenDone:boolean;
+    }> {
+        name:ActionName.QueryInputAppendQuery;
+    }
+
+    export interface QueryInputRemoveLastChar extends Action<{
+        sourceId:string;
+    }> {
+        name:ActionName.QueryInputRemoveLastChar;
+    }
+
+    export interface QueryInputSetLpos extends Action<{
+        sourceId:string;
+        lpos:string;
+    }> {
+        name:ActionName.QueryInputSetLpos;
+    }
+
+    export interface QueryInputSetMatchCase extends Action<{
+        sourceId:string;
+        value:boolean;
+    }> {
+        name:ActionName.QueryInputSetMatchCase;
+    }
+
+    export interface QueryInputSetDefaultAttr extends Action<{
+        sourceId:string;
+        value:string;
+    }> {
+        name:ActionName.QueryInputSetDefaultAttr;
+    }
+
+    export interface QueryInputAddAlignedCorpus extends Action<{
+        corpname:string;
+    }> {
+        name:ActionName.QueryInputAddAlignedCorpus;
+    }
+
+    export interface QueryInputRemoveAlignedCorpus extends Action<{
+        corpname:string;
+    }> {
+        name:ActionName.QueryInputRemoveAlignedCorpus;
+    }
+
+    export interface QueryInputSetPCQPosNeg extends Action<{
+        corpname:string;
+        value:'pos'|'neg';
+    }> {
+        name:ActionName.QueryInputSetPCQPosNeg;
+    }
+
+    export interface QueryInputSetIncludeEmpty extends Action<{
+        corpname:string;
+        value:boolean;
+    }> {
+        name:ActionName.QueryInputSetIncludeEmpty;
+    }
+
+    export interface QueryInputMakeCorpusPrimary extends Action<{
+        corpname:string;
+    }> {
+        name:ActionName.QueryInputMakeCorpusPrimary;
+    }
+
+    export interface QuerySubmit extends Action<{
+    }> {
+        name:ActionName.QuerySubmit;
+    }
+
+    export interface CorpusSwitchModelRestore<T={}> extends Action<CorpusSwitchModelRestorePayload<T>> {
+        name:ActionName.CorpusSwitchModelRestore;
     }
 }

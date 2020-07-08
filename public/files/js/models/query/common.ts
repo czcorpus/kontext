@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
+import { Dict } from 'cnc-tskit';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
+
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { ConcServerArgs } from '../concordance/common';
 
 
@@ -100,17 +101,14 @@ export interface WithinBuilderData extends Kontext.AjaxResponse {
  */
 export class WidgetsMap {
 
-    private data:Immutable.Map<string, Immutable.List<string>>;
+    private data:{[key:string]:Array<string>};
 
-    constructor(data:Immutable.List<[string, Immutable.List<string>]>) {
-        this.data = Immutable.Map<string, Immutable.List<string>>(data);
+    constructor(data:Array<[string, Array<string>]>) {
+        this.data = Dict.fromEntries(data);
     }
 
-    get(key:string):Immutable.List<string> {
-        if (this.data.has(key)) {
-            return this.data.get(key);
-        }
-        return Immutable.List<string>();
+    get(key:string):Array<string> {
+        return this.data[key] ? this.data[key] : [];
     }
 }
 
@@ -151,21 +149,21 @@ export interface QueryFormModelState {
 
     forcedAttr:string;
 
-    attrList:Immutable.List<Kontext.AttrItem>;
+    attrList:Array<Kontext.AttrItem>;
 
-    structAttrList:Immutable.List<Kontext.AttrItem>;
+    structAttrList:Array<Kontext.AttrItem>;
 
-    lemmaWindowSizes:Immutable.List<number>;
+    lemmaWindowSizes:Array<number>;
 
-    posWindowSizes:Immutable.List<number>;
+    posWindowSizes:Array<number>;
 
-    wPoSList:Immutable.List<{v:string; n:string}>;
+    wPoSList:Array<{v:string; n:string}>;
 
     currentAction:string;
 
-    queries:Immutable.Map<string, string>; // corpname|filter_id -> query
+    queries:{[key:string]:string}; // corpname|filter_id -> query
 
-    tagBuilderSupport:Immutable.Map<string, boolean>;
+    tagBuilderSupport:{[key:string]:boolean};
 
     useCQLEditor:boolean;
 
@@ -177,9 +175,9 @@ export interface QueryFormModelState {
 
     isAnonymousUser:boolean;
 
-    activeWidgets:Immutable.Map<string, string>;
+    activeWidgets:{[key:string]:string|null};
 
-    downArrowTriggersHistory:Immutable.Map<string, boolean>;
+    downArrowTriggersHistory:{[key:string]:boolean};
 
     contextFormVisible:boolean;
 
@@ -222,7 +220,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.ident = ident;
     }
 
-    protected validateQuery(query:string, queryType:string):boolean {
+    protected validateQuery(query:string, queryType:QueryTypes):boolean {
         const parseFn = ((query:string) => {
             switch (queryType) {
                 case 'iquery':
@@ -255,17 +253,14 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return mismatch;
     }
 
-    protected addQueryInfix(sourceId:string, query:string, insertRange:[number, number]):void {
-        this.state.queries = this.state.queries.set(
-            sourceId,
-            this.state.queries.get(sourceId).substring(0, insertRange[0]) + query +
-                this.state.queries.get(sourceId).substr(insertRange[1])
-        );
+    protected addQueryInfix(state:QueryFormModelState, sourceId:string, query:string, insertRange:[number, number]):void {
+        state.queries[sourceId] = state.queries[sourceId].substring(0, insertRange[0]) + query +
+                state.queries[sourceId].substr(insertRange[1]);
     }
 
     getQueryUnicodeNFC(queryId:string):string {
          // TODO ES2015 stuff here
-        return this.state.queries.has(queryId) ? this.state.queries.get(queryId)['normalize']() : undefined;
+        return Dict.hasKey(queryId, this.state.queries) ? this.state.queries[queryId]['normalize']() : undefined;
     }
 
     csGetStateKey():string {

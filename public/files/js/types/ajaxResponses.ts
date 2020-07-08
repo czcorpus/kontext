@@ -102,9 +102,9 @@ export namespace AjaxResponse {
     }
 
     export interface QueryFormArgs extends ConcFormArgs {
-        curr_query_types:{[corpname:string]:string};
+        curr_query_types:{[corpname:string]:QueryTypes};
         curr_queries:{[corpname:string]:string};
-        curr_pcq_pos_neg_values:{[corpname:string]:string};
+        curr_pcq_pos_neg_values:{[corpname:string]:'pos'|'neg'};
         curr_lpos_values:{[corpname:string]:string};
         curr_qmcase_values:{[corpname:string]:boolean};
         curr_default_attr_values:{[corpname:string]:string};
@@ -113,7 +113,7 @@ export namespace AjaxResponse {
         selected_text_types:TextTypes.ServerCheckedValues;
         bib_mapping:TextTypes.BibMapping;
         has_lemma:{[corpname:string]:boolean};
-        tagset_docs:{[corpname:string]:boolean};
+        tagset_docs:{[corpname:string]:string};
     }
 
     export function isQueryFormArgs(args:ConcFormArgs):args is QueryFormArgs {
