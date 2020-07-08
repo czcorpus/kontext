@@ -20,6 +20,7 @@
 import * as Immutable from 'immutable';
 import * as React from 'react';
 import { tap } from 'rxjs/operators';
+import { IStateChangeListener } from 'kombo';
 
 import { Kontext, TextTypes } from '../types/common';
 import { PluginInterfaces } from '../types/plugins';
@@ -31,13 +32,12 @@ import { TextTypesModel, SelectedTextTypes } from '../models/textTypes/main';
 import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import corplistComponent from 'plugins/corparch/init';
-import liveAttributes from 'plugins/liveAttributes/init';
-import subcMixer from 'plugins/subcmixer/init';
 import { InputMode } from '../models/subcorp/common';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
-import { IStateChangeListener } from 'kombo';
+import corplistComponent from 'plugins/corparch/init';
+import liveAttributes from 'plugins/liveAttributes/init';
+import subcMixer from 'plugins/subcmixer/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -147,13 +147,6 @@ export class SubcorpForm {
         const subcmixerPlg = subcMixer(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
-            {
-                getIsPublic: () => this.subcorpFormModel.getIsPublic(),
-                getDescription: () => this.subcorpFormModel.getDescription(),
-                getSubcName: () => this.subcorpFormModel.getSubcname(),
-                validateForm: () => this.subcorpFormModel.validateForm(false),
-                addListener: (fn:IStateChangeListener<SubcorpFormModelState>) => this.subcorpFormModel.addListener(fn)
-            },
             this.layoutModel.getConf<string>('CorpusIdAttr')
         );
 
