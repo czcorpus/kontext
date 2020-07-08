@@ -25,12 +25,12 @@ import * as Immutable from 'immutable';
 import {MultiDict} from '../../multidict';
 import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
 import {CTFormProperties, roundFloat} from './ctFreqForm';
-import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { CTFreqServerArgs } from './common';
+import { Maths } from 'cnc-tskit';
 
 /**
  * A representation of 2D freq table.
@@ -534,7 +534,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
 
     private recalculateConfIntervals():void {
         this.origData = mapDataTable(this.origData, cell => {
-            const confInt = wilsonConfInterval(cell.abs, cell.domainSize, this.alphaLevel);
+            const confInt = Maths.wilsonConfInterval(cell.abs, cell.domainSize, this.alphaLevel);
             return {
                 origOrder: cell.origOrder,
                 ipm: cell.ipm,
@@ -562,7 +562,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel {
                 tableData[item[0]] = {};
             }
             const ipm = this.calcIpm(item);
-            const confInt = wilsonConfInterval(item[2], item[3], this.alphaLevel);
+            const confInt = Maths.wilsonConfInterval(item[2], item[3], this.alphaLevel);
             tableData[item[0]][item[1]] = {
                 origOrder: i,
                 ipm: ipm,

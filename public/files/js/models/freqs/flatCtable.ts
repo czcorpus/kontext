@@ -24,9 +24,9 @@ import {FreqResultResponse} from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import {GeneralFreq2DModel, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
-import {wilsonConfInterval} from './confIntervalCalc';
 import {MultiDict} from '../../multidict';
 import { Action, IFullActionControl } from 'kombo';
+import { Maths } from 'cnc-tskit';
 
 /**
  * En extended 2d freq. data item containing
@@ -119,7 +119,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel {
 
     private recalculateConfIntervals():void {
         this.origData = this.origData.map((cell, i) => {
-            const confInt = wilsonConfInterval(cell.abs, cell.domainSize, this.alphaLevel);
+            const confInt = Maths.wilsonConfInterval(cell.abs, cell.domainSize, this.alphaLevel);
             return {
                 origOrder: i,
                 val1: cell.val1,
@@ -180,7 +180,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel {
     importData(data:FreqResultResponse.CTFreqResultData):void {
         this.fullSize = data.full_size;
         this.origData = Immutable.List<FreqDataItem>(data.data.map((item, i) => {
-            const confInt = wilsonConfInterval(item[2], item[3], this.alphaLevel);
+            const confInt = Maths.wilsonConfInterval(item[2], item[3], this.alphaLevel);
             return {
                 origOrder: i,
                 val1: item[0],
