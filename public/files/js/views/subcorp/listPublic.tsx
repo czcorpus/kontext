@@ -22,8 +22,8 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
-import {PublicSubcorpListState, PublicSubcorpListModel,
-    DataItem, Actions, SearchTypes} from '../../models/subcorp/listPublic';
+import {PublicSubcorpListState, PublicSubcorpListModel, DataItem, SearchTypes} from '../../models/subcorp/listPublic';
+import {Actions, ActionName} from '../../models/subcorp/actions';
 import { Subscription } from 'rxjs';
 
 export interface Views {
@@ -47,8 +47,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            dispatcher.dispatch({
-                name: Actions.SET_SEARCH_TYPE,
+            dispatcher.dispatch<Actions.SetSearchType>({
+                name: ActionName.SetSearchType,
                 payload: {
                     value: evt.target.value
                 }
@@ -87,8 +87,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         handleChange(evt:React.ChangeEvent<HTMLInputElement>) {
-            dispatcher.dispatch({
-                name: Actions.SET_SEARCH_QUERY,
+            dispatcher.dispatch<Actions.SetSearchQuery>({
+                name: ActionName.SetSearchQuery,
                 payload: {
                     value: evt.target.value
                 }
@@ -179,8 +179,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private _handleUseInQueryButton():void {
-            dispatcher.dispatch({
-                name: Actions.USE_IN_QUERY,
+            dispatcher.dispatch<Actions.UseInQuery>({
+                name: ActionName.UseInQuery,
                 payload: {
                     corpname: this.props.item.corpname,
                     id: this.props.item.ident
