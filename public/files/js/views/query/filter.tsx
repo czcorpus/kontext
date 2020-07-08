@@ -19,7 +19,6 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
@@ -45,12 +44,10 @@ export interface FilterFormViews {
 // ---------
 
 export interface FilterFormProps {
-    formType:Kontext.ConcFormTypes.FILTER;
     filterId:string;
     operationIdx?:number;
     tagHelperView:PluginInterfaces.TagHelper.View;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
-    actionPrefix:string;
 }
 
 // ---------
@@ -76,7 +73,7 @@ export interface FirstHitsFormProps {
 
 export interface FirstHitsFormState {
     isAutoSubmit:boolean;
-    docStructs:Immutable.Map<string, string>;
+    docStructs:{[key:string]:string};
 }
 
 // ---------
@@ -191,13 +188,13 @@ export function init(
                 name: 'FILTER_QUERY_SET_INCL_KWIC',
                 payload: {
                     filterId: this.props.filterId,
-                    value: !this.props.inclkwicValues.get(this.props.filterId)
+                    value: !this.props.inclkwicValues[this.props.filterId]
                 }
             });
         }
 
         _renderForm() {
-            if (this.props.withinArgs.get(this.props.filterId) === 1) {
+            if (this.props.withinArgs[this.props.filterId] === 1) {
                 return this._renderSwitchMaincorpForm();
 
             } else {
@@ -211,27 +208,26 @@ export function init(
                     <table className="form">
                         <tbody>
                             <inputViews.TRQueryTypeField
-                                queryType={this.props.queryTypes.get(this.props.filterId)}
+                                queryType={this.props.queryTypes[this.props.filterId]}
                                 sourceId={this.props.filterId}
-                                actionPrefix={this.props.actionPrefix}
-                                hasLemmaAttr={this.props.hasLemma.get(this.props.filterId)} />
+                                formType={this.props.formType}
+                                hasLemmaAttr={this.props.hasLemma[this.props.filterId]} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
-                                queryType={this.props.queryTypes.get(this.props.filterId)}
-                                widgets={this.props.supportedWidgets.get(this.props.filterId)}
+                                queryType={this.props.queryTypes[this.props.filterId]}
+                                widgets={this.props.supportedWidgets[this.props.filterId]}
                                 sourceId={this.props.filterId}
                                 wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValues.get(this.props.filterId)}
-                                matchCaseValue={this.props.matchCaseValues.get(this.props.filterId)}
+                                lposValue={this.props.lposValues[this.props.filterId]}
+                                matchCaseValue={this.props.matchCaseValues[this.props.filterId]}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttrValues.get(this.props.filterId)}
+                                defaultAttr={this.props.defaultAttrValues[this.props.filterId]}
                                 attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocs.get(this.props.filterId)}
+                                tagsetDocUrl={this.props.tagsetDocs[this.props.filterId]}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguage}
-                                actionPrefix={this.props.actionPrefix}
                                 useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this._handleSubmit} />
                         </tbody>
@@ -255,18 +251,18 @@ export function init(
                             <tr>
                                 <th>{he.translate('query__filter_th')}:</th>
                                 <td>
-                                    <select value={this.props.pnFilterValues.get(this.props.filterId)} onChange={this._handlePosNegSelect}>
+                                    <select value={this.props.pnFilterValues[this.props.filterId]} onChange={this._handlePosNegSelect}>
                                         <option value="p">{he.translate('query__qfilter_pos')}</option>
                                         <option value="n">{he.translate('query__qfilter_neg')}</option>
                                     </select>
                                 </td>
                             </tr>
-                            {this.props.pnFilterValues.get(this.props.filterId) === 'p' ?
+                            {this.props.pnFilterValues[this.props.filterId] === 'p' ?
                                 (<tr>
                                     <th>{he.translate('query__qlfilter_sel_token')}:</th>
                                     <td>
                                         <select onChange={this._handleSelTokenSelect}
-                                                value={this.props.filflValues.get(this.props.filterId)}>
+                                                value={this.props.filflValues[this.props.filterId]}>
                                             <option value="f">{he.translate('query__token_first')}</option>
                                             <option value="l">{he.translate('query__token_last')}</option>
                                         </select>
@@ -282,25 +278,25 @@ export function init(
                                 <td>
                                     <label>
                                         {he.translate('query__qfilter_range_from')}:{'\u00a0'}
-                                        <layoutViews.ValidatedItem invalid={this.props.filfposValues.get(this.props.filterId).isInvalid}>
+                                        <layoutViews.ValidatedItem invalid={this.props.filfposValues[this.props.filterId].isInvalid}>
                                             <input type="text" style={{width: '3em'}}
-                                                value={this.props.filfposValues.get(this.props.filterId).value}
+                                                value={this.props.filfposValues[this.props.filterId].value}
                                                 onChange={this._handleToFromRangeValChange.bind(this, 'from')} />
                                         </layoutViews.ValidatedItem>
                                     </label>
                                     {'\u00a0'}
                                     <label>
                                         {he.translate('query__qfilter_range_to')}:{'\u00a0'}
-                                        <layoutViews.ValidatedItem invalid={this.props.filtposValues.get(this.props.filterId).isInvalid}>
+                                        <layoutViews.ValidatedItem invalid={this.props.filtposValues[this.props.filterId].isInvalid}>
                                             <input type="text" style={{width: '3em'}}
-                                                value={this.props.filtposValues.get(this.props.filterId).value}
+                                                value={this.props.filtposValues[this.props.filterId].value}
                                                 onChange={this._handleToFromRangeValChange.bind(this, 'to')} />
                                         </layoutViews.ValidatedItem>
                                     </label>
                                     {'\u00a0,\u00a0'}
                                     <label>
                                         {he.translate('query__qfilter_include_kwic')}
-                                        <input type="checkbox" checked={this.props.inclkwicValues.get(this.props.filterId)}
+                                        <input type="checkbox" checked={this.props.inclkwicValues[this.props.filterId]}
                                             onChange={this._handleInclKwicCheckbox} />
                                     </label>
                                 </td>
@@ -308,27 +304,26 @@ export function init(
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryTypeField
-                                queryType={this.props.queryTypes.get(this.props.filterId)}
+                                queryType={this.props.queryTypes[this.props.filterId]}
+                                formType={this.props.formType}
                                 sourceId={this.props.filterId}
-                                actionPrefix={this.props.actionPrefix}
-                                hasLemmaAttr={this.props.hasLemma.get(this.props.filterId)} />
+                                hasLemmaAttr={this.props.hasLemma[this.props.filterId]} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
-                                queryType={this.props.queryTypes.get(this.props.filterId)}
-                                widgets={this.props.supportedWidgets.get(this.props.filterId)}
+                                queryType={this.props.queryTypes[this.props.filterId]}
+                                widgets={this.props.supportedWidgets[this.props.filterId]}
                                 sourceId={this.props.filterId}
                                 wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValues.get(this.props.filterId)}
-                                matchCaseValue={this.props.matchCaseValues.get(this.props.filterId)}
+                                lposValue={this.props.lposValues[this.props.filterId]}
+                                matchCaseValue={this.props.matchCaseValues[this.props.filterId]}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttrValues.get(this.props.filterId)}
+                                defaultAttr={this.props.defaultAttrValues[this.props.filterId]}
                                 attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocs.get(this.props.filterId)}
+                                tagsetDocUrl={this.props.tagsetDocs[this.props.filterId]}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguage}
-                                actionPrefix={this.props.actionPrefix}
                                 useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this._handleSubmit}
                                 takeFocus={false} />
@@ -346,7 +341,7 @@ export function init(
         }
 
         render() {
-            if (this.props.opLocks.get(this.props.filterId)) {
+            if (this.props.opLocks[this.props.filterId]) {
                 return (
                     <div>
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')}
@@ -482,7 +477,7 @@ export function init(
                     <label>
                         {he.translate('query__used_first_hits_struct')}:{'\u00a0'}
                         <select disabled>
-                            <option>{this.state.docStructs.get(this.props.opKey)}</option>
+                            <option>{this.state.docStructs[this.props.opKey]}</option>
                         </select>
                     </label>
                     <p>{he.translate('query__the_form_no_params_to_change')}.</p>

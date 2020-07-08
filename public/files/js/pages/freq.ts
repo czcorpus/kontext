@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Kontext, TextTypes } from '../types/common';
-import { PluginInterfaces } from '../types/plugins';
 import { AjaxResponse, FreqResultResponse } from '../types/ajaxResponses';
 import { PageModel, DownloadType } from '../app/page';
 import { MultiDict } from '../multidict';
@@ -241,9 +239,8 @@ class FreqPage {
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
-                    actionPrefix: '',
                     allowCorpusSelection: false,
-                    tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
+                    tagHelperViews: {},
                     queryStorageView: null,
                     liveAttrsView: null,
                     liveAttrsCustomTT: null,
@@ -251,7 +248,6 @@ class FreqPage {
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,
-                    actionPrefix: '',
                     filterId: null,
                     tagHelperView: null,
                     queryStorageView: null

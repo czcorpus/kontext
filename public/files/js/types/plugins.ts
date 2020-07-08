@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable, Subscription } from 'rxjs';
-import * as Immutable from 'immutable';
+import { Observable } from 'rxjs';
 import {Kontext, TextTypes} from '../types/common';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
-import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
+import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
 import { ConcServerArgs } from '../models/concordance/common';
+import { FormType } from '../models/query/actions';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -190,7 +190,7 @@ export namespace PluginInterfaces {
 
         export interface ViewProps {
             sourceId:string;
-            actionPrefix:string;
+            formType:FormType;
             range:[number, number];
             onInsert:()=>void;
             onEscKey:()=>void;
@@ -215,7 +215,7 @@ export namespace PluginInterfaces {
         export interface IModel extends IEventEmitter {
 
             getCurrentCorpusOnly():boolean;
-            getData():Immutable.List<Kontext.QueryHistoryItem>;
+            getData():Array<Kontext.QueryHistoryItem>;
             getQueryType():string;
             getOffset():number;
             getIsBusy():boolean;
@@ -227,7 +227,7 @@ export namespace PluginInterfaces {
 
         export interface WidgetProps {
             sourceId:string;
-            actionPrefix:string;
+            formType:FormType;
             onCloseTrigger:()=>void;
         }
 

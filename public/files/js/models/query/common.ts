@@ -27,9 +27,10 @@ import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
 import { ConcServerArgs } from '../concordance/common';
+import { FormType } from './actions';
 
 
-export type QueryTypes = 'iquery'|'phrase'|'lemma'|'word'|'cql';
+export type QueryType = 'iquery'|'phrase'|'lemma'|'word'|'cql';
 
 export type AnyQuery = {
     iquery?:string;
@@ -96,44 +97,6 @@ export interface WithinBuilderData extends Kontext.AjaxResponse {
     structattrs:{[attr:string]:Array<string>};
 }
 
-/**
- *
- */
-export class WidgetsMap {
-
-    private data:{[key:string]:Array<string>};
-
-    constructor(data:Array<[string, Array<string>]>) {
-        this.data = Dict.fromEntries(data);
-    }
-
-    get(key:string):Array<string> {
-        return this.data[key] ? this.data[key] : [];
-    }
-}
-
-export interface SetQueryInputAction extends Action<{
-    sourceId:string;
-    query:string;
-    insertRange:[number, number]|null;
-    rawAnchorIdx:number|null;
-    rawFocusIdx:number|null;
-}> {};
-
-export interface MoveCursorInputAction extends Action<{
-    sourceId:string;
-    rawAnchorIdx:number|null;
-    rawFocusIdx:number|null;
-}> {};
-
-export interface AppendQueryInputAction extends Action<{
-    sourceId:string;
-    query:string;
-    prependSpace?:boolean;
-    closeWhenDone?:boolean;
-    triggeredKey?:[number, number]; // from virtual keyboard
-}> {};
-
 
 export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
     if (anchorIdx === focusIdx) {
@@ -146,6 +109,8 @@ export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number, fo
 
 
 export interface QueryFormModelState {
+
+    formType:FormType;
 
     forcedAttr:string;
 
@@ -171,7 +136,7 @@ export interface QueryFormModelState {
 
     widgetArgs:Kontext.GeneralProps;
 
-    supportedWidgets:WidgetsMap;
+    supportedWidgets:{[key:string]:Array<string>};
 
     isAnonymousUser:boolean;
 
@@ -182,6 +147,8 @@ export interface QueryFormModelState {
     contextFormVisible:boolean;
 
     textTypesFormVisible:boolean;
+
+    historyVisible:boolean;
 }
 
 /**
@@ -220,7 +187,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.ident = ident;
     }
 
-    protected validateQuery(query:string, queryType:QueryTypes):boolean {
+    protected validateQuery(query:string, queryType:QueryType):boolean {
         const parseFn = ((query:string) => {
             switch (queryType) {
                 case 'iquery':

@@ -31,7 +31,7 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
-import { GeneralQueryFormProperties, QueryFormModel, WidgetsMap, appendQuery, QueryFormModelState, shouldDownArrowTriggerHistory, ConcQueryArgs, QueryTypes } from './common';
+import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState, shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType } from './common';
 import { QueryContextArgs } from './context';
 import { ActionName, Actions, CorpusSwitchModelRestorePayload } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
@@ -41,7 +41,7 @@ type ExportedQueryContextArgs = {[p in keyof QueryContextArgs]?:QueryContextArgs
 
 
 export interface QueryFormUserEntries {
-    currQueryTypes:{[corpname:string]:QueryTypes};
+    currQueryTypes:{[corpname:string]:QueryType};
     currQueries:{[corpname:string]:string};  // current queries values (e.g. when restoring a form state)
     currPcqPosNegValues:{[corpname:string]:'pos'|'neg'};
     currDefaultAttrValues:{[corpname:string]:string};
@@ -112,7 +112,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 };
 
 
-function determineSupportedWidgets(corpora:Array<string>, queryTypes:{[key:string]:string}, tagBuilderSupport:{[key:string]:boolean}, isAnonymousUser:boolean):WidgetsMap {
+function determineSupportedWidgets(corpora:Array<string>, queryTypes:{[key:string]:string}, tagBuilderSupport:{[key:string]:boolean}, isAnonymousUser:boolean):{[key:string]:Array<string>} {
     const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
         const ans = ['keyboard'];
         if (!isAnonymousUser) {
@@ -126,15 +126,16 @@ function determineSupportedWidgets(corpora:Array<string>, queryTypes:{[key:strin
         }
         return ans;
     }
-    return new WidgetsMap(
-            List.map(
-                corpname => tuple(
-                    corpname,
-                    getCorpWidgets(corpname, queryTypes[corpname])
-                ),
-                corpora
+    return pipe(
+        corpora,
+        List.map(
+            corpname => tuple(
+                corpname,
+                getCorpWidgets(corpname, queryTypes[corpname])
             )
-    )
+        ),
+        Dict.fromEntries()
+    );
 }
 
 
@@ -162,7 +163,7 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     pcqPosNegValues:{[key:string]:'pos'|'neg'};
 
-    queryTypes:{[key:string]:QueryTypes};
+    queryTypes:{[key:string]:QueryType};
 
     tagBuilderSupport:{[key:string]:boolean};
 
@@ -217,6 +218,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
         const tagBuilderSupport = props.tagBuilderSupport;
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'first-query-model', {
+            formType: 'query',
             forcedAttr: props.forcedAttr,
             attrList: props.attrList,
             structAttrList: props.structAttrList,
@@ -285,7 +287,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             isAnonymousUser: props.isAnonymousUser,
             supportedWidgets: determineSupportedWidgets(corpora, queryTypes, tagBuilderSupport, props.isAnonymousUser),
             contextFormVisible: false,
-            textTypesFormVisible: false
+            textTypesFormVisible: false,
+            historyVisible: false
         });
         this.setUserValues(this.state, props);
 
@@ -306,8 +309,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             this.emitChange();
         });
 
-        this.addActionHandler<Actions.SetActiveInputWidget>(
+        this.addActionSubsetHandler<Actions.SetActiveInputWidget>(
             ActionName.SetActiveInputWidget,
+            action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
                     state.activeWidgets[action.payload.sourceId] = action.payload.value;
@@ -323,8 +327,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputSelectType>(
+        this.addActionSubsetHandler<Actions.QueryInputSelectType>(
             ActionName.QueryInputSelectType,
+            action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
                     let qType = action.payload.queryType;
@@ -373,8 +378,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputMoveCursor>(
+        this.addActionSubsetHandler<Actions.QueryInputMoveCursor>(
             ActionName.QueryInputMoveCursor,
+            action => action.payload.formType === 'query',
             action => {
                 this.changeState(state =>
                     state.downArrowTriggersHistory[action.payload.sourceId] =
@@ -387,8 +393,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputSetQuery>(
+        this.addActionSubsetHandler<Actions.QueryInputSetQuery>(
             ActionName.QueryInputSetQuery,
+            action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
                     if (action.payload.insertRange) {
@@ -411,8 +418,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputAppendQuery>(
+        this.addActionSubsetHandler<Actions.QueryInputAppendQuery>(
             ActionName.QueryInputAppendQuery,
+            action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
                     state.queries[action.payload.sourceId] = appendQuery(
@@ -439,8 +447,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputSetLpos>(
+        this.addActionSubsetHandler<Actions.QueryInputSetLpos>(
             ActionName.QueryInputSetLpos,
+            action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
                     state.lposValues[action.payload.sourceId] = action.payload.lpos;
@@ -448,8 +457,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputSetMatchCase>(
+        this.addActionSubsetHandler<Actions.QueryInputSetMatchCase>(
             ActionName.QueryInputSetMatchCase,
+            action =>  action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
                     state.matchCaseValues[action.payload.sourceId] = action.payload.value;
@@ -457,8 +467,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputSetDefaultAttr>(
+        this.addActionSubsetHandler<Actions.QueryInputSetDefaultAttr>(
             ActionName.QueryInputSetDefaultAttr,
+            action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
                     this.state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
@@ -480,15 +491,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     this.removeAlignedCorpus(state, action.payload.corpname);
-                });
-            }
-        );
-
-        this.addActionHandler<Actions.QueryInputSetPCQPosNeg>(
-            ActionName.QueryInputSetPCQPosNeg,
-            action => {
-                this.changeState(state => {
-                    state.pcqPosNegValues[action.payload.corpname] = action.payload.value;
                 });
             }
         );

@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { tap, concatMap, map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { Action } from 'kombo';
@@ -29,12 +28,14 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { StatefulModel } from '../../models/base';
 import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../../models/query/cqleditor/parser';
+import { List, pipe } from 'cnc-tskit';
+import { QueryType } from '../../models/query/common';
 
 
 
 export interface InputBoxHistoryItem {
     query:string;
-    query_type:string;
+    query_type:QueryType;
     created:number;
 }
 
@@ -54,7 +55,7 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
 
     private pluginApi:IPluginApi;
 
-    private data:Immutable.List<Kontext.QueryHistoryItem>;
+    private data:Array<Kontext.QueryHistoryItem>;
 
     private offset:number;
 
@@ -79,7 +80,7 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
     constructor(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
-        this.data = Immutable.List<Kontext.QueryHistoryItem>();
+        this.data = [];
         this.queryType = '';
         this.currentCorpusOnly = false;
         this.offset = offset;
@@ -234,11 +235,14 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
             tap((data) => {
                 this.hasMoreItems = data.data.length === this.limit + 1;
                 this.data = this.hasMoreItems ?
-                    Immutable.List<Kontext.QueryHistoryItem>(
-                        data.data.slice(0, data.data.length - 1)
-                            .map(attachSh.bind(null, this.pluginApi.getComponentHelpers()))) :
-                    Immutable.List<Kontext.QueryHistoryItem>(data.data
-                            .map(attachSh.bind(null, this.pluginApi.getComponentHelpers())));
+                        List.map(
+                            attachSh.bind(null, this.pluginApi.getComponentHelpers()),
+                            data.data.slice(0, data.data.length - 1)
+                        ) :
+                        List.map(
+                            attachSh.bind(null, this.pluginApi.getComponentHelpers()),
+                            data.data
+                        );
             })
         );
     }
@@ -280,22 +284,28 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
     }
 
     importData(data:Array<Kontext.QueryHistoryItem>):void {
-        this.data = Immutable.List<Kontext.QueryHistoryItem>(data
-                        .map(attachSh.bind(null, this.pluginApi.getComponentHelpers())));
+        this.data = List.map(
+            attachSh.bind(null, this.pluginApi.getComponentHelpers()),
+            data
+        );
     }
 
-    getData():Immutable.List<Kontext.QueryHistoryItem> {
+    getData():Array<Kontext.QueryHistoryItem> {
         return this.data;
     }
 
-    getFlatData():Immutable.List<InputBoxHistoryItem> {
-        return this.data.flatMap(v => {
-            return Immutable.List<InputBoxHistoryItem>()
-                .push({query: v.query, query_type: v.query_type, created: v.created})
-                .concat(v.aligned
-                        .filter(v2 => !!v2.query)
-                        .map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created})));
-        }).toList();
+    getFlatData():Array<InputBoxHistoryItem> {
+        return List.flatMap(
+            v => [{query: v.query, query_type: v.query_type, created: v.created}]
+                .concat(
+                    pipe(
+                        v.aligned,
+                        List.filter(v2 => !!v2.query),
+                        List.map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created}))
+                    )
+            ),
+            this.data
+        );
     }
 
     getOffset():number {

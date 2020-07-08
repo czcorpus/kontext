@@ -18,14 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf } from 'rxjs';
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {InputModuleViews} from './input';
-import {WidgetsMap} from '../../models/query/common';
+import {QueryType} from '../../models/query/common';
 import {PluginInterfaces} from '../../types/plugins';
 import { IActionDispatcher } from 'kombo';
+import { List, Dict } from 'cnc-tskit';
 
 
 export interface AlignedModuleArgs {
@@ -35,24 +34,24 @@ export interface AlignedModuleArgs {
 }
 
 export interface AlignedCorporaProps {
-    availableCorpora:Immutable.List<{n:string; label:string}>;
-    alignedCorpora:Immutable.List<string>;
-    queryTypes:Immutable.Map<string, string>;
-    supportedWidgets:WidgetsMap;
-    wPoSList:Immutable.List<{n:string; v:string}>;
-    lposValues:Immutable.Map<string, string>;
-    matchCaseValues:Immutable.Map<string, boolean>;
+    availableCorpora:Array<{n:string; label:string}>;
+    alignedCorpora:Array<string>;
+    queryTypes:{[key:string]:QueryType};
+    supportedWidgets:{[key:string]:Array<string>};
+    wPoSList:Array<{n:string; v:string}>;
+    lposValues:{[key:string]:string};
+    matchCaseValues:{[key:string]:boolean};
     forcedAttr:string;
-    defaultAttrValues:Immutable.Map<string, string>;
-    attrList:Immutable.List<Kontext.AttrItem>;
-    tagsetDocUrls:Immutable.Map<string, string>;
-    pcqPosNegValues:Immutable.Map<string, string>;
-    includeEmptyValues:Immutable.Map<string, boolean>;
-    inputLanguages:Immutable.Map<string, string>;
+    defaultAttrValues:{[key:string]:string};
+    attrList:Array<Kontext.AttrItem>;
+    tagsetDocUrls:{[key:string]:string};
+    pcqPosNegValues:{[key:string]:string};
+    includeEmptyValues:{[key:string]:boolean};
+    inputLanguages:{[key:string]:string};
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
-    hasLemmaAttr:Immutable.Map<string, boolean>;
+    hasLemmaAttr:{[key:string]:boolean};
     useCQLEditor:boolean;
-    tagHelperViews:Immutable.Map<string, PluginInterfaces.TagHelper.View>;
+    tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
     onEnterKey:()=>void;
 }
 
@@ -80,15 +79,15 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         label:string;
         pcqPosNegValue:string;
         includeEmptyValue:boolean;
-        queryType:string;
-        widgets:Immutable.List<string>;
+        queryType:QueryType;
+        widgets:Array<string>;
         hasLemmaAttr:boolean;
-        wPoSList:Immutable.List<{n:string; v:string}>;
+        wPoSList:Array<{n:string; v:string}>;
         lposValue:string;
         matchCaseValue:boolean;
         forcedAttr:string;
         defaultAttr:string;
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
         tagsetDocUrl:string;
         inputLanguage:string;
         queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
@@ -191,8 +190,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
             return ans ? ans.label : corpname;
         };
 
-        const corpIsUnused = (corpname) => {
-            return !props.alignedCorpora.contains(corpname);
+        const corpIsUnused = (corpname:string) => {
+            return !List.some(v => v === corpname, props.alignedCorpora);
         };
 
         return (
@@ -204,21 +203,21 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                         key={item}
                         label={findCorpusLabel(item)}
                         corpname={item}
-                        queryType={props.queryTypes.get(item)}
-                        widgets={props.supportedWidgets.get(item)}
+                        queryType={props.queryTypes[item]}
+                        widgets={props.supportedWidgets[item]}
                         wPoSList={props.wPoSList}
-                        lposValue={props.lposValues.get(item)}
-                        matchCaseValue={props.matchCaseValues.get(item)}
+                        lposValue={props.lposValues[item]}
+                        matchCaseValue={props.matchCaseValues[item]}
                         forcedAttr={props.forcedAttr}
-                        defaultAttr={props.defaultAttrValues.get(item)}
+                        defaultAttr={props.defaultAttrValues[item]}
                         attrList={props.attrList}
-                        tagsetDocUrl={props.tagsetDocUrls.get(item)}
-                        tagHelperView={props.tagHelperViews.get(item)}
-                        pcqPosNegValue={props.pcqPosNegValues.get(item)}
-                        includeEmptyValue={props.includeEmptyValues.get(item)}
-                        inputLanguage={props.inputLanguages.get(item)}
+                        tagsetDocUrl={props.tagsetDocUrls[item]}
+                        tagHelperView={props.tagHelperViews[item]}
+                        pcqPosNegValue={props.pcqPosNegValues[item]}
+                        includeEmptyValue={props.includeEmptyValues[item]}
+                        inputLanguage={props.inputLanguages[item]}
                         queryStorageView={props.queryStorageView}
-                        hasLemmaAttr={props.hasLemmaAttr.get(item)}
+                        hasLemmaAttr={props.hasLemmaAttr[item]}
                         useCQLEditor={props.useCQLEditor}
                         onEnterKey={props.onEnterKey} />
                 )}

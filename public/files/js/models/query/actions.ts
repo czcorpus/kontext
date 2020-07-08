@@ -21,7 +21,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { WithinBuilderData, QueryTypes } from './common';
+import { WithinBuilderData, QueryType } from './common';
 
 
 export enum ActionName {
@@ -64,11 +64,15 @@ export enum ActionName {
     QueryInputSetDefaultAttr = 'QUERY_INPUT_SET_DEFAULT_ATTR',
     QueryInputAddAlignedCorpus = 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
     QueryInputRemoveAlignedCorpus = 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-    QueryInputSetPCQPosNeg = 'QUERY_INPUT_SET_PCQ_POS_NEG',
+    FilterInputSetPCQPosNeg = 'QUERY_INPUT_SET_PCQ_POS_NEG',
+    FilterInputSetFilfl = 'FILTER_QUERY_SET_FILFL',
+    FilterInputSetRange = 'FILTER_QUERY_SET_RANGE',
+    FilterInputSetInclKwic = 'FILTER_QUERY_SET_INCL_KWIC',
     QueryInputSetIncludeEmpty = 'QUERY_INPUT_SET_INCLUDE_EMPTY',
     QueryInputMakeCorpusPrimary = 'QUERY_MAKE_CORPUS_PRIMARY',
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
-    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE'
+    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
+    ApplyFilter = 'FILTER_QUERY_APPLY_FILTER'
 }
 
 export interface CorpusSwitchModelRestorePayload<T> {
@@ -77,6 +81,8 @@ export interface CorpusSwitchModelRestorePayload<T> {
     prevCorpora:Array<string>;
     currCorpora:Array<string>;
 }
+
+export type FormType = 'query'|'filter';
 
 export namespace Actions {
 
@@ -227,6 +233,7 @@ export namespace Actions {
     }
 
     export interface SetActiveInputWidget extends Action<{
+        formType:FormType;
         sourceId:string;
         value:string;
         widgetArgs:{[key:string]:string|number|boolean};
@@ -240,8 +247,9 @@ export namespace Actions {
     }
 
     export interface QueryInputSelectType extends Action<{
+        formType:FormType;
         sourceId:string;
-        queryType:QueryTypes;
+        queryType:QueryType;
     }> {
         name:ActionName.QueryInputSelectType;
     }
@@ -255,6 +263,7 @@ export namespace Actions {
     }
 
     export interface QueryInputMoveCursor extends Action<{
+        formType:FormType;
         sourceId:string;
         rawAnchorIdx:number;
         rawFocusIdx:number;
@@ -263,6 +272,7 @@ export namespace Actions {
     }
 
     export interface QueryInputSetQuery extends Action<{
+        formType:FormType;
         sourceId:string;
         query:string;
         insertRange:[number, number]|null;
@@ -273,21 +283,25 @@ export namespace Actions {
     }
 
     export interface QueryInputAppendQuery extends Action<{
+        formType:FormType;
         sourceId:string;
         query:string;
         prependSpace:boolean;
         closeWhenDone:boolean;
+        triggeredKey?:[number, number];
     }> {
         name:ActionName.QueryInputAppendQuery;
     }
 
     export interface QueryInputRemoveLastChar extends Action<{
+        formType:FormType;
         sourceId:string;
     }> {
         name:ActionName.QueryInputRemoveLastChar;
     }
 
     export interface QueryInputSetLpos extends Action<{
+        formType:FormType;
         sourceId:string;
         lpos:string;
     }> {
@@ -295,6 +309,7 @@ export namespace Actions {
     }
 
     export interface QueryInputSetMatchCase extends Action<{
+        formType:FormType;
         sourceId:string;
         value:boolean;
     }> {
@@ -302,6 +317,7 @@ export namespace Actions {
     }
 
     export interface QueryInputSetDefaultAttr extends Action<{
+        formType:FormType;
         sourceId:string;
         value:string;
     }> {
@@ -320,11 +336,39 @@ export namespace Actions {
         name:ActionName.QueryInputRemoveAlignedCorpus;
     }
 
-    export interface QueryInputSetPCQPosNeg extends Action<{
-        corpname:string;
+    export interface FilterInputSetPCQPosNeg extends Action<{
+        filterId:string;
         value:'pos'|'neg';
     }> {
-        name:ActionName.QueryInputSetPCQPosNeg;
+        name:ActionName.FilterInputSetPCQPosNeg;
+    }
+
+    export interface FilterInputSetFilfl extends Action<{
+        filterId:string;
+        value:string;
+    }> {
+        name:ActionName.FilterInputSetFilfl;
+    }
+
+    export interface FilterInputSetRange extends Action<{
+        filterId:string;
+        value:string;
+        rangeId:string;
+    }> {
+        name:ActionName.FilterInputSetRange;
+    }
+
+    export interface FilterInputSetInclKwic extends Action<{
+        filterId:string;
+        value:boolean;
+    }> {
+        name:ActionName.FilterInputSetInclKwic;
+    }
+
+    export interface ApplyFilter extends Action<{
+        filterId:string;
+    }> {
+        name:ActionName.ApplyFilter;
     }
 
     export interface QueryInputSetIncludeEmpty extends Action<{

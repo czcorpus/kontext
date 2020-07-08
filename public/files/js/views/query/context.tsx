@@ -24,7 +24,6 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
@@ -34,9 +33,9 @@ import { pipe, List } from 'cnc-tskit';
 
 export interface SpecifyContextFormProps {
     hasLemmaAttr:boolean;
-    lemmaWindowSizes:Immutable.List<number>;
-    wPoSList:Immutable.List<{v:string; n:string}>;
-    posWindowSizes:Immutable.List<number>;
+    lemmaWindowSizes:Array<number>;
+    wPoSList:Array<{v:string; n:string}>;
+    posWindowSizes:Array<number>;
 }
 
 
@@ -82,7 +81,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         namePrefix:string;
         windowTypeSelector:string;
         windowSizeSelector:string;
-        options:Immutable.List<number>;
+        options:Array<number>;
 
     }> = (props) => {
 
@@ -125,7 +124,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------------------------- <TRLemmaWindowSelector /> ---------------------
 
     const TRLemmaWindowSelector:React.SFC<{
-        options:Immutable.List<number>;
+        options:Array<number>;
         fc_lemword_window_type:string;
         fc_lemword_wsize:string;
 
@@ -141,7 +140,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------------------------- <TRPosWindowSelector /> ---------------------
 
     const TRPosWindowSelector:React.SFC<{
-        options:Immutable.List<number>;
+        options:Array<number>;
         fc_pos_window_type:string;
         fc_pos_wsize:string;
 
@@ -162,7 +161,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         fc_lemword_type:string;
         fc_lemword:string;
         fc_lemword_window_type:string;
-        lemmaWindowSizes:Immutable.List<number>;
+        lemmaWindowSizes:Array<number>;
 
     }> = (props) => {
 
@@ -206,11 +205,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------------------------- <PoSFilter /> ---------------------
 
     const PoSFilter:React.SFC<{
-        posWindowSizes:Immutable.List<number>;
+        posWindowSizes:Array<number>;
         fc_pos_window_type:string;
         fc_pos_wsize:string;
-        fc_pos:string[];
-        wPoSList:Immutable.List<{v:string; n:string}>;
+        fc_pos:Array<string>;
+        wPoSList:Array<{v:string; n:string}>;
         fc_pos_type:string;
 
     }> = (props) => {
@@ -286,7 +285,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         fc_lemword={props.formData.fc_lemword}
                         fc_lemword_type={props.formData.fc_lemword_type}
                     />
-                    {props.wPoSList && props.wPoSList.size > 0 ?
+                    {props.wPoSList && props.wPoSList.length > 0 ?
                         <PoSFilter
                             posWindowSizes={props.posWindowSizes}
                             wPoSList={props.wPoSList}

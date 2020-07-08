@@ -82,6 +82,7 @@ import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
 import { Actions, ActionName } from '../models/concordance/actions';
+import { QueryType } from '../models/query/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -540,7 +541,7 @@ export class ViewPage {
                         .filter(k => concFormsArgs[k].form_type === 'filter'),
             maincorps: fetchArgs<string>(item => item.maincorp),
             currPnFilterValues: fetchArgs<string>(item => item.pnfilter),
-            currQueryTypes: fetchArgs<string>(item => item.query_type),
+            currQueryTypes: fetchArgs<QueryType>(item => item.query_type),
             currQueries: fetchArgs<string>(item => item.query),
             currQmcaseValues: fetchArgs<boolean>(item => item.qmcase),
             currDefaultAttrValues: fetchArgs<string>(item => item.default_attr_value),
@@ -750,7 +751,6 @@ export class ViewPage {
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    actionPrefix: '',
                     corpname: this.layoutModel.getCorpusIdent().id
                 },
                 filterFormProps: {
@@ -764,7 +764,6 @@ export class ViewPage {
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    actionPrefix: 'FILTER_',
                     filterId: '__new__'
                 },
                 filterSubHitsFormProps: {

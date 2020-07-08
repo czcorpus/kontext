@@ -27,6 +27,7 @@ import { MainMenuModel } from '../models/mainMenu';
 import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
 import { AsyncTaskChecker } from '../models/asyncTask';
 import { GeneralViewOptionsModelState } from '../models/options/general';
+import { QueryType } from '../models/query/common';
 
 /**
  *
@@ -422,7 +423,7 @@ export namespace Kontext {
          * Query with syntax highlighting (using embedded HTML)
          */
         query_sh?:string;
-        query_type:string;
+        query_type:QueryType;
         query_id:string;
         subcorpname:string;
         lpos:string;
@@ -451,7 +452,7 @@ export namespace Kontext {
         bib_mapping:TextTypes.BibMapping;
 
         aligned:Array<{
-            query_type:string;
+            query_type:QueryType;
             query:string;
             corpname:string;
             human_corpname:string;

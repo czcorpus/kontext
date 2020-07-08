@@ -19,20 +19,20 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {init as keyboardInit} from './virtualKeyboard';
-import {init as cqlEditoInit} from './cqlEditor';
-import {WithinBuilderModel, WithinBuilderModelState} from '../../models/query/withinBuilder';
-import {PluginInterfaces} from '../../types/plugins';
-import {Kontext} from '../../types/common';
-import {Keyboard, List} from 'cnc-tskit';
-import {QueryFormModel, SetQueryInputAction, AppendQueryInputAction, QueryFormModelState} from '../../models/query/common';
-import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
-import {VirtualKeyboardModel} from '../../models/query/virtualKeyboard';
-import {CQLEditorModel} from '../../models/query/cqleditor/model';
 import { Subscription } from 'rxjs';
-import { Actions, ActionName } from '../../models/query/actions';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Keyboard, List } from 'cnc-tskit';
+
+import { init as keyboardInit } from './virtualKeyboard';
+import { init as cqlEditoInit } from './cqlEditor';
+import { WithinBuilderModel, WithinBuilderModelState } from '../../models/query/withinBuilder';
+import { PluginInterfaces } from '../../types/plugins';
+import { Kontext } from '../../types/common';
+import { QueryFormModel, QueryFormModelState, QueryType } from '../../models/query/common';
+import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
+import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
+import { CQLEditorModel } from '../../models/query/cqleditor/model';
+import { Actions, ActionName, FormType } from '../../models/query/actions';
 
 
 export interface InputModuleArgs {
@@ -55,19 +55,18 @@ export interface InputModuleViews {
 
 
 export interface TRQueryInputFieldProps {
-    actionPrefix:string;
     sourceId:string;
     lposValue:string;
-    wPoSList:Immutable.List<{n:string; v:string}>;
-    queryType:string;
+    wPoSList:Array<{n:string; v:string}>;
+    queryType:QueryType;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    widgets:Immutable.List<string>;
+    widgets:Array<string>;
     inputLanguage:string;
     useCQLEditor:boolean;
     forcedAttr:string;
     defaultAttr:string;
-    attrList:Immutable.List<Kontext.AttrItem>;
+    attrList:Array<Kontext.AttrItem>;
     matchCaseValue:boolean;
     tagsetDocUrl:string;
     onEnterKey:()=>void;
@@ -81,7 +80,7 @@ export interface TRQueryInputFieldState {
 
 
 export interface TRQueryTypeFieldProps {
-    actionPrefix:string;
+    formType:FormType;
     sourceId:string;
     queryType:string; // TODO enum
     hasLemmaAttr:boolean;
@@ -89,7 +88,7 @@ export interface TRQueryTypeFieldProps {
 
 
 export interface TRPcqPosNegFieldProps {
-    actionPrefix:string;
+    formType:FormType;
     sourceId:string;
     value:string; // TODO enum
 }
@@ -100,7 +99,6 @@ export interface TRIncludeEmptySelectorProps {
 }
 
 interface SingleLineInputProps {
-    actionPrefix:string;
     sourceId:string;
     refObject:React.RefObject<HTMLInputElement>;
     hasHistoryWidget:boolean;
@@ -111,8 +109,7 @@ interface SingleLineInputProps {
 
 interface QueryToolboxProps {
     sourceId:string;
-    actionPrefix:string;
-    widgets:Immutable.List<string>;
+    widgets:Array<string>;
     inputLanguage:string;
     tagHelperView:PluginInterfaces.TagHelper.View;
     toggleHistoryWidget:()=>void;
@@ -134,9 +131,7 @@ export function init({
 
     // -------------- <QueryHints /> --------------------------------------------
 
-    class QueryHints extends React.Component<{
-        actionPrefix:string;
-    }, UsageTipsState> {
+    class QueryHints extends React.Component<{}, UsageTipsState> {
 
         private modelSubscription:Subscription;
 
@@ -153,7 +148,7 @@ export function init({
 
         _clickHandler() {
             dispatcher.dispatch({
-                name: this.props.actionPrefix + 'NEXT_QUERY_HINT',
+                name: 'NEXT_QUERY_HINT',
                 payload: {}
             });
         }
@@ -257,9 +252,10 @@ export function init({
 
     const TRQueryTypeField:React.SFC<TRQueryTypeFieldProps> = (props) => {
         const handleSelection = (evt) => {
-            dispatcher.dispatch({
-                name: props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
+            dispatcher.dispatch<Actions.QueryInputSelectType>({
+                name: ActionName.QueryInputSelectType,
                 payload: {
+                    formType: props.formType,
                     sourceId: props.sourceId,
                     queryType: evt.target.value
                 }
@@ -289,10 +285,10 @@ export function init({
     const TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps> = (props) => {
 
         const handleSelectChange = (evt) => {
-            dispatcher.dispatch({
-                name: props.actionPrefix + 'QUERY_INPUT_SET_PCQ_POS_NEG',
+            dispatcher.dispatch<Actions.FilterInputSetPCQPosNeg>({
+                name: ActionName.FilterInputSetPCQPosNeg,
                 payload: {
-                    corpname: props.sourceId,
+                    filterId: props.sourceId,
                     value: evt.target.value
                 }
             });
@@ -316,8 +312,8 @@ export function init({
     const TRIncludeEmptySelector:React.SFC<TRIncludeEmptySelectorProps> = (props) => {
 
         const handleCheckbox = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SET_INCLUDE_EMPTY',
+            dispatcher.dispatch<Actions.QueryInputSetIncludeEmpty>({
+                name: ActionName.QueryInputSetIncludeEmpty,
                 payload: {
                     corpname: props.corpname,
                     value: !props.value
@@ -342,8 +338,8 @@ export function init({
     // ------------------- <TagWidget /> --------------------------------
 
     const TagWidget:React.SFC<{
+        formType:FormType;
         sourceId:string;
-        actionPrefix:string;
         args:Kontext.GeneralProps;
         tagHelperView:PluginInterfaces.TagHelper.View
         closeClickHandler:()=>void;
@@ -360,7 +356,7 @@ export function init({
                         sourceId={props.sourceId}
                         onInsert={props.closeClickHandler}
                         onEscKey={props.closeClickHandler}
-                        actionPrefix={props.actionPrefix}
+                        formType={props.formType}
                         range={[props.args['leftIdx'], props.args['rightIdx']]} />
             </layoutViews.PopupBox>
         );
@@ -369,7 +365,7 @@ export function init({
     // ------------------- <WithinWidget /> --------------------------------
 
     interface WithinWidgetProps {
-        actionPrefix:string;
+        formType:FormType;
         sourceId:string;
         closeClickHandler:()=>void;
     }
@@ -411,9 +407,10 @@ export function init({
         }
 
         _handleInsert() {
-            dispatcher.dispatch<AppendQueryInputAction>({
-                name: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
+            dispatcher.dispatch<Actions.QueryInputAppendQuery>({
+                name: ActionName.QueryInputAppendQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: WithinBuilderModel.exportQuery(this.props),
                     prependSpace: true,
@@ -475,7 +472,7 @@ export function init({
 
     const HistoryWidget:React.SFC<{
         sourceId:string;
-        actionPrefix:string;
+        formType:FormType;
         onCloseTrigger:()=>void;
         queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
 
@@ -485,7 +482,7 @@ export function init({
                 <props.queryStorageView
                         sourceId={props.sourceId}
                         onCloseTrigger={props.onCloseTrigger}
-                        actionPrefix={props.actionPrefix} />
+                        formType={props.formType} />
             </div>
         );
     };
@@ -494,7 +491,7 @@ export function init({
 
     const KeyboardWidget:React.SFC<{
         sourceId:string;
-        actionPrefix:string;
+        formType:FormType;
         inputLanguage:string;
         closeClickHandler:()=>void;
 
@@ -517,7 +514,7 @@ export function init({
                     keyPressHandler={keyHandler}>
                 <keyboardViews.VirtualKeyboard sourceId={props.sourceId}
                         inputLanguage={props.inputLanguage}
-                        actionPrefix={props.actionPrefix} />
+                        formType={props.formType} />
             </layoutViews.PopupBox>
         );
     };
@@ -580,7 +577,7 @@ export function init({
         }
 
         _renderWidget() {
-            switch (this.props.activeWidgets.get(this.props.sourceId)) {
+            switch (this.props.activeWidgets[this.props.sourceId]) {
                 case 'tag':
                     return <TagWidget closeClickHandler={this._handleCloseWidget}
                                 tagHelperView={this.props.tagHelperView}
@@ -620,7 +617,7 @@ export function init({
     const LposSelector:React.SFC<{
         sourceId:string;
         actionPrefix:string;
-        wPoSList:Immutable.List<{v:string; n:string}>;
+        wPoSList:Array<{v:string; n:string}>;
         lposValue:string;
 
     }> = (props) => {
@@ -702,8 +699,8 @@ export function init({
         private handleKeyDown(evt) {
             if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
-                    this.props.downArrowTriggersHistory.get(this.props.sourceId) &&
-                    !this.props.historyIsVisible) {
+                    this.props.downArrowTriggersHistory[this.props.sourceId] &&
+                        !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
             } else if (evt.keyCode === Keyboard.Code.ESC) {
@@ -716,7 +713,7 @@ export function init({
                                 spellCheck={false}
                                 ref={this.props.refObject}
                                 onChange={this.handleInputChange}
-                                value={this.props.queries.get(this.props.sourceId)}
+                                value={this.props.queries[this.props.sourceId]}
                                 onKeyDown={this.handleKeyDown} />;
         }
     }
@@ -730,7 +727,7 @@ export function init({
         sourceId:string;
         forcedAttr:string;
         defaultAttr:string;
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
 
     }> = (props) => {
 
@@ -764,24 +761,17 @@ export function init({
 
     // ------------------- <TRQueryInputField /> -----------------------------
 
-    class TRQueryInputField extends React.Component<TRQueryInputFieldProps, TRQueryInputFieldState> {
+    class TRQueryInputField extends React.PureComponent<TRQueryInputFieldProps & TRQueryInputFieldState> {
 
         private _queryInputElement:React.RefObject<HTMLInputElement|HTMLTextAreaElement>;
-
-        private modelSubscriptions:Array<Subscription>;
 
         constructor(props) {
             super(props);
             this._queryInputElement = React.createRef();
             this._handleInputChange = this._handleInputChange.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
             this.handleReqHistory = this.handleReqHistory.bind(this);
             this.handleInputEscKeyDown = this.handleInputEscKeyDown.bind(this);
-            this.state = {
-                historyVisible: false
-            };
-            this.modelSubscriptions = [];
         }
 
         _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
@@ -799,14 +789,8 @@ export function init({
             }
         }
 
-        _handleModelChange(state) {
-            this.setState({
-                historyVisible: this.state.historyVisible
-            });
-        }
-
         _toggleHistoryWidget() {
-            const newVisibility = !this.state.historyVisible;
+            const newVisibility = !this.props.historyVisible;
             this.setState({
                 historyVisible: newVisibility
             });
@@ -816,21 +800,13 @@ export function init({
         }
 
         componentDidMount() {
-            this.modelSubscriptions = [
-                cqlEditorModel.addListener(this._handleModelChange),
-                queryModel.addListener(this._handleModelChange)
-            ];
             if (this.props.takeFocus && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
         }
 
-        componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe());
-        }
-
         componentDidUpdate(prevProps, prevState) {
-            if (prevState.historyVisible && !this.state.historyVisible &&
+            if (prevProps.historyVisible && !this.props.historyVisible &&
                     this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
@@ -849,13 +825,12 @@ export function init({
                 case 'lemma':
                 case 'phrase':
                 case 'word':
-                case 'char':
                     return <BoundSingleLineInput
                                 sourceId={this.props.sourceId}
                                 actionPrefix={this.props.actionPrefix}
                                 refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.state.historyVisible}
+                                historyIsVisible={this.props.historyVisible}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown} />;
                 case 'cql':
@@ -867,7 +842,7 @@ export function init({
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.state.historyVisible}
+                                historyIsVisible={this.props.historyVisible}
                                 inputRef={this._queryInputElement as React.RefObject<HTMLPreElement>} /> :
                         <cqlEditorViews.CQLEditorFallback
                                 actionPrefix={this.props.actionPrefix}
@@ -876,14 +851,13 @@ export function init({
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.state.historyVisible} />;
+                                historyIsVisible={this.props.historyVisible} />;
             }
         }
 
         _renderInputOptions() {
             switch (this.props.queryType) {
                 case 'iquery':
-                case 'char':
                     return null;
                 case 'lemma':
                     return <LposSelector wPoSList={this.props.wPoSList}
@@ -939,7 +913,7 @@ export function init({
                                 inputLanguage={this.props.inputLanguage}
                                 actionPrefix={this.props.actionPrefix} />
                             {this._renderInput()}
-                            {this.state.historyVisible ?
+                            {this.props.historyVisible ?
                                 <HistoryWidget
                                         queryStorageView={this.props.queryStorageView}
                                         sourceId={this.props.sourceId}
@@ -960,9 +934,10 @@ export function init({
         }
     }
 
+    const BoundTRQueryInputField = BoundWithProps<TRQueryInputFieldProps, TRQueryInputFieldState>(TRQueryInputField, queryModel)
 
     return {
-        TRQueryInputField: TRQueryInputField,
+        TRQueryInputField: BoundTRQueryInputField,
         TRQueryTypeField: TRQueryTypeField,
         TRPcqPosNegField: TRPcqPosNegField,
         TRIncludeEmptySelector: TRIncludeEmptySelector

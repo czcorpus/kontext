@@ -30,6 +30,10 @@ import { FirstHitsServerArgs } from './common';
 import { MultiDict } from '../../multidict';
 
 
+export interface FirstHitsModelState {
+    docStructValues:{[key:string]:string};
+}
+
 
 export class FirstHitsModel extends StatefulModel {
 
@@ -37,7 +41,7 @@ export class FirstHitsModel extends StatefulModel {
 
     private readonly syncInitialArgs:AjaxResponse.FirstHitsFormArgs;
 
-    private docStructValues:Immutable.Map<string, string>;
+
 
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel, syncInitialArgs:AjaxResponse.FirstHitsFormArgs) {

@@ -20,7 +20,7 @@
 
 import {Kontext, TextTypes} from '../types/common';
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../models/concordance/common';
-import { QueryTypes } from '../models/query/common';
+import { QueryType } from '../models/query/common';
 
 // TODO !! this should be broken and moved into respective modules
 
@@ -102,7 +102,7 @@ export namespace AjaxResponse {
     }
 
     export interface QueryFormArgs extends ConcFormArgs {
-        curr_query_types:{[corpname:string]:QueryTypes};
+        curr_query_types:{[corpname:string]:QueryType};
         curr_queries:{[corpname:string]:string};
         curr_pcq_pos_neg_values:{[corpname:string]:'pos'|'neg'};
         curr_lpos_values:{[corpname:string]:string};
@@ -123,7 +123,7 @@ export namespace AjaxResponse {
     export interface QueryFormArgsResponse extends QueryFormArgs, Kontext.AjaxResponse {}
 
     export interface FilterFormArgs extends ConcFormArgs {
-        query_type:QueryTypes;
+        query_type:QueryType;
         query:string;
         maincorp:string;
         pnfilter:string;

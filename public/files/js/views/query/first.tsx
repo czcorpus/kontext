@@ -20,7 +20,6 @@
 
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 
 import { init as inputInit } from './input';
@@ -30,7 +29,6 @@ import { init as ttViewsInit } from '../textTypes';
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { FirstQueryFormModel, FirstQueryFormModelState } from '../../models/query/first';
-import { WidgetsMap } from '../../models/query/common';
 import { UsageTipsModel } from '../../models/usageTips';
 import { TextTypesModel, TextTypesModelState } from '../../models/textTypes/main';
 import { WithinBuilderModel } from '../../models/query/withinBuilder';
@@ -38,7 +36,7 @@ import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../models/query/context';
 import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { ActionName, Actions } from '../../models/query/actions';
-import { Keyboard } from 'cnc-tskit';
+import { Keyboard, List } from 'cnc-tskit';
 
 
 export interface MainModuleArgs {
@@ -56,10 +54,8 @@ export interface MainModuleArgs {
 
 
 export interface QueryFormProps {
-    formType:Kontext.ConcFormTypes.QUERY;
-    actionPrefix:string;
     allowCorpusSelection:boolean;
-    tagHelperViews:Immutable.Map<string, PluginInterfaces.TagHelper.View>;
+    tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     liveAttrsView:PluginInterfaces.LiveAttributes.View;
     liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
@@ -68,34 +64,10 @@ export interface QueryFormProps {
 
 
 export interface QueryFormLiteProps {
-    formType:Kontext.ConcFormTypes.QUERY;
     corpname:string;
     operationIdx?:number;
-    actionPrefix:string;
     tagHelperView:PluginInterfaces.TagHelper.View;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
-}
-
-
-interface FirstQueryFormState {
-    corpora:Immutable.List<string>;
-    queryTypes:Immutable.Map<string, string>;
-    supportedWidgets:WidgetsMap;
-    lposValues:Immutable.Map<string, string>;
-    matchCaseValues:Immutable.Map<string, boolean>;
-    forcedAttr:string;
-    defaultAttrValues:Immutable.Map<string, string>;
-    attrList:Immutable.List<Kontext.AttrItem>;
-    tagsetDocUrls:Immutable.Map<string, string>;
-    pcqPosNegValues:Immutable.Map<string, string>;
-    includeEmptyValues:Immutable.Map<string, boolean>;
-    lemmaWindowSizes:Immutable.List<number>;
-    posWindowSizes:Immutable.List<number>;
-    hasLemmaAttr:Immutable.Map<string, boolean>;
-    wPoSList:Immutable.List<{v:string; n:string}>;
-    contextFormVisible:boolean;
-    inputLanguages:Immutable.Map<string, string>;
-    useCQLEditor:boolean;
 }
 
 
@@ -236,7 +208,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         render() {
-            const primaryCorpname = this.props.corpora.get(0);
+            const primaryCorpname = this.props.corpora[0];
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form primary-language">
@@ -245,36 +217,35 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 <TRCorpusField corparchWidget={CorparchWidget} />
                                 : null}
                             <inputViews.TRQueryTypeField
-                                    queryType={this.props.queryTypes.get(primaryCorpname)}
+                                    formType={this.props.formType}
+                                    queryType={this.props.queryTypes[primaryCorpname]}
                                     sourceId={primaryCorpname}
-                                    actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.props.hasLemma.get(primaryCorpname)} />
+                                    hasLemmaAttr={this.props.hasLemma[primaryCorpname]} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
-                                queryType={this.props.queryTypes.get(primaryCorpname)}
-                                widgets={this.props.supportedWidgets.get(primaryCorpname)}
+                                queryType={this.props.queryTypes[primaryCorpname]}
+                                widgets={this.props.supportedWidgets[primaryCorpname]}
                                 sourceId={primaryCorpname}
                                 wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValues.get(primaryCorpname)}
-                                matchCaseValue={this.props.matchCaseValues.get(primaryCorpname)}
+                                lposValue={this.props.lposValues[primaryCorpname]}
+                                matchCaseValue={this.props.matchCaseValues[primaryCorpname]}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttrValues.get(primaryCorpname)}
+                                defaultAttr={this.props.defaultAttrValues[primaryCorpname]}
                                 attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocs.get(primaryCorpname)}
-                                tagHelperView={this.props.tagHelperViews.get(primaryCorpname)}
+                                tagsetDocUrl={this.props.tagsetDocs[primaryCorpname]}
+                                tagHelperView={this.props.tagHelperViews[primaryCorpname]}
                                 queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.props.inputLanguages.get(primaryCorpname)}
-                                actionPrefix={this.props.actionPrefix}
+                                inputLanguage={this.props.inputLanguages[primaryCorpname]}
                                 onEnterKey={this._handleSubmit}
                                 useCQLEditor={this.props.useCQLEditor}
                                 takeFocus={true} />
                         </tbody>
                     </table>
-                    {this.props.corpora.size > 1 || this.props.availableAlignedCorpora.size > 0 ?
+                    {this.props.corpora.length > 1 || this.props.availableAlignedCorpora.length > 0 ?
                         <alignedViews.AlignedCorpora
                                 availableCorpora={this.props.availableAlignedCorpora}
-                                alignedCorpora={this.props.corpora.rest().toList()}
+                                alignedCorpora={List.tail(this.props.corpora)}
                                 queryTypes={this.props.queryTypes}
                                 supportedWidgets={this.props.supportedWidgets}
                                 wPoSList={this.props.wPoSList}
@@ -303,7 +274,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.props.lemmaWindowSizes}
                                     posWindowSizes={this.props.posWindowSizes}
-                                    hasLemmaAttr={this.props.hasLemma.get(primaryCorpname)}
+                                    hasLemmaAttr={this.props.hasLemma[primaryCorpname]}
                                     wPoSList={this.props.wPoSList} />
                             : null}
                     </fieldset>
@@ -417,25 +388,24 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                     <table className="form primary-language">
                         <tbody>
                             <inputViews.TRQueryTypeField
-                                    queryType={this.props.queryTypes.get(this.props.corpname)}
+                                    formType={this.props.formType}
+                                    queryType={this.props.queryTypes[this.props.corpname]}
                                     sourceId={this.props.corpname}
-                                    actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.props.hasLemma.get(this.props.corpname)} />
+                                    hasLemmaAttr={this.props.hasLemma[this.props.corpname]} />
                             <inputViews.TRQueryInputField
-                                queryType={this.props.queryTypes.get(this.props.corpname)}
-                                widgets={this.props.supportedWidgets.get(this.props.corpname)}
+                                queryType={this.props.queryTypes[this.props.corpname]}
+                                widgets={this.props.supportedWidgets[this.props.corpname]}
                                 sourceId={this.props.corpname}
                                 wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValues.get(this.props.corpname)}
-                                matchCaseValue={this.props.matchCaseValues.get(this.props.corpname)}
+                                lposValue={this.props.lposValues[this.props.corpname]}
+                                matchCaseValue={this.props.matchCaseValues[this.props.corpname]}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttrValues.get(this.props.corpname)}
+                                defaultAttr={this.props.defaultAttrValues[this.props.corpname]}
                                 attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocs.get(this.props.corpname)}
+                                tagsetDocUrl={this.props.tagsetDocs[this.props.corpname]}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.props.inputLanguages.get(this.props.corpname)}
-                                actionPrefix={this.props.actionPrefix}
+                                inputLanguage={this.props.inputLanguages[this.props.corpname]}
                                 onEnterKey={this._handleSubmit}
                                 useCQLEditor={this.props.useCQLEditor} />
                         </tbody>
@@ -449,7 +419,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.props.lemmaWindowSizes}
                                     posWindowSizes={this.props.posWindowSizes}
-                                    hasLemmaAttr={this.props.hasLemma.get(this.props.corpname)}
+                                    hasLemmaAttr={this.props.hasLemma[this.props.corpname]}
                                     wPoSList={this.props.wPoSList} />
                             : null}
                     </fieldset>
