@@ -20,13 +20,13 @@
 
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
-import {StatefulModel} from '../../models/base';
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../multidict';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
-import { Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { ActionName, Actions } from './actions';
 
 
 
@@ -43,7 +43,7 @@ export interface FreqResultsSaveModelArgs {
 /**
  *
  */
-export class FreqResultsSaveModel extends StatefulModel {
+export class FreqResultsSaveModel extends StatefulModel<{}> {
 
     private layoutModel:PageModel;
 
@@ -68,7 +68,7 @@ export class FreqResultsSaveModel extends StatefulModel {
     constructor({
             dispatcher, layoutModel, freqArgsProviderFn, saveLinkFn,
             quickSaveRowLimit}:FreqResultsSaveModelArgs) {
-        super(dispatcher);
+        super(dispatcher, {});
         this.layoutModel = layoutModel;
         this.formIsActive = false;
         this.saveformat = SaveData.Format.CSV;
@@ -129,16 +129,30 @@ export class FreqResultsSaveModel extends StatefulModel {
                         this.layoutModel.showMessage('error', err);
 
                     } else {
-                        this.submit();
                         this.formIsActive = false;
+                        this.suspend({}, (action, syncData) => {
+                            return action.name === ActionName.ResultPrepareSubmitArgsDone ? null : syncData
+                        }).subscribe(
+                            (action:Actions.ResultPrepareSubmitArgsDone) => {
+                                this.submit(action.payload.data);
+                            }
+                        )
                     }
                     this.emitChange();
                 break;
             }
         });
+
+        /*
+        this.addActionHandler(
+            'FREQ_SAVE_FORM_SUBMIT'
+        )
+        */
     }
 
-    private validateForm():Error|null {
+    unregister() {}
+
+    private validateForm(/*state*/):Error|null {
         this.fromLine.isInvalid = false;
         this.toLine.isInvalid = false;
         if (!this.validateNumberFormat(this.fromLine.value, false)) {
@@ -163,7 +177,7 @@ export class FreqResultsSaveModel extends StatefulModel {
         return false;
     }
 
-    private submit():void {
+    private submit(dataRowsArgs:MultiDict):void {
         const args = this.freqArgsProviderFn();
         args.set('saveformat', this.saveformat);
         args.set('colheaders', this.includeColHeaders ? '1' : '0');

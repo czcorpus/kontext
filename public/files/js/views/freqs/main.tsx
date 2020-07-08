@@ -19,14 +19,13 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
-import {Keyboard} from 'cnc-tskit';
+import {Keyboard, List} from 'cnc-tskit';
 import {init as dataRowsInit} from './dataRows';
 import {init as initSaveViews} from './save';
-import {FreqDataRowsModel, ResultBlock} from '../../models/freqs/dataRows';
-import {IActionDispatcher} from 'kombo';
-import { Subscription } from 'rxjs';
+import {FreqDataRowsModel, ResultBlock, FreqDataRowsModelState} from '../../models/freqs/dataRows';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
+import { Actions, ActionName } from '../../models/freqs/actions';
 
 // --------------------------- exported types --------------------------------------
 
@@ -34,7 +33,7 @@ interface FreqResultViewProps {
 }
 
 interface FreqResultViewState {
-    blocks:Immutable.List<ResultBlock>;
+    blocks:Array<ResultBlock>;
     minFreqVal:string;
     currentPage:string;
     sortColumn:string;
@@ -43,10 +42,6 @@ interface FreqResultViewState {
     totalPages:number;
     saveFormIsActive:boolean;
     isLoading:boolean;
-}
-
-interface ExportedComponents {
-    FreqResultView:React.ComponentClass<FreqResultViewProps>;
 }
 
 // ------------------------ factory --------------------------------
@@ -90,23 +85,20 @@ export function init(
         hasNextPage:boolean;
         hasPrevPage:boolean;
         totalPages:number;
-        setLoadingFlag:()=>void;
     }
 
     const Paginator:React.SFC<PaginatorProps> = (props) => {
 
         const handlePageChangeByClick = (curr, step) => {
-            props.setLoadingFlag();
-            dispatcher.dispatch({
-                name: 'FREQ_RESULT_SET_CURRENT_PAGE',
+            dispatcher.dispatch<Actions.ResultSetCurrentPage>({
+                name: ActionName.ResultSetCurrentPage,
                 payload: {value: String(Number(curr) + step)}
             });
         };
 
         const handlePageChange = (evt) => {
-            props.setLoadingFlag();
-            dispatcher.dispatch({
-                name: 'FREQ_RESULT_SET_CURRENT_PAGE',
+            dispatcher.dispatch<Actions.ResultSetCurrentPage>({
+                name: ActionName.ResultSetCurrentPage,
                 payload: {value: evt.target.value}
             });
         };
@@ -160,22 +152,20 @@ export function init(
 
     const MinFreqInput:React.SFC<{
         minFreqVal:string;
-        setLoadingFlag:()=>void;
 
     }> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch({
-                name: 'FREQ_RESULT_SET_MIN_FREQ_VAL',
+            dispatcher.dispatch<Actions.ResultSetMinFreqVal>({
+                name: ActionName.ResultSetMinFreqVal,
                 payload: {value: evt.target.value}
             });
         };
 
         const inputKeyDownHandler = (evt:React.KeyboardEvent<{}>) => {
             if (evt.keyCode === Keyboard.Code.ENTER) {
-                props.setLoadingFlag();
-                dispatcher.dispatch({
-                    name: 'FREQ_RESULT_APPLY_MIN_FREQ',
+                dispatcher.dispatch<Actions.ResultApplyMinFreq>({
+                    name: ActionName.ResultApplyMinFreq,
                     payload: {}
                 });
                 evt.preventDefault();
@@ -199,22 +189,20 @@ export function init(
 
     interface FilterFormProps {
         minFreqVal:string;
-        setLoadingFlag:()=>void;
     }
 
     const FilterForm:React.SFC<FilterFormProps> = (props) => {
 
         const handleApplyClick = (evt) => {
-            props.setLoadingFlag();
-            dispatcher.dispatch({
-                name: 'FREQ_RESULT_APPLY_MIN_FREQ',
+            dispatcher.dispatch<Actions.ResultApplyMinFreq>({
+                name: ActionName.ResultApplyMinFreq,
                 payload: {}
             });
         };
 
         return (
             <form className="FilterForm" action="freqs">
-                <MinFreqInput minFreqVal={props.minFreqVal} setLoadingFlag={props.setLoadingFlag} />
+                <MinFreqInput minFreqVal={props.minFreqVal} />
                 {'\u00a0'}
                 <button type="button" className="util-button" onClick={handleApplyClick}>
                     {he.translate('global__apply_btn')}
@@ -225,85 +213,47 @@ export function init(
 
     // ----------------------- <FreqResultView /> -------------------------
 
-    class FreqResultView extends React.Component<FreqResultViewProps, FreqResultViewState> {
-
-        private modelSubscription:Subscription;
-        private fdrmSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this._setLoadingFlag = this._setLoadingFlag.bind(this);
-            this.state = this._fetchState();
-        }
-
-        _fetchState() {
-            return {
-                blocks: freqDataRowsModel.getBlocks(),
-                minFreqVal: freqDataRowsModel.getMinFreq(),
-                currentPage: freqDataRowsModel.getCurrentPage(),
-                sortColumn: freqDataRowsModel.getSortColumn(),
-                hasNextPage: freqDataRowsModel.hasNextPage(),
-                hasPrevPage: freqDataRowsModel.hasPrevPage(),
-                totalPages: freqDataRowsModel.getTotalPages(),
-                saveFormIsActive: freqDataRowsModel.getSaveModel().getFormIsActive(),
-                isLoading: false
-            };
-        }
-
-        _handleModelChange(evt) {
-            this.setState(this._fetchState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = freqDataRowsModel.addListener(this._handleModelChange);
-            this.fdrmSubscription = freqDataRowsModel.getSaveModel().addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-            this.fdrmSubscription.unsubscribe();
-        }
-
-        _setLoadingFlag() {
-            const v = this._fetchState();
-            v.isLoading = true;
-            this.setState(v);
-        }
+    class FreqResultView extends React.Component<FreqResultViewProps & FreqDataRowsModelState> {
 
         _handleSaveFormClose() {
-            dispatcher.dispatch({
-                name: 'FREQ_RESULT_CLOSE_SAVE_FORM',
+            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
+                name: ActionName.ResultCloseSaveForm,
                 payload: {}
             });
+        }
+
+        hasNextPage(state:FreqDataRowsModelState):boolean {
+            return Number(state.currentPage) < state.data[0].TotalPages;
+        }
+    
+        hasPrevPage(state:FreqDataRowsModelState):boolean {
+            return Number(state.currentPage) > 1 && state.data[0].TotalPages > 1;
         }
 
         render() {
             return (
                 <div className="FreqResultView">
-                    {this.state.currentPage !== null ?
-                        <Paginator currentPage={this.state.currentPage}
-                            hasNextPage={this.state.hasNextPage}
-                            hasPrevPage={this.state.hasPrevPage}
-                            totalPages={this.state.totalPages}
-                            setLoadingFlag={this._setLoadingFlag}
-                            isLoading={this.state.isLoading} /> : null}
+                    {this.props.currentPage !== null ?
+                        <Paginator currentPage={this.props.currentPage}
+                            hasNextPage={this.hasNextPage(this.props)}
+                            hasPrevPage={this.hasPrevPage(this.props)}
+                            totalPages={this.props.data[0].TotalPages}
+                            isLoading={this.props.isBusy} /> : null}
                     <div className="freq-blocks">
-                        <FilterForm minFreqVal={this.state.minFreqVal} setLoadingFlag={this._setLoadingFlag} />
-                        {this.state.blocks.map((block, i) => {
+                        <FilterForm minFreqVal={this.props.flimit} />
+                        {List.map((block, i) => {
                             return (
                                 <div key={`block-${i}`}>
                                     <hr />
                                     <ResultSizeInfo totalPages={block.TotalPages} totalItems={block.Total} />
                                     <drViews.DataTable head={block.Head}
-                                            sortColumn={this.state.sortColumn}
-                                            rows={block.Items}
-                                            setLoadingFlag={this._setLoadingFlag} />
+                                            sortColumn={this.props.sortColumn}
+                                            rows={block.Items} />
                                 </div>
                             );
-                        })}
+                        }, this.props.data)}
                     </div>
-                    {this.state.saveFormIsActive ?
+                    {this.props.saveFormActive ?
                         <saveViews.SaveFreqForm onClose={this._handleSaveFormClose} /> :
                         null
                     }
@@ -314,6 +264,6 @@ export function init(
 
 
     return {
-        FreqResultView: FreqResultView
+        FreqResultView: BoundWithProps(FreqResultView, freqDataRowsModel)
     };
 }

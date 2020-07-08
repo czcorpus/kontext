@@ -38,7 +38,7 @@ import { init as analysisFrameInit } from '../views/analysis';
 import { init as queryOverviewInit } from '../views/query/overview';
 import { init as resultViewFactory } from '../views/freqs/main';
 import { init as ctResultViewInit } from '../views/freqs/ctResult';
-import { FreqDataRowsModel } from '../models/freqs/dataRows';
+import { FreqDataRowsModel, importData as importFreqData, FreqDataRowsModelState } from '../models/freqs/dataRows';
 import { FreqCTResultsSaveModel } from '../models/freqs/save';
 import { ConfIntervals, DataPoint } from '../charts/confIntervals';
 import { TextTypesModel } from '../models/textTypes/main';
@@ -285,13 +285,14 @@ class FreqPage {
                     freqCrit: this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     saveLinkFn: this.setDownloadLink.bind(this),
-                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
+                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
+                    initialData: importFreqData(
+                        this.layoutModel,
+                        this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
+                        this.layoutModel.getConf<number>('FreqItemsPerPage'),
+                        1
+                    )
                 });
-                this.freqResultModel.importData(
-                    this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
-                    this.layoutModel.getConf<number>('FreqItemsPerPage'),
-                    1
-                );
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
@@ -300,7 +301,7 @@ class FreqPage {
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
                     window.document.getElementById('result-mount'),
-                    {}
+                    {} as FreqDataRowsModelState
                 );
             break;
             case 'ct':
