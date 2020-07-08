@@ -24,6 +24,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
 import { init as inputInit } from './input';
 import { FilterFormModel, FilterFormModelState } from '../../models/query/filter';
+import { FirstHitsModelState } from '../../models/query/firstHits';
 import { WithinBuilderModel } from '../../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { FirstHitsModel } from '../../models/query/firstHits';
@@ -69,11 +70,6 @@ export interface FirstHitsFormProps {
     formType:Kontext.ConcFormTypes.FIRSTHITS;
     operationIdx?:number;
     opKey:string;
-}
-
-export interface FirstHitsFormState {
-    isAutoSubmit:boolean;
-    docStructs:{[key:string]:string};
 }
 
 // ---------
@@ -416,14 +412,10 @@ export function init(
     /**
      *
      */
-    class FirstHitsForm extends React.Component<FirstHitsFormProps, FirstHitsFormState> {
+    class FirstHitsForm extends React.PureComponent<FirstHitsFormProps & FirstHitsModelState> {
 
         constructor(props) {
             super(props);
-            this.state = {
-                isAutoSubmit: this.props.operationIdx === undefined,
-                docStructs: firstHitsModel.getDocStructValues()
-            }
             this._handleSubmit = this._handleSubmit.bind(this);
         }
 
@@ -436,7 +428,7 @@ export function init(
         }
 
         componentDidMount() {
-            if (this.state.isAutoSubmit) {
+            if (this.props.operationIdx === undefined) {
                 window.setTimeout(this._handleSubmit, 0);
             }
         }
@@ -449,8 +441,8 @@ export function init(
                 });
 
             } else {
-                dispatcher.dispatch({
-                    name: 'FILTER_FIRST_HITS_SUBMIT',
+                dispatcher.dispatch<Actions.FilterFirstHitsSubmit>({
+                    name: ActionName.FilterFirstHitsSubmit,
                     payload: {
                         opKey: this.props.opKey
                     }
@@ -459,7 +451,7 @@ export function init(
         }
 
         _renderContents() {
-            if (this.state.isAutoSubmit) {
+            if (this.props.operationIdx === undefined) {
                 return this._renderAutoSubmitState();
 
             } else {
@@ -477,7 +469,7 @@ export function init(
                     <label>
                         {he.translate('query__used_first_hits_struct')}:{'\u00a0'}
                         <select disabled>
-                            <option>{this.state.docStructs[this.props.opKey]}</option>
+                            <option>{this.props.docStructValues[this.props.opKey]}</option>
                         </select>
                     </label>
                     <p>{he.translate('query__the_form_no_params_to_change')}.</p>
@@ -495,6 +487,6 @@ export function init(
     return {
         FilterForm: BoundWithProps<FilterFormProps, FilterFormModelState>(FilterForm, filterModel),
         SubHitsForm: SubHitsForm,
-        FirstHitsForm: FirstHitsForm
+        FirstHitsForm: BoundWithProps<FirstHitsFormProps, FirstHitsModelState>(FirstHitsForm, firstHitsModel)
     };
 }

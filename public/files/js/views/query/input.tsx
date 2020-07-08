@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Subscription } from 'rxjs';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, ActionDispatcher, Bound } from 'kombo';
 import { Keyboard, List } from 'cnc-tskit';
 
 import { init as keyboardInit } from './virtualKeyboard';
@@ -71,11 +71,6 @@ export interface TRQueryInputFieldProps {
     tagsetDocUrl:string;
     onEnterKey:()=>void;
     takeFocus?:boolean;
-}
-
-
-export interface TRQueryInputFieldState {
-    historyVisible:boolean;
 }
 
 
@@ -131,19 +126,11 @@ export function init({
 
     // -------------- <QueryHints /> --------------------------------------------
 
-    class QueryHints extends React.Component<{}, UsageTipsState> {
-
-        private modelSubscription:Subscription;
+    class QueryHints extends React.PureComponent<UsageTipsState> {
 
         constructor(props) {
             super(props);
-            this._changeListener = this._changeListener.bind(this);
             this._clickHandler = this._clickHandler.bind(this);
-            this.state = queryHintModel.getState();
-        }
-
-        _changeListener(state) {
-            this.setState(state);
         }
 
         _clickHandler() {
@@ -153,18 +140,10 @@ export function init({
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = queryHintModel.addListener(this._changeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
             return (
                 <div>
-                    <span className="hint">{this.state.currentHints.get(UsageTipCategory.QUERY)}</span>
+                    <span className="hint">{this.props.currentHints[UsageTipCategory.QUERY]}</span>
                     <span className="next-hint">
                         <a onClick={this._clickHandler} title={he.translate('global__next_tip')}>
                             <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
@@ -175,6 +154,8 @@ export function init({
             );
         }
     }
+
+    const BoundQueryHints = Bound<UsageTipsState>(QueryHints, queryHintModel);
 
     // ------------------- <QueryTypeHints /> -----------------------------
 
@@ -582,15 +563,15 @@ export function init({
                     return <TagWidget closeClickHandler={this._handleCloseWidget}
                                 tagHelperView={this.props.tagHelperView}
                                 sourceId={this.props.sourceId}
-                                actionPrefix={this.props.actionPrefix}
+                                formType={this.props.formType}
                                 args={this.props.widgetArgs} />;
                 case 'within':
                     return <BoundWithinWidget closeClickHandler={this._handleCloseWidget}
-                                sourceId={this.props.sourceId} actionPrefix={this.props.actionPrefix} />;
+                                sourceId={this.props.sourceId} formType={this.props.formType} />;
                 case 'keyboard':
                     return <KeyboardWidget closeClickHandler={this._handleCloseWidget}
                                 sourceId={this.props.sourceId} inputLanguage={this.props.inputLanguage}
-                                actionPrefix={this.props.actionPrefix} />;
+                                formType={this.props.formType} />;
                 default:
                     return null;
             }
@@ -616,16 +597,17 @@ export function init({
 
     const LposSelector:React.SFC<{
         sourceId:string;
-        actionPrefix:string;
+        formType:FormType;
         wPoSList:Array<{v:string; n:string}>;
         lposValue:string;
 
     }> = (props) => {
 
         const handleLposChange = (evt) => {
-            dispatcher.dispatch({
-                name: props.actionPrefix + 'QUERY_INPUT_SET_LPOS',
+            dispatcher.dispatch<Actions.QueryInputSetLpos>({
+                name: ActionName.QueryInputSetLpos,
                 payload: {
+                    formType: props.formType,
                     sourceId: props.sourceId,
                     lpos: evt.target.value
                 }
@@ -648,16 +630,17 @@ export function init({
     // ------------------- <MatchCaseSelector /> -----------------------------
 
     const MatchCaseSelector:React.SFC<{
-        actionPrefix:string;
+        formType:FormType;
         sourceId:string;
         matchCaseValue:boolean;
 
     }> = (props) => {
 
         const handleCheckbox = (evt) => {
-            dispatcher.dispatch({
-                name: props.actionPrefix + 'QUERY_INPUT_SET_MATCH_CASE',
+            dispatcher.dispatch<Actions.QueryInputSetMatchCase>({
+                name: ActionName.QueryInputSetMatchCase,
                 payload: {
+                    formType: props.formType,
                     sourceId: props.sourceId,
                     value: !props.matchCaseValue
                 }
@@ -684,9 +667,10 @@ export function init({
         }
 
         private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
-            dispatcher.dispatch<SetQueryInputAction>({
-                name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+            dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                name: ActionName.QueryInputSetQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: evt.target.value,
                     rawAnchorIdx: this.props.refObject.current.selectionStart,
@@ -723,7 +707,7 @@ export function init({
     // ------------------- <DefaultAttrSelector /> -----------------------------
 
     const DefaultAttrSelector:React.SFC<{
-        actionPrefix:string;
+        formType:FormType;
         sourceId:string;
         forcedAttr:string;
         defaultAttr:string;
@@ -732,9 +716,10 @@ export function init({
     }> = (props) => {
 
         const handleSelectChange = (evt) => {
-            dispatcher.dispatch({
-                name: props.actionPrefix + 'QUERY_INPUT_SET_DEFAULT_ATTR',
+            dispatcher.dispatch<Actions.QueryInputSetDefaultAttr>({
+                name: ActionName.QueryInputSetDefaultAttr,
                 payload: {
+                    formType: props.formType,
                     sourceId: props.sourceId,
                     value: evt.target.value
                 }
@@ -761,7 +746,7 @@ export function init({
 
     // ------------------- <TRQueryInputField /> -----------------------------
 
-    class TRQueryInputField extends React.PureComponent<TRQueryInputFieldProps & TRQueryInputFieldState> {
+    class TRQueryInputField extends React.PureComponent<TRQueryInputFieldProps & QueryFormModelState> {
 
         private _queryInputElement:React.RefObject<HTMLInputElement|HTMLTextAreaElement>;
 
@@ -776,9 +761,10 @@ export function init({
 
         _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
             if (evt.target instanceof HTMLTextAreaElement || evt.target instanceof HTMLInputElement) {
-                dispatcher.dispatch<SetQueryInputAction>({
-                    name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+                dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                    name: ActionName.QueryInputSetQuery,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         query: evt.target.value,
                         rawAnchorIdx: this._queryInputElement.current.selectionStart,
@@ -827,7 +813,6 @@ export function init({
                 case 'word':
                     return <BoundSingleLineInput
                                 sourceId={this.props.sourceId}
-                                actionPrefix={this.props.actionPrefix}
                                 refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
                                 historyIsVisible={this.props.historyVisible}
@@ -836,7 +821,7 @@ export function init({
                 case 'cql':
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
-                                actionPrefix={this.props.actionPrefix}
+                                formType={this.props.formType}
                                 sourceId={this.props.sourceId}
                                 takeFocus={this.props.takeFocus}
                                 onReqHistory={this.handleReqHistory}
@@ -845,7 +830,7 @@ export function init({
                                 historyIsVisible={this.props.historyVisible}
                                 inputRef={this._queryInputElement as React.RefObject<HTMLPreElement>} /> :
                         <cqlEditorViews.CQLEditorFallback
-                                actionPrefix={this.props.actionPrefix}
+                                formType={this.props.formType}
                                 sourceId={this.props.sourceId}
                                 inputRef={this._queryInputElement as React.RefObject<HTMLTextAreaElement>}
                                 onReqHistory={this.handleReqHistory}
@@ -863,22 +848,22 @@ export function init({
                     return <LposSelector wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValue}
                                 sourceId={this.props.sourceId}
-                                actionPrefix={this.props.actionPrefix}  />;
+                                formType={this.props.formType}  />;
                 case 'phrase':
                     return <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
                                 sourceId={this.props.sourceId}
-                                actionPrefix={this.props.actionPrefix} />;
+                                formType={this.props.formType} />;
                 case 'word':
                     return (
                         <span>
                             <LposSelector wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValue}
                                 sourceId={this.props.sourceId}
-                                actionPrefix={this.props.actionPrefix}  />
+                                formType={this.props.formType}  />
                             {'\u00a0'}
                             <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
                                 sourceId={this.props.sourceId}
-                                actionPrefix={this.props.actionPrefix} />
+                                formType={this.props.formType} />
                         </span>
                     );
                 case 'cql':
@@ -889,7 +874,7 @@ export function init({
                                     forcedAttr={this.props.forcedAttr}
                                     attrList={this.props.attrList}
                                     sourceId={this.props.sourceId}
-                                    actionPrefix={this.props.actionPrefix} />{'\u00a0'}
+                                    formType={this.props.formType} />{'\u00a0'}
                             {this.props.tagsetDocUrl ?
                                 (<span className="tagset-summary">(
                                     <a className="external" target="_blank" href={this.props.tagsetDocUrl}>
@@ -910,19 +895,18 @@ export function init({
                                 tagHelperView={this.props.tagHelperView}
                                 sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}
-                                inputLanguage={this.props.inputLanguage}
-                                actionPrefix={this.props.actionPrefix} />
+                                inputLanguage={this.props.inputLanguage} />
                             {this._renderInput()}
                             {this.props.historyVisible ?
                                 <HistoryWidget
                                         queryStorageView={this.props.queryStorageView}
                                         sourceId={this.props.sourceId}
                                         onCloseTrigger={this._toggleHistoryWidget}
-                                        actionPrefix={this.props.actionPrefix}/>
+                                        formType={this.props.formType}/>
                                 : null
                             }
                             <div className="query-hints">
-                                <QueryHints actionPrefix={this.props.actionPrefix} />
+                                <BoundQueryHints  />
                             </div>
                         </div>
                         <div className="query-options">
@@ -934,7 +918,7 @@ export function init({
         }
     }
 
-    const BoundTRQueryInputField = BoundWithProps<TRQueryInputFieldProps, TRQueryInputFieldState>(TRQueryInputField, queryModel)
+    const BoundTRQueryInputField = BoundWithProps<TRQueryInputFieldProps, QueryFormModelState>(TRQueryInputField, queryModel)
 
     return {
         TRQueryInputField: BoundTRQueryInputField,

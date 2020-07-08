@@ -42,8 +42,8 @@ export interface CQLEditorProps {
 }
 
 export interface CQLEditorFallbackProps {
+    formType:FormType;
     sourceId:string;
-    actionPrefix:string;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
     inputRef:React.RefObject<HTMLTextAreaElement>;

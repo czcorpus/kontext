@@ -141,12 +141,12 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                     <table className="form">
                         <tbody>
                             <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
-                                    value={this.props.pcqPosNegValue} actionPrefix="" />
+                                    value={this.props.pcqPosNegValue} formType="query" />
                             <inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
                                     corpname={this.props.corpname} />
                             <inputViews.TRQueryTypeField queryType={this.props.queryType}
+                                    formType="query"
                                     sourceId={this.props.corpname}
-                                    actionPrefix=""
                                     hasLemmaAttr={this.props.hasLemmaAttr} />
                             <inputViews.TRQueryInputField
                                 sourceId={this.props.corpname}
@@ -161,7 +161,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 tagsetDocUrl={this.props.tagsetDocUrl}
                                 inputLanguage={this.props.inputLanguage}
                                 queryStorageView={this.props.queryStorageView}
-                                actionPrefix=""
                                 useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this.props.onEnterKey}
                                 tagHelperView={this.props.tagHelperView} />

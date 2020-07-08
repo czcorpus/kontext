@@ -72,7 +72,8 @@ export enum ActionName {
     QueryInputMakeCorpusPrimary = 'QUERY_MAKE_CORPUS_PRIMARY',
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
     CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
-    ApplyFilter = 'FILTER_QUERY_APPLY_FILTER'
+    ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
+    FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT'
 }
 
 export interface CorpusSwitchModelRestorePayload<T> {
@@ -391,5 +392,11 @@ export namespace Actions {
 
     export interface CorpusSwitchModelRestore<T={}> extends Action<CorpusSwitchModelRestorePayload<T>> {
         name:ActionName.CorpusSwitchModelRestore;
+    }
+
+    export interface FilterFirstHitsSubmit extends Action<{
+        opKey:string;
+    }> {
+        name:ActionName.FilterFirstHitsSubmit;
     }
 }
