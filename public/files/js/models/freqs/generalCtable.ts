@@ -23,13 +23,12 @@ import { FreqResultResponse } from '../../types/ajaxResponses';
 import * as Immutable from 'immutable';
 import { StatefulModel } from '../base';
 import { PageModel } from '../../app/page';
-import { availConfLevels } from './confIntervalCalc';
 import { isStructAttr, CTFormProperties, validateMinAbsFreqAttr,
     FreqFilterQuantities } from './ctFreqForm';
 import { IFullActionControl } from 'kombo';
 import { MultiDict } from '../../multidict';
-import { CTFreqServerArgs } from './common';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
+import { Maths, Dict } from 'cnc-tskit';
 
 /**
  * This type represents a single data item containing
@@ -89,13 +88,13 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
      * A significance level. We use it rather as an ID here,
      * that's why it's a string.
      */
-    protected alphaLevel:string;
+    protected alphaLevel:Maths.AlphaLevel;
 
     /**
      * Available significance levels. It actually contains
      * pairs of [significance level ID, confidence level ID string]
      */
-    private availAlphaLevels:Immutable.List<[string, string]>;
+    private availAlphaLevels:Immutable.List<[Maths.AlphaLevel, string]>;
 
     /**
      * A total number of possible items (meaning: all the combinations of attr1_val vs. attr2_val).
@@ -119,7 +118,7 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
         this.minFreq = props.ctminfreq;
         this.minFreqType = props.ctminfreq_type;
         this.adhocSubcDetector = adhocSubcDetector;
-        this.alphaLevel = '0.05';
+        this.alphaLevel = Maths.AlphaLevel.LEVEL_5;
         this.availAlphaLevels = this.importAvailAlphaLevels();
         this.fullSize = null;
     }
@@ -158,12 +157,12 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
         }
     }
 
-    private importAvailAlphaLevels():Immutable.List<[string, string]> {
-        return Immutable.List<[string, string]>(
-            availConfLevels
+    private importAvailAlphaLevels():Immutable.List<[Maths.AlphaLevel, string]> {
+        return Immutable.List<[Maths.AlphaLevel, string]>(
+            Dict.values(Maths.AlphaLevel)
                 .sort((x1, x2) => parseFloat(x1) - parseFloat(x2))
                 .map(item => {
-                    return <[string, string]>[item, (1 - parseFloat(item)).toFixed(3)];
+                    return [item, (1 - parseFloat(item)).toFixed(3)];
 
                 })
         );
