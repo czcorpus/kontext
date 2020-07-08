@@ -49,7 +49,7 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
 }
 
 
-const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, subcorpFormModel, corpusIdAttr) => {
+const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, corpusIdAttr) => {
 
     const WARNING_SIZE_ERROR_RATIO = 0.01;
 

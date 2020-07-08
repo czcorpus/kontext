@@ -116,19 +116,10 @@ export namespace PluginInterfaces {
 
         export type View = React.ComponentClass<{isActive:boolean}>;
 
-        export interface ISubcorpFormModel {
-            getIsPublic():boolean;
-            getDescription():Kontext.FormValue<string>;
-            getSubcName():Kontext.FormValue<string>;
-            addListener(fn:Kontext.ModelListener):Subscription;
-            validateForm():Error|null;
-        }
-
         export interface Factory {
             (
                 pluginApi:IPluginApi,
                 textTypesModel:TextTypes.ITextTypesModel,
-                subcorpFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel,
                 corpusIdAttr:string
             ):IPlugin;
         }
