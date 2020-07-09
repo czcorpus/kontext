@@ -82,6 +82,7 @@ import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
 import { Actions, ActionName } from '../models/concordance/actions';
+import { QueryType } from '../models/query/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -540,7 +541,7 @@ export class ViewPage {
                         .filter(k => concFormsArgs[k].form_type === 'filter'),
             maincorps: fetchArgs<string>(item => item.maincorp),
             currPnFilterValues: fetchArgs<string>(item => item.pnfilter),
-            currQueryTypes: fetchArgs<string>(item => item.query_type),
+            currQueryTypes: fetchArgs<QueryType>(item => item.query_type),
             currQueries: fetchArgs<string>(item => item.query),
             currQmcaseValues: fetchArgs<boolean>(item => item.qmcase),
             currDefaultAttrValues: fetchArgs<string>(item => item.default_attr_value),
@@ -695,10 +696,10 @@ export class ViewPage {
      */
     initQueryOverviewArea(taghelperPlugin:PluginInterfaces.TagHelper.IPlugin,
                     queryStoragePlugin:PluginInterfaces.QueryStorage.IPlugin):void {
-        this.queryModels.queryReplayModel = new QueryReplayModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            {
+        this.queryModels.queryReplayModel = new QueryReplayModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            replayModelDeps: {
                 queryModel: this.queryModels.queryModel,
                 filterModel: this.queryModels.filterModel,
                 sortModel: this.queryModels.sortModel,
@@ -706,11 +707,13 @@ export class ViewPage {
                 sampleModel: this.queryModels.sampleModel,
                 textTypesModel: this.queryModels.textTypesModel,
                 switchMcModel: this.queryModels.switchMcModel,
-                firstHitsModel: this.queryModels.firstHitsModel
+                firstHitsModel: this.queryModels.firstHitsModel,
+                queryContextModel: this.queryModels.queryContextModel
             },
-            this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
-            this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
-        );
+            currentOperations: this.layoutModel.getConf<Array<Kontext.QueryOperation>>(
+                'queryOverview') || [],
+            concArgsCache: this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
+        });
 
         this.queryOverviewViews = queryOverviewInit({
             dispatcher: this.layoutModel.dispatcher,
@@ -750,7 +753,6 @@ export class ViewPage {
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    actionPrefix: '',
                     corpname: this.layoutModel.getCorpusIdent().id
                 },
                 filterFormProps: {
@@ -764,7 +766,6 @@ export class ViewPage {
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    actionPrefix: 'FILTER_',
                     filterId: '__new__'
                 },
                 filterSubHitsFormProps: {

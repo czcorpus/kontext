@@ -19,8 +19,8 @@
  */
 
 import { Action } from 'kombo';
-import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue, AjaxConcResponse,
-    LineGroupId, RefsColumn } from './common';
+import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
+    AjaxConcResponse, LineGroupId, RefsColumn } from './common';
 import { SaveData } from '../../app/navigation';
 
 export enum ActionName {
@@ -83,7 +83,9 @@ export enum ActionName {
     ApplyStoredLineSelections = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS',
     ApplyStoredLineSelectionsDone = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS_DONE',
     PublishStoredLineSelections = 'CONCORDANCE_PUBLISH_STORED_LINE_SELECTIONS',
-    ToggleLineGroupRenameForm = 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME'
+    ToggleLineGroupRenameForm = 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME',
+    MakeConcPermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
+    GetConcArchiveStatus = 'QUERY_GET_CONC_ARCHIVED_STATUS'
 }
 
 export interface ConcGroupChangePayload {
@@ -452,5 +454,16 @@ export namespace Actions {
     export interface ToggleLineGroupRenameForm extends Action<{
     }> {
         name:ActionName.ToggleLineGroupRenameForm;
+    }
+
+    export interface MakeConcPermanent extends Action<{
+        revoke:boolean;
+    }> {
+        name:ActionName.MakeConcPermanent;
+    }
+
+    export interface GetConcArchiveStatus extends Action<{
+    }> {
+        name:ActionName.GetConcArchiveStatus;
     }
 }

@@ -18,41 +18,64 @@
 
 import {IPluginApi} from '../../../types/plugins';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
-import * as Immutable from 'immutable';
 import { TagBuilderBaseState } from '../common';
+import { tuple, pipe, List, Dict, HTTP } from 'cnc-tskit';
 
 
 export interface FeatureSelectProps {
     sourceId:string;
     error:Error|null;
-    allFeatures:Immutable.Map<string, Immutable.List<string>>;
-    availableFeatures:Immutable.Map<string, Immutable.List<string>>;
-    filterFeaturesHistory:Immutable.List<Immutable.List<FilterRecord>>;
+    allFeatures:{[key:string]:Array<string>};
+    availableFeatures:{[key:string]:Array<string>};
+    filterFeaturesHistory:Array<Array<FilterRecord>>;
     showCategory:string;
 }
 
-export class FilterRecord extends Immutable.Record({name: undefined, value: undefined}) {
+export class FilterRecord {
+
+    readonly name:string;
+
+    readonly value:string;
+
+    constructor(name:string, value:string) {
+        this.name = name;
+        this.value = value;
+    }
 
     composeString():string {
-        return this.valueSeq().join('=');
+        return `${this.name}=${this.value}`;
     }
 
     getKeyval():[string, string] {
-        return [this.get('name'), this.get('value')];
+        return tuple(this.name, this.value);
     }
 
     compare(that:FilterRecord):number {
         return this.composeString() < that.composeString() ? -1 : 1;
     }
+
+    equals(rec2:FilterRecord):boolean {
+        return this.name === rec2.name && this.value === rec2.value;
+    }
+
+    setValue(v:string):FilterRecord {
+        return new FilterRecord(this.name, v);
+    }
 }
 
 function composeQuery(state:UDTagBuilderModelState):string {
-    return state.filterFeaturesHistory.last().groupBy(x => x.get('name')).map(
-        (value, key) =>
-            key==='POS' ?
-            `${state.posField}="${value.map(x => x.get('value')).join('|')}"` :
-            `${state.featureField}="${value.map(x => x.composeString()).join('|')}"`
-    ).valueSeq().sort().join(' & ');
+    return pipe(
+        state.filterFeaturesHistory,
+        List.last(),
+        List.groupBy(x => x.name),
+        List.map(
+            ([recName, groupedRecs]) =>
+                recName === 'POS' ?
+                    `${state.posField}="${groupedRecs.map(x => x.value).join('|')}"` :
+                    `${state.featureField}="${groupedRecs.map(x => x.composeString()).join('|')}"`
+        ),
+        List.sorted((v1, v2) => v1.localeCompare(v2))
+    ).join(' & ');
 }
 
 export interface UDTagBuilderModelState extends TagBuilderBaseState {
@@ -69,10 +92,10 @@ export interface UDTagBuilderModelState extends TagBuilderBaseState {
 
     // ...
     error: Error|null;
-    allFeatures: Immutable.Map<string, Immutable.List<string>>;
-    availableFeatures: Immutable.Map<string, Immutable.List<string>>;
-    filterFeaturesHistory: Immutable.List<Immutable.List<FilterRecord>>;
-    showCategory: string;
+    allFeatures:{[key:string]:Array<string>};
+    availableFeatures:{[key:string]:Array<string>};
+    filterFeaturesHistory:Array<Array<FilterRecord>>;
+    showCategory:string;
 
     posField: string;
     featureField: string;
@@ -86,7 +109,8 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
     private readonly sourceId:string;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:UDTagBuilderModelState, ident:string) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi,
+            initialState:UDTagBuilderModelState, ident:string) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.ident = ident;
@@ -111,9 +135,14 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
                     if (!action.error) {
-                        newState.allFeatures = Immutable.fromJS(action.payload['result']);
+                        newState.allFeatures = action.payload['result']; // TODO test and type !!!
                         newState.availableFeatures = newState.allFeatures;
-                        newState.showCategory = newState.allFeatures.keySeq().sort().first()
+                        newState.showCategory = pipe(
+                            newState.allFeatures,
+                            Dict.keys(),
+                            List.sorted((v1, v2) => v1.localeCompare(v2)),
+                            List.head()
+                        )
                     } else {
                         newState.error = action.error;
                     }
@@ -126,7 +155,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
                     if (!action.error) {
-                        newState.availableFeatures = Immutable.fromJS(action.payload['result']);
+                        newState.availableFeatures = action.payload['result']; // TODO test and type
                     } else {
                         newState.error = action.error;
                     }
@@ -138,12 +167,15 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             'TAGHELPER_ADD_FILTER': (state, action) => {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
-                    const filter = new FilterRecord(action.payload);
-                    const filterFeatures = newState.filterFeaturesHistory.last();
+                    const filter = new FilterRecord(
+                        action.payload['name'],
+                        action.payload['value']
+                    );
+                    const filterFeatures = List.last(newState.filterFeaturesHistory);
                     newState.isBusy = true;
                     if (filterFeatures.every(x => !x.equals(filter))) {
-                        const newFilterFeatures = filterFeatures.push(filter);
-                        newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(newFilterFeatures);
+                        filterFeatures.push(filter);
+                        newState.filterFeaturesHistory.push(filterFeatures);
                         newState.canUndo = true;
                         newState.generatedQuery = composeQuery(newState);
                     }
@@ -154,11 +186,17 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             'TAGHELPER_REMOVE_FILTER': (state, action) => {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
-                    const filter = new FilterRecord(action.payload);
-                    const filterFeatures = newState.filterFeaturesHistory.last();
+                    const filter = new FilterRecord(
+                        action.payload['name'],
+                        action.payload['value']
+                    );
+                    const filterFeatures = List.last(newState.filterFeaturesHistory);
 
-                    const newFilterFeatures = filterFeatures.filterNot((value) => value.equals(filter));
-                    newState.filterFeaturesHistory = newState.filterFeaturesHistory.push(Immutable.List(newFilterFeatures))
+                    const newFilterFeatures = List.filter(
+                        value => !value.equals(filter),
+                        filterFeatures
+                    );
+                    newState.filterFeaturesHistory.push(newFilterFeatures);
                     newState.canUndo = true;
                     newState.isBusy = true;
                     newState.generatedQuery = composeQuery(newState);
@@ -170,8 +208,8 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             'TAGHELPER_UNDO': (state, action) => {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
-                    newState.filterFeaturesHistory = newState.filterFeaturesHistory.delete(-1);
-                    if (newState.filterFeaturesHistory.size===1) {
+                    newState.filterFeaturesHistory = List.init(newState.filterFeaturesHistory);
+                    if (newState.filterFeaturesHistory.length === 1) {
                         newState.canUndo = false;
                     }
                     newState.isBusy = true;
@@ -183,7 +221,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             'TAGHELPER_RESET': (state, action) => {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
-                    newState.filterFeaturesHistory = Immutable.List([Immutable.List([])]);
+                    newState.filterFeaturesHistory = [[]];
                     newState.availableFeatures = newState.allFeatures;
                     newState.canUndo = false;
                     newState.generatedQuery = composeQuery(newState);
@@ -196,8 +234,14 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
     sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_DATA':
-                if (action.payload['sourceId'] === this.sourceId && state.filterFeaturesHistory.size === 1) {
-                    this.getFilteredFeatures(state, dispatch, 'TAGHELPER_GET_INITIAL_DATA_DONE', false);
+                if (action.payload['sourceId'] === this.sourceId &&
+                        state.filterFeaturesHistory.length === 1) {
+                    this.getFilteredFeatures(
+                        state,
+                        dispatch,
+                        'TAGHELPER_GET_INITIAL_DATA_DONE',
+                        false
+                    );
                 }
             break;
 
@@ -205,23 +249,41 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             case 'TAGHELPER_REMOVE_FILTER':
             case 'TAGHELPER_UNDO':
                 if (action.payload['sourceId'] === this.sourceId) {
-                    this.getFilteredFeatures(state, dispatch, 'TAGHELPER_GET_FILTERED_DATA_DONE', true);
+                    this.getFilteredFeatures(
+                        state,
+                        dispatch,
+                        'TAGHELPER_GET_FILTERED_DATA_DONE',
+                        true
+                    );
                 }
             break;
             case 'TAGHELPER_SET_ACTIVE_TAG':
-                if (action.payload['sourceId'] === this.sourceId && this.ident !== action.payload['value']) {
-                    this.suspend({}, (nextAction, syncObj) => this.ident === nextAction.payload['value'] ? null : syncObj);
+                if (action.payload['sourceId'] === this.sourceId &&
+                        this.ident !== action.payload['value']) {
+                    this.suspend(
+                        {},
+                        (nextAction, syncObj) => this.ident === nextAction.payload['value'] ?
+                            null : syncObj
+                    ).subscribe(); // TODO is this correct?
                 }
             break;
         }
     }
 
-    private getFilteredFeatures(state:UDTagBuilderModelState, dispatch:SEDispatcher, actionDone:string, useFilter:boolean) {
-        const baseArgs:Array<[string, string]> = [['corpname', state.corpname], ['tagset', state.tagsetName]];
-        const queryArgs:Array<[string, string]> = state.filterFeaturesHistory.last().map(x => x.getKeyval()).toArray();
+    private getFilteredFeatures(state:UDTagBuilderModelState, dispatch:SEDispatcher,
+            actionDone:string, useFilter:boolean) {
+        const baseArgs:Array<[string, string]> = [
+            tuple('corpname', state.corpname),
+            tuple('tagset', state.tagsetName)
+        ];
+        const queryArgs:Array<[string, string]> = pipe(
+            state.filterFeaturesHistory,
+            List.last(),
+            List.map(x => x.getKeyval())
+        );
 
         this.pluginApi.ajax$(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
                 useFilter ? baseArgs.concat(queryArgs) : baseArgs
@@ -241,7 +303,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             (error) => {
                 dispatch({
                     name: actionDone,
-                    error: error,
+                    error,
                     payload: {
                         sourceId: this.sourceId
                     }

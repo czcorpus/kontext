@@ -18,19 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf, Subscription } from 'rxjs';
+import { of as rxOf } from 'rxjs';
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard } from 'cnc-tskit';
 
 import { CQLEditorModel, CQLEditorModelState } from '../../models/query/cqleditor/model';
-import { SetQueryInputAction, MoveCursorInputAction, QueryFormModelState } from '../../models/query/common';
+import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
+import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 
 
 export interface CQLEditorProps {
-    actionPrefix:string;
+    formType:QueryFormType;
     sourceId:string;
     takeFocus:boolean;
     hasHistoryWidget:boolean;
@@ -41,8 +42,8 @@ export interface CQLEditorProps {
 }
 
 export interface CQLEditorFallbackProps {
+    formType:QueryFormType;
     sourceId:string;
-    actionPrefix:string;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
     inputRef:React.RefObject<HTMLTextAreaElement>;
@@ -73,9 +74,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         private inputKeyUpHandler(evt) {
             if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME || evt.keyCode === Keyboard.Code.END) {
-                dispatcher.dispatch<MoveCursorInputAction>({
-                    name: 'QUERY_INPUT_MOVE_CURSOR',
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: this.props.inputRef.current.selectionStart,
                         rawFocusIdx: this.props.inputRef.current.selectionEnd
@@ -97,9 +99,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
-            dispatcher.dispatch<SetQueryInputAction>({
-                name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+            dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                name: ActionName.QueryInputSetQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: evt.target.value,
                     rawAnchorIdx: this.props.inputRef.current.selectionStart,
@@ -112,7 +115,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
                                 ref={this.props.inputRef}
-                                value={this.props.queries.get(this.props.sourceId)}
+                                value={this.props.queries[this.props.sourceId]}
                                 onChange={this.handleInputChange}
                                 onKeyDown={this.handleKeyDown}
                                 onKeyUp={this.inputKeyUpHandler}
@@ -196,9 +199,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
             const query = src.map(v => v[0]).join('');
 
-            dispatcher.dispatch<SetQueryInputAction>({
-                name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+            dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                name: ActionName.QueryInputSetQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: query,
                     rawAnchorIdx: rawAnchorIdx,
@@ -227,26 +231,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         const leftIdx = Number(a.getAttribute('data-leftIdx'));
                         const rightIdx = Number(a.getAttribute('data-rightIdx'));
 
-                        dispatcher.dispatch(rxOf(
-                            {
-                                name: 'TAGHELPER_PRESET_PATTERN',
-                                payload: {
-                                    sourceId: this.props.sourceId,
-                                    pattern: this.props.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
-                                }
-                            },
-                            {
-                                name: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-                                payload: {
-                                    sourceId: this.props.sourceId,
-                                    value: 'tag',
-                                    widgetArgs: {
-                                        leftIdx: leftIdx,
-                                        rightIdx: rightIdx
-                                    }
+                        dispatcher.dispatch({
+                            name: 'TAGHELPER_PRESET_PATTERN',
+                            payload: {
+                                sourceId: this.props.sourceId,
+                                pattern: this.props.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
+                            }
+                        });
+                        dispatcher.dispatch<Actions.SetActiveInputWidget>({
+                            name: ActionName.SetActiveInputWidget,
+                            payload: {
+                                formType: this.props.formType,
+                                sourceId: this.props.sourceId,
+                                value: 'tag',
+                                widgetArgs: {
+                                    leftIdx: leftIdx,
+                                    rightIdx: rightIdx
                                 }
                             }
-                        ));
+                        });
                     break;
                 }
             }
@@ -256,9 +259,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME || evt.keyCode === Keyboard.Code.END) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
-                dispatcher.dispatch<MoveCursorInputAction>({
-                    name: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: anchorIdx,
                         rawFocusIdx: focusIdx
@@ -290,9 +294,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
                             rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1);
 
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                        name: ActionName.QueryInputSetQuery,
                         payload: {
+                            formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
                             rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
@@ -303,9 +308,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
                 } else if (rawAnchorIdx < rawFocusIdx) {
                     const query = rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx);
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                        name: ActionName.QueryInputSetQuery,
                         payload: {
+                            formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
                             rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
@@ -316,9 +322,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
                 } else {
                     const query = rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx);
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                        name: ActionName.QueryInputSetQuery,
                         payload: {
+                            formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
                             rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
@@ -333,9 +340,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 const src = this.extractText(this.props.inputRef.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const query = src.map(v => v[0]).join('');
-                dispatcher.dispatch<SetQueryInputAction>({
-                    name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                    name: ActionName.QueryInputSetQuery,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         // We have to add a single whitespace here because otherwise FF cannot handle cursor
                         // position properly (normally it inserts its custom br type=_moz element which is
@@ -352,9 +360,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 const query = src.map(v => v[0]).join('');
-                dispatcher.dispatch<MoveCursorInputAction>({
-                    name: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: anchorIdx === focusIdx ? query.length : anchorIdx,
                         rawFocusIdx: query.length

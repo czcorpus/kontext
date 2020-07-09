@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import { StatelessModel, IActionDispatcher, Action } from 'kombo';
+import { StatelessModel, IActionDispatcher } from 'kombo';
+import { tuple, List, pipe, Dict } from 'cnc-tskit';
 
 
 
@@ -35,7 +35,7 @@ interface UsageTip {
 }
 
 
-const tipsDef = Immutable.List<UsageTip>([
+const tipsDef = [
     {messageId: 'query__tip_01', category: UsageTipCategory.QUERY},
     {messageId: 'query__tip_02', category: UsageTipCategory.QUERY},
     {messageId: 'query__tip_03', category: UsageTipCategory.QUERY},
@@ -45,11 +45,11 @@ const tipsDef = Immutable.List<UsageTip>([
     {messageId: 'concview__tip_02', category: UsageTipCategory.CONCORDANCE},
     {messageId: 'concview__tip_03', category: UsageTipCategory.CONCORDANCE},
     {messageId: 'concview__tip_04', category: UsageTipCategory.CONCORDANCE}
-]);
+];
 
 export interface UsageTipsState {
-    currentHints:Immutable.Map<UsageTipCategory, string>;
-    hintsPointers:Immutable.Map<UsageTipCategory, number>;
+    currentHints:{[key in UsageTipCategory]:string};
+    hintsPointers:{[key in UsageTipCategory]:number};
 }
 
 
@@ -61,59 +61,54 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
     private translatorFn:(s:string)=>string;
 
     constructor(dispatcher:IActionDispatcher, translatorFn:(s:string)=>string) {
-        const pointers = Immutable.Map<UsageTipCategory, number>([
-            UsageTipCategory.CONCORDANCE,
-            UsageTipCategory.QUERY
-
-        ].map(cat => {
-            const avail = tipsDef.filter(v => v.category == cat);
-            return [cat, Math.round(Math.random() * (avail.size - 1))|0];
-        }));
-
+        const pointers = pipe(
+            [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY],
+            List.map(cat => {
+                const avail = tipsDef.filter(v => v.category === cat);
+                return tuple(cat, Math.round(Math.random() * (avail.length - 1)));
+            }),
+            Dict.fromEntries()
+        );
         super(
             dispatcher,
             {
                 hintsPointers: pointers,
-                currentHints: Immutable.Map<UsageTipCategory, string>(
-                    [
-                        UsageTipCategory.CONCORDANCE,
-                        UsageTipCategory.QUERY
-
-                    ].map(cat => {
+                currentHints: pipe(
+                    [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY],
+                    List.map(cat => {
                         const avail = tipsDef.filter(v => v.category === cat);
-                        return [
+                        return tuple(
                             cat,
-                            avail.size > 0 ? translatorFn(avail.get(pointers.get(cat)).messageId) : null
-                        ];
-                    })
+                            avail.length > 0 ? translatorFn(avail[pointers[cat]].messageId) : null
+                        );
+                    }),
+                    Dict.fromEntries()
                 )
             }
         );
         this.translatorFn = translatorFn;
+
+        this.addActionHandler(
+            'NEXT_QUERY_HINT',
+            (state, action) => {
+                this.setNextHint(state, UsageTipCategory.QUERY);
+            }
+        );
+
+        this.addActionHandler(
+            'NEXT_CONC_HINT',
+            (state, action) => {
+                this.setNextHint(state, UsageTipCategory.CONCORDANCE);
+            }
+        );
     }
 
-    reduce(state:UsageTipsState, action:Action):UsageTipsState {
-        let newState:UsageTipsState;
-        switch (action.name) {
-            case 'NEXT_QUERY_HINT':
-                newState = this.copyState(state);
-                this.setNextHint(newState, UsageTipCategory.QUERY);
-                return newState;
-            case 'NEXT_CONC_HINT':
-                newState = this.copyState(state);
-                this.setNextHint(newState, UsageTipCategory.CONCORDANCE);
-                return newState;
-            default:
-                return state;
-        }
-    }
-
-    setNextHint(state:UsageTipsState, category:UsageTipCategory):void {
-        const curr = state.hintsPointers.get(category);
+    private setNextHint(state:UsageTipsState, category:UsageTipCategory):void {
+        const curr = state.hintsPointers[category];
         const avail = tipsDef.filter(v => v.category === category);
-        state.hintsPointers = state.hintsPointers.set(category, (curr + 1) % avail.size);
-        state.currentHints = state.currentHints.set(category,
-            this.translatorFn(avail.get(state.hintsPointers.get(category)).messageId));
+        state.hintsPointers[category] = (curr + 1) % avail.length;
+        state.currentHints[category] = this.translatorFn(
+            avail[state.hintsPointers[category]].messageId);
     }
 
 }

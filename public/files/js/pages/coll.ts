@@ -38,7 +38,6 @@ import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
-import { IModel } from 'kombo';
 
 
 declare var require:any;
@@ -253,9 +252,8 @@ export class CollPage {
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
-                    actionPrefix: '',
                     allowCorpusSelection: false,
-                    tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
+                    tagHelperViews: {},
                     queryStorageView: null,
                     liveAttrsView: null,
                     liveAttrsCustomTT: null,
@@ -263,7 +261,6 @@ export class CollPage {
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,
-                    actionPrefix: '',
                     filterId: null,
                     tagHelperView: null,
                     queryStorageView: null

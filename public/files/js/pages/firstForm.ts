@@ -18,10 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Action, IFullActionControl } from 'kombo';
 import { tap, share } from 'rxjs/operators';
-import { Dict, List } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../types/common';
 import { AjaxResponse } from '../types/ajaxResponses';
@@ -206,10 +205,9 @@ export class FirstFormPage {
             liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ?
                 liveAttrsViews['LiveAttrsCustomTT'] : null,
             attributes: this.textTypesModel.getAttributes(),
-            tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
+            tagHelperViews: {},
             queryStorageView: null,
-            allowCorpusSelection: null,
-            actionPrefix: null
+            allowCorpusSelection: null
         };
     }
 
@@ -355,9 +353,9 @@ export class FirstFormPage {
                 )
             ];
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
-            ttAns.tagHelperViews = Immutable.Map(
-                (this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagBuilderCorpora : [])
-                .map(corpus => [
+            ttAns.tagHelperViews = pipe(
+                this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagBuilderCorpora : [],
+                List.map(corpus => tuple(
                         corpus,
                         tagHelperPlg.getWidgetView(
                             corpus,
@@ -365,11 +363,11 @@ export class FirstFormPage {
                             Array<PluginInterfaces.TagHelper.TagsetInfo>>(
                                 'pluginData', 'taghelper', 'corp_tagsets')
                         )
-                ])
+                )),
+                Dict.fromEntries()
             );
 
             ttAns.allowCorpusSelection = true;
-            ttAns.actionPrefix = '';
 
             this.initQueryModel();
             const corparchWidget = this.initCorplistComponent();

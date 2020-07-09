@@ -33,7 +33,7 @@ export enum ActionName {
     MakeConcLinkPersistent = 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT',
     UndoLastQueryOp = 'MAIN_MENU_UNDO_LAST_QUERY_OP',
     ShowFilter = 'MAIN_MENU_SHOW_FILTER',
-    FilterApplySubmitsRemove = 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE',
+    FilterApplySubhitsRemove = 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE',
     FilterApplyFirstOccurrences = 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
     ShowFreqForm = 'MAIN_MENU_SHOW_FREQ_FORM',
     ShowCollForm = 'MAIN_MENU_SHOW_COLL_FORM',
@@ -43,6 +43,7 @@ export enum ActionName {
     ShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS',
     ShowSaveForm = 'MAIN_MENU_SHOW_SAVE_FORM',
     DirectSave = 'MAIN_MENU_DIRECT_SAVE',
+    ShowSwitchMc = 'MAIN_MENU_SHOW_SWITCHMC'
 }
 
 
@@ -104,9 +105,9 @@ export namespace Actions {
         name: ActionName.ShowFilter;
     }
 
-    export interface FilterApplySubmitsRemove extends Action<{
+    export interface FilterApplySubhitsRemove extends Action<{
     }> {
-        name: ActionName.FilterApplySubmitsRemove;
+        name: ActionName.FilterApplySubhitsRemove;
     }
 
     export interface FilterApplyFirstOccurrences extends Action<{
@@ -155,4 +156,8 @@ export namespace Actions {
         name: ActionName.DirectSave;
     }
 
+    export interface ShowSwitchMc extends Action<{
+    }> {
+        name: ActionName.ShowSwitchMc;
+    }
 }

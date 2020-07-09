@@ -19,24 +19,24 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import { Keyboard } from 'cnc-tskit';
-import {Kontext } from '../../types/common';
-import { QueryStorageModel, InputBoxHistoryItem } from './models';
-import { SetQueryInputAction } from '../../models/query/common';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
+import { Keyboard } from 'cnc-tskit';
+
+import { Kontext } from '../../types/common';
+import { QueryStorageModel, InputBoxHistoryItem } from './models';
+import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 
 
 export interface QueryStorageProps {
+    formType:QueryFormType;
     sourceId:string;
-    actionPrefix:string;
     onCloseTrigger:()=>void;
 }
 
 
 interface QueryStorageState {
-    data:Immutable.List<InputBoxHistoryItem>;
+    data:Array<InputBoxHistoryItem>;
     isBusy:boolean;
     currentItem:number;
 }
@@ -71,10 +71,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         _keyPressHandler(evt) {
             const inc = Number({
-                [Keyboard.Code.UP_ARROW]: this.state.data.size - 1,
+                [Keyboard.Code.UP_ARROW]: this.state.data.length - 1,
                 [Keyboard.Code.DOWN_ARROW]: 1
             }[evt.keyCode]);
-            const modulo = this.state.data.size > 0 ? this.state.data.size : 1;
+            const modulo = this.state.data.length > 0 ? this.state.data.length : 1;
             if (!isNaN(inc)) {
                 this.setState({
                     data: queryStorageModel.getFlatData(),
@@ -83,17 +83,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 });
 
             } else if (evt.keyCode === Keyboard.Code.ENTER) {
-                const historyItem = this.state.data.get(this.state.currentItem);
-                dispatcher.dispatch({
-                    name: 'QUERY_INPUT_SELECT_TYPE',
+                const historyItem = this.state.data[this.state.currentItem];
+                dispatcher.dispatch<Actions.QueryInputSelectType>({
+                    name: ActionName.QueryInputSelectType,
                     payload: {
                         sourceId: this.props.sourceId, // either corpname or filterId
-                        queryType: historyItem.query_type
+                        queryType: historyItem.query_type,
+                        formType: this.props.formType
                     }
                 });
-                dispatcher.dispatch<SetQueryInputAction>({
-                    name: 'QUERY_INPUT_SET_QUERY',
+                dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                    name: ActionName.QueryInputSetQuery,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         query: historyItem.query,
                         rawAnchorIdx: null,
@@ -111,17 +113,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _handleClickSelection(itemNum) {
-            const historyItem = this.state.data.get(itemNum);
-            dispatcher.dispatch({
-                name: this.props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
+            const historyItem = this.state.data[itemNum];
+            dispatcher.dispatch<Actions.QueryInputSelectType>({
+                name: ActionName.QueryInputSelectType,
                 payload: {
                     sourceId: this.props.sourceId,
-                    queryType: historyItem.query_type
+                    queryType: historyItem.query_type,
+                    formType: this.props.formType
                 }
             });
-            dispatcher.dispatch<SetQueryInputAction>({
-                name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+            dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                name: ActionName.QueryInputSetQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: historyItem.query,
                     rawAnchorIdx: null,
@@ -135,8 +139,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         componentDidMount() {
             this.modelSubscription = queryStorageModel.addListener(this._handleModelChange);
             dispatcher.dispatch({
-                name: 'QUERY_STORAGE_LOAD_HISTORY',
-                payload: {}
+                name: 'QUERY_STORAGE_LOAD_HISTORY'
             });
         }
 

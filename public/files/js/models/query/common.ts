@@ -18,17 +18,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
+import { Dict } from 'cnc-tskit';
+import { IFullActionControl, StatefulModel } from 'kombo';
+
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { ConcServerArgs } from '../concordance/common';
+import { QueryFormType, Actions, ActionName } from './actions';
 
 
-export type QueryTypes = 'iquery'|'phrase'|'lemma'|'word'|'cql';
+export type QueryType = 'iquery'|'phrase'|'lemma'|'word'|'cql';
+
+export interface QueryContextArgs {
+    fc_lemword_window_type:string;
+    fc_lemword_wsize:string;
+    fc_lemword:string;
+    fc_lemword_type:string;
+    fc_pos_window_type:string;
+    fc_pos_wsize:string;
+    fc_pos:string[];
+    fc_pos_type:string;
+}
 
 export type AnyQuery = {
     iquery?:string;
@@ -95,49 +108,9 @@ export interface WithinBuilderData extends Kontext.AjaxResponse {
     structattrs:{[attr:string]:Array<string>};
 }
 
-/**
- *
- */
-export class WidgetsMap {
 
-    private data:Immutable.Map<string, Immutable.List<string>>;
-
-    constructor(data:Immutable.List<[string, Immutable.List<string>]>) {
-        this.data = Immutable.Map<string, Immutable.List<string>>(data);
-    }
-
-    get(key:string):Immutable.List<string> {
-        if (this.data.has(key)) {
-            return this.data.get(key);
-        }
-        return Immutable.List<string>();
-    }
-}
-
-export interface SetQueryInputAction extends Action<{
-    sourceId:string;
-    query:string;
-    insertRange:[number, number]|null;
-    rawAnchorIdx:number|null;
-    rawFocusIdx:number|null;
-}> {};
-
-export interface MoveCursorInputAction extends Action<{
-    sourceId:string;
-    rawAnchorIdx:number|null;
-    rawFocusIdx:number|null;
-}> {};
-
-export interface AppendQueryInputAction extends Action<{
-    sourceId:string;
-    query:string;
-    prependSpace?:boolean;
-    closeWhenDone?:boolean;
-    triggeredKey?:[number, number]; // from virtual keyboard
-}> {};
-
-
-export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
+export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number,
+            focusIdx:number):boolean {
     if (anchorIdx === focusIdx) {
         return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
 
@@ -149,23 +122,25 @@ export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number, fo
 
 export interface QueryFormModelState {
 
+    formType:QueryFormType;
+
     forcedAttr:string;
 
-    attrList:Immutable.List<Kontext.AttrItem>;
+    attrList:Array<Kontext.AttrItem>;
 
-    structAttrList:Immutable.List<Kontext.AttrItem>;
+    structAttrList:Array<Kontext.AttrItem>;
 
-    lemmaWindowSizes:Immutable.List<number>;
+    lemmaWindowSizes:Array<number>;
 
-    posWindowSizes:Immutable.List<number>;
+    posWindowSizes:Array<number>;
 
-    wPoSList:Immutable.List<{v:string; n:string}>;
+    wPoSList:Array<{v:string; n:string}>;
 
     currentAction:string;
 
-    queries:Immutable.Map<string, string>; // corpname|filter_id -> query
+    queries:{[key:string]:string}; // corpname|filter_id -> query
 
-    tagBuilderSupport:Immutable.Map<string, boolean>;
+    tagBuilderSupport:{[key:string]:boolean};
 
     useCQLEditor:boolean;
 
@@ -173,23 +148,26 @@ export interface QueryFormModelState {
 
     widgetArgs:Kontext.GeneralProps;
 
-    supportedWidgets:WidgetsMap;
+    supportedWidgets:{[key:string]:Array<string>};
 
     isAnonymousUser:boolean;
 
-    activeWidgets:Immutable.Map<string, string>;
+    activeWidgets:{[key:string]:string|null};
 
-    downArrowTriggersHistory:Immutable.Map<string, boolean>;
+    downArrowTriggersHistory:{[key:string]:boolean};
 
     contextFormVisible:boolean;
 
     textTypesFormVisible:boolean;
+
+    historyVisible:boolean;
 }
 
 /**
  *
  */
-export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T> implements Kontext.ICorpusSwitchAwareModel<T> {
+export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T>
+        implements Kontext.ICorpusSwitchAwareModel<T> {
 
     protected readonly pageModel:PageModel;
 
@@ -220,24 +198,49 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.queryContextModel = queryContextModel;
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
+
+        this.addActionSubtypeHandler<Actions.ToggleQueryHistoryWidget>(
+            ActionName.ToggleQueryHistoryWidget,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.historyVisible = !state.historyVisible;
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.SetActiveInputWidget>(
+            ActionName.SetActiveInputWidget,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.activeWidgets[action.payload.sourceId] = action.payload.value;
+                    state.widgetArgs = action.payload.widgetArgs || {};
+                });
+            }
+        );
     }
 
-    protected validateQuery(query:string, queryType:string):boolean {
+    protected validateQuery(query:string, queryType:QueryType):boolean {
         const parseFn = ((query:string) => {
             switch (queryType) {
                 case 'iquery':
                     return () => {
-                        if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
+                        if (!!(/^"[^\"]+"$/.exec(query) ||
+                                /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
                             throw new Error();
                         }
                     }
                 case 'phrase':
-                    return parseQuery.bind(null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
                 case 'lemma':
                 case 'word':
-                    return parseQuery.bind(null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
                 case 'cql':
-                    return parseQuery.bind(null, query + ';', {tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query + ';', {tracer: this.queryTracer});
                 default:
                     return () => {};
             }
@@ -255,17 +258,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return mismatch;
     }
 
-    protected addQueryInfix(sourceId:string, query:string, insertRange:[number, number]):void {
-        this.state.queries = this.state.queries.set(
-            sourceId,
-            this.state.queries.get(sourceId).substring(0, insertRange[0]) + query +
-                this.state.queries.get(sourceId).substr(insertRange[1])
-        );
+    protected addQueryInfix(state:QueryFormModelState, sourceId:string, query:string,
+            insertRange:[number, number]):void {
+        state.queries[sourceId] = state.queries[sourceId].substring(0, insertRange[0]) + query +
+                state.queries[sourceId].substr(insertRange[1]);
     }
 
     getQueryUnicodeNFC(queryId:string):string {
          // TODO ES2015 stuff here
-        return this.state.queries.has(queryId) ? this.state.queries.get(queryId)['normalize']() : undefined;
+        return Dict.hasKey(queryId, this.state.queries) ?
+            this.state.queries[queryId]['normalize']() :
+            undefined;
     }
 
     csGetStateKey():string {

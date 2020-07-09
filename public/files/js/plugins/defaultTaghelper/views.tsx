@@ -20,16 +20,16 @@
 import * as React from 'react';
 import { IActionDispatcher, StatelessModel, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
-import { AppendQueryInputAction, SetQueryInputAction } from '../../models/query/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { TagBuilderBaseState } from './common';
-import * as Immutable from 'immutable';
+import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
+import { Dict } from 'cnc-tskit';
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>>,
-    widgetViews:Immutable.Map<string, any>) {
+    models:{[key:string]:StatelessModel<TagBuilderBaseState>},
+    widgetViews:{[key:string]:any}) { // TODO Type
 
     const layoutViews = he.getLayoutViews();
 
@@ -89,12 +89,12 @@ export function init(
 
     const TagButtons:React.SFC<{
                 range:[number, number];
+                formType:QueryFormType;
                 sourceId:string;
                 onInsert?:()=>void;
                 canUndo:boolean;
                 rawPattern:string;
                 generatedQuery:string;
-                actionPrefix:string;
             }> = (props) => {
 
         const buttonClick = (evt) => {
@@ -117,9 +117,10 @@ export function init(
             } else if (evt.target.value === 'insert') {
                 if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
                     const query = `"${props.rawPattern}"`;
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                        name: ActionName.QueryInputSetQuery,
                         payload: {
+                            formType: props.formType,
                             sourceId: props.sourceId,
                             query: query,
                             insertRange: [props.range[0], props.range[1]],
@@ -129,11 +130,15 @@ export function init(
                     });
 
                 } else {
-                    dispatcher.dispatch<AppendQueryInputAction>({
-                        name: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
+                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                        name: ActionName.QueryInputSetQuery,
                         payload: {
+                            formType: props.formType,
                             sourceId: props.sourceId,
-                            query: `[${props.generatedQuery}]`
+                            query: `[${props.generatedQuery}]`,
+                            insertRange: [props.range[0], props.range[1]],
+                            rawAnchorIdx: null,
+                            rawFocusIdx: null
                         }
                     });
                 }
@@ -186,7 +191,7 @@ export function init(
                                     onInsert={this.props.onInsert}
                                     canUndo={this.props.canUndo}
                                     range={this.props.range}
-                                    actionPrefix={this.props.actionPrefix}
+                                    formType={this.props.formType}
                                     rawPattern={this.props.rawPattern}
                                     generatedQuery={this.props.generatedQuery} />
                         <div>
@@ -198,7 +203,7 @@ export function init(
         }
     }
 
-    const AvailableTagBuilderBound = models.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model));
+    const AvailableTagBuilderBound = Dict.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model), models);
 
     // ---------------- <ActiveTagBuilder /> -----------------------------------
 
@@ -219,12 +224,12 @@ export function init(
             ).toList();
 
         const children = widgetViews.entrySeq().map(tagset => {
-            const TagBuilderBound = AvailableTagBuilderBound.get(tagset[0]);
+            const TagBuilderBound = AvailableTagBuilderBound[tagset[0]];
             return <TagBuilderBound
                         key={tagset[0]}
                         activeView={tagset[1]}
                         sourceId={props.sourceId}
-                        actionPrefix={props.actionPrefix}
+                        formType={props.formType}
                         range={props.range}
                         onInsert={props.onInsert}
                         onEscKey={props.onEscKey} />;

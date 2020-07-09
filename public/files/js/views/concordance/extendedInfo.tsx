@@ -101,7 +101,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
         render() {
             return <div className="UsageTips">
-                {this.props.currentHints.get(UsageTipCategory.CONCORDANCE)}
+                {this.props.currentHints[UsageTipCategory.CONCORDANCE]}
                 {'\u00a0'}<span className="next-hint">
                 <a onClick={this.handleNextClick} title={he.translate('global__next_tip')}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}

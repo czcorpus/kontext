@@ -20,7 +20,7 @@
 
 import {Kontext, TextTypes} from '../types/common';
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../models/concordance/common';
-import { QueryTypes } from '../models/query/common';
+import { QueryType } from '../models/query/common';
 
 // TODO !! this should be broken and moved into respective modules
 
@@ -88,8 +88,18 @@ export namespace AjaxResponse {
 
     export interface WideCtx extends Kontext.AjaxResponse {
         content:Array<{class:string; str:string}>;
-        expand_left_args:{pos:number; hitlen:number; detail_left_ctx:number; detail_right_ctx:number};
-        expand_right_args:{pos:number; hitlen:number; detail_left_ctx:number; detail_right_ctx:number};
+        expand_left_args:{
+            pos:number;
+            hitlen:number;
+            detail_left_ctx:number;
+            detail_right_ctx:number
+        };
+        expand_right_args:{
+            pos:number;
+            hitlen:number;
+            detail_left_ctx:number;
+            detail_right_ctx:number
+        };
     }
 
     export interface FullRef extends Kontext.AjaxResponse {
@@ -97,14 +107,14 @@ export namespace AjaxResponse {
     }
 
     export interface ConcFormArgs {
-        form_type:string;
+        form_type:Kontext.ConcFormTypes;
         op_key:string; // an ID used by conc_persistence
     }
 
     export interface QueryFormArgs extends ConcFormArgs {
-        curr_query_types:{[corpname:string]:string};
+        curr_query_types:{[corpname:string]:QueryType};
         curr_queries:{[corpname:string]:string};
-        curr_pcq_pos_neg_values:{[corpname:string]:string};
+        curr_pcq_pos_neg_values:{[corpname:string]:'pos'|'neg'};
         curr_lpos_values:{[corpname:string]:string};
         curr_qmcase_values:{[corpname:string]:boolean};
         curr_default_attr_values:{[corpname:string]:string};
@@ -113,7 +123,7 @@ export namespace AjaxResponse {
         selected_text_types:TextTypes.ServerCheckedValues;
         bib_mapping:TextTypes.BibMapping;
         has_lemma:{[corpname:string]:boolean};
-        tagset_docs:{[corpname:string]:boolean};
+        tagset_docs:{[corpname:string]:string};
     }
 
     export function isQueryFormArgs(args:ConcFormArgs):args is QueryFormArgs {
@@ -123,7 +133,7 @@ export namespace AjaxResponse {
     export interface QueryFormArgsResponse extends QueryFormArgs, Kontext.AjaxResponse {}
 
     export interface FilterFormArgs extends ConcFormArgs {
-        query_type:QueryTypes;
+        query_type:QueryType;
         query:string;
         maincorp:string;
         pnfilter:string;
@@ -141,7 +151,8 @@ export namespace AjaxResponse {
     }
 
     export function isFilterFormArgs(args:ConcFormArgs):args is FilterFormArgs {
-        return args['query_type'] !== undefined && args['pnfilter'] !== undefined && args['filfl'] !== undefined;
+        return args['query_type'] !== undefined && args['pnfilter'] !== undefined &&
+                args['filfl'] !== undefined;
     }
 
     export interface FilterFormArgsResponse extends FilterFormArgs, Kontext.AjaxResponse {}
@@ -230,7 +241,8 @@ export namespace AjaxResponse {
         SubcorpList:Array<{v:string; n:string}>;
         TextTypesNotes:string;
         TextDirectionRTL:boolean;
-        pluginData:{[plgName:string]:any}; // here it is impossible to determine a detailed type in a reasonable way
+        // here it is impossible to determine a detailed type in a reasonable way
+        pluginData:{[plgName:string]:any};
         DefaultVirtKeyboard:string;
     }
 }
@@ -240,8 +252,10 @@ export namespace FreqResultResponse {
 
     export interface Item {
         Word:Array<{n:string}>;
-        pfilter:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
-        nfilter:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
+        pfilter:Array<[keyof ConcQuickFilterServerArgs,
+            ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
+        nfilter:Array<[keyof ConcQuickFilterServerArgs,
+            ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
         fbar:number;
         freqbar:number;
         rel:number;
@@ -249,7 +263,7 @@ export namespace FreqResultResponse {
         freq:number;
         nbar:number;
         norm:number;
-        norel:number; // 0|1 (TODO bool?)
+        norel:0|1; // (TODO bool?)
     }
 
     export interface Header {

@@ -1,5 +1,5 @@
 {
-  "name": "KonText",
+  "name": "kontext",
   "description": "An advanced web front-end for the Manatee-open corpus search engine",
   "license": "GPL-2.0",
   "version": "0.15.0",
@@ -36,8 +36,8 @@
     "@types/react-dom": "^16.9.8",
     "immutable": "^3.8.2",
     "rxjs": "^6.6.0",
-    "kombo": "^0.80.0",
-    "cnc-tskit": "0.18.0",
+    "kombo": "^0.81.3",
+    "cnc-tskit": "0.19.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   }
