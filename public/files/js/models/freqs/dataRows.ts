@@ -140,7 +140,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.saveModel = new FreqResultsSaveModel({
             dispatcher: dispatcher,
             layoutModel: pageModel,
-            freqArgsProviderFn: () => this.getSubmitArgs({} as FreqDataRowsModelState), // TODO propagate args
             saveLinkFn: saveLinkFn,
             quickSaveRowLimit: quickSaveRowLimit
         });
@@ -271,8 +270,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler(
-            'FREQ_SAVE_FORM_SUBMIT',
+        this.addActionHandler<Actions.SaveFormSubmit>(
+            ActionName.SaveFormSubmit,
             null,
             (state, action, dispatch) => {
                 dispatch<Actions.ResultPrepareSubmitArgsDone>({

@@ -24,8 +24,8 @@ import {PageModel} from '../../app/page';
 import {MultiDict} from '../../multidict';
 import {Freq2DTableModel} from './ctable';
 import {Freq2DFlatViewModel} from './flatCtable';
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
-import { ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { IFullActionControl, StatefulModel } from 'kombo';
+import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 import { ActionName, Actions } from './actions';
 
 
@@ -35,137 +35,146 @@ export interface FreqResultsSaveModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
-    freqArgsProviderFn:()=>MultiDict;
     saveLinkFn:(file:string, url:string)=>void;
+}
+
+export interface FreqResultsSaveModelState {
+    formIsActive:boolean;
+    saveformat:SaveData.Format;
+    includeColHeaders:boolean;
+    includeHeading:boolean;
+    fromLine:Kontext.FormValue<string>;
+    toLine:Kontext.FormValue<string>;
+    quickSaveRowLimit:number;
 }
 
 
 /**
  *
  */
-export class FreqResultsSaveModel extends StatefulModel<{}> {
+export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelState> {
 
     private layoutModel:PageModel;
 
-    private formIsActive:boolean;
-
-    private saveformat:SaveData.Format;
-
-    private includeColHeaders:boolean;
-
-    private includeHeading:boolean;
-
-    private fromLine:Kontext.FormValue<string>;
-
-    private toLine:Kontext.FormValue<string>;
-
     private saveLinkFn:(file:string, url:string)=>void;
 
-    private freqArgsProviderFn:()=>MultiDict;
-
-    private quickSaveRowLimit:number;
-
-    constructor({
-            dispatcher, layoutModel, freqArgsProviderFn, saveLinkFn,
-            quickSaveRowLimit}:FreqResultsSaveModelArgs) {
-        super(dispatcher, {});
-        this.layoutModel = layoutModel;
-        this.formIsActive = false;
-        this.saveformat = SaveData.Format.CSV;
-        this.fromLine = {value: '1', isInvalid: false, isRequired: true};
-        this.toLine = {value: '', isInvalid: false, isRequired: false};
-        this.includeHeading = false;
-        this.includeColHeaders = false;
-        this.freqArgsProviderFn = freqArgsProviderFn;
-        this.saveLinkFn = saveLinkFn;
-        this.quickSaveRowLimit = quickSaveRowLimit;
-
-        dispatcher.registerActionListener((action:Action) => {
-            switch (action.name) {
-                case MainMenuActionName.ShowSaveForm:
-                    this.formIsActive = true;
-                    this.toLine.value = '';
-                    this.emitChange();
-                break;
-                case MainMenuActionName.DirectSave:
-                    if (window.confirm(this.layoutModel.translate(
-                        'global__quicksave_limit_warning_{format}{lines}',
-                        {format: action.payload['saveformat'], lines: this.quickSaveRowLimit}
-                    ))) {
-                        this.saveformat = action.payload['saveformat'];
-                        this.toLine.value = `${this.quickSaveRowLimit}`;
-                        this.submit();
-                        this.toLine.value = '';
-                        this.emitChange();
-                    }
-                break;
-                case 'FREQ_RESULT_CLOSE_SAVE_FORM':
-                    this.formIsActive = false;
-                    this.emitChange();
-                break;
-                case 'FREQ_SAVE_FORM_SET_FORMAT':
-                    this.saveformat = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'FREQ_SAVE_FORM_SET_FROM_LINE':
-                    this.fromLine.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'FREQ_SAVE_FORM_SET_TO_LINE':
-                    this.toLine.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING':
-                    this.includeHeading = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS':
-                    this.includeColHeaders = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'FREQ_SAVE_FORM_SUBMIT':
-                    const err = this.validateForm();
-                    if (err) {
-                        this.layoutModel.showMessage('error', err);
-
-                    } else {
-                        this.formIsActive = false;
-                        this.suspend({}, (action, syncData) => {
-                            return action.name === ActionName.ResultPrepareSubmitArgsDone ? null : syncData
-                        }).subscribe(
-                            (action:Actions.ResultPrepareSubmitArgsDone) => {
-                                this.submit(action.payload.data);
-                            }
-                        )
-                    }
-                    this.emitChange();
-                break;
+    constructor({dispatcher, layoutModel, saveLinkFn, quickSaveRowLimit}:FreqResultsSaveModelArgs) {
+        super(
+            dispatcher,
+            {
+                formIsActive: false,
+                saveformat: SaveData.Format.CSV,
+                fromLine: {value: '1', isInvalid: false, isRequired: true},
+                toLine: {value: '', isInvalid: false, isRequired: false},
+                includeHeading: false,
+                includeColHeaders: false,
+                quickSaveRowLimit: quickSaveRowLimit
             }
-        });
+        );
 
-        /*
-        this.addActionHandler(
-            'FREQ_SAVE_FORM_SUBMIT'
-        )
-        */
+        this.layoutModel = layoutModel;
+        this.saveLinkFn = saveLinkFn;
+
+        this.addActionHandler<MainMenuActions.ShowSaveForm>(
+            MainMenuActionName.ShowSaveForm,
+            action => {
+                this.changeState(state => {
+                    state.formIsActive = true;
+                    state.toLine.value = '';
+                })
+            }
+        );
+
+        this.addActionHandler<MainMenuActions.DirectSave>(
+            MainMenuActionName.DirectSave,
+            action => {
+                if (window.confirm(this.layoutModel.translate(
+                    'global__quicksave_limit_warning_{format}{lines}',
+                    {format: action.payload.saveformat, lines: this.state.quickSaveRowLimit}
+                ))) {
+                    this.changeState(state => {
+                        state.saveformat = action.payload.saveformat,
+                        state.toLine.value = `${state.quickSaveRowLimit}`
+                    });
+                    this.suspend({}, (action, syncData) =>
+                        action.name === ActionName.ResultPrepareSubmitArgsDone ? null : syncData
+                    ).subscribe(
+                        (action:Actions.ResultPrepareSubmitArgsDone) => {
+                            this.submit(action.payload.data);
+                        }
+                    )
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.ResultCloseSaveForm>(
+            ActionName.ResultCloseSaveForm,
+            action => this.changeState(state => {state.formIsActive = false})
+        );
+
+        this.addActionHandler<Actions.SaveFormSetFormat>(
+            ActionName.SaveFormSetFormat,
+            action => this.changeState(state => {state.saveformat = action.payload.value})
+        );
+
+        this.addActionHandler<Actions.SaveFormSetFromLine>(
+            ActionName.SaveFormSetFromLine,
+            action => this.changeState(state => {state.fromLine.value = action.payload.value})
+        );
+
+        this.addActionHandler<Actions.SaveFormSetToLine>(
+            ActionName.SaveFormSetToLine,
+            action => this.changeState(state => {state.toLine.value = action.payload.value})
+        );
+
+        this.addActionHandler<Actions.SaveFormSetIncludeHeading>(
+            ActionName.SaveFormSetIncludeHeading,
+            action => this.changeState(state => {state.includeHeading = action.payload.value})
+        );
+
+        this.addActionHandler<Actions.SaveFormSetIncludeColHeading>(
+            ActionName.SaveFormSetIncludeColHeading,
+            action => this.changeState(state => {state.includeColHeaders = action.payload.value})
+        );
+
+        this.addActionHandler<Actions.SaveFormSubmit>(
+            ActionName.SaveFormSubmit,
+            action => {
+                let err;
+                this.changeState(state => {err = this.validateForm(state)});
+                if (err) {
+                    this.layoutModel.showMessage('error', err);
+
+                } else {
+                    this.changeState(state => {state.formIsActive = false});
+                    this.suspend({}, (action, syncData) => {
+                        return action.name === ActionName.ResultPrepareSubmitArgsDone ? null : syncData
+                    }).subscribe(
+                        (action:Actions.ResultPrepareSubmitArgsDone) => {
+                            this.submit(action.payload.data);
+                        }
+                    )
+                }
+            }
+        );
     }
 
     unregister() {}
 
-    private validateForm(/*state*/):Error|null {
-        this.fromLine.isInvalid = false;
-        this.toLine.isInvalid = false;
-        if (!this.validateNumberFormat(this.fromLine.value, false)) {
-            this.fromLine.isInvalid = true;
+    private validateForm(state:FreqResultsSaveModelState):Error|null {
+        state.fromLine.isInvalid = false;
+        state.toLine.isInvalid = false;
+        if (!this.validateNumberFormat(state.fromLine.value, false)) {
+            state.fromLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        if (!this.validateNumberFormat(this.toLine.value, true)) {
-            this.toLine.isInvalid = true;
+        if (!this.validateNumberFormat(state.toLine.value, true)) {
+            state.toLine.isInvalid = true;
             return new Error(this.layoutModel.translate('global__invalid_number_format'));
         }
-        if (parseInt(this.fromLine.value) < 1 || (this.toLine.value !== '' &&
-                parseInt(this.fromLine.value) > parseInt(this.toLine.value))) {
-            this.fromLine.isInvalid = true;
+        if (parseInt(state.fromLine.value) < 1 || (state.toLine.value !== '' &&
+                parseInt(state.fromLine.value) > parseInt(state.toLine.value))) {
+            state.fromLine.isInvalid = true;
             return new Error(this.layoutModel.translate('freq__save_form_from_value_err_msg'));
         }
     }
@@ -178,75 +187,55 @@ export class FreqResultsSaveModel extends StatefulModel<{}> {
     }
 
     private submit(dataRowsArgs:MultiDict):void {
-        const args = this.freqArgsProviderFn();
-        args.set('saveformat', this.saveformat);
-        args.set('colheaders', this.includeColHeaders ? '1' : '0');
-        args.set('heading', this.includeHeading ? '1' : '0');
-        args.set('from_line', this.fromLine.value);
-        args.set('to_line', this.toLine.value);
+        const args = new MultiDict();
+        dataRowsArgs.items().forEach(([k, v]) => args.add(k, v));
+        args.set('saveformat', this.state.saveformat);
+        args.set('colheaders', this.state.includeColHeaders ? '1' : '0');
+        args.set('heading', this.state.includeHeading ? '1' : '0');
+        args.set('from_line', this.state.fromLine.value);
+        args.set('to_line', this.state.toLine.value);
         args.remove('format'); // cannot risk 'json' here
         this.saveLinkFn(
-            `frequencies.${SaveData.formatToExt(this.saveformat)}`,
+            `frequencies.${SaveData.formatToExt(this.state.saveformat)}`,
             this.layoutModel.createActionUrl('savefreq', args.items())
         );
-    }
-
-    getFormIsActive():boolean {
-        return this.formIsActive;
-    }
-
-    getSaveformat():SaveData.Format {
-        return this.saveformat;
-    }
-
-    getIncludeColHeaders():boolean {
-        return this.includeColHeaders;
-    }
-
-    getIncludeHeading():boolean {
-        return this.includeHeading;
-    }
-
-    getFromLine():Kontext.FormValue<string> {
-        return this.fromLine;
-    }
-
-    getToLine():Kontext.FormValue<string> {
-        return this.toLine;
     }
 }
 
 
+export interface FreqCTResultsSaveModelState {
+    saveMode:string;
+}
 
-export class FreqCTResultsSaveModel extends StatefulModel {
+export class FreqCTResultsSaveModel extends StatefulModel<FreqCTResultsSaveModelState> {
 
     ctTableModel:Freq2DTableModel;
 
     ctFlatModel:Freq2DFlatViewModel;
 
-    saveMode:string;
-
-
     constructor(dispatcher:IFullActionControl, ctTableModel:Freq2DTableModel, ctFlatModel:Freq2DFlatViewModel) {
-        super(dispatcher);
+        super(dispatcher, {saveMode: null});
         this.ctTableModel = ctTableModel;
         this.ctFlatModel = ctFlatModel;
 
-        dispatcher.registerActionListener((action:Action) => {
-            switch (action.name) {
-                case 'FREQ_CT_SET_SAVE_MODE':
-                    this.saveMode = action.payload['value'];
-                break;
-                case MainMenuActionName.DirectSave:
-                    if (this.saveMode === 'table') {
-                        this.ctTableModel.submitDataConversion(action.payload['saveformat']);
+        this.addActionHandler<Actions.SetCtSaveMode>(
+            ActionName.SetCtSaveMode,
+            action => this.changeState(state => {state.saveMode = action.payload.value})
+        );
 
-                    } else if (this.saveMode === 'list') {
-                        this.ctFlatModel.submitDataConversion(action.payload['saveformat']);
-                    }
-                break;
+        this.addActionHandler<MainMenuActions.DirectSave>(
+            MainMenuActionName.DirectSave,
+            action => {
+                if (this.state.saveMode === 'table') {
+                    this.ctTableModel.submitDataConversion(action.payload.saveformat);
+
+                } else if (this.state.saveMode === 'list') {
+                    this.ctFlatModel.submitDataConversion(action.payload.saveformat);
+                }
             }
-        });
+        );
     }
+
+    unregister() {}
 
 }

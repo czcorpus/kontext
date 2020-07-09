@@ -374,6 +374,7 @@ class FreqPage {
             break;
             case 'tt':
             case 'ml': {
+                /* TODO
                 const args = this.freqResultModel.getSubmitArgs();
                 args.remove('format');
                 this.layoutModel.getHistory().replaceState(
@@ -381,6 +382,7 @@ class FreqPage {
                     args,
                     window.document.title
                 );
+                */
             }
             break;
         }

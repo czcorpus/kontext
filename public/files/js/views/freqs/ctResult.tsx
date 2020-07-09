@@ -31,6 +31,7 @@ import {DataPoint} from '../../charts/confIntervals';
 import {IActionDispatcher} from 'kombo';
 import { Subscription } from 'rxjs';
 import { Color, pipe } from 'cnc-tskit';
+import { Actions, ActionName } from '../../models/freqs/actions';
 
 
 const enum TableViewMode {
@@ -1196,8 +1197,8 @@ export function init(
         }
 
         _handleModeSwitch(evt) {
-            dispatcher.dispatch({
-                name: 'FREQ_CT_SET_SAVE_MODE',
+            dispatcher.dispatch<Actions.SetCtSaveMode>({
+                name: ActionName.SetCtSaveMode,
                 payload: {value: evt.target.value}
             });
             this.setState({mode: evt.target.value});
@@ -1215,8 +1216,8 @@ export function init(
         }
 
         componentDidMount() {
-            dispatcher.dispatch({
-                name: 'FREQ_CT_SET_SAVE_MODE',
+            dispatcher.dispatch<Actions.SetCtSaveMode>({
+                name: ActionName.SetCtSaveMode,
                 payload: {value: this.state.mode}
             });
         }

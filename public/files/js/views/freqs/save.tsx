@@ -21,9 +21,9 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
-import {FreqResultsSaveModel} from '../../models/freqs/save';
-import {IActionDispatcher} from 'kombo';
-import { Subscription } from 'rxjs';
+import {FreqResultsSaveModel, FreqResultsSaveModelState} from '../../models/freqs/save';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
+import {ActionName, Actions} from '../../models/freqs/actions';
 
 
 interface SaveFreqFormProps {
@@ -65,8 +65,8 @@ export function init(
     const TRSaveFormatSelect:React.SFC<TRSaveFormatSelectProps> = (props) => {
 
         const handleSelect = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_SAVE_FORM_SET_FORMAT',
+            dispatcher.dispatch<Actions.SaveFormSetFormat>({
+                name: ActionName.SaveFormSetFormat,
                 payload: {
                     value: evt.target.value
                 }
@@ -78,10 +78,10 @@ export function init(
                 <th>{utils.translate('coll__save_form_select_label')}:</th>
                 <td>
                     <select value={props.value} onChange={handleSelect}>
-                        <option value="csv">CSV</option>
-                        <option value="xlsx">XLSX (Excel)</option>
-                        <option value="xml">XML</option>
-                        <option value="text">Text</option>
+                        <option value={SaveData.Format.CSV}>CSV</option>
+                        <option value={SaveData.Format.XLSX}>XLSX (Excel)</option>
+                        <option value={SaveData.Format.XML}>XML</option>
+                        <option value={SaveData.Format.TEXT}>Text</option>
                     </select>
                 </td>
             </tr>
@@ -101,8 +101,8 @@ export function init(
     const TRIncludeHeadingCheckbox:React.SFC<TRIncludeHeadingCheckboxProps> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING',
+            dispatcher.dispatch<Actions.SaveFormSetIncludeHeading>({
+                name: ActionName.SaveFormSetIncludeHeading,
                 payload: {
                     value: !props.value
                 }
@@ -136,8 +136,8 @@ export function init(
     const TRColHeadersCheckbox:React.SFC<TRColHeadersCheckboxProps> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
+            dispatcher.dispatch<Actions.SaveFormSetIncludeColHeading>({
+                name: ActionName.SaveFormSetIncludeColHeading,
                 payload: {
                     value: !props.value
                 }
@@ -165,8 +165,8 @@ export function init(
     const TRSelLineRangeInputs:React.SFC<TRSelLineRangeInputsProps> = (props) => {
 
         const handleFromInput = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_SAVE_FORM_SET_FROM_LINE',
+            dispatcher.dispatch<Actions.SaveFormSetFromLine>({
+                name: ActionName.SaveFormSetFromLine,
                 payload: {
                     value: evt.target.value
                 }
@@ -174,8 +174,8 @@ export function init(
         };
 
         const handleToInput = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_SAVE_FORM_SET_TO_LINE',
+            dispatcher.dispatch<Actions.SaveFormSetToLine>({
+                name: ActionName.SaveFormSetToLine,
                 payload: {
                     value: evt.target.value
                 }
@@ -214,55 +214,27 @@ export function init(
     /**
      *
      */
-    class SaveFreqForm extends React.Component<SaveFreqFormProps, SaveFreqFormState> {
-
-        private modelSubscription:Subscription;
+    class SaveFreqForm extends React.Component<SaveFreqFormProps & FreqResultsSaveModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
         }
 
-        _fetchModelState() {
-            return {
-                saveformat: freqSaveModel.getSaveformat(),
-                includeColHeaders: freqSaveModel.getIncludeColHeaders(),
-                includeHeading: freqSaveModel.getIncludeHeading(),
-                fromLine: freqSaveModel.getFromLine(),
-                toLine: freqSaveModel.getToLine(),
-            };
-        }
-
         _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'FREQ_SAVE_FORM_SUBMIT',
+            dispatcher.dispatch<Actions.SaveFormSubmit>({
+                name: ActionName.SaveFormSubmit,
                 payload: {}
             });
         }
 
-        _handleModelChange() {
-            if (freqSaveModel.getFormIsActive()) {
-                this.setState(this._fetchModelState());
-            }
-        }
-
-        componentDidMount() {
-            this.modelSubscription = freqSaveModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderFormatDependentOptions() {
-            switch (this.state.saveformat) {
+            switch (this.props.saveformat) {
                 case SaveData.Format.XML:
-                    return <TRIncludeHeadingCheckbox value={this.state.includeHeading} />;
+                    return <TRIncludeHeadingCheckbox value={this.props.includeHeading} />;
                 case SaveData.Format.CSV:
                 case SaveData.Format.XLSX:
-                    return <TRColHeadersCheckbox value={this.state.includeColHeaders} />
+                    return <TRColHeadersCheckbox value={this.props.includeColHeaders} />
                 default:
                 return <tr><td colSpan={2} /></tr>;
             }
@@ -275,11 +247,11 @@ export function init(
                         <form className="SaveFreqForm">
                             <table className="form">
                                 <tbody>
-                                    <TRSaveFormatSelect value={this.state.saveformat} />
+                                    <TRSaveFormatSelect value={this.props.saveformat} />
                                     {this._renderFormatDependentOptions()}
                                     <TRSelLineRangeInputs
-                                            fromValue={this.state.fromLine}
-                                            toValue={this.state.toLine} />
+                                            fromValue={this.props.fromLine}
+                                            toValue={this.props.toLine} />
                                 </tbody>
                             </table>
                             <button type="button" className="default-button"
@@ -294,7 +266,7 @@ export function init(
     }
 
     return {
-        SaveFreqForm: SaveFreqForm
+        SaveFreqForm: BoundWithProps(SaveFreqForm, freqSaveModel)
     };
 
 }
