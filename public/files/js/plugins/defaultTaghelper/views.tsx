@@ -23,7 +23,7 @@ import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { TagBuilderBaseState } from './common';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
-import { Dict } from 'cnc-tskit';
+import { Dict, List, pipe } from 'cnc-tskit';
 
 export function init(
     dispatcher:IActionDispatcher,
@@ -215,25 +215,32 @@ export function init(
             });
         };
 
-        const tagsetTabs = widgetViews.keySeq()
-            .map(
+        const tagsetTabs = pipe(
+            widgetViews,
+            Dict.keys(),
+            List.map(
                 tagset => ({
                     id: tagset,
                     label: tagset
                 })
-            ).toList();
+            )
+        );
 
-        const children = widgetViews.entrySeq().map(tagset => {
-            const TagBuilderBound = AvailableTagBuilderBound[tagset[0]];
-            return <TagBuilderBound
-                        key={tagset[0]}
-                        activeView={tagset[1]}
-                        sourceId={props.sourceId}
-                        formType={props.formType}
-                        range={props.range}
-                        onInsert={props.onInsert}
-                        onEscKey={props.onEscKey} />;
-        });
+        const children = pipe(
+            widgetViews,
+            Dict.toEntries(),
+            List.map(tagset => {
+                const TagBuilderBound = AvailableTagBuilderBound[tagset[0]];
+                return <TagBuilderBound
+                            key={tagset[0]}
+                            activeView={tagset[1]}
+                            sourceId={props.sourceId}
+                            formType={props.formType}
+                            range={props.range}
+                            onInsert={props.onInsert}
+                            onEscKey={props.onEscKey} />;
+            })
+        );
 
         return (
             <div>
@@ -241,9 +248,9 @@ export function init(
                 <layoutViews.TabView
                     className="TagsetFormSelector"
                     callback={handleTabSelection}
-                    items={tagsetTabs.toArray()} >
+                    items={tagsetTabs} >
 
-                    {children.toArray()}
+                    {children}
                 </layoutViews.TabView>
             </div>
         );

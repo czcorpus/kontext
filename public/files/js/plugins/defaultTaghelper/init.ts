@@ -53,85 +53,89 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
             tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>):PluginInterfaces.TagHelper.View {
         const views:Array<[string, React.SFC<{}>|React.ComponentClass<{}>]> = [];
         let models:Array<[string, StatelessModel<TagBuilderBaseState>]> = [];
-        for (const tagsetInfo of tagsets) {
-            switch (tagsetInfo.type) {
-                case 'positional':
-                    const positions:Array<PositionOptions> = [];
-                    addPairIfNotPresent(
-                        models,
-                        tagsetInfo.ident,
-                        new TagHelperModel(
-                            this.pluginApi.dispatcher(),
-                            this.pluginApi,
-                            {
-                                corpname,
-                                tagsetName: tagsetInfo.ident,
-                                data: [positions],
-                                positions,
-                                tagAttr: tagsetInfo.featAttr,
-                                presetPattern: '',
-                                srchPattern: '.*',
-                                rawPattern: '.*',
-                                generatedQuery: `${tagsetInfo.featAttr}=".*"`,
-                                isBusy: false,
-                                canUndo: false
-                            },
-                            tagsetInfo.ident
-                        ));
-                    addPairIfNotPresent(
-                        views,
-                        tagsetInfo.ident,
-                        ppTagsetViewInit(
-                            this.pluginApi.dispatcher(),
-                            this.pluginApi.getComponentHelpers()
-                        )
-                    );
-                break;
-                case 'keyval':
-                    addPairIfNotPresent(
-                        models,
-                        tagsetInfo.ident,
-                        new UDTagBuilderModel(
-                            this.pluginApi.dispatcher(),
-                            this.pluginApi,
-                            {
-                                corpname,
-                                tagsetName: tagsetInfo.ident,
-                                isBusy: false,
-                                insertRange: [0, 0],
-                                canUndo: false,
-                                generatedQuery: '',
-                                rawPattern: '', // not applicable for the current UI
-                                error: null,
-                                allFeatures: {},
-                                availableFeatures: {},
-                                filterFeaturesHistory: [[]],
-                                showCategory: '',
-                                posField: tagsetInfo.posAttr,
-                                featureField: tagsetInfo.featAttr
-                            },
-                            tagsetInfo.ident
-                        )
-                    );
-                    addPairIfNotPresent(
-                        views,
-                        tagsetInfo.ident,
-                        udTagsetViewInit(
-                            this.pluginApi.dispatcher(),
-                            this.pluginApi.getComponentHelpers()
-                        )
-                    );
-                break;
-                case 'other': // 'other' means defined but unsupported
-                case null:  // null means no tagset defined for the corpus
-                    return null;
-                default:
-                    throw new Error(
-                        `Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`);
-            }
-        }
+        List.forEach(
+            tagsetInfo => {
+                switch (tagsetInfo.type) {
+                    case 'positional':
+                        const positions:Array<PositionOptions> = [];
+                        addPairIfNotPresent(
+                            models,
+                            tagsetInfo.ident,
+                            new TagHelperModel(
+                                this.pluginApi.dispatcher(),
+                                this.pluginApi,
+                                {
+                                    corpname,
+                                    tagsetName: tagsetInfo.ident,
+                                    data: [positions],
+                                    positions,
+                                    tagAttr: tagsetInfo.featAttr,
+                                    presetPattern: '',
+                                    srchPattern: '.*',
+                                    rawPattern: '.*',
+                                    generatedQuery: `${tagsetInfo.featAttr}=".*"`,
+                                    isBusy: false,
+                                    canUndo: false
+                                },
+                                tagsetInfo.ident
+                            ));
+                        addPairIfNotPresent(
+                            views,
+                            tagsetInfo.ident,
+                            ppTagsetViewInit(
+                                this.pluginApi.dispatcher(),
+                                this.pluginApi.getComponentHelpers()
+                            )
+                        );
+                    break;
+                    case 'keyval':
+                        addPairIfNotPresent(
+                            models,
+                            tagsetInfo.ident,
+                            new UDTagBuilderModel(
+                                this.pluginApi.dispatcher(),
+                                this.pluginApi,
+                                {
+                                    corpname,
+                                    tagsetName: tagsetInfo.ident,
+                                    isBusy: false,
+                                    insertRange: [0, 0],
+                                    canUndo: false,
+                                    generatedQuery: '',
+                                    rawPattern: '', // not applicable for the current UI
+                                    error: null,
+                                    allFeatures: {},
+                                    availableFeatures: {},
+                                    filterFeaturesHistory: [[]],
+                                    showCategory: '',
+                                    posField: tagsetInfo.posAttr,
+                                    featureField: tagsetInfo.featAttr
+                                },
+                                tagsetInfo.ident
+                            )
+                        );
+                        addPairIfNotPresent(
+                            views,
+                            tagsetInfo.ident,
+                            udTagsetViewInit(
+                                this.pluginApi.dispatcher(),
+                                this.pluginApi.getComponentHelpers()
+                            )
+                        );
+                    break;
+                    case 'other': // 'other' means defined but unsupported
+                    case null:  // null means no tagset defined for the corpus
+                        return null;
+                    default:
+                        throw new Error(
+                            `Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`
+                        );
+                }
+            },
+            tagsets
+        );
 
-        models.forEach(
+        List.forEach(
             ([key, model]) => {
                 model.suspend({}, (action, syncObj) => {
                     if (action.name === 'TAGHELPER_SET_ACTIVE_TAG' &&
@@ -144,7 +148,8 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                     }
                     return syncObj;
                 });
-            }
+            },
+            models
         );
 
         return viewInit(
