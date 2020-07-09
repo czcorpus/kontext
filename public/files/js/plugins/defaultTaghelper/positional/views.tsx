@@ -19,10 +19,11 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
+import { IActionDispatcher } from 'kombo';
+
 import {PositionValue, PositionOptions, TagHelperModelState} from './models';
 import { Kontext } from '../../../types/common';
-import { IActionDispatcher } from 'kombo';
+import { List } from 'cnc-tskit';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
@@ -72,7 +73,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     // ------------------------------ <ValueList /> ----------------------------
 
     const ValueList:React.SFC<{
-                positionValues:Immutable.Iterable<number, PositionValue>,
+                positionValues:Array<PositionValue>,
                 lineIdx:number;
                 isLocked:boolean;
                 checkboxHandler:CheckboxHandler;
@@ -87,7 +88,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         };
 
         const hasOnlyUnfulfilledChild = () => {
-            return props.positionValues.size === 1 && props.positionValues.get(0).id === '-';
+            return props.positionValues.length === 1 && List.head(props.positionValues).id === '-';
         };
 
         const renderUnfulfilledCheckbox = () => {
@@ -99,7 +100,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             );
         };
         return (
-            props.positionValues.filter(item => item.available).size > 0 ?
+            List.filter(item => item.available, props.positionValues).length > 0 ?
             (
                 <table className="checkbox-list">
                 <tbody>
@@ -143,7 +144,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             <li className="defaultTaghelper_PositionLine">
                 <a className={linkClass} onClick={clickHandler}>
                     <span className="pos-num">{props.lineIdx + 1})</span> {props.position['label']}
-                    <span className="status-text">[ {getAvailableChildren().size} ]</span>
+                    <span className="status-text">[ {getAvailableChildren().length} ]</span>
                 </a>
                 {props.position.isActive ?
                 <ValueList positionValues={getAvailableChildren()}
@@ -158,7 +159,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     const PositionList:React.SFC<{
         sourceId:string;
-        positions:Immutable.List<PositionOptions>;
+        positions:Array<PositionOptions>;
         checkboxHandler:CheckboxHandler;
     }> = (props) => {
 

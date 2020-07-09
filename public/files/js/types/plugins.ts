@@ -24,7 +24,7 @@ import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
 import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
 import { ConcServerArgs } from '../models/concordance/common';
-import { FormType } from '../models/query/actions';
+import { QueryFormType } from '../models/query/actions';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -190,7 +190,7 @@ export namespace PluginInterfaces {
 
         export interface ViewProps {
             sourceId:string;
-            formType:FormType;
+            formType:QueryFormType;
             range:[number, number];
             onInsert:()=>void;
             onEscKey:()=>void;
@@ -199,7 +199,8 @@ export namespace PluginInterfaces {
         export type View = React.ComponentClass<ViewProps>|React.SFC<ViewProps>;
 
         export interface IPlugin {
-            getWidgetView(corpname:string, tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;
+            getWidgetView(corpname:string,
+                tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;
         }
 
         export interface Factory {
@@ -227,7 +228,7 @@ export namespace PluginInterfaces {
 
         export interface WidgetProps {
             sourceId:string;
-            formType:FormType;
+            formType:QueryFormType;
             onCloseTrigger:()=>void;
         }
 
@@ -279,7 +280,8 @@ export namespace PluginInterfaces {
             /**
              * Create a corpus selection widget used on the query page
              */
-            createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}>;
+            createWidget(targetAction:string,
+                options:Kontext.GeneralProps):React.ComponentClass<{}>;
 
             /**
              * This is needed when corpus change is performed.
@@ -300,7 +302,8 @@ export namespace PluginInterfaces {
     export namespace LiveAttributes {
 
         export interface IPlugin {
-            getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
+            getViews(subcMixerView:React.ComponentClass,
+                textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
         }
 
         /**
@@ -410,7 +413,8 @@ export namespace PluginInterfaces {
             data: Array<[string, string]>;
         }
 
-        export type Renderer = React.ComponentClass<Kontext.GeneralProps>|React.SFC<Kontext.GeneralProps>;
+        export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
+            React.SFC<Kontext.GeneralProps>;
 
         export interface DataAndRenderer {
             renderer:Renderer;

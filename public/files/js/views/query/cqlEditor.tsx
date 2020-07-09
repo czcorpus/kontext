@@ -27,11 +27,11 @@ import { Keyboard } from 'cnc-tskit';
 import { CQLEditorModel, CQLEditorModelState } from '../../models/query/cqleditor/model';
 import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
-import { Actions, ActionName, FormType } from '../../models/query/actions';
+import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 
 
 export interface CQLEditorProps {
-    formType:FormType;
+    formType:QueryFormType;
     sourceId:string;
     takeFocus:boolean;
     hasHistoryWidget:boolean;
@@ -42,7 +42,7 @@ export interface CQLEditorProps {
 }
 
 export interface CQLEditorFallbackProps {
-    formType:FormType;
+    formType:QueryFormType;
     sourceId:string;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
@@ -231,26 +231,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         const leftIdx = Number(a.getAttribute('data-leftIdx'));
                         const rightIdx = Number(a.getAttribute('data-rightIdx'));
 
-                        dispatcher.dispatch(rxOf(
-                            {
-                                name: 'TAGHELPER_PRESET_PATTERN',
-                                payload: {
-                                    sourceId: this.props.sourceId,
-                                    pattern: this.props.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
-                                }
-                            },
-                            {
-                                name: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-                                payload: {
-                                    sourceId: this.props.sourceId,
-                                    value: 'tag',
-                                    widgetArgs: {
-                                        leftIdx: leftIdx,
-                                        rightIdx: rightIdx
-                                    }
+                        dispatcher.dispatch({
+                            name: 'TAGHELPER_PRESET_PATTERN',
+                            payload: {
+                                sourceId: this.props.sourceId,
+                                pattern: this.props.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
+                            }
+                        });
+                        dispatcher.dispatch<Actions.SetActiveInputWidget>({
+                            name: ActionName.SetActiveInputWidget,
+                            payload: {
+                                formType: this.props.formType,
+                                sourceId: this.props.sourceId,
+                                value: 'tag',
+                                widgetArgs: {
+                                    leftIdx: leftIdx,
+                                    rightIdx: rightIdx
                                 }
                             }
-                        ));
+                        });
                     break;
                 }
             }

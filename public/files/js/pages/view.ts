@@ -696,10 +696,10 @@ export class ViewPage {
      */
     initQueryOverviewArea(taghelperPlugin:PluginInterfaces.TagHelper.IPlugin,
                     queryStoragePlugin:PluginInterfaces.QueryStorage.IPlugin):void {
-        this.queryModels.queryReplayModel = new QueryReplayModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            {
+        this.queryModels.queryReplayModel = new QueryReplayModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            replayModelDeps: {
                 queryModel: this.queryModels.queryModel,
                 filterModel: this.queryModels.filterModel,
                 sortModel: this.queryModels.sortModel,
@@ -707,11 +707,13 @@ export class ViewPage {
                 sampleModel: this.queryModels.sampleModel,
                 textTypesModel: this.queryModels.textTypesModel,
                 switchMcModel: this.queryModels.switchMcModel,
-                firstHitsModel: this.queryModels.firstHitsModel
+                firstHitsModel: this.queryModels.firstHitsModel,
+                queryContextModel: this.queryModels.queryContextModel
             },
-            this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
-            this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
-        );
+            currentOperations: this.layoutModel.getConf<Array<Kontext.QueryOperation>>(
+                'queryOverview') || [],
+            concArgsCache: this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
+        });
 
         this.queryOverviewViews = queryOverviewInit({
             dispatcher: this.layoutModel.dispatcher,

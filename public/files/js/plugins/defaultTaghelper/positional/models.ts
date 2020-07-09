@@ -16,11 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {IPluginApi} from '../../../types/plugins';
-import * as Immutable from 'immutable';
+import { IPluginApi } from '../../../types/plugins';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { TagBuilderBaseState } from '../common';
 import { Observable, of as rxOf } from 'rxjs';
+import { List, pipe } from 'cnc-tskit';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -53,7 +53,7 @@ export interface PositionValue {
  */
 export interface PositionOptions {
     label:string;
-    values:Immutable.List<PositionValue>;
+    values:Array<PositionValue>;
     isLocked:boolean;
     isActive:boolean;
 }
@@ -65,9 +65,9 @@ export interface TagHelperModelState extends TagBuilderBaseState {
      * Contains all the values (inner lists) along with selection
      * status through whole user interaction (outer list).
      */
-    data:Immutable.List<Immutable.List<PositionOptions>>;
+    data:Array<Array<PositionOptions>>;
 
-    positions:Immutable.List<PositionOptions>;
+    positions:Array<PositionOptions>;
 
     presetPattern:string;
 
@@ -92,7 +92,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     private readonly sourceId:string;
 
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:TagHelperModelState, ident:string) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi,
+            initialState:TagHelperModelState, ident:string) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.ident = ident;
@@ -102,7 +103,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
                     newState.presetPattern = action.payload['pattern'];
-                    if (newState.data.last().size > 0) {
+                    if (List.last(newState.data).length > 0) {
                         this.applyPresetPattern(newState);
                     }
                     return newState;
@@ -122,8 +123,13 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                     const newState = this.copyState(state);
                     newState.isBusy = false;
                     if (!action.error) {
-                        if (Array.isArray(action.payload['tags']) && action.payload['tags'].length > 0) {
-                            this.importData(newState, action.payload['labels'], action.payload['tags']);
+                        if (Array.isArray(action.payload['tags']) &&
+                                action.payload['tags'].length > 0) {
+                            this.importData(
+                                newState,
+                                action.payload['labels'],
+                                action.payload['tags']
+                            );
                             if (newState.presetPattern) {
                                 this.applyPresetPattern(newState);
                             }
@@ -140,8 +146,12 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
             'TAGHELPER_CHECKBOX_CHANGED': (state, action) => {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
-                    this.updateSelectedItem(newState, action.payload['position'], action.payload['value'],
-                            action.payload['checked']);
+                    this.updateSelectedItem(
+                        newState,
+                        action.payload['position'],
+                        action.payload['value'],
+                        action.payload['checked']
+                    );
                     newState.isBusy = true;
                     return newState;
                 }
@@ -185,14 +195,18 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
             'TAGHELPER_TOGGLE_ACTIVE_POSITION': (state, action) => {
                 if (action.payload['sourceId'] === this.sourceId) {
                     const newState = this.copyState(state);
-                    const latest = newState.data.last();
-                    newState.data = newState.data.push(latest.map((item, i) => ({
-                        label: item.label,
-                        values: item.values,
-                        isLocked: item.isLocked,
-                        isActive: i === action.payload['idx'] ? !item.isActive : item.isActive
-                    })).toList());
-                    newState.positions = newState.data.last();
+                    const latest = List.last(newState.data);
+                    newState.data.push(
+                        List.map(
+                            (item, i) => ({
+                                ...item,
+                                isActive: i === action.payload['idx'] ?
+                                    !item.isActive : item.isActive
+                            }),
+                            latest
+                        )
+                    );
+                    newState.positions = List.last(newState.data);
                     return newState;
                 }
                 return state;
@@ -204,7 +218,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         switch (action.name) {
             case 'TAGHELPER_GET_INITIAL_DATA':
                 if (action.payload['sourceId'] === this.sourceId) {
-                    (state.data.last().size === 0 ?
+                    (List.last(state.data).length === 0 ?
                         this.loadInitialData(state) :
                         rxOf({
                             labels: [],
@@ -262,8 +276,13 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
             }
             break;
             case 'TAGHELPER_SET_ACTIVE_TAG':
-                if (action.payload['sourceId'] === this.sourceId && this.ident !== action.payload['value']) {
-                    this.suspend({}, (action, syncObj) => this.ident === action.payload['value'] ? null : syncObj);
+                if (action.payload['sourceId'] === this.sourceId &&
+                        this.ident !== action.payload['value']) {
+                    this.suspend(
+                        {},
+                        (action, syncObj) => this.ident === action.payload['value']
+                            ? null : syncObj
+                    ).subscribe(); // TODO is this correct ?
                 }
             break;
         }
@@ -299,17 +318,17 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     }
 
     private resetSelections(state:TagHelperModelState):void {
-        state.data = state.data.slice(0, 2).toList();
-        state.positions = state.data.last();
+        state.data = state.data.slice(0, 2);
+        state.positions = List.last(state.data);
         state.canUndo = this.canUndo(state);
         state.srchPattern = this.getCurrentPattern(state);
         [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
     }
 
     private undo(state:TagHelperModelState):void {
-        if (state.data.size > 2) {
-            state.data = state.data.slice(0, -1).toList();
-            state.positions = state.data.last();
+        if (state.data.length > 2) {
+            state.data = state.data.slice(0, -1);
+            state.positions = List.last(state.data);
         }
         state.canUndo = this.canUndo(state);
         state.srchPattern = this.getCurrentPattern(state);
@@ -323,16 +342,21 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      */
     private applyPresetPattern(state:TagHelperModelState):void {
         if (/^\||[^\\]\|/.exec(state.presetPattern)) {
-            this.pluginApi.showMessage('warning', this.pluginApi.translate('taghelper__cannot_parse'));
+            this.pluginApi.showMessage(
+                'warning',
+                this.pluginApi.translate('taghelper__cannot_parse')
+            );
         }
         const parsePattern = /\[\\?[^\]]+\]|\\?[^\]^\[^\.]|\.\*|\./g;
         const values = [];
-        let item = null;
-        while ((item = parsePattern.exec(state.presetPattern)) !== null) {
-            values.push(item[0].substr(0, 1) === '[' ? item[0].substring(1, item[0].length - 1) : item[0]);
+        let item = parsePattern.exec(state.presetPattern);
+        while (item !== null) {
+            values.push(item[0].substr(0, 1) === '[' ?
+                item[0].substring(1, item[0].length - 1) : item[0]);
+            item = parsePattern.exec(state.presetPattern);
         }
-        for (let i = 0; i < state.data.last().size; i +=1 ) {
-            const oldPos = state.data.last().get(i);
+        for (let i = 0; i < List.last(state.data).length; i +=1 ) {
+            const oldPos = List.last(state.data)[i];
             const newPos:PositionOptions = {
                 label: oldPos.label,
                 values: oldPos.values.map((item:PositionValue) => {
@@ -342,13 +366,15 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                         selected: (values[i] || '').indexOf(item.id) > -1 ? true : false,
                         available: item.available
                     }
-                }).toList(),
+                }),
                 isLocked: oldPos.isLocked,
                 isActive: oldPos.isActive
             };
-            state.data = state.data.push(state.data.last().set(i, newPos));
+            const lst = List.last(state.data);
+            lst[i] = newPos;
+            state.data.push(lst);
         }
-        state.positions = state.data.last();
+        state.positions = List.last(state.data);
         state.canUndo = false;
         state.srchPattern = this.getCurrentPattern(state);
         [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
@@ -359,24 +385,24 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      * Performs an initial import (i.e. any previous data is lost)
      */
     private importData(state:TagHelperModelState, labels:Array<string>, data:RawTagValues):void {
-        state.data = state.data.push(Immutable.List<PositionOptions>(
-            data.map<PositionOptions>((position:Array<Array<string>>, i:number) => {
-                return {
-                    label: labels[i],
-                    isLocked: false,
-                    isActive: false,
-                    values:  Immutable.List<PositionValue>(position.map<PositionValue>((item: Array<string>) => {
-                        return {
-                            id: item[0],
-                            title: item[1],
-                            selected: false,
-                            available: true
-                        }
-                    }))
-                };
-            })
+        state.data.push(List.map(
+            (position:Array<Array<string>>, i:number) => ({
+                label: labels[i],
+                isLocked: false,
+                isActive: false,
+                values: List.map(
+                    (item:Array<string>) => ({
+                        id: item[0],
+                        title: item[1],
+                        selected: false,
+                        available: true
+                    }),
+                    position
+                )
+            }),
+            data
         ));
-        state.positions = state.data.last();
+        state.positions = List.last(state.data);
         state.canUndo = this.canUndo(state);
     }
 
@@ -385,10 +411,13 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     }
 
     private hasSelectedItems(state:TagHelperModelState):boolean {
-        return state.data.last()
-            .flatMap(item => item.values
-            .map(subitem => subitem.selected))
-            .find(x => x === true) !== undefined;
+        return pipe(
+            state.data,
+            List.last(),
+            List.flatMap(item => item.values),
+            List.map(subitem => subitem.selected),
+            List.some(x => x === true)
+        );
     }
 
     /**
@@ -399,39 +428,44 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      * 2) any position option value not found in server response is made unavalilable
      */
     private mergeData(state:TagHelperModelState, tags:UpdateTagValues, triggerRow:number):void {
-        const newItem = state.data.last().map((item:PositionOptions, i:number) => {
-            let posOpts:PositionOptions;
-            if (!item.isLocked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
-                posOpts = {
-                    label: item.label,
-                    values: item.values,
-                    isLocked: true,
-                    isActive: item.isActive
-                };
+        const newItem = pipe(
+            state.data,
+            List.last(),
+            List.map(
+                (item:PositionOptions, i:number) => {
+                    let posOpts:PositionOptions;
+                    if (!item.isLocked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
+                        posOpts = {
+                            label: item.label,
+                            values: item.values,
+                            isLocked: true,
+                            isActive: item.isActive
+                        };
 
-            } else if (i !== triggerRow && !item.isLocked) {
-                const tmp = Immutable.Map(tags[i]);
-                posOpts = {
-                    label: item.label,
-                    values: item.values.map((v:PositionValue) => {
-                        return {
-                            id: v.id,
-                            title: v.title,
-                            selected: v.selected,
-                            available: tmp.get(v.id) === undefined ? false : true
-                        }
-
-                    }).toList(),
-                    isLocked: item.isLocked,
-                    isActive: item.isActive
-                };
-            } else {
-                posOpts = item;
-            }
-            return posOpts;
-        }).toList();
-        state.data = state.data.pop().push(newItem);
-        state.positions = state.data.last();
+                    } else if (i !== triggerRow && !item.isLocked) {
+                        const tmp = tags[i];
+                        posOpts = {
+                            label: item.label,
+                            values: List.map(
+                                (v:PositionValue) => ({
+                                    ...v,
+                                    available: tmp[v.id] !== undefined
+                                }),
+                                item.values
+                            ),
+                            isLocked: item.isLocked,
+                            isActive: item.isActive
+                        };
+                    } else {
+                        posOpts = item;
+                    }
+                    return posOpts;
+                },
+            )
+        );
+        state.data.pop();
+        state.data.push(newItem);
+        state.positions = List.last(state.data);
         state.canUndo = this.canUndo(state);
     }
 
@@ -439,28 +473,30 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      * Changes the 'checked' status of an item specified by a position and a value
      * (.e.g. 2nd position (gender), F value (feminine))
      */
-    private updateSelectedItem(state:TagHelperModelState, position:number, value:string, checked:boolean):void {
-        const oldPos = state.data.last().get(position);
+    private updateSelectedItem(state:TagHelperModelState, position:number, value:string,
+            checked:boolean):void {
+        const oldPos = List.last(state.data)[position];
         const newPos:PositionOptions = {
             label: oldPos.label,
-            values: oldPos.values.map((item:PositionValue) => {
-                return {
-                    id: item.id,
-                    title: item.title,
+            values: List.map(
+                (item:PositionValue) => ({
+                    ...item,
                     selected: item.id === value ? checked : item.selected,
-                    available: item.available
-                }
-            }).toList(),
+                }),
+                oldPos.values
+            ),
             isLocked: oldPos.isLocked,
             isActive: oldPos.isActive
         };
-        state.data = state.data.push(state.data.last().set(position, newPos));
+        const lastItem = List.last(state.data);
+        lastItem[position] = newPos;
+        state.data.push(lastItem);
         state.srchPattern = this.getCurrentPattern(state);
         [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
     }
 
     private canUndo(state:TagHelperModelState):boolean {
-        return state.data.size > 2;
+        return state.data.length > 2;
     }
 
     private getCurrentPattern(state:TagHelperModelState):string {
@@ -476,12 +512,19 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
             }
         }
         if (this.hasSelectedItems(state)) {
-            return state.data.last().map<string>((item:PositionOptions) => {
-                return exportPosition(item.values
-                            .filter((s:PositionValue) => s.selected)
-                            .map<string>((s:PositionValue) => s.id)
-                );
-            }).join('');
+            return pipe(
+                state.data,
+                List.last(),
+                List.map(
+                    item => exportPosition(
+                        pipe(
+                            item.values,
+                            List.filter(s => s.selected),
+                            List.map(s => s.id)
+                        )
+                    )
+                )
+            ).join('');
 
         } else {
             return '.*';
@@ -497,6 +540,6 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      * Return options for a selected position (e.g. position 2: M, I, F, N, X)
      */
     getOptions(state:TagHelperModelState, position:number):PositionOptions {
-        return state.data.last().get(position);
+        return List.last(state.data)[position];
     }
 }

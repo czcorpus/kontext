@@ -23,12 +23,12 @@ import {Kontext} from '../../types/common';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {QueryFormModel, QueryFormModelState} from '../../models/query/common';
 import { VirtualKeyboardModel, VirtualKeyboardState } from '../../models/query/virtualKeyboard';
-import { ActionName, Actions, FormType } from '../../models/query/actions';
+import { ActionName, Actions, QueryFormType } from '../../models/query/actions';
 import { List } from 'cnc-tskit';
 
 
 export interface VirtualKeyboardProps {
-    formType:FormType;
+    formType:QueryFormType;
     sourceId:string;
     inputLanguage:string;
 }

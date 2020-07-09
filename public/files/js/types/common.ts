@@ -59,7 +59,7 @@ export namespace Kontext {
 
     }
 
-    export var isFormValue = <T>(v:any):v is FormValue<T> => {
+    export const isFormValue = <T>(v:any):v is FormValue<T> => {
         return v !== null && v !== undefined && v.hasOwnProperty('value') &&
                 v.hasOwnProperty('isRequired') && v.hasOwnProperty('isInvalid');
     }
@@ -72,7 +72,8 @@ export namespace Kontext {
      * @param formValue
      * @param data
      */
-    export var updateFormValue = <T>(formValue:FormValue<T>, data:{[P in keyof FormValue<T>]?: FormValue<T>[P]}) => {
+    export const updateFormValue = <T>(formValue:FormValue<T>,
+            data:{[P in keyof FormValue<T>]?: FormValue<T>[P]}) => {
         return {
             value: data.value !== undefined ? data.value : formValue.value,
             isInvalid: data.isInvalid !== undefined ? data.isInvalid : formValue.isInvalid,
@@ -81,13 +82,20 @@ export namespace Kontext {
         };
     }
 
-    export var newFormValue = <T>(v:T, isRequired:boolean):FormValue<T> => {
-        return {value: v, isInvalid: false, isRequired: isRequired, errorDesc: undefined};
-    }
+    export const newFormValue = <T>(v:T, isRequired:boolean):FormValue<T> => ({
+        value: v,
+        isInvalid: false,
+        isRequired,
+        errorDesc: undefined
+    });
 
-    export var resetFormValue = <T>(formValue:FormValue<T>, val:T) => {
-        return {value: val, isInvalid: false, isRequired: formValue.isRequired, errorDesc: undefined};
-    };
+    export const resetFormValue = <T>(formValue:FormValue<T>, val:T) => ({
+        value: val,
+        isInvalid: false,
+        isRequired:
+        formValue.isRequired,
+        errorDesc: undefined
+    });
 
     /**
      * Represents possible sources for MultiDict
@@ -341,8 +349,10 @@ export namespace Kontext {
     }
 
     export interface IHistory {
-        pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void;
-        replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void;
+        pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any,
+            title?:string):void;
+        replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any,
+            title?:string):void;
         setOnPopState(fn:(event:PopStateEvent)=>void):void;
     }
 
@@ -517,7 +527,9 @@ export namespace Kontext {
         SHUFFLE = 'shuffle',
         SWITCHMC = 'switchmc',
         SUBHITS = 'subhits',
-        FIRSTHITS = 'firsthits'
+        FIRSTHITS = 'firsthits',
+        LOCKED = 'locked',
+        LGROUP = 'lgroup'
     }
 }
 
@@ -673,7 +685,7 @@ export namespace TextTypes {
     }
 
     export interface BibMapping {
-        [bib_id:string]:string;
+        [bibId:string]:string;
     }
 
     export interface AttrInfo {
@@ -830,7 +842,8 @@ export namespace TextTypes {
      */
     export interface ITextTypesModel extends IEventEmitter, IAdHocSubcorpusDetector {
 
-        applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void;
+        applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues,
+            bibMapping:TextTypes.BibMapping):void;
 
         /**
          * Return a defined structural attribute
@@ -872,7 +885,8 @@ export namespace TextTypes {
          * If the map function updates a record then it should create
          * a new copy. Unchanged objects can be returned directly.
          */
-        mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i:number)=>TextTypes.AttributeValue);
+        mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue,
+            i:number)=>TextTypes.AttributeValue);
 
         /**
          * Sets a new list of values for a specific attribute.
@@ -939,12 +953,5 @@ export namespace TextTypes {
 
 }
 
-declare module Legacy {
-
-    export interface IPopupBox {
-        getContentElement():HTMLElement;
-        close():void;
-    }
-}
 
 export const typedProps = <T>(props) => <T>props;

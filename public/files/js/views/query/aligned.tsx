@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {InputModuleViews} from './input';
-import {QueryType} from '../../models/query/common';
-import {PluginInterfaces} from '../../types/plugins';
+import { List } from 'cnc-tskit';
+
+import { Kontext } from '../../types/common';
+import { InputModuleViews } from './input';
+import { QueryType } from '../../models/query/common';
+import { PluginInterfaces } from '../../types/plugins';
 import { IActionDispatcher } from 'kombo';
-import { List, Dict } from 'cnc-tskit';
 
 
 export interface AlignedModuleArgs {
@@ -141,11 +142,12 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                     <table className="form">
                         <tbody>
                             <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
-                                    value={this.props.pcqPosNegValue} formType="query" />
+                                    value={this.props.pcqPosNegValue}
+                                    formType={Kontext.ConcFormTypes.QUERY} />
                             <inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
                                     corpname={this.props.corpname} />
                             <inputViews.TRQueryTypeField queryType={this.props.queryType}
-                                    formType="query"
+                                    formType={Kontext.ConcFormTypes.QUERY}
                                     sourceId={this.props.corpname}
                                     hasLemmaAttr={this.props.hasLemmaAttr} />
                             <inputViews.TRQueryInputField

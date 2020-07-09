@@ -19,8 +19,7 @@
  */
 
 import * as React from 'react';
-import { Subscription } from 'rxjs';
-import { IActionDispatcher, BoundWithProps, ActionDispatcher, Bound } from 'kombo';
+import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Keyboard, List } from 'cnc-tskit';
 
 import { init as keyboardInit } from './virtualKeyboard';
@@ -32,7 +31,7 @@ import { QueryFormModel, QueryFormModelState, QueryType } from '../../models/que
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { CQLEditorModel } from '../../models/query/cqleditor/model';
-import { Actions, ActionName, FormType } from '../../models/query/actions';
+import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 
 
 export interface InputModuleArgs {
@@ -75,7 +74,7 @@ export interface TRQueryInputFieldProps {
 
 
 export interface TRQueryTypeFieldProps {
-    formType:FormType;
+    formType:QueryFormType;
     sourceId:string;
     queryType:string; // TODO enum
     hasLemmaAttr:boolean;
@@ -83,7 +82,7 @@ export interface TRQueryTypeFieldProps {
 
 
 export interface TRPcqPosNegFieldProps {
-    formType:FormType;
+    formType:QueryFormType;
     sourceId:string;
     value:string; // TODO enum
 }
@@ -319,7 +318,7 @@ export function init({
     // ------------------- <TagWidget /> --------------------------------
 
     const TagWidget:React.SFC<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         args:Kontext.GeneralProps;
         tagHelperView:PluginInterfaces.TagHelper.View
@@ -346,7 +345,7 @@ export function init({
     // ------------------- <WithinWidget /> --------------------------------
 
     interface WithinWidgetProps {
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         closeClickHandler:()=>void;
     }
@@ -453,7 +452,7 @@ export function init({
 
     const HistoryWidget:React.SFC<{
         sourceId:string;
-        formType:FormType;
+        formType:QueryFormType;
         onCloseTrigger:()=>void;
         queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
 
@@ -472,7 +471,7 @@ export function init({
 
     const KeyboardWidget:React.SFC<{
         sourceId:string;
-        formType:FormType;
+        formType:QueryFormType;
         inputLanguage:string;
         closeClickHandler:()=>void;
 
@@ -513,7 +512,6 @@ export function init({
 
         _renderButtons() {
             const ans = [];
-
             if (this.props.widgets.indexOf('tag') > -1) {
                 ans.push(<a onClick={this._handleWidgetTrigger.bind(this, 'tag')}>{he.translate('query__insert_tag_btn_link')}</a>);
             }
@@ -530,11 +528,13 @@ export function init({
         }
 
         _handleWidgetTrigger(name) {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+            dispatcher.dispatch<Actions.SetActiveInputWidget>({
+                name: ActionName.SetActiveInputWidget,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
-                    value: name
+                    value: name,
+                    widgetArgs: this.props.widgetArgs
                 }
             });
         }
@@ -548,11 +548,13 @@ export function init({
         }
 
         _handleCloseWidget() {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+            dispatcher.dispatch<Actions.SetActiveInputWidget>({
+                name: ActionName.SetActiveInputWidget,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
-                    value: null
+                    value: null,
+                    widgetArgs: this.props.widgetArgs
                 }
             });
         }
@@ -597,7 +599,7 @@ export function init({
 
     const LposSelector:React.SFC<{
         sourceId:string;
-        formType:FormType;
+        formType:QueryFormType;
         wPoSList:Array<{v:string; n:string}>;
         lposValue:string;
 
@@ -630,7 +632,7 @@ export function init({
     // ------------------- <MatchCaseSelector /> -----------------------------
 
     const MatchCaseSelector:React.SFC<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         matchCaseValue:boolean;
 
@@ -707,7 +709,7 @@ export function init({
     // ------------------- <DefaultAttrSelector /> -----------------------------
 
     const DefaultAttrSelector:React.SFC<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         forcedAttr:string;
         defaultAttr:string;
@@ -776,11 +778,13 @@ export function init({
         }
 
         _toggleHistoryWidget() {
-            const newVisibility = !this.props.historyVisible;
-            this.setState({
-                historyVisible: newVisibility
+            dispatcher.dispatch<Actions.ToggleQueryHistoryWidget>({
+                name: ActionName.ToggleQueryHistoryWidget,
+                payload: {
+                    formType: this.props.formType
+                }
             });
-            if (!newVisibility && this._queryInputElement.current) {
+            if (!this.props.historyVisible && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
         }
@@ -891,7 +895,8 @@ export function init({
                     <th>{he.translate('query__query_th')}:</th>
                     <td>
                         <div className="query-area">
-                            <BoundQueryToolbox widgets={this.props.widgets}
+                            <BoundQueryToolbox
+                                widgets={this.props.widgets}
                                 tagHelperView={this.props.tagHelperView}
                                 sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}

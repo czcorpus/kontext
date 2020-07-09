@@ -25,11 +25,11 @@ import { Keyboard } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { QueryStorageModel, InputBoxHistoryItem } from './models';
-import { Actions, ActionName, FormType } from '../../models/query/actions';
+import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 
 
 export interface QueryStorageProps {
-    formType:FormType;
+    formType:QueryFormType;
     sourceId:string;
     onCloseTrigger:()=>void;
 }

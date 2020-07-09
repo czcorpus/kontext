@@ -22,7 +22,7 @@ import { IActionDispatcher, StatelessModel, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { TagBuilderBaseState } from './common';
-import { Actions, ActionName, FormType } from '../../models/query/actions';
+import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Dict } from 'cnc-tskit';
 
 export function init(
@@ -89,7 +89,7 @@ export function init(
 
     const TagButtons:React.SFC<{
                 range:[number, number];
-                formType:FormType;
+                formType:QueryFormType;
                 sourceId:string;
                 onInsert?:()=>void;
                 canUndo:boolean;

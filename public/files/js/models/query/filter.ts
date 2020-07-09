@@ -30,7 +30,8 @@ import { MultiDict } from '../../multidict';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
-import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery, shouldDownArrowTriggerHistory, FilterServerArgs, QueryType, AnyQuery } from './common';
+import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
+    shouldDownArrowTriggerHistory, FilterServerArgs, QueryType, AnyQuery } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 
@@ -44,7 +45,8 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     filters:Array<string>;
     maincorps:Array<[string, string]>;
     currQueryTypes:Array<[string, QueryType]>;
-    currQueries:Array<[string, string]>;  // current queries values (e.g. when restoring a form state)
+    // current queries values (e.g. when restoring a form state)
+    currQueries:Array<[string, string]>;
     currDefaultAttrValues:Array<[string, string]>;
     tagBuilderSupport:Array<[string, boolean]>;
     currLposValues:Array<[string, string]>;
@@ -63,9 +65,10 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
 }
 
 /**
- *import {GeneralViewOptionsModel} from '../options/general';
+ * import {GeneralViewOptionsModel} from '../options/general';
  */
-export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs}, initialArgs:AjaxResponse.FilterFormArgs,
+export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
+        initialArgs:AjaxResponse.FilterFormArgs,
         key:(item:AjaxResponse.FilterFormArgs)=>T):Array<[string, T]> {
     const ans = [];
     for (let formId in args) {
@@ -80,7 +83,9 @@ export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
 }
 
 
-function determineSupportedWidgets(queries:{[key:string]:string}, queryTypes:{[key:string]:QueryType}, tagBuilderSupport:{[key:string]:boolean}):{[key:string]:Array<string>} {
+function determineSupportedWidgets(queries:{[key:string]:string},
+        queryTypes:{[key:string]:QueryType},
+        tagBuilderSupport:{[key:string]:boolean}):{[key:string]:Array<string>} {
     const getWidgets = (filterId:string):Array<string> => {
         switch (queryTypes[filterId]) {
             case 'iquery':
@@ -181,7 +186,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         );
         const tagBuilderSupport = props.tagBuilderSupport;
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'filter-form-model', {
-            formType: 'filter',
+            formType: Kontext.ConcFormTypes.FILTER,
             forcedAttr: '', // TODO
             attrList: [], // TODO
             structAttrList: [], // TODO
@@ -199,7 +204,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 List.map(([sourceId,]) => tuple(sourceId, false)),
                 Dict.fromEntries()
             ),
-            queryTypes: queryTypes,
+            queryTypes,
             lposValues: pipe(
                 props.currLposValues,
                 Dict.fromEntries()
@@ -272,17 +277,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         });
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionSubsetHandler<Actions.SetActiveInputWidget>(
-            ActionName.SetActiveInputWidget,
-            action => action.payload.formType === 'filter',
-            action => {
-                this.changeState(state => {
-                    state.activeWidgets[action.payload.sourceId] = action.payload.value;
-                    state.widgetArgs = action.payload.widgetArgs || {};
-                });
-            }
-        );
-
         this.addActionHandler<MainMenuActions.ShowFilter>(
             MainMenuActionName.ShowFilter,
             action => {
@@ -297,7 +291,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSelectType>(
+        this.addActionSubtypeHandler<Actions.QueryInputSelectType>(
             ActionName.QueryInputSelectType,
             action => action.payload.formType === 'filter',
             action => {
@@ -312,7 +306,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSetQuery>(
+        this.addActionSubtypeHandler<Actions.QueryInputSetQuery>(
             ActionName.QueryInputSetQuery,
             action => action.payload.formType === 'filter',
             action => {
@@ -328,30 +322,32 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     } else {
                         state.queries[action.payload.sourceId] = action.payload.query;
                     }
-                    state.downArrowTriggersHistory[action.payload.sourceId] = shouldDownArrowTriggerHistory(
-                        action.payload.query,
-                        action.payload.rawAnchorIdx,
-                        action.payload.rawFocusIdx
-                    );
+                    state.downArrowTriggersHistory[action.payload.sourceId] =
+                        shouldDownArrowTriggerHistory(
+                            action.payload.query,
+                            action.payload.rawAnchorIdx,
+                            action.payload.rawFocusIdx
+                        );
                 });
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputMoveCursor>(
+        this.addActionSubtypeHandler<Actions.QueryInputMoveCursor>(
             ActionName.QueryInputMoveCursor,
             action => action.payload.formType === 'filter',
             action => {
                 this.changeState(state => {
-                    state.downArrowTriggersHistory[action.payload.sourceId] = shouldDownArrowTriggerHistory(
-                        state.queries[action.payload.sourceId],
-                        action.payload.rawAnchorIdx,
-                        action.payload.rawFocusIdx
-                    );
+                    state.downArrowTriggersHistory[action.payload.sourceId] =
+                        shouldDownArrowTriggerHistory(
+                            state.queries[action.payload.sourceId],
+                            action.payload.rawAnchorIdx,
+                            action.payload.rawFocusIdx
+                        );
                 });
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputAppendQuery>(
+        this.addActionSubtypeHandler<Actions.QueryInputAppendQuery>(
             ActionName.QueryInputAppendQuery,
             action => action.payload.formType === 'filter',
             action => {
@@ -365,7 +361,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSetLpos>(
+        this.addActionSubtypeHandler<Actions.QueryInputSetLpos>(
             ActionName.QueryInputSetLpos,
             action => action.payload.formType === 'filter',
             action => {
@@ -375,7 +371,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSetMatchCase>(
+        this.addActionSubtypeHandler<Actions.QueryInputSetMatchCase>(
             ActionName.QueryInputSetMatchCase,
             action => action.payload.formType === 'filter',
             action => {
@@ -385,7 +381,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSetDefaultAttr>(
+        this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
             ActionName.QueryInputSetDefaultAttr,
             action => action.payload.formType === 'filter',
             action => {
@@ -476,33 +472,38 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
     private validateForm(state:FilterFormModelState, filterId:string):Error|null {
         if (validateNumber(state.filfposValues[filterId].value)) {
-            state.filfposValues[filterId] = setFormItemInvalid(state.filfposValues[filterId], false);
+            state.filfposValues[filterId] = setFormItemInvalid(
+                state.filfposValues[filterId], false);
 
         } else {
-            state.filfposValues[filterId] = setFormItemInvalid(state.filfposValues[filterId], true);
+            state.filfposValues[filterId] = setFormItemInvalid(
+                state.filfposValues[filterId], true);
             return new Error(this.pageModel.translate('global__invalid_number_format'));
         }
 
         if (validateNumber(state.filtposValues[filterId].value)) {
-            state.filtposValues[filterId] = setFormItemInvalid(state.filtposValues[filterId], false);
+            state.filtposValues[filterId] = setFormItemInvalid(
+                state.filtposValues[filterId], false);
 
         } else {
-            state.filtposValues[filterId] = setFormItemInvalid(state.filtposValues[filterId], true);
+            state.filtposValues[filterId] = setFormItemInvalid(
+                state.filtposValues[filterId], true);
             return new Error(this.pageModel.translate('global__invalid_number_format'));
         }
     }
 
-    private setFilPosValue(state:FilterFormModelState, filterId:string, value:string, rangeId:string):void {
+    private setFilPosValue(state:FilterFormModelState, filterId:string, value:string,
+            rangeId:string):void {
         if (rangeId === 'filfpos') {
             state.filfposValues[filterId] = {
-                value: value,
+                value,
                 isInvalid: false,
                 isRequired: true
             };
 
         } else if (rangeId === 'filtpos') {
             state.filtposValues[filterId] = {
-                value: value,
+                value,
                 isInvalid: false,
                 isRequired: true
             };
@@ -546,13 +547,15 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                             state.opLocks[filterId] = false;
                         });
 
-                    } else if (data.form_type === 'locked' || data.form_type == 'lgroup') {
+                    } else if (data.form_type === Kontext.ConcFormTypes.LOCKED ||
+                            data.form_type === Kontext.ConcFormTypes.LGROUP) {
                         this.changeState(state => {
                             state.opLocks[filterId] = true;
                         });
 
                     } else {
-                        throw new Error('Cannot sync filter model - invalid form data type: ' + data.form_type);
+                        throw new Error(
+                            'Cannot sync filter model - invalid form data type: ' + data.form_type);
                     }
                 }
             )
@@ -586,13 +589,17 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             return true;
 
         } else {
-            this.pageModel.showMessage('error', this.pageModel.translate('query__query_must_be_entered'));
+            this.pageModel.showMessage('error',
+                this.pageModel.translate('query__query_must_be_entered'));
             return false;
         }
     }
 
     private testQueryTypeMismatch(filterId):boolean {
-        const error = this.validateQuery(this.state.queries[filterId], this.state.queryTypes[filterId]);
+        const error = this.validateQuery(
+            this.state.queries[filterId],
+            this.state.queryTypes[filterId]
+        );
         return !error || window.confirm(this.pageModel.translate('global__query_type_mismatch'));
     }
 

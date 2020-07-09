@@ -54,6 +54,7 @@ export interface MainModuleArgs {
 
 
 export interface QueryFormProps {
+    formType:Kontext.ConcFormTypes.QUERY;
     allowCorpusSelection:boolean;
     tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
@@ -66,6 +67,7 @@ export interface QueryFormProps {
 export interface QueryFormLiteProps {
     corpname:string;
     operationIdx?:number;
+    formType:Kontext.ConcFormTypes.QUERY;
     tagHelperView:PluginInterfaces.TagHelper.View;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
 }

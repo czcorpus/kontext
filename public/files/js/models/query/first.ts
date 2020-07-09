@@ -31,18 +31,16 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
-import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState, shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType } from './common';
-import { QueryContextArgs } from './context';
+import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState,
+    shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType, QueryContextArgs } from './common';
 import { ActionName, Actions, CorpusSwitchModelRestorePayload } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 
 
-type ExportedQueryContextArgs = {[p in keyof QueryContextArgs]?:QueryContextArgs[p]};
-
-
 export interface QueryFormUserEntries {
     currQueryTypes:{[corpname:string]:QueryType};
-    currQueries:{[corpname:string]:string};  // current queries values (e.g. when restoring a form state)
+    // current queries values (e.g. when restoring a form state)
+    currQueries:{[corpname:string]:string};
     currPcqPosNegValues:{[corpname:string]:'pos'|'neg'};
     currDefaultAttrValues:{[corpname:string]:string};
     currLposValues:{[corpname:string]:string};
@@ -77,10 +75,11 @@ export interface QueryInputSetQueryProps {
  *
  * @param data
  */
-export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArgs}):AjaxResponse.QueryFormArgsResponse => {
+export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArgs}):
+        AjaxResponse.QueryFormArgsResponse => {
     const k = (() => {
         for (let p in data) {
-            if (data.hasOwnProperty(p) && data[p].form_type === 'query') {
+            if (data.hasOwnProperty(p) && data[p].form_type === Kontext.ConcFormTypes.QUERY) {
                 return p;
             }
         }
@@ -93,7 +92,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
     } else {
         return {
             messages: [],
-            form_type: 'query',
+            form_type: Kontext.ConcFormTypes.QUERY,
             op_key: '__new__',
             curr_query_types: {},
             curr_queries: {},
@@ -112,7 +111,10 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 };
 
 
-function determineSupportedWidgets(corpora:Array<string>, queryTypes:{[key:string]:string}, tagBuilderSupport:{[key:string]:boolean}, isAnonymousUser:boolean):{[key:string]:Array<string>} {
+function determineSupportedWidgets(corpora:Array<string>, queryTypes:{[key:string]:string},
+        tagBuilderSupport:{[key:string]:boolean},
+        isAnonymousUser:boolean):{[key:string]:Array<string>} {
+
     const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
         const ans = ['keyboard'];
         if (!isAnonymousUser) {
@@ -194,8 +196,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      * (if applicable).
      */
     shuffleForbidden:boolean;
-
-    queryContextArgs:ExportedQueryContextArgs;
 }
 
 
@@ -218,7 +218,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
         const tagBuilderSupport = props.tagBuilderSupport;
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'first-query-model', {
-            formType: 'query',
+            formType: Kontext.ConcFormTypes.QUERY,
             forcedAttr: props.forcedAttr,
             attrList: props.attrList,
             structAttrList: props.structAttrList,
@@ -229,7 +229,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             useCQLEditor: props.useCQLEditor,
             currentAction: 'first_form',
             widgetArgs: {},
-            corpora: corpora,
+            corpora,
             availableAlignedCorpora: props.availableAlignedCorpora,
             subcorpList: props.subcorpList,
             currentSubcorp: props.currentSubcorp || '',
@@ -244,7 +244,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             downArrowTriggersHistory: pipe(
                 props.corpora,
-                List.map(item => tuple(item, shouldDownArrowTriggerHistory(props.currQueries[item], 0, 0))),
+                List.map(item => tuple(
+                    item,
+                    shouldDownArrowTriggerHistory(props.currQueries[item], 0, 0))
+                ),
                 Dict.fromEntries()
             ),
             lposValues: pipe(
@@ -262,7 +265,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 List.map(item => tuple(item, props.currDefaultAttrValues[item] || 'word')),
                 Dict.fromEntries()
             ),
-            queryTypes: queryTypes,
+            queryTypes,
             pcqPosNegValues: pipe(
                 props.corpora,
                 List.map(item => tuple(item, props.currPcqPosNegValues[item] || 'pos')),
@@ -273,7 +276,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 List.map(item => tuple(item, props.currIncludeEmptyValues[item] || false)),
                 Dict.fromEntries()
             ),
-            tagBuilderSupport: tagBuilderSupport,
+            tagBuilderSupport,
             inputLanguages: props.inputLanguages,
             hasLemma: props.hasLemma,
             tagsetDocs: props.tagsetDocs,
@@ -283,42 +286,18 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 List.map(item => tuple(item, null)),
                 Dict.fromEntries()
             ),
-            queryContextArgs: {},
             isAnonymousUser: props.isAnonymousUser,
-            supportedWidgets: determineSupportedWidgets(corpora, queryTypes, tagBuilderSupport, props.isAnonymousUser),
+            supportedWidgets: determineSupportedWidgets(
+                corpora,
+                queryTypes,
+                tagBuilderSupport,
+                props.isAnonymousUser
+            ),
             contextFormVisible: false,
             textTypesFormVisible: false,
             historyVisible: false
         });
         this.setUserValues(this.state, props);
-
-        this.queryContextModel.addListener((state) => {
-            this.state.queryContextArgs = {};
-            if (state.formData.fc_lemword) {
-                this.state.queryContextArgs.fc_lemword = state.formData.fc_lemword;
-                this.state.queryContextArgs.fc_lemword_type = state.formData.fc_lemword_type;
-                this.state.queryContextArgs.fc_lemword_window_type = state.formData.fc_lemword_window_type;
-                this.state.queryContextArgs.fc_lemword_wsize = state.formData.fc_lemword_wsize;
-            }
-            if (state.formData.fc_pos.length > 0) {
-                this.state.queryContextArgs.fc_pos = state.formData.fc_pos;
-                this.state.queryContextArgs.fc_pos_type = state.formData.fc_pos_type;
-                this.state.queryContextArgs.fc_pos_window_type = state.formData.fc_pos_window_type;
-                this.state.queryContextArgs.fc_pos_wsize = state.formData.fc_pos_wsize;
-            }
-            this.emitChange();
-        });
-
-        this.addActionSubsetHandler<Actions.SetActiveInputWidget>(
-            ActionName.SetActiveInputWidget,
-            action => action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    state.activeWidgets[action.payload.sourceId] = action.payload.value;
-                    state.widgetArgs = action.payload.widgetArgs || {};
-                });
-            }
-        );
 
         this.addActionHandler<Actions.CQLEditorDisable>(
             ActionName.CQLEditorDisable,
@@ -327,7 +306,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSelectType>(
+        this.addActionSubtypeHandler<Actions.QueryInputSelectType>(
             ActionName.QueryInputSelectType,
             action => action.payload.formType === 'query',
             action => {
@@ -335,7 +314,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     let qType = action.payload.queryType;
                     if (!state.hasLemma[action.payload.sourceId] &&  qType === 'lemma') {
                         qType = 'phrase';
-                        this.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
+                        this.pageModel.showMessage(
+                            'warning',
+                            'Lemma attribute not available, using "phrase"'
+                        );
                     }
                     state.queryTypes[action.payload.sourceId] = qType;
                     state.supportedWidgets = determineSupportedWidgets(
@@ -378,7 +360,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputMoveCursor>(
+        this.addActionSubtypeHandler<Actions.QueryInputMoveCursor>(
             ActionName.QueryInputMoveCursor,
             action => action.payload.formType === 'query',
             action => {
@@ -393,7 +375,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSetQuery>(
+        this.addActionSubtypeHandler<Actions.QueryInputSetQuery>(
             ActionName.QueryInputSetQuery,
             action => action.payload.formType === 'query',
             action => {
@@ -409,16 +391,17 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     } else {
                         state.queries[action.payload.sourceId] = action.payload.query;
                     }
-                    state.downArrowTriggersHistory[action.payload.sourceId] = shouldDownArrowTriggerHistory(
-                        action.payload.query,
-                        action.payload.rawAnchorIdx,
-                        action.payload.rawFocusIdx
-                    );
+                    state.downArrowTriggersHistory[action.payload.sourceId] =
+                        shouldDownArrowTriggerHistory(
+                            action.payload.query,
+                            action.payload.rawAnchorIdx,
+                            action.payload.rawFocusIdx
+                        );
                 });
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputAppendQuery>(
+        this.addActionSubtypeHandler<Actions.QueryInputAppendQuery>(
             ActionName.QueryInputAppendQuery,
             action => action.payload.formType === 'query',
             action => {
@@ -441,13 +424,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.changeState(state => {
                     const currQuery2 = state.queries[action.payload.sourceId];
                     if (currQuery2.length > 0) {
-                        state.queries[action.payload.sourceId] = currQuery2.substr(0, currQuery2.length - 1);
+                        state.queries[action.payload.sourceId] =
+                            currQuery2.substr(0, currQuery2.length - 1);
                     }
                 });
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSetLpos>(
+        this.addActionSubtypeHandler<Actions.QueryInputSetLpos>(
             ActionName.QueryInputSetLpos,
             action => action.payload.formType === 'query',
             action => {
@@ -457,7 +441,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSetMatchCase>(
+        this.addActionSubtypeHandler<Actions.QueryInputSetMatchCase>(
             ActionName.QueryInputSetMatchCase,
             action =>  action.payload.formType === 'query',
             action => {
@@ -467,7 +451,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionSubsetHandler<Actions.QueryInputSetDefaultAttr>(
+        this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
             ActionName.QueryInputSetDefaultAttr,
             action => action.payload.formType === 'query',
             action => {
@@ -507,19 +491,38 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.addActionHandler<Actions.QueryInputMakeCorpusPrimary>(
             ActionName.QueryInputMakeCorpusPrimary,
             action => {
-                this.changeState(state => {
-                    this.makeCorpusPrimary(state, action.payload.corpname);
-                });
-                window.location.href = this.pageModel.createActionUrl(this.state.currentAction, this.createSubmitArgs().items());
+                this.suspend({}, (action, syncData) => {
+                    return action.name === ActionName.QueryContextFormPrepareArgsDone ?
+                        null : syncData;
+
+                }).subscribe(
+                    (wAction:Actions.QueryContextFormPrepareArgsDone) => {
+                        this.changeState(state => {
+                            this.makeCorpusPrimary(state, action.payload.corpname);
+                        });
+                        window.location.href = this.pageModel.createActionUrl(
+                            this.state.currentAction,
+                            this.createSubmitArgs(wAction.payload.data).items()
+                        );
+                    }
+                );
             }
         );
 
         this.addActionHandler<Actions.QuerySubmit>(
             ActionName.QuerySubmit,
             action => {
-                if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
-                    this.submitQuery();
-                }
+                this.suspend({}, (action, syncData) => {
+                    return action.name === ActionName.QueryContextFormPrepareArgsDone ?
+                        null : syncData;
+
+                }).subscribe(
+                    (wAction:Actions.QueryContextFormPrepareArgsDone) => {
+                        if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
+                            this.submitQuery(wAction.payload.data);
+                        }
+                    }
+                );
             }
         );
 
@@ -567,7 +570,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.emitChange();
     }
 
-    private restoreFromCorpSwitch(payload:CorpusSwitchModelRestorePayload<FirstQueryFormModelState>):void {
+    private restoreFromCorpSwitch(
+            payload:CorpusSwitchModelRestorePayload<FirstQueryFormModelState>):void {
         if (payload.key === this.csGetStateKey()) {
             this.state = {...payload.data};
             this.state.supportedWidgets = determineSupportedWidgets(
@@ -585,7 +589,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             return true;
 
         } else {
-            this.pageModel.showMessage('error', this.pageModel.translate('query__query_must_be_entered'));
+            this.pageModel.showMessage(
+                'error',
+                this.pageModel.translate('query__query_must_be_entered')
+            );
             return false;
         }
     }
@@ -596,7 +603,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             List.map(corpname => this.isPossibleQueryTypeMismatch(corpname)),
             List.filter(err => !!err)
         );
-        return errors.length === 0 || window.confirm(this.pageModel.translate('global__query_type_mismatch'));
+        return errors.length === 0 || window.confirm(
+            this.pageModel.translate('global__query_type_mismatch'));
     }
 
     csGetStateKey():string {
@@ -668,14 +676,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             map(
                 (data) => {
-                    if (data.form_type === 'query') {
+                    if (data.form_type === Kontext.ConcFormTypes.QUERY) {
                         return data;
 
-                    } else if (data.form_type === 'locked') {
+                    } else if (data.form_type === Kontext.ConcFormTypes.LOCKED) {
                         return null;
 
                     } else {
-                        throw new Error('Cannot sync query store - invalid form data type: ' + data.form_type);
+                        throw new Error(
+                            'Cannot sync query store - invalid form data type: ' + data.form_type);
                     }
                 }
             )
@@ -689,7 +698,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     private addAlignedCorpus(state:FirstQueryFormModelState, corpname:string):void {
-        if (!List.some(v => v === corpname, state.corpora) && List.some(x => x.n === corpname, state.availableAlignedCorpora)) {
+        if (!List.some(v => v === corpname, state.corpora) &&
+                List.some(x => x.n === corpname, state.availableAlignedCorpora)) {
             state.corpora.push(corpname);
             if (!Dict.hasKey(corpname, state.queries)) {
                 state.queries[corpname] = '';
@@ -724,7 +734,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         List.removeValue(corpname, state.corpora);
     }
 
-    private createSubmitArgs():MultiDict {
+    private createSubmitArgs(contextFormArgs:QueryContextArgs):MultiDict {
         const primaryCorpus = this.state.corpora[0];
         const args = this.pageModel.getConcArgs() as MultiDict<ConcQueryArgs>;
         args.set('corpname', primaryCorpus);
@@ -741,12 +751,27 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             args.set('viewmode', 'kwic');
         }
 
+        Dict.forEach(
+            (v, k) => {
+                if (Array.isArray(v)) {
+                    args.replace(k, v);
+
+                } else {
+                    args.set(k, v);
+                }
+            },
+            contextFormArgs
+        )
+
         function createArgname(name, corpname) {
             return corpname !== primaryCorpus ? name + '_' + corpname : name;
         }
 
         this.state.corpora.forEach(corpname => {
-            args.add(createArgname('queryselector', corpname), `${this.state.queryTypes[corpname]}row`);
+            args.add(
+                createArgname('queryselector', corpname),
+                `${this.state.queryTypes[corpname]}row`
+            );
             // now we set the query; we have to remove possible new-line
             // characters as while the client's cql parser and CQL widget are ok with that
             // server is unable to parse this
@@ -764,19 +789,25 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 }
             }
             if (this.state.matchCaseValues[corpname]) {
-                args.add(createArgname('qmcase', corpname), this.state.matchCaseValues[corpname] ? '1' : '0');
+                args.add(
+                    createArgname('qmcase', corpname),
+                    this.state.matchCaseValues[corpname] ? '1' : '0'
+                );
             }
-            args.set(createArgname('pcq_pos_neg', corpname), this.state.pcqPosNegValues[corpname]);
-            args.set(createArgname('include_empty', corpname), this.state.includeEmptyValues[corpname] ? '1' : '0');
-            args.set(createArgname('default_attr', corpname), this.state.defaultAttrValues[corpname]);
+            args.set(
+                createArgname('pcq_pos_neg', corpname),
+                this.state.pcqPosNegValues[corpname]
+            );
+            args.set(
+                createArgname('include_empty', corpname),
+                this.state.includeEmptyValues[corpname] ? '1' : '0'
+            );
+            args.set(
+                createArgname('default_attr', corpname),
+                this.state.defaultAttrValues[corpname]
+            );
         });
 
-
-        // query context
-        Dict.forEach(
-            (value, key) => args.replace(key, [value]),
-            this.state.queryContextArgs as {}
-        );
 
         // text types
         const ttData = this.textTypesModel.exportSelections(false);
@@ -801,8 +832,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return args;
     }
 
-    submitQuery():void {
-        const args = this.createSubmitArgs().items();
+    submitQuery(contextFormArgs:QueryContextArgs):void {
+        const args = this.createSubmitArgs(contextFormArgs).items();
         const url = this.pageModel.createActionUrl('first', args);
         if (url.length < 2048) {
             window.location.href = url;
@@ -812,8 +843,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
     }
 
-    getSubmitUrl():string {
-        const args = this.createSubmitArgs().items();
+    getSubmitUrl(contextFormArgs:QueryContextArgs):string {
+        const args = this.createSubmitArgs(contextFormArgs).items();
         return this.pageModel.createActionUrl('first', args);
     }
 

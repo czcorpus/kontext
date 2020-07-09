@@ -19,7 +19,7 @@
  */
 
 import { Dict } from 'cnc-tskit';
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
@@ -27,10 +27,21 @@ import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
 import { ConcServerArgs } from '../concordance/common';
-import { FormType } from './actions';
+import { QueryFormType, Actions, ActionName } from './actions';
 
 
 export type QueryType = 'iquery'|'phrase'|'lemma'|'word'|'cql';
+
+export interface QueryContextArgs {
+    fc_lemword_window_type:string;
+    fc_lemword_wsize:string;
+    fc_lemword:string;
+    fc_lemword_type:string;
+    fc_pos_window_type:string;
+    fc_pos_wsize:string;
+    fc_pos:string[];
+    fc_pos_type:string;
+}
 
 export type AnyQuery = {
     iquery?:string;
@@ -98,7 +109,8 @@ export interface WithinBuilderData extends Kontext.AjaxResponse {
 }
 
 
-export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
+export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number,
+            focusIdx:number):boolean {
     if (anchorIdx === focusIdx) {
         return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
 
@@ -110,7 +122,7 @@ export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number, fo
 
 export interface QueryFormModelState {
 
-    formType:FormType;
+    formType:QueryFormType;
 
     forcedAttr:string;
 
@@ -154,7 +166,8 @@ export interface QueryFormModelState {
 /**
  *
  */
-export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T> implements Kontext.ICorpusSwitchAwareModel<T> {
+export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T>
+        implements Kontext.ICorpusSwitchAwareModel<T> {
 
     protected readonly pageModel:PageModel;
 
@@ -185,6 +198,27 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.queryContextModel = queryContextModel;
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
+
+        this.addActionSubtypeHandler<Actions.ToggleQueryHistoryWidget>(
+            ActionName.ToggleQueryHistoryWidget,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.historyVisible = !state.historyVisible;
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.SetActiveInputWidget>(
+            ActionName.SetActiveInputWidget,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.activeWidgets[action.payload.sourceId] = action.payload.value;
+                    state.widgetArgs = action.payload.widgetArgs || {};
+                });
+            }
+        );
     }
 
     protected validateQuery(query:string, queryType:QueryType):boolean {
@@ -192,17 +226,21 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             switch (queryType) {
                 case 'iquery':
                     return () => {
-                        if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
+                        if (!!(/^"[^\"]+"$/.exec(query) ||
+                                /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
                             throw new Error();
                         }
                     }
                 case 'phrase':
-                    return parseQuery.bind(null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
                 case 'lemma':
                 case 'word':
-                    return parseQuery.bind(null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
                 case 'cql':
-                    return parseQuery.bind(null, query + ';', {tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query + ';', {tracer: this.queryTracer});
                 default:
                     return () => {};
             }
@@ -220,14 +258,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return mismatch;
     }
 
-    protected addQueryInfix(state:QueryFormModelState, sourceId:string, query:string, insertRange:[number, number]):void {
+    protected addQueryInfix(state:QueryFormModelState, sourceId:string, query:string,
+            insertRange:[number, number]):void {
         state.queries[sourceId] = state.queries[sourceId].substring(0, insertRange[0]) + query +
                 state.queries[sourceId].substr(insertRange[1]);
     }
 
     getQueryUnicodeNFC(queryId:string):string {
          // TODO ES2015 stuff here
-        return Dict.hasKey(queryId, this.state.queries) ? this.state.queries[queryId]['normalize']() : undefined;
+        return Dict.hasKey(queryId, this.state.queries) ?
+            this.state.queries[queryId]['normalize']() :
+            undefined;
     }
 
     csGetStateKey():string {

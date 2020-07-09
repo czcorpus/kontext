@@ -25,7 +25,8 @@ import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { ActionName as ConcActionName } from '../concordance/actions';
-import { Actions as GeneralOptsActions, ActionName as GeneralOptsActionName } from '../options/actions';
+import { Actions as GeneralOptsActions,
+    ActionName as GeneralOptsActionName } from '../options/actions';
 
 
 
@@ -72,7 +73,8 @@ export function isStaticItem(item:Kontext.SubmenuItem): item is StaticSubmenuIte
                 !item.hasOwnProperty('message');
 }
 
-export function isEventTriggeringItem(item:Kontext.SubmenuItem): item is Kontext.EventTriggeringSubmenuItem {
+export function isEventTriggeringItem(item:Kontext.SubmenuItem):
+        item is Kontext.EventTriggeringSubmenuItem {
     return (<Kontext.EventTriggeringSubmenuItem>item).message !== undefined;
 }
 
@@ -94,13 +96,15 @@ function importMenuData(data:Array<InitialMenuEntry>):Array<Kontext.MenuEntry> {
 /**
  * Note - the function mutates data
  */
-export function disableMenuItems(data:InitialMenuData, ...disabled:Array<[string, string|null]>):InitialMenuData {
+export function disableMenuItems(data:InitialMenuData, ...disabled:Array<[string, string|null]>
+        ):InitialMenuData {
     List.forEach(
         ([itemId, subItemId]) => {
             const submenuEntry = List.find(([ident,]) => ident === itemId, data.submenuItems);
             if (submenuEntry) {
                 const [,submenu] = submenuEntry;
-                if (subItemId === undefined) { // no submenu specified => we disable whole menu section
+                // no submenu specified => we disable whole menu section
+                if (subItemId === undefined) {
                     submenu.disabled = true;
 
                 } else {
@@ -138,10 +142,10 @@ class MenuShortcutMapper implements Kontext.IMainMenuShortcutMapper {
             ident: `${keyCode}_${keyMod}_${message}`,
             label: '',
             hint: null,
-            message: message,
-            args: args,
-            keyCode: keyCode,
-            keyMod: keyMod,
+            message,
+            args,
+            keyCode,
+            keyMod,
             indirect: false,
             disabled: false
         });
@@ -163,7 +167,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
     private readonly pageModel:PageModel;
 
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initialData:InitialMenuData, concArgs:Array<[string, string]>) {
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initialData:InitialMenuData,
+            concArgs:Array<[string, string]>) {
         super(
             dispatcher,
             {
@@ -171,7 +176,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 visibleSubmenu: null,
                 data: importMenuData(initialData.submenuItems),
                 isBusy: false,
-                concArgs: concArgs
+                concArgs
             }
         );
         this.pageModel = pageModel;
@@ -220,7 +225,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             ActionName.ShowSaveQueryAsForm,
             ActionName.MakeConcLinkPersistent,
             ActionName.UndoLastQueryOp,
-            ActionName.FilterApplySubmitsRemove,
+            ActionName.FilterApplySubhitsRemove,
             ActionName.FilterApplyFirstOccurrences,
             ActionName.ShowFreqForm,
             ActionName.ShowCollForm,

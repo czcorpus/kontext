@@ -1,21 +1,22 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
+import { List, pipe, Dict } from 'cnc-tskit';
+
 import { FilterRecord, FeatureSelectProps } from './models';
-import * as Immutable from 'immutable';
 import { Kontext } from '../../../types/common';
 
 export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.ComponentClass<FeatureSelectProps> {
 
     const CategoryDetail:React.FunctionComponent<{
-        allValues:Immutable.List<string>;
-        availableValues:Immutable.List<string>;
+        allValues:Array<string>;
+        availableValues:Array<string>;
         onChangeHandler:(event) => void;
         categoryName:string;
-        filterFeatures:Immutable.List<FilterRecord>;
+        filterFeatures:Array<FilterRecord>;
     }> = (props) => {
-        const categoryFilterRecord = new FilterRecord({'name': props.categoryName});
+        const categoryFilterRecord = new FilterRecord(props.categoryName, null);
         const checkboxes = props.allValues.sort().map(value => {
-            const filterRecord = categoryFilterRecord.set('value', value);
+            const filterRecord = categoryFilterRecord.setValue(value);
             return <li key={value}>
                 <input
                     onChange={props.onChangeHandler}
@@ -33,17 +34,23 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
 
     const CategorySelect:React.FunctionComponent<{
         selectedCategory:string;
-        allFeatures:Immutable.Map<string, Immutable.List<string>>;
-        availableFeatures:Immutable.Map<string, Immutable.List<string>>;
+        allFeatures:{[key:string]:Array<string>};
+        availableFeatures:{[key:string]:Array<string>};
         onSelectCategoryHandler:(event) => void;
 
     }> = (props) => {
-        const categories = props.allFeatures.keySeq().sort().map(category => {
-            const availableValuesCount = (props.availableFeatures.has(category) ? props.availableFeatures.get(category).size : 0);
-            return <option key={category} value={category}>
-                    {category + " (" + availableValuesCount + ")"}
-                </option>;
-        });
+        const categories = pipe(
+            props.allFeatures,
+            Dict.keys(),
+            List.sorted((v1, v2) => v1.localeCompare(v2)),
+            List.map(category => {
+                const availableValuesCount = Dict.hasKey(category, props.availableFeatures) ?
+                    props.availableFeatures[category].length : 0;
+                return <option key={category} value={category}>
+                        {category + " (" + availableValuesCount + ")"}
+                    </option>;
+            })
+        );
         return <select multiple size={20} onChange={props.onSelectCategoryHandler}
                         value={[props.selectedCategory]}>{categories}</select>;
     }
@@ -52,18 +59,20 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
 
     const QueryLineCategory:React.FunctionComponent<{
         categoryName:string;
-        filterFeaturesCategory:Immutable.List<FilterRecord>;
+        filterFeaturesCategory:Array<FilterRecord>;
         handleRemoveFilter:(event) => void;
     }> = (props) => {
-        const buttonGroup = props.filterFeaturesCategory
-            .sort()
-            .map(filter => (
+        const buttonGroup = pipe(
+            props.filterFeaturesCategory,
+            List.sorted((f1, f2) => f1.name.localeCompare(f2.name)),
+            List.map(filter => (
                 <li key={filter.composeString()} className="item">
-                    <span>{filter.get('value')}</span>
-                    <button name={filter.get('name')} type="button" value={filter.get('value')}
+                    <span>{filter.value}</span>
+                    <button name={filter.name} type="button" value={filter.value}
                             onClick={props.handleRemoveFilter} className="query-close">{'\u00D7'}</button>
                 </li>
-            )).toArray();
+            ))
+        );
         return (
             <li className = "query-button-group">
                 {props.categoryName + ' = '}
@@ -77,20 +86,28 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
     // ------------------------ <QueryExpression /> --------------------------------------------
 
     const QueryExpression:React.FunctionComponent<{
-        filterFeatures:Immutable.List<FilterRecord>;
+        filterFeatures:Array<FilterRecord>;
         handleRemoveFilter:(event) => void;
     }> = (props) => {
-        const groupedFilterFeatures = props.filterFeatures.groupBy(item => item.get('name'))
-        const selected = groupedFilterFeatures.sort().reduce(
-            (acc, val, key) => acc.concat([
-                acc.length ? <li key={`amp:${key}`} className = "query-button-group amp">{'&'}</li> : null,
-                <QueryLineCategory
-                    key={key}
-                    categoryName={key}
-                    filterFeaturesCategory={val.toList()}
-                    handleRemoveFilter={props.handleRemoveFilter} />
-            ]),
-            []
+        const selected = pipe(
+            props.filterFeatures,
+            List.groupBy(item => item.name),
+            List.sorted(([key1,], [key2,]) => key1.localeCompare(key2)),
+            List.foldl(
+                (acc, [key, recList]) => {
+                    acc.push((
+                        <React.Fragment key={`emp:${key}`}>
+                            {acc.length ? <li className="query-button-group amp">{'&'}</li> : null}
+                            <QueryLineCategory
+                                categoryName={key}
+                                filterFeaturesCategory={recList}
+                                handleRemoveFilter={props.handleRemoveFilter} />
+                        </React.Fragment>
+                    ));
+                    return acc;
+                },
+                []
+            )
         );
         return (
             <div className="QueryExpression">
@@ -151,12 +168,14 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                 return <div>Error: {this.props.error.message}</div>;
 
             } else {
+                const featsWithoutPos = {...this.props.allFeatures};
+                delete featsWithoutPos['POS'];
                 return(
                     <div className='FeatureSelect'>
                         <h4>{ut.translate('taghelper__selected_features_label')}:</h4>
                         <div className='QueryLine' style={{maxWidth: '39em', minHeight: '4em'}}>
                             <QueryExpression
-                                filterFeatures={this.props.filterFeaturesHistory.last()}
+                                filterFeatures={List.last(this.props.filterFeaturesHistory)}
                                 handleRemoveFilter={this.handleRemoveFilter} />
                         </div>
                         <div style={{display: 'flex', alignItems: 'stretch'}}>
@@ -164,28 +183,28 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                                 <h4>{ut.translate('taghelper__part_of_speech_label')}:</h4>
                                 <CategoryDetail
                                     onChangeHandler={(event) => this.handleCheckboxChange(event)}
-                                    filterFeatures={this.props.filterFeaturesHistory.last()}
+                                    filterFeatures={List.last(this.props.filterFeaturesHistory)}
                                     categoryName="POS"
-                                    allValues={this.props.allFeatures.get("POS", Immutable.List([]))}
-                                    availableValues={this.props.availableFeatures.get("POS", Immutable.List([]))} />
+                                    allValues={this.props.allFeatures['POS'] || []}
+                                    availableValues={this.props.availableFeatures['POS'] || []} />
                             </div>
                             <div>
                                 <h4>{ut.translate('taghelper__features_label')}:</h4>
                                 <div style={{display: 'flex', alignItems: 'flex-start'}}>
                                     <div className='CategorySelect' style={{marginRight: '2em'}}>
                                         <CategorySelect
-                                            allFeatures={this.props.allFeatures.remove("POS")}
-                                            availableFeatures={this.props.availableFeatures.remove("POS")}
+                                            allFeatures={featsWithoutPos}
+                                            availableFeatures={featsWithoutPos}
                                             onSelectCategoryHandler={this.handleCategorySelect}
                                             selectedCategory={this.props.showCategory} />
                                     </div>
                                     <div className='CategoryDetail'>
                                         <CategoryDetail
                                             onChangeHandler={(event) => this.handleCheckboxChange(event)}
-                                            filterFeatures={this.props.filterFeaturesHistory.last()}
+                                            filterFeatures={List.last(this.props.filterFeaturesHistory)}
                                             categoryName={this.props.showCategory}
-                                            allValues={this.props.allFeatures.get(this.props.showCategory, Immutable.List([]))}
-                                            availableValues={this.props.availableFeatures.get(this.props.showCategory, Immutable.List([]))} />
+                                            allValues={this.props.allFeatures[this.props.showCategory] || []}
+                                            availableValues={this.props.availableFeatures[this.props.showCategory] || []} />
                                     </div>
                                 </div>
                             </div>

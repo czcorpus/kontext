@@ -21,7 +21,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { WithinBuilderData, QueryType } from './common';
+import { WithinBuilderData, QueryType, QueryContextArgs } from './common';
 
 
 export enum ActionName {
@@ -45,6 +45,7 @@ export enum ActionName {
     QueryInputUnhitVirtualKeyboardShift = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputToggleVirtualKeyboardCaps = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_CAPS',
     QueryInputSelectContextFormItem = 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+    QueryContextFormPrepareArgsDone = 'QUERY_CONTEXT_FORM_PREPARE_ARGS_DONE',
     QueryContextToggleForm = 'QUERY_CONTEXT_TOGGLE_FORM',
     QueryTextTypesToggleForm = 'QUERY_TEXT_TYPES_TOGGLE_FORM',
     LoadWithinBuilderData = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
@@ -73,7 +74,8 @@ export enum ActionName {
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
     CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
     ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
-    FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT'
+    FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
+    ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET'
 }
 
 export interface CorpusSwitchModelRestorePayload<T> {
@@ -83,7 +85,7 @@ export interface CorpusSwitchModelRestorePayload<T> {
     currCorpora:Array<string>;
 }
 
-export type FormType = 'query'|'filter';
+export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
 
 export namespace Actions {
 
@@ -199,6 +201,12 @@ export namespace Actions {
         name:ActionName.QueryInputSelectContextFormItem;
     }
 
+    export interface QueryContextFormPrepareArgsDone extends Action<{
+        data:QueryContextArgs;
+    }> {
+        name:ActionName.QueryContextFormPrepareArgsDone;
+    }
+
     export interface QueryContextToggleForm extends Action<{
     }> {
         name:ActionName.QueryContextToggleForm;
@@ -234,7 +242,7 @@ export namespace Actions {
     }
 
     export interface SetActiveInputWidget extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         value:string;
         widgetArgs:{[key:string]:string|number|boolean};
@@ -248,7 +256,7 @@ export namespace Actions {
     }
 
     export interface QueryInputSelectType extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         queryType:QueryType;
     }> {
@@ -264,7 +272,7 @@ export namespace Actions {
     }
 
     export interface QueryInputMoveCursor extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         rawAnchorIdx:number;
         rawFocusIdx:number;
@@ -273,7 +281,7 @@ export namespace Actions {
     }
 
     export interface QueryInputSetQuery extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         query:string;
         insertRange:[number, number]|null;
@@ -284,7 +292,7 @@ export namespace Actions {
     }
 
     export interface QueryInputAppendQuery extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         query:string;
         prependSpace:boolean;
@@ -295,14 +303,14 @@ export namespace Actions {
     }
 
     export interface QueryInputRemoveLastChar extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
     }> {
         name:ActionName.QueryInputRemoveLastChar;
     }
 
     export interface QueryInputSetLpos extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         lpos:string;
     }> {
@@ -310,7 +318,7 @@ export namespace Actions {
     }
 
     export interface QueryInputSetMatchCase extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         value:boolean;
     }> {
@@ -318,7 +326,7 @@ export namespace Actions {
     }
 
     export interface QueryInputSetDefaultAttr extends Action<{
-        formType:FormType;
+        formType:QueryFormType;
         sourceId:string;
         value:string;
     }> {
@@ -390,7 +398,8 @@ export namespace Actions {
         name:ActionName.QuerySubmit;
     }
 
-    export interface CorpusSwitchModelRestore<T={}> extends Action<CorpusSwitchModelRestorePayload<T>> {
+    export interface CorpusSwitchModelRestore<T={}> extends
+            Action<CorpusSwitchModelRestorePayload<T>> {
         name:ActionName.CorpusSwitchModelRestore;
     }
 
@@ -398,5 +407,11 @@ export namespace Actions {
         opKey:string;
     }> {
         name:ActionName.FilterFirstHitsSubmit;
+    }
+
+    export interface ToggleQueryHistoryWidget extends Action<{
+        formType:QueryFormType;
+    }> {
+        name:ActionName.ToggleQueryHistoryWidget;
     }
 }

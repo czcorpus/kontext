@@ -45,6 +45,7 @@ export interface FilterFormViews {
 // ---------
 
 export interface FilterFormProps {
+    formType:Kontext.ConcFormTypes.FILTER;
     filterId:string;
     operationIdx?:number;
     tagHelperView:PluginInterfaces.TagHelper.View;

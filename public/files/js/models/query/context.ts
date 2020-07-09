@@ -20,21 +20,11 @@
 
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions, ActionName } from './actions';
+import { QueryContextArgs } from './common';
 
 
 export interface QueryContextModelState {
     formData:QueryContextArgs;
-}
-
-export interface QueryContextArgs {
-    fc_lemword_window_type:string;
-    fc_lemword_wsize:string;
-    fc_lemword:string;
-    fc_lemword_type:string;
-    fc_pos_window_type:string;
-    fc_pos_wsize:string;
-    fc_pos:string[];
-    fc_pos_type:string;
 }
 
 
@@ -59,6 +49,22 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState> {
             (state, action) => {
                 state.formData[action.payload.name] = action.payload.value;
             }
+        );
+
+        this.addActionHandler<Actions.QuerySubmit>(
+            ActionName.QuerySubmit,
+            null,
+            (state, action, dispatch) => {
+                dispatch<Actions.QueryContextFormPrepareArgsDone>({
+                    name: ActionName.QueryContextFormPrepareArgsDone,
+                    payload: {
+                        data: state.formData
+                    }
+                });
+            }
+        ).sideEffectAlsoOn(
+            ActionName.QueryInputMakeCorpusPrimary,
+            ActionName.BranchQuery
         );
     }
 }

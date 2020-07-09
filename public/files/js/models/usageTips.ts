@@ -48,7 +48,7 @@ const tipsDef = [
 ];
 
 export interface UsageTipsState {
-    currentHints:{[key in keyof UsageTip]:string};
+    currentHints:{[key in UsageTipCategory]:string};
     hintsPointers:{[key in UsageTipCategory]:number};
 }
 
@@ -64,8 +64,8 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
         const pointers = pipe(
             [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY],
             List.map(cat => {
-                const avail = tipsDef.filter(v => v.category == cat);
-                return tuple(cat, Math.round(Math.random() * (avail.length - 1))|0);
+                const avail = tipsDef.filter(v => v.category === cat);
+                return tuple(cat, Math.round(Math.random() * (avail.length - 1)));
             }),
             Dict.fromEntries()
         );
@@ -107,7 +107,8 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
         const curr = state.hintsPointers[category];
         const avail = tipsDef.filter(v => v.category === category);
         state.hintsPointers[category] = (curr + 1) % avail.length;
-        state.currentHints[category] = this.translatorFn(avail[state.hintsPointers[category]].messageId);
+        state.currentHints[category] = this.translatorFn(
+            avail[state.hintsPointers[category]].messageId);
     }
 
 }
