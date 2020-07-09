@@ -28,8 +28,7 @@ import { Dict, List, pipe } from 'cnc-tskit';
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    models:{[key:string]:StatelessModel<TagBuilderBaseState>},
-    widgetViews:{[key:string]:any}) { // TODO Type
+    deps:{[key:string]:[StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]}) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -167,7 +166,7 @@ export function init(
 
     type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps & {activeView:React.ComponentClass|React.SFC};
 
-    class TagBuilder extends React.Component<ActiveTagBuilderProps & TagBuilderBaseState> {
+    class TagBuilder extends React.PureComponent<ActiveTagBuilderProps & TagBuilderBaseState> {
 
         constructor(props) {
             super(props);
@@ -203,11 +202,10 @@ export function init(
         }
     }
 
-    const AvailableTagBuilderBound = Dict.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model), models);
-
     // ---------------- <ActiveTagBuilder /> -----------------------------------
 
     const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
+
         const handleTabSelection = (value:string) => {
             dispatcher.dispatch({
                 name: 'TAGHELPER_SET_ACTIVE_TAG',
@@ -216,7 +214,7 @@ export function init(
         };
 
         const tagsetTabs = pipe(
-            widgetViews,
+            deps,
             Dict.keys(),
             List.map(
                 tagset => ({
@@ -227,13 +225,13 @@ export function init(
         );
 
         const children = pipe(
-            widgetViews,
+            deps,
             Dict.toEntries(),
-            List.map(tagset => {
-                const TagBuilderBound = AvailableTagBuilderBound[tagset[0]];
+            List.map(([key, [model, view]]) => {
+                const TagBuilderBound = BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model);
                 return <TagBuilderBound
-                            key={tagset[0]}
-                            activeView={tagset[1]}
+                            key={key}
+                            activeView={view}
                             sourceId={props.sourceId}
                             formType={props.formType}
                             range={props.range}
@@ -246,10 +244,9 @@ export function init(
             <div>
                 <h3>{he.translate('taghelper__create_tag_heading')}</h3>
                 <layoutViews.TabView
-                    className="TagsetFormSelector"
-                    callback={handleTabSelection}
-                    items={tagsetTabs} >
-
+                        className="TagsetFormSelector"
+                        callback={handleTabSelection}
+                        items={tagsetTabs} >
                     {children}
                 </layoutViews.TabView>
             </div>

@@ -20,7 +20,7 @@
 
 import { StatelessModel } from 'kombo';
 import { TagBuilderBaseState } from './common';
-import { List, Dict } from 'cnc-tskit';
+import { List, Dict, tuple, pipe } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { TagHelperModel, PositionOptions } from './positional/models';
@@ -34,10 +34,10 @@ declare var require:any;
 require('./style.less'); // webpack
 
 
-function addPairIfNotPresent<T>(list:Array<[string, T]>, ident:string, model:T):void {
+function addPairIfNotPresent<T, U>(list:Array<[string, T, U]>, ident:string, model:T, view:U):void {
     const srchIdx = List.findIndex(([d,]) => d === ident, list);
-    if (srchIdx > -1) {
-        list.push([ident, model]);
+    if (srchIdx === -1) {
+        list.push([ident, model, view]);
     }
 }
 
@@ -49,79 +49,87 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         this.pluginApi = pluginApi;
     }
 
+    private addPosTagsetBuilder(
+            deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]>,
+            tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,
+            corpname:string
+    ):void {
+        const positions:Array<PositionOptions> = [];
+        addPairIfNotPresent(
+            deps,
+            tagsetInfo.ident,
+            new TagHelperModel(
+                this.pluginApi.dispatcher(),
+                this.pluginApi,
+                {
+                    corpname,
+                    tagsetName: tagsetInfo.ident,
+                    data: [positions],
+                    positions,
+                    tagAttr: tagsetInfo.featAttr,
+                    presetPattern: '',
+                    srchPattern: '.*',
+                    rawPattern: '.*',
+                    generatedQuery: `${tagsetInfo.featAttr}=".*"`,
+                    isBusy: false,
+                    canUndo: false
+                },
+                tagsetInfo.ident
+            ),
+            ppTagsetViewInit(
+                this.pluginApi.dispatcher(),
+                this.pluginApi.getComponentHelpers()
+            )
+        );
+    }
+
+    private addKeyvalTagsetBuilder(
+        deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]>,
+        tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,
+        corpname:string
+    ):void {
+        addPairIfNotPresent(
+            deps,
+            tagsetInfo.ident,
+            new UDTagBuilderModel(
+                this.pluginApi.dispatcher(),
+                this.pluginApi,
+                {
+                    corpname,
+                    tagsetName: tagsetInfo.ident,
+                    isBusy: false,
+                    insertRange: [0, 0],
+                    canUndo: false,
+                    generatedQuery: '',
+                    rawPattern: '', // not applicable for the current UI
+                    error: null,
+                    allFeatures: {},
+                    availableFeatures: {},
+                    filterFeaturesHistory: [[]],
+                    showCategory: '',
+                    posField: tagsetInfo.posAttr,
+                    featureField: tagsetInfo.featAttr
+                },
+                tagsetInfo.ident
+            ),
+            udTagsetViewInit(
+                this.pluginApi.dispatcher(),
+                this.pluginApi.getComponentHelpers()
+            )
+        );
+    }
+
     getWidgetView(corpname:string,
             tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>):PluginInterfaces.TagHelper.View {
-        const views:Array<[string, React.SFC<{}>|React.ComponentClass<{}>]> = [];
-        let models:Array<[string, StatelessModel<TagBuilderBaseState>]> = [];
+        const deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]> = [];
         List.forEach(
             tagsetInfo => {
                 switch (tagsetInfo.type) {
                     case 'positional':
-                        const positions:Array<PositionOptions> = [];
-                        addPairIfNotPresent(
-                            models,
-                            tagsetInfo.ident,
-                            new TagHelperModel(
-                                this.pluginApi.dispatcher(),
-                                this.pluginApi,
-                                {
-                                    corpname,
-                                    tagsetName: tagsetInfo.ident,
-                                    data: [positions],
-                                    positions,
-                                    tagAttr: tagsetInfo.featAttr,
-                                    presetPattern: '',
-                                    srchPattern: '.*',
-                                    rawPattern: '.*',
-                                    generatedQuery: `${tagsetInfo.featAttr}=".*"`,
-                                    isBusy: false,
-                                    canUndo: false
-                                },
-                                tagsetInfo.ident
-                            ));
-                        addPairIfNotPresent(
-                            views,
-                            tagsetInfo.ident,
-                            ppTagsetViewInit(
-                                this.pluginApi.dispatcher(),
-                                this.pluginApi.getComponentHelpers()
-                            )
-                        );
+                        this.addPosTagsetBuilder(deps, tagsetInfo, corpname);
                     break;
                     case 'keyval':
-                        addPairIfNotPresent(
-                            models,
-                            tagsetInfo.ident,
-                            new UDTagBuilderModel(
-                                this.pluginApi.dispatcher(),
-                                this.pluginApi,
-                                {
-                                    corpname,
-                                    tagsetName: tagsetInfo.ident,
-                                    isBusy: false,
-                                    insertRange: [0, 0],
-                                    canUndo: false,
-                                    generatedQuery: '',
-                                    rawPattern: '', // not applicable for the current UI
-                                    error: null,
-                                    allFeatures: {},
-                                    availableFeatures: {},
-                                    filterFeaturesHistory: [[]],
-                                    showCategory: '',
-                                    posField: tagsetInfo.posAttr,
-                                    featureField: tagsetInfo.featAttr
-                                },
-                                tagsetInfo.ident
-                            )
-                        );
-                        addPairIfNotPresent(
-                            views,
-                            tagsetInfo.ident,
-                            udTagsetViewInit(
-                                this.pluginApi.dispatcher(),
-                                this.pluginApi.getComponentHelpers()
-                            )
-                        );
+                        this.addKeyvalTagsetBuilder(deps, tagsetInfo, corpname);
                     break;
                     case 'other': // 'other' means defined but unsupported
                     case null:  // null means no tagset defined for the corpus
@@ -136,7 +144,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         );
 
         List.forEach(
-            ([key, model]) => {
+            ([key, model,]) => {
                 model.suspend({}, (action, syncObj) => {
                     if (action.name === 'TAGHELPER_SET_ACTIVE_TAG' &&
                             key === action.payload['value']) {
@@ -149,14 +157,22 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                     return syncObj;
                 });
             },
-            models
+            deps
         );
 
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
-            Dict.fromEntries(models),
-            views,
+            pipe(
+                deps,
+                List.map(
+                    ([ident, model, view]) => tuple(
+                        ident,
+                        tuple(model, view)
+                    )
+                ),
+                Dict.fromEntries(),
+            )
         );
     }
 }
