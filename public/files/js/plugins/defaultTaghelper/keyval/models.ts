@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2020 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2020 Martin Zimandl <martin.zimandl@gmail.com>
+ * Copyright (c) 2020 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,10 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {IPluginApi} from '../../../types/plugins';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
-import { TagBuilderBaseState } from '../common';
 import { tuple, pipe, List, Dict, HTTP } from 'cnc-tskit';
+import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+
+import { IPluginApi } from '../../../types/plugins';
+import { TagBuilderBaseState } from '../common';
+import { Actions, ActionName } from '../actions';
+import { Kontext } from '../../../types/common';
 
 
 export interface FeatureSelectProps {
@@ -29,6 +35,10 @@ export interface FeatureSelectProps {
     availableFeatures:{[key:string]:Array<string>};
     filterFeaturesHistory:Array<Array<FilterRecord>>;
     showCategory:string;
+}
+
+interface DataResponse extends Kontext.AjaxResponse {
+    keyval_tags:{[key:string]:Array<string>};
 }
 
 export class FilterRecord {
@@ -115,163 +125,190 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
         this.pluginApi = pluginApi;
         this.ident = ident;
         this.sourceId = initialState.corpname;
-        this.actionMatch = {
-            'TAGHELPER_SELECT_CATEGORY': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.showCategory = action.payload['value'];
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_GET_INITIAL_DATA': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.isBusy = true;
-                    return newState;
-                }
-            },
-            'TAGHELPER_GET_INITIAL_DATA_DONE': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    if (!action.error) {
-                        newState.allFeatures = action.payload['result']; // TODO test and type !!!
-                        newState.availableFeatures = newState.allFeatures;
-                        newState.showCategory = pipe(
-                            newState.allFeatures,
-                            Dict.keys(),
-                            List.sorted((v1, v2) => v1.localeCompare(v2)),
-                            List.head()
-                        )
-                    } else {
-                        newState.error = action.error;
-                    }
-                    newState.isBusy = false;
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_GET_FILTERED_DATA_DONE': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    if (!action.error) {
-                        newState.availableFeatures = action.payload['result']; // TODO test and type
-                    } else {
-                        newState.error = action.error;
-                    }
-                    newState.isBusy = false;
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_ADD_FILTER': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    const filter = new FilterRecord(
-                        action.payload['name'],
-                        action.payload['value']
-                    );
-                    const filterFeatures = List.last(newState.filterFeaturesHistory);
-                    newState.isBusy = true;
-                    if (filterFeatures.every(x => !x.equals(filter))) {
-                        filterFeatures.push(filter);
-                        newState.filterFeaturesHistory.push(filterFeatures);
-                        newState.canUndo = true;
-                        newState.generatedQuery = composeQuery(newState);
-                    }
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_REMOVE_FILTER': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    const filter = new FilterRecord(
-                        action.payload['name'],
-                        action.payload['value']
-                    );
-                    const filterFeatures = List.last(newState.filterFeaturesHistory);
 
-                    const newFilterFeatures = List.filter(
-                        value => !value.equals(filter),
-                        filterFeatures
-                    );
-                    newState.filterFeaturesHistory.push(newFilterFeatures);
-                    newState.canUndo = true;
-                    newState.isBusy = true;
-                    newState.generatedQuery = composeQuery(newState);
-
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_UNDO': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.filterFeaturesHistory = List.init(newState.filterFeaturesHistory);
-                    if (newState.filterFeaturesHistory.length === 1) {
-                        newState.canUndo = false;
-                    }
-                    newState.isBusy = true;
-                    newState.generatedQuery = composeQuery(newState);
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_RESET': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.filterFeaturesHistory = [[]];
-                    newState.availableFeatures = newState.allFeatures;
-                    newState.canUndo = false;
-                    newState.generatedQuery = composeQuery(newState);
-                    return newState;
-                }
+        this.addActionSubtypeHandler<Actions.KVSelectCategory>(
+            ActionName.KVSelectCategory,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.showCategory = action.payload.value;
             }
-        };
-    }
+        );
 
-    sideEffects(state:UDTagBuilderModelState, action:Action, dispatch:SEDispatcher) {
-        switch (action.name) {
-            case 'TAGHELPER_GET_INITIAL_DATA':
-                if (action.payload['sourceId'] === this.sourceId &&
-                        state.filterFeaturesHistory.length === 1) {
+        this.addActionSubtypeHandler<Actions.GetInitialData>(
+            ActionName.GetInitialData,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                if (state.filterFeaturesHistory.length === 1) {
                     this.getFilteredFeatures(
                         state,
                         dispatch,
-                        'TAGHELPER_GET_INITIAL_DATA_DONE',
+                        (data, err) => err ?
+                        {
+                            name: ActionName.KVGetInitialDataDone,
+                            error: err
+
+                        } :
+                        {
+                            name: ActionName.KVGetInitialDataDone,
+                            payload: {
+                                sourceId: this.sourceId,
+                                result: data
+                            }
+                        },
                         false
                     );
                 }
-            break;
+            }
+        );
 
-            case 'TAGHELPER_ADD_FILTER':
-            case 'TAGHELPER_REMOVE_FILTER':
-            case 'TAGHELPER_UNDO':
-                if (action.payload['sourceId'] === this.sourceId) {
-                    this.getFilteredFeatures(
-                        state,
-                        dispatch,
-                        'TAGHELPER_GET_FILTERED_DATA_DONE',
-                        true
+        this.addActionSubtypeHandler<Actions.KVGetInitialDataDone>(
+            ActionName.KVGetInitialDataDone,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                if (!action.error) {
+                    state.allFeatures = action.payload.result;
+                    state.availableFeatures = state.allFeatures;
+                    state.showCategory = pipe(
+                        state.allFeatures,
+                        Dict.keys(),
+                        List.sorted((v1, v2) => v1.localeCompare(v2)),
+                        List.head()
                     );
+
+                } else {
+                    state.error = action.error;
                 }
-            break;
-            case 'TAGHELPER_SET_ACTIVE_TAG':
-                if (action.payload['sourceId'] === this.sourceId &&
-                        this.ident !== action.payload['value']) {
+                state.isBusy = false;
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.KVGetFilteredDataDone>(
+            ActionName.KVGetFilteredDataDone,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                if (action.error) {
+                    state.error = action.error;
+
+                } else {
+                    const reset = Dict.map(
+                        _ => [],
+                        state.availableFeatures
+                    )
+                    state.availableFeatures = {...reset, ...action.payload.result};
+                }
+                state.isBusy = false;
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.KVAddFilter>(
+            ActionName.KVAddFilter,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                const filter = new FilterRecord(
+                    action.payload.name,
+                    action.payload.value
+                );
+                const filterFeatures = List.last(state.filterFeaturesHistory);
+                state.isBusy = true;
+                if (List.every(x => !x.equals(filter), filterFeatures)) {
+                    filterFeatures.push(filter);
+                    state.filterFeaturesHistory.push(filterFeatures);
+                    state.canUndo = true;
+                    state.generatedQuery = composeQuery(state);
+                }
+            },
+            (state, action, dispatch) => {
+                this.getFilteredFeatures(
+                    state,
+                    dispatch,
+                    (data, err) => err ?
+                        {
+                            name: ActionName.KVGetFilteredDataDone,
+                            error: err
+
+                        } :
+                        {
+                            name: ActionName.KVGetFilteredDataDone,
+                            payload: {
+                                sourceId: this.sourceId,
+                                result: data
+                            }
+                        },
+                    true
+                );
+            }
+        ).sideEffectAlsoOn(
+            ActionName.KVRemoveFilter,
+            ActionName.Undo
+        );
+
+        this.addActionSubtypeHandler<Actions.KVRemoveFilter>(
+            ActionName.KVRemoveFilter,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                const filter = new FilterRecord(
+                    action.payload.name,
+                    action.payload.value
+                );
+                const filterFeatures = List.last(state.filterFeaturesHistory);
+
+                const newFilterFeatures = List.filter(
+                    value => !value.equals(filter),
+                    filterFeatures
+                );
+                state.filterFeaturesHistory.push(newFilterFeatures);
+                state.canUndo = true;
+                state.isBusy = true;
+                state.generatedQuery = composeQuery(state);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.Undo>(
+            ActionName.Undo,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.filterFeaturesHistory = List.init(state.filterFeaturesHistory);
+                if (state.filterFeaturesHistory.length === 1) {
+                    state.canUndo = false;
+                }
+                state.isBusy = true;
+                state.generatedQuery = composeQuery(state);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.Reset>(
+            ActionName.Reset,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.filterFeaturesHistory = [[]];
+                state.availableFeatures = state.allFeatures;
+                state.canUndo = false;
+                state.generatedQuery = composeQuery(state);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.SetActiveTag>(
+            ActionName.SetActiveTag,
+            action => action.payload.sourceId === this.sourceId,
+            null,
+            (state, action, dispatch) => {
+                if (this.ident !== action.payload.value) {
                     this.suspend(
                         {},
                         (nextAction, syncObj) => this.ident === nextAction.payload['value'] ?
                             null : syncObj
                     ).subscribe(); // TODO is this correct?
                 }
-            break;
-        }
+            }
+        );
     }
 
-    private getFilteredFeatures(state:UDTagBuilderModelState, dispatch:SEDispatcher,
-            actionDone:string, useFilter:boolean) {
+
+    private getFilteredFeatures<U>(state:UDTagBuilderModelState, dispatch:SEDispatcher,
+            actionFactory:(data:any, err?:Error)=>Action<U>, useFilter:boolean) {
         const baseArgs:Array<[string, string]> = [
             tuple('corpname', state.corpname),
             tuple('tagset', state.tagsetName)
@@ -282,7 +319,7 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             List.map(x => x.getKeyval())
         );
 
-        this.pluginApi.ajax$(
+        this.pluginApi.ajax$<DataResponse>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
@@ -292,22 +329,10 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
         ).subscribe(
             (result) => {
-                dispatch({
-                    name: actionDone,
-                    payload: {
-                        sourceId: this.sourceId,
-                        result: result['keyval_tags']
-                    }
-                });
+                dispatch<Action<U>>(actionFactory(result.keyval_tags));
             },
             (error) => {
-                dispatch({
-                    name: actionDone,
-                    error,
-                    payload: {
-                        sourceId: this.sourceId
-                    }
-                });
+                dispatch(actionFactory(null, error));
             }
         )
     }

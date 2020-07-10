@@ -104,7 +104,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                     rawPattern: '', // not applicable for the current UI
                     error: null,
                     allFeatures: {},
-                    availableFeatures: {},
+                    availableFeatures: {'': []},
                     filterFeaturesHistory: [[]],
                     showCategory: '',
                     posField: tagsetInfo.posAttr,

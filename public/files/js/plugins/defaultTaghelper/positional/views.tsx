@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
+import { List } from 'cnc-tskit';
 
 import {PositionValue, PositionOptions, TagHelperModelState} from './models';
 import { Kontext } from '../../../types/common';
-import { List } from 'cnc-tskit';
+import { Actions, ActionName } from '../actions';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
@@ -163,12 +164,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         checkboxHandler:CheckboxHandler;
     }> = (props) => {
 
-        const lineClickHandler = (idx:number) => () => {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_TOGGLE_ACTIVE_POSITION',
+        const lineClickHandler = () => {
+            dispatcher.dispatch<Actions.ToggleActivePosition>({
+                name: ActionName.ToggleActivePosition,
                 payload: {
-                    sourceId: props.sourceId,
-                    idx: idx
+                    sourceId: props.sourceId
                 }
             });
         };
@@ -177,7 +177,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             <ul className="defaultTaghelper_PositionList">
                 {props.positions.map(
                     (item, i) => <PositionLine key={`${i}:${item.label}`} position={item}
-                                                lineIdx={i} clickHandler={lineClickHandler(i)}
+                                                lineIdx={i} clickHandler={lineClickHandler}
                                                 checkboxHandler={props.checkboxHandler} />)}
             </ul>
         );
@@ -188,8 +188,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     const TagBuilder:React.SFC<TagHelperModelState> = (props) => {
 
         const checkboxHandler = (lineIdx:number, value:string, checked:boolean) => {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_CHECKBOX_CHANGED',
+            dispatcher.dispatch<Actions.CheckboxChanged>({
+                name: ActionName.CheckboxChanged,
                 payload: {
                     sourceId: props.corpname,
                     position: lineIdx,
@@ -197,10 +197,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                     checked: checked
                 }
             });
-        };
-
-        const escKeyHandler = () => {
-
         };
 
         return (

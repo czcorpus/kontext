@@ -16,16 +16,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IPluginApi } from '../../../types/plugins';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
-import { TagBuilderBaseState } from '../common';
 import { Observable, of as rxOf } from 'rxjs';
-import { List, pipe } from 'cnc-tskit';
+import { List, pipe, HTTP, Dict } from 'cnc-tskit';
+import { StatelessModel, IActionDispatcher } from 'kombo';
+
+import { IPluginApi } from '../../../types/plugins';
+import { TagBuilderBaseState } from '../common';
+import { Actions, ActionName } from '../actions';
 
 
-type RawTagValues = Array<Array<Array<string>>>;
+type RawTagValues = Array<Array<[string, string]>>;
 
-type UpdateTagValues = {[idx:number]:Array<Array<string>>};
 
 /**
  * Defines a JSON format used by server
@@ -80,6 +81,19 @@ export interface TagHelperModelState extends TagBuilderBaseState {
     tagAttr:string;
 }
 
+function cloneSelection(data:Array<PositionOptions>):Array<PositionOptions> {
+    return List.map(
+        item => ({
+            ...item,
+            values: List.map(
+                value => ({...value}),
+                item.values
+            )
+        }),
+        data
+    );
+}
+
 /**
  * This model handles a single tag-builder instance.
  */
@@ -98,199 +112,195 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         this.pluginApi = pluginApi;
         this.ident = ident;
         this.sourceId = initialState.corpname;
-        this.actionMatch = {
-            'TAGHELPER_PRESET_PATTERN': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.presetPattern = action.payload['pattern'];
-                    if (List.last(newState.data).length > 0) {
-                        this.applyPresetPattern(newState);
-                    }
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_GET_INITIAL_DATA': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.isBusy = true;
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_GET_INITIAL_DATA_DONE': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.isBusy = false;
-                    if (!action.error) {
-                        if (Array.isArray(action.payload['tags']) &&
-                                action.payload['tags'].length > 0) {
-                            this.importData(
-                                newState,
-                                action.payload['labels'],
-                                action.payload['tags']
-                            );
-                            if (newState.presetPattern) {
-                                this.applyPresetPattern(newState);
-                            }
-                        }
 
-                    } else {
-                        // TODO fix side effect here
-                        this.pluginApi.showMessage('error', action.error);
-                    }
-                    return newState;
+        this.addActionSubtypeHandler<Actions.PresetPattern>(
+            ActionName.PresetPattern,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.presetPattern = action.payload.pattern;
+                if (List.last(state.data).length > 0) {
+                    this.applyPresetPattern(state);
                 }
-                return state;
-            },
-            'TAGHELPER_CHECKBOX_CHANGED': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    this.updateSelectedItem(
-                        newState,
-                        action.payload['position'],
-                        action.payload['value'],
-                        action.payload['checked']
-                    );
-                    newState.isBusy = true;
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_LOAD_FILTERED_DATA_DONE': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.isBusy = false;
-                    if (!action.error) {
-                        this.mergeData(
-                            newState,
-                            action.payload['tags'],
-                            action.payload['triggerRow']
-                        );
-
-                    } else {
-                        // TODO fix side effect
-                        this.pluginApi.showMessage('error', action.error);
-                    }
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_UNDO': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    this.undo(newState);
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_RESET': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    this.resetSelections(newState);
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_TOGGLE_ACTIVE_POSITION': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    const latest = List.last(newState.data);
-                    newState.data.push(
-                        List.map(
-                            (item, i) => ({
-                                ...item,
-                                isActive: i === action.payload['idx'] ?
-                                    !item.isActive : item.isActive
-                            }),
-                            latest
-                        )
-                    );
-                    newState.positions = List.last(newState.data);
-                    return newState;
-                }
-                return state;
             }
-        }
-    }
+        );
 
-    sideEffects(state:TagHelperModelState, action:Action, dispatch:SEDispatcher) {
-        switch (action.name) {
-            case 'TAGHELPER_GET_INITIAL_DATA':
-                if (action.payload['sourceId'] === this.sourceId) {
-                    (List.last(state.data).length === 0 ?
-                        this.loadInitialData(state) :
-                        rxOf({
-                            labels: [],
-                            tags: []
-                        })
-                    ).subscribe(
-                        (data) => {
-                            dispatch({
-                                name: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                payload: {
-                                    sourceId: this.sourceId,
-                                    labels: data.labels,
-                                    tags: data.tags
-                                }
-                            });
-
-                        },
-                        (err) => {
-                            dispatch({
-                                name: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                payload: {
-                                    sourceId: this.sourceId,
-                                    labels: [],
-                                    tags: []
-                                },
-                                error: err
-                            });
-                        }
-                    );
-                }
-            break;
-            case 'TAGHELPER_CHECKBOX_CHANGED':
-            if (action.payload['sourceId'] === this.sourceId) {
-                this.updateData(state, action.payload['position']).subscribe(
+        this.addActionSubtypeHandler<Actions.GetInitialData>(
+            ActionName.GetInitialData,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                (List.last(state.data).length === 0 ?
+                    this.loadInitialData(state) :
+                    rxOf({
+                        labels: [],
+                        tags: []
+                    })
+                ).subscribe(
                     (data) => {
-                        dispatch({
-                            name: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                        dispatch<Actions.GetInitialDataDone>({
+                            name: ActionName.GetInitialDataDone,
                             payload: {
                                 sourceId: this.sourceId,
-                                tags: data.tags,
-                                triggerRow: action.payload['position']
+                                labels: data.labels,
+                                tags: data.tags
                             }
                         });
+
                     },
                     (err) => {
-                        dispatch({
-                            name: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                        dispatch<Actions.GetInitialDataDone>({
+                            name: ActionName.GetInitialDataDone,
                             payload: {
-                                sourceId: this.sourceId
+                                sourceId: this.sourceId,
+                                labels: [],
+                                tags: []
                             },
                             error: err
                         });
                     }
                 );
             }
-            break;
-            case 'TAGHELPER_SET_ACTIVE_TAG':
-                if (action.payload['sourceId'] === this.sourceId &&
-                        this.ident !== action.payload['value']) {
+        );
+
+        this.addActionSubtypeHandler<Actions.GetInitialDataDone>(
+            ActionName.GetInitialDataDone,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    if (Array.isArray(action.payload.tags) &&
+                            action.payload.tags.length > 0) {
+                        this.importData(
+                            state,
+                            action.payload.labels,
+                            action.payload.tags
+                        );
+                        if (state.presetPattern) {
+                            this.applyPresetPattern(state);
+                        }
+                    }
+
+                } else {
+                    // TODO fix side effect here
+                    this.pluginApi.showMessage('error', action.error);
+                }
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.CheckboxChanged>(
+            ActionName.CheckboxChanged,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                this.updateSelectedItem(
+                    state,
+                    action.payload.position,
+                    action.payload.value,
+                    action.payload.checked
+                );
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.updateData(state, action.payload.position).subscribe(
+                    (data) => {
+                        dispatch<Actions.LoadFilteredDataDone>({
+                            name: ActionName.LoadFilteredDataDone,
+                            payload: {
+                                sourceId: this.sourceId,
+                                tags: data.tags,
+                                triggerRow: action.payload.position
+                            }
+                        });
+                    },
+                    (err) => {
+                        dispatch<Actions.LoadFilteredDataDone>({
+                            name: ActionName.LoadFilteredDataDone,
+                            payload: {
+                                sourceId: this.sourceId,
+                                tags: [],
+                                triggerRow: action.payload.position
+                            },
+                            error: err
+                        });
+                    }
+                );
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.LoadFilteredDataDone>(
+            ActionName.LoadFilteredDataDone,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    this.mergeData(
+                        state,
+                        action.payload.tags,
+                        action.payload.triggerRow
+                    );
+
+                } else {
+                    // TODO fix side effect
+                    this.pluginApi.showMessage('error', action.error);
+                }
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.Undo>(
+            ActionName.Undo,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                this.undo(state);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.Reset>(
+            ActionName.Reset,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                this.resetSelections(state);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.ToggleActivePosition>(
+            ActionName.ToggleActivePosition,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                const latest = List.last(state.data);
+                state.data.push(
+                    List.map(
+                        (item, i) => ({
+                            ...item,
+                            isActive: i === action.payload['idx'] ?
+                                !item.isActive : item.isActive
+                        }),
+                        latest
+                    )
+                );
+                state.positions = List.last(state.data);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.SetActiveTag>(
+            ActionName.SetActiveTag,
+            action => action.payload.sourceId === this.sourceId,
+            null,
+            (state, action, dispatch) => {
+                if (this.ident !== action.payload.value) {
                     this.suspend(
                         {},
-                        (action, syncObj) => this.ident === action.payload['value']
-                            ? null : syncObj
+                        (action:Actions.SetActiveTag, syncObj) => this.ident === action.payload.value
+                        ? null : syncObj
                     ).subscribe(); // TODO is this correct ?
                 }
-            break;
-        }
+            }
+        );
     }
 
     private loadInitialData(state:TagHelperModelState):Observable<TagDataResponse> {
         return this.pluginApi.ajax$<TagDataResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
                 [
@@ -304,7 +314,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
 
     private updateData(state:TagHelperModelState, triggerRow:number):Observable<TagDataResponse> {
         return this.pluginApi.ajax$<TagDataResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
                 [
@@ -355,25 +365,30 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 item[0].substring(1, item[0].length - 1) : item[0]);
             item = parsePattern.exec(state.presetPattern);
         }
-        for (let i = 0; i < List.last(state.data).length; i +=1 ) {
-            const oldPos = List.last(state.data)[i];
-            const newPos:PositionOptions = {
-                label: oldPos.label,
-                values: oldPos.values.map((item:PositionValue) => {
-                    return {
-                        id: item.id,
-                        title: item.title,
-                        selected: (values[i] || '').indexOf(item.id) > -1 ? true : false,
-                        available: item.available
-                    }
-                }),
-                isLocked: oldPos.isLocked,
-                isActive: oldPos.isActive
-            };
-            const lst = List.last(state.data);
-            lst[i] = newPos;
-            state.data.push(lst);
-        }
+        pipe(
+            state.data,
+            List.last(),
+            List.forEach(
+                (oldPos, i) => {
+                    const newPos:PositionOptions = {
+                        label: oldPos.label,
+                        values: oldPos.values.map((item:PositionValue) => {
+                            return {
+                                id: item.id,
+                                title: item.title,
+                                selected: (values[i] || '').indexOf(item.id) > -1 ? true : false,
+                                available: item.available
+                            }
+                        }),
+                        isLocked: oldPos.isLocked,
+                        isActive: oldPos.isActive
+                    };
+                    const lst = List.last(state.data);
+                    lst[i] = newPos;
+                    state.data.push(lst);
+                }
+            )
+        );
         state.positions = List.last(state.data);
         state.canUndo = false;
         state.srchPattern = this.getCurrentPattern(state);
@@ -427,7 +442,12 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      *    current one is locked
      * 2) any position option value not found in server response is made unavalilable
      */
-    private mergeData(state:TagHelperModelState, tags:UpdateTagValues, triggerRow:number):void {
+    private mergeData(state:TagHelperModelState, tags:RawTagValues, triggerRow:number):void {
+        const mappedTags = pipe(
+            tags,
+            List.map(Dict.fromEntries())
+        );
+
         const newItem = pipe(
             state.data,
             List.last(),
@@ -436,25 +456,21 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                     let posOpts:PositionOptions;
                     if (!item.isLocked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
                         posOpts = {
-                            label: item.label,
-                            values: item.values,
-                            isLocked: true,
-                            isActive: item.isActive
+                            ...item,
+                            isLocked: true
                         };
 
                     } else if (i !== triggerRow && !item.isLocked) {
-                        const tmp = tags[i];
+                        const serverFiltered = mappedTags[i];
                         posOpts = {
-                            label: item.label,
+                            ...item,
                             values: List.map(
-                                (v:PositionValue) => ({
+                                v => ({
                                     ...v,
-                                    available: tmp[v.id] !== undefined
+                                    available: serverFiltered && serverFiltered[v.id] !== undefined
                                 }),
                                 item.values
-                            ),
-                            isLocked: item.isLocked,
-                            isActive: item.isActive
+                            )
                         };
                     } else {
                         posOpts = item;
@@ -477,20 +493,18 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
             checked:boolean):void {
         const oldPos = List.last(state.data)[position];
         const newPos:PositionOptions = {
-            label: oldPos.label,
+            ...oldPos,
             values: List.map(
                 (item:PositionValue) => ({
                     ...item,
                     selected: item.id === value ? checked : item.selected,
                 }),
                 oldPos.values
-            ),
-            isLocked: oldPos.isLocked,
-            isActive: oldPos.isActive
+            )
         };
-        const lastItem = List.last(state.data);
-        lastItem[position] = newPos;
-        state.data.push(lastItem);
+        const newSelection = cloneSelection(List.last(state.data));
+        newSelection[position] = newPos;
+        state.data.push(newSelection);
         state.srchPattern = this.getCurrentPattern(state);
         [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
     }
@@ -500,12 +514,13 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     }
 
     private getCurrentPattern(state:TagHelperModelState):string {
-        function exportPosition(v) {
-            if (v.size > 1) {
+
+        function exportPosition(v:Array<string>):string {
+            if (v.length > 1) {
                 return '[' + v.join('') + ']';
 
-            } else if (v.size === 1) {
-                return v.join('');
+            } else if (v.length === 1) {
+                return v[0];
 
             } else {
                 return '.';
