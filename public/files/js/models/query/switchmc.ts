@@ -18,17 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { Kontext } from '../../types/common';
-import * as Immutable from 'immutable';
+import { Dict } from 'cnc-tskit';
 
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { StatefulModel } from '../base';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { SwitchMainCorpServerArgs } from './common';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import { Actions, ActionName } from './actions';
 
 
 
@@ -49,36 +50,47 @@ export function fetchSwitchMainCorpFormArgs<T>(args:{[ident:string]:AjaxResponse
 }
 
 
-export class SwitchMainCorpModel extends StatefulModel {
+export interface SwitchMainCorpModelState {
+    maincorpValues:{[key:string]:string};
+}
+
+
+export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState> {
 
     private readonly layoutModel:PageModel;
 
     private readonly syncInitialArgs:AjaxResponse.SwitchMainCorpArgs;
 
-    private maincorpValues:Immutable.Map<string, string>;
-
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel, data:SwitchMainCorpFormProperties, syncInitialArgs:AjaxResponse.SwitchMainCorpArgs) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                maincorpValues: Dict.fromEntries(data.maincorp)
+            }
+        );
         this.layoutModel = layoutModel;
         this.syncInitialArgs = syncInitialArgs;
-        this.maincorpValues = Immutable.Map<string, string>(data);
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'MAIN_MENU_SHOW_SWITCHMC':
-                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
-                    this.emitChange();
-                break;
-                case 'SWITCH_MC_FORM_SUBMIT':
-                    window.location.href = this.getSubmitUrl(action.payload['operationId']);
-                break;
+        this.addActionHandler<MainMenuActions.ShowSwitchMc>(
+            MainMenuActionName.ShowSwitchMc,
+            action => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
             }
-        });
+        );
+
+        this.addActionHandler<Actions.SwitchMcFormSubmit>(
+            ActionName.SwitchMcFormSubmit,
+            action => {
+                window.location.href = this.getSubmitUrl(action.payload.operationId);
+            }
+        );
     }
+
+    unregister() {}
 
     getSubmitUrl(opId:string):string {
         const args = this.layoutModel.getConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
-        args.set('maincorp', this.maincorpValues.get(opId));
+        args.set('maincorp', this.state.maincorpValues[opId]);
         return this.layoutModel.createActionUrl('switch_main_corp', args);
     }
 
@@ -87,7 +99,9 @@ export class SwitchMainCorpModel extends StatefulModel {
             tap(
                 (data) => {
                     if (data.form_type === Kontext.ConcFormTypes.SWITCHMC) {
-                        this.maincorpValues = this.maincorpValues.set(data.op_key, data.maincorp);
+                        this.changeState(state => {
+                            state.maincorpValues[data.op_key] = data.maincorp;
+                        });
                     }
                 }
             ),
@@ -105,11 +119,6 @@ export class SwitchMainCorpModel extends StatefulModel {
                 }
             )
         );
-    }
-
-
-    getMainCorpValues():Immutable.Map<string, string> {
-        return this.maincorpValues;
     }
 
 }

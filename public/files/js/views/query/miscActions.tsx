@@ -19,14 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { Keyboard } from 'cnc-tskit';
-import { ConcSampleModel } from '../../models/query/sample';
-import { SwitchMainCorpModel } from '../../models/query/switchmc';
+import { ConcSampleModel, ConcSampleModelState } from '../../models/query/sample';
+import { SwitchMainCorpModel, SwitchMainCorpModelState } from '../../models/query/switchmc';
 import { ActionName, Actions } from '../../models/query/actions';
 
 
@@ -42,10 +40,6 @@ export interface SampleFormProps {
     formType:Kontext.ConcFormTypes.SAMPLE;
     sampleId:string;
     operationIdx?:number;
-}
-
-export interface SampleFormState {
-    rlines:string;
 }
 
 // -----------
@@ -71,10 +65,6 @@ export interface SwitchMainCorpFormProps {
     opKey:string;
 }
 
-export interface SwitchMainCorpFormState {
-    maincorpValues:Immutable.Map<string, string>;
-}
-
 // --------
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
@@ -82,29 +72,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <SampleForm /> --------------------------------
 
-    class SampleForm extends React.Component<SampleFormProps, SampleFormState> {
-
-        private modelSubscription:Subscription;
+    class SampleForm extends React.PureComponent<SampleFormProps & ConcSampleModelState> {
 
         constructor(props) {
             super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleInputChange = this._handleInputChange.bind(this);
             this._handleSubmitEvent = this._handleSubmitEvent.bind(this);
-            this.state = {
-                rlines: sampleModel.getRlinesValues().get(this.props.sampleId)
-            };
-        }
-
-        _handleModelChange() {
-            this.setState({
-                rlines: sampleModel.getRlinesValues().get(this.props.sampleId)
-            })
         }
 
         _handleInputChange(evt) {
-            dispatcher.dispatch({
-                name: 'SAMPLE_FORM_SET_RLINES',
+            dispatcher.dispatch<Actions.SampleFormSetRlines>({
+                name: ActionName.SampleFormSetRlines,
                 payload: {
                     sampleId: this.props.sampleId,
                     value: evt.target.value
@@ -121,8 +99,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     });
 
                 } else {
-                    dispatcher.dispatch({
-                        name: 'SAMPLE_FORM_SUBMIT',
+                    dispatcher.dispatch<Actions.SampleFormSubmit>({
+                        name: ActionName.SampleFormSubmit,
                         payload: {sampleId: this.props.sampleId}
                     });
                 }
@@ -131,21 +109,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
-        componentDidMount() {
-            this.modelSubscription = sampleModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
             return (
                 <form onKeyDown={this._handleSubmitEvent}>
                     <p>{he.translate('query__create_sample_desc')}.</p>
                     <p>
                         {he.translate('query__create_sample_rlines_label')}:
-                        {'\u00a0'}<input type="text" name="rlines" value={this.state.rlines} style={{width: '4em'}}
+                        {'\u00a0'}<input type="text" name="rlines" value={this.props.rlinesValues[this.props.sampleId]} style={{width: '4em'}}
                                 onChange={this._handleInputChange} />
                     </p>
                     <div className="buttons">
@@ -159,6 +129,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
+    const BoundSampleForm = BoundWithProps<SampleFormProps, ConcSampleModelState>(SampleForm, sampleModel);
 
     // ------------------------ <ShuffleForm /> --------------------------------
 
@@ -238,27 +209,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     /**
      *
      */
-    class SwitchMainCorpForm extends React.Component<SwitchMainCorpFormProps, SwitchMainCorpFormState> {
-
-        private modelSubscription:Subscription;
+    class SwitchMainCorpForm extends React.PureComponent<SwitchMainCorpFormProps & SwitchMainCorpModelState> {
 
         constructor(props) {
             super(props);
-            this.state = {maincorpValues: switchMcModel.getMainCorpValues()};
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleSubmitEvent = this._handleSubmitEvent.bind(this);
-        }
-
-        _handleModelChange() {
-            this.setState({maincorpValues: switchMcModel.getMainCorpValues()});
-        }
-
-        componentDidMount() {
-            this.modelSubscription = switchMcModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _handleSubmitEvent(evt) {
@@ -270,9 +225,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     });
 
                 } else {
-                    dispatcher.dispatch({
-                        name: 'SWITCH_MC_FORM_SUBMIT',
-                        payload: {opKey: this.props.opKey}
+                    dispatcher.dispatch<Actions.SwitchMcFormSubmit>({
+                        name: ActionName.SwitchMcFormSubmit,
+                        payload: {
+                            operationId: this.props.opKey
+                        }
                     });
                 }
                 evt.preventDefault();
@@ -285,7 +242,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <div>
                     <p>
                         <label>{he.translate('query__set_main_corp_to_label')}</label>:{'\u00a0'}
-                        <input type="text" readOnly={true} value={this.state.maincorpValues.get(this.props.opKey)}
+                        <input type="text" readOnly={true} value={this.props.maincorpValues[this.props.opKey]}
                                 title={he.translate('query__value_cannot_be_changed')} />
                     </p>
                     <p>
@@ -299,11 +256,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
+    const BoundSwitchMainCorpForm = BoundWithProps<SwitchMainCorpFormProps, SwitchMainCorpModelState>(SwitchMainCorpForm, switchMcModel);
 
     return {
-        SampleForm: SampleForm,
+        SampleForm: BoundSampleForm,
         ShuffleForm: ShuffleForm,
-        SwitchMainCorpForm: SwitchMainCorpForm
+        SwitchMainCorpForm: BoundSwitchMainCorpForm
     };
 
 }

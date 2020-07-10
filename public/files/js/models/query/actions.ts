@@ -75,7 +75,10 @@ export enum ActionName {
     CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
     ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
-    ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET'
+    ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
+    SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
+    SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
+    SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT'
 }
 
 export interface CorpusSwitchModelRestorePayload<T> {
@@ -413,5 +416,24 @@ export namespace Actions {
         formType:QueryFormType;
     }> {
         name:ActionName.ToggleQueryHistoryWidget;
+    }
+
+    export interface SampleFormSetRlines extends Action<{
+        value:string;
+        sampleId:string;
+    }> {
+        name:ActionName.SampleFormSetRlines;
+    }
+
+    export interface SampleFormSubmit extends Action<{
+        sampleId:string;
+    }> {
+        name:ActionName.SampleFormSubmit;
+    }
+
+    export interface SwitchMcFormSubmit extends Action<{
+        operationId:string;
+    }> {
+        name:ActionName.SwitchMcFormSubmit;
     }
 }

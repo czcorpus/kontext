@@ -18,16 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import * as Immutable from 'immutable';
+import { Dict } from 'cnc-tskit';
 
-import { StatefulModel } from '../base';
 import { PageModel } from '../../app/page';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { SampleServerArgs } from './common';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import { Actions, ActionName } from './actions';
 
 
 export interface SampleFormProperties {
@@ -46,51 +47,68 @@ export function fetchSampleFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
     return ans;
 }
 
+export interface ConcSampleModelState {
+    rlinesValues:{[key:string]:string};
+}
 
-export class ConcSampleModel extends StatefulModel {
+
+export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
 
     private readonly pageModel:PageModel;
 
     private readonly syncInitialArgs:AjaxResponse.SampleFormArgs;
 
-    private rlinesValues:Immutable.Map<string, string>;
-
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SampleFormProperties, syncInitialArgs:AjaxResponse.SampleFormArgs) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                rlinesValues: Dict.fromEntries(props.rlines)
+            }
+        );
         this.pageModel = pageModel;
         this.syncInitialArgs = syncInitialArgs;
-        this.rlinesValues = Immutable.Map<string, string>(props.rlines);
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'MAIN_MENU_SHOW_SAMPLE':
-                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
-                    this.emitChange();
-                break;
-                case 'SAMPLE_FORM_SET_RLINES':
-                    const v = action.payload['value'];
-                    if (/^([1-9]\d*)?$/.exec(v)) {
-                        this.rlinesValues = this.rlinesValues.set(action.payload['sampleId'], v);
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('query__sample_value_must_be_gt_zero'));
-                    }
-                    this.emitChange();
-                break;
-                case 'SAMPLE_FORM_SUBMIT':
-                    this.submitQuery(action.payload['sampleId']);
-                    this.emitChange(); // actually - currently there is no need for this (window.location changed here...)
-                break;
+        this.addActionHandler<MainMenuActions.ShowSample>(
+            MainMenuActionName.ShowSample,
+            action => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                this.emitChange();
             }
-        });
+        );
+
+        this.addActionHandler<Actions.SampleFormSetRlines>(
+            ActionName.SampleFormSetRlines,
+            action => {
+                const v = action.payload['value'];
+                if (/^([1-9]\d*)?$/.exec(v)) {
+                    this.changeState(state => {
+                        state.rlinesValues[action.payload.sampleId] = v;
+                    });
+
+                } else {
+                    this.pageModel.showMessage('error', this.pageModel.translate('query__sample_value_must_be_gt_zero'));
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.SampleFormSubmit>(
+            ActionName.SampleFormSubmit,
+            action => {
+                this.submitQuery(action.payload.sampleId);
+            }
+        );
     }
+
+    unregister() {}
 
     syncFrom(src:Observable<AjaxResponse.SampleFormArgs>):Observable<AjaxResponse.SampleFormArgs> {
         return src.pipe(
             tap(
                 (data) => {
                     if (data.form_type === 'sample') {
-                        this.rlinesValues = this.rlinesValues.set(data.op_key, data.rlines);
+                        this.changeState(state => {
+                            state.rlinesValues[data.op_key] = data.rlines;
+                        });
                     }
                 }
             ),
@@ -112,7 +130,7 @@ export class ConcSampleModel extends StatefulModel {
 
     private createSubmitArgs(sortId:string):MultiDict<SampleServerArgs> {
         const args = this.pageModel.getConcArgs() as MultiDict<SampleServerArgs>;
-        args.set('rlines', parseInt(this.rlinesValues.get(sortId)));
+        args.set('rlines', parseInt(this.state.rlinesValues[sortId]));
         return args;
     }
 
@@ -125,7 +143,4 @@ export class ConcSampleModel extends StatefulModel {
         return this.pageModel.createActionUrl('reduce', this.createSubmitArgs(sortId).items());
     }
 
-    getRlinesValues():Immutable.Map<string, string> {
-        return this.rlinesValues;
-    }
 }
