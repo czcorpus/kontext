@@ -19,17 +19,12 @@
 import os
 import time
 import json
-from functools import cmp_to_key
 from collections import defaultdict
 import re
 from lxml import etree
 from plugins.abstract.taghelper import AbstractTagsetInfoLoader
 from translation import ugettext as _
-
-
-def cmp(a, b):
-        """Python 3 workaround for in-built python 2 cmp() function"""
-        return (a>b)-(a<b)
+from typing import DefaultDict, Set, List, Union
 
 
 class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
@@ -96,8 +91,6 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         tagset = self._load_tag_descriptions(self.tagset_name, lang)
         if tagset is None:
             return {}
-        item_sequences = tuple([tuple([item[0] for item in position])
-                                for position in tagset['values']])
 
         translation_table = [dict(tagset['values'][i]) for i in range(tagset['num_pos'])]
 
@@ -116,7 +109,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                 tst_path += '%s/' % s
                 if not os.path.exists(tst_path):
                     os.mkdir(tst_path, 0o775)
-            ans = [set() for i in range(tagset['num_pos'])]
+            ans = [set() for _ in range(tagset['num_pos'])]
             with open(self.variants_file_path) as fr:
                 for line in fr:
                     line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
@@ -131,9 +124,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
 
             ans_sorted = []
             for i in range(len(ans)):
-                def cmp_by_seq(x, y): return (cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0]))
-                                              if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0)
-                ans_sorted.append(sorted(ans[i], key=cmp_to_key(cmp_by_seq)))
+                ans_sorted.append(sorted(ans[i], key=lambda x: x[0]))
 
             for i in range(len(ans_sorted)):
                 if len(ans_sorted[i]) == 1 and ans_sorted[i][0] == '-':
@@ -160,8 +151,6 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         tuples (ID, description)
         """
         tagset = self._load_tag_descriptions(self.tagset_name, lang)
-        item_sequences = tuple([tuple(['-'] + [item[0] for item in position])
-                                for position in tagset['values']])
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.SPEC_CHAR_REPLACEMENTS)
         patt = re.compile(required_pattern)
@@ -172,8 +161,13 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                 if patt.match(line):
                     matching_tags.append(line)
 
-        ans = defaultdict(lambda: set())
-        tag_elms = re.findall(r'\\[\*\?\^\.!]|\[[^\]]+\]|[^-]|-', required_pattern)
+        ans: DefaultDict[int, Union[Set, List]] = defaultdict(lambda: set())
+        if required_pattern in ('.*', '.+'):
+            tag_elms = ['.' for _ in range(tagset['num_pos'])]
+        else:
+            tag_elms = re.findall(r'\[[^\]]+\]|.', required_pattern)
+        import logging
+        logging.getLogger(__name__).debug('required_pattern: {}, tag_elms: {}'.format(required_pattern, tag_elms))
         translation_tables = [dict(tagset['values'][i]) for i in range(len(tag_elms))]
 
         for item in matching_tags:
@@ -188,17 +182,16 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                     ans[i].add((value, '%s - %s' % (item[i], item[i])))
 
         for key in ans:
-            i = int(key)
             used_keys = [x[0] for x in ans[key]]
             if '-' in used_keys:
-                # in only '-' is available it actaually means there is no need to choose anything
+                # in only '-' is available it actually means there is no need to choose anything
                 if len(used_keys) == 1:
-                    ans[key] = ()
-
-            def cmp_by_seq(x, y): return cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
-                if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
-            ans[key] = sorted(ans[key], key=cmp_to_key(cmp_by_seq)) if ans[key] is not None else None
-        return {'tags': ans, 'labels': []}
+                    ans[key] = set()
+            ans[key] = sorted(ans[key], key=lambda x: x[0]) if ans[key] is not None else None
+            logging.getLogger(__name__).debug('ans[key]: {}'.format(ans[key]))
+        return dict(
+            tags=[v for _, v in sorted(ans.items(), key=lambda x: x[0])],
+            labels=[])
 
     def _load_tag_descriptions(self, tagset_name, lang):
         """
