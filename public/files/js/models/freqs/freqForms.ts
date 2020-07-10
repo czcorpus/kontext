@@ -22,10 +22,9 @@ import {Kontext} from '../../types/common';
 import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
 import {AlignTypes} from './ctFreqForm';
-import { Action, IFullActionControl, StatelessModel } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 import { FreqServerArgs } from './common';
 import { MultiDict } from '../../multidict';
-import { StatefulModel } from '../base';
 
 
 export interface FreqFormInputs {
@@ -243,118 +242,86 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
 /**
  *
  */
-export class TTFreqFormModel extends StatefulModel {
+export interface TTFreqFormModelState {
+    structAttrList:Immutable.List<Kontext.AttrItem>;
+    fttattr:Immutable.Set<string>;
+    fttIncludeEmpty:boolean;
+    flimit:Kontext.FormValue<string>;
+    freqSort:string;
+}
+
+export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
 
     private pageModel:PageModel;
 
-    private structAttrList:Immutable.List<Kontext.AttrItem>;
-
-    private fttattr:Immutable.Set<string>;
-
-    private fttIncludeEmpty:boolean;
-
-    private flimit:Kontext.FormValue<string>;
-
-    private freqSort:string;
-
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:FreqFormProps) {
-        super(dispatcher);
-        this.pageModel = pageModel;
-        this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
-        this.fttattr = Immutable.Set<string>(props.fttattr);
-        this.fttIncludeEmpty = props.ftt_include_empty;
-        this.flimit = {value: props.flimit, isInvalid: false, isRequired: true};
-        this.freqSort = props.freq_sort;
-
-        dispatcher.registerActionListener((action:Action) => {
-            switch (action.name) {
-                case 'FREQ_TT_SET_FTTATTR':
-                    if (this.fttattr.contains(action.payload['value'])) {
-                        this.fttattr = this.fttattr.remove((action.payload['value']));
-
-                    } else {
-                        this.fttattr = this.fttattr.add(action.payload['value']);
-                    }
-                    this.emitChange();
-                break;
-                case 'FREQ_TT_SET_FTT_INCLUDE_EMPTY':
-                    this.fttIncludeEmpty = !this.fttIncludeEmpty;
-                    this.emitChange();
-                break;
-                case 'FREQ_TT_SET_FLIMIT':
-                    this.flimit.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'FREQ_TT_SUBMIT':
-                    const err = this.validateForm();
-                    if (!err) {
-                        this.submit();
-                        // we leave page here
-
-                    } else {
-                        this.pageModel.showMessage('error', err);
-                    }
-                    this.emitChange();
-                break;
+        super(
+            dispatcher,
+            {
+                structAttrList: Immutable.List<Kontext.AttrItem>(props.structAttrList),
+                fttattr: Immutable.Set<string>(props.fttattr),
+                fttIncludeEmpty: props.ftt_include_empty,
+                flimit: {value: props.flimit, isInvalid: false, isRequired: true},
+                freqSort: props.freq_sort,
             }
-        });
+        );
+        this.pageModel = pageModel;
+        
+        this.addActionHandler(
+            'FREQ_TT_SET_FTTATTR',
+            (state, action) => {
+                if (state.fttattr.contains(action.payload['value'])) {
+                    state.fttattr = state.fttattr.remove((action.payload['value']));
+
+                } else {
+                    state.fttattr = state.fttattr.add(action.payload['value']);
+                }
+            }
+        );
+
+        this.addActionHandler(
+            'FREQ_TT_SET_FTT_INCLUDE_EMPTY',
+            (state, action) => {state.fttIncludeEmpty = !state.fttIncludeEmpty}
+        );
+        
+        this.addActionHandler(
+            'FREQ_TT_SET_FLIMIT',
+            (state, action) => {state.flimit.value = action.payload['value']}
+        );
+
+        this.addActionHandler(
+            'FREQ_TT_SUBMIT',
+            (state, action) => {
+                const err = this.validateForm(state);
+                if (!err) {
+                    this.submit(state);
+                    // we leave page here
+
+                } else {
+                    this.pageModel.showMessage('error', err);
+                }
+            }
+        );
     }
 
-    private validateForm():Error|null {
-        if (validateGzNumber(this.flimit.value)) {
-            this.flimit.isInvalid = false;
+    private validateForm(state:TTFreqFormModelState):Error|null {
+        if (validateGzNumber(state.flimit.value)) {
+            state.flimit.isInvalid = false;
             return null;
 
         } else {
-            this.flimit.isInvalid = true;
+            state.flimit.isInvalid = true;
             return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
         }
     }
 
-    private submit():void {
+    private submit(state:TTFreqFormModelState):void {
         const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
-        args.replace('fttattr', this.fttattr.toArray());
-        args.set('ftt_include_empty', this.fttIncludeEmpty ? '1' : '0');
-        args.set('flimit', parseInt(this.flimit.value));
-        args.set('freq_sort', this.freqSort);
+        args.replace('fttattr', state.fttattr.toArray());
+        args.set('ftt_include_empty', state.fttIncludeEmpty ? '1' : '0');
+        args.set('flimit', parseInt(state.flimit.value));
+        args.set('freq_sort', state.freqSort);
         window.location.href = this.pageModel.createActionUrl('freqtt', args.items());
     }
 
-    getStructAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.structAttrList;
-    }
-
-    getStructAttrListSplitTypes():Immutable.List<Immutable.List<Kontext.AttrItem>> {
-        const structOf = (a:Kontext.AttrItem) => a.n.split('.')[0];
-        return this.structAttrList.reduce<Immutable.List<Immutable.List<Kontext.AttrItem>>>((reduc, curr) => {
-            if (reduc.size === 0 || structOf(curr) !== structOf(reduc.last().last())) {
-                if (reduc.last()) {
-                    const tmp = reduc.last();
-                    return reduc
-                        .pop()
-                        .push(tmp.sort((v1, v2) => v1.n.localeCompare(v2.n)).toList())
-                        .push(Immutable.List<Kontext.AttrItem>([{n: curr.n, label: curr.label}]));
-
-                } else {
-                    return reduc.push(Immutable.List<Kontext.AttrItem>([{n: curr.n, label: curr.label}]));
-                }
-
-            } else {
-                const tmp = reduc.last();
-                return reduc.pop().push(tmp.push({n: curr.n, label: curr.label}));
-            }
-        }, Immutable.List<Immutable.List<Kontext.AttrItem>>());
-    }
-
-    getFttattr():Immutable.Set<string> {
-        return this.fttattr;
-    }
-
-    getFttIncludeEmpty():boolean {
-        return this.fttIncludeEmpty;
-    }
-
-    getFlimit():Kontext.FormValue<string> {
-        return this.flimit;
-    }
 }

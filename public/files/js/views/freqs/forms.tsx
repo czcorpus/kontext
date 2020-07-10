@@ -22,11 +22,10 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
-import {MLFreqFormModel, TTFreqFormModel, MLFreqFormModelState} from '../../models/freqs/freqForms';
+import {MLFreqFormModel, TTFreqFormModel, MLFreqFormModelState, TTFreqFormModelState} from '../../models/freqs/freqForms';
 import {Freq2DFormModel, AlignTypes} from '../../models/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import { Subscription } from 'rxjs';
+import {IActionDispatcher} from 'kombo';
 
 // -------------------------- exported component ----------
 
@@ -164,41 +163,28 @@ export function init(
     interface TTFreqFormProps {
     }
 
-    class TTFreqForm extends React.Component<TTFreqFormProps, {
-        flimit:Kontext.FormValue<string>;
-        structAttrListSplitTypes:Immutable.List<Immutable.List<Kontext.AttrItem>>;
-        fttattr:Immutable.Set<string>;
-        fttIncludeEmpty:boolean;
+    class TTFreqForm extends React.Component<TTFreqFormProps & TTFreqFormModelState> {
 
-    }> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props:TTFreqFormProps) {
-            super(props);
-            this.state = this._getModelState();
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-        }
-
-        _getModelState() {
-            return {
-                structAttrListSplitTypes: ttFreqFormModel.getStructAttrListSplitTypes(),
-                fttattr: ttFreqFormModel.getFttattr(),
-                fttIncludeEmpty: ttFreqFormModel.getFttIncludeEmpty(),
-                flimit: ttFreqFormModel.getFlimit()
-            };
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._getModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = ttFreqFormModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
+        getStructAttrListSplitTypes(state:TTFreqFormModelState):Immutable.List<Immutable.List<Kontext.AttrItem>> {
+            const structOf = (a:Kontext.AttrItem) => a.n.split('.')[0];
+            return state.structAttrList.reduce<Immutable.List<Immutable.List<Kontext.AttrItem>>>((reduc, curr) => {
+                if (reduc.size === 0 || structOf(curr) !== structOf(reduc.last().last())) {
+                    if (reduc.last()) {
+                        const tmp = reduc.last();
+                        return reduc
+                            .pop()
+                            .push(tmp.sort((v1, v2) => v1.n.localeCompare(v2.n)).toList())
+                            .push(Immutable.List<Kontext.AttrItem>([{n: curr.n, label: curr.label}]));
+    
+                    } else {
+                        return reduc.push(Immutable.List<Kontext.AttrItem>([{n: curr.n, label: curr.label}]));
+                    }
+    
+                } else {
+                    const tmp = reduc.last();
+                    return reduc.pop().push(tmp.push({n: curr.n, label: curr.label}));
+                }
+            }, Immutable.List<Immutable.List<Kontext.AttrItem>>());
         }
 
         render():React.ReactElement<{}> {
@@ -213,7 +199,7 @@ export function init(
                                     </label>
                                 </th>
                                 <td>
-                                    <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_TT" />
+                                    <FreqLimitInput flimit={this.props.flimit} actionPrefix="FREQ_TT" />
                                 </td>
                             </tr>
                             <tr>
@@ -223,7 +209,7 @@ export function init(
                                     </label>
                                 </th>
                                 <td>
-                                    <IncludeEmptyCheckbox fttIncludeEmpty={this.state.fttIncludeEmpty} />
+                                    <IncludeEmptyCheckbox fttIncludeEmpty={this.props.fttIncludeEmpty} />
                                 </td>
                             </tr>
                         </tbody>
@@ -232,8 +218,8 @@ export function init(
                         <tbody>
                             <tr>
                                 <td colSpan={2}>
-                                    <StructAttrSelect structAttrListSplitTypes={this.state.structAttrListSplitTypes}
-                                            fttattr={this.state.fttattr} />
+                                    <StructAttrSelect structAttrListSplitTypes={this.getStructAttrListSplitTypes(this.props)}
+                                            fttattr={this.props.fttattr} />
                                 </td>
                             </tr>
                         </tbody>
@@ -551,8 +537,6 @@ export function init(
             );
         }
     }
-
-    const BoundMLFreqForm = BoundWithProps(MLFreqForm, mlFreqFormModel);
 
     // ---------------------- <FrequencyForm /> ---------------------
 
