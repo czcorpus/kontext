@@ -22,10 +22,10 @@ import * as React from 'react';
 import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
-import {MLFreqFormModel, TTFreqFormModel} from '../../models/freqs/freqForms';
+import {MLFreqFormModel, TTFreqFormModel, MLFreqFormModelState} from '../../models/freqs/freqForms';
 import {Freq2DFormModel, AlignTypes} from '../../models/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import { Subscription } from 'rxjs';
 
 // -------------------------- exported component ----------
@@ -469,45 +469,11 @@ export function init(
 
     }
 
-    interface MLFreqFormState {
-        attrList:Immutable.List<Kontext.AttrItem>;
-        flimit:Kontext.FormValue<string>;
-        levels:Immutable.List<number>;
-        mlxattrValues:Immutable.List<string>;
-        mlxicaseValues:Immutable.List<boolean>;
-        positionRangeLabels:Array<string>;
-        mlxctxIndices:Immutable.List<number>;
-        alignTypes:Immutable.List<AlignTypes>;
-        maxNumLevels:number;
-    }
-
-    class MLFreqForm extends React.Component<MLFreqFormProps, MLFreqFormState> {
-
-        private modelSubscription:Subscription;
+    class MLFreqForm extends React.Component<MLFreqFormProps & MLFreqFormModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._getModelState();
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleAddLevelClick = this._handleAddLevelClick.bind(this);
-        }
-
-        _getModelState() {
-            return {
-                attrList: mlFreqFormModel.getAttrList(),
-                flimit: mlFreqFormModel.getFlimit(),
-                levels: mlFreqFormModel.getLevels(),
-                mlxattrValues: mlFreqFormModel.getMlxattrValues(),
-                mlxicaseValues: mlFreqFormModel.getMlxicaseValues(),
-                positionRangeLabels: mlFreqFormModel.getPositionRangeLabels(),
-                mlxctxIndices: mlFreqFormModel.getMlxctxIndices(),
-                alignTypes: mlFreqFormModel.getAlignTypes(),
-                maxNumLevels: mlFreqFormModel.getMaxNumLevels()
-            };
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._getModelState());
         }
 
         _handleAddLevelClick() {
@@ -517,15 +483,8 @@ export function init(
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = mlFreqFormModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
+            const levels = this.props.mlxattr.map((_, i) => i).toList();
             return (
                 <table className="MLFreqForm">
                     <tbody>
@@ -533,7 +492,7 @@ export function init(
                             <td>
                                 <label style={{fontWeight: 'bold'}}>
                                     {he.translate('freq__freq_limit_label')}:{'\u00a0'}
-                                    <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_ML" />
+                                    <FreqLimitInput flimit={this.props.flimit} actionPrefix="FREQ_ML" />
                                 </label>
                             </td>
                             <td />
@@ -561,20 +520,20 @@ export function init(
                                             <th />
                                             <th />
                                         </tr>
-                                        {this.state.levels.map(item => {
+                                        {levels.map(item => {
                                             return <SingleLevelFieldTR
                                                         key={`level_${item}`}
-                                                        isRemovable={item > 0 || this.state.levels.size > 1}
-                                                        numLevels={this.state.levels.size}
+                                                        isRemovable={item > 0 || levels.size > 1}
+                                                        numLevels={levels.size}
                                                         levelIdx={item}
-                                                        attrList={this.state.attrList}
-                                                        mlxAttrValue={this.state.mlxattrValues.get(item)}
-                                                        mlxicaseValue={this.state.mlxicaseValues.get(item)}
-                                                        positionRangeLabels={this.state.positionRangeLabels}
-                                                        mlxctxIndex={this.state.mlxctxIndices.get(item)}
-                                                        alignType={this.state.alignTypes.get(item)} />;
+                                                        attrList={this.props.attrList}
+                                                        mlxAttrValue={this.props.mlxattr.get(item)}
+                                                        mlxicaseValue={this.props.mlxicase.get(item)}
+                                                        positionRangeLabels={mlFreqFormModel.getPositionRangeLabels()}
+                                                        mlxctxIndex={this.props.mlxctxIndices.get(item)}
+                                                        alignType={this.props.alignType.get(item)} />;
                                         })}
-                                        {this.state.levels.size < this.state.maxNumLevels ?
+                                        {levels.size < this.props.maxNumLevels ?
                                             (<tr>
                                                 <td>
                                                     <layoutViews.PlusButton mouseOverHint={he.translate('freq__add_level_btn')}
@@ -592,6 +551,8 @@ export function init(
             );
         }
     }
+
+    const BoundMLFreqForm = BoundWithProps(MLFreqForm, mlFreqFormModel);
 
     // ---------------------- <FrequencyForm /> ---------------------
 

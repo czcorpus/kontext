@@ -19,13 +19,13 @@
  */
 
 import {Kontext} from '../../types/common';
-import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
 import {AlignTypes} from './ctFreqForm';
-import { Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl, StatelessModel } from 'kombo';
 import { FreqServerArgs } from './common';
 import { MultiDict } from '../../multidict';
+import { StatefulModel } from '../base';
 
 
 export interface FreqFormInputs {
@@ -59,25 +59,20 @@ function validateGzNumber(s:string):boolean {
 /**
  *
  */
-export class MLFreqFormModel extends StatefulModel {
+export interface MLFreqFormModelState {
+    attrList:Immutable.List<Kontext.AttrItem>;
+    flimit:Kontext.FormValue<string>;
+    freqSort:string;
+    mlxattr:Immutable.List<string>;
+    mlxicase:Immutable.List<boolean>;
+    mlxctxIndices:Immutable.List<number>;
+    alignType:Immutable.List<AlignTypes>;
+    maxNumLevels:number;
+}
+
+export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
 
     private pageModel:PageModel;
-
-    private attrList:Immutable.List<Kontext.AttrItem>;
-
-    private flimit:Kontext.FormValue<string>;
-
-    private freqSort:string;
-
-    private mlxattr:Immutable.List<string>;
-
-    private mlxicase:Immutable.List<boolean>;
-
-    private mlxctxIndices:Immutable.List<number>;
-
-    private alignType:Immutable.List<AlignTypes>;
-
-    private maxNumLevels:number;
 
     private static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
 
@@ -86,87 +81,98 @@ export class MLFreqFormModel extends StatefulModel {
     private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
-        super(dispatcher);
-        this.pageModel = pageModel;
-        this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
-        this.flimit = {value: props.flimit, isInvalid: false, isRequired: true};
-        this.freqSort = props.freq_sort;
-        this.mlxattr = Immutable.List<string>(props.mlxattr);
-        this.mlxicase = Immutable.List<boolean>(props.mlxicase);
-        this.mlxctxIndices = Immutable.List<number>(props.mlxctx.map(item => this.importMlxctxValue(item)));
-        this.alignType = Immutable.List<AlignTypes>(props.alignType);
-        this.maxNumLevels = maxNumLevels;
-
-        dispatcher.registerActionListener((action:Action) => {
-            switch (action.name) {
-                case 'FREQ_ML_SET_FLIMIT':
-                    this.flimit.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'FREQ_ML_ADD_LEVEL':
-                    if (this.mlxattr.size < this.maxNumLevels) {
-                        this.addLevel();
-
-                    } else {
-                        throw new Error('Maximum number of levels reached');
-                    }
-                    this.emitChange();
-                break;
-                case 'FREQ_ML_REMOVE_LEVEL':
-                    this.removeLevel(action.payload['levelIdx']);
-                    this.emitChange();
-                break;
-                case 'FREQ_ML_CHANGE_LEVEL':
-                    this.changeLevel(action.payload['levelIdx'], action.payload['direction']);
-                    this.emitChange();
-                break;
-                case 'FREQ_ML_SET_MLXATTR':
-                    this.mlxattr = this.mlxattr.set(action.payload['levelIdx'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'FREQ_ML_SET_MLXICASE':
-                    this.mlxicase = this.mlxicase.set(
-                        action.payload['levelIdx'],
-                        !this.mlxicase.get(action.payload['levelIdx'])
-                    );
-                    this.emitChange();
-                break;
-                case 'FREQ_ML_SET_MLXCTX_INDEX':
-                    this.mlxctxIndices = this.mlxctxIndices.set(
-                        action.payload['levelIdx'],
-                        Number(action.payload['value'])
-                    );
-                    this.emitChange();
-                break;
-                case 'FREQ_ML_SET_ALIGN_TYPE':
-                    this.alignType = this.alignType.set(
-                        action.payload['levelIdx'],
-                        action.payload['value']
-                    );
-                    this.emitChange();
-                break;
-                case 'FREQ_ML_SUBMIT':
-                    const err = this.validateForm();
-                    if (!err) {
-                        this.emitChange();
-                        this.submit();
-
-                    } else {
-                        this.pageModel.showMessage('error', err);
-                        this.emitChange();
-                    }
-                break;
+        super(
+            dispatcher,
+            {
+                attrList: Immutable.List<Kontext.AttrItem>(props.attrList),
+                flimit: {value: props.flimit, isInvalid: false, isRequired: true},
+                freqSort: props.freq_sort,
+                mlxattr: Immutable.List<string>(props.mlxattr),
+                mlxicase: Immutable.List<boolean>(props.mlxicase),
+                mlxctxIndices: Immutable.List<number>(props.mlxctx.map(item => this.importMlxctxValue(item))),
+                alignType: Immutable.List<AlignTypes>(props.alignType),
+                maxNumLevels: maxNumLevels,
             }
-        });
+        );
+        this.pageModel = pageModel;
+
+        this.addActionHandler(
+            'FREQ_ML_SET_FLIMIT',
+            (state, action) => {state.flimit.value = action.payload['value']}
+        );
+
+        this.addActionHandler(
+            'FREQ_ML_ADD_LEVEL',
+            (state, action) => {
+                if (state.mlxattr.size < state.maxNumLevels) {
+                    this.addLevel(state);
+
+                } else {
+                    throw new Error('Maximum number of levels reached');
+                }
+            }
+        );
+        
+        this.addActionHandler(
+            'FREQ_ML_REMOVE_LEVEL',
+            (state, action) => this.removeLevel(state, action.payload['levelIdx'])
+        );
+
+        this.addActionHandler(
+            'FREQ_ML_CHANGE_LEVEL',
+            (state, action) => this.changeLevel(state, action.payload['levelIdx'], action.payload['direction'])
+        );
+
+        this.addActionHandler(
+            'FREQ_ML_SET_MLXATTR',
+            (state, action) => {state.mlxattr = state.mlxattr.set(action.payload['levelIdx'], action.payload['value'])}
+        );
+
+        this.addActionHandler(
+            'FREQ_ML_SET_MLXICASE',
+            (state, action) => {state.mlxicase = state.mlxicase.set(
+                action.payload['levelIdx'],
+                !state.mlxicase.get(action.payload['levelIdx'])
+            )}
+        );
+
+        this.addActionHandler(
+            'FREQ_ML_SET_MLXCTX_INDEX',
+            (state, action) => {state.mlxctxIndices = state.mlxctxIndices.set(
+                action.payload['levelIdx'],
+                Number(action.payload['value'])
+            )}
+        );
+
+        this.addActionHandler(
+            'FREQ_ML_SET_ALIGN_TYPE',
+            (state, action) => {state.alignType = state.alignType.set(
+                action.payload['levelIdx'],
+                action.payload['value']
+            )}
+        );
+
+        this.addActionHandler(
+            'FREQ_ML_SUBMIT',
+            (state, action) => {
+                const err = this.validateForm(state);
+                if (!err) {
+                    this.submit(state);
+
+                } else {
+                    this.pageModel.showMessage('error', err);
+                }
+            }
+        );
     }
 
-    private validateForm():Error|null {
-        if (validateGzNumber(this.flimit.value)) {
-            this.flimit.isInvalid = false;
+    private validateForm(state:MLFreqFormModelState):Error|null {
+        if (validateGzNumber(state.flimit.value)) {
+            state.flimit.isInvalid = false;
             return null;
 
         } else {
-            this.flimit.isInvalid = true;
+            state.flimit.isInvalid = true;
             return new Error(this.pageModel.translate('coll__invalid_gz_number_value'));
         }
     }
@@ -183,48 +189,48 @@ export class MLFreqFormModel extends StatefulModel {
         return undefined;
     }
 
-    private addLevel():void {
-        this.mlxattr = this.mlxattr.push(this.attrList.get(0).n);
-        this.mlxicase = this.mlxicase.push(false);
-        this.mlxctxIndices = this.mlxctxIndices.push(this.importMlxctxValue('0>0'));
-        this.alignType = this.alignType.push(AlignTypes.LEFT);
+    private addLevel(state:MLFreqFormModelState):void {
+        state.mlxattr = state.mlxattr.push(state.attrList.get(0).n);
+        state.mlxicase = state.mlxicase.push(false);
+        state.mlxctxIndices = state.mlxctxIndices.push(this.importMlxctxValue('0>0'));
+        state.alignType = state.alignType.push(AlignTypes.LEFT);
     }
 
-    private removeLevel(levelIdx:number):void {
-        this.mlxattr = this.mlxattr.remove(levelIdx);
-        this.mlxicase = this.mlxicase.remove(levelIdx);
-        this.mlxctxIndices = this.mlxctxIndices.remove(levelIdx);
-        this.alignType = this.alignType.remove(levelIdx);
+    private removeLevel(state:MLFreqFormModelState, levelIdx:number):void {
+        state.mlxattr = state.mlxattr.remove(levelIdx);
+        state.mlxicase = state.mlxicase.remove(levelIdx);
+        state.mlxctxIndices = state.mlxctxIndices.remove(levelIdx);
+        state.alignType = state.alignType.remove(levelIdx);
     }
 
-    private changeLevel(levelIdx:number, direction:string):void {
+    private changeLevel(state:MLFreqFormModelState, levelIdx:number, direction:string):void {
         const shift = direction === 'down' ? 1 : -1;
-        const rmMlxattr = this.mlxattr.get(levelIdx);
-        this.mlxattr = this.mlxattr.remove(levelIdx).insert(levelIdx + shift, rmMlxattr);
-        const rmMlxicase = this.mlxicase.get(levelIdx);
-        this.mlxicase = this.mlxicase.remove(levelIdx).insert(levelIdx + shift, rmMlxicase);
-        const rmMlxctxIndex = this.mlxctxIndices.get(levelIdx);
-        this.mlxctxIndices = this.mlxctxIndices.remove(levelIdx).insert(levelIdx + shift, rmMlxctxIndex);
-        const rmAlignType = this.alignType.get(levelIdx);
-        this.alignType = this.alignType.remove(levelIdx).insert(levelIdx + shift, rmAlignType);
+        const rmMlxattr = state.mlxattr.get(levelIdx);
+        state.mlxattr = state.mlxattr.remove(levelIdx).insert(levelIdx + shift, rmMlxattr);
+        const rmMlxicase = state.mlxicase.get(levelIdx);
+        state.mlxicase = state.mlxicase.remove(levelIdx).insert(levelIdx + shift, rmMlxicase);
+        const rmMlxctxIndex = state.mlxctxIndices.get(levelIdx);
+        state.mlxctxIndices = state.mlxctxIndices.remove(levelIdx).insert(levelIdx + shift, rmMlxctxIndex);
+        const rmAlignType = state.alignType.get(levelIdx);
+        state.alignType = state.alignType.remove(levelIdx).insert(levelIdx + shift, rmAlignType);
     }
 
-    private submit():void {
+    private submit(state:MLFreqFormModelState):void {
         const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
-        args.set('flimit', parseInt(this.flimit.value));
-        this.mlxattr.forEach((item, i) => {
+        args.set('flimit', parseInt(state.flimit.value));
+        state.mlxattr.forEach((item, i) => {
             args.set(`ml${i+1}attr`, item);
         });
-        this.mlxicase.forEach((item, i) => {
+        state.mlxicase.forEach((item, i) => {
             args.set(`ml${i+1}icase`, item ? 'i' : '');
         });
-        this.mlxctxIndices.forEach((item, i) => {
-            const val = this.alignType.get(i) === 'left' ?
+        state.mlxctxIndices.forEach((item, i) => {
+            const val = state.alignType.get(i) === 'left' ?
                     MLFreqFormModel.POSITION_LA[item] : MLFreqFormModel.POSITION_RA[item];
             args.set(`ml${i+1}ctx`, val);
         });
-        args.set('freqlevel', this.mlxattr.size);
-        args.set('freq_sort', this.freqSort);
+        args.set('freqlevel', state.mlxattr.size);
+        args.set('freq_sort', state.freqSort);
         window.location.href = this.pageModel.createActionUrl('freqml', args.items());
     }
 
@@ -232,37 +238,6 @@ export class MLFreqFormModel extends StatefulModel {
         return MLFreqFormModel.POSITION_LABELS;
     }
 
-    getFlimit():Kontext.FormValue<string> {
-        return this.flimit;
-    }
-
-    getLevels():Immutable.List<number> {
-        return this.mlxattr.map((_, i) => i).toList();
-    }
-
-    getAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.attrList;
-    }
-
-    getMlxattrValues():Immutable.List<string> {
-        return this.mlxattr;
-    }
-
-    getMlxicaseValues():Immutable.List<boolean> {
-        return this.mlxicase;
-    }
-
-    getMlxctxIndices():Immutable.List<number> {
-        return this.mlxctxIndices;
-    }
-
-    getAlignTypes():Immutable.List<AlignTypes> {
-        return this.alignType;
-    }
-
-    getMaxNumLevels():number {
-        return this.maxNumLevels;
-    }
 }
 
 /**
