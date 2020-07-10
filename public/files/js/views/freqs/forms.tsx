@@ -27,6 +27,7 @@ import {Freq2DFormModel} from '../../models/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
 import {init as freqFormsFactory} from './freqForms';
 import {IActionDispatcher} from 'kombo';
+import {ActionName} from '../../models/freqs/actions';
 
 // -------------------------- exported component ----------
 
@@ -73,8 +74,8 @@ export function init(
 
         _handleSubmitClick() {
             const actions = {
-                ml: 'FREQ_ML_SUBMIT',
-                tt: 'FREQ_TT_SUBMIT',
+                ml: ActionName.MLSubmit,
+                tt: ActionName.TTSubmit,
                 ct: 'FREQ_CT_SUBMIT'
             };
             dispatcher.dispatch({

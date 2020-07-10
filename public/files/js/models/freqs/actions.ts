@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { ResultBlock } from './dataRows';
 import { MultiDict } from '../../multidict';
 import { SaveData } from '../../app/navigation';
+import { AlignTypes } from './ctFreqForm';
 
 
 export enum ActionName {
@@ -38,7 +39,20 @@ export enum ActionName {
     SaveFormSetIncludeHeading = 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING',
     SaveFormSetIncludeColHeading = 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
     SaveFormSubmit = 'FREQ_SAVE_FORM_SUBMIT',
-    SetCtSaveMode = 'FREQ_CT_SET_SAVE_MODE'
+    SetCtSaveMode = 'FREQ_CT_SET_SAVE_MODE',
+    MLSetFLimit = 'FREQ_ML_SET_FLIMIT',
+    MLAddLevel = 'FREQ_ML_ADD_LEVEL',
+    MLRemoveLevel = 'FREQ_ML_REMOVE_LEVEL',
+    MLChangeLevel = 'FREQ_ML_CHANGE_LEVEL',
+    MLSetMlxAttr = 'FREQ_ML_SET_MLXATTR',
+    MLSetMlxiCase = 'FREQ_ML_SET_MLXICASE',
+    MLSetMlxctxIndex = 'FREQ_ML_SET_MLXCTX_INDEX',
+    MLSetAlignType = 'FREQ_ML_SET_ALIGN_TYPE',
+    MLSubmit = 'FREQ_ML_SUBMIT',
+    TTSetFttAttr = 'FREQ_TT_SET_FTTATTR',
+    TTSetIncludeEmpty = 'FREQ_TT_SET_FTT_INCLUDE_EMPTY',
+    TTSetFLimit = 'FREQ_TT_SET_FLIMIT',
+    TTSubmit = 'FREQ_TT_SUBMIT'
 }
 
 
@@ -125,4 +139,83 @@ export namespace Actions {
     }> {
         name: ActionName.SetCtSaveMode;
     }
+
+    export interface MLSetFLimit extends Action<{
+        value:string;
+    }> {
+        name: ActionName.MLSetFLimit;
+    }
+
+    export interface MLAddLevel extends Action<{
+    }> {
+        name: ActionName.MLAddLevel;
+    }
+    
+    export interface MLRemoveLevel extends Action<{
+        levelIdx:number;
+    }> {
+        name: ActionName.MLRemoveLevel;
+    }
+
+    export interface MLChangeLevel extends Action<{
+        levelIdx:number;
+        direction:string;
+    }> {
+        name: ActionName.MLChangeLevel;
+    }
+
+    export interface MLSetMlxAttr extends Action<{
+        levelIdx:number;
+        value:string;
+    }> {
+        name: ActionName.MLSetMlxAttr;
+    }
+
+    export interface MLSetMlxiCase extends Action<{
+        levelIdx:number;
+    }> {
+        name: ActionName.MLSetMlxiCase;
+    }
+
+    export interface MLSetMlxctxIndex extends Action<{
+        levelIdx:number;
+        value:string;
+    }> {
+        name: ActionName.MLSetMlxctxIndex;
+    }
+
+    export interface MLSetAlignType extends Action<{
+        levelIdx:number;
+        value:AlignTypes;
+    }> {
+        name: ActionName.MLSetAlignType;
+    }
+
+    export interface MLSubmit extends Action<{
+    }> {
+        name: ActionName.MLSubmit;
+    }
+
+    export interface TTSetFttAttr extends Action<{
+        value:string;
+    }> {
+        name: ActionName.TTSetFttAttr;
+    }
+
+    export interface TTSetIncludeEmpty extends Action<{
+    }> {
+        name: ActionName.TTSetIncludeEmpty;
+    }
+
+    export interface TTSetFLimit extends Action<{
+        value:string;
+    }> {
+        name: ActionName.TTSetFLimit;
+    }
+
+    export interface TTSubmit extends Action<{
+    }> {
+        name: ActionName.TTSubmit;
+    }
+
 }

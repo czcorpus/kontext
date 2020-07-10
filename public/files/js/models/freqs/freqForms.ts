@@ -25,6 +25,7 @@ import {AlignTypes} from './ctFreqForm';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { FreqServerArgs } from './common';
 import { MultiDict } from '../../multidict';
+import { ActionName, Actions } from './actions';
 
 
 export interface FreqFormInputs {
@@ -95,13 +96,13 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler(
-            'FREQ_ML_SET_FLIMIT',
-            (state, action) => {state.flimit.value = action.payload['value']}
+        this.addActionHandler<Actions.MLSetFLimit>(
+            ActionName.MLSetFLimit,
+            (state, action) => {state.flimit.value = action.payload.value}
         );
 
-        this.addActionHandler(
-            'FREQ_ML_ADD_LEVEL',
+        this.addActionHandler<Actions.MLAddLevel>(
+            ActionName.MLAddLevel,
             (state, action) => {
                 if (state.mlxattr.size < state.maxNumLevels) {
                     this.addLevel(state);
@@ -112,47 +113,47 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
             }
         );
         
-        this.addActionHandler(
-            'FREQ_ML_REMOVE_LEVEL',
-            (state, action) => this.removeLevel(state, action.payload['levelIdx'])
+        this.addActionHandler<Actions.MLRemoveLevel>(
+            ActionName.MLRemoveLevel,
+            (state, action) => this.removeLevel(state, action.payload.levelIdx)
         );
 
-        this.addActionHandler(
-            'FREQ_ML_CHANGE_LEVEL',
-            (state, action) => this.changeLevel(state, action.payload['levelIdx'], action.payload['direction'])
+        this.addActionHandler<Actions.MLChangeLevel>(
+            ActionName.MLChangeLevel,
+            (state, action) => this.changeLevel(state, action.payload.levelIdx, action.payload.direction)
         );
 
-        this.addActionHandler(
-            'FREQ_ML_SET_MLXATTR',
-            (state, action) => {state.mlxattr = state.mlxattr.set(action.payload['levelIdx'], action.payload['value'])}
+        this.addActionHandler<Actions.MLSetMlxAttr>(
+            ActionName.MLSetMlxAttr,
+            (state, action) => {state.mlxattr = state.mlxattr.set(action.payload.levelIdx, action.payload.value)}
         );
 
-        this.addActionHandler(
-            'FREQ_ML_SET_MLXICASE',
+        this.addActionHandler<Actions.MLSetMlxiCase>(
+            ActionName.MLSetMlxiCase,
             (state, action) => {state.mlxicase = state.mlxicase.set(
-                action.payload['levelIdx'],
-                !state.mlxicase.get(action.payload['levelIdx'])
+                action.payload.levelIdx,
+                !state.mlxicase.get(action.payload.levelIdx)
             )}
         );
 
-        this.addActionHandler(
-            'FREQ_ML_SET_MLXCTX_INDEX',
+        this.addActionHandler<Actions.MLSetMlxctxIndex>(
+            ActionName.MLSetMlxctxIndex,
             (state, action) => {state.mlxctxIndices = state.mlxctxIndices.set(
-                action.payload['levelIdx'],
-                Number(action.payload['value'])
+                action.payload.levelIdx,
+                Number(action.payload.value)
             )}
         );
 
-        this.addActionHandler(
-            'FREQ_ML_SET_ALIGN_TYPE',
+        this.addActionHandler<Actions.MLSetAlignType>(
+            ActionName.MLSetAlignType,
             (state, action) => {state.alignType = state.alignType.set(
-                action.payload['levelIdx'],
-                action.payload['value']
+                action.payload.levelIdx,
+                action.payload.value
             )}
         );
 
-        this.addActionHandler(
-            'FREQ_ML_SUBMIT',
+        this.addActionHandler<Actions.MLSubmit>(
+            ActionName.MLSubmit,
             (state, action) => {
                 const err = this.validateForm(state);
                 if (!err) {
@@ -267,30 +268,30 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
         );
         this.pageModel = pageModel;
         
-        this.addActionHandler(
-            'FREQ_TT_SET_FTTATTR',
+        this.addActionHandler<Actions.TTSetFttAttr>(
+            ActionName.TTSetFttAttr,
             (state, action) => {
-                if (state.fttattr.contains(action.payload['value'])) {
-                    state.fttattr = state.fttattr.remove((action.payload['value']));
+                if (state.fttattr.contains(action.payload.value)) {
+                    state.fttattr = state.fttattr.remove((action.payload.value));
 
                 } else {
-                    state.fttattr = state.fttattr.add(action.payload['value']);
+                    state.fttattr = state.fttattr.add(action.payload.value);
                 }
             }
         );
 
-        this.addActionHandler(
-            'FREQ_TT_SET_FTT_INCLUDE_EMPTY',
+        this.addActionHandler<Actions.TTSetIncludeEmpty>(
+            ActionName.TTSetIncludeEmpty,
             (state, action) => {state.fttIncludeEmpty = !state.fttIncludeEmpty}
         );
         
-        this.addActionHandler(
-            'FREQ_TT_SET_FLIMIT',
-            (state, action) => {state.flimit.value = action.payload['value']}
+        this.addActionHandler<Actions.TTSetFLimit>(
+            ActionName.TTSetFLimit,
+            (state, action) => {state.flimit.value = action.payload.value}
         );
 
-        this.addActionHandler(
-            'FREQ_TT_SUBMIT',
+        this.addActionHandler<Actions.TTSubmit>(
+            ActionName.TTSubmit,
             (state, action) => {
                 const err = this.validateForm(state);
                 if (!err) {

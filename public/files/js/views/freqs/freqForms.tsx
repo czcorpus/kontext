@@ -25,6 +25,7 @@ import {Kontext} from '../../types/common';
 import {TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel, MLFreqFormModelState} from '../../models/freqs/freqForms';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import { AlignTypes } from '../../models/freqs/ctFreqForm';
+import {Actions, ActionName} from '../../models/freqs/actions';
 
 // -------------------------- exported component ----------
 
@@ -52,8 +53,8 @@ export function init(
     const StructAttrSelect:React.SFC<StructAttrSelectProps> = (props) => {
 
         const handleCheckboxChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_TT_SET_FTTATTR',
+            dispatcher.dispatch<Actions.TTSetFttAttr>({
+                name: ActionName.TTSetFttAttr,
                 payload: {
                     value: evt.target.value
                 }
@@ -106,14 +107,14 @@ export function init(
     // ---------------------- <FreqLimitInput /> --------------------------------------------
 
     const FreqLimitInput:React.SFC<{
-        actionPrefix:string;
+        actionName:ActionName.MLSetFLimit|ActionName.TTSetFLimit;
         flimit:Kontext.FormValue<string>;
 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: `${props.actionPrefix}_SET_FLIMIT`,
+            dispatcher.dispatch<Actions.MLSetFLimit|Actions.TTSetFLimit>({
+                name: props.actionName,
                 payload: {
                     value: evt.target.value
                 }
@@ -138,8 +139,8 @@ export function init(
     const IncludeEmptyCheckbox:React.SFC<IncludeEmptyCheckboxProps> = (props) => {
 
         const handleCheckboxChange = () => {
-            dispatcher.dispatch({
-                name: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY',
+            dispatcher.dispatch<Actions.TTSetIncludeEmpty>({
+                name: ActionName.TTSetIncludeEmpty,
                 payload: {}
             });
         };
@@ -189,7 +190,7 @@ export function init(
                                     </label>
                                 </th>
                                 <td>
-                                    <FreqLimitInput flimit={this.props.flimit} actionPrefix="FREQ_TT" />
+                                    <FreqLimitInput flimit={this.props.flimit} actionName={ActionName.TTSetFLimit} />
                                 </td>
                             </tr>
                             <tr>
@@ -230,8 +231,8 @@ export function init(
     const MLAttrSelection:React.SFC<MLAttrSelectionProps> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_ML_SET_MLXATTR',
+            dispatcher.dispatch<Actions.MLSetMlxAttr>({
+                name: ActionName.MLSetMlxAttr,
                 payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
@@ -259,8 +260,8 @@ export function init(
     const MLIgnoreCaseCheckbox:React.SFC<MLIgnoreCaseCheckboxProps> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'FREQ_ML_SET_MLXICASE',
+            dispatcher.dispatch<Actions.MLSetMlxiCase>({
+                name: ActionName.MLSetMlxiCase,
                 payload: {
                     levelIdx: props.levelIdx
                 }
@@ -282,8 +283,8 @@ export function init(
     const MLPositionSelect:React.SFC<MLPositionSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_ML_SET_MLXCTX_INDEX',
+            dispatcher.dispatch<Actions.MLSetMlxctxIndex>({
+                name: ActionName.MLSetMlxctxIndex,
                 payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
@@ -311,8 +312,8 @@ export function init(
     const MLPosAlignmentSelect:React.SFC<MLPosAlignmentSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_ML_SET_ALIGN_TYPE',
+            dispatcher.dispatch<Actions.MLSetAlignType>({
+                name: ActionName.MLSetAlignType,
                 payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
@@ -339,8 +340,8 @@ export function init(
     const MLMoveLevelControl:React.SFC<MLMoveLevelControlProps> = (props) => {
 
         const handleClick = (direction) => {
-            dispatcher.dispatch({
-                name: 'FREQ_ML_CHANGE_LEVEL',
+            dispatcher.dispatch<Actions.MLChangeLevel>({
+                name: ActionName.MLChangeLevel,
                 payload: {
                     levelIdx: props.levelIdx,
                     direction: direction
@@ -390,8 +391,8 @@ export function init(
     const SingleLevelFieldTR:React.SFC<SingleLevelFieldTRProps> = (props) => {
 
         const handleRemoveLevelClick = () => {
-            dispatcher.dispatch({
-                name: 'FREQ_ML_REMOVE_LEVEL',
+            dispatcher.dispatch<Actions.MLRemoveLevel>({
+                name: ActionName.MLRemoveLevel,
                 payload: {
                     levelIdx: props.levelIdx
                 }
@@ -449,8 +450,8 @@ export function init(
         }
 
         _handleAddLevelClick() {
-            dispatcher.dispatch({
-                name: 'FREQ_ML_ADD_LEVEL',
+            dispatcher.dispatch<Actions.MLAddLevel>({
+                name: ActionName.MLAddLevel,
                 payload: {}
             });
         }
@@ -464,7 +465,7 @@ export function init(
                             <td>
                                 <label style={{fontWeight: 'bold'}}>
                                     {he.translate('freq__freq_limit_label')}:{'\u00a0'}
-                                    <FreqLimitInput flimit={this.props.flimit} actionPrefix="FREQ_ML" />
+                                    <FreqLimitInput flimit={this.props.flimit} actionName={ActionName.MLSetFLimit} />
                                 </label>
                             </td>
                             <td />
