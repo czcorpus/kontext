@@ -29,7 +29,13 @@ export const enum ActionName {
     Undo = 'TAGHELPER_UNDO',
     Reset = 'TAGHELPER_RESET',
     ToggleActivePosition = 'TAGHELPER_TOGGLE_ACTIVE_POSITION',
-    SetActiveTag = 'TAGHELPER_SET_ACTIVE_TAG'
+    SetActiveTag = 'TAGHELPER_SET_ACTIVE_TAG',
+    KVSelectCategory = 'TAGHELPER_SELECT_CATEGORY',
+    KVAddFilter = 'TAGHELPER_ADD_FILTER',
+    KVRemoveFilter = 'TAGHELPER_REMOVE_FILTER',
+    KVGetInitialDataDone = 'TAGHELPER_KV_GET_INITIAL_DATA_DONE',
+    KVGetFilteredDataDone = 'TAGHELPER_KV_GET_FILTERED_DATA_DONE'
+
 
 }
 
@@ -96,5 +102,42 @@ export namespace Actions {
         value:string;
     }> {
         name:ActionName.SetActiveTag;
+    }
+
+    export interface KVSelectCategory extends Action<{
+        sourceId:string;
+        value:string;
+    }> {
+        name:ActionName.KVSelectCategory;
+    }
+
+    export interface KVAddFilter extends Action<{
+        sourceId:string;
+        name:string;
+        value:string;
+    }> {
+        name:ActionName.KVAddFilter;
+    }
+
+    export interface KVRemoveFilter extends Action<{
+        sourceId:string;
+        name:string;
+        value:string;
+    }> {
+        name:ActionName.KVRemoveFilter;
+    }
+
+    export interface KVGetInitialDataDone extends Action<{
+        sourceId:string;
+        result:{[key:string]:Array<string>};
+    }> {
+        name:ActionName.KVGetInitialDataDone;
+    }
+
+    export interface KVGetFilteredDataDone extends Action<{
+        sourceId:string;
+        result:{[key:string]:Array<string>};
+    }> {
+        name:ActionName.KVGetFilteredDataDone;
     }
 }

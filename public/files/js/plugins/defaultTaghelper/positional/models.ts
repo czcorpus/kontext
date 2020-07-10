@@ -18,7 +18,7 @@
 
 import { Observable, of as rxOf } from 'rxjs';
 import { List, pipe, HTTP, Dict } from 'cnc-tskit';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher } from 'kombo';
 
 import { IPluginApi } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
@@ -27,7 +27,6 @@ import { Actions, ActionName } from '../actions';
 
 type RawTagValues = Array<Array<[string, string]>>;
 
-type UpdateTagValues = Array<{[valCode:string]:[string, string]}>;
 
 /**
  * Defines a JSON format used by server

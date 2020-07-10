@@ -4,8 +4,13 @@ import { List, pipe, Dict } from 'cnc-tskit';
 
 import { FilterRecord, FeatureSelectProps } from './models';
 import { Kontext } from '../../../types/common';
+import { Actions, ActionName } from '../actions';
+import { Action } from 'rxjs/internal/scheduler/Action';
+
 
 export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.ComponentClass<FeatureSelectProps> {
+
+    // --------------------------- <CategoryDetail /> ------------------------------
 
     const CategoryDetail:React.FunctionComponent<{
         allValues:Array<string>;
@@ -15,22 +20,28 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         filterFeatures:Array<FilterRecord>;
     }> = (props) => {
         const categoryFilterRecord = new FilterRecord(props.categoryName, null);
-        const checkboxes = props.allValues.sort().map(value => {
-            const filterRecord = categoryFilterRecord.setValue(value);
-            return <li key={value}>
-                <input
-                    onChange={props.onChangeHandler}
-                    type="checkbox"
-                    id={props.categoryName + '-' + value}
-                    name={props.categoryName}
-                    value={value}
-                    checked={props.filterFeatures.some(x => x.equals(filterRecord) ? true : false)}
-                    disabled={props.availableValues.includes(value) ? false : true} />
-                <label htmlFor={props.categoryName + '-' + value}>{value}</label>
-            </li>
-        });
+        const checkboxes = pipe(
+            props.allValues,
+            List.sorted((v1, v2) => v1.localeCompare(v2)),
+            List.map(value => {
+                const filterRecord = categoryFilterRecord.setValue(value);
+                return <li key={value}>
+                    <input
+                        onChange={props.onChangeHandler}
+                        type="checkbox"
+                        id={props.categoryName + '-' + value}
+                        name={props.categoryName}
+                        value={value}
+                        checked={List.some(x => x.equals(filterRecord), props.filterFeatures)}
+                        disabled={!List.some(x => x === value, props.availableValues)} />
+                    <label htmlFor={props.categoryName + '-' + value}>{value}</label>
+                </li>
+            })
+        );
         return <ul className="defaultTaghelper_PositionList">{checkboxes}</ul>;
     }
+
+    // --------------------------- <CategorySelect /> ------------------------------
 
     const CategorySelect:React.FunctionComponent<{
         selectedCategory:string;
@@ -46,7 +57,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             List.map(category => {
                 const availableValuesCount = Dict.hasKey(category, props.availableFeatures) ?
                     props.availableFeatures[category].length : 0;
-                return <option key={category} value={category}>
+                return <option key={category} value={category} disabled={availableValuesCount === 0}>
                         {category + " (" + availableValuesCount + ")"}
                     </option>;
             })
@@ -129,22 +140,23 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
 
         handleCheckboxChange(event) {
             if (event.target.checked) {
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_ADD_FILTER',
+                dispatcher.dispatch<Actions.KVAddFilter>({
+                    name: ActionName.KVAddFilter,
                     payload: {
                         sourceId: this.props.sourceId,
                         name: event.target.name,
                         value: event.target.value
                     }
                 });
+
             } else {
                 this.handleRemoveFilter(event);
             }
         }
 
         handleRemoveFilter(event) {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_REMOVE_FILTER',
+            dispatcher.dispatch<Actions.KVRemoveFilter>({
+                name: ActionName.KVRemoveFilter,
                 payload: {
                     sourceId: this.props.sourceId,
                     name: event.target.name,
@@ -154,8 +166,8 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         };
 
         handleCategorySelect(event) {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_SELECT_CATEGORY',
+            dispatcher.dispatch<Actions.KVSelectCategory>({
+                name: ActionName.KVSelectCategory,
                 payload: {
                     sourceId: this.props.sourceId,
                     value: event.target.value
@@ -170,6 +182,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             } else {
                 const featsWithoutPos = {...this.props.allFeatures};
                 delete featsWithoutPos['POS'];
+
                 return(
                     <div className='FeatureSelect'>
                         <h4>{ut.translate('taghelper__selected_features_label')}:</h4>
@@ -194,7 +207,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                                     <div className='CategorySelect' style={{marginRight: '2em'}}>
                                         <CategorySelect
                                             allFeatures={featsWithoutPos}
-                                            availableFeatures={featsWithoutPos}
+                                            availableFeatures={this.props.availableFeatures}
                                             onSelectCategoryHandler={this.handleCategorySelect}
                                             selectedCategory={this.props.showCategory} />
                                     </div>
