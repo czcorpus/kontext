@@ -18,10 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import { IEventEmitter, Action, IFullActionControl } from 'kombo';
+ import { IEventEmitter, Action, IFullActionControl } from 'kombo';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { share } from 'rxjs/operators';
+
+import { Kontext } from '../types/common';
 
 /**
  * A base class for KonText's legacy models. Using this model

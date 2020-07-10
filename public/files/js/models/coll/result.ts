@@ -31,7 +31,6 @@ import { HTTP, List } from 'cnc-tskit';
 import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell, AjaxResponse, CollServerArgs } from './common';
 import { CalcWatchdog } from './calc';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
-import { ConcSaveFormProps } from '../../views/concordance/save';
 
 
 

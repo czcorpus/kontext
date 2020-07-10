@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 import { tap, share } from 'rxjs/operators';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
@@ -35,11 +35,11 @@ import { UsageTipsModel } from '../models/usageTips';
 import { init as queryFormInit, QueryFormProps } from '../views/query/first';
 import { init as corpnameLinkInit } from '../views/overview';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import { StatefulModel } from '../models/base';
 import { PluginInterfaces } from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
 import { ConcLinesStorage, StorageUsingState, openStorage } from '../models/concordance/selectionStorage';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../models/query/actions';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
@@ -54,33 +54,37 @@ require('styles/firstForm.less');
  * ConfigWrapper ensures that actions we need to be bound
  * to the global app config trigger proper updates in the config.
  */
-class ConfigWrapper extends StatefulModel {
+class ConfigWrapper extends StatelessModel<{}> {
 
     private layoutModel:PageModel;
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
-        super(dispatcher);
+        super(dispatcher, {});
         this.layoutModel = layoutModel;
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'QUERY_INPUT_ADD_ALIGNED_CORPUS': {
-                    const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>(
-                        'alignedCorpora',
-                        ac.concat([action.payload['corpname']])
-                    );
-                }
-                break;
-                case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': {
-                    const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>(
-                        'alignedCorpora',
-                        ac.filter(v => v !== action.payload['corpname'])
-                    );
-                }
-                break;
+
+        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActionName.QueryInputAddAlignedCorpus,
+            null,
+            (state, action, dispatch) => {
+                const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
+                this.layoutModel.setConf<Array<string>>(
+                    'alignedCorpora',
+                    ac.concat([action.payload['corpname']])
+                );
             }
-        });
+        );
+
+        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActionName.QueryInputRemoveAlignedCorpus,
+            null,
+            (state, action, dispatch) => {
+                const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
+                this.layoutModel.setConf<Array<string>>(
+                    'alignedCorpora',
+                    ac.filter(v => v !== action.payload['corpname'])
+                );
+            }
+        );
     }
 }
 
