@@ -23,6 +23,7 @@ import * as React from 'react';
 import {FreqDataRowsModel, ResultHeader, ResultItem} from '../../models/freqs/dataRows';
 import {IActionDispatcher} from 'kombo';
 import { Actions, ActionName } from '../../models/freqs/actions';
+import { List } from 'cnc-tskit';
 
 interface DataTableProps {
     head:Array<ResultHeader>;
@@ -163,7 +164,7 @@ export function init(
 
         const getBarChartTitle = () => {
             if (props.head.length > 0) {
-                return props.head[-1].s || '';
+                return List.last(props.head).s || '';
             }
             return '';
         };
