@@ -16,15 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Kontext, TextTypes } from '../types/common';
-import { PluginInterfaces } from '../types/plugins';
 import { PageModel, DownloadType } from '../app/page';
 import { KontextPage } from '../app/main';
 import { MultiDict } from '../multidict';
 import { CollFormModel, CollFormInputs, CollFormProps } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
-import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { QuerySaveAsFormModel } from '../models/query/save';
 import { CollResultModel } from '../models/coll/result';
 import { init as analysisFrameInit } from '../views/analysis';
@@ -38,6 +36,7 @@ import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
+import { CTFormInputs, CTFormProperties } from '../models/freqs/twoDimension/common';
 
 
 declare var require:any;
@@ -115,15 +114,15 @@ export class CollPage {
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
-            ctminfreq_type: ctFormInputs.ctminfreq_type
+            ctminfreq_type: ctFormInputs.ctminfreq_type,
+            usesAdHocSubcorpus: this.initAdhocSubcDetector().usesAdHocSubcorpus()
         };
 
 
         this.ctFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            this.initAdhocSubcDetector()
+            ctFormProps
         );
 
         const freqFormViews = freqFormInit(

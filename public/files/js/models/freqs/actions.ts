@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { ResultBlock } from './dataRows';
 import { MultiDict } from '../../multidict';
 import { SaveData } from '../../app/navigation';
+import { Dimensions, FreqFilterQuantities, AlignTypes } from './twoDimension/common';
 
 
 export enum ActionName {
@@ -38,7 +39,13 @@ export enum ActionName {
     SaveFormSetIncludeHeading = 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING',
     SaveFormSetIncludeColHeading = 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
     SaveFormSubmit = 'FREQ_SAVE_FORM_SUBMIT',
-    SetCtSaveMode = 'FREQ_CT_SET_SAVE_MODE'
+    SetCtSaveMode = 'FREQ_CT_SET_SAVE_MODE',
+    FreqctFormSetDimensionAttr = 'FREQ_CT_FORM_SET_DIMENSION_ATTR',
+    FreqctFormSetMinFreqType = 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE',
+    FreqctFormSetMinFreq = 'FREQ_CT_FORM_SET_MIN_FREQ',
+    FreqctFormSetCtx = 'FREQ_CT_FORM_SET_CTX',
+    FreqctFormSetAlignType = 'FREQ_CT_FORM_SET_ALIGN_TYPE',
+    FreqctFormSubmit = 'FREQ_CT_SUBMIT'
 }
 
 
@@ -124,5 +131,43 @@ export namespace Actions {
         value:string;
     }> {
         name: ActionName.SetCtSaveMode;
+    }
+
+    export interface FreqctFormSetDimensionAttr extends Action<{
+        dimension:Dimensions;
+        value:string;
+    }> {
+        name: ActionName.FreqctFormSetDimensionAttr;
+    }
+
+    export interface FreqctFormSetMinFreqType extends Action<{
+        value:FreqFilterQuantities;
+    }> {
+        name: ActionName.FreqctFormSetMinFreqType;
+    }
+
+    export interface FreqctFormSetMinFreq extends Action<{
+        value:string;
+    }> {
+        name: ActionName.FreqctFormSetMinFreq;
+    }
+
+    export interface FreqctFormSetCtx extends Action<{
+        dim:Dimensions;
+        value:number;
+    }> {
+        name: ActionName.FreqctFormSetCtx;
+    }
+
+    export interface FreqctFormSetAlignType extends Action<{
+        dim:Dimensions;
+        value:AlignTypes;
+    }> {
+        name: ActionName.FreqctFormSetAlignType;
+    }
+
+    export interface FreqctFormSubmit extends Action<{
+    }> {
+        name: ActionName.FreqctFormSubmit;
     }
 }

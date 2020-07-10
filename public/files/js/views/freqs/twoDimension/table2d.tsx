@@ -18,20 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, TextTypes} from '../../types/common';
+import {Kontext, TextTypes} from '../../../types/common';
 import * as Immutable from 'immutable';
 import * as React from 'react';
-import {init as ctFlatResultFactory} from './ctFlatResult';
-import {init as ctViewOptsFactory} from './ctViewOpts';
-import {Freq2DFlatViewModel} from '../../models/freqs/flatCtable';
-import {Freq2DTableModel, Data2DTable, ColorMappings, TableInfo} from '../../models/freqs/ctable';
-import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
-import {FreqQuantities, CTFreqCell} from '../../models/freqs/generalCtable';
-import {DataPoint} from '../../charts/confIntervals';
+import {init as ctFlatResultFactory} from './flatTable';
+import {init as ctViewOptsFactory} from './viewOpts';
+import {Freq2DFlatViewModel} from '../../../models/freqs/twoDimension/flatTable';
+import {Freq2DTableModel, Data2DTable, ColorMappings, TableInfo} from '../../../models/freqs/twoDimension/table2d';
+import {FreqFilterQuantities} from '../../../models/freqs/twoDimension/common';
+import {FreqQuantities, CTFreqCell} from '../../../models/freqs/twoDimension/generalDisplay';
+import {DataPoint} from '../../../charts/confIntervals';
 import {IActionDispatcher} from 'kombo';
 import { Subscription } from 'rxjs';
 import { Color, pipe } from 'cnc-tskit';
-import { Actions, ActionName } from '../../models/freqs/actions';
+import { Actions, ActionName } from '../../../models/freqs/actions';
 
 
 const enum TableViewMode {

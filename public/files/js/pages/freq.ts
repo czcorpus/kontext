@@ -25,9 +25,9 @@ import { MultiDict } from '../multidict';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
     from '../models/freqs/freqForms';
-import { Freq2DTableModel } from '../models/freqs/ctable';
-import { Freq2DFlatViewModel } from '../models/freqs/flatCtable';
-import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
+import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d';
+import { Freq2DFlatViewModel } from '../models/freqs/twoDimension/flatTable';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { QuerySaveAsFormModel } from '../models/query/save';
 import { fetchQueryFormArgs } from '../models/query/first';
 import { init as freqFormFactory } from '../views/freqs/forms';
@@ -35,7 +35,7 @@ import { init as collFormFactory } from '../views/coll/forms';
 import { init as analysisFrameInit } from '../views/analysis';
 import { init as queryOverviewInit } from '../views/query/overview';
 import { init as resultViewFactory } from '../views/freqs/main';
-import { init as ctResultViewInit } from '../views/freqs/ctResult';
+import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
 import { FreqDataRowsModel, importData as importFreqData, FreqDataRowsModelState } from '../models/freqs/dataRows';
 import { FreqCTResultsSaveModel } from '../models/freqs/save';
 import { ConfIntervals, DataPoint } from '../charts/confIntervals';
@@ -44,6 +44,7 @@ import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
+import { CTFormInputs, CTFormProperties } from '../models/freqs/twoDimension/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -122,14 +123,14 @@ class FreqPage {
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
-            ctminfreq_type: ctFormInputs.ctminfreq_type
+            ctminfreq_type: ctFormInputs.ctminfreq_type,
+            usesAdHocSubcorpus: adhocSubcDetector.usesAdHocSubcorpus()
         };
 
         this.cTFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            adhocSubcDetector
+            ctFormProps
         );
         this.ctFreqModel = new Freq2DTableModel(
             this.layoutModel.dispatcher,

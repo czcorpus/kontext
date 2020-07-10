@@ -184,6 +184,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'iquery')]],
             Dict.fromEntries()
         );
+
         const tagBuilderSupport = props.tagBuilderSupport;
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'filter-form-model', {
             formType: Kontext.ConcFormTypes.FILTER,
@@ -249,7 +250,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ),
             activeWidgets: pipe(
                 props.filters,
-                List.map(item => null),
+                List.map(item => tuple(item, null)),
                 Dict.fromEntries()
             ),
             withinArgs: pipe(

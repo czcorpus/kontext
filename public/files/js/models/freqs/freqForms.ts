@@ -22,10 +22,10 @@ import {Kontext} from '../../types/common';
 import {StatefulModel} from '../base';
 import {PageModel} from '../../app/page';
 import * as Immutable from 'immutable';
-import {AlignTypes} from './ctFreqForm';
 import { Action, IFullActionControl } from 'kombo';
 import { FreqServerArgs } from './common';
 import { MultiDict } from '../../multidict';
+import { AlignTypes } from './twoDimension/common';
 
 
 export interface FreqFormInputs {

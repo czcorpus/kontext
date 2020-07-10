@@ -18,17 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { TextTypes } from '../../types/common';
-import { FreqResultResponse } from '../../types/ajaxResponses';
+import { TextTypes } from '../../../types/common';
+import { FreqResultResponse } from '../../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import { StatefulModel } from '../base';
-import { PageModel } from '../../app/page';
-import { isStructAttr, CTFormProperties, validateMinAbsFreqAttr,
-    FreqFilterQuantities } from './ctFreqForm';
+import { StatefulModel } from '../../base';
+import { PageModel } from '../../../app/page';
 import { IFullActionControl } from 'kombo';
-import { MultiDict } from '../../multidict';
-import { ConcQuickFilterServerArgs } from '../concordance/common';
+import { MultiDict } from '../../../multidict';
+import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Maths, Dict } from 'cnc-tskit';
+import { FreqFilterQuantities, CTFormProperties, validateMinAbsFreqAttr, isStructAttr } from './common';
 
 /**
  * This type represents a single data item containing

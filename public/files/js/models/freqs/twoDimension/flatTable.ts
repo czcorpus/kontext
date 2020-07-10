@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {TextTypes} from '../../types/common';
-import {PageModel, DownloadType} from '../../app/page';
-import {FreqResultResponse} from '../../types/ajaxResponses';
+import {TextTypes} from '../../../types/common';
+import {PageModel, DownloadType} from '../../../app/page';
+import {FreqResultResponse} from '../../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import {GeneralFreq2DModel, CTFreqCell} from './generalCtable';
-import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
-import {MultiDict} from '../../multidict';
+import {GeneralFreq2DModel, CTFreqCell} from './generalDisplay';
+import {MultiDict} from '../../../multidict';
 import { Action, IFullActionControl } from 'kombo';
 import { Maths } from 'cnc-tskit';
+import { CTFormProperties, roundFloat, FreqFilterQuantities } from './common';
 
 /**
  * En extended 2d freq. data item containing

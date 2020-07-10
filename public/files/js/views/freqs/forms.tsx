@@ -20,13 +20,14 @@
 
 import * as React from 'react';
 import * as Immutable from 'immutable';
-
-import {Kontext} from '../../types/common';
-import {MLFreqFormModel, TTFreqFormModel} from '../../models/freqs/freqForms';
-import {Freq2DFormModel, AlignTypes} from '../../models/freqs/ctFreqForm';
-import {init as ctFreqFormFactory} from './ctFreqForm';
-import {IActionDispatcher} from 'kombo';
+import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
+
+import { Kontext } from '../../types/common';
+import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/freqForms';
+import { Freq2DFormModel } from '../../models/freqs/twoDimension/form';
+import { init as ctFreqFormFactory } from './twoDimension/form';
+import { AlignTypes } from '../../models/freqs/twoDimension/common';
 
 // -------------------------- exported component ----------
 

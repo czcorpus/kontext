@@ -18,38 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import { IActionDispatcher, Bound } from 'kombo';
 
-import {Freq2DFormModel, FreqFilterQuantities, AlignTypes, Dimensions} from '../../models/freqs/ctFreqForm';
-import { Subscription } from 'rxjs';
+import { Kontext } from '../../../types/common';
+import { FreqFilterQuantities, Dimensions, isStructAttr } from '../../../models/freqs/twoDimension/common';
+import { Freq2DFormModel, Freq2DFormModelState } from '../../../models/freqs/twoDimension/form';
+import { Actions, ActionName } from '../../../models/freqs/actions';
 
 
-interface CTFreqFormProps {
-}
-
-interface CTFreqFormState {
-    posAttrs:Immutable.List<Kontext.AttrItem>;
-    structAttrs:Immutable.List<Kontext.AttrItem>;
-    attr1:string;
-    attr1IsStruct:boolean;
-    attr2:string;
-    attr2IsStruct:boolean;
-    minFreq:string;
-    minFreqType:FreqFilterQuantities;
-    minFreqHint:string;
-    positionRangeLabels:Array<string>,
-    alignType1:AlignTypes;
-    alignType2:AlignTypes;
-    ctxIndex1:number;
-    ctxIndex2:number;
-    usesAdHocSubcorpus:boolean;
-}
 
 interface ExportedComponents {
-    CTFreqForm:React.ComponentClass<CTFreqFormProps>;
+    CTFreqForm:React.ComponentClass<{}>;
 }
 
 
@@ -161,57 +141,16 @@ export function init(
 
     // -------------------- <CTFreqForm /> --------------------------------------------
 
-    class CTFreqForm extends React.Component<CTFreqFormProps, CTFreqFormState> {
-
-        private modelSubscription:Subscription;
+    class CTFreqForm extends React.PureComponent<Freq2DFormModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchState();
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleAttrSelChange = this._handleAttrSelChange.bind(this);
         }
 
-
-        _fetchState() {
-            return {
-                posAttrs: ctFreqFormModel.getPosAttrs(),
-                structAttrs: ctFreqFormModel.getStructAttrs(),
-                attr1: ctFreqFormModel.getAttr1(),
-                attr1IsStruct: ctFreqFormModel.getAttr1IsStruct(),
-                attr2: ctFreqFormModel.getAttr2(),
-                attr2IsStruct: ctFreqFormModel.getAttr2IsStruct(),
-                minFreq: ctFreqFormModel.getMinFreq(),
-                minFreqType: ctFreqFormModel.getMinFreqType(),
-                minFreqHint: ctFreqFormModel.getMinFreqHint(),
-                positionRangeLabels: ctFreqFormModel.getPositionRangeLabels(),
-                alignType1: ctFreqFormModel.getAlignType(1),
-                alignType2: ctFreqFormModel.getAlignType(2),
-                ctxIndex1: ctFreqFormModel.getCtxIndex(1),
-                ctxIndex2: ctFreqFormModel.getCtxIndex(2),
-                usesAdHocSubcorpus: ctFreqFormModel.getUsesAdHocSubcorpus()
-            };
-        }
-
-        getInitialState() {
-            return this._fetchState();
-        }
-
-        componentDidMount() {
-            this.modelSubscription = ctFreqFormModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._fetchState());
-        }
-
         _handleAttrSelChange(dimension, evt) {
-            dispatcher.dispatch({
-                name: 'FREQ_CT_FORM_SET_DIMENSION_ATTR',
+            dispatcher.dispatch<Actions.FreqctFormSetDimensionAttr>({
+                name: ActionName.FreqctFormSetDimensionAttr,
                 payload: {
                     dimension: dimension,
                     value: evt.target.value
@@ -227,9 +166,9 @@ export function init(
                     </th>
                     <td>
                         <CTFreqPosSelect
-                                positionRangeLabels={this.state.positionRangeLabels}
+                                positionRangeLabels={this.props.positionRangeLabels}
                                 dim={dim}
-                                value={dim === 1 ? this.state.ctxIndex1 : this.state.ctxIndex2} />
+                                value={dim === 1 ? this.props.ctxIndex1 : this.props.ctxIndex2} />
                     </td>
                 </tr>,
                 <tr key="input">
@@ -239,14 +178,14 @@ export function init(
                     <td>
                         <CTFreqNodeStartSelect
                                 dim={dim}
-                                value={dim === 1 ? this.state.alignType1 : this.state.alignType2} />
+                                value={dim === 1 ? this.props.alignType1 : this.props.alignType2} />
                     </td>
                 </tr>
             ];
         }
 
         _renderWarning() {
-            if (this.state.usesAdHocSubcorpus) {
+            if (this.props.usesAdHocSubcorpus) {
                 return (
                     <p className="warning">
                         <img src={he.createStaticUrl('img/warning-icon.svg')}
@@ -261,8 +200,8 @@ export function init(
             return (
                 <div className="CTFreqForm">
                     <div className="toolbar">
-                            <CTFreqFormMinFreqInput value={this.state.minFreq} freqType={this.state.minFreqType}
-                                    hint={this.state.minFreqHint} />
+                            <CTFreqFormMinFreqInput value={this.props.minFreq} freqType={this.props.minFreqType}
+                                    hint={this.props.minFreqHint} />
                     </div>
                     <table className="form">
                         <tbody className="dim1">
@@ -276,19 +215,19 @@ export function init(
                                 </th>
                                 <td>
                                     <select onChange={this._handleAttrSelChange.bind(this, 1)}
-                                            value={this.state.attr1}>
+                                            value={this.props.attr1}>
                                         <optgroup label={he.translate('global__attrsel_group_pos_attrs')}>
-                                            {this.state.posAttrs.map(item =>
+                                            {this.props.availAttrList.map(item =>
                                                 <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
                                         </optgroup>
                                         <optgroup label={he.translate('global__attrsel_group_struct_attrs')}>
-                                            {this.state.structAttrs.map(item =>
+                                            {this.props.availStructAttrList.map(item =>
                                                 <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
                                         </optgroup>
                                     </select>
                                 </td>
                             </tr>
-                            {!this.state.attr1IsStruct ? this._renderPosAttrOpts(1) : <tr><td colSpan={2} rowSpan={2} /></tr>}
+                            {!isStructAttr(this.props.attr1) ? this._renderPosAttrOpts(1) : <tr><td colSpan={2} rowSpan={2} /></tr>}
                         </tbody>
                         <tbody className="dim2">
                             <tr>
@@ -301,19 +240,19 @@ export function init(
                                 </th>
                                 <td>
                                     <select onChange={this._handleAttrSelChange.bind(this, 2)}
-                                            value={this.state.attr2}>
+                                            value={this.props.attr2}>
                                         <optgroup label={he.translate('global__attrsel_group_pos_attrs')}>
-                                            {this.state.posAttrs.map(item =>
+                                            {this.props.availAttrList.map(item =>
                                                 <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
                                         </optgroup>
                                         <optgroup label={he.translate('global__attrsel_group_struct_attrs')}>
-                                            {this.state.structAttrs.map(item =>
+                                            {this.props.availStructAttrList.map(item =>
                                                 <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
                                         </optgroup>
                                     </select>
                                 </td>
                             </tr>
-                            {!this.state.attr2IsStruct ? this._renderPosAttrOpts(2) : <tr><td colSpan={2} rowSpan={2} /></tr>}
+                            {!isStructAttr(this.props.attr2) ? this._renderPosAttrOpts(2) : <tr><td colSpan={2} rowSpan={2} /></tr>}
                         </tbody>
                     </table>
                     {this._renderWarning()}
@@ -323,7 +262,7 @@ export function init(
     }
 
     return {
-        CTFreqForm: CTFreqForm
+        CTFreqForm: Bound<Freq2DFormModelState>(CTFreqForm, ctFreqFormModel)
     };
 
 }

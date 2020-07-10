@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
+import {Kontext} from '../../../types/common';
 import * as Immutable from 'immutable';
 import * as React from 'react';
-import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
+import {FreqFilterQuantities} from '../../../models/freqs/twoDimension/common';
 import {IActionDispatcher} from 'kombo';
 
 

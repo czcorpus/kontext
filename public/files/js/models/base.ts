@@ -30,6 +30,8 @@ import { Kontext } from '../types/common';
  * please use Kombo's StatefulModel instead as it provides easier
  * integration with React component properties and has separated
  * state properties from "internal" ones.
+ *
+ * @deprecated
  */
 export class StatefulModel implements IEventEmitter {
 

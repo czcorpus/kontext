@@ -18,19 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {TextTypes} from '../../types/common';
-import {PageModel, DownloadType} from '../../app/page';
-import {FreqResultResponse} from '../../types/ajaxResponses';
+import {TextTypes} from '../../../types/common';
+import {PageModel, DownloadType} from '../../../app/page';
+import {FreqResultResponse} from '../../../types/ajaxResponses';
 import * as Immutable from 'immutable';
-import {MultiDict} from '../../multidict';
-import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalCtable';
-import {CTFormProperties, roundFloat} from './ctFreqForm';
-import {DataPoint} from '../../charts/confIntervals';
+import {MultiDict} from '../../../multidict';
+import {GeneralFreq2DModel, CTFreqCell, FreqQuantities} from './generalDisplay';
+import {DataPoint} from '../../../charts/confIntervals';
 import { Action, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { CTFreqServerArgs } from './common';
+import { CTFreqServerArgs } from '../common';
 import { Maths } from 'cnc-tskit';
+import { CTFormProperties, roundFloat } from './common';
 
 /**
  * A representation of 2D freq table.

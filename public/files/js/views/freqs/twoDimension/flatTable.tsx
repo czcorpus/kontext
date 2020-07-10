@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import * as React from 'react';
 import * as Immutable from 'immutable';
-import {Freq2DFlatViewModel, FreqDataItem} from '../../models/freqs/flatCtable';
-import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
-import {init as ctViewOptsFactory} from './ctViewOpts';
-import {IActionDispatcher} from 'kombo';
+import { IActionDispatcher} from 'kombo';
 import { Subscription } from 'rxjs';
+
+import { Kontext } from '../../../types/common';
+import { Freq2DFlatViewModel, FreqDataItem } from '../../../models/freqs/twoDimension/flatTable';
+import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
+import { init as ctViewOptsFactory } from './viewOpts';
 
 // ----------------------- exported types ------------------------------------
 
