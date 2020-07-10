@@ -19,35 +19,19 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import { IActionDispatcher} from 'kombo';
-import { Subscription } from 'rxjs';
 
 import { Kontext } from '../../../types/common';
 import { Freq2DFlatViewModel, FreqDataItem } from '../../../models/freqs/twoDimension/flatTable';
 import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
 import { init as ctViewOptsFactory } from './viewOpts';
+import { Freq2DTableModelState } from '../../../models/freqs/twoDimension/table2d';
 
 // ----------------------- exported types ------------------------------------
 
-interface CTFlatFreqResultViewProps {}
-
-interface CTFlatFreqResultViewState {
-    data:Immutable.List<FreqDataItem>;
-    attr1:string;
-    attr2:string;
-    minFreq:string;
-    minFreqType:FreqFilterQuantities;
-    sortCol:string;
-    sortColIsReversed:boolean;
-    confIntervalLeftMinWarn:number;
-    alphaLevel:string;
-    availAlphaLevels:Immutable.List<[string, string]>;
-    canProvideIpm:boolean;
-}
 
 interface Views {
-    CTFlatFreqResultView:React.ComponentClass<CTFlatFreqResultViewProps>;
+    CTFlatFreqResultView:React.ComponentClass<{}>;
 }
 
 // ------------------------- factory -----------------------------------------
@@ -151,42 +135,11 @@ export function init(
     /**
      *
      */
-    class CTFlatFreqResultView extends React.Component<CTFlatFreqResultViewProps, CTFlatFreqResultViewState> {
+    class CTFlatFreqResultView extends React.PureComponent<Freq2DTableModelState> {
 
-        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                data: ctFlatFreqDataRowsModel.getData(),
-                attr1: ctFlatFreqDataRowsModel.getAttr1(),
-                attr2: ctFlatFreqDataRowsModel.getAttr2(),
-                minFreq: ctFlatFreqDataRowsModel.getMinFreq(),
-                minFreqType: ctFlatFreqDataRowsModel.getMinFreqType(),
-                sortCol: ctFlatFreqDataRowsModel.getSortCol(),
-                sortColIsReversed: ctFlatFreqDataRowsModel.getSortColIsReversed(),
-                confIntervalLeftMinWarn: ctFlatFreqDataRowsModel.getConfIntervalLeftMinWarn(),
-                alphaLevel: ctFlatFreqDataRowsModel.getAlphaLevel(),
-                availAlphaLevels: ctFlatFreqDataRowsModel.getAvailAlphaLevels(),
-                canProvideIpm: ctFlatFreqDataRowsModel.canProvideIpm()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = ctFlatFreqDataRowsModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -199,13 +152,13 @@ export function init(
                                 <div>
                                     <ul className="items">
                                         <li>
-                                            <ctViewOpts.MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType}
-                                                    canProvideIpm={this.state.canProvideIpm} />
+                                            <ctViewOpts.MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType}
+                                                    canProvideIpm={this.props.canProvideIpm} />
                                         </li>
                                         <li>
-                                            <ctViewOpts.AlphaLevelSelect alphaLevel={this.state.alphaLevel}
-                                                    availAlphaLevels={this.state.availAlphaLevels}
-                                                    confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn} />
+                                            <ctViewOpts.AlphaLevelSelect alphaLevel={this.props.alphaLevel}
+                                                    availAlphaLevels={this.props.availAlphaLevels}
+                                                    confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} />
                                         </li>
                                     </ul>
                                 </div>
@@ -219,26 +172,26 @@ export function init(
                                 <th>
                                     {he.translate('freq__ct_filter_th')}
                                 </th>
-                                <THSortableCol label={this.state.attr1} value={this.state.attr1}
-                                        isActive={this.state.sortCol === this.state.attr1}
-                                        isReversed={this.state.sortCol === this.state.attr1 && this.state.sortColIsReversed}
+                                <THSortableCol label={this.props.attr1} value={this.props.attr1}
+                                        isActive={this.props.sortCol === this.props.attr1}
+                                        isReversed={this.props.sortCol === this.props.attr1 && this.props.sortColIsReversed}
                                             />
-                                <th>{this.state.attr2}</th>
+                                <th>{this.props.attr2}</th>
                                 <THSortableCol label={he.translate('freq__ct_abs_freq_label')}
-                                        value="abs" isActive={this.state.sortCol === 'abs'}
-                                        isReversed={this.state.sortCol === 'abs' && this.state.sortColIsReversed}
+                                        value="abs" isActive={this.props.sortCol === 'abs'}
+                                        isReversed={this.props.sortCol === 'abs' && this.props.sortColIsReversed}
                                         />
                                 {this.state.canProvideIpm ?
                                     <THSortableCol label={he.translate('freq__ct_ipm_freq_label')}
-                                            value="ipm" isActive={this.state.sortCol === 'ipm'}
-                                            isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} /> :
+                                            value="ipm" isActive={this.props.sortCol === 'ipm'}
+                                            isReversed={this.props.sortCol === 'ipm' && this.props.sortColIsReversed} /> :
                                     null
                                 }
                             </tr>
-                            {this.state.data.map((item, i) =>
+                            {this.props.data.map((item, i) =>
                                 <TRFlatListRow key={`r_${i}`} idx={i+1} data={item}
-                                        confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
-                                        canProvideIpm={this.state.canProvideIpm} />)}
+                                        confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn}
+                                        canProvideIpm={this.props.canProvideIpm} />)}
                         </tbody>
                     </table>
                 </div>

@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { IFullActionControl, StatefulModel } from 'kombo';
+import { Maths, Dict, tuple, pipe, List } from 'cnc-tskit';
+
 import { TextTypes } from '../../../types/common';
 import { FreqResultResponse } from '../../../types/ajaxResponses';
-import * as Immutable from 'immutable';
-import { StatefulModel } from '../../base';
 import { PageModel } from '../../../app/page';
-import { IFullActionControl } from 'kombo';
 import { MultiDict } from '../../../multidict';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
-import { Maths, Dict } from 'cnc-tskit';
 import { FreqFilterQuantities, CTFormProperties, validateMinAbsFreqAttr, isStructAttr } from './common';
+
 
 /**
  * This type represents a single data item containing
@@ -53,73 +53,77 @@ export const enum FreqQuantities {
     IPM = 'ipm'
 }
 
-/**
- * This is a common ancestor for both 2d and flat frequency tables.
- */
-export abstract class GeneralFreq2DModel extends StatefulModel {
+export function importAvailAlphaLevels():Array<[Maths.AlphaLevel, string]> {
+    return pipe(
+        Maths.AlphaLevel,
+        Dict.values(),
+        List.sorted((x1, x2) => parseFloat(x1) - parseFloat(x2)),
+        List.map(item => tuple(item, (1 - parseFloat(item)).toFixed(3)))
+    );
+}
 
-    protected pageModel:PageModel;
+export interface GeneralFreq2DModelState {
 
-    protected attr1:string;
+    attr1:string;
 
-    protected attr2:string;
+    attr2:string;
 
     /**
      * Note: either absolute freq. or ipm - depends on minFreqType
      */
-    protected minFreq:string;
+    minFreq:string;
 
-    protected minFreqType:FreqFilterQuantities;
+    minFreqType:FreqFilterQuantities;
 
     /**
      * Already encoded criterion for the 1st attribute
      * (it cannot be changed within this model).
      */
-    protected ctFcrit1:string;
+    ctFcrit1:string;
 
     /**
      * Already encoded criterion for the 2nd attribute
      * (it cannot be changed within this model).
      */
-    protected ctFcrit2:string;
+    ctFcrit2:string;
 
     /**
      * A significance level. We use it rather as an ID here,
      * that's why it's a string.
      */
-    protected alphaLevel:Maths.AlphaLevel;
+    alphaLevel:Maths.AlphaLevel;
 
     /**
      * Available significance levels. It actually contains
      * pairs of [significance level ID, confidence level ID string]
      */
-    private availAlphaLevels:Immutable.List<[Maths.AlphaLevel, string]>;
+    availAlphaLevels:Array<[Maths.AlphaLevel, string]>;
 
     /**
      * A total number of possible items (meaning: all the combinations of attr1_val vs. attr2_val).
      * This is calculated on server because some data are already filtered there so the client
      * sees only a fraction.
      */
-    protected fullSize:number;
+    fullSize:number;
+
+    usesAdHocSubcorpus:boolean;
+}
+
+/**
+ * This is a common ancestor for both 2d and flat frequency tables.
+ */
+export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> extends StatefulModel<T> {
+
+    protected readonly pageModel:PageModel;
 
     private static CONF_INTERVAL_LEFT_MIN_WARN = 0.0;
 
-    private adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector;
-
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:CTFormProperties,
-            adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
-        super(dispatcher);
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, initState:T) {
+        super(
+            dispatcher,
+            initState
+        );
         this.pageModel = pageModel;
-        this.ctFcrit1 = props.ctfcrit1;
-        this.ctFcrit2 = props.ctfcrit2;
-        this.attr1 = props.ctattr1;
-        this.attr2 = props.ctattr2;
-        this.minFreq = props.ctminfreq;
-        this.minFreqType = props.ctminfreq_type;
-        this.adhocSubcDetector = adhocSubcDetector;
-        this.alphaLevel = Maths.AlphaLevel.LEVEL_5;
-        this.availAlphaLevels = this.importAvailAlphaLevels();
-        this.fullSize = null;
     }
 
     protected calcIpm(v:FreqResultResponse.CTFreqResultItem) {
@@ -132,14 +136,14 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
      * to the current freq. mode (ipm, abs). This is used when filtering
      * values by percentile.
      */
-    abstract createPercentileSortMapping():Immutable.Map<number, number>;
+    abstract createPercentileSortMapping():{[key:string]:number};
 
     /**
      *
      */
-    protected createMinFreqFilterFn():(CTFreqCell)=>boolean {
-        const minFreq = parseInt(this.minFreq || '0', 10);
-        switch (this.minFreqType) {
+    protected createMinFreqFilterFn(state:GeneralFreq2DModelState):(CTFreqCell)=>boolean {
+        const minFreq = parseInt(state.minFreq || '0', 10);
+        switch (state.minFreqType) {
             case FreqFilterQuantities.ABS:
                 return (v:CTFreqCell) => v && v.abs >= minFreq;
             case FreqFilterQuantities.IPM:
@@ -147,24 +151,13 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
             case FreqFilterQuantities.ABS_PERCENTILE:
             case FreqFilterQuantities.IPM_PERCENTILE:
                 const sortMap = this.createPercentileSortMapping();
-                const emptyItemsRatio = 1 - sortMap.size / this.fullSize;
+                const emptyItemsRatio = 1 - sortMap.size / state.fullSize;
                 return (v:CTFreqCell) => {
-                    return v && sortMap.get(v.origOrder) / this.fullSize + emptyItemsRatio >= minFreq / 100;
+                    return v && sortMap[v.origOrder] / state.fullSize + emptyItemsRatio >= minFreq / 100;
                 }
             default:
-                throw new Error('Unknown freq type: ' + this.minFreqType);
+                throw new Error('Unknown freq type: ' + state.minFreqType);
         }
-    }
-
-    private importAvailAlphaLevels():Immutable.List<[Maths.AlphaLevel, string]> {
-        return Immutable.List<[Maths.AlphaLevel, string]>(
-            Dict.values(Maths.AlphaLevel)
-                .sort((x1, x2) => parseFloat(x1) - parseFloat(x2))
-                .map(item => {
-                    return [item, (1 - parseFloat(item)).toFixed(3)];
-
-                })
-        );
     }
 
     /**
@@ -173,34 +166,34 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
      * @param v1
      * @param v2
      */
-    protected generatePFilter(v1:string, v2:string):string {
+    protected generatePFilter(state:GeneralFreq2DModelState, v1:string, v2:string):string {
         const args = this.pageModel.getConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
 
-        if (this.isStructAttr(this.attr1) && this.isStructAttr(this.attr2)) {
-            const [s1, a1] = this.attr1.split('.');
-            const [s2, a2] = this.attr2.split('.');
+        if (isStructAttr(state.attr1) && isStructAttr(state.attr2)) {
+            const [s1, a1] = state.attr1.split('.');
+            const [s2, a2] = state.attr2.split('.');
             args.set('q2', `p0 0 1 [] within <${s1} ${a1}="${v1}" /> within <${s2} ${a2}="${v2}" />`);
 
-        } else if (!this.isStructAttr(this.attr1) && !this.isStructAttr(this.attr2)) {
+        } else if (!isStructAttr(state.attr1) && !isStructAttr(state.attr2)) {
             const icase1 = ''; // TODO - optionally (?i)
-            const begin1 = this.ctFcrit1;
-            const end1 = this.ctFcrit1;
+            const begin1 = state.ctFcrit1;
+            const end1 = state.ctFcrit1;
             const icase2 = ''; // TODO - optionally (?i)
-            args.set('q2', `p${begin1} ${end1} 0 [${this.attr1}="${icase1}${v1}" & ${this.attr2}="${icase2}${v2}"]`);
+            args.set('q2', `p${begin1} ${end1} 0 [${state.attr1}="${icase1}${v1}" & ${state.attr2}="${icase2}${v2}"]`);
 
-        } else if (this.isStructAttr(this.attr1) && !this.isStructAttr(this.attr2)) {
-            const [s1, a1] = this.attr1.split('.');
+        } else if (isStructAttr(state.attr1) && !isStructAttr(state.attr2)) {
+            const [s1, a1] = state.attr1.split('.');
             const icase2 = ''; // TODO - optionally (?i)
-            const begin2 = this.ctFcrit2;
-            const end2 = this.ctFcrit2;
-            args.set('q2', `p${begin2} ${end2} 0 [${this.attr2}="${icase2}${v2}"] within <${s1} ${a1}="${v1}" />`);
+            const begin2 = state.ctFcrit2;
+            const end2 = state.ctFcrit2;
+            args.set('q2', `p${begin2} ${end2} 0 [${state.attr2}="${icase2}${v2}"] within <${s1} ${a1}="${v1}" />`);
 
         } else {
             const icase1 = ''; // TODO - optionally (?i)
-            const begin1 = this.ctFcrit1;
-            const end1 = this.ctFcrit1;
-            const [s2, a2] = this.attr2.split('.');
-            args.set('q2', `p${begin1} ${end1} 0 [${this.attr1}="${icase1}${v1}"] within <${s2} ${a2}="${v2}" />`);
+            const begin1 = state.ctFcrit1;
+            const end1 = state.ctFcrit1;
+            const [s2, a2] = state.attr2.split('.');
+            args.set('q2', `p${begin1} ${end1} 0 [${state.attr1}="${icase1}${v1}"] within <${s2} ${a2}="${v2}" />`);
         }
         return this.pageModel.createActionUrl('quick_filter', args);
     }
@@ -213,59 +206,7 @@ export abstract class GeneralFreq2DModel extends StatefulModel {
         return validateMinAbsFreqAttr(v);
     }
 
-    /**
-     *
-     * @param v
-     */
-    protected isStructAttr(v:string):boolean {
-        return isStructAttr(v);
-    }
-
-    getAttr1():string {
-        return this.attr1;
-    }
-
-    getAttr2():string {
-        return this.attr2;
-    }
-
-    getAttr1IsStruct():boolean {
-        return this.isStructAttr(this.attr1);
-    }
-
-    getAttr2IsStruct():boolean {
-        return this.isStructAttr(this.attr2);
-    }
-
-    canProvideIpm():boolean {
-        return !this.getAttr1IsStruct() || !this.getAttr2IsStruct();
-    }
-
-    getMinFreq():string {
-        return this.minFreq;
-    }
-
-    getMinFreqType():FreqFilterQuantities {
-        return this.minFreqType;
-    }
-
-    getAvailAlphaLevels():Immutable.List<[string, string]> {
-        return this.availAlphaLevels;
-    }
-
-    getAlphaLevel():string {
-        return this.alphaLevel;
-    }
-
-    getConfIntervalLeftMinWarn():number {
-        return GeneralFreq2DModel.CONF_INTERVAL_LEFT_MIN_WARN;
-    }
-
-    getUsesAdHocSubcorpus():boolean {
-        return this.adhocSubcDetector.usesAdHocSubcorpus();
-    }
-
-    getConcSelectedTextTypes():{[attr:string]:Array<string>} {
-        return this.adhocSubcDetector.exportSelections(false);
+    static canProvideIpm(state:GeneralFreq2DModelState):boolean {
+        return !isStructAttr(state.attr1) || !isStructAttr(state.attr2);
     }
 }

@@ -23,6 +23,9 @@ import { ResultBlock } from './dataRows';
 import { MultiDict } from '../../multidict';
 import { SaveData } from '../../app/navigation';
 import { Dimensions, FreqFilterQuantities, AlignTypes } from './twoDimension/common';
+import { Maths } from 'cnc-tskit';
+import { FreqQuantities } from './twoDimension/generalDisplay';
+import { ColorMappings } from './twoDimension/table2d';
 
 
 export enum ActionName {
@@ -45,7 +48,15 @@ export enum ActionName {
     FreqctFormSetMinFreq = 'FREQ_CT_FORM_SET_MIN_FREQ',
     FreqctFormSetCtx = 'FREQ_CT_FORM_SET_CTX',
     FreqctFormSetAlignType = 'FREQ_CT_FORM_SET_ALIGN_TYPE',
-    FreqctFormSubmit = 'FREQ_CT_SUBMIT'
+    FreqctFormSubmit = 'FREQ_CT_SUBMIT',
+    FreqctSetAlphaLevel = 'FREQ_CT_SET_ALPHA_LEVEL',
+    FreqctSetMinFreq = 'FREQ_CT_SET_MIN_FREQ',
+    FreqctSetEmptyVecVisibility = 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY',
+    FreqctTransposeTable = 'FREQ_CT_TRANSPOSE_TABLE',
+    FreqctSortByDimension = 'FREQ_CT_SORT_BY_DIMENSION',
+    FreqctSetDisplayQuantity = 'FREQ_CT_SET_DISPLAY_QUANTITY',
+    FreqctSetColorMapping = 'FREQ_CT_SET_COLOR_MAPPING',
+    FreqctSetHighlightedGroup = 'FREQ_CT_SET_HIGHLIGHTED_GROUP'
 }
 
 
@@ -169,5 +180,53 @@ export namespace Actions {
     export interface FreqctFormSubmit extends Action<{
     }> {
         name: ActionName.FreqctFormSubmit;
+    }
+
+    export interface FreqctSetAlphaLevel extends Action<{
+        value:Maths.AlphaLevel;
+    }> {
+        name: ActionName.FreqctSetAlphaLevel;
+    }
+
+    export interface FreqctSetMinFreq extends Action<{
+        value:string;
+    }> {
+        name: ActionName.FreqctSetMinFreq;
+    }
+
+    export interface FreqctSetEmptyVecVisibility extends Action<{
+        value:boolean;
+    }> {
+        name: ActionName.FreqctSetEmptyVecVisibility;
+    }
+
+    export interface FreqctTransposeTable extends Action<{
+    }> {
+        name: ActionName.FreqctTransposeTable;
+    }
+
+    export interface FreqctSortByDimension extends Action<{
+        dim:Dimensions;
+        attr:string;
+    }> {
+        name: ActionName.FreqctSortByDimension;
+    }
+
+    export interface FreqctSetDisplayQuantity extends Action<{
+        value:FreqQuantities;
+    }> {
+        name: ActionName.FreqctSetDisplayQuantity;
+    }
+
+    export interface FreqctSetColorMapping extends Action<{
+        value:ColorMappings;
+    }> {
+        name: ActionName.FreqctSetColorMapping;
+    }
+
+    export interface FreqctSetHighlightedGroup extends Action<{
+        value:[number, number];
+    }> {
+        name: ActionName.FreqctSetHighlightedGroup;
     }
 }
