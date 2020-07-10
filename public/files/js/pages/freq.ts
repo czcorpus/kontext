@@ -27,7 +27,7 @@ import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
     from '../models/freqs/freqForms';
 import { Freq2DTableModel } from '../models/freqs/ctable';
 import { Freq2DFlatViewModel } from '../models/freqs/flatCtable';
-import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
+import { CTFormProperties, CTFormInputs, Freq2DFormModel, AlignTypes } from '../models/freqs/ctFreqForm';
 import { QuerySaveAsFormModel } from '../models/query/save';
 import { fetchQueryFormArgs } from '../models/query/first';
 import { init as freqFormFactory } from '../views/freqs/forms';
@@ -95,7 +95,7 @@ class FreqPage {
             mlxattr: freqFormInputs.mlxattr || List.repeat(() => attrs[0].n, initFreqLevel),
             mlxicase: freqFormInputs.mlxicase || List.repeat(() => false, initFreqLevel),
             mlxctx: freqFormInputs.mlxctx || List.repeat(() => '0>0', initFreqLevel),
-            alignType: freqFormInputs.alignType || List.repeat(() => 'left', initFreqLevel),
+            alignType: freqFormInputs.alignType || List.repeat(() => AlignTypes.LEFT, initFreqLevel),
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };

@@ -19,13 +19,13 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
 import {TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel, MLFreqFormModelState} from '../../models/freqs/freqForms';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import { AlignTypes } from '../../models/freqs/ctFreqForm';
 import {Actions, ActionName} from '../../models/freqs/actions';
+import { List } from 'cnc-tskit';
 
 // -------------------------- exported component ----------
 
@@ -46,8 +46,8 @@ export function init(
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
     interface StructAttrSelectProps {
-        structAttrListSplitTypes:Immutable.List<Immutable.List<Kontext.AttrItem>>;
-        fttattr:Immutable.Set<string>;
+        structAttrListSplitTypes:Array<Array<Kontext.AttrItem>>;
+        fttattr:Array<string>;
     }
 
     const StructAttrSelect:React.SFC<StructAttrSelectProps> = (props) => {
@@ -65,7 +65,7 @@ export function init(
             <table className="struct-attr-list">
                 <thead>
                     <tr>
-                        <th colSpan={props.structAttrListSplitTypes.size}>
+                        <th colSpan={props.structAttrListSplitTypes.length}>
                             {he.translate('query__structattrs')}:
                         </th>
                     </tr>
@@ -87,7 +87,7 @@ export function init(
                                                             <input id={`ttsort_${i}_${j}`}
                                                                 type="checkbox"
                                                                 value={item.n}
-                                                                checked={props.fttattr.contains(item.n)}
+                                                                checked={props.fttattr.includes(item.n)}
                                                                 onChange={handleCheckboxChange}  />
                                                         </td>
                                                     </tr>
@@ -156,26 +156,26 @@ export function init(
 
     class TTFreqForm extends React.Component<TTFreqFormProps & TTFreqFormModelState> {
 
-        getStructAttrListSplitTypes(state:TTFreqFormModelState):Immutable.List<Immutable.List<Kontext.AttrItem>> {
+        getStructAttrListSplitTypes(state:TTFreqFormModelState):Array<Array<Kontext.AttrItem>> {
             const structOf = (a:Kontext.AttrItem) => a.n.split('.')[0];
-            return state.structAttrList.reduce<Immutable.List<Immutable.List<Kontext.AttrItem>>>((reduc, curr) => {
-                if (reduc.size === 0 || structOf(curr) !== structOf(reduc.last().last())) {
-                    if (reduc.last()) {
-                        const tmp = reduc.last();
-                        return reduc
-                            .pop()
-                            .push(tmp.sort((v1, v2) => v1.n.localeCompare(v2.n)).toList())
-                            .push(Immutable.List<Kontext.AttrItem>([{n: curr.n, label: curr.label}]));
+            return List.reduce((reduc, curr) => {
+                const lastElement = reduc.length === 0 ? null : List.last(reduc);
+                if (lastElement === null || structOf(curr) !== structOf(List.last(lastElement))) {
+                    if (lastElement) {
+                        lastElement.sort((v1, v2) => v1.n.localeCompare(v2.n));
+                        reduc.push([{n: curr.n, label: curr.label}]);
+                        return reduc;
     
                     } else {
-                        return reduc.push(Immutable.List<Kontext.AttrItem>([{n: curr.n, label: curr.label}]));
+                        reduc.push([{n: curr.n, label: curr.label}]);
+                        return reduc;
                     }
     
                 } else {
-                    const tmp = reduc.last();
-                    return reduc.pop().push(tmp.push({n: curr.n, label: curr.label}));
+                    lastElement.push({n: curr.n, label: curr.label});
+                    return reduc;
                 }
-            }, Immutable.List<Immutable.List<Kontext.AttrItem>>());
+            }, [], state.structAttrList);
         }
 
         render():React.ReactElement<{}> {
@@ -225,7 +225,7 @@ export function init(
     interface MLAttrSelectionProps {
         levelIdx:number;
         mlxAttrValue:string;
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
     }
 
     const MLAttrSelection:React.SFC<MLAttrSelectionProps> = (props) => {
@@ -378,7 +378,7 @@ export function init(
 
     interface SingleLevelFieldTRProps {
         levelIdx:number;
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
         mlxAttrValue:string;
         mlxicaseValue:boolean;
         positionRangeLabels:Array<string>;
@@ -457,7 +457,7 @@ export function init(
         }
 
         render() {
-            const levels = this.props.mlxattr.map((_, i) => i).toList();
+            const levels = List.map((_, i) => i, this.props.mlxattr);
             return (
                 <table className="MLFreqForm">
                     <tbody>
@@ -496,17 +496,17 @@ export function init(
                                         {levels.map(item => {
                                             return <SingleLevelFieldTR
                                                         key={`level_${item}`}
-                                                        isRemovable={item > 0 || levels.size > 1}
-                                                        numLevels={levels.size}
+                                                        isRemovable={item > 0 || levels.length > 1}
+                                                        numLevels={levels.length}
                                                         levelIdx={item}
                                                         attrList={this.props.attrList}
-                                                        mlxAttrValue={this.props.mlxattr.get(item)}
-                                                        mlxicaseValue={this.props.mlxicase.get(item)}
+                                                        mlxAttrValue={this.props.mlxattr[item]}
+                                                        mlxicaseValue={this.props.mlxicase[item]}
                                                         positionRangeLabels={mlFreqFormModel.getPositionRangeLabels()}
-                                                        mlxctxIndex={this.props.mlxctxIndices.get(item)}
-                                                        alignType={this.props.alignType.get(item)} />;
+                                                        mlxctxIndex={this.props.mlxctxIndices[item]}
+                                                        alignType={this.props.alignType[item]} />;
                                         })}
-                                        {levels.size < this.props.maxNumLevels ?
+                                        {levels.length < this.props.maxNumLevels ?
                                             (<tr>
                                                 <td>
                                                     <layoutViews.PlusButton mouseOverHint={he.translate('freq__add_level_btn')}

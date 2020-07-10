@@ -19,7 +19,6 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
 import {MLFreqFormModel, TTFreqFormModel} from '../../models/freqs/freqForms';
@@ -85,11 +84,11 @@ export function init(
         }
 
         render() {
-            const items = Immutable.List([
+            const items = [
                 {id: 'ml', label: he.translate('freq__sel_form_type_ml')},
                 {id: 'tt', label: he.translate('freq__sel_form_type_tt')},
                 {id: 'ct', label: he.translate('freq__sel_form_type_ct')},
-            ])
+            ];
 
             return (
                 <div className="FrequencyForm">
@@ -98,7 +97,7 @@ export function init(
                             className="FreqFormSelector"
                             defaultId={this.state.formType}
                             callback={this._handleFormSwitch}
-                            items={items.toArray()} >
+                            items={items} >
 
                             <freqForms.MLFreqForm />
                             <freqForms.TTFreqForm />

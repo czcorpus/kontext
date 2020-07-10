@@ -20,12 +20,12 @@
 
 import {Kontext} from '../../types/common';
 import {PageModel} from '../../app/page';
-import * as Immutable from 'immutable';
 import {AlignTypes} from './ctFreqForm';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { FreqServerArgs } from './common';
 import { MultiDict } from '../../multidict';
 import { ActionName, Actions } from './actions';
+import { List } from 'cnc-tskit';
 
 
 export interface FreqFormInputs {
@@ -37,7 +37,7 @@ export interface FreqFormInputs {
     mlxattr:Array<string>;
     mlxicase:Array<boolean>;
     mlxctx:Array<string>;
-    alignType:Array<string>;
+    alignType:Array<AlignTypes>;
 }
 
 
@@ -60,14 +60,26 @@ function validateGzNumber(s:string):boolean {
  *
  */
 export interface MLFreqFormModelState {
-    attrList:Immutable.List<Kontext.AttrItem>;
+    attrList:Array<Kontext.AttrItem>;
     flimit:Kontext.FormValue<string>;
     freqSort:string;
-    mlxattr:Immutable.List<string>;
-    mlxicase:Immutable.List<boolean>;
-    mlxctxIndices:Immutable.List<number>;
-    alignType:Immutable.List<AlignTypes>;
+    mlxattr:Array<string>;
+    mlxicase:Array<boolean>;
+    mlxctxIndices:Array<number>;
+    alignType:Array<AlignTypes>;
     maxNumLevels:number;
+}
+
+function importMlxctxValue(v:string, positionLa:string[], positionRa:string[]):number {
+    let srchIdx = positionLa.indexOf(v);
+    if (srchIdx > -1) {
+        return srchIdx;
+    }
+    srchIdx = positionRa.indexOf(v);
+    if (srchIdx > -1) {
+        return srchIdx;
+    }
+    return undefined;
 }
 
 export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
@@ -84,13 +96,13 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         super(
             dispatcher,
             {
-                attrList: Immutable.List<Kontext.AttrItem>(props.attrList),
+                attrList: props.attrList,
                 flimit: {value: props.flimit, isInvalid: false, isRequired: true},
                 freqSort: props.freq_sort,
-                mlxattr: Immutable.List<string>(props.mlxattr),
-                mlxicase: Immutable.List<boolean>(props.mlxicase),
-                mlxctxIndices: Immutable.List<number>(props.mlxctx.map(item => this.importMlxctxValue(item))),
-                alignType: Immutable.List<AlignTypes>(props.alignType),
+                mlxattr: props.mlxattr,
+                mlxicase: props.mlxicase,
+                mlxctxIndices: List.map(item => importMlxctxValue(item, MLFreqFormModel.POSITION_LA, MLFreqFormModel.POSITION_RA), props.mlxctx),
+                alignType: props.alignType,
                 maxNumLevels: maxNumLevels,
             }
         );
@@ -104,7 +116,7 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         this.addActionHandler<Actions.MLAddLevel>(
             ActionName.MLAddLevel,
             (state, action) => {
-                if (state.mlxattr.size < state.maxNumLevels) {
+                if (state.mlxattr.length < state.maxNumLevels) {
                     this.addLevel(state);
 
                 } else {
@@ -125,31 +137,22 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
 
         this.addActionHandler<Actions.MLSetMlxAttr>(
             ActionName.MLSetMlxAttr,
-            (state, action) => {state.mlxattr = state.mlxattr.set(action.payload.levelIdx, action.payload.value)}
+            (state, action) => {state.mlxattr[action.payload.levelIdx] = action.payload.value}
         );
 
         this.addActionHandler<Actions.MLSetMlxiCase>(
             ActionName.MLSetMlxiCase,
-            (state, action) => {state.mlxicase = state.mlxicase.set(
-                action.payload.levelIdx,
-                !state.mlxicase.get(action.payload.levelIdx)
-            )}
+            (state, action) => {state.mlxicase[action.payload.levelIdx] = !state.mlxicase[action.payload.levelIdx]}
         );
 
         this.addActionHandler<Actions.MLSetMlxctxIndex>(
             ActionName.MLSetMlxctxIndex,
-            (state, action) => {state.mlxctxIndices = state.mlxctxIndices.set(
-                action.payload.levelIdx,
-                Number(action.payload.value)
-            )}
+            (state, action) => {state.mlxctxIndices[action.payload.levelIdx] = Number(action.payload.value)}
         );
 
         this.addActionHandler<Actions.MLSetAlignType>(
             ActionName.MLSetAlignType,
-            (state, action) => {state.alignType = state.alignType.set(
-                action.payload.levelIdx,
-                action.payload.value
-            )}
+            (state, action) => {state.alignType[action.payload.levelIdx] = action.payload.value}
         );
 
         this.addActionHandler<Actions.MLSubmit>(
@@ -177,42 +180,26 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         }
     }
 
-    private importMlxctxValue(v:string):number {
-        let srchIdx = MLFreqFormModel.POSITION_LA.indexOf(v);
-        if (srchIdx > -1) {
-            return srchIdx;
-        }
-        srchIdx = MLFreqFormModel.POSITION_RA.indexOf(v);
-        if (srchIdx > -1) {
-            return srchIdx;
-        }
-        return undefined;
-    }
-
     private addLevel(state:MLFreqFormModelState):void {
-        state.mlxattr = state.mlxattr.push(state.attrList.get(0).n);
-        state.mlxicase = state.mlxicase.push(false);
-        state.mlxctxIndices = state.mlxctxIndices.push(this.importMlxctxValue('0>0'));
-        state.alignType = state.alignType.push(AlignTypes.LEFT);
+        state.mlxattr.push(state.attrList[0].n);
+        state.mlxicase.push(false);
+        state.mlxctxIndices.push(importMlxctxValue('0>0', MLFreqFormModel.POSITION_LA, MLFreqFormModel.POSITION_RA));
+        state.alignType.push(AlignTypes.LEFT);
     }
 
     private removeLevel(state:MLFreqFormModelState, levelIdx:number):void {
-        state.mlxattr = state.mlxattr.remove(levelIdx);
-        state.mlxicase = state.mlxicase.remove(levelIdx);
-        state.mlxctxIndices = state.mlxctxIndices.remove(levelIdx);
-        state.alignType = state.alignType.remove(levelIdx);
+        state.mlxattr = List.removeAt(levelIdx, state.mlxattr);
+        state.mlxicase = List.removeAt(levelIdx, state.mlxicase);
+        state.mlxctxIndices = List.removeAt(levelIdx, state.mlxctxIndices);
+        state.alignType = List.removeAt(levelIdx, state.alignType);
     }
 
     private changeLevel(state:MLFreqFormModelState, levelIdx:number, direction:string):void {
         const shift = direction === 'down' ? 1 : -1;
-        const rmMlxattr = state.mlxattr.get(levelIdx);
-        state.mlxattr = state.mlxattr.remove(levelIdx).insert(levelIdx + shift, rmMlxattr);
-        const rmMlxicase = state.mlxicase.get(levelIdx);
-        state.mlxicase = state.mlxicase.remove(levelIdx).insert(levelIdx + shift, rmMlxicase);
-        const rmMlxctxIndex = state.mlxctxIndices.get(levelIdx);
-        state.mlxctxIndices = state.mlxctxIndices.remove(levelIdx).insert(levelIdx + shift, rmMlxctxIndex);
-        const rmAlignType = state.alignType.get(levelIdx);
-        state.alignType = state.alignType.remove(levelIdx).insert(levelIdx + shift, rmAlignType);
+        [state.mlxattr[levelIdx], state.mlxattr[levelIdx + shift]] = [state.mlxattr[levelIdx + shift], state.mlxattr[levelIdx]];
+        [state.mlxicase[levelIdx], state.mlxicase[levelIdx + shift]] = [state.mlxicase[levelIdx + shift], state.mlxicase[levelIdx]];
+        [state.mlxctxIndices[levelIdx], state.mlxctxIndices[levelIdx + shift]] = [state.mlxctxIndices[levelIdx + shift], state.mlxctxIndices[levelIdx]];
+        [state.alignType[levelIdx], state.alignType[levelIdx + shift]] = [state.alignType[levelIdx + shift], state.alignType[levelIdx]]
     }
 
     private submit(state:MLFreqFormModelState):void {
@@ -225,11 +212,11 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
             args.set(`ml${i+1}icase`, item ? 'i' : '');
         });
         state.mlxctxIndices.forEach((item, i) => {
-            const val = state.alignType.get(i) === 'left' ?
+            const val = state.alignType[i] === 'left' ?
                     MLFreqFormModel.POSITION_LA[item] : MLFreqFormModel.POSITION_RA[item];
             args.set(`ml${i+1}ctx`, val);
         });
-        args.set('freqlevel', state.mlxattr.size);
+        args.set('freqlevel', state.mlxattr.length);
         args.set('freq_sort', state.freqSort);
         window.location.href = this.pageModel.createActionUrl('freqml', args.items());
     }
@@ -244,8 +231,8 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
  *
  */
 export interface TTFreqFormModelState {
-    structAttrList:Immutable.List<Kontext.AttrItem>;
-    fttattr:Immutable.Set<string>;
+    structAttrList:Array<Kontext.AttrItem>;
+    fttattr:Array<string>;
     fttIncludeEmpty:boolean;
     flimit:Kontext.FormValue<string>;
     freqSort:string;
@@ -259,8 +246,8 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
         super(
             dispatcher,
             {
-                structAttrList: Immutable.List<Kontext.AttrItem>(props.structAttrList),
-                fttattr: Immutable.Set<string>(props.fttattr),
+                structAttrList: props.structAttrList,
+                fttattr: props.fttattr,
                 fttIncludeEmpty: props.ftt_include_empty,
                 flimit: {value: props.flimit, isInvalid: false, isRequired: true},
                 freqSort: props.freq_sort,
@@ -271,11 +258,11 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
         this.addActionHandler<Actions.TTSetFttAttr>(
             ActionName.TTSetFttAttr,
             (state, action) => {
-                if (state.fttattr.contains(action.payload.value)) {
-                    state.fttattr = state.fttattr.remove((action.payload.value));
+                if (state.fttattr.includes(action.payload.value)) {
+                    state.fttattr = List.removeValue(action.payload.value, state.fttattr);
 
                 } else {
-                    state.fttattr = state.fttattr.add(action.payload.value);
+                    state.fttattr = List.addUnique(action.payload.value, state.fttattr);
                 }
             }
         );
@@ -318,7 +305,7 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
 
     private submit(state:TTFreqFormModelState):void {
         const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
-        args.replace('fttattr', state.fttattr.toArray());
+        args.replace('fttattr', state.fttattr);
         args.set('ftt_include_empty', state.fttIncludeEmpty ? '1' : '0');
         args.set('flimit', parseInt(state.flimit.value));
         args.set('freq_sort', state.freqSort);
