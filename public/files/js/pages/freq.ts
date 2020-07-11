@@ -38,7 +38,6 @@ import { init as resultViewFactory } from '../views/freqs/main';
 import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
 import { FreqDataRowsModel, importData as importFreqData, FreqDataRowsModelState } from '../models/freqs/dataRows';
 import { FreqCTResultsSaveModel } from '../models/freqs/save';
-import { ConfIntervals, DataPoint } from '../charts/confIntervals';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
@@ -124,7 +123,8 @@ class FreqPage {
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
-            usesAdHocSubcorpus: adhocSubcDetector.usesAdHocSubcorpus()
+            usesAdHocSubcorpus: adhocSubcDetector.usesAdHocSubcorpus(),
+            selectedTextTypes: adhocSubcDetector.exportSelections(false)
         };
 
         this.cTFreqFormModel = new Freq2DFormModel(
@@ -135,14 +135,12 @@ class FreqPage {
         this.ctFreqModel = new Freq2DTableModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            adhocSubcDetector
+            ctFormProps
         );
         this.ctFlatFreqModel = new Freq2DFlatViewModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            adhocSubcDetector,
+            ctFormProps
         );
         this.ctResultSaveModel = new FreqCTResultsSaveModel(
             this.layoutModel.dispatcher,
@@ -305,33 +303,20 @@ class FreqPage {
                 const data = this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>(
                     'CTFreqResultData'
                 );
-                this.ctFreqModel.importData(data);
-                this.ctFlatFreqModel.importData(data);
-                this.ctFreqModel.addOnNewDataHandler((newData) =>
-                    this.ctFlatFreqModel.importDataAndNotify(newData)
-                );
+                this.ctFreqModel.initialImportData(data);
+                this.ctFlatFreqModel.initialImportData(data);
                 const ctFreqResultView = ctResultViewInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
                     this.ctFreqModel,
                     this.ctFlatFreqModel
                 );
-                const width = 600;
-                const height = 14 * (this.ctFreqModel.getD1Labels().filter(x => x[1]).size +
-                    this.ctFreqModel.getD2Labels().filter(x => x[1]).size) / 2;
+                const [width, height, onFrameReady] = this.ctFreqModel.getOnTableFrameReady();
                 this.layoutModel.renderReactComponent(
                     ctFreqResultView.CTFreqResultView,
                     window.document.getElementById('result-mount'),
                     {
-                        onConfIntervalFrameReady: (data:Array<DataPoint>, heading:string) => {
-                            const charts = new ConfIntervals(
-                                this.layoutModel,
-                                width,
-                                height,
-                                document.getElementById('confidence-intervals-frame')
-                            );
-                            charts.renderChart(data, heading);
-                        },
+                        onConfIntervalFrameReady: onFrameReady,
                         d3PaneWidth: width,
                         d3PaneHeight: height
                     }

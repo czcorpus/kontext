@@ -874,7 +874,8 @@ export class ViewPage {
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
-            usesAdHocSubcorpus: ttModel.usesAdHocSubcorpus()
+            usesAdHocSubcorpus: ttModel.usesAdHocSubcorpus(),
+            selectedTextTypes: ttModel.exportSelections(false)
         };
 
         this.ctFreqFormModel = new Freq2DFormModel(

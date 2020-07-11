@@ -22,9 +22,8 @@ import { Action } from 'kombo';
 import { ResultBlock } from './dataRows';
 import { MultiDict } from '../../multidict';
 import { SaveData } from '../../app/navigation';
-import { Dimensions, FreqFilterQuantities, AlignTypes } from './twoDimension/common';
+import { Dimensions, FreqFilterQuantities, AlignTypes, FreqQuantities } from './twoDimension/common';
 import { Maths } from 'cnc-tskit';
-import { FreqQuantities } from './twoDimension/generalDisplay';
 import { ColorMappings } from './twoDimension/table2d';
 
 
@@ -56,7 +55,11 @@ export enum ActionName {
     FreqctSortByDimension = 'FREQ_CT_SORT_BY_DIMENSION',
     FreqctSetDisplayQuantity = 'FREQ_CT_SET_DISPLAY_QUANTITY',
     FreqctSetColorMapping = 'FREQ_CT_SET_COLOR_MAPPING',
-    FreqctSetHighlightedGroup = 'FREQ_CT_SET_HIGHLIGHTED_GROUP'
+    FreqctSetHighlightedGroup = 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
+    FreqctSortFlatList = 'FREQ_CT_SORT_FLAT_LIST',
+    FreqctHighlight2DCoord = 'FREQ_CT_HIGHLIGHT_2D_COORD',
+    FreqctReset2DCoordHighlight = 'FREQ_CT_RESET_2D_COORD_HIGHLIGHT'
+
 }
 
 
@@ -228,5 +231,23 @@ export namespace Actions {
         value:[number, number];
     }> {
         name: ActionName.FreqctSetHighlightedGroup;
+    }
+
+    export interface FreqctSortFlatList extends Action<{
+        value:string;
+        reversed:boolean;
+    }> {
+        name: ActionName.FreqctSortFlatList;
+    }
+
+    export interface FreqctHighlight2DCoord extends Action<{
+        coord:[number, number];
+    }> {
+        name: ActionName.FreqctHighlight2DCoord;
+    }
+
+    export interface FreqctReset2DCoordHighlight extends Action<{
+    }> {
+        name: ActionName.FreqctReset2DCoordHighlight;
     }
 }

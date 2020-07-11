@@ -45,13 +45,6 @@ export interface CTFreqCell {
     pfilter:string;
 }
 
-/**
- * Supported frequency quantities
- */
-export const enum FreqQuantities {
-    ABS = 'abs',
-    IPM = 'ipm'
-}
 
 export function importAvailAlphaLevels():Array<[Maths.AlphaLevel, string]> {
     return pipe(
@@ -107,6 +100,8 @@ export interface GeneralFreq2DModelState {
     fullSize:number;
 
     usesAdHocSubcorpus:boolean;
+
+    confIntervalLeftMinWarn:number;
 }
 
 /**
@@ -116,7 +111,7 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
 
     protected readonly pageModel:PageModel;
 
-    private static CONF_INTERVAL_LEFT_MIN_WARN = 0.0;
+    static readonly CONF_INTERVAL_LEFT_MIN_WARN = 0.0;
 
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, initState:T) {
         super(
@@ -126,7 +121,7 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
         this.pageModel = pageModel;
     }
 
-    protected calcIpm(v:FreqResultResponse.CTFreqResultItem) {
+    static calcIpm(v:FreqResultResponse.CTFreqResultItem) {
         return Math.round(v[2] / v[3] * 1e6 * 100) / 100;
     }
 
@@ -137,6 +132,7 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
      * values by percentile.
      */
     abstract createPercentileSortMapping():{[key:string]:number};
+
 
     /**
      *
@@ -166,7 +162,7 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
      * @param v1
      * @param v2
      */
-    protected generatePFilter(state:GeneralFreq2DModelState, v1:string, v2:string):string {
+    generatePFilter(state:GeneralFreq2DModelState, v1:string, v2:string):string {
         const args = this.pageModel.getConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
 
         if (isStructAttr(state.attr1) && isStructAttr(state.attr2)) {

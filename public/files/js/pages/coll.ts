@@ -106,6 +106,7 @@ export class CollPage {
         );
 
         const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
+        const tt = this.initAdhocSubcDetector();
         const ctFormProps:CTFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
@@ -115,7 +116,8 @@ export class CollPage {
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
-            usesAdHocSubcorpus: this.initAdhocSubcDetector().usesAdHocSubcorpus()
+            usesAdHocSubcorpus: tt.usesAdHocSubcorpus(),
+            selectedTextTypes: tt.exportSelections(false)
         };
 
 

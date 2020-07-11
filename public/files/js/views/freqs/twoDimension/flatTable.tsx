@@ -19,10 +19,11 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher} from 'kombo';
+import { IActionDispatcher, Bound} from 'kombo';
 
 import { Kontext } from '../../../types/common';
-import { Freq2DFlatViewModel, FreqDataItem } from '../../../models/freqs/twoDimension/flatTable';
+import { Freq2DFlatViewModel, FreqDataItem, Freq2DFlatViewModelState } from '../../../models/freqs/twoDimension/flatTable';
+import { GeneralFreq2DModel } from '../../../models/freqs/twoDimension/generalDisplay';
 import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
 import { init as ctViewOptsFactory } from './viewOpts';
 import { Freq2DTableModelState } from '../../../models/freqs/twoDimension/table2d';
@@ -135,12 +136,7 @@ export function init(
     /**
      *
      */
-    class CTFlatFreqResultView extends React.PureComponent<Freq2DTableModelState> {
-
-
-        constructor(props) {
-            super(props);
-        }
+    class CTFlatFreqResultView extends React.PureComponent<Freq2DFlatViewModelState> {
 
         render() {
             return (
@@ -153,7 +149,7 @@ export function init(
                                     <ul className="items">
                                         <li>
                                             <ctViewOpts.MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType}
-                                                    canProvideIpm={this.props.canProvideIpm} />
+                                                    canProvideIpm={Freq2DFlatViewModel.canProvideIpm(this.props)} />
                                         </li>
                                         <li>
                                             <ctViewOpts.AlphaLevelSelect alphaLevel={this.props.alphaLevel}
@@ -173,25 +169,25 @@ export function init(
                                     {he.translate('freq__ct_filter_th')}
                                 </th>
                                 <THSortableCol label={this.props.attr1} value={this.props.attr1}
-                                        isActive={this.props.sortCol === this.props.attr1}
-                                        isReversed={this.props.sortCol === this.props.attr1 && this.props.sortColIsReversed}
+                                        isActive={this.props.sortBy === this.props.attr1}
+                                        isReversed={this.props.sortBy === this.props.attr1 && this.props.sortReversed}
                                             />
                                 <th>{this.props.attr2}</th>
                                 <THSortableCol label={he.translate('freq__ct_abs_freq_label')}
-                                        value="abs" isActive={this.props.sortCol === 'abs'}
-                                        isReversed={this.props.sortCol === 'abs' && this.props.sortColIsReversed}
+                                        value="abs" isActive={this.props.sortBy === 'abs'}
+                                        isReversed={this.props.sortBy === 'abs' && this.props.sortReversed}
                                         />
-                                {this.state.canProvideIpm ?
-                                    <THSortableCol label={he.translate('freq__ct_ipm_freq_label')}
-                                            value="ipm" isActive={this.props.sortCol === 'ipm'}
-                                            isReversed={this.props.sortCol === 'ipm' && this.props.sortColIsReversed} /> :
+                                {GeneralFreq2DModel.canProvideIpm(this.props) ?
+                                        <THSortableCol label={he.translate('freq__ct_ipm_freq_label')}
+                                                value="ipm" isActive={this.props.sortBy === 'ipm'}
+                                                isReversed={this.props.sortBy === 'ipm' && this.props.sortReversed} /> :
                                     null
                                 }
                             </tr>
                             {this.props.data.map((item, i) =>
                                 <TRFlatListRow key={`r_${i}`} idx={i+1} data={item}
                                         confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn}
-                                        canProvideIpm={this.props.canProvideIpm} />)}
+                                        canProvideIpm={GeneralFreq2DModel.canProvideIpm(this.props)} />)}
                         </tbody>
                     </table>
                 </div>
@@ -200,7 +196,7 @@ export function init(
     }
 
     return {
-        CTFlatFreqResultView: CTFlatFreqResultView
+        CTFlatFreqResultView: Bound(CTFlatFreqResultView, ctFlatFreqDataRowsModel)
     };
 
 }

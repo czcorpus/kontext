@@ -88,6 +88,12 @@ export interface CTFormProperties extends CTFormInputs {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
     usesAdHocSubcorpus:boolean;
+    selectedTextTypes:{[attr:string]:Array<string>};
+}
+
+export const enum FreqQuantities {
+    ABS = 'abs',
+    IPM = 'ipm'
 }
 
 /**
