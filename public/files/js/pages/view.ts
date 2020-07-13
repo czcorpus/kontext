@@ -23,7 +23,7 @@
 import { Action } from 'kombo';
 import { Observable, of as rxOf, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
-import { List, tuple } from 'cnc-tskit';
+import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main';
 import { Kontext, TextTypes, ViewOptions } from '../types/common';
@@ -58,7 +58,7 @@ import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
     from '../models/freqs/freqForms';
 import { FirstHitsModel } from '../models/query/firstHits';
-import { Freq2DFormModel, CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/ctFreqForm';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { ConcSaveModel } from '../models/concordance/save';
 import { ConcDashboard } from '../models/concordance/dashboard';
 import { TextTypesDistModel, TTCrit } from '../models/concordance/ttDistModel';
@@ -83,6 +83,7 @@ import kwicConnectInit from 'plugins/kwicConnect/init';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
 import { Actions, ActionName } from '../models/concordance/actions';
 import { QueryType } from '../models/query/common';
+import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -536,9 +537,14 @@ export class ViewPage {
         );
         const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(
             concFormsArgs, this.concFormsInitialArgs.filter, key);
+
         const filterFormProps:FilterFormProperties = {
-            filters: Object.keys(concFormsArgs)
-                        .filter(k => concFormsArgs[k].form_type === 'filter'),
+            filters: pipe(
+                concFormsArgs,
+                Dict.values(),
+                List.filter(v => v.form_type === 'filter'),
+                List.map(v => v.op_key)
+            ),
             maincorps: fetchArgs<string>(item => item.maincorp),
             currPnFilterValues: fetchArgs<string>(item => item.pnfilter),
             currQueryTypes: fetchArgs<QueryType>(item => item.query_type),
@@ -867,14 +873,15 @@ export class ViewPage {
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
-            ctminfreq_type: ctFormInputs.ctminfreq_type
+            ctminfreq_type: ctFormInputs.ctminfreq_type,
+            usesAdHocSubcorpus: ttModel.usesAdHocSubcorpus(),
+            selectedTextTypes: ttModel.exportSelections(false)
         };
 
         this.ctFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            ttModel
+            ctFormProps
         );
 
         this.freqFormViews = freqFormInit(

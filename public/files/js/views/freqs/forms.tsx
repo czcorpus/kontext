@@ -19,14 +19,14 @@
  */
 
 import * as React from 'react';
+import { IActionDispatcher} from 'kombo';
 
-import {Kontext} from '../../types/common';
-import {MLFreqFormModel, TTFreqFormModel} from '../../models/freqs/freqForms';
-import {Freq2DFormModel} from '../../models/freqs/ctFreqForm';
-import {init as ctFreqFormFactory} from './ctFreqForm';
-import {init as freqFormsFactory} from './freqForms';
-import {IActionDispatcher} from 'kombo';
-import {ActionName} from '../../models/freqs/actions';
+import { Kontext} from '../../types/common';
+import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/freqForms';
+import { init as freqFormsFactory } from './freqForms';
+import { ActionName } from '../../models/freqs/actions';
+import { init as ctFreqFormFactory } from './twoDimension/form';
+import { Freq2DFormModel } from '../../models/freqs/twoDimension/form';
 
 // -------------------------- exported component ----------
 

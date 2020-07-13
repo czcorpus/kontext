@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PageModel} from '../../app/page';
-import {AlignTypes} from './ctFreqForm';
 import { IFullActionControl, StatelessModel } from 'kombo';
+import { List } from 'cnc-tskit';
+
+import { Kontext } from '../../types/common';
+import { PageModel } from '../../app/page';
 import { FreqServerArgs } from './common';
 import { MultiDict } from '../../multidict';
-import { ActionName, Actions } from './actions';
-import { List } from 'cnc-tskit';
+import { AlignTypes } from './twoDimension/common';
+import { Actions, ActionName } from './actions';
 
 
 export interface FreqFormInputs {
@@ -124,7 +125,7 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
                 }
             }
         );
-        
+
         this.addActionHandler<Actions.MLRemoveLevel>(
             ActionName.MLRemoveLevel,
             (state, action) => this.removeLevel(state, action.payload.levelIdx)
@@ -254,7 +255,7 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
             }
         );
         this.pageModel = pageModel;
-        
+
         this.addActionHandler<Actions.TTSetFttAttr>(
             ActionName.TTSetFttAttr,
             (state, action) => {
@@ -271,7 +272,7 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
             ActionName.TTSetIncludeEmpty,
             (state, action) => {state.fttIncludeEmpty = !state.fttIncludeEmpty}
         );
-        
+
         this.addActionHandler<Actions.TTSetFLimit>(
             ActionName.TTSetFLimit,
             (state, action) => {state.flimit.value = action.payload.value}

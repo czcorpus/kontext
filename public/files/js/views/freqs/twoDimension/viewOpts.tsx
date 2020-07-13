@@ -18,16 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import * as Immutable from 'immutable';
 import * as React from 'react';
-import {FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
-import {IActionDispatcher} from 'kombo';
+import { IActionDispatcher } from 'kombo';
+import { Maths } from 'cnc-tskit';
+
+import { Kontext } from '../../../types/common';
+import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
+import { Actions, ActionName } from '../../../models/freqs/actions';
 
 
 interface AlphaLevelSelectProps {
     confIntervalLeftMinWarn:number;
-    availAlphaLevels:Immutable.List<[string, string]>;
+    availAlphaLevels:Array<[Maths.AlphaLevel, string]>;
     alphaLevel:string;
 }
 
@@ -61,16 +63,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     const MinFreqInput:React.SFC<MinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_CT_SET_MIN_FREQ',
-                payload: {value: evt.target.value}
+            dispatcher.dispatch<Actions.FreqctSetMinFreq>({
+                name: ActionName.FreqctSetMinFreq,
+                payload: {
+                    value: evt.target.value
+                }
             });
         };
 
         const handleTypeChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_CT_SET_MIN_FREQ_TYPE',
-                payload: {value: evt.target.value}
+            dispatcher.dispatch<Actions.FreqctFormSetMinFreqType>({
+                name: ActionName.FreqctFormSetMinFreqType,
+                payload: {
+                    value: evt.target.value
+                }
             });
         };
 
@@ -134,8 +140,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         _onChange(evt) {
-            dispatcher.dispatch({
-                name: 'FREQ_CT_SET_ALPHA_LEVEL',
+            dispatcher.dispatch<Actions.FreqctSetAlphaLevel>({
+                name: ActionName.FreqctSetAlphaLevel,
                 payload: {
                     value: evt.target.value
                 }

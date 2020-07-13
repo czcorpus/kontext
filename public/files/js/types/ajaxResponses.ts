@@ -291,25 +291,5 @@ export namespace FreqResultResponse {
         concsize:number;
     }
 
-    export type CTFreqResultItem = [string, string, number, number];
-
-    export interface CTFreqResultData {
-        data: Array<CTFreqResultItem>;
-        full_size:number;
-    }
-
-    export interface CTFreqResultResponse extends AjaxConcResponse {
-        data:CTFreqResultData;
-        attr1:string;
-        attr2:string;
-        ctfreq_form_args:{
-            ctattr1:string;
-            ctattr2:string;
-            ctfcrit1:string;
-            ctfcrit2:string;
-            ctminfreq:string
-        };
-    }
-
 
 }

@@ -19,13 +19,13 @@
  */
 
 import * as React from 'react';
-
-import {Kontext} from '../../types/common';
-import {TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel, MLFreqFormModelState} from '../../models/freqs/freqForms';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import { AlignTypes } from '../../models/freqs/ctFreqForm';
-import {Actions, ActionName} from '../../models/freqs/actions';
 import { List } from 'cnc-tskit';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+
+import { Kontext} from '../../types/common';
+import { TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel, MLFreqFormModelState } from '../../models/freqs/freqForms';
+import { Actions, ActionName } from '../../models/freqs/actions';
+import { AlignTypes } from '../../models/freqs/twoDimension/common';
 
 // -------------------------- exported component ----------
 
@@ -165,12 +165,12 @@ export function init(
                         lastElement.sort((v1, v2) => v1.n.localeCompare(v2.n));
                         reduc.push([{n: curr.n, label: curr.label}]);
                         return reduc;
-    
+
                     } else {
                         reduc.push([{n: curr.n, label: curr.label}]);
                         return reduc;
                     }
-    
+
                 } else {
                     lastElement.push({n: curr.n, label: curr.label});
                     return reduc;
