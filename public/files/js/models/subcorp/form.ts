@@ -91,33 +91,33 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
 
         this.addActionHandler<Actions.FormSetInputMode>(
             ActionName.FormSetInputMode,
-            action => this.changeState(state => state.inputMode = action.payload.value)
+            action => this.changeState(state => {state.inputMode = action.payload.value})
         );
 
         this.addActionHandler<Actions.FormSetSubcAsPublic>(
             ActionName.FormSetSubcAsPublic,
-            action => this.changeState(state => state.isPublic = action.payload.value)
+            action => this.changeState(state => {state.isPublic = action.payload.value})
         );
 
         this.addActionHandler<Actions.FormSetDescription>(
             ActionName.FormSetDescription,
-            action => this.changeState(state =>
+            action => this.changeState(state => {
                 state.description = Kontext.updateFormValue(this.state.description, {value: action.payload.value})
-            )
+            })
         );
 
         this.addActionHandler<Actions.FormSubmit>(
             ActionName.FormSubmit,
             action => {
                 if (this.state.inputMode === InputMode.GUI) {
-                    this.changeState(state => state.isBusy = true);
+                    this.changeState(state => {state.isBusy = true});
                     this.submit().subscribe(
                         () => {
-                            this.changeState(state => state.isBusy = false);
+                            this.changeState(state => {state.isBusy = false});
                             window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
                         },
                         (err) => {
-                            this.changeState(state => state.isBusy = false);
+                            this.changeState(state => {state.isBusy = false});
                             this.pageModel.showMessage('error', err);
                         }
                     );
@@ -129,9 +129,16 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
             }
         );
 
+        this.addActionHandler<Actions.FormSetSubcName>(
+            ActionName.FormSetSubcName,
+            (action) => {
+                this.changeState(state => {state.subcname.value = action.payload.value});
+            }
+        );
+
         this.addActionHandler<Actions.FormSetAlignedCorpora>(
             ActionName.FormSetAlignedCorpora,
-            action => this.changeState(state => state.alignedCorpora = action.payload.alignedCorpora)
+            action => this.changeState(state => {state.alignedCorpora = action.payload.alignedCorpora})
         );
     }
 
@@ -157,13 +164,17 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
     }
 
     validateForm(mustHaveTTSelection:boolean):Error|null {
-        return validateSubcProps(
-            this.state.subcname,
-            this.state.description,
-            mustHaveTTSelection,
-            this.textTypesModel.findHasSelectedItems(),
-            this.pageModel
-        );
+        let result;
+        this.changeState(state => {
+            result = validateSubcProps(
+                state.subcname,
+                state.description,
+                mustHaveTTSelection,
+                this.textTypesModel.findHasSelectedItems(),
+                this.pageModel
+            );
+        });
+        return result;
     }
 
     submit():Observable<any> {

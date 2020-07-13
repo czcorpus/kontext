@@ -192,11 +192,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 (data) => {
                     this.layoutModel.showMessage('info',
                     this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
-                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                    this.changeState(state => {state.actionBoxVisibleRow = -1});
                 },
                 (err) => {
                     this.layoutModel.showMessage('error', err);
-                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                    this.changeState(state => {state.actionBoxVisibleRow = -1});
                 }
             )
         );
@@ -206,11 +206,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             action => this.createSubcorpus(action.payload.idx, true).subscribe(
                 (data) => {
                     this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
-                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                    this.changeState(state => {state.actionBoxVisibleRow = -1});
                 },
                 (err) => {
                     this.layoutModel.showMessage('error', err);
-                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                    this.changeState(state => {state.actionBoxVisibleRow = -1});
                 }
             )
         );
@@ -225,10 +225,10 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             ).subscribe(
                 (data) => {
                     this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
-                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                    this.changeState(state => {state.actionBoxVisibleRow = -1});
                 },
                 (err) => {
-                    this.changeState(state => state.actionBoxVisibleRow = -1);
+                    this.changeState(state => {state.actionBoxVisibleRow = -1});
                     this.layoutModel.showMessage('error', err);
                 }
             )
@@ -237,7 +237,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.addActionHandler<Actions.PublishSubcorpus>(
             ActionName.PublishSubcorpus,
             action => {
-                this.changeState(state => state.isBusy = true);
+                this.changeState(state => {state.isBusy = true});
                 this.publishSubcorpus(action.payload.rowIdx, action.payload.description).subscribe(
                     (_) => {
                         this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_published'));
@@ -272,7 +272,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.addActionHandler<Actions.SubmitPublicDescription>(
             ActionName.SubmitPublicDescription,
             action => {
-                this.changeState(state => state.isBusy = true);
+                this.changeState(state => {state.isBusy = true});
                 this.updateSubcorpusDescSubmit(action.payload.rowIdx).subscribe(
                     (_) => {
                         this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_desc_updated'));
@@ -312,7 +312,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         if (data.deleted) {
             throw new Error('Cannot change public description of a deleted subcorpus');
         }
-        this.changeState(state =>
+        this.changeState(state => {
             state.lines[idx] = {
                 name: data.name,
                 corpname: data.corpname,
@@ -325,7 +325,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 published: data.published,
                 description: desc
             }
-        )
+        })
     }
 
     private publishSubcorpus(rowIdx:number, description:string):Observable<any> {
@@ -349,7 +349,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         ).pipe(
             tap((_) => {
-                this.changeState(state =>
+                this.changeState(state => {
                     state.lines[srchIdx] = {
                         name: data.name,
                         corpname: data.corpname,
@@ -362,7 +362,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         published: true,
                         description: description
                     }
-                )
+                })
             })
         );
     }
@@ -423,7 +423,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         ).pipe(
             tap((_) => {
-                this.changeState(state => state.lines = List.filter((v, i) => i !== lineIdx, state.lines));
+                this.changeState(state => {state.lines = List.filter((v, i) => i !== lineIdx, state.lines)});
             })
         );
     }

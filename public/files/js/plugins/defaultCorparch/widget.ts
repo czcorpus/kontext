@@ -170,7 +170,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             activeTab: 0,
             activeListItem: tuple(null, null),
             corpusIdent,
-            alignedCorpora: pluginApi.getConf<Array<string>>('alignedCorpora'),
+            alignedCorpora: pluginApi.getConf<Array<string>>('alignedCorpora') || [],
             anonymousUser,
             dataFav: dataFavImp,
             dataFeat: [...dataFeat],
@@ -180,8 +180,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 {
                     subcorpus_id: currCorp.usesubcorp,
                     subcorpus_orig_id: currCorp.origSubcorpName,
-                    corpora: [currCorp.id].concat(
-                        pluginApi.getConf<Array<string>>('alignedCorpora')),
+                    corpora: List.concat(
+                        pluginApi.getConf<Array<string>>('alignedCorpora') || [],
+                        [currCorp.id]
+                    ),
                 }
             ),
             isWaitingForSearchResults: false,
@@ -245,7 +247,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.addActionHandler<Actions.SetActiveTab>(
             ActionName.SetActiveTab,
             (state, action) => {
-                state.activeTab = action.payload['value'];
+                state.activeTab = action.payload.value;
             }
         );
 
