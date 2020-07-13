@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../multidict';
@@ -25,6 +24,7 @@ import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/commo
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import { List, pipe } from 'cnc-tskit';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -89,7 +89,7 @@ export interface CorplistTableModelState {
 
     filters:Filters;
 
-    keywords:Immutable.List<KeywordInfo>;
+    keywords:Array<KeywordInfo>;
 
     detailData:CorpusInfo;
 
@@ -103,7 +103,7 @@ export interface CorplistTableModelState {
 
     limit:number;
 
-    rows:Immutable.List<common.CorplistItem>;
+    rows:Array<common.CorplistItem>;
 }
 
 
@@ -125,14 +125,14 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             dispatcher,
             {
                 filters: { maxSize: '', minSize: '', name: '', sortBySize: 'name'},
-                keywords: Immutable.List<KeywordInfo>(initialData.search_params.keywords.map(importKeywordInfo(preselectedKeywords))),
+                keywords: List.map(importKeywordInfo(preselectedKeywords), initialData.search_params.keywords),
                 detailData: null,
                 isBusy: false,
                 offset: 0,
                 limit: pluginApi.getConf('pluginData')['corparch']['max_page_size'],
                 searchedCorpName: '',
                 nextOffset: initialData.nextOffset,
-                rows: Immutable.List<common.CorplistItem>(initialData.rows)
+                rows: initialData.rows
             }
         );
         this.pluginApi = pluginApi;
@@ -163,35 +163,35 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             case 'KEYWORD_CLICKED': {
                 newState.offset = 0;
                 if (!action.payload['ctrlKey']) {
-                    newState.keywords = newState.keywords.map(v => ({
+                    newState.keywords = List.map(v => ({
                         ident: v.ident,
                         label: v.label,
                         color: v.color,
                         visible: v.visible,
                         selected: false
-                    })).toList();
+                    }), newState.keywords);
                 }
                 const idx = newState.keywords.findIndex(v => v.ident === action.payload['keyword']);
-                const v = newState.keywords.get(idx);
-                newState.keywords = newState.keywords.set(idx, {
+                const v = newState.keywords[idx];
+                newState.keywords[idx] = {
                     ident: v.ident,
                     label: v.label,
                     color: v.color,
                     visible: v.visible,
                     selected: !v.selected
-                });
+                };
                 newState.isBusy = true;
             }
             break;
             case 'KEYWORD_RESET_CLICKED':
                 newState.offset = 0;
-                newState.keywords = newState.keywords.map(v => ({
+                newState.keywords = List.map(v => ({
                     ident: v.ident,
                     label: v.label,
                     color: v.color,
                     visible: v.visible,
                     selected: false
-                })).toList();
+                }), newState.keywords);
                 newState.isBusy = true;
             break;
             case 'EXPANSION_CLICKED':
@@ -333,7 +333,11 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     }
 
     exportQuery(state:CorplistTableModelState):string {
-        const q = state.keywords.filter(v => v.selected && v.visible).map(v => this.tagPrefix + v.ident).toList();
+        const q = pipe(
+            state.keywords,
+            List.filter(v => v.selected && v.visible),
+            List.map(v => this.tagPrefix + v.ident)
+        );
         if (state.searchedCorpName) {
             return q.concat(state.searchedCorpName).join(' ');
         }
@@ -450,14 +454,14 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     }
 
     private importData(state:CorplistTableModelState, inData:CorplistDataResponse):void {
-        state.rows = Immutable.List<common.CorplistItem>(inData.rows);
-        state.keywords = state.keywords.map<KeywordInfo>(v => ({
+        state.rows = inData.rows;
+        state.keywords = List.map(v => ({
             ident: v.ident,
             label: v.label,
             color: v.color,
             visible: true, // currently we do not make visual taglist filtering
             selected: v.selected
-        })).toList();
+        }), state.keywords);
         state.nextOffset = inData.nextOffset;
         state.filters = {
             maxSize: inData.filters.maxSize,
@@ -475,7 +479,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             sortBySize: data.filters.sortBySize
         };
         state.nextOffset = data.nextOffset;
-        state.rows = state.rows.concat(data.rows).toList();
+        state.rows = List.concat(data.rows, state.rows);
     }
 }
 

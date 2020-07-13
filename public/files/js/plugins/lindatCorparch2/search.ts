@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import {IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../multidict';
 import {Kontext} from '../../types/common';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import { pipe, List, tuple } from 'cnc-tskit';
 
 
 /**
@@ -58,31 +58,31 @@ export interface SearchKeyword {
  */
 class Cache {
 
-    private phrases:Immutable.OrderedMap<string, Immutable.List<SearchResultRow>>;
+    private phrases:Array<[string, Array<SearchResultRow>]>;
 
     private capacity:number;
 
     constructor(capacity:number) {
         this.capacity = capacity;
-        this.phrases = Immutable.OrderedMap<string, Immutable.List<SearchResultRow>>();
+        this.phrases = [];
     }
 
     has(phrase:string):boolean {
-        return this.phrases.has(phrase);
+        return List.findIndex(item => item[0] === phrase, this.phrases) !== -1;
     }
 
-    get(phrase:string):Immutable.List<SearchResultRow> {
-        if (this.phrases.has(phrase)) {
-            return this.phrases.get(phrase);
+    get(phrase:string):Array<SearchResultRow> {
+        if (this.has(phrase)) {
+            return List.find(item => item[0] === phrase, this.phrases)[1];
         }
-        return Immutable.List<SearchResultRow>();
+        return [];
     }
 
     set(phrase:string, data:Array<SearchResultRow>) {
-        if (this.phrases.size === this.capacity) {
-            this.phrases = this.phrases.remove(this.phrases.keySeq().first());
+        if (this.phrases.length === this.capacity) {
+            this.phrases = List.shift(this.phrases);
         }
-        this.phrases = this.phrases.set(phrase, Immutable.List<SearchResultRow>(data));
+        this.phrases.push(tuple(phrase, data));
     }
 }
 
@@ -101,12 +101,16 @@ export class SearchEngine {
         this.cache = new Cache(cacheCapacity);
     }
 
-    private mkQuery(phrase:string, keywords:Immutable.List<SearchKeyword>):string {
-        const kw = keywords.filter(item => item.selected).map(item => '+' + item.id).join(' ');
+    private mkQuery(phrase:string, keywords:Array<SearchKeyword>):string {
+        const kw = pipe(
+            keywords,
+            List.filter(item => item.selected),
+            List.map(item => '+' + item.id)
+        ).join(' ');
         return `${kw} ${phrase}`;
     }
 
-    search(phrase:string, keywords:Immutable.List<SearchKeyword>):Observable<Immutable.List<SearchResultRow>> {
+    search(phrase:string, keywords:Array<SearchKeyword>):Observable<Array<SearchResultRow>> {
         const q = this.mkQuery(phrase, keywords);
         if (this.cache.has(q)) {
             return rxOf(this.cache.get(q));
@@ -123,7 +127,7 @@ export class SearchEngine {
                 tap((data) => {
                     this.cache.set(q, data.rows);
                 }),
-                map((data) => Immutable.List<SearchResultRow>(data.rows))
+                map((data) => data.rows)
             );
         }
     }

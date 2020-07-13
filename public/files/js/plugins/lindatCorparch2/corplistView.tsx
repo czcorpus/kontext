@@ -17,7 +17,6 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo} from './corplist';
 import { CorplistItem } from './common';
@@ -25,6 +24,7 @@ import { CorpusInfoBoxProps } from '../../views/overview';
 import { CorpusInfoType } from '../../models/common/layout';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
+import { pipe, List } from 'cnc-tskit';
 
 
 export interface CorplistTableProps {
@@ -417,7 +417,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     const KeywordsField:React.SFC<{
         label:string;
-        keywords:Immutable.List<KeywordInfo>;
+        keywords:Array<KeywordInfo>;
 
     }> = (props) => {
 
@@ -428,8 +428,10 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         return (
             <fieldset className="keywords">
                 <legend>{props.label}</legend>
-                {props.keywords.filter(v => v.visible).map((keyword, i) =>
-                        <KeywordLink key={i} keyword={keyword} />
+                {pipe(
+                    props.keywords,
+                    List.filter(v => v.visible),
+                    List.map((keyword, i) => <KeywordLink key={i} keyword={keyword} />)
                 )}
                 {hasSelectedKeywords() ? <ResetLink  /> : null}
                 <div className="inline-label hint">

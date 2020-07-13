@@ -17,8 +17,7 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import { Keyboard } from 'cnc-tskit';
+import { Keyboard, List } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
@@ -123,7 +122,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     // -------------------------- <FavoritesBox /> ---------------------
 
     const FavoritesBox:React.SFC<{
-        data:Immutable.List<FavListItem>;
+        data:Array<FavListItem>;
         anonymousUser:boolean;
         activeIdx:number;
 
@@ -143,8 +142,10 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                         <tr>
                             <td colSpan={3}>{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td>
                         </tr> :
-                        props.data.map((item, i) =>
-                            <TRFavoriteItem key={item.id} data={item} isActive={i === props.activeIdx} />)
+                        List.map((item, i) =>
+                            <TRFavoriteItem key={item.id} data={item} isActive={i === props.activeIdx} />,
+                            props.data
+                        )
                     }
                 </tbody>
             </table>
@@ -187,7 +188,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     // ---------------------------------- <FeaturedBox /> --------------------------------
 
     const FeaturedBox:React.SFC<{
-        data:Immutable.List<CorplistItem>;
+        data:Array<CorplistItem>;
         activeIdx:number;
 
     }> = (props) => {
@@ -199,9 +200,10 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                             {util.translate('defaultCorparch__featured_corpora')}
                         </th>
                     </tr>
-                    {props.data.map((item, i) =>
-                            <TRFeaturedItem key={item.id} data={item}
-                                    isActive={i === props.activeIdx} />)}
+                    {List.map((item, i) =>
+                        <TRFeaturedItem key={item.id} data={item} isActive={i === props.activeIdx} />,
+                        props.data
+                    )}
                 </tbody>
             </table>
         );
@@ -282,8 +284,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     // ----------------------------- <ListsTab /> -------------------------------
 
     const ListsTab:React.SFC<{
-        dataFav:Immutable.List<FavListItem>;
-        dataFeat:Immutable.List<CorplistItem>;
+        dataFav:Array<FavListItem>;
+        dataFeat:Array<CorplistItem>;
         anonymousUser:boolean;
         activeListItem:[number, number];
 
@@ -473,7 +475,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                 {
                     props.data.found_in.length > 0 ?
                         <span className="found-in">,{'\u00a0'}
-                            {props.data.found_in.map(foundIn => util.translate(foundIn))}
+                            {List.map(foundIn => util.translate(foundIn), props.data.found_in)}
                         </span>
                     : null
                 }
@@ -503,9 +505,9 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     // ---------------------------- <SearchTab /> -----------------------------------
 
     const SearchTab:React.SFC<{
-        availSearchKeywords:Immutable.List<SearchKeyword>;
+        availSearchKeywords:Array<SearchKeyword>;
         isWaitingForSearchResults:boolean;
-        currSearchResult:Immutable.List<SearchResultRow>;
+        currSearchResult:Array<SearchResultRow>;
         currSearchPhrase:string;
         hasSelectedKeywords:boolean;
         focusedRowIdx:number;
@@ -515,7 +517,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         return (
             <div>
                 <div className="labels">
-                    {props.availSearchKeywords.map(item => <SearchKeyword key={item.id} {...item} />)}
+                    {List.map(item => <SearchKeyword key={item.id} {...item} />, props.availSearchKeywords)}
                     {props.hasSelectedKeywords ? <ResetKeyword /> : null}
                     <div className="labels-hint">
                         {util.translate('defaultCorparch__hold_ctrl_for_multiple')}
@@ -524,11 +526,12 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                 <div className="autocomplete-wrapper">
                     <SearchInput value={props.currSearchPhrase} handleTab={props.handleTab} />
                     <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
-                    {props.currSearchResult.size > 0 ?
+                    {props.currSearchResult.length > 0 ?
                         (<div className="tt-menu">
-                            {props.currSearchResult.map((item, i) =>
-                                    <SearchResultRow key={item.id} data={item}
-                                            hasFocus={i === props.focusedRowIdx} />)}
+                            {List.map((item, i) =>
+                                <SearchResultRow key={item.id} data={item} hasFocus={i === props.focusedRowIdx} />,
+                                props.currSearchResult
+                            )}
                         </div>) : null}
                 </div>
             </div>
@@ -568,7 +571,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     const SubcorpSelection:React.SFC<{
         currSubcorpus:string;
         origSubcorpName:string;
-        availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
+        availSubcorpora:Array<Kontext.SubcorpListItem>;
 
     }> = (props) => {
 
@@ -576,9 +579,9 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             dispatcher.dispatch({
                 name: 'QUERY_INPUT_SELECT_SUBCORP',
                 payload: {
-                    subcorp: props.availSubcorpora.get(evt.target.value).v,
-                    pubName: props.availSubcorpora.get(evt.target.value).pub,
-                    foreign: props.availSubcorpora.get(evt.target.value).foreign
+                    subcorp: props.availSubcorpora[evt.target.value].v,
+                    pubName: props.availSubcorpora[evt.target.value].pub,
+                    foreign: props.availSubcorpora[evt.target.value].foreign
                 }
             });
         };
@@ -593,9 +596,10 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             <span id="subcorp-selector-wrapper">
                 <select id="subcorp-selector" name="usesubcorp" value={selItemIdx()}
                         onChange={handleSubcorpChange}>
-                    {props.availSubcorpora.map((item, i) => {
-                        return <option key={item.v} value={i}>{item.n}</option>;
-                    })}
+                    {List.map((item, i) =>
+                        <option key={item.v} value={i}>{item.n}</option>,
+                        props.availSubcorpora
+                    )}
                 </select>
             </span>
         )
@@ -716,7 +720,7 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                                 corpusIdent={this.props.corpusIdent} onClick={this._handleWidgetButtonClick}
                                 isWidgetVisible={this.props.isVisible} />
                         {this.props.isVisible ? this._renderWidget() : null}
-                        {this.props.availableSubcorpora.size > 0 ?
+                        {this.props.availableSubcorpora.length > 0 ?
                             (<span>
                                 <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
                                 <SubcorpSelection currSubcorpus={this.props.currSubcorpus}
