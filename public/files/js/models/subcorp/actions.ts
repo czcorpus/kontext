@@ -41,6 +41,7 @@ export enum ActionName {
     SubmitPublicDescription = 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT',
     PublishItem = 'SUBCORP_LIST_PUBLISH_ITEM',
     FormSetInputMode = 'SUBCORP_FORM_SET_INPUT_MODE',
+    FormSetSubcName = 'SUBCORP_FORM_SET_SUBCNAME',
     FormSetSubcAsPublic = 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
     FormSetDescription = 'SUBCORP_FORM_SET_DESCRIPTION',
     FormSubmit = 'SUBCORP_FORM_SUBMIT',
@@ -136,6 +137,12 @@ export namespace Actions {
         subcname:string;
     }> {
         name:ActionName.PublishItem;
+    }
+
+    export interface FormSetSubcName extends Action<{
+        value:string;
+    }> {
+        name:ActionName.FormSetSubcName;
     }
 
     export interface FormSetInputMode extends Action<{

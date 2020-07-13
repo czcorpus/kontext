@@ -309,11 +309,9 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_SUBCNAME',
-                payload: {
-                    value: evt.target.value
-                }
+            dispatcher.dispatch<Actions.FormSetSubcName>({
+                name: ActionName.FormSetSubcName,
+                payload: {value: evt.target.value}
             });
         };
 
@@ -350,8 +348,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleChange = (evt:React.ChangeEvent<HTMLTextAreaElement>) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_DESCRIPTION',
+            dispatcher.dispatch<Actions.FormSetDescription>({
+                name: ActionName.FormSetDescription,
                 payload: {
                     value: evt.target.value
                 }

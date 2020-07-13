@@ -364,14 +364,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ActionName.QueryInputMoveCursor,
             action => action.payload.formType === 'query',
             action => {
-                this.changeState(state =>
+                this.changeState(state => {
                     state.downArrowTriggersHistory[action.payload.sourceId] =
                         shouldDownArrowTriggerHistory(
                             this.state.queries[action.payload.sourceId],
                             action.payload.rawAnchorIdx,
                             action.payload.rawFocusIdx
                         )
-                );
+                });
             }
         );
 
