@@ -58,7 +58,7 @@ import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
     from '../models/freqs/freqForms';
 import { FirstHitsModel } from '../models/query/firstHits';
-import { Freq2DFormModel, CTFormInputs, CTFormProperties } from '../models/freqs/ctFreqForm';
+import { Freq2DFormModel, CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/ctFreqForm';
 import { ConcSaveModel } from '../models/concordance/save';
 import { ConcDashboard } from '../models/concordance/dashboard';
 import { TextTypesDistModel, TTCrit } from '../models/concordance/ttDistModel';
@@ -843,7 +843,7 @@ export class ViewPage {
             mlxattr: List.repeat(() => attrs[0].n, initFreqLevel),
             mlxicase: List.repeat(() => false, initFreqLevel),
             mlxctx: List.repeat(() => '0>0', initFreqLevel),  // = "Node'"
-            alignType: List.repeat(() => 'left', initFreqLevel),
+            alignType: List.repeat(() => AlignTypes.LEFT, initFreqLevel),
         }
         this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,

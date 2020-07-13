@@ -16,15 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Kontext, TextTypes } from '../types/common';
-import { PluginInterfaces } from '../types/plugins';
 import { PageModel, DownloadType } from '../app/page';
 import { KontextPage } from '../app/main';
 import { MultiDict } from '../multidict';
 import { CollFormModel, CollFormInputs, CollFormProps } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
-import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
+import { CTFormProperties, CTFormInputs, Freq2DFormModel, AlignTypes } from '../models/freqs/ctFreqForm';
 import { QuerySaveAsFormModel } from '../models/query/save';
 import { CollResultModel } from '../models/coll/result';
 import { init as analysisFrameInit } from '../views/analysis';
@@ -90,7 +88,7 @@ export class CollPage {
             mlxattr: List.repeat(() => attrs[0].n, initFreqLevel),
             mlxicase: List.repeat(() => false, initFreqLevel),
             mlxctx: List.repeat(() => '0>0', initFreqLevel),  // = "Node'"
-            alignType: List.repeat(() => 'left', initFreqLevel)
+            alignType: List.repeat(() => AlignTypes.LEFT, initFreqLevel)
         }
 
         this.mlFreqModel = new MLFreqFormModel(
