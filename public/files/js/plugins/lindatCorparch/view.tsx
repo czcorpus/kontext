@@ -22,7 +22,6 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {TreeWidgetModel, Node} from './model';
-import * as Immutable from 'immutable';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
@@ -41,7 +40,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         ident:string;
         name:string;
         active:boolean;
-        corplist:Immutable.List<Node>;
+        corplist:Array<Node>;
         activeFeat:string;
         activeLanguage:string;
         permitted:boolean;
@@ -79,7 +78,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         activeFeat:string;
         activeLanguage:string;
         name:string;
-        corplist:Immutable.List<Node>;
+        corplist:Array<Node>;
         permitted:boolean;
         onActiveLanguageSet:(lang:string)=>void;
         onActiveLanguageDrop:()=>void;
@@ -154,8 +153,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         access:any; // TODO ??
         ident:string;
         activeLanguage:string;
-        language:Immutable.List<string>;
-        features:Immutable.List<string>;
+        language:Array<string>;
+        features:Array<string>;
         activeFeat:string;
         pmltq:string;
         repo:string;
@@ -348,7 +347,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         level?:string;
         htmlClass?:string;
         name?:string;
-        corplist:Immutable.List<Node>;
+        corplist:Array<Node>;
         activeLanguage:string;
         activeFeat:string;
         permitted:boolean;
@@ -361,7 +360,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         const renderChildren = () => {
                 return props.corplist.map((item, i) => {
-                    if (item.corplist.size > 0) {
+                    if (item.corplist.length > 0) {
                         if (item.level === 'outer') {
                             return <TreeNode key={i} name={item.name} ident={item.ident}
                                              corplist={item.corplist}
@@ -415,7 +414,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------------------- <ItemListSorted /> -------------------------------
 
     class ItemListSorted extends React.Component<{
-        corplist:Immutable.List<Node>;
+        corplist:Array<Node>;
         activeLanguage:string;
         activeFeat:string;
         htmlClass:string;
@@ -467,7 +466,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }, {
         data:Node;
-        sortedData:Immutable.List<Node>;
+        sortedData:Array<Node>;
         sorted:boolean;
         expanded:boolean;
         activeLanguage:string;
