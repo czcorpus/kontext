@@ -112,7 +112,6 @@ class WordlistFormPage {
                     wltype: WlTypes.SIMPLE
                 }
             );
-            this.layoutModel.registerSwitchCorpAwareObject(this.wordlistFormModel);
             const corparchWidget = this.initCorparchPlugin();
             this.views = wordlistFormInit({
                 dispatcher: this.layoutModel.dispatcher,

@@ -23,7 +23,6 @@ import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { AjaxError } from 'rxjs/ajax';
-import * as Immutable from 'immutable';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
 import { Kontext } from '../types/common';
@@ -42,14 +41,16 @@ import { L10n } from './l10n';
 import { AsyncTaskChecker, AsyncTaskStatus } from '../models/asyncTask';
 import { UserSettings } from './userSettings';
 import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu';
-import { AppNavigation, AjaxArgs } from './navigation';
+import { AppNavigation, AjaxArgs, ICorpusSwitchSerializable } from './navigation';
 import { EmptyPlugin } from '../plugins/empty/init';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../models/mainMenu/actions';
+import { Actions as QueryActions, ActionName as QueryActionName, ActionName } from '../models/query/actions';
 import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
+import { List } from 'cnc-tskit';
 
 
 export enum DownloadType {
@@ -115,7 +116,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * events (e.g. the 'ESC' key). But it is always a preferred approach
      * to focus a suitable element and catch event via that.
      */
-    private globalKeyHandlers:Immutable.List<(evt:Event)=>void>;
+    private globalKeyHandlers:Array<(evt:Event)=>void>;
 
     private readonly appNavig:AppNavigation;
 
@@ -129,7 +130,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         this.appNavig = appNavig;
         this.userSettings = userSettings;
         this.dispatcher = dispatcher;
-        this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
+        this.globalKeyHandlers = [];
     }
 
     /**
@@ -181,7 +182,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Adds a window-registered key event handler.
      */
     addGlobalKeyEventHandler(fn:(evt:KeyboardEvent)=>void):void {
-        this.globalKeyHandlers = this.globalKeyHandlers.push(fn);
+        this.globalKeyHandlers.push(fn);
     }
 
     /**
@@ -190,7 +191,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
         const srchIdx:number = this.globalKeyHandlers.indexOf(fn);
         if (srchIdx > -1) {
-            this.globalKeyHandlers = this.globalKeyHandlers.remove(srchIdx);
+            List.removeAt(srchIdx, this.globalKeyHandlers);
         }
     }
 
@@ -212,25 +213,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     /**
-     * Register an object to store and restore data during corpus switch
-     * procedure.
-     *
-     * Please avoid calling this method in page model's init() method
-     * as it would lead to an infinite recursion.
-     */
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void {
-        this.appNavig.registerSwitchCorpAwareObject(obj);
-    }
-
-    /**
      * Change the current corpus used by KonText. Please note
      * that this basically reinitializes all the page's model
      * and views (both layout and page init() method are called
      * again).
-     *
-     * Objects you want to preserve must implement ICorpusSwitchAware<T>
-     * interface and must be registered via registerSwitchCorpAwareObject()
-     * (see below).
      *
      * A concrete page must ensure that its init() is also called
      * as a promise chained after the one returned by this method.
@@ -683,18 +669,21 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     restoreModelsDataAfterSwitch():void {
+        /* TODO !!!!
         this.appNavig.forEachCorpSwitchSerializedItem((key, data) => {
-            this.dispatcher.dispatch({
-                name: 'CORPUS_SWITCH_MODEL_RESTORE',
+            console.log('foreach ', key, data);
+            this.dispatcher.dispatch<QueryActions.CorpusSwitchModelRestore>({
+                name: ActionName.CorpusSwitchModelRestore,
                 payload: {
                     key,
                     data,
                     prevCorpora: this.appNavig.getSwitchCorpPreviousCorpora(),
-                    currCorpora: Immutable.List([this.getCorpusIdent().id].concat(
-                        this.getConf<Array<string>>('alignedCorpora')))
+                    currCorpora: [this.getCorpusIdent().id].concat(
+                        this.getConf<Array<string>>('alignedCorpora'))
                 }
             });
         });
+        */
     }
 
     openWebSocket(args:MultiDict):WebSocket|null {
@@ -717,6 +706,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         this.corpViewOptionsModel.unregister();
         this.mainMenuModel.unregister();
         this.generalViewOptionsModel.unregister();
+    }
+
+    registerCorpusSwitchAwareModel<T>(model:ICorpusSwitchSerializable<T>):void {
+        this.appNavig.registerCorpusSwitchAwareModel(model);
     }
 
     /**

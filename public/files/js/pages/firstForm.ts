@@ -264,6 +264,7 @@ export class FirstFormPage {
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
             }
         );
+        this.layoutModel.registerCorpusSwitchAwareModel(this.queryModel);
 
         this.cqlEditorModel = new CQLEditorModel({
             dispatcher: this.layoutModel.dispatcher,
@@ -376,7 +377,6 @@ export class FirstFormPage {
             this.initQueryModel();
             const corparchWidget = this.initCorplistComponent();
             this.attachQueryForm(ttAns, corparchWidget);
-            this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
             this.initCorpnameLink();
             const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
 

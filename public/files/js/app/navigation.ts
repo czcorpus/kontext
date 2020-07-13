@@ -26,6 +26,9 @@ import {AjaxResponse} from '../types/ajaxResponses';
 import {Kontext} from '../types/common';
 import {MultiDict} from '../multidict';
 import { HTTP, Dict, pipe, List } from 'cnc-tskit';
+import { IActionDispatcher, StatefulModel, IModel, IFullActionControl } from 'kombo';
+import { Actions, ActionName } from '../models/common/actions';
+import { dispatch } from 'rxjs/internal/observable/pairs';
 
 
 /**
@@ -69,6 +72,10 @@ export namespace SaveData {
                 throw new Error(`Unknown safe format ${sf}`);
         }
     }
+}
+
+export interface ICorpusSwitchSerializable<T> extends IModel<T> {
+    csGetStateKey():string;
 }
 
 /**
@@ -165,6 +172,37 @@ function createHistory(urlHandler:Kontext.IURLHandler):Kontext.IHistory {
     }
 }
 
+class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}}> {
+
+    constructor(dispatcher:IFullActionControl, initialState:{data:{}}) {
+        super(dispatcher, initialState);
+
+        this.addActionHandler<Actions.SwitchCorpus>(
+            ActionName.SwitchCorpus,
+            action => {
+                this.suspend(Dict.map(v => false, this.state.data), (wAction, syncData) => {
+                    if (wAction.name === ActionName.SwitchCorpusReady) {
+                        syncData[(wAction as Actions.SwitchCorpusReady<{}>).payload.modelId] = true;
+                        return Dict.hasValue(false, syncData) ? {...syncData} : null;
+                    }
+                }).subscribe(
+                    (data) => {
+                        console.log('new style corp switch data: ', data);
+                    }
+                )
+            }
+        );
+    }
+
+    unregister() {}
+
+    registerModel<T>(model:ICorpusSwitchSerializable<T>):void {
+        this.changeState(state => {
+            state.data[model.csGetStateKey()] = model.getState();
+        })
+    }
+}
+
 /**
  * AppNavigation handles all the URL generation, window navigation,
  * AJAX requests and handling of navigation history.
@@ -173,20 +211,24 @@ export class AppNavigation implements Kontext.IURLHandler {
 
     private conf:Kontext.IConfHandler;
 
-    private switchCorpAwareObjects:{[ident:string]:(state:{})=>void};
-
     private switchCorpStateStorage:{[ident:string]:{}};
 
     private switchCorpPreviousCorpora:Array<string>;
 
     private history:Kontext.IHistory;
 
-    constructor(conf:Kontext.IConfHandler) {
+    private corpusSwitchModel:CorpusSwitchModel;
+
+    private readonly dispatcher:IFullActionControl;
+
+    constructor(conf:Kontext.IConfHandler, dispatcher:IFullActionControl) {
         this.conf = conf;
-        this.switchCorpAwareObjects = {};
+        this.dispatcher = dispatcher;
         this.switchCorpStateStorage = {};
         this.switchCorpPreviousCorpora = [];
         this.history = createHistory(this);
+        this.corpusSwitchModel = new CorpusSwitchModel(dispatcher, {data: {}});
+
     }
 
     /**
@@ -399,31 +441,10 @@ export class AppNavigation implements Kontext.IURLHandler {
     }
 
     /**
-     * Register an object to store and restore data during corpus switch
-     * procedure.
-     *
-     * Please avoid calling this method in page model's init() method
-     * as it would lead to an infinite recursion.
-     */
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void {
-        this.switchCorpAwareObjects[obj.csGetStateKey()] = (state) => {
-            this.switchCorpStateStorage[obj.csGetStateKey()] = state;
-        }
-    }
-
-    forEachCorpSwitchSerializedItem(fn:(storeKey:string, data:any)=>void):void {
-        Dict.forEach((value, key) => fn(key, value), this.switchCorpStateStorage);
-    }
-
-    /**
      * Change the current corpus used by KonText. Please note
      * that this basically reinitializes all the page's models
      * and views (both layout and page init() method are called
      * again).
-     *
-     * Objects you want to preserve must implement ICorpusSwitchAware<T>
-     * interface and must be registered via registerSwitchCorpAwareObject()
-     * (see below).
      *
      * A concrete page must ensure that its init() is also called
      * as a promise chained after the one returned by this method.
@@ -432,7 +453,9 @@ export class AppNavigation implements Kontext.IURLHandler {
      * @param subcorpus - an optional subcorpus
      */
     switchCorpus(corpora:Array<string>, subcorpus:string):Observable<any> {
-        this.switchCorpAwareObjects = {};
+        this.dispatcher.dispatch<Actions.SwitchCorpus>({
+            name: ActionName.SwitchCorpus
+        });
         this.switchCorpPreviousCorpora = List.concat(
             this.conf.getConf<Array<string>>('alignedCorpora'),
             [this.conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
@@ -528,6 +551,9 @@ export class AppNavigation implements Kontext.IURLHandler {
         return this.switchCorpPreviousCorpora;
     }
 
+    registerCorpusSwitchAwareModel<T>(model:ICorpusSwitchSerializable<T>):void {
+        this.corpusSwitchModel.registerModel(model);
+    }
 
 
 }

@@ -28,6 +28,8 @@ import * as common from './common';
 import { IPluginApi } from '../../types/plugins';
 import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions, ActionName } from './actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 
 /**
  *
@@ -144,8 +146,7 @@ export interface CorplistWidgetModelArgs {
 /**
  *
  */
-export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
-                            implements Kontext.ICorpusSwitchAwareModel<CorplistWidgetModelState> {
+export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState> {
 
     private pluginApi:IPluginApi;
 
@@ -624,11 +625,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            'CORPUS_SWITCH_MODEL_RESTORE',
+        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore<{dataFav:Array<FavListItem>}>>(
+            GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
-                if (action.payload['key'] === this.csGetStateKey()) {
-                    state.dataFav = action.payload['data'].dataFav.filter(v => v.trashTTL === null);
+                if (action.payload.key === this.csGetStateKey()) {
+                    state.dataFav = action.payload.data.dataFav.filter(v => v.trashTTL === null);
                     state.currFavitemId = findCurrFavitemId(
                         state.dataFav,
                         this.getFullCorpusSelection(state)

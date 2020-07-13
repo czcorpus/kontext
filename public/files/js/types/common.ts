@@ -97,6 +97,12 @@ export namespace Kontext {
         errorDesc: undefined
     });
 
+    // ----------------
+
+    export type UserMessageTypes = 'info'|'warning'|'error'|'mail';
+
+    //
+
     /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).
@@ -471,34 +477,6 @@ export namespace Kontext {
             pcq_pos_neg:string;
             default_attr:string;
         }>;
-    }
-
-    /**
-     * ICorpusSwitchAware represents an object which keeps
-     * some of its properties persistent even when KonText
-     * switches active corpus (which deletes most of the
-     * client-side objects - typically all the models and views).
-     * I.e. the object stores some of the attributes and
-     * its successor will use these values to set the
-     * same properties.
-     *
-     * Please note that the model is expected to
-     * respond to the action
-     * CORPUS_SWITCH_MODEL_RESTORE where data
-     * along with model state key are passed.
-     * The action is passed for all the key+data
-     * pair so each model must check for the key
-     * to be sure it works with its own serialized
-     * data.
-     */
-    export interface ICorpusSwitchAwareModel<T> extends IModel<T> {
-
-
-        /**
-         * Return a key under which the data will
-         * be stored.
-         */
-        csGetStateKey():string;
     }
 
     export interface CorpusSwitchActionProps<T> {

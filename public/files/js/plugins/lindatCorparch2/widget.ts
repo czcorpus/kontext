@@ -152,8 +152,7 @@ export interface CorplistWidgetModelArgs {
 /**
  *
  */
-export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
-                                 implements Kontext.ICorpusSwitchAwareModel<CorpusSwitchPreserved> {
+export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState> {
 
     private pluginApi:IPluginApi;
 

@@ -49,7 +49,6 @@ export interface IPluginApi extends ITranslator {
     pluginIsActive(name:string):boolean;
     getConcArgs():Kontext.IMultiDict<ConcServerArgs>;
     getCorpusIdent():Kontext.FullCorpusIdent;
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
     setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);

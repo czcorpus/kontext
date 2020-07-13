@@ -72,20 +72,12 @@ export enum ActionName {
     QueryInputSetIncludeEmpty = 'QUERY_INPUT_SET_INCLUDE_EMPTY',
     QueryInputMakeCorpusPrimary = 'QUERY_MAKE_CORPUS_PRIMARY',
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
-    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
     ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
     ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
     SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
     SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
     SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT'
-}
-
-export interface CorpusSwitchModelRestorePayload<T> {
-    key:string;
-    data:T,
-    prevCorpora:Array<string>;
-    currCorpora:Array<string>;
 }
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
@@ -399,11 +391,6 @@ export namespace Actions {
     export interface QuerySubmit extends Action<{
     }> {
         name:ActionName.QuerySubmit;
-    }
-
-    export interface CorpusSwitchModelRestore<T={}> extends
-            Action<CorpusSwitchModelRestorePayload<T>> {
-        name:ActionName.CorpusSwitchModelRestore;
     }
 
     export interface FilterFirstHitsSubmit extends Action<{

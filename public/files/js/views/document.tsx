@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Keyboard, Client } from 'cnc-tskit';
+import { Keyboard, Client, List } from 'cnc-tskit';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
@@ -551,21 +551,16 @@ export function init(
 
     // ------------------------------ <Messages /> -----------------------------
 
-    const Messages:React.SFC<CoreViews.Messages.Props & MessageModelState> = (props) => {
+    const Messages:React.SFC<CoreViews.Messages.Props & MessageModelState> = (props) => (
 
-        if (props.messages.size > 0) {
-            return (
-                <div className="messages">
-                    {props.messages.map((item, i) => (
-                        <Message key={`msg:${i}`} {...item} />
-                    ))}
-                </div>
-            );
-
-        } else {
-            return null;
-        }
-    };
+        List.empty(props.messages) ?
+            null :
+            <div className="messages">
+                {props.messages.map((item, i) => (
+                    <Message key={`msg:${i}`} {...item} />
+                ))}
+            </div>
+    );
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 

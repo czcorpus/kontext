@@ -33,8 +33,9 @@ import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState,
     shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType, QueryContextArgs } from './common';
-import { ActionName, Actions, CorpusSwitchModelRestorePayload } from './actions';
+import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName, CorpusSwitchModelRestorePayload } from '../common/actions';
 
 
 export interface QueryFormUserEntries {
@@ -526,11 +527,24 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.CorpusSwitchModelRestore<FirstQueryFormModelState>>(
-            ActionName.CorpusSwitchModelRestore,
+        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore<FirstQueryFormModelState>>(
+            GlobalActionName.CorpusSwitchModelRestore,
             action => {
                 this.restoreFromCorpSwitch(action.payload);
                 this.emitChange();
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            action => {
+                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<FirstQueryFormModelState>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.csGetStateKey(),
+                        state: this.state
+                    }
+                })
             }
         );
 
