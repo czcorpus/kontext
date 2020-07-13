@@ -191,7 +191,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 item => ({id: item[0], label: item[1], color: item[2], selected:false}),
                 corporaLabels
             ),
-            availableSubcorpora: pluginApi.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
+            availableSubcorpora: pluginApi.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList') || [],
             focusedRowIdx: -1
         });
         this.pluginApi = pluginApi;

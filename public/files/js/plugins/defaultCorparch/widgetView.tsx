@@ -620,8 +620,6 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
 
     class CorplistWidget extends React.PureComponent<CorplistWidgetModelState> {
 
-        private modelSubscription:Subscription;
-
         constructor(props) {
             super(props);
             this._handleCloseClick = this._handleCloseClick.bind(this);

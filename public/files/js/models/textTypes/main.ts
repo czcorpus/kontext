@@ -257,19 +257,19 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
 
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, data:InitialData,
             selectedItems?:SelectedTextTypes) {
-        const attributes = Immutable.List(importInitialData(data, selectedItems || {}));
+        const attributes = importInitialData(data, selectedItems || {});
         super(
             dispatcher,
             {
-                attributes,
+                attributes: Immutable.List(attributes),
                 bibLabelAttr: data.bib_attr,
                 bibIdAttr: data.id_attr,
-                selectionHistory: Immutable.List<Immutable.List<TextTypes.AttributeSelection>>(
-                    attributes),
+                selectionHistory: Immutable.List<Immutable.List<TextTypes.AttributeSelection>>().push(
+                    Immutable.List(attributes)),
                 selectAll: Immutable.Map<string, boolean>(
                     attributes.map(
                         (item:TextTypes.AttributeSelection)=>[item.name, false]
-                    ).toList()
+                    )
                 ),
                 metaInfo: Immutable.Map<string, TextTypes.AttrSummary>(),
                 textInputPlaceholder: null,

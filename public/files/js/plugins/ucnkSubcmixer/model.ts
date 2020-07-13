@@ -18,56 +18,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext, TextTypes } from '../../types/common';
-import { IPluginApi } from '../../types/plugins';
-import * as Immutable from 'immutable';
 import { IActionDispatcher, Action, StatelessModel, SEDispatcher } from 'kombo';
 import { Observable, throwError as rxThrowError } from 'rxjs';
+import { pipe, Dict, List, HTTP, tuple } from 'cnc-tskit';
+
+import { Kontext, TextTypes } from '../../types/common';
+import { IPluginApi } from '../../types/plugins';
 import { validateSubcProps } from '../../models/subcorp/form';
+import { Actions, ActionName } from './actions';
+import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeAttrVal } from './common';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 
-export interface SubcMixerExpression {
-    attrName:string;
-    attrValue:string;
-    ratio:Kontext.FormValue<string>;
-    baseRatio:string; // a ratio in the original corpus
-    zeroFixed:boolean;
-}
-
-export interface CalculationResults {
-    attrs:Immutable.List<[string, number, boolean]>;
-    total:number;
-    ids:Immutable.List<string>;
-    structs:Immutable.List<string>;
-}
-
-export interface CalculationResponse extends Kontext.AjaxResponse {
-    attrs?:Array<[string,number]>;
-    total:number;
-    ids?:Array<string>;
-    structs:Array<string>;
-}
-
-export interface TextTypeAttrVal {
-    attrName:string;
-    attrValue:string;
-    isSelected:boolean;
-}
 
 export interface SubcMixerModelState {
     currentSubcname:Kontext.FormValue<string>;
-    shares:Immutable.List<SubcMixerExpression>;
+    shares:Array<SubcMixerExpression>;
     currentResult:CalculationResults|null;
     corpusIdAttr:string;
-    alignedCorpora:Immutable.List<string>;
+    alignedCorpora:Array<string>;
     ratioLimit:number;
     isBusy:boolean;
     isVisible:boolean;
     subcIsPublic:boolean;
     subcDescription:Kontext.FormValue<string>;
     numOfErrors:number;
-    ttAttributes:Immutable.List<TextTypes.AttributeSelection>; // basically a copy of text type model attributes
-    ttInitialAvailableValues:Immutable.List<TextTypes.AttributeSelection>;
-    liveattrsSelections:Immutable.Map<string, Immutable.List<string>>;
+    ttAttributes:Array<TextTypes.AttributeSelection>; // basically a copy of text type model attributes
+    ttInitialAvailableValues:Array<TextTypes.AttributeSelection>;
+    liveattrsSelections:{[key:string]:Array<string>};
 }
 
 /**
@@ -85,154 +62,145 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             initialState:SubcMixerModelState) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
-        this.actionMatch = {
-            'QUERY_INPUT_ADD_ALIGNED_CORPUS': (state, action) => {
-                const newState = this.copyState(state);
-                return newState;
-            },
-            'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': (state, action) => {
-                const newState = this.copyState(state);
-                return newState;
-            },
-            'TT_SELECTION_CHANGED': (state, action) => {
-                // we have to keep track of tt model selection changes
-                const newState = this.copyState(state);
-                newState.ttAttributes = action.payload['attributes'];
-                return newState;
-            },
-            'SUBCORP_FORM_SET_SUBCNAME': (state, action) => {
-                const newState = this.copyState(state);
-                newState.currentSubcname = Kontext.updateFormValue(newState.currentSubcname, {value: action.payload['value']});
-                return newState;
-            },
-            'SUBCORP_FORM_SET_SUBC_AS_PUBLIC': (state, action) => {
-                const newState = this.copyState(state);
-                newState.subcIsPublic = !!action.payload['value'];
-                return newState;
-            },
-            'SUBCORP_FORM_SET_DESCRIPTION': (state, action) => {
-                const newState = this.copyState(state);
-                newState.subcDescription = Kontext.updateFormValue(newState.subcDescription, {value: action.payload['value']});
-                return newState;
-            },
-            'LIVE_ATTRIBUTES_REFINE_DONE': (state, action) => {
-                const newState = this.copyState(state);
-                const newSelections:TextTypes.ServerCheckedValues = action.payload['selectedTypes'];
-                Object.keys(newSelections).forEach(attrName => {
-                    newState.liveattrsSelections = newState.liveattrsSelections.set(
-                        attrName, Immutable.List<string>(newSelections[attrName])
-                    );
-                });
-                return newState;
-            },
-            'UCNK_SUBCMIXER_SHOW_WIDGET': (state, action) => {
-                const newState = this.copyState(state);
-                newState.isVisible = true;
-                this.refreshData(newState);
-                return newState;
-            },
-            'UCNK_SUBCMIXER_HIDE_WIDGET': (state, action) => {
-                const newState = this.copyState(state);
-                newState.isVisible = false;
-                newState.currentResult = null;
-                return newState;
-            },
-            'UCNK_SUBCMIXER_SET_RATIO': (state, action) => {
-                const newState = this.copyState(state);
-                this.updateRatio(
-                    newState,
-                    action.payload['attrName'],
-                    action.payload['attrValue'],
-                    Kontext.newFormValue(action.payload['ratio'], true)
-                );
-                return newState;
-            },
-            'UCNK_SUBCMIXER_SET_RATIO_VALIDATE': (state, action) => {
-                const newState = this.copyState(state);
-                const val = this.getRatio(newState, action.payload['attrName'], action.payload['attrValue']);
-                if (val) {
-                    this.updateRatio(
-                        newState,
-                        action.payload['attrName'],
-                        action.payload['attrValue'],
-                        Kontext.updateFormValue(val, {isInvalid: action.payload['isInvalid']})
-                    );
-                }
-                return newState;
-            },
-            'UCNK_SUBCMIXER_SUBMIT_TASK': (state, action) => {
-                const newState = this.copyState(state);
-                newState.isBusy = true;
-                newState.numOfErrors = 0;
-                return newState;
-            },
-            'UCNK_SUBCMIXER_SUBMIT_TASK_DONE': (state, action) => {
-                const newState = this.copyState(state);
-                newState.isBusy = false;
-                if (!action.error) {
-                    newState.currentResult = action.payload['result'];
-                    if (newState.currentResult) {
-                        newState.numOfErrors =  newState.currentResult.attrs.reduce(
-                                (prev, curr) => prev + (!curr[2] ? 1 : 0), 0);
-                    }
-                }
-                return newState;
-            },
-            'UCNK_SUBCMIXER_CREATE_SUBCORPUS': (state, action) => {
-                const newState = this.copyState(state);
-                newState.isBusy = true;
-                return newState;
-            },
-            'UCNK_SUBCMIXER_CREATE_SUBCORPUS_DONE': (state, action) => {
-                const newState = this.copyState(state);
-                newState.isBusy = false;
-                if (!action.error) {
-                    // we leave the app here
-                    window.location.href = this.pluginApi.createActionUrl('subcorpus/subcorp_list');
-                }
-                return newState;
-            }
-        };
-    }
 
-    sideEffects(state:SubcMixerModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.name) {
-            case 'UCNK_SUBCMIXER_SET_RATIO':
-                const err = this.validateRatio(action.payload['ratio']);
+        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActionName.QueryInputAddAlignedCorpus,
+            (state, action) => {
+                // TODO
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActionName.QueryInputRemoveAlignedCorpus,
+            (state, action) => {
+                // TODO
+            }
+        );
+
+        this.addActionHandler(
+            'TT_SELECTION_CHANGED', // TODO type
+            (state, action) => {
+                state.ttAttributes = action.payload['attributes'];
+            }
+        );
+
+        this.addActionHandler(
+            'SUBCORP_FORM_SET_SUBCNAME',
+            (state, action) => {
+                state.currentSubcname = Kontext.updateFormValue(state.currentSubcname, {value: action.payload['value']});
+            }
+        );
+
+        this.addActionHandler(
+            'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
+            (state, action) => {
+                state.subcIsPublic = !!action.payload['value'];
+            }
+        );
+
+        this.addActionHandler(
+            'SUBCORP_FORM_SET_DESCRIPTION',
+            (state, action) => {
+                state.subcDescription = Kontext.updateFormValue(state.subcDescription, {value: action.payload['value']});
+            }
+        );
+
+        this.addActionHandler(
+            'LIVE_ATTRIBUTES_REFINE_DONE',
+            (state, action) => {
+                const newSelections:TextTypes.ServerCheckedValues = action.payload['selectedTypes'];
+                state.liveattrsSelections = {
+                    ...state.liveattrsSelections,
+                    ...newSelections,
+                };
+            }
+        );
+
+        this.addActionHandler<Actions.ShowWidget>(
+            ActionName.ShowWidget,
+            (state, action) => {
+                state.isVisible = true;
+                this.refreshData(state);
+            }
+        );
+
+        this.addActionHandler<Actions.HideWidget>(
+            ActionName.HideWidget,
+            (state, action) => {
+                state.isVisible = false;
+                state.currentResult = null;
+            }
+        );
+
+        this.addActionHandler<Actions.SetRatio>(
+            ActionName.SetRatio,
+            (state, action) => {
+                this.updateRatio(
+                    state,
+                    action.payload.attrName,
+                    action.payload.attrValue,
+                    Kontext.newFormValue(action.payload.ratio, true)
+                );
+            },
+            (state, action, dispatch) => {
+                const err = this.validateRatio(action.payload.ratio);
                 if (err !== null) {
                     this.pluginApi.showMessage('error', err);
-                    dispatch({
-                        name: 'UCNK_SUBCMIXER_SET_RATIO_VALIDATE',
+                    dispatch<Actions.SetRatioValidate>({
+                        name: ActionName.SetRatioValidate,
                         payload: {
-                            attrName: action.payload['attrName'],
-                            attrValue: action.payload['attrValue'],
+                            attrName: action.payload.attrName,
+                            attrValue: action.payload.attrValue,
                             isInvalid: true
                         }
                     });
                 }
-            break;
-            case 'UCNK_SUBCMIXER_SUBMIT_TASK':
+            }
+        );
+
+        this.addActionHandler<Actions.SetRatioValidate>(
+            ActionName.SetRatioValidate,
+            (state, action) => {
+                const val = this.getRatio(state, action.payload.attrName, action.payload.attrValue);
+                if (val) {
+                    this.updateRatio(
+                        state,
+                        action.payload.attrName,
+                        action.payload.attrValue,
+                        Kontext.updateFormValue(val, {isInvalid: action.payload.isInvalid})
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitTask>(
+            ActionName.SubmitTask,
+            (state, action) => {
+                state.isBusy = true;
+                state.numOfErrors = 0;
+            },
+            (state, action, dispatch) => {
                 this.submitTask(state).subscribe(
                     (data) => {
                         if (!data.attrs || !data.ids) {
                             const [msgType, msgText] = data.messages[0] || ['error', 'global__unknown_error'];
                             this.pluginApi.showMessage(msgType, this.pluginApi.translate(msgText));
                             const err = new Error(msgText);
-                            dispatch({
-                                name: 'UCNK_SUBCMIXER_SUBMIT_TASK_DONE',
+                            dispatch<Actions.SubmitTaskDone>({
+                                name: ActionName.SubmitTaskDone,
                                 error: err
                             });
                             this.pluginApi.showMessage('error', err);
 
                         } else {
-                            dispatch({
-                                name: 'UCNK_SUBCMIXER_SUBMIT_TASK_DONE',
+                            dispatch<Actions.SubmitTaskDone>({
+                                name: ActionName.SubmitTaskDone,
                                 payload: {
                                     result: {
                                         attrs: this.importResults(state.shares, state.ratioLimit, data.attrs),
                                         total: data.total,
-                                        ids: Immutable.List<string>(data.ids),
-                                        structs: Immutable.List<string>(data.structs)
+                                        ids: Array<string>(data.ids),
+                                        structs: Array<string>(data.structs)
                                     }
                                 }
                             });
@@ -240,31 +208,66 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch({
-                            name: 'UCNK_SUBCMIXER_SUBMIT_TASK_DONE',
+                        dispatch<Actions.SubmitTaskDone>({
+                            name: ActionName.SubmitTaskDone,
                             error: err
                         });
                     }
                 );
-            break;
-            case 'UCNK_SUBCMIXER_CREATE_SUBCORPUS':
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitTaskDone>(
+            ActionName.SubmitTaskDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.currentResult = action.payload.result;
+                    if (state.currentResult) {
+                        state.numOfErrors = List.foldl(
+                            (prev, curr) => prev + (!curr[2] ? 1 : 0), 0,
+                            state.currentResult.attrs
+                        );
+                    }
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitCreateSubcorpus>(
+            ActionName.SubmitCreateSubcorpus,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
                 this.submitCreateSubcorpus(state).subscribe(
                     (resp) => {
                         window.location.href = this.pluginApi.createActionUrl('subcorpus/subcorp_list');
-                        dispatch({
-                            name: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS_DONE'
+                        dispatch<Actions.CreateSubcorpusDone>({
+                            name: ActionName.CreateSubcorpusDone
                         });
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch({
-                            name: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS_DONE',
+                        dispatch<Actions.CreateSubcorpusDone>({
+                            name: ActionName.CreateSubcorpusDone,
                             error: err
                         });
                     }
                 );
-            break;
-        }
+            }
+        );
+
+        this.addActionHandler<Actions.CreateSubcorpusDone>(
+            ActionName.CreateSubcorpusDone,
+            null,
+            (state, action, dispatch) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    // we leave the app here
+                    window.location.href = this.pluginApi.createActionUrl('subcorpus/subcorp_list');
+                }
+            }
+        );
     }
 
     /**
@@ -281,42 +284,46 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         return [null, null];
     }
 
-    private importResults(shares:Immutable.List<SubcMixerExpression>,
-            sizeErrorRatio:number, data:Array<[string, number]>):Immutable.List<[string, number, boolean]> {
+    private importResults(shares:Array<SubcMixerExpression>,
+            sizeErrorRatio:number, data:Array<[string, number]>):Array<[string, number, boolean]> {
         const evalDist = (v, idx) => {
-            const userRatio = parseFloat(shares.get(idx).ratio.value) / 100;
+            const userRatio = parseFloat(shares[idx].ratio.value) / 100;
             return Math.abs(v - userRatio) < sizeErrorRatio;
         };
         // We must first merge the tree-copied conditions back to
         // single ones. Here we assume that the conditions are split
         // in a way ensuring the sum of ratios for each key is actually 100%.
-        let tmp = Immutable.OrderedMap<string, number>();
-        data.forEach(item => {
-            if (!tmp.has(item[0])) {
-                tmp = tmp.set(item[0], item[1]);
+        let tmp:Array<[string, number]> = [];
+        data.forEach(([key, value]) => {
+            const srchIdx = List.findIndex(([v,]) => v === key, tmp);
+            if (srchIdx > -1) {
+                tmp[srchIdx] = tuple(key, tmp[srchIdx][1] + value);
 
             } else {
-                tmp = tmp.set(item[0], tmp.get(item[0]) + item[1]);
+                tmp.push(tuple(key, value));
             }
         });
 
-        const mappedData:Immutable.List<[string, number, boolean]> =
-            tmp.entrySeq()
-                .map((item:[string, number]) => {
-                    const ans = this.parseServerExpression(item[0]);
-                    return {
-                        data: item,
-                        sharesIdx: shares.findIndex(x => x.attrName === ans[0] && x.attrValue === ans[1] && !x.zeroFixed)
-                    };
-                })
-                .filter(x => x.sharesIdx > - 1 && !shares.get(x.sharesIdx).zeroFixed)
-                .map<[string, number, boolean]>((item, _) => [item.data[0], item.data[1] * 100, evalDist(item.data[1], item.sharesIdx)])
-                .toList();
-
-        return Immutable.List<[string, number, boolean]>(mappedData);
+        const mappedData:Array<[string, number, boolean]> = pipe(
+            tmp,
+            List.map((item:[string, number]) => {
+                const ans = this.parseServerExpression(item[0]);
+                return {
+                    data: item,
+                    sharesIdx: shares.findIndex(x => x.attrName === ans[0] && x.attrValue === ans[1] && !x.zeroFixed)
+                };
+            }),
+            List.filter(x => x.sharesIdx > - 1 && !shares[x.sharesIdx].zeroFixed),
+            List.map((item, _) => tuple(
+                item.data[0],
+                item.data[1] * 100,
+                evalDist(item.data[1], item.sharesIdx)
+            ))
+        );
+        return mappedData;
     }
 
-    private submitCreateSubcorpus(state:SubcMixerModelState):Observable<any> {
+    private submitCreateSubcorpus(state:SubcMixerModelState):Observable<Kontext.AjaxResponse & {status: boolean}> {
         const err = validateSubcProps(
             state.currentSubcname,
             state.subcDescription,
@@ -334,10 +341,10 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         args['publish'] = state.subcIsPublic ? '1' : '0';
         args['description'] = state.subcDescription.value;
         args['idAttr'] = state.corpusIdAttr;
-        args['ids'] = state.currentResult.ids.toArray().join(',');
-        args['structs'] = state.currentResult.structs.toArray().join(',');
-        return this.pluginApi.ajax$<Kontext.AjaxResponse>(
-            'POST',
+        args['ids'] = state.currentResult.ids.join(',');
+        args['structs'] = state.currentResult.structs.join(',');
+        return this.pluginApi.ajax$<Kontext.AjaxResponse & {status: boolean}>(
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('subcorpus/subcmixer_create_subcorpus'),
             args
         );
@@ -360,16 +367,16 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         }
         const args = {};
         args['corpname'] = this.pluginApi.getCorpusIdent().id;
-        args['aligned_corpora'] = state.alignedCorpora.toArray();
+        args['aligned_corpora'] = state.alignedCorpora;
         args['expression'] = JSON.stringify(
             state.shares.map(item => ({
                 attrName: item.attrName,
                 attrValue: item.attrValue,
                 ratio: item.ratio ? parseFloat(item.ratio.value) : null
-            })).toJS()
+            }))
         );
         return this.pluginApi.ajax$<CalculationResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('subcorpus/subcmixer_run_calc'),
             args
         );
@@ -379,19 +386,22 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         return state.ttAttributes.find((val) => val.name === ident);
     }
 
-    private getAvailableValues(state:SubcMixerModelState):Immutable.List<TextTypeAttrVal> {
+    private getAvailableValues(state:SubcMixerModelState):Array<TextTypeAttrVal> {
 
-        const getInitialAvailableValues = (attrName:string):Immutable.List<TextTypes.AttributeValue> => {
-            const idx = state.ttInitialAvailableValues.findIndex(item => item.name === attrName);
-            if (idx > -1) {
-                return state.ttInitialAvailableValues.get(idx).getValues().map(item => item).toList();
-            }
-            return Immutable.List<TextTypes.AttributeValue>();
+        const getInitialAvailableValues = (attrName:string):Array<TextTypes.AttributeValue> => {
+            const idx = List.findIndex(
+                item => item.name === attrName,
+                state.ttInitialAvailableValues
+            );
+            return idx > -1 ?
+                state.ttInitialAvailableValues[idx].getValues().map(item => item).toArray() :
+                [];
         };
 
-        return state.ttAttributes
-            .filter(item => item.hasUserChanges())
-            .flatMap(item => {
+        return pipe(
+            state.ttAttributes,
+            List.filter(item => item.hasUserChanges()),
+            List.flatMap(item => {
                 const tmp = this.getTtAttribute(state, item.name)
                         .getValues()
                         .filter(item => item.selected)
@@ -405,7 +415,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                         };
                     });
             })
-            .toList();
+        );
     }
 
     private validateRatio(ratio:string):Error|null {
@@ -424,19 +434,16 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         const idx = state.shares.findIndex(item => item.attrName === attrName
                 && item.attrValue === attrValue && item.zeroFixed === false);
         if (idx > -1) {
-            const curr = state.shares.get(idx);
-            state.shares = state.shares.set(idx, {
-                attrName: curr.attrName,
-                attrValue: curr.attrValue,
-                ratio: ratio,
-                baseRatio: curr.baseRatio,
-                zeroFixed: curr.zeroFixed
-            });
+            const curr = state.shares[idx];
+            state.shares[idx] = {
+                ...curr,
+                ratio: ratio
+            };
         }
     }
 
-    getShares(state:SubcMixerModelState):Immutable.List<SubcMixerExpression> {
-        return state.shares.filter(item => item.zeroFixed === false).toList();
+    getShares(state:SubcMixerModelState):Array<SubcMixerExpression> {
+        return state.shares.filter(item => item.zeroFixed === false);
     }
 
     /**
@@ -468,31 +475,39 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
 
     private refreshData(state:SubcMixerModelState):void {
         const availableValues = this.getAvailableValues(state);
-        const numValsPerGroup = availableValues
-            .filter(item => item.isSelected)
-            .reduce(
-                (prev:Immutable.Map<string, number>, curr:TextTypeAttrVal) => {
-                    const ans = prev.has(curr.attrName) ? prev : prev.set(curr.attrName, 0);
-                    return ans.set(curr.attrName, ans.get(curr.attrName) + 1);
+        const numValsPerGroup = pipe(
+            availableValues,
+            List.filter(item => item.isSelected),
+            List.foldl(
+                (prev, curr) => {
+                    if (!Dict.hasKey(curr.attrName, prev)) {
+                        prev[curr.attrName] = 0;
+                    }
+                    prev[curr.attrName] += 1;
+                    return prev;
                 },
-                Immutable.Map<string, number>()
-            );
-        state.shares = availableValues.filter(item => item.isSelected).map<SubcMixerExpression>((item, i, arr) => {
-            const attrVal = state.ttAttributes
-                    .find(val => val.name === item.attrName)
-                    .getValues()
-                    .find(item2 => item2.value == item.attrValue);
-            const total = this.getTtAttrSize(state, item.attrName);
-            return {
-                attrName: item.attrName,
-                attrValue: item.attrValue,
-                ratio: Kontext.newFormValue(
-                    item.isSelected ? this.safeCalcInitialRatio(numValsPerGroup.get(item.attrName), i).toFixed(1) : '0',
-                    true
-                ),
-                baseRatio: attrVal ? (attrVal.availItems / total * 100).toFixed(1) : '?',
-                zeroFixed: !item.isSelected
-            }
-        }).toList();
+                {} as {[key:string]:number}
+            )
+        );
+        state.shares = pipe(
+            availableValues,
+            List.filter(item => item.isSelected),
+            List.map((item, i) => {
+                const attrVal = state.ttAttributes
+                        .find(val => val.name === item.attrName)
+                        .getValues()
+                        .find(item2 => item2.value == item.attrValue);
+                const total = this.getTtAttrSize(state, item.attrName);
+                return {
+                    ...item,
+                    ratio: Kontext.newFormValue(
+                        item.isSelected ? this.safeCalcInitialRatio(numValsPerGroup[item.attrName], i).toFixed(1) : '0',
+                        true
+                    ),
+                    baseRatio: attrVal ? (attrVal.availItems / total * 100).toFixed(1) : '?',
+                    zeroFixed: !item.isSelected
+                };
+            })
+        );
     }
 }
