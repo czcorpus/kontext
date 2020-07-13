@@ -24,6 +24,7 @@ import { Maths } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
 import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
+import { Actions, ActionName } from '../../../models/freqs/actions';
 
 
 interface AlphaLevelSelectProps {
@@ -62,16 +63,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     const MinFreqInput:React.SFC<MinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_CT_SET_MIN_FREQ',
-                payload: {value: evt.target.value}
+            dispatcher.dispatch<Actions.FreqctSetMinFreq>({
+                name: ActionName.FreqctSetMinFreq,
+                payload: {
+                    value: evt.target.value
+                }
             });
         };
 
         const handleTypeChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'FREQ_CT_SET_MIN_FREQ_TYPE',
-                payload: {value: evt.target.value}
+            dispatcher.dispatch<Actions.FreqctFormSetMinFreqType>({
+                name: ActionName.FreqctFormSetMinFreqType,
+                payload: {
+                    value: evt.target.value
+                }
             });
         };
 

@@ -43,7 +43,7 @@ import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
-import { CTFormInputs, CTFormProperties } from '../models/freqs/twoDimension/common';
+import { CTFormInputs, CTFormProperties, CTFreqResultData } from '../models/freqs/twoDimension/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -300,7 +300,7 @@ class FreqPage {
                 );
             break;
             case 'ct':
-                const data = this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>(
+                const data = this.layoutModel.getConf<CTFreqResultData>(
                     'CTFreqResultData'
                 );
                 this.ctFreqModel.initialImportData(data);

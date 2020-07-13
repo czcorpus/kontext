@@ -25,7 +25,7 @@ import { PageModel, DownloadType } from '../../../app/page';
 import { FreqResultResponse } from '../../../types/ajaxResponses';
 import { GeneralFreq2DModel, CTFreqCell, GeneralFreq2DModelState, importAvailAlphaLevels } from './generalDisplay';
 import { MultiDict } from '../../../multidict';
-import { CTFormProperties, roundFloat, FreqFilterQuantities, FreqQuantities } from './common';
+import { CTFormProperties, roundFloat, FreqFilterQuantities, FreqQuantities, CTFreqResultData } from './common';
 import { Actions, ActionName } from '../actions';
 
 /**
@@ -228,25 +228,25 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
         }
     }
 
-    initialImportData(data:FreqResultResponse.CTFreqResultData):void {
+    initialImportData(data:CTFreqResultData):void {
         this.importData(this.state, data);
     }
 
-    protected importData(state:Freq2DFlatViewModelState, data:FreqResultResponse.CTFreqResultData):void {
+    protected importData(state:Freq2DFlatViewModelState, data:CTFreqResultData):void {
         state.fullSize = data.full_size;
         state.origData = List.map(
-            (item, i) => {
-                const confInt = Maths.wilsonConfInterval(item[2], item[3], state.alphaLevel);
+            ([label1, label2, absFreq, total], i) => {
+                const confInt = Maths.wilsonConfInterval(absFreq, total, state.alphaLevel);
                 return {
                     origOrder: i,
-                    val1: item[0],
-                    val2: item[1],
-                    abs: item[2],
-                    absConfInterval: [Math.round(confInt[0] * item[3]), Math.round(confInt[1] * item[3])],
-                    ipm: GeneralFreq2DModel.calcIpm(item),
+                    val1: label1,
+                    val2: label2,
+                    abs: absFreq,
+                    absConfInterval: [Math.round(confInt[0] * total), Math.round(confInt[1] * total)],
+                    ipm: GeneralFreq2DModel.calcIpm(absFreq, total),
                     ipmConfInterval: [roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)],
-                    domainSize: item[3],
-                    pfilter: this.generatePFilter(state, item[0], item[1]),
+                    domainSize: total,
+                    pfilter: this.generatePFilter(state, label1, label2),
                     bgColor: '#FFFFFF'
                 };
             },
@@ -255,8 +255,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
         this.updateData(state);
     }
 
-    private getFreqFetchFn():(c:CTFreqCell)=>number {
-        switch (this.state.minFreqType) {
+    private getFreqFetchFn(state:Freq2DFlatViewModelState):(c:CTFreqCell)=>number {
+        switch (state.minFreqType) {
             case FreqFilterQuantities.ABS:
             case FreqFilterQuantities.ABS_PERCENTILE:
                 return (c:CTFreqCell) => c.abs;
@@ -264,20 +264,20 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             case FreqFilterQuantities.IPM_PERCENTILE:
                 return (c:CTFreqCell) => c.ipm;
             default:
-                throw new Error('Unknown quantity: ' + this.state.minFreqType);
+                throw new Error('Unknown quantity: ' + state.minFreqType);
         }
     }
 
-    createPercentileSortMapping():{[key:string]:number} {
-        const fetchFreq = this.getFreqFetchFn();
-        return pipe(
+    createPercentileSortMapping(state:Freq2DFlatViewModelState):[{[key:string]:number}, number] {
+        const fetchFreq = this.getFreqFetchFn(state);
+        const asList = pipe(
             this.state.origData,
             List.map(x => tuple(x.origOrder, fetchFreq(x))),
             List.filter(x => x !== undefined),
             List.sorted((x1, x2) => x1[1] - x2[1]),
-            List.map((x, i) => tuple(x[0].toFixed(), i)),
-            Dict.fromEntries()
+            List.map((x, i) => tuple(x[0].toFixed(), i))
         );
+        return tuple(Dict.fromEntries(asList), List.size(asList));
     }
 
     exportData():FormatConversionExportData {

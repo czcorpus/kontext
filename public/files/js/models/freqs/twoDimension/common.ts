@@ -19,6 +19,7 @@
  */
 
 import { Kontext } from '../../../types/common';
+import { AjaxConcResponse } from '../../concordance/common';
 
 export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
     if (x1.label < x2.label) {
@@ -114,4 +115,35 @@ export const enum AlignTypes {
 export const enum Dimensions {
     FIRST = 1,
     SECOND = 2
+}
+
+
+
+export type CTFreqResultItem = [string, string, number, number];
+
+export interface CTFreqResultData {
+    data: Array<CTFreqResultItem>;
+    full_size:number;
+}
+
+export interface CTFreqResultResponse extends AjaxConcResponse {
+    data:CTFreqResultData;
+    attr1:string;
+    attr2:string;
+    ctfreq_form_args:{
+        ctattr1:string;
+        ctattr2:string;
+        ctfcrit1:string;
+        ctfcrit2:string;
+        ctminfreq:string
+    };
+}
+
+export interface CTFreqResultDummyResponse {
+    data:CTFreqResultData;
+    isDummy:true;
+}
+
+export function isDummyResponse(v:CTFreqResultResponse|CTFreqResultDummyResponse):v is CTFreqResultDummyResponse {
+    return v['isDummy'] === true;
 }

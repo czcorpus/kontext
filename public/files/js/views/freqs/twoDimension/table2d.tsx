@@ -598,20 +598,15 @@ export function init(
     /**
      *
      */
-    class CTCell extends React.PureComponent<CTCellProps> {
+    const CTCell:React.SFC<CTCellProps> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.handleItemClick = this.handleItemClick.bind(this);
-        }
-
-        getValue() {
-            if (this.isNonEmpty()) {
-                switch (this.props.quantity) {
+        const getValue = () => {
+            if (isNonEmpty()) {
+                switch (props.quantity) {
                     case FreqQuantities.IPM:
-                        return formatIpm(this.props.data.ipm);
+                        return formatIpm(props.data.ipm);
                     case FreqQuantities.ABS:
-                        return he.formatNumber(this.props.data.abs, 0);
+                        return he.formatNumber(props.data.abs, 0);
                     default:
                         return NaN;
                 }
@@ -619,39 +614,35 @@ export function init(
             } else {
                 return '';
             }
-        }
+        };
 
-        isNonEmpty() {
+        const isNonEmpty = () => {
             const v = (() => {
-                switch (this.props.quantity) {
+                switch (props.quantity) {
                     case 'ipm':
-                        return this.props.data ? this.props.data.ipm : 0;
+                        return props.data ? props.data.ipm : 0;
                     case 'abs':
-                        return this.props.data ? this.props.data.abs : 0;
+                        return props.data ? props.data.abs : 0;
                     default:
                         return NaN;
                 }
             })();
             return v > 0;
-        }
+        };
 
-        handleItemClick() {
-            this.props.onClick();
-        }
+        const shouldWarn = () => {
+            if (props.quantity === 'ipm') {
+                return props.data.ipmConfInterval[0] <= props.confIntervalLeftMinWarn;
 
-        shouldWarn() {
-            if (this.props.quantity === 'ipm') {
-                return this.props.data.ipmConfInterval[0] <= this.props.confIntervalLeftMinWarn;
-
-            } else if (this.props.quantity === 'abs') {
-                return this.props.data.absConfInterval[0] <= this.props.confIntervalLeftMinWarn;
+            } else if (props.quantity === 'abs') {
+                return props.data.absConfInterval[0] <= props.confIntervalLeftMinWarn;
             }
             return false;
-        }
+        };
 
-        renderWarning() {
-            if (this.shouldWarn()) {
-                const linkStyle = {color: pipe(this.props.data.bgColor, Color.importColor(1), Color.textColorFromBg(), Color.color2str())}
+        const renderWarning = () => {
+            if (shouldWarn()) {
+                const linkStyle = {color: pipe(props.data.bgColor, Color.importColor(1), Color.textColorFromBg(), Color.color2str())}
                 return <strong className="warn" style={linkStyle}
                                 title={he.translate('freq__ct_conf_interval_too_uncertain')}>
                             {'\u00a0'}
@@ -662,45 +653,36 @@ export function init(
             }
         }
 
-        shouldComponentUpdate(nextProps, nextState) {
-            return this.props.data !== nextProps.data || this.props.attr1 !== nextProps.attr1 ||
-                    this.props.attr2 !== nextProps.attr2 ||
-                    this.props.confIntervalLeftMinWarn !== nextProps.confIntervalLeftMinWarn ||
-                    this.props.quantity !== nextProps.quantity || this.props.isHighlighted !== nextProps.isHighlighted;
-        }
-
-        render() {
-            if (this.isNonEmpty()) {
-                const bgStyle = {};
-                const linkStyle = {};
-                const tdClasses = ['data-cell'];
-                if (this.props.isHighlighted) {
-                    tdClasses.push('highlighted');
-
-                } else {
-                    bgStyle['backgroundColor'] = this.props.data.bgColor;
-                    linkStyle['color'] = pipe(this.props.data.bgColor, Color.importColor(1), Color.textColorFromBg(), Color.color2str());
-                }
-                return (
-                    <td className={tdClasses.join(' ')} style={bgStyle}>
-                        {this.renderWarning()}
-                        <a onClick={this.handleItemClick} style={linkStyle}
-                                title={he.translate('freq__ct_click_for_details')}>
-                            {this.getValue()}
-                        </a>
-                        {this.props.isHighlighted ? <CTCellMenu onClose={this.props.onClose}
-                                                            data={this.props.data}
-                                                            attr1={this.props.attr1}
-                                                            label1={this.props.label1}
-                                                            attr2={this.props.attr2}
-                                                            label2={this.props.label2}
-                                                            canProvideIpm={this.props.canProvideIpm} /> : null}
-                    </td>
-                );
+        if (isNonEmpty()) {
+            const bgStyle = {};
+            const linkStyle = {};
+            const tdClasses = ['data-cell'];
+            if (props.isHighlighted) {
+                tdClasses.push('highlighted');
 
             } else {
-                return <td className="empty-cell" />;
+                bgStyle['backgroundColor'] = props.data.bgColor;
+                linkStyle['color'] = pipe(props.data.bgColor, Color.importColor(1), Color.textColorFromBg(), Color.color2str());
             }
+            return (
+                <td className={tdClasses.join(' ')} style={bgStyle}>
+                    {renderWarning()}
+                    <a onClick={props.onClick} style={linkStyle}
+                            title={he.translate('freq__ct_click_for_details')}>
+                        {getValue()}
+                    </a>
+                    {props.isHighlighted ? <CTCellMenu onClose={props.onClose}
+                                                        data={props.data}
+                                                        attr1={props.attr1}
+                                                        label1={props.label1}
+                                                        attr2={props.attr2}
+                                                        label2={props.label2}
+                                                        canProvideIpm={props.canProvideIpm} /> : null}
+                </td>
+            );
+
+        } else {
+            return <td className="empty-cell" />;
         }
     };
 
@@ -959,10 +941,8 @@ export function init(
     };
 
 
-    /**
-     *
-     * @param {*} props
-     */
+    // ------------------------- <CTDataTable /> --------------------------------------
+
     const CTDataTable = (props) => {
         if (!props.isEmpty) {
             return <CTFullDataTable {...props} />
@@ -972,11 +952,8 @@ export function init(
         }
     }
 
+    // ------------------------- <WaitingAnim /> --------------------------------------
 
-    /**
-     *
-     * @param {*} props
-     */
     const WaitingAnim = (props) => {
         return (
              <table className="ct-data">
@@ -1040,7 +1017,7 @@ export function init(
             });
         }
 
-        _highlightItem(i, j) {
+        _highlightItem(i:number, j:number) {
             dispatcher.dispatch<Actions.FreqctHighlight2DCoord>({
                 name: ActionName.FreqctHighlight2DCoord,
                 payload: {

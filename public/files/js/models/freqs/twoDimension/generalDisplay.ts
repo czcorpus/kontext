@@ -121,8 +121,8 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
         this.pageModel = pageModel;
     }
 
-    static calcIpm(v:FreqResultResponse.CTFreqResultItem) {
-        return Math.round(v[2] / v[3] * 1e6 * 100) / 100;
+    static calcIpm(absFreq:number, totalSize:number) {
+        return Math.round(absFreq / totalSize * 1e6 * 100) / 100;
     }
 
     /**
@@ -130,8 +130,11 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
      * import to indices within sorted list of these items according
      * to the current freq. mode (ipm, abs). This is used when filtering
      * values by percentile.
+     * Because the original order may be same for some items, it is
+     * also necessary to return the actual number of items before
+     * the mapping is created (where multiple values per key are lost).
      */
-    abstract createPercentileSortMapping():{[key:string]:number};
+    abstract createPercentileSortMapping(state:GeneralFreq2DModelState):[{[key:string]:number}, number];
 
 
     /**
@@ -146,8 +149,8 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
                 return (v:CTFreqCell) => v && v.ipm >= minFreq;
             case FreqFilterQuantities.ABS_PERCENTILE:
             case FreqFilterQuantities.IPM_PERCENTILE:
-                const sortMap = this.createPercentileSortMapping();
-                const emptyItemsRatio = 1 - sortMap.size / state.fullSize;
+                const [sortMap, origSize] = this.createPercentileSortMapping(state);
+                const emptyItemsRatio = 1 - origSize / state.fullSize;
                 return (v:CTFreqCell) => {
                     return v && sortMap[v.origOrder] / state.fullSize + emptyItemsRatio >= minFreq / 100;
                 }

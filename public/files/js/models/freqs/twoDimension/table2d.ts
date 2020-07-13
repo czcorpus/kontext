@@ -27,7 +27,7 @@ import { MultiDict } from '../../../multidict';
 import { GeneralFreq2DModel, CTFreqCell, importAvailAlphaLevels, GeneralFreq2DModelState } from './generalDisplay';
 import { DataPoint, ConfIntervals } from '../../../charts/confIntervals';
 import { CTFreqServerArgs } from '../common';
-import { CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities } from './common';
+import { CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities, CTFreqResultDummyResponse, CTFreqResultResponse, CTFreqResultData, isDummyResponse } from './common';
 import { Actions,  ActionName } from '../actions';
 
 /**
@@ -66,37 +66,26 @@ export interface TableInfo {
  * 2d data table. Returns a new instance.
  */
 const filterDataTable = (t:Data2DTable, cond:(cell:CTFreqCell)=>boolean):Data2DTable => {
-    const ans:Data2DTable = {};
-    for (let k1 in t) {
-        for (let k2 in t[k1]) {
-            if (ans[k1] === undefined) {
-                ans[k1] = {};
-            }
-            if (cond(t[k1][k2])) {
-                ans[k1][k2] = t[k1][k2];
-
-            } else {
-                ans[k1][k2] = undefined;
-            }
-        }
-    }
-    return ans;
+    return Dict.map(
+        col => Dict.map(
+            cell => cond(cell) ? cell : undefined,
+            col
+        ),
+        t
+    );
 };
 
 /**
  * An implementation of MAP for 2d data table. Returns a new instance.
  */
 const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTable => {
-    const ans:Data2DTable = {};
-    for (let k1 in t) {
-        for (let k2 in t[k1]) {
-            if (ans[k1] === undefined) {
-                ans[k1] = {};
-            }
-            ans[k1][k2] = t[k1][k2] !== undefined ? fn(t[k1][k2]) : undefined;
-        }
-    }
-    return ans;
+    return Dict.map(
+        col => Dict.map(
+            cell => cell ? fn(cell) : undefined,
+            col
+        ),
+        t
+    );
 };
 
 /**
@@ -104,20 +93,19 @@ const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTab
  * on existing 2d table and returns a 1d list.
  */
 const mapDataTableAsList = <T>(t:Data2DTable, fn:(cell:CTFreqCell)=>T):Array<T> => {
-    const ans:Array<T> = [];
-    for (let k1 in t) {
-        for (let k2 in t[k1]) {
-            ans.push(t[k1][k2] !== undefined ? fn(t[k1][k2]) : undefined);
-        }
-    }
-    return ans;
+    return pipe(
+        t,
+        Dict.toEntries(),
+        List.flatMap(([k, v]) => Dict.toEntries(v)),
+        List.map(([,v]) => v ? fn(v) : undefined)
+    );
 };
 
 /**
  * Available color mappings for 2d data table cells.
  */
 export const enum ColorMappings {
-    LINEAR = "linear",
+    LINEAR = 'linear',
     PERCENTILE = "percentile"
 }
 
@@ -177,7 +165,7 @@ export interface Freq2DTableModelState extends GeneralFreq2DModelState {
 
     isWaiting:boolean;
 
-    onNewDataHandlers:Array<(data:FreqResultResponse.CTFreqResultData)=>void>;
+    onNewDataHandlers:Array<(data:CTFreqResultData)=>void>;
 
     highlightedGroup:[number, number];
 
@@ -249,7 +237,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             ActionName.FreqctFormSetMinFreqType,
             action => {
                 this.changeState(state =>  {
-                    state.minFreqType = action.payload['value'];
+                    state.minFreqType = action.payload.value;
                     state.isWaiting = true;
                 });
                 this.waitAndReload(true);
@@ -310,7 +298,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             action => {
                 this.changeState(state => {
                     state.displayQuantity = action.payload.value;
-                    state.data = this.recalcHeatmap();
+                    this.recalcHeatmap(state);
                 });
             }
         );
@@ -320,7 +308,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             action => {
                 this.changeState(state => {
                     state.colorMapping = action.payload.value;
-                    state.data = this.recalcHeatmap();
+                    this.recalcHeatmap(state);
                 });
             }
         );
@@ -330,6 +318,15 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             action => {
                 this.changeState(state => {
                     state.highlightedGroup = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.FreqctHighlight2DCoord>(
+            ActionName.FreqctHighlight2DCoord,
+            action =>  {
+                this.changeState(state => {
+                    state.highlightedCoord = action.payload.coord
                 });
             }
         );
@@ -358,6 +355,9 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
     }
 
     private waitAndReload(resetServerMinFreq:boolean):void {
+
+        const mustLoadDueToLimit = () => parseInt(this.state.minFreq, 10) < this.state.serverMinFreq || this.state.serverMinFreq === null;
+
         if (this.throttleTimeout) {
             window.clearTimeout(this.throttleTimeout);
         }
@@ -369,16 +369,24 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
                     }
                     state.isWaiting = true;
                 });
-
-                (this.mustLoadDueToLimit() ? this.fetchData() : rxOf(null)).subscribe(
-                    (data) => {
+                const data$:Observable<CTFreqResultResponse|CTFreqResultDummyResponse> = mustLoadDueToLimit() ?
+                    this.fetchData() :
+                    rxOf<CTFreqResultDummyResponse>({
+                        data: {
+                            data: [],
+                            full_size: 0
+                        },
+                        isDummy: true
+                    });
+                data$.subscribe(
+                    data => {
                         this.changeState(state => {
-                            if (data !== null) {
-                                state.serverMinFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
-                                this.importData(state, data.data);
+                            if (isDummyResponse(data)) {
+                                this.updateLocalData(state);
 
                             } else {
-                                this.updateLocalData(state);
+                                state.serverMinFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
+                                this.importData(state, data.data);
                             }
                             state.isWaiting = false;
                         });
@@ -416,7 +424,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         }
     }
 
-    getRowSum(state:Freq2DTableModelState, attrVal:string):{ipm:number; abs:number} {
+    private getRowSum(state:Freq2DTableModelState, attrVal:string):{ipm:number; abs:number} {
         const d = state.data[attrVal];
         let sumIpm = 0;
         let sumAbs = 0;
@@ -427,7 +435,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         return {ipm: sumIpm, abs: sumAbs};
     }
 
-    getColSum(state:Freq2DTableModelState, attrVal:string):{ipm:number; abs:number} {
+    private getColSum(state:Freq2DTableModelState, attrVal:string):{ipm:number; abs:number} {
         let sumIpm = 0;
         let sumAbs = 0;
         for (let k in state.data) {
@@ -444,15 +452,10 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
      * @param quantity either 'ipm', 'abs' or 'attr'
      * @param vector either 'col' or 'row'
      */
-    sortLabels(items:Array<[string, boolean]>, quantity:string, vector:string):Array<[string, boolean]> {
-        const sumFn:(v:string)=>{ipm:number; abs:number} = (() => {
-            switch (vector) {
-            case 'row':
-                return this.getRowSum.bind(this);
-            case 'col':
-                return this.getColSum.bind(this);
-            }
-        })();
+    sortLabels(state:Freq2DTableModelState, dim:Dimensions):void {
+        const sumFn:(v:string)=>{ipm:number; abs:number} = dim === Dimensions.FIRST ?
+            this.getRowSum.bind(this, state) : this.getColSum.bind(this, state);
+        const quantity = dim === Dimensions.FIRST ? state.sortDim1 : state.sortDim2;
         const cmpValFn:(v1:string, v2:string)=>number = (() => {
             switch (quantity) {
             case 'ipm':
@@ -463,20 +466,28 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
                 return (v1, v2) => v1.localeCompare(v2)
             }
         })();
-        const v = quantity === 'attr' ? 1 : -1;
-        return List.sorted((x1, x2) => cmpValFn(x1[0], x2[0]), items);
+        const sortFn = List.sorted<[string, boolean]>((x1, x2) => cmpValFn(x1[0], x2[0]));
+        if (dim === Dimensions.FIRST) {
+            state.d1Labels = sortFn(state.d1Labels);
+
+        } else {
+            state.d2Labels = sortFn(state.d2Labels);
+        }
     }
 
-    createPercentileSortMapping():{[key:string]:number} {
-        const fetchFreq = this.getFreqFetchFn();
-        const data = mapDataTableAsList(this.state.origData, x => tuple(x.origOrder, fetchFreq(x)));
-        return pipe(
+    createPercentileSortMapping(state:Freq2DTableModelState):[{[key:string]:number}, number] {
+        const fetchFreq = this.getFreqFetchFn(state);
+        const data = mapDataTableAsList(state.origData, x => tuple(x.origOrder, fetchFreq(x)));
+        const asList = pipe(
             data,
             List.filter(x => x !== undefined),
-            List.sortedBy(([k, v]) => v),
+            List.sortedBy(([,v]) => v),
             List.map(([x,], i) => tuple(x.toFixed(), i)),
-            Dict.fromEntries()
-        )
+        );
+        return tuple(
+            Dict.fromEntries(asList),
+            List.size(asList)
+        );
     }
 
     static getTableInfo(state:Freq2DTableModelState):TableInfo {
@@ -503,13 +514,9 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             state.d1Labels = state.d1Labels.map<[string, boolean]>(x => [x[0], true]);
             state.d2Labels = state.d2Labels.map<[string, boolean]>(x => [x[0], true]);
         }
-        state.d1Labels = this.sortLabels(state.d1Labels, state.sortDim1, 'row');
-        state.d2Labels = this.sortLabels(state.d2Labels, state.sortDim2, 'col');
-        this.recalcHeatmap();
-    }
-
-    private mustLoadDueToLimit():boolean {
-        return parseInt(this.state.minFreq, 10) < this.state.serverMinFreq || this.state.serverMinFreq === null;
+        this.sortLabels(state, Dimensions.FIRST);
+        this.sortLabels(state, Dimensions.SECOND);
+        this.recalcHeatmap(state);
     }
 
     private transposeTable(state:Freq2DTableModelState):void {
@@ -559,7 +566,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
     }
 
 
-    private resetData(state:Freq2DTableModelState):void {
+    private resetData(state:Freq2DTableModelState):void { // TODO do we need this?
         state.data = state.origData;
     }
 
@@ -574,10 +581,10 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         return args;
     }
 
-    private fetchData():Observable<FreqResultResponse.CTFreqResultResponse> {
+    private fetchData():Observable<CTFreqResultResponse> {
         const args = this.getSubmitArgs();
         args.set('format', 'json');
-        return this.pageModel.ajax$<FreqResultResponse.CTFreqResultResponse>(
+        return this.pageModel.ajax$<CTFreqResultResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('freqct'),
             args
@@ -620,92 +627,115 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         );
     }
 
-    initialImportData(data:FreqResultResponse.CTFreqResultData):void {
+    /**
+     * Import data and update initial state. Please note that
+     * this won't work once you change the state via any action
+     * (runtime error will be thrown).
+     */
+    initialImportData(data:CTFreqResultData):void {
         this.importData(this.state, data);
     }
 
-    protected importData(state:Freq2DTableModelState, data:FreqResultResponse.CTFreqResultData):void {
+    protected importData(state:Freq2DTableModelState, data:CTFreqResultData):void {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
         const tableData:Data2DTable = {};
 
         state.fullSize = data.full_size;
-        data.data.forEach((item, i) => {
-            d1Labels[item[0]] = true;
-            d2Labels[item[1]] = true;
-
-            if (tableData[item[0]] === undefined) {
-                tableData[item[0]] = {};
+        let origOrder = 0;
+        let prevAbs = 0;
+        data.data.forEach(([label1, label2, absFreq, total]) => {
+            d1Labels[label1] = true;
+            d2Labels[label2] = true;
+            if (absFreq > prevAbs) {
+                origOrder += 1;
             }
-            const ipm = GeneralFreq2DModel.calcIpm(item);
-            const confInt = Maths.wilsonConfInterval(item[2], item[3], state.alphaLevel);
-            tableData[item[0]][item[1]] = {
-                origOrder: i,
+            prevAbs = absFreq;
+
+            if (tableData[label1] === undefined) {
+                tableData[label1] = {};
+            }
+            const ipm = GeneralFreq2DModel.calcIpm(absFreq, total);
+            const confInt = Maths.wilsonConfInterval(absFreq, total, state.alphaLevel);
+            tableData[label1][label2] = {
+                origOrder: origOrder,
                 ipm: ipm,
                 ipmConfInterval: [roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)],
-                abs: item[2],
-                absConfInterval: [Math.round(confInt[0] * item[3]), Math.round(confInt[1] * item[3])],
-                domainSize: item[3],
+                abs: absFreq,
+                absConfInterval: [Math.round(confInt[0] * total), Math.round(confInt[1] * total)],
+                domainSize: total,
                 bgColor: '#FFFFFF',
-                pfilter: this.generatePFilter(state, item[0], item[1])
+                pfilter: this.generatePFilter(state, label1, label2)
             };
+
         });
-        state.d1Labels = Object.keys(d1Labels).sort().map(x => [x, true]);
+        state.d1Labels = pipe(
+            d1Labels,
+            Dict.keys(),
+            List.sortedAlphaBy(x => x),
+            List.map(x => tuple<string, boolean>(x, true))
+        );
         state.d2Labels = Object.keys(d2Labels).sort().map(x => [x, true]);
         state.origData = tableData;
         this.updateLocalData(state);
+
     }
 
-    private getFreqFetchFn():(c:CTFreqCell)=>number {
-        switch (this.state.minFreqType) {
+    private getFreqFetchFn(state:Freq2DTableModelState):(c:CTFreqCell)=>number {
+        switch (state.minFreqType) {
             case FreqFilterQuantities.ABS:
+            case FreqFilterQuantities.ABS_PERCENTILE:
                 return (c:CTFreqCell) => c.abs;
             case FreqFilterQuantities.IPM:
+            case FreqFilterQuantities.IPM_PERCENTILE:
                 return (c:CTFreqCell) => c.ipm;
             default:
-                throw new Error('Unknown quantity: ' + this.state.minFreqType);
+                throw new Error('Unknown quantity: ' + state.minFreqType);
         }
     }
 
-    private recalcHeatmap():Data2DTable {
-        const fetchFreq = this.getFreqFetchFn();
-        const dataList = mapDataTableAsList(this.state.data, x => tuple(x.origOrder, fetchFreq(x)));
+    private recalcHeatmap(state:Freq2DTableModelState):void {
+        const fetchFreq = this.getFreqFetchFn(state);
+        const dataList = mapDataTableAsList(state.data, x => tuple(x.origOrder, fetchFreq(x)));
         if (!dataList.find(x => x !== undefined)) {
             return;
         }
-        let fMin = dataList.length > 0 ? dataList.find(x => x !== undefined)[1] : null;
-        let fMax = dataList.length > 0 ? dataList.find(x => x !== undefined)[1] : null;
-        dataList.filter(x => x !== undefined).forEach(item => {
-            if (item[1] > fMax) {
-                fMax = item[1];
-            }
-            if (item[1] < fMin) {
-                fMin = item[1];
-            }
-        });
+        const [,fMax] = pipe(
+            dataList,
+            List.filter(x => x !== undefined),
+            List.maxItem(([,v2]) => v2)
+        );
+        const [,fMin] = pipe(
+            dataList,
+            List.filter(x => x !== undefined),
+            List.maxItem(([,v2]) => -v2)
+        );
 
         const mappingFunc:(c:CTFreqCell)=>string = (() => {
             const a = Freq2DTableModel.COLOR_HEATMAP.length - 1;
-            if (this.state.colorMapping === ColorMappings.LINEAR) {
+            if (state.colorMapping === ColorMappings.LINEAR) {
                 return (c:CTFreqCell) => Freq2DTableModel.COLOR_HEATMAP[~~Math.floor((fetchFreq(c) - fMin) * a / (fMax - fMin))];
 
 
-            } else if (this.state.colorMapping === ColorMappings.PERCENTILE) {
-                const ordered = pipe(
+            } else if (state.colorMapping === ColorMappings.PERCENTILE) {
+                const orderedAsList = pipe(
                     dataList,
                     List.filter(x => x !== undefined),
-                    List.sorted((x1, x2) => x1[1] - x2[1]),
+                    List.sortedBy(([,freq]) => freq),
                     List.map(([k,], i) => tuple(k.toFixed(), i)),
-                    Dict.fromEntries()
                 );
-                return (c:CTFreqCell) => Freq2DTableModel.COLOR_HEATMAP[~~Math.floor(ordered[c.origOrder] * (a + 1) / Dict.size(ordered))];
+                const numOrdered = List.size(orderedAsList); // we must preserve this to keep correct size as...
+                const ordered = Dict.fromEntries(orderedAsList); // ... now we loose some size due to non-unique "origOrder"
+                return (c:CTFreqCell) => {
+                    return Freq2DTableModel.COLOR_HEATMAP[~~Math.floor(ordered[c.origOrder] * (a + 1) / numOrdered)];
+                }
 
             } else {
                 throw new Error('Falied to define mapping func');
             }
         })();
 
-        return mapDataTable(this.state.data, item => ({
+        state.data = mapDataTable(state.data, item => ({
             ...item,
             bgColor: mappingFunc(item)
         }));
