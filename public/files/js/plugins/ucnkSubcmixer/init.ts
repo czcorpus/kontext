@@ -17,10 +17,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import * as Immutable from 'immutable';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as viewInit} from './view';
-import { SubcMixerModel, SubcMixerExpression } from './model';
+
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { init as viewInit } from './view';
+import { SubcMixerModel } from './model';
 import { Kontext } from '../../types/common';
 
 declare var require:any;
@@ -57,11 +57,11 @@ const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, co
         pluginApi.dispatcher(),
         pluginApi,
         {
-            ttAttributes: textTypesModel.getAttributes(),
-            ttInitialAvailableValues: textTypesModel.getInitialAvailableValues(),
+            ttAttributes: textTypesModel.getAttributes().toArray(),
+            ttInitialAvailableValues: textTypesModel.getInitialAvailableValues().toArray(),
             currentSubcname: Kontext.newFormValue('', true),
-            shares: Immutable.List<SubcMixerExpression>(),
-            alignedCorpora: Immutable.List<string>(),
+            shares: [],
+            alignedCorpora: [],
             corpusIdAttr: corpusIdAttr,
             currentResult: null,
             ratioLimit: WARNING_SIZE_ERROR_RATIO,
@@ -70,7 +70,7 @@ const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, co
             numOfErrors: 0,
             subcIsPublic: false,
             subcDescription: Kontext.newFormValue('', false),
-            liveattrsSelections:Immutable.Map<string, Immutable.List<string>>()
+            liveattrsSelections: {}
         }
     );
     return new SubcmixerPlugin(pluginApi, model);
