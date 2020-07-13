@@ -239,6 +239,7 @@ export class SubcorpForm {
                 this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
                 {
                     itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                        /* TODO !!!!!!
                         return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
                             tap(
                                 () => {
@@ -260,6 +261,7 @@ export class SubcorpForm {
                                 }
                             )
                         );
+                        */
                     }
                 }
             );

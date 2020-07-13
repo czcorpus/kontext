@@ -44,7 +44,7 @@ import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/main
 import { AppNavigation, AjaxArgs, ICorpusSwitchSerializable } from './navigation';
 import { EmptyPlugin } from '../plugins/empty/init';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../models/mainMenu/actions';
-import { Actions as QueryActions, ActionName as QueryActionName, ActionName } from '../models/query/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName, ActionName } from '../models/common/actions';
 import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
@@ -210,22 +210,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      */
     registerTask(task:Kontext.AsyncTaskInfo):void {
         this.asyncTaskChecker.registerTask(task);
-    }
-
-    /**
-     * Change the current corpus used by KonText. Please note
-     * that this basically reinitializes all the page's model
-     * and views (both layout and page init() method are called
-     * again).
-     *
-     * A concrete page must ensure that its init() is also called
-     * as a promise chained after the one returned by this method.
-     *
-     * @param corpora - a primary corpus plus possible aligned corpora
-     * @param subcorpus - an optional subcorpus
-     */
-    switchCorpus(corpora:Array<string>, subcorpus?:string):Observable<any> {
-        return this.appNavig.switchCorpus(corpora, subcorpus);
     }
 
     /**
@@ -668,24 +652,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         return ans !== undefined ? ans : dflt;
     }
 
-    restoreModelsDataAfterSwitch():void {
-        /* TODO !!!!
-        this.appNavig.forEachCorpSwitchSerializedItem((key, data) => {
-            console.log('foreach ', key, data);
-            this.dispatcher.dispatch<QueryActions.CorpusSwitchModelRestore>({
-                name: ActionName.CorpusSwitchModelRestore,
-                payload: {
-                    key,
-                    data,
-                    prevCorpora: this.appNavig.getSwitchCorpPreviousCorpora(),
-                    currCorpora: [this.getCorpusIdent().id].concat(
-                        this.getConf<Array<string>>('alignedCorpora'))
-                }
-            });
-        });
-        */
-    }
-
     openWebSocket(args:MultiDict):WebSocket|null {
         if (window['WebSocket'] !== undefined && this.getConf('webSocketUrl')) {
             const ans = new WebSocket(this.getConf('webSocketUrl') + '?' +
@@ -708,8 +674,14 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         this.generalViewOptionsModel.unregister();
     }
 
-    registerCorpusSwitchAwareModel<T>(model:ICorpusSwitchSerializable<T>):void {
-        this.appNavig.registerCorpusSwitchAwareModel(model);
+    registerCorpusSwitchAwareModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}>>):void {
+        this.appNavig.registerCorpusSwitchAwareModels(
+            () => {
+                this.unregisterAllModels();
+                onDone();
+            },
+            ...models
+        );
     }
 
     /**

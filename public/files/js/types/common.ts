@@ -148,13 +148,6 @@ export namespace Kontext {
         foreignSubcorp?:boolean;
     }
 
-    /**
-     * A general click action performed on featured/favorite/searched item
-     */
-    export interface CorplistItemClick {
-        (corpora:Array<string>, subcorpId:string):Observable<any>;
-    }
-
     export interface ICorpusInfoModel extends IEventEmitter {
         getCurrentInfoData():any; // TODO
         isLoading():boolean;

@@ -258,6 +258,14 @@ export namespace PluginInterfaces {
 
     export namespace Corparch {
 
+
+        /**
+         * A general click action performed on featured/favorite/searched item
+         */
+        export interface CorplistItemClick {
+            (corpora:Array<string>, subcorpId:string):void;
+        }
+
         export type WidgetView = React.ComponentClass<{}>;
 
         /**

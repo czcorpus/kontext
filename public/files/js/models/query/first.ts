@@ -527,7 +527,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore<FirstQueryFormModelState>>(
+        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
             action => {
                 this.restoreFromCorpSwitch(action.payload);
@@ -584,10 +584,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.emitChange();
     }
 
-    private restoreFromCorpSwitch(
-            payload:CorpusSwitchModelRestorePayload<FirstQueryFormModelState>):void {
-        if (payload.key === this.csGetStateKey()) {
-            this.state = {...payload.data};
+    private restoreFromCorpSwitch(payload:CorpusSwitchModelRestorePayload):void {
+        const data = payload.data[this.csGetStateKey()] as FirstQueryFormModelState;
+        console.log('p: ', payload);
+        if (data) {
+            console.log('data: ', data);
+            this.state.queries[List.head(payload.currCorpora)] = data.queries[List.head(payload.prevCorpora)];
             this.state.supportedWidgets = determineSupportedWidgets(
                 this.state.corpora,
                 this.state.queryTypes,
@@ -622,7 +624,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     csGetStateKey():string {
-        return 'query-storage';
+        return 'FirstQueryFormModelState';
     }
 
     getActiveWidget(sourceId:string):string {
