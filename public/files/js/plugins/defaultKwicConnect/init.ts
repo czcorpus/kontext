@@ -24,6 +24,7 @@ import {init as viewInit, View} from './views';
 import {init as renderersInit, Views as RenderersView} from './renderers';
 import {KwicConnectModel, KnownRenderers} from './model';
 import { IConcLinesProvider } from '../../types/concordance';
+import { List } from 'cnc-tskit';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -47,8 +48,10 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
         this.model = new KwicConnectModel({
             dispatcher: pluginApi.dispatcher(),
             pluginApi: pluginApi,
-            corpora: [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
-                    .concat(...pluginApi.getConf<Array<string>>('alignedCorpora')),
+            corpora: List.concat(
+                pluginApi.getConf<Array<string>>('alignedCorpora'),
+                [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
+            ),
             mainCorp: 'maincorp' in concArgs ? concArgs['maincorp'] : concArgs['corpname'],
             rendererMap: this.selectRenderer.bind(this),
             concLinesProvider: concLinesProvider,
