@@ -29,7 +29,7 @@ export enum ActionName {
     SwitchCorpus = 'SWITCH_CORPUS',
     SwitchCorpusReady = 'SWITCH_CORPUS_READY',
     SwitchCorpusDone = 'SWITCH_CORPUS_DONE',
-    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
+    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE'
 }
 
 export interface CorpusSwitchModelRestorePayload {

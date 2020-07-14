@@ -23,6 +23,7 @@ import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { AjaxError } from 'rxjs/ajax';
+import { List } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
 import { Kontext } from '../types/common';
@@ -41,16 +42,16 @@ import { L10n } from './l10n';
 import { AsyncTaskChecker, AsyncTaskStatus } from '../models/asyncTask';
 import { UserSettings } from './userSettings';
 import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu';
-import { AppNavigation, AjaxArgs, ICorpusSwitchSerializable } from './navigation';
+import { AppNavigation } from './navigation';
 import { EmptyPlugin } from '../plugins/empty/init';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../models/mainMenu/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName, ActionName } from '../models/common/actions';
 import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
-import { List } from 'cnc-tskit';
+import { ICorpusSwitchSerializable } from '../models/common/corpusSwitch';
+import { IPageLeaveVoter } from '../models/common/pageLeave';
 
 
 export enum DownloadType {
@@ -223,7 +224,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * @param args Parameters to be passed along with request
      * @param options Additional settings
      */
-    ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
+    ajax$<T>(method:string, url:string, args:Kontext.AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
         return this.appNavig.ajax$<T>(method, url, args, options);
     }
 
@@ -233,7 +234,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * @param url
      * @param args
      */
-    bgDownload(filename:string, type:DownloadType, url:string, args?:AjaxArgs):void {
+    bgDownload(filename:string, type:DownloadType, url:string, args?:Kontext.AjaxArgs):void {
         const taskId = `${new Date().getTime()}:${url}`;
         const method = () => {
             if (type === DownloadType.FREQ2D) {
@@ -682,6 +683,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             },
             ...models
         );
+    }
+
+    registerPageLeaveVoters(...models:Array<IPageLeaveVoter<{}>>):void {
+        this.appNavig.registerPageLeaveVoters(...models);
     }
 
     /**

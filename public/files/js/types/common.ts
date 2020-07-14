@@ -347,6 +347,18 @@ export namespace Kontext {
         encodeURLParameters<T>(params:IMultiDict<T>):string
     }
 
+    /**
+     * Possible types for PageModel's ajax method request args
+     */
+    export type AjaxArgs = IMultiDict|{[key:string]:any}|string;
+
+    /**
+     *
+     */
+    export interface IAjaxHandler {
+        ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Observable<T>;
+    }
+
     export interface IHistory {
         pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any,
             title?:string):void;

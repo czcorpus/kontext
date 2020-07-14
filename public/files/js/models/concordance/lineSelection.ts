@@ -26,10 +26,13 @@ import { Kontext } from '../../types/common';
 import { ConcLinesStorage } from './selectionStorage';
 import { PageModel } from '../../app/page';
 import { HTTP, List } from 'cnc-tskit';
-import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse, LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse, ConcServerArgs } from './common';
+import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse,
+    LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse, ConcServerArgs
+} from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as UserInfoActions, ActionName as UserInfoActionName } from '../user/actions';
 import { MultiDict } from '../../multidict';
+import { IPageLeaveVoter } from '../common/pageLeave';
 
 
 interface ReenableEditResponse extends AjaxConcResponse {
@@ -79,7 +82,6 @@ export interface LineSelectionModelArgs {
     layoutModel:PageModel;
     dispatcher:IFullActionControl;
     clStorage:ConcLinesStorage<LineSelectionModelState>;
-    onLeavePage:()=>void;
 }
 
 /**
@@ -88,7 +90,7 @@ export interface LineSelectionModelArgs {
  * - binary (checked/unchecked)
  * - categorical (0,1,2,3,4)
  */
-export class LineSelectionModel extends StatelessModel<LineSelectionModelState> {
+export class LineSelectionModel extends StatelessModel<LineSelectionModelState> implements IPageLeaveVoter<LineSelectionModelState> {
 
     static FILTER_NEGATIVE = 'n';
 
@@ -97,8 +99,6 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
     private readonly layoutModel:PageModel;
 
     private readonly clStorage:ConcLinesStorage<LineSelectionModelState>;
-
-    private readonly onLeavePage:()=>void;
 
     static numSelectedItems(state:LineSelectionModelState):number {
         return state.data[state.queryHash] ? state.data[state.queryHash].selections.length : 0;
@@ -124,7 +124,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             };
     }
 
-    constructor({layoutModel, dispatcher, clStorage, onLeavePage}:LineSelectionModelArgs) {
+    constructor({layoutModel, dispatcher, clStorage}:LineSelectionModelArgs) {
         const query = layoutModel.getConf<Array<string>>('compiledQuery');
         const initState:LineSelectionModelState = {
             currentGroupIds: attachColorsToIds(
@@ -151,7 +151,6 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         );
         this.layoutModel = layoutModel;
         this.clStorage = clStorage;
-        this.onLeavePage = onLeavePage;
 
         this.addActionHandler<Actions.SelectLines>(
             ActionName.SelectLine,
@@ -479,6 +478,15 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         );
     }
 
+    getRegistrationId():string {
+        return 'LineSelectionModel';
+    }
+
+    reasonNotLeave():string|null {
+        return LineSelectionModel.numSelectedItems(this.getState()) > 0 ?
+            this.layoutModel.translate('linesel__current_sel_not_saved_confirm') : null;
+    }
+
     private validateGroupId(state:LineSelectionModelState, value:number|undefined):boolean {
         if (value === undefined) {
             return true;
@@ -583,7 +591,6 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                 const args = this.layoutModel.getConcArgs();
                 args.replace('q', data.Q);
                 const nextUrl = this.layoutModel.createActionUrl('view', args.items());
-                this.onLeavePage();
                 window.location.href = nextUrl;
             },
             (err) => {
@@ -600,9 +607,6 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                     this.layoutModel.getConcArgs().items()
             ),
             {},
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
 
         ).pipe(
             tap((data) => {

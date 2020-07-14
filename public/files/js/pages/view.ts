@@ -170,7 +170,6 @@ export class ViewPage {
         this.layoutModel = layoutModel;
         this.queryModels = new QueryModels();
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
-        this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
         this.lineGroupsChart = new LineSelGroupsRatiosChart(
             this.layoutModel,
             this.layoutModel.getConf<Array<string>>('ChartExportFormats')
@@ -232,23 +231,6 @@ export class ViewPage {
             this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
             [200, 200]
         );
-    }
-
-    private handleBeforeUnload(event:any):void {
-        /*
-        if (this.viewModels.lineSelectionModel.hasSelectedLines()) {
-            event.returnValue = this.translate('global__are_you_sure_to_leave');
-            return event.returnValue;
-        } TODO !!! */
-        return undefined; // !! any other value will cause the dialog window to be shown
-    }
-
-    /**
-     * User must be notified in case he wants to leave the page but at the same time he
-     * has selected some concordance lines without using them in a filter.
-     */
-    private onBeforeUnloadAsk():void {
-        window.addEventListener('beforeunload', this.handleBeforeUnload);
     }
 
     /**
@@ -1056,10 +1038,7 @@ export class ViewPage {
         this.viewModels.lineSelectionModel = new LineSelectionModel({
             layoutModel: this.layoutModel,
             dispatcher: this.layoutModel.dispatcher,
-            clStorage: lineSelStorage,
-            onLeavePage: () => {
-                window.removeEventListener('beforeunload', this.handleBeforeUnload);
-            }
+            clStorage: lineSelStorage
         });
 
         this.viewModels.concDetailModel = new ConcDetailModel(
@@ -1156,7 +1135,6 @@ export class ViewPage {
                 this.layoutModel.getConf<number>('QueryHistoryPageNumRecords')
             );
             this.setupHistoryOnPopState();
-            this.onBeforeUnloadAsk();
             this.initQueryForm();
             this.initFirsthitsForm();
             this.initFilterForm(this.queryModels.firstHitsModel);
@@ -1170,6 +1148,11 @@ export class ViewPage {
             if (this.layoutModel.getConf<boolean>('Unfinished')) {
                 this.reloadHits();
             }
+
+            this.layoutModel.registerPageLeaveVoters(
+                this.viewModels.lineSelectionModel
+            );
+
             this.renderLines(
                 {
                     ttModel,

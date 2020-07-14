@@ -203,6 +203,7 @@
         "linesel__group_does_not_exist_{group}": "Source group '{group}' does not exist",
         "linesel__group_missing": "Source group cannot be empty",
         "linesel__operations_modal_heading": "Line selection operations",
+        "linesel__current_sel_not_saved_confirm": "The current line selection is not saved yet and will be lost once you leave the page",
         "query__qt_basic": "Basic",
         "query__qt_lemma": "Lemma",
         "query__qt_phrase": "Phrase",

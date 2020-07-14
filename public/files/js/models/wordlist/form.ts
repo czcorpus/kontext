@@ -401,7 +401,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
-                if (action.payload['key'] === this.csGetStateKey()) {
+                if (action.payload['key'] === this.getRegistrationId()) {
                     Dict.forEach(
                         (val, key) => {
                             state[key] = val;
@@ -496,7 +496,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
         );
     }
 
-    csGetStateKey():string {
+    getRegistrationId():string {
         return 'wordlist-form';
     }
 
