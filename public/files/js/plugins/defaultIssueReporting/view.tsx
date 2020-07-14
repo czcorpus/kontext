@@ -20,9 +20,9 @@
 
 import * as React from 'react';
 import {Kontext} from '../../types/common';
-import { IssueReportingModel } from './init';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IssueReportingModel, IssueReportingModelState } from './init';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Actions, ActionName } from './actions';
 
 
 export interface IssueReportingWidgetProps {
@@ -48,8 +48,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch({
-                name: 'ISSUE_REPORTING_SUBMIT_ISSUE',
+            dispatcher.dispatch<Actions.SubmitIssue>({
+                name: ActionName.SubmitIssue,
                 payload: {}
             });
         };
@@ -78,8 +78,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleTextareaChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'ISSUE_REPORTING_UPDATE_ISSUE_BODY',
+            dispatcher.dispatch<Actions.UpdateIssueBody>({
+                name: ActionName.UpdateIssueBody,
                 payload: {value: evt.target.value}
             });
         };
@@ -102,54 +102,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------- <IssueReportingWidget /> -------------------------------------
 
-    class IssueReportingWidget extends React.Component<IssueReportingWidgetProps, {
-        formVisible:boolean;
-        issueBody:string;
-        waitingForModel:boolean;
-    }> {
-
-        private modelSubscription:Subscription;
+    class IssueReportingWidget extends React.Component<IssueReportingWidgetProps & IssueReportingModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handleLinkClick = this._handleLinkClick.bind(this);
             this._closeClickHandler = this._closeClickHandler.bind(this);
         }
 
-        _fetchModelState() {
-            return {
-                formVisible: reportingModel.isActive(),
-                issueBody: reportingModel.getIssueBody(),
-                waitingForModel: reportingModel.isBusy()
-            };
-        }
-
-        _modelChangeHandler() {
-            this.setState(this._fetchModelState());
-        }
 
         _handleLinkClick() {
-            dispatcher.dispatch({
-                name: 'ISSUE_REPORTING_SET_VISIBILITY',
+            dispatcher.dispatch<Actions.SetVisibility>({
+                name: ActionName.SetVisibility,
                 payload: {value: true}
             });
         }
 
         _closeClickHandler() {
-            dispatcher.dispatch({
-                name: 'ISSUE_REPORTING_SET_VISIBILITY',
+            dispatcher.dispatch<Actions.SetVisibility>({
+                name: ActionName.SetVisibility,
                 payload: {value: false}
             });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = reportingModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -158,10 +131,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <a onClick={this._handleLinkClick}>
                         {he.translate('defaultIR__report_issue_link')}
                     </a>
-                    {this.state.formVisible ?
+                    {this.props.isActive ?
                         <IssueReportingForm closeClickHandler={this._closeClickHandler}
-                            value={this.state.issueBody}
-                            waitingForModel={this.state.waitingForModel} /> :
+                            value={this.props.issueBody}
+                            waitingForModel={this.props.isBusy} /> :
                         null
                     }
                 </div>
@@ -172,7 +145,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
 
     return {
-        IssueReportingWidget: IssueReportingWidget
+        IssueReportingWidget: BoundWithProps(IssueReportingWidget, reportingModel)
     };
 
 }

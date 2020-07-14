@@ -19,63 +19,80 @@
  */
 
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {StatefulModel} from '../../models/base';
 import {init as viewInit} from './view';
-import { Action } from 'kombo';
+import { StatelessModel } from 'kombo';
+import { Actions, ActionName } from './actions';
 
 
-export class IssueReportingModel extends StatefulModel {
+export interface IssueReportingModelState {
+    issueBody:string;
+    isBusy:boolean;
+    isActive:boolean;
+}
+
+export class IssueReportingModel extends StatelessModel<IssueReportingModelState> {
 
     private pluginApi:IPluginApi;
 
-    private issueBody:string;
-
-    private _isBusy:boolean;
-
-    private _isActive:boolean;
-
     constructor(pluginApi:IPluginApi) {
-        super(pluginApi.dispatcher());
-        this.pluginApi = pluginApi;
-        this._isBusy = false;
-        this._isActive = false;
-
-        pluginApi.dispatcher().registerActionListener((action:Action) => {
-            switch (action.name) {
-                case 'ISSUE_REPORTING_SET_VISIBILITY':
-                    this._isActive = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'ISSUE_REPORTING_UPDATE_ISSUE_BODY':
-                    this.issueBody = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'ISSUE_REPORTING_SUBMIT_ISSUE':
-                    this._isBusy = true;
-                    this.emitChange();
-                    this.pluginApi.ajax$(
-                        'POST',
-                        this.pluginApi.createActionUrl('user/submit_issue'),
-                        {
-                            body: this.issueBody,
-                            args: JSON.stringify(this.fetchBrowserInfo())
-                        }
-                    ).subscribe(
-                        (data) => {
-                            this._isBusy = false;
-                            this._isActive = false;
-                            this.pluginApi.showMessage('info', this.pluginApi.translate('defaultIR__message_sent'));
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this._isBusy = false;
-                            this.pluginApi.showMessage('error', err);
-                            this.emitChange();
-                        }
-                    );
-                break;
+        super(
+            pluginApi.dispatcher(),
+            {
+                issueBody: null,
+                isBusy: false,
+                isActive: false
             }
-        });
+        );
+        this.pluginApi = pluginApi;
+
+        this.addActionHandler<Actions.SetVisibility>(
+            ActionName.SetVisibility,
+            (state, action) => {state.isActive = action.payload.value}
+        );
+
+        this.addActionHandler<Actions.UpdateIssueBody>(
+            ActionName.UpdateIssueBody,
+            (state, action) => {state.issueBody = action.payload.value}
+        );
+
+        this.addActionHandler<Actions.SubmitIssue>(
+            ActionName.SubmitIssue,
+            (state, action) => {state.isBusy = true},
+            (state, action, dispatch) => {
+                this.pluginApi.ajax$(
+                    'POST',
+                    this.pluginApi.createActionUrl('user/submit_issue'),
+                    {
+                        body: state.issueBody,
+                        args: JSON.stringify(this.fetchBrowserInfo())
+                    }
+                ).subscribe(
+                    (data) => {
+                        dispatch<Actions.SubmitIssueDone>({name: ActionName.SubmitIssueDone});
+                    },
+                    (err) => {
+                        dispatch<Actions.SubmitIssueDone>({
+                            name: ActionName.SubmitIssueDone,
+                            error: err
+                        });
+                    }
+                );
+            }
+        );
+        
+        this.addActionHandler<Actions.SubmitIssueDone>(
+            ActionName.SubmitIssueDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    state.isActive = false;
+                    this.pluginApi.showMessage('info', this.pluginApi.translate('defaultIR__message_sent'));
+                }
+            }
+        );
     }
 
     private fetchBrowserInfo():any {
@@ -85,18 +102,6 @@ export class IssueReportingModel extends StatefulModel {
             userAgent: navigator.userAgent,
             language: navigator.language
         };
-    }
-
-    getIssueBody():string {
-        return this.issueBody;
-    }
-
-    isBusy():boolean {
-        return this._isBusy;
-    }
-
-    isActive():boolean {
-        return this._isActive;
     }
 
 }
