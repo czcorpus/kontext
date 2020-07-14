@@ -29,7 +29,7 @@ import { Actions, ActionName } from '../actions';
 import { Actions as GeneralViewOptionsActions, ActionName as GeneralViewOptionsActionName } from '../../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../common/actions';
 import { AjaxResponse } from '../../../types/ajaxResponses';
-import { ICorpusSwitchSerializable } from '../../../app/navigation';
+import { ICorpusSwitchSerializable } from '../../common/corpusSwitch';
 
 /**
  *
@@ -288,7 +288,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState>
                 dispatcher.dispatch<GlobalActions.SwitchCorpusReady<CQLEditorModelCorpusSwitchPreserve>>({
                     name: GlobalActionName.SwitchCorpusReady,
                     payload: {
-                        modelId: this.csGetStateKey(),
+                        modelId: this.getRegistrationId(),
                         data: this.serialize(state)
                     }
                 })
@@ -300,14 +300,14 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState>
             (state, action) => {
                 this.deserialize(
                     state,
-                    action.payload.data[this.csGetStateKey()] as CQLEditorModelCorpusSwitchPreserve,
+                    action.payload.data[this.getRegistrationId()] as CQLEditorModelCorpusSwitchPreserve,
                     action.payload.corpora
                 );
             }
         );
     }
 
-    csGetStateKey():string {
+    getRegistrationId():string {
         return 'CQLEditorModelState';
     }
 

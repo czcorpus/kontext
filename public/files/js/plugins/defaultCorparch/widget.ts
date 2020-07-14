@@ -30,7 +30,7 @@ import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions, ActionName } from './actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { ICorpusSwitchSerializable } from '../../app/navigation';
+import { ICorpusSwitchSerializable } from '../../models/common/corpusSwitch';
 
 /**
  *
@@ -592,7 +592,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
-                const storedData = action.payload.data[this.csGetStateKey()];
+                const storedData = action.payload.data[this.getRegistrationId()];
                 if (storedData) {
                     state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
                     state.currFavitemId = findCurrFavitemId(
@@ -656,7 +656,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 dispatch<GlobalActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
                     name: GlobalActionName.SwitchCorpusReady,
                     payload: {
-                        modelId: this.csGetStateKey(),
+                        modelId: this.getRegistrationId(),
                         data: this.serialize(state)
                     }
                 });
@@ -664,7 +664,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         );
     }
 
-    csGetStateKey():string {
+    getRegistrationId():string {
         return 'default-corparch-widget';
     }
 

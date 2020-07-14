@@ -386,7 +386,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 );
                 return newState;
             case 'CORPUS_SWITCH_MODEL_RESTORE':
-                if (action.payload['key'] === this.csGetStateKey()) {
+                if (action.payload['key'] === this.getRegistrationId()) {
                     newState = this.copyState(state);
                     newState.dataFav = List.filter(v => v.trashTTL === null, action.payload['data'].dataFav);
                     newState.currFavitemId = findCurrFavitemId(
@@ -568,7 +568,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
     }
 
-    csGetStateKey():string {
+    getRegistrationId():string {
         return 'default-corparch-widget';
     }
 

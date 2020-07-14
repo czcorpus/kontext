@@ -35,8 +35,8 @@ import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModel
     shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType, QueryContextArgs } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName, CorpusSwitchModelRestorePayload } from '../common/actions';
-import { ICorpusSwitchSerializable } from '../../app/navigation';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { ICorpusSwitchSerializable } from '../common/corpusSwitch';
 
 
 export interface QueryFormUserEntries {
@@ -544,7 +544,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.changeState(state => {
                     this.deserialize(
                         state,
-                        action.payload.data[this.csGetStateKey()] as FirstQueryFormModelSwitchPreserve,
+                        action.payload.data[this.getRegistrationId()] as FirstQueryFormModelSwitchPreserve,
                         action.payload.corpora,
                     );
                 });
@@ -557,7 +557,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 dispatcher.dispatch<GlobalActions.SwitchCorpusReady<FirstQueryFormModelSwitchPreserve>>({
                     name: GlobalActionName.SwitchCorpusReady,
                     payload: {
-                        modelId: this.csGetStateKey(),
+                        modelId: this.getRegistrationId(),
                         data: this.serialize(this.state)
                     }
                 });
@@ -623,7 +623,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             this.pageModel.translate('global__query_type_mismatch'));
     }
 
-    csGetStateKey():string {
+    getRegistrationId():string {
         return 'FirstQueryFormModelState';
     }
 

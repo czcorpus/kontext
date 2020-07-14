@@ -270,7 +270,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             undefined;
     }
 
-    csGetStateKey():string {
+    getRegistrationId():string {
         return this.ident;
     }
 }
