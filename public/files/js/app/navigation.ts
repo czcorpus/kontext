@@ -19,16 +19,16 @@
  */
 
 import { Observable, forkJoin } from 'rxjs';
-import { map, tap, scan, concatMap, timestamp } from 'rxjs/operators';
+import { map, tap, scan } from 'rxjs/operators';
 import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 
 import {AjaxResponse} from '../types/ajaxResponses';
 import {Kontext} from '../types/common';
 import {MultiDict} from '../multidict';
 import { HTTP, Dict, pipe, List } from 'cnc-tskit';
-import { IActionDispatcher, StatefulModel, IModel, IFullActionControl } from 'kombo';
+import { StatefulModel, IModel, IFullActionControl } from 'kombo';
 import { Actions, ActionName } from '../models/common/actions';
-import { dispatch } from 'rxjs/internal/observable/pairs';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../models/query/actions';
 
 
 /**
@@ -74,8 +74,19 @@ export namespace SaveData {
     }
 }
 
-export interface ICorpusSwitchSerializable<T> extends IModel<T> {
+export interface ICorpusSwitchSerializable<T, U> extends IModel<T> {
+
     csGetStateKey():string;
+
+    serialize(state:T):U;
+
+    /**
+     *
+     * @param state
+     * @param data
+     * @param corpora  list of pairs - [prev corpus, actual corpus]
+     */
+    deserialize(state:T, data:U, corpora:Array<[string, string]>):void;
 }
 
 /**
@@ -201,6 +212,36 @@ class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, prevCorp
         this.history = history;
         this.onDone = () => undefined;
 
+        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActionName.QueryInputAddAlignedCorpus,
+            action => {
+                const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
+                List.addUnique(action.payload.corpname, currAligned);
+                this.conf.setConf('alignedCorpora', currAligned);
+
+                this.changeState(state => {
+                    state.prevCorpora.push(action.payload.corpname);
+                });
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActionName.QueryInputRemoveAlignedCorpus,
+            action => {
+                const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
+                const srchIdx = List.findIndex(v => v === action.payload.corpname, currAligned);
+                if (srchIdx > -1) {
+                    this.conf.setConf('alignedCorpora', List.removeAt(srchIdx, currAligned));
+                }
+                this.changeState(state => {
+                    const srchIdx = List.findIndex(v => v === action.payload.corpname, state.prevCorpora);
+                    if (srchIdx > -1) {
+                        List.removeAt(srchIdx, state.prevCorpora);
+                    }
+                });
+            }
+        );
+
         this.addActionHandler<Actions.SwitchCorpus>(
             ActionName.SwitchCorpus,
             action => {
@@ -213,7 +254,7 @@ class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, prevCorp
                     }).pipe(
                         scan(
                             (acc, action:Actions.SwitchCorpusReady<{}>) => {
-                                acc[action.payload.modelId] = action.payload.state;
+                                acc[action.payload.modelId] = action.payload.data;
                                 return acc;
                             },
                             {}
@@ -265,16 +306,17 @@ class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, prevCorp
                     )
 
                 ).subscribe(
-                    ([storedStates, data]) => {
-                        console.log('new style corp switch data: ', data);
+                    ([storedStates,]) => {
                         this.onDone();
+                        const prevCorpora = this.state.prevCorpora;
+                        this.changeState(state => {
+                            state.prevCorpora = action.payload.corpora;
+                        });
                         this._dispatcher.dispatch<Actions.CorpusSwitchModelRestore>({
                             name: ActionName.CorpusSwitchModelRestore,
                             payload: {
                                 data: storedStates,
-                                prevCorpora: this.state.prevCorpora,
-                                currCorpora: [this.conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id].concat(
-                                    this.conf.getConf<Array<string>>('alignedCorpora'))
+                                corpora: List.zip(action.payload.corpora, prevCorpora)
                             }
                         });
                     }
@@ -285,7 +327,7 @@ class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, prevCorp
 
     unregister() {}
 
-    registerModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}>>):void {
+    registerModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
         this.onDone = onDone;
         this.changeState(state => {
             List.forEach(
@@ -569,7 +611,7 @@ export class AppNavigation implements Kontext.IURLHandler {
         return this.encodeURLParameters(tmp);
     }
 
-    registerCorpusSwitchAwareModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}>>):void {
+    registerCorpusSwitchAwareModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
         this.corpusSwitchModel.registerModels(onDone, ...models);
     }
 

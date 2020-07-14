@@ -19,7 +19,7 @@
  */
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { Subscription, timer as rxTimer, Observable, of as rxOf, throwError } from 'rxjs';
+import { Subscription, timer as rxTimer, Observable, of as rxOf } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
 import { List, tuple, HTTP, pipe } from 'cnc-tskit';
 
@@ -29,6 +29,8 @@ import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions, ActionName } from './actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { ICorpusSwitchSerializable } from '../../app/navigation';
 
 /**
  *
@@ -141,11 +143,15 @@ export interface CorplistWidgetModelArgs {
     corporaLabels:Array<[string, string, string]>;
 }
 
+export interface CorplistWidgetModelCorpusSwitchPreserve {
+    dataFav:Array<FavListItem>;
+}
 
 /**
  *
  */
-export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState> {
+export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
+        implements ICorpusSwitchSerializable<CorplistWidgetModelState, CorplistWidgetModelCorpusSwitchPreserve> {
 
     private pluginApi:IPluginApi;
 
@@ -199,10 +205,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
 
-        this.addActionHandler(
-            'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActionName.QueryInputAddAlignedCorpus,
             (state, action) => {
-                state.alignedCorpora.push(action.payload['corpname']);
+                state.alignedCorpora.push(action.payload.corpname);
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,
                     this.getFullCorpusSelection(state)
@@ -210,11 +216,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActionName.QueryInputRemoveAlignedCorpus,
             (state, action) => {
                 const srch = List.findIndex(
-                    v => v === action.payload['corpname'],
+                    v => v === action.payload.corpname,
                     state.alignedCorpora
                 );
                 if (srch > -1) {
@@ -245,7 +251,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.addActionHandler<Actions.SetActiveTab>(
             ActionName.SetActiveTab,
             (state, action) => {
-                state.activeTab = action.payload['value'];
+                state.activeTab = action.payload.value;
             }
         );
 
@@ -259,13 +265,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     name: ActionName.FavItemClickDone
                 });
                 this.handleFavItemClick(state, action.payload.itemId);
-            }
-        );
-
-        this.addActionHandler<Actions.UpdateList>(
-            ActionName.UpdateList,
-            (state, action) => {
-                state.dataFav = importServerFavitems(action.payload['data']);
             }
         );
 
@@ -647,12 +646,42 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 }
             }
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.csGetStateKey(),
+                        data: this.serialize(state)
+                    }
+                });
+            }
+        );
     }
 
     csGetStateKey():string {
         return 'default-corparch-widget';
     }
 
+    serialize(state:CorplistWidgetModelState):CorplistWidgetModelCorpusSwitchPreserve {
+        return {
+            dataFav: {...state.dataFav}
+        };
+    }
+
+    deserialize(state:CorplistWidgetModelState, data:CorplistWidgetModelCorpusSwitchPreserve, corpora:Array<[string, string]>):void {
+        if (data) {
+            List.forEach(
+                ([oldCorp, newCorp]) => {
+                    state.dataFav[newCorp] = data.dataFav[oldCorp];
+                },
+                corpora
+            )
+        }
+    }
 
     /**
      * According to the state of the current query form, this method creates

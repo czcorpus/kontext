@@ -21,6 +21,7 @@
 import {Kontext} from '../../../types/common';
 import {parse as parseQuery, SyntaxError} from 'cqlParser/parser';
 import {IAttrHelper, NullAttrHelper} from './attrs';
+import { QueryType } from '../common';
 
 /**
  * CharsRule represents a pointer to the original
@@ -545,7 +546,7 @@ function getApplyRules(queryType:string):Array<string> {
  */
 export function highlightSyntax(
         query:string,
-        queryType:string,
+        queryType:QueryType,
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
         onHintChange:(message:string)=>void):string {

@@ -34,8 +34,7 @@ export enum ActionName {
 
 export interface CorpusSwitchModelRestorePayload {
     data:{[key:string]:any};
-    prevCorpora:Array<string>;
-    currCorpora:Array<string>;
+    corpora:Array<[string, string]>;
 }
 
 export namespace Actions {
@@ -77,7 +76,7 @@ export namespace Actions {
 
     export interface SwitchCorpusReady<T> extends Action<{
         modelId:string;
-        state:T;
+        data:T;
     }> {
         name:ActionName.SwitchCorpusReady;
     }

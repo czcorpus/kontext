@@ -674,7 +674,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         this.generalViewOptionsModel.unregister();
     }
 
-    registerCorpusSwitchAwareModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}>>):void {
+    registerCorpusSwitchAwareModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
         this.appNavig.registerCorpusSwitchAwareModels(
             () => {
                 this.unregisterAllModels();

@@ -306,7 +306,6 @@ export class FirstFormPage {
     }
 
     init():void {
-        console.log('register new')
         this.layoutModel.init(true, [], () => {
             this.queryHintModel = new UsageTipsModel(
                 this.layoutModel.dispatcher,
@@ -384,7 +383,8 @@ export class FirstFormPage {
                         window.document.getElementById('query-overview-mount'));
                     this.init();
                 },
-                this.queryModel
+                this.queryModel,
+                this.cqlEditorModel
             );
         });
     }

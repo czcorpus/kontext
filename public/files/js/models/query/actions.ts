@@ -53,7 +53,6 @@ export enum ActionName {
     SetWithinValue = 'QUERY_INPUT_SET_WITHIN_VALUE',
     SetWithinAttr = 'QUERY_INPUT_SET_WITHIN_ATTR',
     SetActiveInputWidget = 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-    CQLEditorDisable = 'CQL_EDITOR_DISABLE',
     QueryInputSelectType = 'QUERY_INPUT_SELECT_TYPE',
     QueryInputSelectSubcorp = 'QUERY_INPUT_SELECT_SUBCORP',
     QueryInputMoveCursor = 'QUERY_INPUT_MOVE_CURSOR',
@@ -77,7 +76,12 @@ export enum ActionName {
     ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
     SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
     SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
-    SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT'
+    SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT',
+    CQLEditorInitialize = 'CQL_EDITOR_INITIALIZE',
+    CQLEditorInitializeDone = 'CQL_EDITOR_INITIALIZE_DONE',
+    CQLEditorEnable = 'CQL_EDITOR_ENABLE',
+    CQLEditorDisable = 'CQL_EDITOR_DISABLE',
+
 }
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
@@ -243,11 +247,6 @@ export namespace Actions {
         widgetArgs:{[key:string]:string|number|boolean};
     }> {
         name:ActionName.SetActiveInputWidget;
-    }
-
-    export interface CQLEditorDisable extends Action<{
-    }> {
-        name:ActionName.CQLEditorDisable;
     }
 
     export interface QueryInputSelectType extends Action<{
@@ -422,5 +421,25 @@ export namespace Actions {
         operationId:string;
     }> {
         name:ActionName.SwitchMcFormSubmit;
+    }
+
+    export interface CQLEditorInitialize extends Action<{
+    }> {
+        name:ActionName.CQLEditorInitialize;
+    }
+
+    export interface CQLEditorInitializeDone extends Action<{
+    }> {
+        name:ActionName.CQLEditorInitializeDone;
+    }
+
+    export interface CQLEditorEnable extends Action<{
+    }> {
+        name:ActionName.CQLEditorEnable;
+    }
+
+    export interface CQLEditorDisable extends Action<{
+    }> {
+        name:ActionName.CQLEditorDisable;
     }
 }
