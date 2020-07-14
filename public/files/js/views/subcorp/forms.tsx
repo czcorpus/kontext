@@ -17,7 +17,6 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {IActionDispatcher, Bound, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
@@ -25,6 +24,7 @@ import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/fo
 import {SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine} from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';
 import { ActionName, Actions } from '../../models/subcorp/actions';
+import { List } from 'cnc-tskit';
 
 export interface FormsModuleArgs {
     dispatcher:IActionDispatcher;
@@ -211,7 +211,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     const WithinBuilder:React.SFC<{
         structsAndAttrs:Kontext.StructsAndAttrs;
-        lines:Immutable.List<WithinLine>;
+        lines:Array<WithinLine>;
     }> = (props) => {
 
         const addLineHandler = () => {
@@ -228,13 +228,14 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         return (
             <table>
                 <tbody>
-                    {props.lines.map((line, i) =>
+                    {List.map((line, i) =>
                         <React.Fragment key ={'wl' + line.rowIdx}>
                             <ExpressionDescLine viewIdx={i} />
                             <StructLine rowIdx={line.rowIdx}
                                 lineData={line} structsAndAttrs={props.structsAndAttrs} />
-                        </React.Fragment>)
-                    }
+                        </React.Fragment>,
+                        props.lines
+                    )}
                     <tr key="button-row" className="last-line">
                         <td>
                             <a className="add-within"
