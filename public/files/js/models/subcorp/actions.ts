@@ -22,7 +22,7 @@ import { Action } from 'kombo';
 import { SubcListFilter } from './list';
 import { InputMode } from './common';
 import { TextTypes } from '../../types/common';
-import { LoadDataResponse } from './listPublic';
+import { LoadDataResponse, SearchTypes } from './listPublic';
 
 
 export enum ActionName {
@@ -175,7 +175,7 @@ export namespace Actions {
     }
 
     export interface SetSearchType extends Action<{
-        value:string;
+        value:SearchTypes;
     }> {
         name:ActionName.SetSearchType;
     }

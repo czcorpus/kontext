@@ -23,7 +23,6 @@ import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PublicSubcorpListState, PublicSubcorpListModel, DataItem, SearchTypes} from '../../models/subcorp/listPublic';
 import {Actions, ActionName} from '../../models/subcorp/actions';
-import { Subscription } from 'rxjs';
 import { List } from 'cnc-tskit';
 
 export interface Views {
@@ -42,7 +41,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------------- <SearchTypeSelect /> -------------------
 
     const SearchTypeSelect:React.SFC<{
-        value:string;
+        value:SearchTypes;
 
     }> = (props) => {
 
@@ -50,7 +49,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             dispatcher.dispatch<Actions.SetSearchType>({
                 name: ActionName.SetSearchType,
                 payload: {
-                    value: evt.target.value
+                    value: evt.target.value as SearchTypes
                 }
             });
         };
@@ -243,13 +242,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------------- <List /> -------------------------
 
     class ListPublic extends React.PureComponent<ListPublicProps & PublicSubcorpListState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = model.getState();
-        }
 
         render() {
             return (
