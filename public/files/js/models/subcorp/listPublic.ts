@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-
 import {PageModel} from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { Kontext } from '../../types/common';
@@ -53,7 +51,7 @@ export enum SearchTypes {
 
 export interface PublicSubcorpListState {
     isBusy:boolean;
-    data:Immutable.List<DataItem>;
+    data:Array<DataItem>;
     searchQuery:string;
     minQuerySize:number;
     searchType:SearchTypes;
@@ -62,8 +60,7 @@ export interface PublicSubcorpListState {
 
 export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListState> {
 
-
-    queryTypeMinPrefixMapping:Immutable.Map<string, number>;
+    queryTypeMinPrefixMapping:{[key:string]:number};
 
     private pageModel:PageModel;
 
@@ -73,103 +70,113 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             dispatcher,
             {
                 isBusy: false,
-                data: Immutable.List<DataItem>(data),
+                data: data,
                 searchQuery: '',
                 minQuerySize: minCodePrefix,
                 searchType: SearchTypes.BY_CODE,
                 inputPrefixThrottleTimer: -1
             }
         );
-        this.queryTypeMinPrefixMapping = Immutable.Map<string, number>({
+        this.queryTypeMinPrefixMapping = {
             [SearchTypes.BY_CODE]: minCodePrefix,
             [SearchTypes.BY_AUTHOR]: minAuthorPrefix
-        });
+        };
         this.pageModel = pageModel;
-    }
 
-    reduce(state:PublicSubcorpListState, action:Action):PublicSubcorpListState {
-        let newState:PublicSubcorpListState;
-        switch (action.name) {
-            case ActionName.SetSearchType:
-                newState = this.copyState(state);
-                newState.searchType = action.payload['value'];
-                newState.minQuerySize = this.queryTypeMinPrefixMapping.get(action.payload['value']);
-                return newState;
-            case ActionName.SetSearchQuery:
-                newState = this.copyState(state);
-                newState.searchQuery = action.payload['value'];
-                if (newState.inputPrefixThrottleTimer) {
-                    window.clearTimeout(newState.inputPrefixThrottleTimer);
+        this.addActionHandler<Actions.SetSearchType>(
+            ActionName.SetSearchType,
+            (state, action) => {
+                state.searchType = action.payload.value;
+                state.minQuerySize = this.queryTypeMinPrefixMapping[action.payload.value];
+            },
+            this.setSearch
+        );
+
+        this.addActionHandler<Actions.SetSearchQuery>(
+            ActionName.SetSearchQuery,
+            (state, action) => {
+                state.searchQuery = action.payload.value;
+                if (state.inputPrefixThrottleTimer) {
+                    window.clearTimeout(state.inputPrefixThrottleTimer);
                 }
-                return newState;
-            case ActionName.SetInputPrefixThrottle:
-                newState = this.copyState(state);
-                newState.inputPrefixThrottleTimer = action.payload['timerId'];
-                return newState;
-            case ActionName.SetCodePrefixDone:
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                return newState;
-            case ActionName.DataLoadDone:
-                newState = this.copyState(state);
-                newState.isBusy = false;
-                newState.data = Immutable.List<DataItem>(action.payload['data']['data']);
-                return newState;
-            default:
-                return state;
-        }
-    }
+            },
+            this.setSearch
+        );
 
-    sideEffects(state:PublicSubcorpListState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.name) {
-            case ActionName.SetSearchType:
-            case ActionName.SetSearchQuery:
-                const timerId = window.setTimeout(
-                    () => {
-                        if (state.searchQuery.length >= state.minQuerySize) {
-                            dispatch<Actions.SetCodePrefixDone>({
-                                name: ActionName.SetCodePrefixDone,
-                                payload: {}
-                            });
-                            this.loadData(state).subscribe(
-                                (data) => {
-                                    dispatch<Actions.DataLoadDone>({
-                                        name: ActionName.DataLoadDone,
-                                        payload: {
-                                            data: data
-                                        }
-                                    });
-                                },
-                                (err) => {
-                                    this.pageModel.showMessage('error', err);
-                                    dispatch<Actions.DataLoadDone>({
-                                        name: ActionName.DataLoadDone,
-                                        error: err
-                                    });
-                                }
-                            );
-                        }
-                        window.clearTimeout(state.inputPrefixThrottleTimer);
-                    },
-                    250
-                );
-                dispatch<Actions.SetInputPrefixThrottle>({
-                    name: ActionName.SetInputPrefixThrottle,
-                    payload: {
-                        timerId: timerId
-                    }
-                });
-            break;
-            case ActionName.UseInQuery:
+        this.addActionHandler<Actions.SetInputPrefixThrottle>(
+            ActionName.SetInputPrefixThrottle,
+            (state, action) => {
+                state.inputPrefixThrottleTimer = action.payload.timerId;
+            }
+        );
+
+        this.addActionHandler<Actions.SetCodePrefixDone>(
+            ActionName.SetCodePrefixDone,
+            (state, action) => {
+                state.isBusy = true;
+            }
+        );
+
+        this.addActionHandler<Actions.DataLoadDone>(
+            ActionName.DataLoadDone,
+            (state, action) => {
+                state.isBusy = false;
+                state.data = action.payload.data.data;
+            }
+        );
+
+        this.addActionHandler<Actions.UseInQuery>(
+            ActionName.UseInQuery,
+            null,
+            (state, action, dispatch) => {
                 const args = new MultiDict();
-                args.set('corpname', action.payload['corpname']);
-                args.set('usesubcorp', action.payload['id']);
+                args.set('corpname', action.payload.corpname);
+                args.set('usesubcorp', action.payload.id);
                 window.location.href = this.pageModel.createActionUrl(
                     'first_form',
                     args
                 );
-            break;
-        }
+            }
+
+        );
+    }
+
+    private setSearch(state:PublicSubcorpListState, action:Action, dispatch:SEDispatcher):void {
+        const timerId = window.setTimeout(
+            () => {
+                if (state.searchQuery.length >= state.minQuerySize) {
+                    dispatch<Actions.SetCodePrefixDone>({
+                        name: ActionName.SetCodePrefixDone,
+                        payload: {}
+                    });
+                    this.loadData(state).subscribe(
+                        (data) => {
+                            dispatch<Actions.DataLoadDone>({
+                                name: ActionName.DataLoadDone,
+                                payload: {
+                                    data: data
+                                }
+                            });
+                        },
+                        (err) => {
+                            this.pageModel.showMessage('error', err);
+                            dispatch<Actions.DataLoadDone>({
+                                name: ActionName.DataLoadDone,
+                                error: err
+                            });
+                        }
+                    );
+                }
+                window.clearTimeout(state.inputPrefixThrottleTimer);
+            },
+            250
+        );
+        dispatch<Actions.SetInputPrefixThrottle>({
+            name: ActionName.SetInputPrefixThrottle,
+            payload: {
+                timerId: timerId
+            }
+        });
     }
 
     private loadData(state:PublicSubcorpListState):Observable<LoadDataResponse> {

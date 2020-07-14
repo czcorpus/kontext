@@ -50,7 +50,7 @@ class PubSubcorpPage {
                 model
             )
             this.layoutModel.renderReactComponent(
-                views.List,
+                views.ListPublic,
                 document.getElementById('published-subcorpora-mount')
             );
         });

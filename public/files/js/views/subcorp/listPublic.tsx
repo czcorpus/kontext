@@ -19,18 +19,17 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PublicSubcorpListState, PublicSubcorpListModel, DataItem, SearchTypes} from '../../models/subcorp/listPublic';
 import {Actions, ActionName} from '../../models/subcorp/actions';
-import { Subscription } from 'rxjs';
+import { List } from 'cnc-tskit';
 
 export interface Views {
-    List:React.ComponentClass<ListProps>;
+    ListPublic:React.ComponentClass<ListPublicProps>;
 }
 
-export interface ListProps {
+export interface ListPublicProps {
 
 }
 
@@ -42,7 +41,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------------- <SearchTypeSelect /> -------------------
 
     const SearchTypeSelect:React.SFC<{
-        value:string;
+        value:SearchTypes;
 
     }> = (props) => {
 
@@ -50,7 +49,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             dispatcher.dispatch<Actions.SetSearchType>({
                 name: ActionName.SetSearchType,
                 payload: {
-                    value: evt.target.value
+                    value: evt.target.value as SearchTypes
                 }
             });
         };
@@ -218,14 +217,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const DataList:React.SFC<{
         hasQuery:boolean;
-        data:Immutable.List<DataItem>;
+        data:Array<DataItem>;
 
     }> = (props) => {
         if (props.hasQuery) {
             return (
                 <ul className="DataList">
-                    {props.data.size > 0 ?
-                        props.data.map(item => <DataRow key={item.ident} item={item} />) :
+                    {props.data.length > 0 ?
+                        List.map(item => <DataRow key={item.ident} item={item} />, props.data) :
                         <li>
                             <p className="no-result">
                                 {he.translate('pubsubclist__no_result')}
@@ -242,14 +241,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <List /> -------------------------
 
-    class List extends React.PureComponent<ListProps & PublicSubcorpListState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = model.getState();
-        }
+    class ListPublic extends React.PureComponent<ListPublicProps & PublicSubcorpListState> {
 
         render() {
             return (
@@ -273,7 +265,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        List: BoundWithProps(List, model)
+        ListPublic: BoundWithProps(ListPublic, model)
     };
 
 }
