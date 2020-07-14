@@ -30,6 +30,8 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { ActionName, Actions } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { FileTarget, WlnumsTypes, WlTypes } from './common';
 
 
@@ -100,7 +102,7 @@ export interface WordlistModelInitialArgs {
 /**
  *
  */
-export class WordlistFormModel extends StatelessModel<WordlistFormState> implements Kontext.ICorpusSwitchAwareModel<WordlistFormState> {
+export class WordlistFormModel extends StatelessModel<WordlistFormState> {
 
     private layoutModel:PageModel;
 
@@ -396,11 +398,10 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler(
-            'CORPUS_SWITCH_MODEL_RESTORE',
+        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
+            GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
                 if (action.payload['key'] === this.csGetStateKey()) {
-                    const props = action.payload as Kontext.CorpusSwitchActionProps<WordlistFormState>;
                     Dict.forEach(
                         (val, key) => {
                             state[key] = val;

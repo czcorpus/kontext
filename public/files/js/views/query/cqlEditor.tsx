@@ -235,7 +235,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             name: 'TAGHELPER_PRESET_PATTERN',
                             payload: {
                                 sourceId: this.props.sourceId,
-                                pattern: this.props.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
+                                pattern: this.props.rawCode[this.props.sourceId].substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                             }
                         });
                         dispatcher.dispatch<Actions.SetActiveInputWidget>({
@@ -274,7 +274,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         private inputKeyDownHandler(evt:React.KeyboardEvent) {
             if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
-                    this.props.downArrowTriggersHistory.get(this.props.sourceId) &&
+                    this.props.downArrowTriggersHistory[this.props.sourceId] &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
@@ -376,8 +376,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         componentDidUpdate(prevProps, prevState) {
             if (this.props.rawAnchorIdx !== null && this.props.rawFocusIdx !== null) {
                 this.reapplySelection(
-                    this.props.rawAnchorIdx.get(this.props.sourceId),
-                    this.props.rawFocusIdx.get(this.props.sourceId)
+                    this.props.rawAnchorIdx[this.props.sourceId],
+                    this.props.rawFocusIdx[this.props.sourceId]
                 );
             }
         }
@@ -391,8 +391,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 this.props.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
 
-            dispatcher.dispatch({
-                name: 'CQL_EDITOR_INITIALIZE'
+            dispatcher.dispatch<Actions.CQLEditorInitialize>({
+                name: ActionName.CQLEditorInitialize
             });
         }
 
@@ -411,14 +411,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onClick={this.handleEditorClick}
                                 className="cql-input"
                                 ref={this.props.inputRef}
-                                dangerouslySetInnerHTML={{__html: this.props.richCode.get(this.props.sourceId) || ''}}
+                                dangerouslySetInnerHTML={{__html: this.props.richCode[this.props.sourceId] || ''}}
                                 onKeyDown={this.inputKeyDownHandler}
                                 onKeyUp={this.inputKeyUpHandler} />
                     <div className="cql-editor-messages">
                         {
                             this.props.cqlEditorMessage ?
                             <div className="cql-editor-message"
-                                    dangerouslySetInnerHTML={{__html: this.props.message.get(this.props.sourceId)}} /> : null
+                                    dangerouslySetInnerHTML={{__html: this.props.message[this.props.sourceId]}} /> : null
                         }
                     </div>
                 </div>

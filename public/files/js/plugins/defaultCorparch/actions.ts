@@ -56,7 +56,6 @@ export enum ActionName {
     FavItemRemoveDone = 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE_DONE',
     FavItemAdd = 'DEFAULT_CORPARCH_FAV_ITEM_ADD',
     FavItemAddDone = 'DEFAULT_CORPARCH_FAV_ITEM_ADD_DONE',
-    UpdateList = 'DEFAULT_CORPARCH_UPDATE_LIST',
     CheckTrashedItems = 'DEFAULT_CORPARCH_CHECK_TRASHED_ITEMS',
     SearchDone = 'DEFAULT_CORPARCH_SEARCH_DONE'
 }
@@ -248,11 +247,6 @@ export namespace Actions {
         rescuedItem:ServerFavlistItem;
     }> {
         name:ActionName.FavItemAddDone;
-    }
-
-    export interface UpdateList extends Action<{
-    }> {
-        name:ActionName.UpdateList;
     }
 
     export interface CheckTrashedItems extends Action<{

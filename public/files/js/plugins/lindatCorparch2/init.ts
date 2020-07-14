@@ -75,13 +75,11 @@ export class Plugin {
             onItemClick: options.itemClickAction,
             corporaLabels: corporaLabels
         });
-        this.pluginApi.registerSwitchCorpAwareObject(this.model);
         return widgetInit({
             dispatcher: this.pluginApi.dispatcher(),
             util: this.pluginApi.getComponentHelpers(),
             widgetModel: this.model
         });
-        // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
     }
 
     disposeWidget():void {

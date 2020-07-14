@@ -49,7 +49,6 @@ export interface IPluginApi extends ITranslator {
     pluginIsActive(name:string):boolean;
     getConcArgs():Kontext.IMultiDict<ConcServerArgs>;
     getCorpusIdent():Kontext.FullCorpusIdent;
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
     setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
@@ -258,6 +257,14 @@ export namespace PluginInterfaces {
     // ------------------------ [corparch] plug-in ----------------------------
 
     export namespace Corparch {
+
+
+        /**
+         * A general click action performed on featured/favorite/searched item
+         */
+        export interface CorplistItemClick {
+            (corpora:Array<string>, subcorpId:string):void;
+        }
 
         export type WidgetView = React.ComponentClass<{}>;
 

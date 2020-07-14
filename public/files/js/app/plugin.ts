@@ -136,10 +136,6 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.getCorpusIdent();
     }
 
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void {
-        return this.pageModel.registerSwitchCorpAwareObject(obj);
-    }
-
     resetMenuActiveItemAndNotify():void {
         this.pageModel.resetMenuActiveItemAndNotify();
     }

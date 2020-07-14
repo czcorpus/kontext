@@ -60,6 +60,7 @@ class WordlistFormPage {
             'wordlist_form',
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                    /* TODO !!!!!!
                     return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
                         tap(
                             () => {
@@ -73,6 +74,7 @@ class WordlistFormPage {
                             }
                         )
                     );
+                    */
                 }
             }
         );
@@ -112,7 +114,6 @@ class WordlistFormPage {
                     wltype: WlTypes.SIMPLE
                 }
             );
-            this.layoutModel.registerSwitchCorpAwareObject(this.wordlistFormModel);
             const corparchWidget = this.initCorparchPlugin();
             this.views = wordlistFormInit({
                 dispatcher: this.layoutModel.dispatcher,
@@ -142,7 +143,11 @@ class WordlistFormPage {
                 document.getElementById('wordlist-form-mount'),
                 {}
             );
-            this.layoutModel.restoreModelsDataAfterSwitch();
+            this.layoutModel.registerCorpusSwitchAwareModels(
+                () => {
+                    // TODO
+                }
+            );
         });
     }
 }

@@ -53,10 +53,10 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
 
     protected pluginApi:IPluginApi;
 
-    private corpusClickHandler:Kontext.CorplistItemClick;
+    private corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick;
 
     constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
-                corpusClickHandler:Kontext.CorplistItemClick) {
+                corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick) {
         super(
             pluginApi.dispatcher(),
             {
@@ -99,11 +99,10 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
         this.addActionHandler<Actions.LeafNodeClicked>(
             ActionName.LeafNodeClicked,
             (state, action) => {
-                const switchCorpus = this.corpusClickHandler(
+                this.corpusClickHandler(
                     [action.payload.ident],
                     this.pluginApi.getCorpusIdent().usesubcorp
                 );
-                if (switchCorpus) switchCorpus.subscribe();
             }
         );
     }

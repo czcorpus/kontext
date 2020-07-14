@@ -53,7 +53,6 @@ export enum ActionName {
     SetWithinValue = 'QUERY_INPUT_SET_WITHIN_VALUE',
     SetWithinAttr = 'QUERY_INPUT_SET_WITHIN_ATTR',
     SetActiveInputWidget = 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-    CQLEditorDisable = 'CQL_EDITOR_DISABLE',
     QueryInputSelectType = 'QUERY_INPUT_SELECT_TYPE',
     QueryInputSelectSubcorp = 'QUERY_INPUT_SELECT_SUBCORP',
     QueryInputMoveCursor = 'QUERY_INPUT_MOVE_CURSOR',
@@ -72,20 +71,17 @@ export enum ActionName {
     QueryInputSetIncludeEmpty = 'QUERY_INPUT_SET_INCLUDE_EMPTY',
     QueryInputMakeCorpusPrimary = 'QUERY_MAKE_CORPUS_PRIMARY',
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
-    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
     ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
     ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
     SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
     SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
-    SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT'
-}
+    SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT',
+    CQLEditorInitialize = 'CQL_EDITOR_INITIALIZE',
+    CQLEditorInitializeDone = 'CQL_EDITOR_INITIALIZE_DONE',
+    CQLEditorEnable = 'CQL_EDITOR_ENABLE',
+    CQLEditorDisable = 'CQL_EDITOR_DISABLE',
 
-export interface CorpusSwitchModelRestorePayload<T> {
-    key:string;
-    data:T,
-    prevCorpora:Array<string>;
-    currCorpora:Array<string>;
 }
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
@@ -253,11 +249,6 @@ export namespace Actions {
         name:ActionName.SetActiveInputWidget;
     }
 
-    export interface CQLEditorDisable extends Action<{
-    }> {
-        name:ActionName.CQLEditorDisable;
-    }
-
     export interface QueryInputSelectType extends Action<{
         formType:QueryFormType;
         sourceId:string;
@@ -401,11 +392,6 @@ export namespace Actions {
         name:ActionName.QuerySubmit;
     }
 
-    export interface CorpusSwitchModelRestore<T={}> extends
-            Action<CorpusSwitchModelRestorePayload<T>> {
-        name:ActionName.CorpusSwitchModelRestore;
-    }
-
     export interface FilterFirstHitsSubmit extends Action<{
         opKey:string;
     }> {
@@ -435,5 +421,25 @@ export namespace Actions {
         operationId:string;
     }> {
         name:ActionName.SwitchMcFormSubmit;
+    }
+
+    export interface CQLEditorInitialize extends Action<{
+    }> {
+        name:ActionName.CQLEditorInitialize;
+    }
+
+    export interface CQLEditorInitializeDone extends Action<{
+    }> {
+        name:ActionName.CQLEditorInitializeDone;
+    }
+
+    export interface CQLEditorEnable extends Action<{
+    }> {
+        name:ActionName.CQLEditorEnable;
+    }
+
+    export interface CQLEditorDisable extends Action<{
+    }> {
+        name:ActionName.CQLEditorDisable;
     }
 }

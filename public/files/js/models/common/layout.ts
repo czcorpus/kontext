@@ -20,24 +20,24 @@
 
 import { Observable, Subscription, timer as rxTimer, of as rxOf, empty as rxEmpty } from 'rxjs';
 import { take, concatMap } from 'rxjs/operators';
-import {Kontext} from '../../types/common';
-import { StatelessModel, StatefulModel, IActionDispatcher, Action, SEDispatcher, IFullActionControl } from 'kombo';
-import {IPluginApi} from '../../types/plugins';
-import * as Immutable from 'immutable';
-import { Ident } from 'cnc-tskit';
+import { Ident, List, pipe } from 'cnc-tskit';
+import { StatelessModel, StatefulModel, IActionDispatcher, Action, SEDispatcher, IFullActionControl, ActionDispatcher } from 'kombo';
+
+import { Kontext } from '../../types/common';
+import { IPluginApi } from '../../types/plugins';
+import { Actions, ActionName } from './actions';
 
 
 export interface MessageModelState {
-    messages:Immutable.List<Kontext.UserNotification>;
+    messages:Array<Kontext.UserNotification>;
 }
-
 
 /**
  *
  */
 export class MessageModel extends StatelessModel<MessageModelState> {
 
-    private pluginApi:IPluginApi;
+    private readonly pluginApi:IPluginApi;
 
     private autoRemoveMessages:boolean;
 
@@ -50,63 +50,64 @@ export class MessageModel extends StatelessModel<MessageModelState> {
     constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, autoRemoveMessages:boolean) {
         super(
             dispatcher,
-            {messages: Immutable.List<Kontext.UserNotification>()}
+            {
+                messages: []
+            }
         );
         this.pluginApi = pluginApi;
         this.autoRemoveMessages = autoRemoveMessages;
-        this.actionMatch = {
-            'MESSAGE_ADD': (state, action) => {
-                const newState = this.copyState(state);
-                this.addMessage(
-                    newState,
-                    action.payload['messageType'],
-                    action.payload['messageText']
-                );
-                return newState;
-            },
-            'MESSAGE_DECREASE_TTL': (state, action) => {
-                const newState = this.copyState(state);
-                newState.messages = newState.messages.map(msg => {
-                    return {
-                        messageId: msg.messageId,
-                        messageType: msg.messageType,
-                        messageText: msg.messageText,
-                        ttl: msg.ttl -= MessageModel.TIME_TICK,
-                        timeFadeout: msg.timeFadeout
-                    }
-                }).filter(msg => msg.ttl > 0).toList();
-                return newState;
-            },
-            'MESSAGE_CLOSED': (state, action) => {
-                const newState = this.copyState(state);
-                this.removeMessage(newState, action.payload['messageId']);
-                return newState;
-            }
-        };
-    }
 
-    sideEffects(state:MessageModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.name) {
-            case 'MESSAGE_ADD':
+        this.addActionHandler<Actions.MessageAdd>(
+            ActionName.MessageAdd,
+            (state, action) => {
+                this.addMessage(
+                    state,
+                    action.payload.messageType,
+                    action.payload.messageText
+                );
+            },
+            (state, action, dispatch) => {
                 if (this.autoRemoveMessages) {
-                    const ticksWait = this.calcMessageTTL(action.payload['messageType']) / MessageModel.TIME_TICK;
+                    const ticksWait = this.calcMessageTTL(action.payload.messageType) / MessageModel.TIME_TICK;
                     const ticksFadeOut = MessageModel.TIME_FADEOUT / MessageModel.TIME_TICK;
                     if (this.timerSubsc) {
                         this.timerSubsc.unsubscribe();
                     }
                     const src = rxTimer(0, MessageModel.TIME_TICK).pipe(take(ticksWait + ticksFadeOut));
                     this.timerSubsc = src.subscribe((x) => {
-                        dispatch({
-                            name: 'MESSAGE_DECREASE_TTL',
-                            payload: {}
+                        dispatch<Actions.MessageDecreaseTTL>({
+                            name: ActionName.MessageDecreaseTTL
                         });
                     });
                 }
-            break;
-        }
+            }
+        );
+
+        this.addActionHandler<Actions.MessageDecreaseTTL>(
+            ActionName.MessageDecreaseTTL,
+            (state, action) => {
+                state.messages = pipe(
+                    state.messages,
+                    List.map(
+                        msg => ({
+                            ...msg,
+                            ttl: msg.ttl -= MessageModel.TIME_TICK,
+                        })
+                    ),
+                    List.filter(msg => msg.ttl > 0)
+                )
+            }
+        );
+
+        this.addActionHandler<Actions.MessageClose>(
+            ActionName.MessageClose,
+            (state, action) => {
+                this.removeMessage(state, action.payload.messageId);
+            }
+        );
     }
 
-    private calcMessageTTL(messageType:string):number {
+    private calcMessageTTL(messageType:Kontext.UserMessageTypes):number {
         const baseInterval = this.pluginApi.getConf<number>('messageAutoHideInterval');
         switch (messageType) {
             case 'error':
@@ -120,8 +121,8 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         }
     }
 
-    private addMessage(state:MessageModelState, messageType:string, messageText:string):void {
-        state.messages = state.messages.push({
+    private addMessage(state:MessageModelState, messageType:Kontext.UserMessageTypes, messageText:string):void {
+        state.messages.push({
             messageType: messageType,
             messageText: messageText,
             messageId: Ident.puid(),
@@ -133,15 +134,12 @@ export class MessageModel extends StatelessModel<MessageModelState> {
     private removeMessage(state:MessageModelState, messageId:string):void {
         const srchIdx = state.messages.findIndex(v => v.messageId === messageId);
         if (srchIdx > -1) {
-            const msg = state.messages.get(srchIdx);
-            state.messages = state.messages.set(srchIdx,
-            {
-                messageId: msg.messageId,
-                messageType: msg.messageType,
-                messageText: msg.messageText,
+            const msg = state.messages[srchIdx];
+            state.messages[srchIdx] = {
+                ...msg,
                 ttl: MessageModel.TIME_FADEOUT,
                 timeFadeout: MessageModel.TIME_FADEOUT
-            });
+            };
         }
     }
 }

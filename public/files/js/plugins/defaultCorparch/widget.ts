@@ -19,15 +19,18 @@
  */
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { Subscription, timer as rxTimer, Observable, of as rxOf, throwError } from 'rxjs';
+import { Subscription, timer as rxTimer, Observable, of as rxOf } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
 import { List, tuple, HTTP, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import * as common from './common';
-import { IPluginApi } from '../../types/plugins';
+import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions, ActionName } from './actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { ICorpusSwitchSerializable } from '../../app/navigation';
 
 /**
  *
@@ -41,7 +44,7 @@ export interface Options  {
      * which means formTarget and submitMethod options have no effect unless you use
      * them directly in some way.
      */
-    itemClickAction?:Kontext.CorplistItemClick;
+    itemClickAction?:PluginInterfaces.Corparch.CorplistItemClick;
 }
 
 /**
@@ -136,22 +139,25 @@ export interface CorplistWidgetModelArgs {
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
     dataFeat:Array<common.CorplistItem>;
-    onItemClick:Kontext.CorplistItemClick;
+    onItemClick:PluginInterfaces.Corparch.CorplistItemClick;
     corporaLabels:Array<[string, string, string]>;
 }
 
+export interface CorplistWidgetModelCorpusSwitchPreserve {
+    dataFav:Array<FavListItem>;
+}
 
 /**
  *
  */
 export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
-                            implements Kontext.ICorpusSwitchAwareModel<CorplistWidgetModelState> {
+        implements ICorpusSwitchSerializable<CorplistWidgetModelState, CorplistWidgetModelCorpusSwitchPreserve> {
 
     private pluginApi:IPluginApi;
 
     private searchEngine:SearchEngine;
 
-    private onItemClick:Kontext.CorplistItemClick;
+    private onItemClick:PluginInterfaces.Corparch.CorplistItemClick;
 
     private inputThrottleTimer:number;
 
@@ -201,10 +207,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
 
-        this.addActionHandler(
-            'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActionName.QueryInputAddAlignedCorpus,
             (state, action) => {
-                state.alignedCorpora.push(action.payload['corpname']);
+                state.alignedCorpora.push(action.payload.corpname);
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,
                     this.getFullCorpusSelection(state)
@@ -212,11 +218,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActionName.QueryInputRemoveAlignedCorpus,
             (state, action) => {
                 const srch = List.findIndex(
-                    v => v === action.payload['corpname'],
+                    v => v === action.payload.corpname,
                     state.alignedCorpora
                 );
                 if (srch > -1) {
@@ -257,26 +263,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.handleFavItemClick(state, action.payload.itemId).subscribe(
-                    (_) => {
-                        dispatch<Actions.FavItemClickDone>({
-                            name: ActionName.FavItemClickDone
-                        });
-                    },
-                    (err) => {
-                        dispatch<Actions.FavItemClickDone>({
-                            name: ActionName.FavItemClickDone
-                        });
-                        this.pluginApi.showMessage('error', err);
-                    }
-                );
-            }
-        );
-
-        this.addActionHandler<Actions.UpdateList>(
-            ActionName.UpdateList,
-            (state, action) => {
-                state.dataFav = importServerFavitems(action.payload['data']);
+                dispatch<Actions.FavItemClickDone>({
+                    name: ActionName.FavItemClickDone
+                });
+                this.handleFavItemClick(state, action.payload.itemId);
             }
         );
 
@@ -293,19 +283,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.handleFeatItemClick(state, action.payload.itemId).subscribe(
-                    () => {
-                        dispatch<Actions.FeatItemClickDone>({
-                            name: ActionName.FeatItemClickDone
-                        });
-                    },
-                    (err) => {
-                        dispatch<Actions.FeatItemClickDone>({
-                            name: ActionName.FeatItemClickDone
-                        });
-                        this.pluginApi.showMessage('error', err);
-                    }
-                );
+                dispatch<Actions.FeatItemClickDone>({
+                    name: ActionName.FeatItemClickDone
+                });
+                this.handleFeatItemClick(state, action.payload.itemId);
             }
         );
 
@@ -322,19 +303,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.handleSearchItemClick(state, action.payload.itemId).subscribe(
-                    () => {
-                        dispatch<Actions.SearchResultItemClickedDone>({
-                            name: ActionName.SearchResultItemClickedDone
-                        });
-                    },
-                    (err) => {
-                        dispatch<Actions.SearchResultItemClickedDone>({
-                            name: ActionName.SearchResultItemClickedDone
-                        });
-                        this.pluginApi.showMessage('error', err);
-                    }
-                );
+                dispatch<Actions.SearchResultItemClickedDone>({
+                    name: ActionName.SearchResultItemClickedDone
+                });
+                this.handleSearchItemClick(state, action.payload.itemId);
             }
         );
 
@@ -582,21 +554,12 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             },
             (state, action, dispatch) => {
                 if (state.focusedRowIdx > -1) {
+                    dispatch<Actions.SearchResultItemClickedDone>({
+                        name: ActionName.SearchResultItemClickedDone
+                    });
                     this.handleSearchItemClick(
-                            state,
-                            state.currSearchResult[state.focusedRowIdx].id).subscribe(
-                        () => {
-                            dispatch<Actions.SearchResultItemClickedDone>({
-                                name: ActionName.SearchResultItemClickedDone
-                            });
-                        },
-                        (err) => {
-                            dispatch<Actions.SearchResultItemClickedDone>({
-                                name: ActionName.SearchResultItemClickedDone,
-                                error: err
-                            });
-                            this.pluginApi.showMessage('error', err);
-                        }
+                        state,
+                        state.currSearchResult[state.focusedRowIdx].id
                     );
                 }
             }
@@ -626,11 +589,12 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            'CORPUS_SWITCH_MODEL_RESTORE',
+        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
+            GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
-                if (action.payload['key'] === this.csGetStateKey()) {
-                    state.dataFav = action.payload['data'].dataFav.filter(v => v.trashTTL === null);
+                const storedData = action.payload.data[this.csGetStateKey()];
+                if (storedData) {
+                    state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
                     state.currFavitemId = findCurrFavitemId(
                         state.dataFav,
                         this.getFullCorpusSelection(state)
@@ -666,37 +630,36 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             },
             (state, action, dispatch) => {
                 if (state.activeListItem[0] === 0) {
+                    dispatch<Actions.FavItemClickDone>({
+                        name: ActionName.FavItemClickDone
+                    });
                     this.handleFavItemClick(
-                            state, state.dataFav[state.activeListItem[1]].id).subscribe(
-                        (_) => {
-                            dispatch<Actions.FavItemClickDone>({
-                                name: ActionName.FavItemClickDone
-                            });
-                        },
-                        (err) => {
-                            dispatch<Actions.FavItemClickDone>({
-                                name: ActionName.FavItemClickDone
-                            });
-                            this.pluginApi.showMessage('error', err);
-                        }
+                        state, state.dataFav[state.activeListItem[1]].id
                     );
 
+
                 } else {
+                    dispatch<Actions.FeatItemClickDone>({
+                        name: ActionName.FeatItemClickDone
+                    });
                     this.handleFeatItemClick(
-                            state, state.dataFeat[state.activeListItem[1]].id).subscribe(
-                        () => {
-                            dispatch<Actions.FeatItemClickDone>({
-                                name: ActionName.FeatItemClickDone
-                            });
-                        },
-                        (err) => {
-                            dispatch<Actions.FeatItemClickDone>({
-                                name: ActionName.FeatItemClickDone
-                            });
-                            this.pluginApi.showMessage('error', err);
-                        }
+                        state, state.dataFeat[state.activeListItem[1]].id
                     );
                 }
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.csGetStateKey(),
+                        data: this.serialize(state)
+                    }
+                });
             }
         );
     }
@@ -705,6 +668,22 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         return 'default-corparch-widget';
     }
 
+    serialize(state:CorplistWidgetModelState):CorplistWidgetModelCorpusSwitchPreserve {
+        return {
+            dataFav: {...state.dataFav}
+        };
+    }
+
+    deserialize(state:CorplistWidgetModelState, data:CorplistWidgetModelCorpusSwitchPreserve, corpora:Array<[string, string]>):void {
+        if (data) {
+            List.forEach(
+                ([oldCorp, newCorp]) => {
+                    state.dataFav[newCorp] = data.dataFav[oldCorp];
+                },
+                corpora
+            )
+        }
+    }
 
     /**
      * According to the state of the current query form, this method creates
@@ -830,25 +809,34 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
     }
 
-    private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
+    private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):void {
         const item = state.dataFav.find(item => item.id === itemId);
-        return item !== undefined ?
-                this.onItemClick(item.corpora.map(x => x.id), item.subcorpus_id) :
-                throwError(new Error(`Favorite item ${itemId} not found`));
+        if (item !== undefined) {
+            this.onItemClick(item.corpora.map(x => x.id), item.subcorpus_id);
+
+        } else {
+            throw new Error(`Favorite item ${itemId} not found`);
+        }
     }
 
-    private handleFeatItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
+    private handleFeatItemClick(state:CorplistWidgetModelState, itemId:string):void {
         const item = state.dataFeat.find(item => item.id === itemId);
-        return item !== undefined ?
-                this.onItemClick([item.corpus_id], item.subcorpus_id) :
-                throwError(new Error(`Featured item ${itemId} not found`));
+        if (item !== undefined) {
+            this.onItemClick([item.corpus_id], item.subcorpus_id);
+
+        } else {
+            throw new Error(`Featured item ${itemId} not found`);
+        }
     }
 
-    private handleSearchItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
+    private handleSearchItemClick(state:CorplistWidgetModelState, itemId:string):void {
         const item = state.currSearchResult.find(item => item.id === itemId);
-        return item !== undefined ?
-            this.onItemClick([item.id], '') :
-            throwError(new Error(`Clicked item ${itemId} not found in search results`));
+        if (item !== undefined) {
+            this.onItemClick([item.id], '');
+
+        } else {
+            throw new Error(`Clicked item ${itemId} not found in search results`);
+        }
     }
 
     private reloadItems(editAction:Observable<Kontext.AjaxResponse>,

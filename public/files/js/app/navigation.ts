@@ -18,14 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, forkJoin } from 'rxjs';
+import { map, tap, scan } from 'rxjs/operators';
 import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 
 import {AjaxResponse} from '../types/ajaxResponses';
 import {Kontext} from '../types/common';
 import {MultiDict} from '../multidict';
 import { HTTP, Dict, pipe, List } from 'cnc-tskit';
+import { StatefulModel, IModel, IFullActionControl } from 'kombo';
+import { Actions, ActionName } from '../models/common/actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../models/query/actions';
 
 
 /**
@@ -69,6 +72,21 @@ export namespace SaveData {
                 throw new Error(`Unknown safe format ${sf}`);
         }
     }
+}
+
+export interface ICorpusSwitchSerializable<T, U> extends IModel<T> {
+
+    csGetStateKey():string;
+
+    serialize(state:T):U;
+
+    /**
+     *
+     * @param state
+     * @param data
+     * @param corpora  list of pairs - [prev corpus, actual corpus]
+     */
+    deserialize(state:T, data:U, corpora:Array<[string, string]>):void;
 }
 
 /**
@@ -165,6 +183,163 @@ function createHistory(urlHandler:Kontext.IURLHandler):Kontext.IHistory {
     }
 }
 
+class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, prevCorpora:Array<string>}> {
+
+    private readonly appNavig:AppNavigation;
+
+    private readonly conf:Kontext.IConfHandler;
+
+    private readonly history:Kontext.IHistory;
+
+    private readonly _dispatcher:IFullActionControl;
+
+    private onDone:()=>void;
+
+    constructor(appNavig:AppNavigation, dispatcher:IFullActionControl, conf:Kontext.IConfHandler, history:Kontext.IHistory) {
+        super(
+            dispatcher,
+            {
+                data: {},
+                prevCorpora: List.concat(
+                    conf.getConf<Array<string>>('alignedCorpora'),
+                    [conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
+                )
+            }
+        );
+        this.appNavig = appNavig;
+        this._dispatcher = dispatcher;
+        this.conf = conf;
+        this.history = history;
+        this.onDone = () => undefined;
+
+        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActionName.QueryInputAddAlignedCorpus,
+            action => {
+                const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
+                List.addUnique(action.payload.corpname, currAligned);
+                this.conf.setConf('alignedCorpora', currAligned);
+
+                this.changeState(state => {
+                    state.prevCorpora.push(action.payload.corpname);
+                });
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActionName.QueryInputRemoveAlignedCorpus,
+            action => {
+                const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
+                const srchIdx = List.findIndex(v => v === action.payload.corpname, currAligned);
+                if (srchIdx > -1) {
+                    this.conf.setConf('alignedCorpora', List.removeAt(srchIdx, currAligned));
+                }
+                this.changeState(state => {
+                    const srchIdx = List.findIndex(v => v === action.payload.corpname, state.prevCorpora);
+                    if (srchIdx > -1) {
+                        List.removeAt(srchIdx, state.prevCorpora);
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.SwitchCorpus>(
+            ActionName.SwitchCorpus,
+            action => {
+                forkJoin(
+                    this.suspend(Dict.map(v => false, this.state.data), (wAction, syncData) => {
+                        if (wAction.name === ActionName.SwitchCorpusReady) {
+                            syncData[(wAction as Actions.SwitchCorpusReady<{}>).payload.modelId] = true;
+                            return Dict.hasValue(false, syncData) ? {...syncData} : null;
+                        }
+                    }).pipe(
+                        scan(
+                            (acc, action:Actions.SwitchCorpusReady<{}>) => {
+                                acc[action.payload.modelId] = action.payload.data;
+                                return acc;
+                            },
+                            {}
+                        )
+                    ),
+                    this.appNavig.ajax$<AjaxResponse.CorpusSwitchResponse>(
+                        HTTP.Method.POST,
+                        this.appNavig.createActionUrl('ajax_switch_corpus'),
+                        {
+                            corpname: List.head(action.payload.corpora),
+                            usesubcorp: action.payload.subcorpus,
+                            align: List.tail(action.payload.corpora)
+                        }
+                    )
+                ).pipe(
+                    tap(
+                        ([,data]) => {
+                            const args = new MultiDict();
+                            args.set('corpname', data.corpusIdent.id);
+                            args.set('usesubcorp', data.corpusIdent.usesubcorp);
+                            this.history.pushState(this.conf.getConf<string>('currentAction'), args);
+
+                            this.conf.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
+                            this.conf.setConf<string>('baseAttr', data.baseAttr);
+                            this.conf.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
+                            this.conf.setConf<Array<string>>('compiledQuery', data.compiledQuery);
+                            this.conf.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
+                            this.conf.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
+                            this.conf.setConf<Array<Kontext.AttrItem>>('availableAlignedCorpora', data.availableAlignedCorpora);
+                            this.conf.setConf<Array<string>>('activePlugins', data.activePlugins);
+                            this.conf.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
+                            this.conf.setConf<number>('numQueryOps', data.numQueryOps);
+                            this.conf.setConf<any>('textTypesData', data.textTypesData); // TODO type
+                            this.conf.setConf<Kontext.StructsAndAttrs>('structsAndAttrs', data.structsAndAttrs);
+                            this.conf.setConf<any>('menuData', data.menuData); // TODO type
+                            this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
+                            this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
+                            this.conf.setConf<Array<Kontext.AttrItem>>('StructAttrList', data.StructAttrList);
+                            this.conf.setConf<Array<string>>('StructList', data.StructList);
+                            this.conf.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
+                            this.conf.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
+                            this.conf.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
+                            this.conf.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
+                            this.conf.setConf<string>('TextTypesNotes', data.TextTypesNotes);
+                            this.conf.setConf<boolean>('TextDirectionRTL', data.TextDirectionRTL);
+                            this.conf.setConf<{[plgName:string]:any}>('pluginData', data.pluginData);
+                            this.conf.setConf<string>('DefaultVirtKeyboard', data.DefaultVirtKeyboard);
+                        }
+                    )
+
+                ).subscribe(
+                    ([storedStates,]) => {
+                        this.onDone();
+                        const prevCorpora = this.state.prevCorpora;
+                        this.changeState(state => {
+                            state.prevCorpora = action.payload.corpora;
+                        });
+                        this._dispatcher.dispatch<Actions.CorpusSwitchModelRestore>({
+                            name: ActionName.CorpusSwitchModelRestore,
+                            payload: {
+                                data: storedStates,
+                                corpora: List.zip(action.payload.corpora, prevCorpora)
+                            }
+                        });
+                    }
+                )
+            }
+        );
+    }
+
+    unregister() {}
+
+    registerModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
+        this.onDone = onDone;
+        this.changeState(state => {
+            List.forEach(
+                model => {
+                    state.data[model.csGetStateKey()] = null;
+                },
+                models
+            )
+        });
+    }
+}
+
 /**
  * AppNavigation handles all the URL generation, window navigation,
  * AJAX requests and handling of navigation history.
@@ -173,20 +348,18 @@ export class AppNavigation implements Kontext.IURLHandler {
 
     private conf:Kontext.IConfHandler;
 
-    private switchCorpAwareObjects:{[ident:string]:(state:{})=>void};
-
-    private switchCorpStateStorage:{[ident:string]:{}};
-
-    private switchCorpPreviousCorpora:Array<string>;
-
     private history:Kontext.IHistory;
 
-    constructor(conf:Kontext.IConfHandler) {
+    private corpusSwitchModel:CorpusSwitchModel;
+
+    private readonly dispatcher:IFullActionControl;
+
+    constructor(conf:Kontext.IConfHandler, dispatcher:IFullActionControl) {
         this.conf = conf;
-        this.switchCorpAwareObjects = {};
-        this.switchCorpStateStorage = {};
-        this.switchCorpPreviousCorpora = [];
+        this.dispatcher = dispatcher;
         this.history = createHistory(this);
+        this.corpusSwitchModel = new CorpusSwitchModel(this, dispatcher, conf, this.history);
+
     }
 
     /**
@@ -398,92 +571,6 @@ export class AppNavigation implements Kontext.IURLHandler {
         window.document.location.reload();
     }
 
-    /**
-     * Register an object to store and restore data during corpus switch
-     * procedure.
-     *
-     * Please avoid calling this method in page model's init() method
-     * as it would lead to an infinite recursion.
-     */
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAwareModel<any>):void {
-        this.switchCorpAwareObjects[obj.csGetStateKey()] = (state) => {
-            this.switchCorpStateStorage[obj.csGetStateKey()] = state;
-        }
-    }
-
-    forEachCorpSwitchSerializedItem(fn:(storeKey:string, data:any)=>void):void {
-        Dict.forEach((value, key) => fn(key, value), this.switchCorpStateStorage);
-    }
-
-    /**
-     * Change the current corpus used by KonText. Please note
-     * that this basically reinitializes all the page's models
-     * and views (both layout and page init() method are called
-     * again).
-     *
-     * Objects you want to preserve must implement ICorpusSwitchAware<T>
-     * interface and must be registered via registerSwitchCorpAwareObject()
-     * (see below).
-     *
-     * A concrete page must ensure that its init() is also called
-     * as a promise chained after the one returned by this method.
-     *
-     * @param corpora - a primary corpus plus possible aligned corpora
-     * @param subcorpus - an optional subcorpus
-     */
-    switchCorpus(corpora:Array<string>, subcorpus:string):Observable<any> {
-        this.switchCorpAwareObjects = {};
-        this.switchCorpPreviousCorpora = List.concat(
-            this.conf.getConf<Array<string>>('alignedCorpora'),
-            [this.conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
-        );
-        return this.ajax$<AjaxResponse.CorpusSwitchResponse>(
-            HTTP.Method.POST,
-            this.createActionUrl('ajax_switch_corpus'),
-            {
-                corpname: corpora[0],
-                usesubcorp: subcorpus,
-                align: corpora.slice(1)
-            }
-
-        ).pipe(
-            tap(
-                (data) => {
-                    const args = new MultiDict();
-                    args.set('corpname', data.corpusIdent.id);
-                    args.set('usesubcorp', data.corpusIdent.usesubcorp);
-                    this.history.pushState(this.conf.getConf<string>('currentAction'), args);
-
-                    this.conf.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
-                    this.conf.setConf<string>('baseAttr', data.baseAttr);
-                    this.conf.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
-                    this.conf.setConf<Array<string>>('compiledQuery', data.compiledQuery);
-                    this.conf.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
-                    this.conf.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
-                    this.conf.setConf<Array<Kontext.AttrItem>>('availableAlignedCorpora', data.availableAlignedCorpora);
-                    this.conf.setConf<Array<string>>('activePlugins', data.activePlugins);
-                    this.conf.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
-                    this.conf.setConf<number>('numQueryOps', data.numQueryOps);
-                    this.conf.setConf<any>('textTypesData', data.textTypesData); // TODO type
-                    this.conf.setConf<Kontext.StructsAndAttrs>('structsAndAttrs', data.structsAndAttrs);
-                    this.conf.setConf<any>('menuData', data.menuData); // TODO type
-                    this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
-                    this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
-                    this.conf.setConf<Array<Kontext.AttrItem>>('StructAttrList', data.StructAttrList);
-                    this.conf.setConf<Array<string>>('StructList', data.StructList);
-                    this.conf.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
-                    this.conf.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
-                    this.conf.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
-                    this.conf.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
-                    this.conf.setConf<string>('TextTypesNotes', data.TextTypesNotes);
-                    this.conf.setConf<boolean>('TextDirectionRTL', data.TextDirectionRTL);
-                    this.conf.setConf<{[plgName:string]:any}>('pluginData', data.pluginData);
-                    this.conf.setConf<string>('DefaultVirtKeyboard', data.DefaultVirtKeyboard);
-                }
-            )
-        );
-    }
-
     getHistory():Kontext.IHistory {
         return this.history;
     }
@@ -524,10 +611,9 @@ export class AppNavigation implements Kontext.IURLHandler {
         return this.encodeURLParameters(tmp);
     }
 
-    getSwitchCorpPreviousCorpora():Array<string> {
-        return this.switchCorpPreviousCorpora;
+    registerCorpusSwitchAwareModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
+        this.corpusSwitchModel.registerModels(onDone, ...models);
     }
-
 
 
 }

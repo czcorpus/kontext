@@ -109,11 +109,12 @@ export class KontextPage extends PageModel {
 
     constructor(conf:Kontext.Conf) {
         const confHandler = new KontextConf(conf);
+        const dispatcher = new ActionDispatcher();
         super(
             confHandler,
-            new ActionDispatcher(),
+            dispatcher,
             new L10n(conf['uiLang'], conf['helpLinks'] || {}),
-            new AppNavigation(confHandler),
+            new AppNavigation(confHandler, dispatcher),
             UserSettings.createInstance()
         );
         this._pluginApi = new PluginApi(this);

@@ -33,8 +33,10 @@ import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState,
     shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType, QueryContextArgs } from './common';
-import { ActionName, Actions, CorpusSwitchModelRestorePayload } from './actions';
+import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName, CorpusSwitchModelRestorePayload } from '../common/actions';
+import { ICorpusSwitchSerializable } from '../../app/navigation';
 
 
 export interface QueryFormUserEntries {
@@ -199,10 +201,20 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 }
 
 
+export interface FirstQueryFormModelSwitchPreserve {
+    queryTypes:{[key:string]:QueryType};
+    lposValues:{[key:string]:string};
+    matchCaseValues:{[key:string]:boolean};
+    queries:{[key:string]:string};
+    includeEmptyValues:{[key:string]:boolean}; // applies only for aligned languages
+}
+
+
 /**
  *
  */
-export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState> {
+export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState>
+        implements ICorpusSwitchSerializable<FirstQueryFormModelState, FirstQueryFormModelSwitchPreserve> {
 
     constructor(
             dispatcher:IFullActionControl,
@@ -367,7 +379,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.changeState(state => {
                     state.downArrowTriggersHistory[action.payload.sourceId] =
                         shouldDownArrowTriggerHistory(
-                            this.state.queries[action.payload.sourceId],
+                            state.queries[action.payload.sourceId],
                             action.payload.rawAnchorIdx,
                             action.payload.rawFocusIdx
                         )
@@ -456,7 +468,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
-                    this.state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
+                    state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
                 });
             }
         );
@@ -526,11 +538,29 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.CorpusSwitchModelRestore<FirstQueryFormModelState>>(
-            ActionName.CorpusSwitchModelRestore,
+        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
+            GlobalActionName.CorpusSwitchModelRestore,
             action => {
-                this.restoreFromCorpSwitch(action.payload);
-                this.emitChange();
+                this.changeState(state => {
+                    this.deserialize(
+                        state,
+                        action.payload.data[this.csGetStateKey()] as FirstQueryFormModelSwitchPreserve,
+                        action.payload.corpora,
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            action => {
+                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<FirstQueryFormModelSwitchPreserve>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.csGetStateKey(),
+                        data: this.serialize(this.state)
+                    }
+                });
             }
         );
 
@@ -570,20 +600,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.emitChange();
     }
 
-    private restoreFromCorpSwitch(
-            payload:CorpusSwitchModelRestorePayload<FirstQueryFormModelState>):void {
-        if (payload.key === this.csGetStateKey()) {
-            this.state = {...payload.data};
-            this.state.supportedWidgets = determineSupportedWidgets(
-                this.state.corpora,
-                this.state.queryTypes,
-                this.state.tagBuilderSupport,
-                this.state.isAnonymousUser
-            );
-            this.emitChange();
-        }
-    }
-
     private testPrimaryQueryNonEmpty():boolean {
         if (this.state.queries[this.state.corpora[0]].length > 0) {
             return true;
@@ -608,7 +624,41 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     csGetStateKey():string {
-        return 'query-storage';
+        return 'FirstQueryFormModelState';
+    }
+
+    serialize(state:FirstQueryFormModelState):FirstQueryFormModelSwitchPreserve {
+        return {
+            queryTypes: {...state.queryTypes},
+            lposValues: {...state.lposValues},
+            matchCaseValues: {...state.matchCaseValues},
+            queries: {...state.queryTypes},
+            includeEmptyValues: {...state.includeEmptyValues}
+        };
+    }
+
+    deserialize(state:FirstQueryFormModelState, data:FirstQueryFormModelSwitchPreserve, corpora:Array<[string, string]>):void {
+        if (data) {
+            pipe(
+                corpora,
+                List.forEach(
+                    ([oldCorp, newCorp], i) => {
+                        state.queries[newCorp] = data.queries[oldCorp];
+                        state.queryTypes[newCorp] = data.queryTypes[oldCorp];
+                        state.matchCaseValues[newCorp] = data.matchCaseValues[oldCorp];
+                        if (i > 0) {
+                            state.includeEmptyValues[newCorp] = data.includeEmptyValues[oldCorp];
+                        }
+                    }
+                )
+            );
+            state.supportedWidgets = determineSupportedWidgets(
+                state.corpora,
+                state.queryTypes,
+                state.tagBuilderSupport,
+                state.isAnonymousUser
+            );
+        }
     }
 
     getActiveWidget(sourceId:string):string {

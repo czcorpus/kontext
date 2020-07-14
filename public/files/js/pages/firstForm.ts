@@ -19,7 +19,6 @@
  */
 
 import { IFullActionControl, StatelessModel } from 'kombo';
-import { tap, share } from 'rxjs/operators';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../types/common';
@@ -40,6 +39,7 @@ import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
 import { ConcLinesStorage, StorageUsingState, openStorage } from '../models/concordance/selectionStorage';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../models/query/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
@@ -122,40 +122,24 @@ export class FirstFormPage {
         return this.layoutModel.translate(msg, values);
     }
 
-    private initCorplistComponent():React.ComponentClass {
+    private initCorplistComponent():[React.ComponentClass, PluginInterfaces.Corparch.IPlugin] {
         const plg = corplistComponent(this.layoutModel.pluginApi());
-        return plg.createWidget(
-            'first_form',
-            {
-                itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                    return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
-                        tap(
-                            () => {
-                                // all the models must be unregistered and components must
-                                // be unmounted to prevent memory leaks and unwanted action handlers
-                                // from previous instance
-                                plg.disposeWidget();
-                                this.queryModel.unregister();
-                                this.cqlEditorModel.unregister();
-                                this.queryHintModel.unregister();
-                                this.textTypesModel.unregister();
-                                this.queryContextModel.unregister();
-                                this.withinBuilderModel.unregister();
-                                this.virtualKeyboardModel.unregister();
-                                this.layoutModel.unregisterAllModels();
-                                this.layoutModel.unmountReactComponent(
-                                    window.document.getElementById('view-options-mount'));
-                                this.layoutModel.unmountReactComponent(
-                                    window.document.getElementById('query-form-mount'));
-                                this.layoutModel.unmountReactComponent(
-                                    window.document.getElementById('query-overview-mount'));
-                                this.init();
+        return tuple(
+            plg.createWidget(
+                'first_form',
+                {
+                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                        this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                            name: GlobalActionName.SwitchCorpus,
+                            payload: {
+                                corpora: corpora,
+                                subcorpus: subcorpId
                             }
-                        ),
-                        share()
-                    );
+                        });
+                    }
                 }
-            }
+            ),
+            plg
         );
     }
 
@@ -374,13 +358,34 @@ export class FirstFormPage {
             ttAns.allowCorpusSelection = true;
 
             this.initQueryModel();
-            const corparchWidget = this.initCorplistComponent();
+            const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
             this.attachQueryForm(ttAns, corparchWidget);
-            this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
             this.initCorpnameLink();
             const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
-
-            this.layoutModel.restoreModelsDataAfterSwitch();
+            this.layoutModel.registerCorpusSwitchAwareModels(
+                () => {
+                    // all the models must be unregistered and components must
+                    // be unmounted to prevent memory leaks and unwanted action handlers
+                    // from previous instance
+                    corparchPlg.disposeWidget();
+                    this.queryModel.unregister();
+                    this.cqlEditorModel.unregister();
+                    this.queryHintModel.unregister();
+                    this.textTypesModel.unregister();
+                    this.queryContextModel.unregister();
+                    this.withinBuilderModel.unregister();
+                    this.virtualKeyboardModel.unregister();
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('view-options-mount'));
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('query-form-mount'));
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('query-overview-mount'));
+                    this.init();
+                },
+                this.queryModel,
+                this.cqlEditorModel
+            );
         });
     }
 }

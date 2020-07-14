@@ -166,8 +166,7 @@ export interface QueryFormModelState {
 /**
  *
  */
-export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T>
-        implements Kontext.ICorpusSwitchAwareModel<T> {
+export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T> {
 
     protected readonly pageModel:PageModel;
 
