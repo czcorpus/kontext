@@ -129,6 +129,29 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
             }
         );
 
+        this.addActionHandler<Actions.FormSubmit>(
+            ActionName.FormSubmit,
+            action => {
+                if (this.state.inputMode === InputMode.GUI) {
+                    this.changeState(state => {state.isBusy = true});
+                    this.submit().subscribe(
+                        () => {
+                            this.changeState(state => {state.isBusy = false});
+                            window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
+                        },
+                        (err) => {
+                            this.changeState(state => {state.isBusy = false});
+                            this.pageModel.showMessage('error', err);
+                        }
+                    );
+
+                } else if (this.state.inputMode === InputMode.RAW) {
+                    this.validateForm(false);
+                    this.emitChange();
+                }
+            }
+        );
+
         this.addActionHandler<Actions.FormSetSubcName>(
             ActionName.FormSetSubcName,
             (action) => {

@@ -18,31 +18,31 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
 import { IActionDispatcher } from 'kombo';
+import { List, pipe } from 'cnc-tskit';
 
 
 export interface Views {
     RawHtmlRenderer:React.SFC<{
-        corpora: Immutable.List<string>;
+        corpora: Array<string>;
         data: {contents: Array<[string, string]>};
     }>;
     DataMuseSimilarWords:React.SFC<{
-        corpora: Immutable.List<string>;
+        corpora: Array<string>;
         data:any;
     }>;
     TreqRenderer:React.SFC<{
-        corpora: Immutable.List<string>;
+        corpora: Array<string>;
         data:any;
     }>;
     UnsupportedRenderer:React.SFC<{
-        corpora: Immutable.List<string>;
+        corpora: Array<string>;
         data:any;
     }>;
     CustomMessageRenderer:React.SFC<{
-        corpora: Immutable.List<string>;
+        corpora: Array<string>;
         data:any;
     }>;
 }
@@ -53,7 +53,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     const RawHtmlRenderer:Views['RawHtmlRenderer'] = (props) => {
         return (
             <div>
-                {props.data.contents.map((v, i) => <div key={`block:${i}`} dangerouslySetInnerHTML={{__html: v[1]}} />)}
+                {List.map((v, i) => <div key={`block:${i}`} dangerouslySetInnerHTML={{__html: v[1]}} />, props.data.contents)}
             </div>
         );
     };
@@ -61,13 +61,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     const DataMuseSimilarWords:Views['DataMuseSimilarWords'] = (props) => {
         const generateLink = (word:string) => {
             const args = new MultiDict();
-            args.set('corpname', props.corpora.get(0));
-            props.corpora.rest().forEach(v => {
-                args.set('align', v);
-                // currently we have to ignore aligned kwics (the are not that easy to fetch)
-                // so we just set a key for query type and ignore the aligned query
-                args.set(`queryselector_${v}`, 'iquery');
-            });
+            args.set('corpname', props.corpora[0]);
+            pipe(
+                props.corpora,
+                List.tail(),
+                List.forEach(
+                    v => {
+                        args.set('align', v);
+                        // currently we have to ignore aligned kwics (the are not that easy to fetch)
+                        // so we just set a key for query type and ignore the aligned query
+                        args.set(`queryselector_${v}`, 'iquery');
+                    }
+                )
+            );
             args.set('queryselector', 'phraserow');
             args.set('phrase', word);
             return he.createActionLink('first', args);
@@ -100,8 +106,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     }> = (props) => {
         return <form className="view-in-treq" action={props.action} method="post" target="_blank">
-            {props.args.map(([k, v], i) =>
-                <input key={`arg:${i}:${k}`} type="hidden" name={k} value={v} />
+            {List.map(([k, v], i) =>
+                <input key={`arg:${i}:${k}`} type="hidden" name={k} value={v} />,
+                props.args
             )}
             <button type="submit" className="util-button">
                 {he.translate('default_kwic_connect__view_in_treq')}
@@ -131,7 +138,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 return (
                     <span className="words">
                         {translations.length > 0 ? '' : '\u2014'}
-                        {translations.map((translation, i) => (
+                        {List.map((translation, i) => (
                             <React.Fragment key={`${translation['righ']}:${i}`}>
                                 <a className="word"
                                         href={generateLink(props.data.kwic, translation['righ'])}
@@ -144,7 +151,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                                 </span>
                                 {i < props.data.contents.translations.length - 1 ? ', ' : null}
                             </React.Fragment>
-                        ))}
+                        ), translations)}
                     </span>
                 );
 

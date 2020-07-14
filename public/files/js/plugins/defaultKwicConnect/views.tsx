@@ -20,9 +20,8 @@
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { KwicConnectModel, KwicConnectState } from './model';
-import {PluginInterfaces} from '../../types/plugins';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { List } from 'cnc-tskit';
 
 export interface KwicConnectContainerProps {
 
@@ -39,37 +38,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // --------------------- <KwicConnectContainer /> ------------------------------------
 
-    class KwicConnectContainer extends React.Component<KwicConnectContainerProps, KwicConnectState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = model.getState();
-            this.stateChangeHandler = this.stateChangeHandler.bind(this);
-        }
-
-        stateChangeHandler(state:KwicConnectState) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = model.addListener(this.stateChangeHandler);
-            dispatcher.dispatch({
-                name: PluginInterfaces.KwicConnect.Actions.FETCH_INFO,
-                payload: {}
-            });
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class KwicConnectContainer extends React.Component<KwicConnectContainerProps & KwicConnectState> {
 
         render() {
-            const outList = this.state.data.filter(output => !!output);
+            const outList = this.props.data.filter(output => !!output);
             return (
                 <div className="KwicConnectContainer">
-                    {outList.map(output => (
+                    {List.map(output => (
                         <React.Fragment key={output.heading}>
                             <div className="KwicConnectWidget">
                                 <h3 className="tckc-provider block">{output.heading}
@@ -78,22 +53,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 <p className="note">
                                     {output.note ? output.note + '\u00a0|\u00a0' : null}
                                     {he.translate('default_kwic_connect__using_attr_for_srch_{attr}',
-                                        {attr: this.state.freqType})}
+                                        {attr: this.props.freqType})}
                                 </p>
                                 <hr />
                                 <layoutViews.ErrorBoundary>
                                     <div className="contents">
-                                        {output.data.size > 0 ?
+                                        {output.data.length > 0 ?
                                             <>
-                                                {output.data.map((item, j) =>
+                                                {List.map((item, j) =>
                                                     React.createElement(
                                                         output.renderer,
                                                         {
                                                             key: `provider:${j}`,
                                                             data: item,
-                                                            corpora: this.state.corpora
+                                                            corpora: this.props.corpora
                                                         }
-                                                    ))
+                                                    ), output.data)
                                                 }
                                             </> :
                                             <p className="data-not-avail">
@@ -105,8 +80,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 </layoutViews.ErrorBoundary>
                             </div>
                         </React.Fragment>
-                    ))}
-                    {this.state.isBusy ?
+                    ), outList)}
+                    {this.props.isBusy ?
                         <div className="loader">
                             <hr />
                             <layoutViews.AjaxLoaderImage />
@@ -119,6 +94,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }
 
     return {
-        KwicConnectContainer: KwicConnectContainer
+        KwicConnectContainer: BoundWithProps(KwicConnectContainer, model)
     };
 }
