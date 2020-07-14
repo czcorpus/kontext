@@ -31,7 +31,6 @@ import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, Aj
 } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as UserInfoActions, ActionName as UserInfoActionName } from '../user/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { MultiDict } from '../../multidict';
 import { IPageLeaveVoter } from '../common/pageLeave';
 
@@ -477,25 +476,15 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
                 state.renameLabelDialogVisible = !state.renameLabelDialogVisible;
             }
         );
-
-        this.addActionHandler<GlobalActions.AskPageLeave>(
-            GlobalActionName.AskPageLeave,
-            null,
-            (state, action, dispatch) => {
-                dispatch<GlobalActions.VotePageLeave>({
-                    name: GlobalActionName.VotePageLeave,
-                    payload: {
-                        modelRegKey: this.getRegistrationId(),
-                        reasonNotLeave: LineSelectionModel.numSelectedItems(state) > 0 ?
-                            this.layoutModel.translate('linesel__current_sel_not_saved_confirm') : null
-                    }
-                });
-            }
-        );
     }
 
     getRegistrationId():string {
         return 'LineSelectionModel';
+    }
+
+    reasonNotLeave():string|null {
+        return LineSelectionModel.numSelectedItems(this.getState()) > 0 ?
+            this.layoutModel.translate('linesel__current_sel_not_saved_confirm') : null;
     }
 
     private validateGroupId(state:LineSelectionModelState, value:number|undefined):boolean {

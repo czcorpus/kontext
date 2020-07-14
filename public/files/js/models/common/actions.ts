@@ -29,9 +29,7 @@ export enum ActionName {
     SwitchCorpus = 'SWITCH_CORPUS',
     SwitchCorpusReady = 'SWITCH_CORPUS_READY',
     SwitchCorpusDone = 'SWITCH_CORPUS_DONE',
-    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
-    AskPageLeave = 'ASK_PAGE_LEAVE',
-    VotePageLeave = 'PERMIT_PAGE_LEAVE'
+    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE'
 }
 
 export interface CorpusSwitchModelRestorePayload {
@@ -81,18 +79,5 @@ export namespace Actions {
         data:T;
     }> {
         name:ActionName.SwitchCorpusReady;
-    }
-
-    export interface AskPageLeave extends Action<{
-        url:string;
-    }> {
-        name:ActionName.AskPageLeave;
-    }
-
-    export interface VotePageLeave extends Action<{
-        modelRegKey:string;
-        reasonNotLeave:string|null;
-    }> {
-        name:ActionName.VotePageLeave;
     }
 }

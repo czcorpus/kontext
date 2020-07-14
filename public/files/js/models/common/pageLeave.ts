@@ -20,13 +20,11 @@
 
 import { StatefulModel, IFullActionControl, IModel } from 'kombo';
 
-import { Actions, ActionName } from './actions';
 import { IStaticallyIdentifiable } from './common';
-import { Dict, pipe, List, tuple } from 'cnc-tskit';
-import { scan } from 'rxjs/operators';
+import { List, pipe, Dict } from 'cnc-tskit';
 
 export interface IPageLeaveVoter<T> extends IModel<T>, IStaticallyIdentifiable {
-
+    reasonNotLeave():string|null;
 }
 
 
@@ -40,57 +38,19 @@ export class PageLeaveVoting extends StatefulModel<{}> {
             {}
         );
         this.votingModels = {};
-        /* TODO cannot do this with async evaluation !!!!
         window.addEventListener('beforeunload', (event) => {
-            dispatcher.dispatch<Actions.AskPageLeave>({
-                name: ActionName.AskPageLeave
-            });
-            event.preventDefault();
-            event.returnValue = '';
-        });
-        */
-        this.addActionHandler<Actions.AskPageLeave>(
-            ActionName.AskPageLeave,
-            action => {
-                this.suspend(
-                    pipe(
-                        this.votingModels,
-                        Dict.keys(),
-                        List.map(k => tuple(k, false)),
-                        Dict.fromEntries()
-                    ),
-                    (wAction, syncData) => {
-                        if (wAction.name === ActionName.VotePageLeave) {
-                            const payload = (wAction as Actions.VotePageLeave).payload;
-                            const newSync = {...syncData, [payload.modelRegKey]: true};
-                            return Dict.hasValue(false, newSync) ? newSync : null;
-                        }
-                        return syncData;
-
-                    }
-                ).pipe(
-                    scan(
-                        (acc, action:Actions.VotePageLeave) => {
-                            acc[action.payload.modelRegKey] = action.payload.reasonNotLeave;
-                            return acc;
-                        },
-                        {} as {[key:string]:string|null}
-                    )
-
-                ).subscribe(
-                    (status) => {
-                        const conditions = pipe(
-                            status,
-                            Dict.values(),
-                            List.filter(v => v !== null)
-                        );
-                        if (!List.empty(conditions)) {
-                            window.confirm(conditions.join(' # '));
-                        }
-                    }
-                )
+            const reasons = pipe(
+                this.votingModels,
+                Dict.values(),
+                List.map(model => model.reasonNotLeave()),
+                List.filter(r => r !== null)
+            );
+            if (!List.empty(reasons)) {
+                event.preventDefault();
+                event.returnValue = '';
             }
-        );
+        });
+
     }
 
     unregister() {}
