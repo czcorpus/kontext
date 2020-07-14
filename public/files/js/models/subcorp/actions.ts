@@ -51,7 +51,14 @@ export enum ActionName {
     SetInputPrefixThrottle = 'PUBSUBC_SET_INPUT_PREFIX_THROTTLE',
     SetCodePrefixDone = 'PUBSUBC_SET_CODE_PREFIX_DONE',
     DataLoadDone = 'PUBSUBC_DATA_LOAD_DONE',
-    UseInQuery = 'PUBSUBC_USE_IN_QUERY'
+    UseInQuery = 'PUBSUBC_USE_IN_QUERY',
+    FormWithinLineAdded = 'SUBCORP_FORM_WITHIN_LINE_ADDED',
+    FormWithinLineSetType = 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE',
+    FormWithinLineSetStruct = 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT',
+    FormWithinLineSetCQL = 'SUBCORP_FORM_WITHIN_LINE_SET_CQL',
+    FormWithinLineRemoved = 'SUBCORP_FORM_WITHIN_LINE_REMOVED',
+    FormShowRawWithinHint = 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT',
+    FormHideRawWithinHint = 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT',
 
 }
 
@@ -210,4 +217,48 @@ export namespace Actions {
         name:ActionName.UseInQuery;
     }
 
+    export interface FormWithinLineAdded extends Action<{
+        structureName:string;
+        negated:boolean;
+        attributeCql:string;
+    }> {
+        name:ActionName.FormWithinLineAdded;
+    }
+
+    export interface FormWithinLineSetType extends Action<{
+        rowIdx:number;
+        value:boolean;
+    }> {
+        name:ActionName.FormWithinLineSetType;
+    }
+
+    export interface FormWithinLineSetStruct extends Action<{
+        rowIdx:number;
+        value:string;
+    }> {
+        name:ActionName.FormWithinLineSetStruct;
+    }
+
+    export interface FormWithinLineSetCQL extends Action<{
+        rowIdx:number;
+        value:string;
+    }> {
+        name:ActionName.FormWithinLineSetCQL;
+    }
+
+    export interface FormWithinLineRemoved extends Action<{
+        rowIdx:number;
+    }> {
+        name:ActionName.FormWithinLineRemoved;
+    }
+
+    export interface FormShowRawWithinHint extends Action<{
+    }> {
+        name:ActionName.FormShowRawWithinHint;
+    }
+
+    export interface FormHideRawWithinHint extends Action<{
+    }> {
+        name:ActionName.FormHideRawWithinHint;
+    }
 }

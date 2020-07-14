@@ -26,7 +26,7 @@ import { MultiDict } from '../../multidict';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
 import { List, pipe } from 'cnc-tskit';
-import { ActionName } from './actions';
+import { ActionName, Actions } from './actions';
 
 /**
  *
@@ -85,59 +85,67 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         );
         this.pageModel = pageModel;
         this.subcFormModel = subcFormModel;
-    }
 
+        this.addActionHandler<Actions.FormSetInputMode>(
+            ActionName.FormSetInputMode,
+            (state, action) => {
+                state.inputMode = action.payload.value;
+            }
+        );
 
-    reduce(state:SubcorpWithinFormModelState, action:Action):SubcorpWithinFormModelState {
-        let newState:SubcorpWithinFormModelState;
+        this.addActionHandler<Actions.FormWithinLineAdded>(
+            ActionName.FormWithinLineAdded,
+            (state, action) => {
+                this.addLine(state, action.payload.structureName, action.payload.negated, action.payload.attributeCql);
+            }
+        );
 
-        switch (action.name) {
-            case ActionName.FormSetInputMode:
-                newState = this.copyState(state);
-                newState.inputMode = action.payload['value'];
-            break;
-            case 'SUBCORP_FORM_WITHIN_LINE_ADDED':
-                newState = this.copyState(state);
-                this.addLine(
-                    newState,
-                    action.payload['structureName'],
-                    action.payload['negated'],
-                    action.payload['attributeCql']
-                );
-            break;
-            case 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE':
-                newState = this.copyState(state);
-                this.updateWithinType(newState, action.payload['rowIdx'], action.payload['value']);
-            break;
-            case 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT':
-                newState = this.copyState(state);
-                this.updateStruct(newState, action.payload['rowIdx'], action.payload['value']);
-            break;
-            case 'SUBCORP_FORM_WITHIN_LINE_SET_CQL':
-                newState = this.copyState(state);
-                this.updateCql(newState, action.payload['rowIdx'], action.payload['value']);
-            break;
-            case 'SUBCORP_FORM_WITHIN_LINE_REMOVED':
-                newState = this.copyState(state);
-                this.removeLine(newState, action.payload['rowIdx']);
-            break;
-            case 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT':
-                newState = this.copyState(state);
-                newState.helpHintVisible = true;
-            break;
-            case 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT':
-                newState = this.copyState(state);
-                newState.helpHintVisible = false;
-            break;
-            default:
-                newState = state;
-        }
-        return newState;
-    }
+        this.addActionHandler<Actions.FormWithinLineSetType>(
+            ActionName.FormWithinLineSetType,
+            (state, action) => {
+                this.updateWithinType(state, action.payload.rowIdx, action.payload.value);
+            }
+        );
 
-    sideEffects(state:SubcorpWithinFormModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.name) {
-            case ActionName.FormSubmit:
+        this.addActionHandler<Actions.FormWithinLineSetStruct>(
+            ActionName.FormWithinLineSetStruct,
+            (state, action) => {
+                this.updateStruct(state, action.payload.rowIdx, action.payload.value);
+            }
+        );
+
+        this.addActionHandler<Actions.FormWithinLineSetCQL>(
+            ActionName.FormWithinLineSetCQL,
+            (state, action) => {
+                this.updateCql(state, action.payload.rowIdx, action.payload.value);
+            }
+        );
+
+        this.addActionHandler<Actions.FormWithinLineRemoved>(
+            ActionName.FormWithinLineRemoved,
+            (state, action) => {
+                this.removeLine(state, action.payload.rowIdx);
+            }
+        );
+
+        this.addActionHandler<Actions.FormShowRawWithinHint>(
+            ActionName.FormShowRawWithinHint,
+            (state, action) => {
+                state.helpHintVisible = true;
+            }
+        );
+
+        this.addActionHandler<Actions.FormHideRawWithinHint>(
+            ActionName.FormHideRawWithinHint,
+            (state, action) => {
+                state.helpHintVisible = false;
+            }
+        );
+
+        this.addActionHandler<Actions.FormSubmit>(
+            ActionName.FormSubmit,
+            null,
+            (state, action, dispatch) => {
                 if (state.inputMode === InputMode.RAW) {
                     const args = this.getSubmitArgs(state);
                     const err = this.validateForm(state);
@@ -158,8 +166,8 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                         }
                     );
                 }
-            break;
-        }
+            }
+        );
     }
 
     updateWithinType(state:SubcorpWithinFormModelState, rowIdx, negated) {

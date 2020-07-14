@@ -59,8 +59,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const changeHandler = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE',
+            dispatcher.dispatch<Actions.FormWithinLineSetType>({
+                name: ActionName.FormWithinLineSetType,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: ({'within': false, '!within': true})[evt.target.value]
@@ -146,8 +146,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const removeHandler = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_REMOVED',
+            dispatcher.dispatch<Actions.FormWithinLineRemoved>({
+                name: ActionName.FormWithinLineRemoved,
                 payload: {rowIdx: props.rowIdx}
             });
         };
@@ -157,8 +157,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         const handleStructChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT',
+            dispatcher.dispatch<Actions.FormWithinLineSetStruct>({
+                name: ActionName.FormWithinLineSetStruct,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: evt.target.value
@@ -167,8 +167,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         const handleCqlChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_SET_CQL',
+            dispatcher.dispatch<Actions.FormWithinLineSetCQL>({
+                name: ActionName.FormWithinLineSetCQL,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: evt.target.value
@@ -215,8 +215,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const addLineHandler = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_ADDED',
+            dispatcher.dispatch<Actions.FormWithinLineAdded>({
+                name: ActionName.FormWithinLineAdded,
                 payload: {
                     negated: false,
                     structureName: Object.keys(props.structsAndAttrs).sort()[0],
@@ -264,15 +264,15 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         _handleHelpClick() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT',
+            dispatcher.dispatch<Actions.FormShowRawWithinHint>({
+                name: ActionName.FormShowRawWithinHint,
                 payload: {}
             });
         }
 
         _handleHelpCloseClick() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT',
+            dispatcher.dispatch<Actions.FormHideRawWithinHint>({
+                name: ActionName.FormHideRawWithinHint,
                 payload: {}
             });
         }
