@@ -632,7 +632,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             queryTypes: {...state.queryTypes},
             lposValues: {...state.lposValues},
             matchCaseValues: {...state.matchCaseValues},
-            queries: {...state.queryTypes},
+            queries: {...state.queries},
             includeEmptyValues: {...state.includeEmptyValues}
         };
     }
