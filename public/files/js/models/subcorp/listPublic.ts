@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-
 import {PageModel} from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { Kontext } from '../../types/common';
@@ -53,7 +51,7 @@ export enum SearchTypes {
 
 export interface PublicSubcorpListState {
     isBusy:boolean;
-    data:Immutable.List<DataItem>;
+    data:Array<DataItem>;
     searchQuery:string;
     minQuerySize:number;
     searchType:SearchTypes;
@@ -62,8 +60,7 @@ export interface PublicSubcorpListState {
 
 export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListState> {
 
-
-    queryTypeMinPrefixMapping:Immutable.Map<string, number>;
+    queryTypeMinPrefixMapping:{[key:string]:number};
 
     private pageModel:PageModel;
 
@@ -73,17 +70,17 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             dispatcher,
             {
                 isBusy: false,
-                data: Immutable.List<DataItem>(data),
+                data: data,
                 searchQuery: '',
                 minQuerySize: minCodePrefix,
                 searchType: SearchTypes.BY_CODE,
                 inputPrefixThrottleTimer: -1
             }
         );
-        this.queryTypeMinPrefixMapping = Immutable.Map<string, number>({
+        this.queryTypeMinPrefixMapping = {
             [SearchTypes.BY_CODE]: minCodePrefix,
             [SearchTypes.BY_AUTHOR]: minAuthorPrefix
-        });
+        };
         this.pageModel = pageModel;
     }
 
@@ -93,7 +90,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             case ActionName.SetSearchType:
                 newState = this.copyState(state);
                 newState.searchType = action.payload['value'];
-                newState.minQuerySize = this.queryTypeMinPrefixMapping.get(action.payload['value']);
+                newState.minQuerySize = this.queryTypeMinPrefixMapping[action.payload['value']];
                 return newState;
             case ActionName.SetSearchQuery:
                 newState = this.copyState(state);
@@ -113,7 +110,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             case ActionName.DataLoadDone:
                 newState = this.copyState(state);
                 newState.isBusy = false;
-                newState.data = Immutable.List<DataItem>(action.payload['data']['data']);
+                newState.data = action.payload['data']['data'];
                 return newState;
             default:
                 return state;
