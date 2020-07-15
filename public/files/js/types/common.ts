@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Observable } from 'rxjs';
 import { IEventEmitter, IModel, StatelessModel } from 'kombo';
 
@@ -484,13 +483,6 @@ export namespace Kontext {
         }>;
     }
 
-    export interface CorpusSwitchActionProps<T> {
-        key:string;
-        data:T;
-        prevCorpora:Immutable.List<string>;
-        currCorpora:Immutable.List<string>;
-    }
-
     export type AttrItem = {n:string; label:string};
 
     export type VirtualKeys = Array<Array<[string, string]>>;
@@ -722,7 +714,7 @@ export namespace TextTypes {
 
         /**
          */
-        getValues():Immutable.List<AttributeValue>;
+        getValues():Array<AttributeValue>;
 
         /**
          * Set new attribute values
@@ -786,7 +778,7 @@ export namespace TextTypes {
         /**
          *
          */
-        setExtendedInfo(ident:string, data:Immutable.Map<string, any>):AttributeSelection;
+        setExtendedInfo(ident:string, data:{[key:string]:any}):AttributeSelection; // TODO type
     }
 
     /**
@@ -807,7 +799,7 @@ export namespace TextTypes {
          */
         setAutoComplete(values:Array<AutoCompleteItem>):ITextInputAttributeSelection;
 
-        getAutoComplete():Immutable.List<AutoCompleteItem>;
+        getAutoComplete():Array<AutoCompleteItem>;
 
         resetAutoComplete():ITextInputAttributeSelection;
     }
@@ -820,99 +812,10 @@ export namespace TextTypes {
         exportSelections(lockedOnesOnly:boolean):ExportedSelection;
     }
 
-    /**
-     *
-     */
-    export interface ITextTypesModel extends IEventEmitter, IAdHocSubcorpusDetector {
-
-        applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues,
-            bibMapping:TextTypes.BibMapping):void;
-
-        /**
-         * Return a defined structural attribute
-         */
-        getAttribute(ident:string):TextTypes.AttributeSelection;
-
-        getBibIdAttr():string;
-
-        getBibLabelAttr():string;
-
-        /**
-         *
-         */
-        getTextInputAttribute(ident:string):ITextInputAttributeSelection
-
-        /**
-         * Return a list of all the defined attributes
-         */
-        getAttributes():Immutable.List<TextTypes.AttributeSelection>;
-
-        /**
-         * Get all available values of a specific attribute before
-         * any filters were applied.
-         */
-        getInitialAvailableValues():Immutable.List<TextTypes.AttributeSelection>;
-
-        /**
-         * Export checkbox selections (e.g. for ajax requests)
-         */
-        exportSelections(lockedOnesOnly:boolean):TextTypes.ServerCheckedValues;
-
-        /**
-         *
-         */
-        filter(attrName:string, fn:(v:AttributeValue)=>boolean):void;
-
-        /**
-         * Update existing values of an attribute via provided map function.
-         * If the map function updates a record then it should create
-         * a new copy. Unchanged objects can be returned directly.
-         */
-        mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue,
-            i:number)=>TextTypes.AttributeValue);
-
-        /**
-         * Sets a new list of values for a specific attribute.
-         */
-        setValues(attrName:string, values:Array<string>):void;
-
-        /**
-         * Please note that this may not apply for all the
-         * attribute items.
-         */
-        setAutoComplete(attrName:string, values:Array<AutoCompleteItem>):void;
-
-        /**
-         * Returns true if a specific attribute (or at least one attribute
-         * if attrName is undefined) contains at least one selected value.
-         */
-        findHasSelectedItems(attrName?:string):boolean;
-
-        /**
-         * Returns a list of attribute names passing 'hasSelectedItems' test.
-         */
-        getAttributesWithSelectedItems(includeLocked:boolean):Array<string>;
-
-        /**
-         * Returns a (typically) numeric summary for a specific attribute.
-         */
-        getAttrSummary():Immutable.Map<string, AttrSummary>;
-
-        getTextInputPlaceholder():string;
-
-        setTextInputPlaceholder(s:string):void;
-
-        setRangeMode(attrName:string, rangeIsOn:boolean);
-
-        getRangeModes():Immutable.Map<string, boolean>;
-
-        canUndoState():boolean;
-
-        isBusy():boolean;
-
-        getMiminimizedBoxes():Immutable.Map<string, boolean>;
-
-        hasSomeMaximizedBoxes():boolean;
+    export interface ITextTypesModel<T> extends IModel<T> {
+        exportSelections(lockedOnesOnly:boolean):{[attr:string]:Array<string>};
+        getAttributes():Array<TextTypes.AttributeSelection>;
+        getInitialAvailableValues():Array<TextTypes.AttributeSelection>;
     }
 
     /**

@@ -21,10 +21,10 @@
 import {TextTypes, Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
 import * as Immutable from 'immutable';
-import { SelectedTextTypes, SelectionFilterMap } from '../../models/textTypes/main';
 import { IActionDispatcher, Action, StatelessModel, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { SelectionFilterMap, SelectedTextTypes } from '../../models/textTypes/common';
 
 
 interface ServerRefineResponse extends Kontext.AjaxResponse {
@@ -534,15 +534,5 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
         } else {
             rxOf(null);
         }
-    }
-
-    getTextInputPlaceholder():string {
-        /*
-        if (this.isEnabled) {
-            return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
-        }
-        return this.pluginApi.translate('ucnkLA__too_many_values_placeholder');
-        */
-       throw new Error('getTextInputPlaceholder() called')
     }
 }

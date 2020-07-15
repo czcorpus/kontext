@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, Action, StatelessModel, SEDispatcher } from 'kombo';
+import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Observable, throwError as rxThrowError } from 'rxjs';
 import { pipe, Dict, List, HTTP, tuple } from 'cnc-tskit';
 
@@ -394,7 +394,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 state.ttInitialAvailableValues
             );
             return idx > -1 ?
-                state.ttInitialAvailableValues[idx].getValues().map(item => item).toArray() :
+                List.map(item => item, state.ttInitialAvailableValues[idx].getValues()) :
                 [];
         };
 
@@ -402,18 +402,19 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             state.ttAttributes,
             List.filter(item => item.hasUserChanges()),
             List.flatMap(item => {
-                const tmp = this.getTtAttribute(state, item.name)
-                        .getValues()
-                        .filter(item => item.selected)
-                        .map(item => item.value);
-                return getInitialAvailableValues(item.name)
-                    .map(subItem => {
-                        return {
-                            attrName: item.name,
-                            attrValue: subItem.value,
-                            isSelected: tmp.contains(subItem.value)
-                        };
-                    });
+                const tmp = pipe(
+                    this.getTtAttribute(state, item.name).getValues(),
+                    List.filter(item => item.selected),
+                    List.map(item => item.value)
+                );
+                return List.map(
+                    subItem => ({
+                        attrName: item.name,
+                        attrValue: subItem.value,
+                        isSelected: List.some(x => x === subItem.value, tmp)
+                    }),
+                    getInitialAvailableValues(item.name)
+                );
             })
         );
     }

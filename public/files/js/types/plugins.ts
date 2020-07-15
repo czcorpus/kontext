@@ -22,7 +22,7 @@ import { Observable } from 'rxjs';
 import {Kontext, TextTypes} from '../types/common';
 import {CoreViews} from './coreViews';
 import {IConcLinesProvider} from '../types/concordance';
-import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
+import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 
@@ -118,7 +118,7 @@ export namespace PluginInterfaces {
         export interface Factory {
             (
                 pluginApi:IPluginApi,
-                textTypesModel:TextTypes.ITextTypesModel,
+                textTypesModel:TextTypes.ITextTypesModel<{}>,
                 corpusIdAttr:string
             ):IPlugin;
         }
@@ -310,7 +310,7 @@ export namespace PluginInterfaces {
 
         export interface IPlugin {
             getViews(subcMixerView:React.ComponentClass,
-                textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
+                textTypesModel:IModel<{}>):any; // TODO types
         }
 
         /**
@@ -354,7 +354,7 @@ export namespace PluginInterfaces {
         export interface Factory {
             (
                 pluginApi:IPluginApi,
-                textTypesModel:TextTypes.ITextTypesModel,
+                textTypesModel:TextTypes.ITextTypesModel<{}>,
                 isEnabled:boolean,
                 controlsAlignedCorpora:boolean,
                 args:PluginInterfaces.LiveAttributes.InitArgs

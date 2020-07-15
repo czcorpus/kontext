@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/soundmanager.d.ts" />
 
 import * as SoundManager from 'vendor/SoundManager';
-import * as Immutable from 'immutable';
+import { List } from 'cnc-tskit';
 
 
 export enum AudioPlayerStatus {
@@ -42,7 +42,7 @@ export class AudioPlayer {
 
     private playSessionId:string = 'kontext-playback';
 
-    private itemsToPlay:Immutable.List<string>;
+    private itemsToPlay:Array<string>;
 
     private onStop:()=>void;
 
@@ -62,7 +62,7 @@ export class AudioPlayer {
             debugMode : false,
             preferFlash : false
         });
-        this.itemsToPlay = Immutable.List([]);
+        this.itemsToPlay = [];
         this.onPlay = onPlay;
         this.onStop = onStop;
         this.onError = onError;
@@ -70,11 +70,11 @@ export class AudioPlayer {
 
     start(itemsToPlay?:Array<string>):void {
         if (itemsToPlay) {
-            this.itemsToPlay = this.itemsToPlay.concat(Immutable.List<string>(itemsToPlay)).toList();
+            this.itemsToPlay = this.itemsToPlay.concat(itemsToPlay);
         }
         let sound = this.soundManager.createSound({
             id: this.playSessionId,
-            url: this.itemsToPlay.first(),
+            url: List.head(this.itemsToPlay),
             autoLoad: true,
             autoPlay: false,
             volume: 100,
@@ -91,7 +91,7 @@ export class AudioPlayer {
             onfinish: () => {
                 this.status = AudioPlayerStatus.STOPPED;
                 this.soundManager.destroySound(this.playSessionId);
-                if (this.itemsToPlay.size > 0) {
+                if (!List.empty(this.itemsToPlay)) {
                     this.soundManager.destroySound(this.playSessionId); // TODO do we need this (again)?
                     this.start();
 
@@ -100,7 +100,7 @@ export class AudioPlayer {
                 }
             }
         });
-        this.itemsToPlay = this.itemsToPlay.shift();
+        this.itemsToPlay = List.shift(this.itemsToPlay);
         sound.play();
     }
 
@@ -129,7 +129,7 @@ export class AudioPlayer {
     stop():void {
         this.soundManager.stop(this.playSessionId);
         this.soundManager.destroySound(this.playSessionId);
-        this.itemsToPlay = this.itemsToPlay.clear();
+        this.itemsToPlay = [];
     }
 
     getStatus():AudioPlayerStatus {

@@ -48,7 +48,7 @@ import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../m
 import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs }
     from '../models/query/switchmc';
 import { QuerySaveAsFormModel } from '../models/query/save';
-import { TextTypesModel } from '../models/textTypes/main';
+import { TextTypesModel, TextTypesModelState } from '../models/textTypes/main';
 import { WithinBuilderModel } from '../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
 import { QueryContextModel } from '../models/query/context';
@@ -108,7 +108,7 @@ export class QueryModels {
 }
 
 interface RenderLinesDeps {
-    ttModel:TextTypes.ITextTypesModel;
+    ttModel:TextTypesModel;
     lvprops:ViewConfiguration;
     qs:PluginInterfaces.QueryStorage.IPlugin;
     tagh:PluginInterfaces.TagHelper.IPlugin;
@@ -793,7 +793,7 @@ export class ViewPage {
         );
     }
 
-    initAnalysisViews(ttModel:TextTypes.ITextTypesModel):void {
+    initAnalysisViews(ttModel:TextTypesModel):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         // ------------------ coll ------------
         const collFormInputs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
@@ -911,7 +911,7 @@ export class ViewPage {
         });
     }
 
-    private initTextTypesModel():TextTypes.ITextTypesModel {
+    private initTextTypesModel():TextTypesModel {
         this.queryModels.textTypesModel = new TextTypesModel(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
@@ -940,7 +940,7 @@ export class ViewPage {
         }
     }
 
-    private initModels(ttModel:TextTypes.ITextTypesModel,
+    private initModels(ttModel:TextTypesModel,
                 syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
                 tokenConnect:PluginInterfaces.TokenConnect.IPlugin):ViewConfiguration {
 

@@ -35,10 +35,13 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 
     private readonly useAlignedCorpBox:boolean;
 
-    constructor(pluginApi:IPluginApi, store:liveAttrsModel.LiveAttrsModel, useAlignedCorpBox:boolean) {
+    private readonly isEnabled:boolean;
+
+    constructor(pluginApi:IPluginApi, store:liveAttrsModel.LiveAttrsModel, useAlignedCorpBox:boolean, isEnabled:boolean) {
         this.pluginApi = pluginApi;
         this.model = store;
         this.useAlignedCorpBox = useAlignedCorpBox;
+        this.isEnabled = isEnabled;
     }
 
     getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):Views {
@@ -56,7 +59,10 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
     }
 
     getTextInputPlaceholder():string {
-        return this.model.getTextInputPlaceholder();
+        if (this.isEnabled) {
+            return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
+        }
+        return this.pluginApi.translate('ucnkLA__too_many_values_placeholder');
     }
 
 }
@@ -118,7 +124,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
         _ => numSelectionSteps === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
     );
 
-    return new LiveAttributesPlugin(pluginApi, store, alignedCorpora.size > 0);
+    return new LiveAttributesPlugin(pluginApi, store, alignedCorpora.size > 0, isEnabled);
 }
 
 export default create;

@@ -18,10 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {TextTypes} from '../../types/common';
-import * as Immutable from 'immutable';
+import { TextTypes } from '../../types/common';
+import { List, pipe } from 'cnc-tskit';
 
-export type ExtendedInfo = Immutable.Map<string, any>;
+
+export type ExtendedInfo = {[key:string]:any}; // TODO type
 
 /**
  * This class represents a text input-based selection of values for a specific structural
@@ -44,23 +45,23 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
 
     name:string;
 
-    autoCompleteHints:Immutable.List<TextTypes.AutoCompleteItem>;
+    autoCompleteHints:Array<TextTypes.AutoCompleteItem>;
 
-    values:Immutable.List<TextTypes.AttributeValue>; // it supports appending values via a single text input
+    values:Array<TextTypes.AttributeValue>; // it supports appending values via a single text input
 
     textFieldValue:string;
 
     constructor(name:string, label:string, isNumeric:boolean, isInterval:boolean,
             attrInfo:TextTypes.AttrInfo, textFieldValue:string,
-            values:Immutable.List<TextTypes.AttributeValue>,
-            autoCompleteHints:Immutable.List<TextTypes.AutoCompleteItem>) {
+            values:Array<TextTypes.AttributeValue>,
+            autoCompleteHints:Array<TextTypes.AutoCompleteItem>) {
         this.name = name;
         this.label = label;
         this.isNumeric = isNumeric;
         this.isInterval = isInterval;
         this.attrInfo = attrInfo;
-        this.autoCompleteHints = autoCompleteHints ? autoCompleteHints : Immutable.List([]);
-        this.values = values ? values : Immutable.List([]);
+        this.autoCompleteHints = autoCompleteHints ? autoCompleteHints : [];
+        this.values = values ? values : [];
         this.textFieldValue = textFieldValue;
     }
 
@@ -72,11 +73,11 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
                 this.isInterval,
                 this.attrInfo,
                 this.textFieldValue,
-                this.values.map(mapFn).toList(), this.autoCompleteHints);
+                List.map(mapFn, this.values), this.autoCompleteHints);
     }
 
     toggleValueSelection(idx:number):TextTypes.AttributeSelection {
-        let val = this.values.get(idx);
+        const val = this.values[idx];
         if (val.selected) {
             return new TextInputAttributeSelection(
                 this.name,
@@ -85,7 +86,7 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
                 this.isInterval,
                 this.attrInfo,
                 this.textFieldValue,
-                this.values.remove(idx),
+                List.removeAt(idx, this.values),
                 this.autoCompleteHints);
 
         } else {
@@ -107,27 +108,30 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
                 this.values.filter((item:TextTypes.AttributeValue)=>item.locked) :
                 this.values;
 
-        return items
-            .filter((item:TextTypes.AttributeValue) => item.selected === true)
-            .map((item:TextTypes.AttributeValue) => item.ident)
-            .toJS();
+        return pipe(
+            items,
+            List.filter((item:TextTypes.AttributeValue) => item.selected === true),
+            List.map((item:TextTypes.AttributeValue) => item.ident)
+        );
     }
 
     updateItems(items:Array<string>):TextTypes.AttributeSelection {
         let values;
-        if (this.values.size > 0) {
-            values = this.values.filter((item:TextTypes.AttributeValue) => {
-                return items.indexOf(item.ident) > -1;
-            }).toList();
+        if (!List.empty(this.values)) {
+            values = List.filter(
+                (item:TextTypes.AttributeValue) => items.indexOf(item.ident) > -1,
+                this.values
+            );
 
         } else {
-            values = Immutable.List(items).map((item) => {
-                return {
+            values = List.map(
+                item => ({
                     value: item,
                     selected: false,
                     locked: false,
-                }
-            }).toList();
+                }),
+                items
+            );
         }
         return new FullAttributeSelection(
             this.name,
@@ -140,19 +144,19 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
     }
 
     filter(fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AttributeSelection {
-        let values = this.values.filter(fn).toList();
         return new FullAttributeSelection(
             this.name,
             this.label,
             this.isNumeric,
             this.isInterval,
             this.attrInfo,
-            values
+            this.values.filter(fn)
         );
     }
 
     addValue(value:TextTypes.AttributeValue):TextTypes.AttributeSelection {
         if (this.values.find(x => x.value === value.value) === undefined) {
+            this.values.push(value);
             return new TextInputAttributeSelection(
                 this.name,
                 this.label,
@@ -160,7 +164,7 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
                 this.isInterval,
                 this.attrInfo,
                 this.textFieldValue,
-                this.values.push(value),
+                this.values,
                 this.autoCompleteHints
             );
 
@@ -170,9 +174,9 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
     }
 
     removeValue(value:string):TextTypes.AttributeSelection {
-        let idx = this.values.map(x => x.value).toList().indexOf(value);
+        const idx = List.findIndex(x => x.value === value, this.values);
         if (idx > -1) {
-            let newValues = this.values.remove(idx);
+            const newValues = List.removeAt(idx, this.values);
             return new TextInputAttributeSelection(
                 this.name,
                 this.label,
@@ -197,12 +201,12 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
             this.isInterval,
             this.attrInfo,
             this.textFieldValue,
-            this.values.clear(),
+            [],
             this.autoCompleteHints
         );
     }
 
-    getValues():Immutable.List<TextTypes.AttributeValue> {
+    getValues():Array<TextTypes.AttributeValue> {
         return this.values;
     }
 
@@ -214,12 +218,11 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
             this.isNumeric,
             this.isInterval,
             this.attrInfo,
-            Immutable.List(values)
+            values
         );
     }
 
     setAutoComplete(values:Array<TextTypes.AutoCompleteItem>):TextInputAttributeSelection {
-        let newValues = Immutable.List(values);
         return new TextInputAttributeSelection(
             this.name,
             this.label,
@@ -228,7 +231,7 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
             this.attrInfo,
             this.textFieldValue,
             this.values,
-            this.autoCompleteHints.clear().merge(newValues)
+            values
         );
     }
 
@@ -241,11 +244,11 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
             this.attrInfo,
             this.textFieldValue,
             this.values,
-            Immutable.List([])
+            []
         );
     }
 
-    getAutoComplete():Immutable.List<TextTypes.AutoCompleteItem> {
+    getAutoComplete():Array<TextTypes.AutoCompleteItem> {
         return this.autoCompleteHints;
     }
 
@@ -256,7 +259,7 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
     setExtendedInfo(ident:string, data:ExtendedInfo):TextTypes.AttributeSelection {
         const srchIdx = this.values.findIndex(v => v.ident === ident);
         if (srchIdx > -1) {
-            const currVal = this.values.get(srchIdx);
+            const currVal = this.values[srchIdx];
             const newVal = {
                 ident: currVal.ident,
                 value: currVal.value,
@@ -266,7 +269,7 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
                 numGrouped: currVal.numGrouped,
                 extendedInfo: data
             };
-            const values = this.values.set(srchIdx, newVal);
+            this.values[srchIdx] = newVal;
             return new TextInputAttributeSelection(
                 this.name,
                 this.label,
@@ -274,7 +277,7 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
                 this.isInterval,
                 this.attrInfo,
                 this.textFieldValue,
-                values,
+                this.values,
                 this.autoCompleteHints
             );
 
@@ -301,7 +304,11 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
     }
 
     getNumOfSelectedItems():number {
-        return this.values.reduce((p, curr) => p + (curr.selected ? 1 : 0), 0);
+        return List.foldl(
+            (p, curr) => p + (curr.selected ? 1 : 0),
+            0,
+            this.values
+        );
     }
 }
 
@@ -324,11 +331,11 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
 
     name:string;
 
-    values:Immutable.List<TextTypes.AttributeValue>;
+    values:Array<TextTypes.AttributeValue>;
 
     constructor(name:string, label:string, isNumeric:boolean, isInterval:boolean,
             attrInfo:TextTypes.AttrInfo,
-            values:Immutable.List<TextTypes.AttributeValue>) {
+            values:Array<TextTypes.AttributeValue>) {
         this.name = name;
         this.label = label;
         this.isNumeric = isNumeric;
@@ -344,7 +351,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
             this.isNumeric,
             this.isInterval,
             this.attrInfo,
-            this.values.map(mapFn).toList()
+            List.map(mapFn, this.values)
         );
     }
 
@@ -357,17 +364,12 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
             this.attrInfo,
             this.values
         );
-        let val = ans.values.get(idx);
+        const val = ans.values[idx];
         let newVal = {
-            ident: val.ident,
-            locked: val.locked,
-            value: val.value,
-            selected: !val.selected,
-            availItems: val.availItems,
-            numGrouped: val.numGrouped,
-            extendedInfo: val.extendedInfo
+            ...val,
+            selected: !val.selected
         };
-        ans.values = ans.values.set(idx, newVal);
+        ans.values[idx] = newVal;
         return ans;
     }
 
@@ -385,16 +387,18 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
         const items = lockedOnesOnly ?
                 this.values.filter((item:TextTypes.AttributeValue)=>item.locked) :
                 this.values;
-        return items
-            .filter((item:TextTypes.AttributeValue) => item.selected === true)
-            .map((item:TextTypes.AttributeValue) => item.ident)
-            .toJS();
+        return pipe(
+            items,
+            List.filter((item:TextTypes.AttributeValue) => item.selected === true),
+            List.map((item:TextTypes.AttributeValue) => item.ident)
+        );
     }
 
     updateItems(items:Array<string>):TextTypes.AttributeSelection {
-        let values = this.values.filter((item:TextTypes.AttributeValue) => {
-                        return items.indexOf(item.ident) > -1;
-                     }).toList();
+        const values = List.filter(
+            (item:TextTypes.AttributeValue) => items.indexOf(item.ident) > -1,
+            this.values
+        );
         return new FullAttributeSelection(
             this.name,
             this.label,
@@ -406,7 +410,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
     }
 
     filter(fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AttributeSelection {
-        let values = this.values.filter(fn).toList();
+        const values = List.filter(fn, this.values);
         return new FullAttributeSelection(
             this.name,
             this.label,
@@ -417,7 +421,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
         );
     }
 
-    getValues():Immutable.List<TextTypes.AttributeValue> {
+    getValues():Array<TextTypes.AttributeValue> {
         return this.values;
     }
 
@@ -428,7 +432,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
             this.isNumeric,
             this.isInterval,
             this.attrInfo,
-            Immutable.List(values)
+            values
         );
     }
 
@@ -447,7 +451,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
             this.isNumeric,
             this.isInterval,
             this.attrInfo,
-            this.values = this.values.clear()
+            []
         );
     }
 
@@ -456,26 +460,21 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
     }
 
     setExtendedInfo(ident:string, data:{[key:string]:any}):TextTypes.AttributeSelection {
-        const srchIdx = this.values.findIndex(v => v.ident === ident);
+        const srchIdx = List.findIndex(v => v.ident === ident, this.values);
         if (srchIdx > -1) {
-            const currVal = this.values.get(srchIdx);
+            const currVal = this.values[srchIdx];
             const newVal = {
-                ident: currVal.ident,
-                value: currVal.value,
-                locked: currVal.locked,
-                selected: currVal.selected,
-                availItems: currVal.availItems,
-                numGrouped: currVal.numGrouped,
+                ...currVal,
                 extendedInfo: data
             };
-            const values = this.values.set(srchIdx, newVal);
+            this.values[srchIdx] = newVal;
             return new FullAttributeSelection(
                 this.name,
                 this.label,
                 this.isNumeric,
                 this.isInterval,
                 this.attrInfo,
-                values
+                this.values
             );
 
         } else {

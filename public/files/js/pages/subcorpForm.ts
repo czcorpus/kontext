@@ -17,18 +17,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import * as Immutable from 'immutable';
+
 import * as React from 'react';
-import { tap } from 'rxjs/operators';
-import { IStateChangeListener } from 'kombo';
 
 import { Kontext, TextTypes } from '../types/common';
 import { PluginInterfaces } from '../types/plugins';
 import { PageModel } from '../app/page';
 import { init as subcorpViewsInit } from '../views/subcorp/forms';
-import { SubcorpFormModel, SubcorpFormModelState } from '../models/subcorp/form';
+import { SubcorpFormModel } from '../models/subcorp/form';
 import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
-import { TextTypesModel, SelectedTextTypes } from '../models/textTypes/main';
+import { TextTypesModel } from '../models/textTypes/main';
 import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
@@ -38,6 +36,7 @@ import { KontextPage } from '../app/main';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
+import { SelectedTextTypes } from '../models/textTypes/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -46,7 +45,7 @@ require('styles/subcorpForm.less');
 
 interface TTProps {
     alignedCorpora:Array<string>;
-    attributes:Immutable.List<TextTypes.AttributeSelection>;
+    attributes:Array<TextTypes.AttributeSelection>;
     liveAttrsCustomTT:React.ComponentClass<{}>|null;
     liveAttrsView:React.ComponentClass<{}>;
     manualAlignCorporaMode:boolean;
@@ -84,27 +83,7 @@ export class SubcorpForm {
         this.corpusIdent = corpusIdent;
     }
 
-    getCurrentSubcorpus():string {
-        return this.subcorpFormModel.getSubcname().value;
-    }
-
-    getCurrentSubcorpusOrigName():string {
-        return this.subcorpFormModel.getSubcname().value;
-    }
-
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>([this.corpusIdent.id]);
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return Immutable.List<Kontext.AttrItem>();
-    }
-
-    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
-        return Immutable.List<{n:string; v:string; pub:string}>();
-    }
-
-    initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:TTProps):void {
+    private initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:TTProps):void {
         this.layoutModel.renderReactComponent(
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
@@ -115,7 +94,7 @@ export class SubcorpForm {
         );
     }
 
-    createTextTypesComponents(selectedTextTypes:SelectedTextTypes):TTInitData {
+    private createTextTypesComponents(selectedTextTypes:SelectedTextTypes):TTInitData {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,

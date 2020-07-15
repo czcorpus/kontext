@@ -41,6 +41,7 @@ import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxCon
 import { Actions, ActionName, ConcGroupChangePayload, PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { SwitchMainCorpServerArgs } from '../query/common';
+import { TextTypesModel } from '../textTypes/main';
 
 
 
@@ -206,7 +207,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     private readonly audioPlayer:AudioPlayer;
 
-    private readonly ttModel:TextTypes.ITextTypesModel;
+    private readonly ttModel:TextTypesModel;
 
     /**
      * Note: substitutes "isBusy". Also compare with unfinishedCalculation.
@@ -217,7 +218,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
-            ttModel:TextTypes.ITextTypesModel, lineViewProps:ViewConfiguration,
+            ttModel:TextTypesModel, lineViewProps:ViewConfiguration,
             initialData:Array<ServerLineData>) {
         const viewAttrs = layoutModel.getConcArgs().head('attrs').split(',');
         super(
@@ -235,7 +236,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 origSubcorpName: lineViewProps.origSubCorpName,
                 unfinishedCalculation: lineViewProps.Unfinished,
                 fastAdHocIpm: lineViewProps.FastAdHocIpm,
-                providesAdHocIpm: ttModel.findHasSelectedItems(),
+                providesAdHocIpm: ttModel.hasSelectedItems(),
                 concSummary: lineViewProps.concSummary,
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),

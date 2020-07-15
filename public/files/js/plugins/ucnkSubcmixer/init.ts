@@ -57,8 +57,8 @@ const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, co
         pluginApi.dispatcher(),
         pluginApi,
         {
-            ttAttributes: textTypesModel.getAttributes().toArray(),
-            ttInitialAvailableValues: textTypesModel.getInitialAvailableValues().toArray(),
+            ttAttributes: textTypesModel.getAttributes(),
+            ttInitialAvailableValues: textTypesModel.getInitialAvailableValues(),
             currentSubcname: Kontext.newFormValue('', true),
             shares: [],
             alignedCorpora: [],
