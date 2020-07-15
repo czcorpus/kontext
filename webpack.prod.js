@@ -21,9 +21,9 @@
 const merge = require('webpack-merge');
 const common = require('./scripts/build/webpack.common');
 const webpack = require('webpack');
-const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const OptimizeCss = require('optimize-css-assets-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 
 module.exports = (env) => merge(common.wpConf(env), {
@@ -57,22 +57,23 @@ module.exports = (env) => merge(common.wpConf(env), {
 			}
 		]
 	},
+	optimization: {
+        minimizer: [
+            new OptimizeCss({
+				assetNameRegExp: /\.css/,
+				cssProcessorOptions: {
+					discardComments: { removeAll: true },
+					reduceIdents: false,
+					discardUnused: false
+				}
+			}),
+            new TerserPlugin(),
+        ]
+	},
 	plugins: [
 		new MiniCssExtractPlugin({
 			filename: "[name].css",
 			chunkFilename: "common.css"
-		}),
-		new OptimizeCssAssetsPlugin({
-			assetNameRegExp: /\.css/,
-			cssProcessorOptions: {
-				discardComments: { removeAll: true },
-				reduceIdents: false,
-				discardUnused: false
-			}
-		}),
-		new UglifyJSPlugin({
-			sourceMap: false,
-			parallel: 4 // we assume that even consumer cpus contain 4+ cores
 		}),
 		new webpack.DefinePlugin({
 			'process.env.NODE_ENV': JSON.stringify('production')
