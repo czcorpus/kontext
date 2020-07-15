@@ -19,7 +19,6 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 
 
 export namespace CoreViews {

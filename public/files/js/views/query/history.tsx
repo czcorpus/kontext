@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import {Keyboard} from 'cnc-tskit';
-import {PluginInterfaces} from '../../types/plugins';
+import { IActionDispatcher } from 'kombo';
+import { Keyboard } from 'cnc-tskit';
 import { Subscription } from 'rxjs';
+
+import { Kontext } from '../../types/common';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 export interface RecentQueriesPageListProps {
@@ -508,7 +508,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         editingQueryName:string;
         hasMoreItems:boolean;
         modelIsBusy:boolean;
-        data:Immutable.List<Kontext.QueryHistoryItem>;
+        data:Array<Kontext.QueryHistoryItem>;
 
     }> = (props) => {
         return (
@@ -520,7 +520,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                             editingQueryName={hasEditor ? props.editingQueryName : undefined} />;
                         })}
                     </ul>
-                    <DataTableFooter dataLength={props.data.size} modelIsBusy={props.modelIsBusy}
+                    <DataTableFooter dataLength={props.data.length} modelIsBusy={props.modelIsBusy}
                             hasMoreItems={props.hasMoreItems} />
             </div>
         );

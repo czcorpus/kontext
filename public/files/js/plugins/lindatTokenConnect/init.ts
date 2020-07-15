@@ -19,11 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {DefaultTokenConnectBackend} from '../defaultTokenConnect/init';
+import { DefaultTokenConnectBackend } from '../defaultTokenConnect/init';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import {init as initDefaultView, Views as DefaultTokenConnectRenderers} from '../defaultTokenConnect/view';
-import {init as initLindatView, Views as LindatTokenConnectRenderers} from './view';
+import { init as initDefaultView, Views as DefaultTokenConnectRenderers } from '../defaultTokenConnect/view';
+import { init as initLindatView, Views as LindatTokenConnectRenderers } from './view';
 
 declare var require:any;
 require('../defaultTokenConnect/style.less');
@@ -44,7 +43,7 @@ export class LindatTokenConnectBackend extends DefaultTokenConnectBackend {
                 lindatView:LindatTokenConnectRenderers, alignedCorpora:Array<string>, conf:ServerExportedConf) {
         super(pluginApi, defaultViews, alignedCorpora, conf);
         this.lindatViews = lindatView;
-        this.alignedCorpora = Immutable.List<string>(alignedCorpora);
+        this.alignedCorpora = alignedCorpora;
     }
 
     selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {

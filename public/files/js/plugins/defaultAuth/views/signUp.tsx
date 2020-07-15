@@ -20,12 +20,13 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Subject, Observable, Subscription } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { debounceTime } from 'rxjs/operators'
 
 import { Kontext } from '../../../types/common';
-import { UserProfileModel, UserProfileState, Actions, UsernameAvailability } from './../profile';
+import { UserProfileModel, UserProfileState } from './../profile';
 import { UserProfileViews } from './profile';
+import { Actions, ActionName } from '../actions';
 
 
 export interface UserSignUpViews {
@@ -41,23 +42,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // --------------- <UsernameAvailFlag /> ----------------------------------------------
 
     const UsernameAvailFlag:React.SFC<{
-        status:UsernameAvailability;
+        status:boolean;
         isBusy:boolean;
     }> = (props) => {
 
         const getMsg = () => {
             switch (props.status) {
-                case UsernameAvailability.AVAILABLE:
+                case true:
                     return <>(
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
                         {he.translate('user__username_avail')})
                     </>;
-                case UsernameAvailability.NOT_AVAILABLE:
+                case false:
                     return <>(
                         <img src={he.createStaticUrl('img/error-icon.svg')} alt={he.translate('global__error_icon')} />
                         {he.translate('user__username_not_avail')})
                     </>;
-                case UsernameAvailability.UNKNOWN:
                 default:
                     return <></>;
             }
@@ -72,7 +72,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     class TrUsernameInput extends React.PureComponent<{
         value:Kontext.FormValue<string>;
-        usernameAvail:UsernameAvailability;
+        usernameAvail:boolean;
         usernameAvailBusy:boolean;
     }> {
 
@@ -89,17 +89,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             this.writingThrottle = this.writingStream.pipe(debounceTime(TrUsernameInput.USERNAME_WRITING_THROTTLE_INTERVAL));
             this.writingThrottle.subscribe({
                 next: (v:string) => {
-                    dispatcher.dispatch({
-                        name: Actions.CHECK_USERNAME,
-                        payload: {}
+                    dispatcher.dispatch<Actions.CheckUsername>({
+                        name: ActionName.CheckUsername
                     });
                 }
             });
         }
 
         private handleUsernameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch({
-                name: Actions.SET_USERNAME,
+            dispatcher.dispatch<Actions.SetUsername>({
+                name: ActionName.SetUsername,
                 payload: {
                     value: evt.target.value
                 }
@@ -139,8 +138,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleFirstNameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch({
-                name: Actions.SET_FIRSTNAME,
+            dispatcher.dispatch<Actions.SetFirstname>({
+                name: ActionName.SetFirstname,
                 payload: {
                     value: evt.target.value
                 }
@@ -148,8 +147,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleLastNameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch({
-                name: Actions.SET_LASTNAME,
+            dispatcher.dispatch<Actions.SetLastname>({
+                name: ActionName.SetLastname,
                 payload: {
                     value: evt.target.value
                 }
@@ -157,8 +156,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleEmailChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch({
-                name: Actions.SET_EMAIL,
+            dispatcher.dispatch<Actions.SetEmail>({
+                name: ActionName.SetEmail,
                 payload: {
                     value: evt.target.value
                 }
@@ -166,22 +165,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleSignUpButton(evt:React.MouseEvent<HTMLButtonElement>):void {
-            dispatcher.dispatch({
-                name: Actions.SUBMIT_SIGN_UP,
+            dispatcher.dispatch<Actions.SubmitSignUp>({
+                name: ActionName.SubmitSignUp,
                 payload: {}
             });
         }
 
         private handleNewRegistration(evt:React.MouseEvent<HTMLButtonElement>):void {
-            dispatcher.dispatch({
-                name: Actions.NEW_REGISTRATION,
+            dispatcher.dispatch<Actions.NewRegistration>({
+                name: ActionName.NewRegistration,
                 payload: {}
             });
         }
 
         private handleGoToMainpage(evt:React.MouseEvent<HTMLButtonElement>):void {
-            dispatcher.dispatch({
-                name: Actions.GO_TO_MAIN_PAGE,
+            dispatcher.dispatch<Actions.GoToMainPage>({
+                name: ActionName.GoToMainPage,
                 payload: {}
             });
         }
