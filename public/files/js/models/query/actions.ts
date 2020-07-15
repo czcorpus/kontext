@@ -88,6 +88,14 @@ export enum ActionName {
     SortFormSetSbward = 'SORT_FORM_SET_SBWARD',
     SortFormSetSicase = 'SORT_FORM_SET_SICASE',
     SortFormSetSpos = 'SORT_FORM_SET_SPOS',
+    MLSortFormSubmit = 'ML_SORT_FORM_SUBMIT',
+    MLSortFormAddLevel = 'ML_SORT_FORM_ADD_LEVEL',
+    MLSortFormRemoveLevel = 'ML_SORT_FORM_REMOVE_LEVEL',
+    MLSortFormSetSattr = 'ML_SORT_FORM_SET_SATTR',
+    MLSortFormSetSicase = 'ML_SORT_FORM_SET_SICASE',
+    MLSortFormSetSbward = 'ML_SORT_FORM_SET_SBWARD',
+    MLSortFormSetCtx = 'ML_SORT_FORM_SET_CTX',
+    MLSortFormSetCtxAlign = 'ML_SORT_FORM_SET_CTX_ALIGN',
 }
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
@@ -495,5 +503,64 @@ export namespace Actions {
         value:string;
     }> {
         name:ActionName.SortFormSetSpos;
+    }
+
+    export interface MLSortFormSubmit extends Action<{
+        sortId:string;
+    }> {
+        name:ActionName.MLSortFormSubmit;
+    }
+
+    export interface MLSortFormAddLevel extends Action<{
+        sortId:string;
+    }> {
+        name:ActionName.MLSortFormAddLevel;
+    }
+
+    export interface MLSortFormRemoveLevel extends Action<{
+        sortId:string;
+        levelIdx:number;
+    }> {
+        name:ActionName.MLSortFormRemoveLevel;
+    }
+
+    export interface MLSortFormSetSattr extends Action<{
+        sortId:string;
+        levelIdx:number;
+        value:string;
+    }> {
+        name:ActionName.MLSortFormSetSattr;
+    }
+
+    export interface MLSortFormSetSicase extends Action<{
+        sortId:string;
+        levelIdx:number;
+        value:string;
+    }> {
+        name:ActionName.MLSortFormSetSicase;
+    }
+
+    export interface MLSortFormSetSbward extends Action<{
+        sortId:string;
+        levelIdx:number;
+        value:string;
+    }> {
+        name:ActionName.MLSortFormSetSbward;
+    }
+
+    export interface MLSortFormSetCtxAlign extends Action<{
+        sortId:string;
+        levelIdx:number;
+        value:string;
+    }> {
+        name:ActionName.MLSortFormSetCtxAlign;
+    }
+
+    export interface MLSortFormSetCtx extends Action<{
+        sortId:string;
+        levelIdx:number;
+        index:number;
+    }> {
+        name:ActionName.MLSortFormSetCtx;
     }
 }

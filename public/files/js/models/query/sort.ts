@@ -18,10 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import * as Immutable from 'immutable';
 
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
@@ -338,56 +337,75 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         this.pageModel = pageModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.onAction((action:Action) => {
-            switch (action.name) {
-                case MainMenuActionName.ShowSort:
-                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_SUBMIT':
-                    this.submit(action.payload['sortId']);
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_ADD_LEVEL':
-                    this.addLevel(action.payload['sortId']);
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_REMOVE_LEVEL':
-                    this.removeLevel(action.payload['sortId'], action.payload['levelIdx']);
-                    this.emitChange();
-                break;
-                case ActionName.SortSetActiveStore:
-                    this.changeState(state => {
-                        state.isActiveActionValues[action.payload['sortId']] = action.payload['formAction'] === 'mlsortx';
-                    });
-                break;
-                case 'ML_SORT_FORM_SET_SATTR':
-                    this.changeState(state => {
-                        state.mlxattrValues[action.payload['sortId']][action.payload['levelIdx']] = action.payload['value'];
-                    });
-                break;
-                case 'ML_SORT_FORM_SET_SICASE':
-                    this.changeState(state => {
-                        state.mlxicaseValues[action.payload['sortId']][action.payload['levelIdx']] = action.payload['value'];
-                    });
-                break;
-                case 'ML_SORT_FORM_SET_SBWARD':
-                    this.changeState(state => {
-                        state.mlxbwardValues[action.payload['sortId']][action.payload['levelIdx']] = action.payload['value'];
-                    });
-                break;
-                case 'ML_SORT_FORM_SET_CTX':
-                    this.changeState(state => {
-                        state.ctxIndexValues[action.payload['sortId']][action.payload['levelIdx']] = action.payload['index'];
-                    });
-                break;
-                case 'ML_SORT_FORM_SET_CTX_ALIGN':
-                    this.changeState(state => {
-                        state.ctxAlignValues[action.payload['sortId']][action.payload['levelIdx']] = action.payload['value'];
-                    });
-                break;
+        this.addActionHandler<MainMenuActions.ShowSort>(
+            MainMenuActionName.ShowSort,
+            action => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
             }
-        });
+        );
+
+        this.addActionHandler<Actions.MLSortFormSubmit>(
+            ActionName.MLSortFormSubmit,
+            action => {
+                this.submit(action.payload.sortId);
+            }
+        );
+
+        this.addActionHandler<Actions.MLSortFormAddLevel>(
+            ActionName.MLSortFormAddLevel,
+            action => {
+                this.addLevel(action.payload.sortId);
+            }
+        );
+
+        this.addActionHandler<Actions.MLSortFormRemoveLevel>(
+            ActionName.MLSortFormRemoveLevel,
+            action => {
+                this.removeLevel(action.payload.sortId, action.payload.levelIdx);
+            }
+        );
+
+        this.addActionHandler<Actions.SortSetActiveStore>(
+            ActionName.SortSetActiveStore,
+            action => {this.changeState(state => {
+                state.isActiveActionValues[action.payload.sortId] = action.payload.formAction === 'mlsortx';
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetSattr>(
+            ActionName.MLSortFormSetSattr,
+            action => {this.changeState(state => {
+                state.mlxattrValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetSicase>(
+            ActionName.MLSortFormSetSicase,
+            action => {this.changeState(state => {
+                state.mlxicaseValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetSbward>(
+            ActionName.MLSortFormSetSbward,
+            action => {this.changeState(state => {
+                state.mlxbwardValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetCtx>(
+            ActionName.MLSortFormSetCtx,
+            action => {this.changeState(state => {
+                state.ctxIndexValues[action.payload.sortId][action.payload.levelIdx] = action.payload.index;
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetCtxAlign>(
+            ActionName.MLSortFormSetCtxAlign,
+            action => {this.changeState(state => {
+                state.ctxAlignValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
+            })}
+        );
     }
 
     unregister() {}
