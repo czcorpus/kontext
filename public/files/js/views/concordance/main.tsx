@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { Subscription } from 'rxjs';
-import { Dict, tuple } from 'cnc-tskit';
+import { tuple } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
@@ -56,6 +56,7 @@ export class ViewPageModels {
     ttDistModel:TextTypesDistModel;
     dashboardModel:ConcDashboard;
     usageTipsModel:UsageTipsModel;
+    syntaxViewModel:IModel<PluginInterfaces.SyntaxViewer.BaseState>;
 }
 
 
@@ -76,10 +77,6 @@ export interface ConcordanceDashboardProps {
         canSendEmail:boolean;
         ShowConcToolbar:boolean;
         anonymousUserConcLoginPrompt:boolean;
-        onSyntaxPaneReady?:(tokenNumber:number, kwicLength:number)=>void;
-        onSyntaxPaneClose:()=>void;
-        onChartFrameReady?:(usePrevData?:boolean)=>void;
-        onReady:()=>void;
     };
     kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
 }
@@ -101,13 +98,12 @@ function secs2hms(v:number) {
 
 export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     concDetailModel, refsDetailModel, usageTipsModel,
-    ttDistModel, dashboardModel}:MainModuleArgs):MainViews
+    ttDistModel, dashboardModel, syntaxViewModel}:MainModuleArgs):MainViews
  {
 
     const layoutViews = he.getLayoutViews();
 
     const lconcSaveModel = lineViewModel.getSaveModel();
-    const syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin = lineViewModel.getSyntaxViewModel();
 
     const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionModel);
     const paginationViews = paginatorViewsInit(dispatcher, he, lineViewModel);
@@ -136,7 +132,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         canSendEmail:boolean;
         mode:LineSelectionModes;
         isBusy:boolean;
-        onChartFrameReady?:()=>void;
         onCloseClick:()=>void;
 
     }> = (props) => {
@@ -144,7 +139,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         const renderContents = () => {
             if (props.isLocked) {
                 return <lineSelViews.LockedLineGroupsMenu
-                        chartCallback={props.onChartFrameReady}
                         canSendEmail={props.canSendEmail}
                         mode={props.mode} />;
 
@@ -165,7 +159,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     // ------------------------- <LineSelectionOps /> ---------------------------
 
     interface LineSelectionOpsProps {
-        onChartFrameReady?:()=>void;
         numLinesInLockedGroups:number;
         visible:boolean;
     }
@@ -258,7 +251,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 isBusy={this.props.isBusy}
                                 isLocked={this.props.isLocked}
                                 onCloseClick={this._closeMenuHandler}
-                                onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={!!this.props.emailDialogCredentials} />
                         :  null}
                 </div>
@@ -457,7 +449,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         viewMode:ViewOptions.AttrViewMode;
         lineSelOpsVisible:boolean;
         numLinesInLockedGroups:number;
-        onChartFrameReady?:()=>void;
     }
 
     class ConcToolbarWrapper extends React.Component<ConcToolbarWrapperProps & LineSelectionModelState> {
@@ -467,7 +458,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 <div className="toolbar-level">
                     <BoundLineSelectionOps
                             visible={this.props.lineSelOpsVisible}
-                            onChartFrameReady={this.props.onChartFrameReady}
                             numLinesInLockedGroups={this.props.numLinesInLockedGroups} />
                     {this.props.showConcToolbar ?
                         <ConcOptions viewMode={this.props.viewMode} />
@@ -516,45 +506,11 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <SyntaxViewPane /> ----------------------------
 
-    class SyntaxViewPane extends React.Component<{
-        tokenNumber:number;
-        kwicLength:number;
-        onReady:(tokNum:number, kwicLen:number)=>void;
-        onClose:()=>void;
+    interface SyntaxViewPaneProps {
         onCloseClick:()=>void;
-    },
-    {
-        waiting:boolean;
-    }> {
+    }
 
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = {
-                waiting: syntaxViewModel.isWaiting()
-            };
-            this._handleModelChange = this._handleModelChange.bind(this);
-        }
-
-        _handleModelChange() {
-            this.setState({
-                waiting: syntaxViewModel.isWaiting()
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = syntaxViewModel.addListener(this._handleModelChange);
-            this.props.onReady(
-                this.props.tokenNumber,
-                this.props.kwicLength
-            );
-        }
-
-        componentWillUnmount() {
-            this.props.onClose();
-            this.modelSubscription.unsubscribe();
-        }
+    class SyntaxViewPane extends React.PureComponent<SyntaxViewPaneProps & PluginInterfaces.SyntaxViewer.BaseState> {
 
         render() {
             return (
@@ -562,7 +518,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
                             customClass="syntax-tree">
                         <div id="syntax-view-pane" className="SyntaxViewPane">
-                            {this.state.waiting ?
+                            {this.props.isBusy ?
                                 (<div className="ajax-loader">
                                     <img src={he.createStaticUrl('img/ajax-loader.gif')}
                                             alt={he.translate('global__loading')} />
@@ -574,6 +530,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             );
         }
     };
+
+    const BoundSyntaxViewPane = BoundWithProps<SyntaxViewPaneProps, PluginInterfaces.SyntaxViewer.BaseState>(SyntaxViewPane, syntaxViewModel);
 
 
     // ------------------------- <ConcordanceView /> ---------------------------
@@ -611,21 +569,16 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _handleSyntaxBoxClose() {
-            dispatcher.dispatch({
-                name: 'HIDE_SYNTAX_VIEW',
-                payload: {}
+            dispatcher.dispatch<Actions.CloseSyntaxView>({
+                name: ActionName.CloseSyntaxView
             });
         }
 
         render() {
             return (
                 <div className="ConcordanceView">
-                    {this.props.syntaxBoxData ?
-                        <SyntaxViewPane onCloseClick={this._handleSyntaxBoxClose}
-                                tokenNumber={this.props.syntaxBoxData.tokenNumber}
-                                kwicLength={this.props.syntaxBoxData.kwicLength}
-                                onReady={this.props.onSyntaxPaneReady}
-                                onClose={this.props.onSyntaxPaneClose} /> : null}
+                    {this.props.syntaxViewVisible ?
+                        <BoundSyntaxViewPane onCloseClick={this._handleSyntaxBoxClose} /> : null}
                     {this.props.kwicDetailVisible ?
                         <concDetailViews.ConcordanceDetail closeClickHandler={this._handleDetailCloseClick} />
                         : null}
@@ -647,7 +600,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         </div>
                         <BoundConcToolbarWrapper
                                 lineSelOpsVisible={this.props.lineSelOptionsVisible}
-                                onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
                                 numLinesInLockedGroups={this.props.numItemsInLockedGroups}

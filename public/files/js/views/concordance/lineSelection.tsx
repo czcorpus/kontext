@@ -30,7 +30,6 @@ import { LineSelectionModes } from '../../models/concordance/common';
 export interface LockedLineGroupsMenuProps {
     canSendEmail:boolean;
     mode:string; // TODO enum
-    chartCallback:(v:boolean)=>void;
 }
 
 export interface LineSelectionViews {
@@ -375,20 +374,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             dispatcher.dispatch<Actions.ToggleLineGroupRenameForm>({
                 name: ActionName.ToggleLineGroupRenameForm
             });
-        }
-
-        componentDidMount() {
-            if (typeof this.props.chartCallback === 'function') {
-                this.props.chartCallback(false);
-            }
-        }
-
-        componentDidUpdate(prevProps, prevState) {
-            // we must inform non-react chart building function to redraw d3 charts
-            if (typeof this.props.chartCallback === 'function'
-                    && prevProps.lastCheckpointUrl !== this.props.lastCheckpointUrl) {
-                this.props.chartCallback(false); // = false => do not use prev data
-            }
         }
 
         render() {

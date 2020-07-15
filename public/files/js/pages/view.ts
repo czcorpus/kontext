@@ -21,12 +21,12 @@
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
 import { Action } from 'kombo';
-import { Observable, of as rxOf, zip } from 'rxjs';
+import { of as rxOf, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
 import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main';
-import { Kontext, TextTypes, ViewOptions } from '../types/common';
+import { Kontext, ViewOptions } from '../types/common';
 import { AjaxResponse } from '../types/ajaxResponses';
 import { PageModel, DownloadType } from '../app/page';
 import { PluginInterfaces } from '../types/plugins';
@@ -48,7 +48,7 @@ import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../m
 import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs }
     from '../models/query/switchmc';
 import { QuerySaveAsFormModel } from '../models/query/save';
-import { TextTypesModel, TextTypesModelState } from '../models/textTypes/main';
+import { TextTypesModel } from '../models/textTypes/main';
 import { WithinBuilderModel } from '../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
 import { QueryContextModel } from '../models/query/context';
@@ -135,7 +135,7 @@ export class ViewPage {
 
     private analysisViews:AnalysisFrameViews;
 
-    private lineGroupsChart:LineSelGroupsRatiosChart;
+    private lineGroupsChart:LineSelGroupsRatiosChart; // TODO
 
     private queryFormViews:QueryMainViews;
 
@@ -221,20 +221,6 @@ export class ViewPage {
 
     /**
      *
-     * @param rootElm
-     * @param usePrevData
-     */
-    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
-        this.lineGroupsChart.showGroupsStats(
-            rootElm,
-            usePrevData,
-            this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
-            [200, 200]
-        );
-    }
-
-    /**
-     *
      */
     private setupHistoryOnPopState():void {
         // register event to load lines via ajax in case user hits back
@@ -256,28 +242,15 @@ export class ViewPage {
         });
     }
 
-    renderLines(renderDeps:RenderLinesDeps,
-            kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):Observable<RenderLinesDeps> {
-        return new Observable(observer => {
-            renderDeps.lvprops.onReady = () => {
-                observer.next(renderDeps);
-                observer.complete();
-            };
-            try {
-                this.layoutModel.renderReactComponent(
-                    this.concViews.ConcordanceDashboard,
-                    window.document.getElementById('conc-dashboard-mount'),
-                    {
-                        concViewProps: renderDeps.lvprops,
-                        kwicConnectView
-                    }
-                );
-
-            } catch (e) {
-                console.error(e.stack);
-                observer.error(e);
+    renderLines(renderDeps:RenderLinesDeps, kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):void {
+        this.layoutModel.renderReactComponent(
+            this.concViews.ConcordanceDashboard,
+            window.document.getElementById('conc-dashboard-mount'),
+            {
+                concViewProps: renderDeps.lvprops,
+                kwicConnectView
             }
-        });
+        );
     }
 
     reloadHits():void {
@@ -991,18 +964,7 @@ export class ViewPage {
             supportsTokenConnect: tokenConnect ? tokenConnect.providesAnyTokenInfo() : false,
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
-            ),
-            onSyntaxPaneReady: (tokenNumber, kwicLength) => {
-                syntaxViewer.render(
-                    document.getElementById('syntax-view-pane'),
-                    tokenNumber,
-                    kwicLength
-                );
-            },
-            onSyntaxPaneClose: () => {
-                syntaxViewer.close();
-            },
-            onReady: ()=>undefined
+            )
         };
 
         this.viewModels = new ViewPageModels();
@@ -1034,6 +996,8 @@ export class ViewPage {
             lineViewProps,
             this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
+
+        this.viewModels.syntaxViewModel = syntaxViewer;
 
         this.viewModels.lineSelectionModel = new LineSelectionModel({
             layoutModel: this.layoutModel,
@@ -1108,20 +1072,22 @@ export class ViewPage {
             let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin =
                 syntaxViewerInit(this.layoutModel.pluginApi());
             if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
-                syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher, {});
+                syntaxViewerModel = new DummySyntaxViewModel(
+                    this.layoutModel.dispatcher,
+                    {
+                        isBusy: false,
+                        kwicLength: 0,
+                        tokenNumber: -1,
+                        targetHTMLElementID: null
+                    }
+                );
             }
             const lineViewProps = this.initModels(
                 ttModel,
                 syntaxViewerModel,
                 this.initTokenConnect()
             );
-            // we must handle non-React widgets:
-            lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
-                this.showGroupsStats(
-                    <HTMLElement>document.querySelector('#selection-actions .chart-area'),
-                    usePrevData
-                );
-            };
+
             this.concViews = concViewsInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
@@ -1167,10 +1133,6 @@ export class ViewPage {
                         this.layoutModel.getConf<Array<string>>('alignedCorpora')
                     ).getView() :
                     null
-
-            ).subscribe(
-                () => undefined,
-                (err) => this.layoutModel.showMessage('error', err)
             );
         });
     }

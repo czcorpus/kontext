@@ -23,7 +23,7 @@ import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP } from 'cnc-tskit';
 
-import { TextTypes, ViewOptions } from '../../types/common';
+import { ViewOptions } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PluginInterfaces } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
@@ -175,8 +175,6 @@ export interface ConcordanceModelState {
 
     showAnonymousUserWarn:boolean;
 
-    syntaxBoxData:{tokenNumber:number; kwicLength:number}|null;
-
     supportsTokenConnect:boolean;
 
     emptyRefValPlaceholder:string;
@@ -190,6 +188,8 @@ export interface ConcordanceModelState {
     lineSelOptionsVisible:boolean;
 
     lineGroupIds:Array<LineGroupId>;
+
+    syntaxViewVisible:boolean;
 }
 
 
@@ -251,7 +251,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 playerAttachedChunk: '',
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
-                syntaxBoxData: null,
                 emptyRefValPlaceholder: '\u2014',
                 lineGroupIds: attachColorsToIds(
                     layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
@@ -261,7 +260,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 saveFormVisible: false,
                 kwicDetailVisible: false,
                 refDetailVisible: false,
-                lineSelOptionsVisible: false
+                lineSelOptionsVisible: false,
+                syntaxViewVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -663,7 +663,25 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                     this.changeGroupNaming(action.payload)
                 }
             }
-        )
+        );
+
+        this.addActionHandler<Actions.ShowSyntaxView>(
+            ActionName.ShowSyntaxView,
+            action => {
+                this.changeState(state => {
+                    state.syntaxViewVisible = true;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.CloseSyntaxView>(
+            ActionName.CloseSyntaxView,
+            action => {
+                this.changeState(state => {
+                    state.syntaxViewVisible = false;
+                });
+            }
+        );
     }
 
     unregister():void {}
