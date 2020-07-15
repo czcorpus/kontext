@@ -52,6 +52,7 @@ export enum ActionName {
 export namespace Actions {
 
     export interface SelectionChanged extends Action<{
+        hasSelectedItems:boolean;
     }> {
         name:ActionName.SelectionChanged;
     };
@@ -130,6 +131,8 @@ export namespace Actions {
     };
 
     export interface AttributeTextInputAutocompleteRequest extends Action<{
+        attrName:string;
+        value:string;
     }> {
         name:ActionName.AttributeTextInputAutocompleteRequest;
     };

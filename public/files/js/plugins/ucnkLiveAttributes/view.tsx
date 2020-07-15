@@ -19,13 +19,16 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext, TextTypes} from '../../types/common';
-import {LiveAttrsModel, LiveAttrsModelState, TTSelectionStep, AlignedLangSelectionStep, isAlignedSelectionStep} from './models';
-import { PluginInterfaces } from '../../types/plugins';
-import {init as ttViewInit} from '../../views/textTypes';
 import { IActionDispatcher, Bound, IModel } from 'kombo';
+import { List } from 'cnc-tskit';
+
+import { Kontext, TextTypes } from '../../types/common';
+import { LiveAttrsModel, LiveAttrsModelState, TTSelectionStep,
+    AlignedLangSelectionStep, isAlignedSelectionStep } from './models';
+import { PluginInterfaces } from '../../types/plugins';
+import { init as ttViewInit } from '../../views/textTypes';
 import { TextTypesModelState } from '../../models/textTypes/main';
+import { Actions, ActionName } from './actions';
 
 
 export interface ViewModuleArgs {
@@ -75,7 +78,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
     // ----------------------------- <SelectionSteps /> --------------------------
 
     const SelectionSteps:React.SFC<{
-        items:Immutable.List<TTSelectionStep|AlignedLangSelectionStep>;
+        items:Array<TTSelectionStep|AlignedLangSelectionStep>;
         isLoading:boolean;
 
     }> = (props) => {
@@ -111,7 +114,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                         {i > 0 ? ', ' : ''}
                         <strong>{attr}</strong>
                             {'\u00a0\u2208\u00a0'}
-                            {'{' + shortenValues(item.values.get(attr), ', ') + '}'}
+                            {'{' + shortenValues(item.values[attr], ', ') + '}'}
                             <br />
                     </span>
                 );
@@ -141,7 +144,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                     </div>
                 );
             })}
-            {props.isLoading ? <StepLoader idx={props.items.size + 1} /> : null}
+            {props.isLoading ? <StepLoader idx={props.items.length + 1} /> : null}
             </div>
         );
     };
@@ -150,13 +153,13 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     const RefineButton:React.SFC<{
         enabled:boolean;
-        mkClickHandler:(action:string)=>(evt:React.MouseEvent<{}>)=>void;
+        clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
     }> = (props) => {
 
         if (props.enabled) {
             return (
-                <a className="util-button" onClick={props.mkClickHandler('refine')}>
+                <a className="util-button" onClick={props.clickHandler}>
                     {he.translate('ucnkLA__refine_selection_btn')}
                 </a>
             );
@@ -170,12 +173,12 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     const UndoButton:React.SFC<{
         enabled:boolean;
-        mkClickHandler:(action:string)=>(evt:React.MouseEvent<{}>)=>void;
+        clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
     }> = (props) => {
         if (props.enabled) {
             return (
-                <a className="util-button cancel" onClick={props.mkClickHandler('undo')}>
+                <a className="util-button cancel" onClick={props.clickHandler}>
                     {he.translate('ucnkLA__undo_selection_btn')}
                 </a>
             );
@@ -189,13 +192,13 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     const ResetButton:React.SFC<{
         enabled:boolean;
-        mkClickHandler:(action:string)=>(evt:React.MouseEvent<{}>)=>void;
+        clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
     }> = (props) => {
 
         if (props.enabled) {
             return (
-                <a className="util-button cancel" onClick={props.mkClickHandler('reset')}>
+                <a className="util-button cancel" onClick={props.clickHandler}>
                     {he.translate('ucnkLA__reset_selection_btn')}
                 </a>
             );
@@ -209,36 +212,40 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     const LiveAttrsView:React.SFC<LiveAttrsModelState> = (props) => {
 
-        const mkClickHandler = (action) => {
-            const actionMap = {
-                refine: 'LIVE_ATTRIBUTES_REFINE_CLICKED',
-                reset: 'LIVE_ATTRIBUTES_RESET_CLICKED',
-                undo: 'LIVE_ATTRIBUTES_UNDO_CLICKED'
-            };
-            return () => {
-                dispatcher.dispatch({
-                    name: actionMap[action],
-                    payload: {}
-                });
-            }
+        const handleRefine = () => {
+            dispatcher.dispatch<Actions.RefineClicked>({
+                name: ActionName.RefineClicked,
+            });
+        };
+
+        const handleReset = () => {
+            dispatcher.dispatch<Actions.ResetClicked>({
+                name: ActionName.ResetClicked,
+            });
+        };
+
+        const handleUndo = () => {
+            dispatcher.dispatch<Actions.UndoClicked>({
+                name: ActionName.UndoClicked,
+            });
         };
 
         const widgetIsActive = () => {
-            return props.alignedCorpora.size > 0 && props.selectionSteps.size > 1
-                || props.alignedCorpora.size === 0 && props.selectionSteps.size > 0;
+            return !List.empty(props.alignedCorpora) && props.selectionSteps.length > 1
+                || List.empty(props.alignedCorpora) && !List.empty(props.selectionSteps);
         };
 
         return (
             <div className="live-attributes">
                 <ul className="controls">
                     <li>
-                        <RefineButton enabled={props.controlsEnabled} mkClickHandler={mkClickHandler} />
+                        <RefineButton enabled={props.controlsEnabled} clickHandler={handleRefine} />
                     </li>
                     <li>
-                        <UndoButton enabled={props.controlsEnabled && props.selectionSteps.size > 0} mkClickHandler={mkClickHandler} />
+                        <UndoButton enabled={props.controlsEnabled && !List.empty(props.selectionSteps)} clickHandler={handleUndo} />
                     </li>
                     <li>
-                        <ResetButton enabled={props.controlsEnabled && props.selectionSteps.size > 0} mkClickHandler={mkClickHandler} />
+                        <ResetButton enabled={props.controlsEnabled && !List.empty(props.selectionSteps)} clickHandler={handleReset} />
                     </li>
                     {SubcmixerComponent ?
                         (<li>
@@ -260,8 +267,8 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
     }> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch({
-                name: 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED',
+            dispatcher.dispatch<Actions.AlignedCorpChanged>({
+                name: ActionName.AlignedCorpChanged,
                 payload: {
                     idx: props.itemIdx
                 }
@@ -292,15 +299,14 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         };
 
         const handleMinIconClick = () => {
-            dispatcher.dispatch({
-                name: 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST',
-                payload: {}
+            dispatcher.dispatch<Actions.ToggleMinimizeAlignedLangList>({
+                name: ActionName.ToggleMinimizeAlignedLangList
             });
         };
 
-        if (props.alignedCorpora.size > 0) {
+        if (!List.empty(props.alignedCorpora)) {
             const classes = ['TableTextTypeAttribute', 'aligned'];
-            if (props.selectionSteps.size > 0 && isAlignedSelectionStep(props.selectionSteps.first())) {
+            if (!List.empty(props.selectionSteps) && isAlignedSelectionStep(List.head(props.selectionSteps))) {
                 classes.push('locked');
             }
             return (
@@ -318,7 +324,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                     {renderHint()}
                                 </p>
                                 {
-                                    props.alignedCorpora.size > 0 ?
+                                    !List.empty(props.alignedCorpora) ?
                                     null :
                                     <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
                                 }

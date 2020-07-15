@@ -17,11 +17,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TextTypesModel} from '../../models/textTypes/main';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { TextTypesModel } from '../../models/textTypes/main';
 import * as liveAttrsModel from './models';
-import * as Immutable from 'immutable';
-import {init as viewInit, Views} from './view';
+import { init as viewInit, Views } from './view';
+import { List } from 'cnc-tskit';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -76,26 +76,26 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 const create:PluginInterfaces.LiveAttributes.Factory = (
         pluginApi, textTypesModel, isEnabled, controlsAlignedCorpora, args) => {
     const currAligned = pluginApi.getConf<Array<string>>('alignedCorpora') || [];
-    const alignedCorpora = Immutable.List(args.availableAlignedCorpora
-        .map((item) => {
-            return {
-                value: item.n,
-                label: item.label,
-                selected: currAligned.indexOf(item.n) > -1,
-                locked: !controlsAlignedCorpora
-            };
-    }));
+    const alignedCorpora = List.map(
+        item => ({
+            value: item.n,
+            label: item.label,
+            selected: currAligned.indexOf(item.n) > -1,
+            locked: !controlsAlignedCorpora
+        }),
+        args.availableAlignedCorpora
+    );
 
     const store = new liveAttrsModel.LiveAttrsModel(
         pluginApi.dispatcher(),
         pluginApi,
         {
-            selectionSteps: Immutable.List<liveAttrsModel.TTSelectionStep|liveAttrsModel.AlignedLangSelectionStep>([]),
+            selectionSteps: [],
             lastRemovedStep: null,
             alignedCorpora: alignedCorpora,
             initialAlignedCorpora: alignedCorpora,
             bibliographyAttribute: args.bibAttr,
-            bibliographyIds: Immutable.OrderedSet<string>(),
+            bibliographyIds: [],
             manualAlignCorporaMode: args.manualAlignCorporaMode,
             controlsEnabled: args.refineEnabled,
             isBusy: false,
@@ -108,7 +108,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
 
     let numSelectionSteps = 0;
     store.addListener((state) => {
-        numSelectionSteps = state.selectionSteps.size;
+        numSelectionSteps = state.selectionSteps.length;
     })
 
     // we must capture (= decide whether they should really be passed to the action queue)
@@ -124,7 +124,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
         _ => numSelectionSteps === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
     );
 
-    return new LiveAttributesPlugin(pluginApi, store, alignedCorpora.size > 0, isEnabled);
+    return new LiveAttributesPlugin(pluginApi, store, !List.empty(alignedCorpora), isEnabled);
 }
 
 export default create;
