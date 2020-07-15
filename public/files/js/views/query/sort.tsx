@@ -24,7 +24,7 @@ import { Subscription } from 'rxjs';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
-import { ConcSortModel, MultiLevelConcSortModel, ConcSortModelState } from '../../models/query/sort';
+import { ConcSortModel, MultiLevelConcSortModel, ConcSortModelState, MultiLevelConcSortModelState } from '../../models/query/sort';
 import { Actions, ActionName } from '../../models/query/actions';
 import { List } from 'cnc-tskit';
 
@@ -313,7 +313,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         level:number;
         numLevels:number;
         mlxattr:string;
-        availAttrs:Immutable.List<Kontext.AttrItem>;
+        availAttrs:Array<Kontext.AttrItem>;
         mlxicase:string;
         mlxbward:string;
         ctxIndex:number;
@@ -394,7 +394,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                                 {he.translate('query__sort_th_attribute')}:
                             </th>
                             <td>
-                                <AttributeList availAttrs={this.props.availAttrs.toArray()}
+                                <AttributeList availAttrs={this.props.availAttrs}
                                         onAttrSelect={this._handleAttrSelect}
                                         currValue={this.props.mlxattr} />
                             </td>
@@ -460,50 +460,26 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
     // -------------------------- <MultiLevelSortForm /> ---------------------------------
 
-    class MultiLevelSortForm extends React.Component<MultiLevelSortFormProps,
-    {
-        availAttrs:Immutable.List<Kontext.AttrItem>;
-        levels:Immutable.List<number>;
-        maxNumLevels:number;
-        mlxattrValues:Immutable.List<string>;
-        mlxicaseValues:Immutable.List<string>;
-        mlxbwardValues:Immutable.List<string>;
-        ctxIndexValues:Immutable.List<number>;
-        ctxAlignValues:Immutable.List<string>;
-    }> {
-
-        private modelSubscription:Subscription;
+    class MultiLevelSortForm extends React.Component<MultiLevelSortFormProps & MultiLevelConcSortModelState> {
 
         constructor(props) {
             super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._addLevel = this._addLevel.bind(this);
-            this.state = this._fetchStateValues();
         }
 
-        _fetchStateValues() {
-             return {
-                availAttrs: multiLevelConcSortModel.getAllAvailAttrs(),
-                levels: multiLevelConcSortModel.getLevelIndices(this.props.sortId),
-                maxNumLevels: multiLevelConcSortModel.getMaxNumLevels(this.props.sortId),
-                mlxattrValues: multiLevelConcSortModel.getMlxattrValues(this.props.sortId),
-                mlxicaseValues: multiLevelConcSortModel.getMlxicaseValues(this.props.sortId),
-                mlxbwardValues: multiLevelConcSortModel.getMlxbwardValues(this.props.sortId),
-                ctxIndexValues: multiLevelConcSortModel.getCtxIndexValues(this.props.sortId),
-                ctxAlignValues: multiLevelConcSortModel.getCtxAlignValues(this.props.sortId)
-            };
+        getMaxNumLevels():number {
+            return Math.min(
+                this.props.mlxattrValues[this.props.sortId].length,
+                this.props.mlxicaseValues[this.props.sortId].length,
+                this.props.mlxbwardValues[this.props.sortId].length,
+                this.props.ctxIndexValues[this.props.sortId].length,
+                this.props.ctxAlignValues[this.props.sortId].length
+            );
         }
 
-        _handleModelChange() {
-            this.setState(this._fetchStateValues());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = multiLevelConcSortModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
+        getLevelIndices():Array<number> {
+            const sortLevel = this.props.sortlevelValues[this.props.sortId];
+            return this.props.mlxattrValues[this.props.sortId].slice(0, sortLevel).map((_, i) => i);
         }
 
         _addLevel() {
@@ -528,25 +504,31 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         render() {
+            const levels = this.getLevelIndices();
             return (
                 <ul className="MultiLevelSortForm">
-                    {this.state.levels.map(level => {
+                    {List.map(level => {
                         return (
                             <li key={`level_${level}`}>
-                                <MLSingleLevelFields availAttrs={this.state.availAttrs}
+                                <MLSingleLevelFields
+                                    /**
+                                     * Return both positional and structural attributes
+                                     * as a single list (positional first).
+                                     */
+                                    availAttrs={List.concat(List.sortedAlphaBy(v => v.label, this.props.availStructAttrList), this.props.availAttrList)}
                                     level={level}
-                                    numLevels={this.state.levels.size}
+                                    numLevels={levels.length}
                                     sortId={this.props.sortId}
                                     onRemoveLevel={this._removeLevelFn(level)}
-                                    mlxattr={this.state.mlxattrValues.get(level)}
-                                    mlxicase={this.state.mlxicaseValues.get(level)}
-                                    mlxbward={this.state.mlxbwardValues.get(level)}
-                                    ctxIndex={this.state.ctxIndexValues.get(level)}
-                                    ctxAlign={this.state.ctxAlignValues.get(level)} />
+                                    mlxattr={this.props.mlxattrValues[this.props.sortId][level]}
+                                    mlxicase={this.props.mlxicaseValues[this.props.sortId][level]}
+                                    mlxbward={this.props.mlxbwardValues[this.props.sortId][level]}
+                                    ctxIndex={this.props.ctxIndexValues[this.props.sortId][level]}
+                                    ctxAlign={this.props.ctxAlignValues[this.props.sortId][level]} />
                             </li>
                         );
-                    })}
-                    {this.state.levels.size < this.state.maxNumLevels ?
+                    }, levels)}
+                    {levels.length < this.getMaxNumLevels() ?
                         <li>
                             <layoutViews.PlusButton
                                 onClick={this._addLevel}
@@ -561,7 +543,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
     return {
         SimpleSortForm: BoundWithProps(SimpleSortForm, sortModel),
-        MultiLevelSortForm: MultiLevelSortForm
+        MultiLevelSortForm: BoundWithProps(MultiLevelSortForm, multiLevelConcSortModel)
     };
 }
 
