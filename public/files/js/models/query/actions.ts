@@ -81,7 +81,13 @@ export enum ActionName {
     CQLEditorInitializeDone = 'CQL_EDITOR_INITIALIZE_DONE',
     CQLEditorEnable = 'CQL_EDITOR_ENABLE',
     CQLEditorDisable = 'CQL_EDITOR_DISABLE',
-
+    SortSetActiveStore = 'SORT_SET_ACTIVE_STORE',
+    SortFormSubmit = 'SORT_FORM_SUBMIT',
+    SortFormSetSattr = 'SORT_FORM_SET_SATTR',
+    SortFormSetSkey = 'SORT_FORM_SET_SKEY',
+    SortFormSetSbward = 'SORT_FORM_SET_SBWARD',
+    SortFormSetSicase = 'SORT_FORM_SET_SICASE',
+    SortFormSetSpos = 'SORT_FORM_SET_SPOS',
 }
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
@@ -441,5 +447,53 @@ export namespace Actions {
     export interface CQLEditorDisable extends Action<{
     }> {
         name:ActionName.CQLEditorDisable;
+    }
+
+    export interface SortSetActiveStore extends Action<{
+        sortId:string;
+        formAction:string;
+    }> {
+        name:ActionName.SortSetActiveStore;
+    }
+
+    export interface SortFormSubmit extends Action<{
+        sortId:string;
+    }> {
+        name:ActionName.SortFormSubmit;
+    }
+
+    export interface SortFormSetSattr extends Action<{
+        sortId:string;
+        value:string;
+    }> {
+        name:ActionName.SortFormSetSattr;
+    }
+
+    export interface SortFormSetSkey extends Action<{
+        sortId:string;
+        value:string;
+    }> {
+        name:ActionName.SortFormSetSkey;
+    }
+
+    export interface SortFormSetSbward extends Action<{
+        sortId:string;
+        value:string;
+    }> {
+        name:ActionName.SortFormSetSbward;
+    }
+
+    export interface SortFormSetSicase extends Action<{
+        sortId:string;
+        value:string;
+    }> {
+        name:ActionName.SortFormSetSicase;
+    }
+
+    export interface SortFormSetSpos extends Action<{
+        sortId:string;
+        value:string;
+    }> {
+        name:ActionName.SortFormSetSpos;
     }
 }
