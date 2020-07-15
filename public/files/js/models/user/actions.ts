@@ -23,7 +23,10 @@ import { Kontext } from '../../types/common';
 
 export enum ActionName {
     UserInfoRequested = 'USER_INFO_REQUESTED',
-    UserInfoLoaded = 'USER_INFO_LOADED'
+    UserInfoLoaded = 'USER_INFO_LOADED',
+    UserShowLoginDialog = 'USER_SHOW_LOGIN_DIALOG',
+    UserHideLoginDialog = 'USER_HIDE_LOGIN_DIALOG',
+    UserLogoutx = 'USER_LOGOUTX'
 }
 
 export namespace Actions {
@@ -37,6 +40,22 @@ export namespace Actions {
         data:Kontext.UserCredentials
     }> {
         name:ActionName.UserInfoLoaded;
+    }
+
+    export interface UserShowLoginDialog extends Action<{
+        returnUrl:string;
+    }> {
+        name:ActionName.UserShowLoginDialog;
+    }
+
+    export interface UserHideLoginDialog extends Action<{
+    }> {
+        name:ActionName.UserHideLoginDialog;
+    }
+
+    export interface UserLogoutx extends Action<{
+    }> {
+        name:ActionName.UserLogoutx;
     }
 
 }

@@ -277,9 +277,7 @@ export namespace Kontext {
         removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void;
 
         /**
-         * Make a shallow copy of a (state) object.
-         * It is best used with state objects containing
-         * primitive values or Immutable.js instances.
+         * @deprecated
          */
         cloneState<T>(obj:Readonly<T>|T):Mutable<T>;
 
