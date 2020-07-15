@@ -86,8 +86,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SELECT_ATTR',
+            dispatcher.dispatch<Actions.WordlistFormSelectAttr>({
+                name: ActionName.WordlistFormSelectAttr,
                 payload: {
                     value: evt.target.value
                 }
@@ -136,8 +136,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SET_WLPAT',
+            dispatcher.dispatch<Actions.WordlistFormSetWlpat>({
+                name: ActionName.WordlistFormSetWlpat,
                 payload: {
                     value: evt.target.value
                 }
@@ -166,8 +166,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleRadioChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SET_WLNUMS',
+            dispatcher.dispatch<Actions.WordlistFormSetWlnums>({
+                name: ActionName.WordlistFormSetWlnums,
                 payload: {
                     value: evt.target.value
                 }
@@ -219,8 +219,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SELECT_WLPOSATTR',
+            dispatcher.dispatch<Actions.WordlistFormSelectWlposattr>({
+                name: ActionName.WordlistFormSelectWlposattr,
                 payload: {
                     position: props.position,
                     value: evt.target.value
@@ -300,8 +300,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleOutTypeChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SET_WLTYPE',
+            dispatcher.dispatch<Actions.WordlistFormSetWltype>({
+                name: ActionName.WordlistFormSetWltype,
                 payload: {
                     value: evt.target.value
                 }
@@ -390,8 +390,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SET_WLMINFREQ',
+            dispatcher.dispatch<Actions.WordlistFormSetWlminfreq>({
+                name: ActionName.WordlistFormSetWlminfreq,
                 payload: {
                     value: evt.target.value
                 }
@@ -422,8 +422,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<{}>) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SET_FILTER_FILE',
+            dispatcher.dispatch<Actions.WordlistFormSetFilter>({
+                name: ActionName.WordlistFormSetFilter,
                 payload: {
                     value: evt.target['files'][0],
                     target: props.target
@@ -432,17 +432,22 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         const handleNewFileClick = (evt) => {
-            dispatcher.dispatch({
-                name: props.target === FileTarget.WHITELIST ?
-                        'WORDLIST_FORM_CREATE_WHITELIST' :
-                        'WORDLIST_FORM_CREATE_BLACKLIST',
-                payload: {}
-            })
+            if (props.target === FileTarget.WHITELIST) {
+                dispatcher.dispatch<Actions.WordlistFormCreateWhitelist>({
+                    name: ActionName.WordlistFormCreateWhitelist
+                });
+
+            } else {
+                dispatcher.dispatch<Actions.WordlistFormCreateBlacklist>({
+                    name: ActionName.WordlistFormCreateBlacklist
+                });
+            }
         }
 
         return (
             <td>
-                <a onClick={handleNewFileClick}>{he.translate('wordlist__create_filter_list')}</a> / <input type="file" onChange={handleInputChange} />
+                <a onClick={handleNewFileClick}>{he.translate('wordlist__create_filter_list')}</a>
+                / <input type="file" onChange={handleInputChange} />
             </td>
         );
 
@@ -451,14 +456,14 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     // -------------------- <TDExistingFileOps /> ----------------------------------------
 
     const TDExistingFileOps:React.SFC<{
-        target:string;
+        target:FileTarget;
         fileName:string;
 
     }> = (props) => {
 
         const handleRemoveClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_CLEAR_FILTER_FILE',
+            dispatcher.dispatch<Actions.WordlistFormClearFilterFile>({
+                name: ActionName.WordlistFormClearFilterFile,
                 payload: {
                     target: props.target
                 }
@@ -466,8 +471,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         const handleEditorEnableClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_REOPEN_EDITOR',
+            dispatcher.dispatch<Actions.WordlistFormReopenEditor>({
+                name: ActionName.WordlistFormReopenEditor,
                 payload: {
                     target: props.target
                 }
@@ -525,15 +530,14 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleClose = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_CLOSE_EDITOR',
-                payload: {}
+            dispatcher.dispatch<Actions.WordlistFormCloseEditor>({
+                name: ActionName.WordlistFormCloseEditor
             });
         };
 
         const handleWriting = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_UPDATE_EDITOR',
+            dispatcher.dispatch<Actions.WordlistFormUpdateEditor>({
+                name: ActionName.WordlistFormUpdateEditor,
                 payload: {
                     value: evt.target.value
                 }
@@ -543,8 +547,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         const handleKeyDown = (evt:React.KeyboardEvent<{}>) => {
             if (evt.keyCode === Keyboard.Code.ENTER) {
                 if (evt.shiftKey) {
-                    dispatcher.dispatch({
-                        name: 'WORDLIST_FORM_UPDATE_EDITOR',
+                    dispatcher.dispatch<Actions.WordlistFormUpdateEditor>({
+                        name: ActionName.WordlistFormUpdateEditor,
                         payload: {
                             value: props.data.data + '\n'
                         }
@@ -659,9 +663,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'WORDLIST_FORM_SUBMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.WordlistFormSubmit>({
+                name: ActionName.WordlistFormSubmit
             });
         }
 
