@@ -554,9 +554,16 @@ export class FirstQueryFormModel extends QueryFormModel implements PluginInterfa
         });
 
         // query context
-        Dict.forEach<string, string>(
-            (value, key) => args.replace(key, [value]),
-            this.queryContextModel.getContextArgs()
+        Dict.forEach(
+            (value, key) => {
+                if (Array.isArray(value)) {
+                    args.replace(key, value);
+
+                } else {
+                    args.replace(key, [value]);
+                }
+            },
+            this.queryContextModel.getContextArgs() as {} // TODO !!! type
         );
 
         // text types

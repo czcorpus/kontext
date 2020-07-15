@@ -26,7 +26,7 @@ export interface QueryContextModelState {
     formData:QueryContextArgs;
 }
 
-type ExportedArgs = {[p in keyof QueryContextArgs]?:string};
+export type ExportedArgs = {[p in keyof QueryContextArgs]?:QueryContextArgs[p]};
 
 interface QueryContextArgs {
     fc_lemword_window_type:string;
