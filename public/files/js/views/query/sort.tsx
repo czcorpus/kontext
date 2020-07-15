@@ -109,8 +109,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
         const handleSelectFn = (value) => {
             return () => {
-                dispatcher.dispatch({
-                    name: 'SORT_FORM_SET_SKEY',
+                dispatcher.dispatch<Actions.SortFormSetSkey>({
+                    name: ActionName.SortFormSetSkey,
                     payload: {
                         sortId: props.sortId,
                         value: value
@@ -157,8 +157,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleAttrSelect(value) {
-            dispatcher.dispatch({
-                name: 'SORT_FORM_SET_SATTR',
+            dispatcher.dispatch<Actions.SortFormSetSattr>({
+                name: ActionName.SortFormSetSattr,
                 payload: {
                     sortId: this.props.sortId,
                     value: value
@@ -167,8 +167,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleSicaseCheck(evt) {
-            dispatcher.dispatch({
-                name: 'SORT_FORM_SET_SICASE',
+            dispatcher.dispatch<Actions.SortFormSetSicase>({
+                name: ActionName.SortFormSetSicase,
                 payload: {
                     sortId: this.props.sortId,
                     value: evt.target.checked ? 'i' : ''
@@ -177,8 +177,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleSbwardCheck(evt) {
-            dispatcher.dispatch({
-                name: 'SORT_FORM_SET_SBWARD',
+            dispatcher.dispatch<Actions.SortFormSetSbward>({
+                name: ActionName.SortFormSetSbward,
                 payload: {
                     sortId: this.props.sortId,
                     value: evt.target.checked ? 'r' : ''
@@ -187,8 +187,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleSposChange(evt) {
-            dispatcher.dispatch({
-                name: 'SORT_FORM_SET_SPOS',
+            dispatcher.dispatch<Actions.SortFormSetSpos>({
+                name: ActionName.SortFormSetSpos,
                 payload: {
                     sortId: this.props.sortId,
                     value: evt.target.value
@@ -595,8 +595,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
 
         _handleSortTypeChange(formType) {
-            dispatcher.dispatch({
-                name: 'SORT_SET_ACTIVE_STORE',
+            dispatcher.dispatch<Actions.SortSetActiveStore>({
+                name: ActionName.SortSetActiveStore,
                 payload: {
                     sortId: this.props.sortId,
                     formAction: formType

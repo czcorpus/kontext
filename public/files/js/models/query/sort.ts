@@ -29,6 +29,8 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { ConcSortServerArgs } from './common';
 import { StatefulModel as KontextStatefulModel } from '../base';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions, ActionName } from './actions';
 
 
 export interface SortFormProperties {
@@ -144,70 +146,103 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         this.pageModel = pageModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.onAction((action:Action) => {
-            switch (action.name) {
-                case 'MAIN_MENU_SHOW_SORT':
-                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
-                    this.emitChange();
-                break;
-                case 'SORT_SET_ACTIVE_STORE':
-                    this.state.isActiveActionValues = this.state.isActiveActionValues.set(
-                        action.payload['sortId'], action.payload['formAction'] === 'sortx'
-                    );
-                    this.emitChange();
-                break;
-                case 'SORT_FORM_SUBMIT':
-                    this.submit(action.payload['sortId']);
-                    // no need to notify anybody - we're leaving the page here
-                break;
-                case 'SORT_FORM_SET_SATTR':
-                    this.state.sattrValues = this.state.sattrValues.set(action.payload['sortId'],
-                            action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'SORT_FORM_SET_SKEY':
-                    this.state.skeyValues = this.state.skeyValues.set(action.payload['sortId'],
-                            action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'SORT_FORM_SET_SBWARD':
-                    this.state.sbwardValues = this.state.sbwardValues.set(action.payload['sortId'],
-                            action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'SORT_FORM_SET_SICASE':
-                    this.state.sicaseValues = this.state.sicaseValues.set(action.payload['sortId'],
-                            action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'SORT_FORM_SET_SPOS':
-                    if (/^([1-9]\d*)*$/.exec(action.payload['value'])) {
-                        this.state.sposValues = this.state.sposValues.set(action.payload['sortId'],
-                                action.payload['value']);
+        this.addActionHandler<MainMenuActions.ShowSort>(
+            MainMenuActionName.ShowSort,
+            action => {this.changeState(state => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}), state)
+            })}
+        );
 
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('query__sort_set_spos_error_msg'));
-                    }
-                    this.emitChange();
-                break;
+        this.addActionHandler<Actions.SortSetActiveStore>(
+            ActionName.SortSetActiveStore,
+            action => {this.changeState(state => {
+                state.isActiveActionValues = state.isActiveActionValues.set(
+                    action.payload.sortId,
+                    action.payload.formAction === 'sortx'
+                );
+            })}
+        );
+
+        this.addActionHandler<Actions.SortFormSubmit>(
+            ActionName.SortFormSubmit,
+            action => {
+                this.submit(action.payload.sortId);
+                // no need to notify anybody - we're leaving the page here
             }
-        });
+        );
+
+        this.addActionHandler<Actions.SortFormSetSattr>(
+            ActionName.SortFormSetSattr,
+            action => {this.changeState(state => {
+                state.sattrValues = state.sattrValues.set(
+                    action.payload.sortId,
+                    action.payload.value
+                );
+            })}
+        );
+
+        this.addActionHandler<Actions.SortFormSetSkey>(
+            ActionName.SortFormSetSkey,
+            action => {this.changeState(state => {
+                state.skeyValues = state.skeyValues.set(
+                    action.payload.sortId,
+                    action.payload.value
+                );
+            })}
+        );
+
+        this.addActionHandler<Actions.SortFormSetSbward>(
+            ActionName.SortFormSetSbward,
+            action => {this.changeState(state => {
+                state.sbwardValues = state.sbwardValues.set(
+                    action.payload.sortId,
+                    action.payload.value
+                );
+            })}
+        );
+
+        this.addActionHandler<Actions.SortFormSetSicase>(
+            ActionName.SortFormSetSicase,
+            action => {this.changeState(state => {
+                state.sicaseValues = state.sicaseValues.set(
+                    action.payload.sortId,
+                    action.payload.value
+                );
+            })}
+        );
+
+        this.addActionHandler<Actions.SortFormSetSpos>(
+            ActionName.SortFormSetSpos,
+            action => {
+                if (/^([1-9]\d*)*$/.exec(action.payload.value)) {
+                    this.changeState(state => {
+                        state.sposValues = state.sposValues.set(
+                            action.payload.sortId,
+                            action.payload.value
+                        );
+                    })
+
+                } else {
+                    this.pageModel.showMessage('error', this.pageModel.translate('query__sort_set_spos_error_msg'));
+                }
+            }
+        );
     }
 
     unregister() {}
 
-    syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
+    syncFrom(src:Observable<AjaxResponse.SortFormArgs>, state:ConcSortModelState):Observable<AjaxResponse.SortFormArgs> {
         return src.pipe(
             tap(
                 (data) => {
                     if (data.form_type === 'sort') {
                         const sortId = data.op_key;
-                        this.state.isActiveActionValues = this.state.isActiveActionValues.set(sortId, data.form_action === 'sortx');
-                        this.state.sattrValues = this.state.sattrValues.set(sortId, data.sattr);
-                        this.state.skeyValues = this.state.skeyValues.set(sortId, data.skey);
-                        this.state.sposValues = this.state.sposValues.set(sortId, data.spos);
-                        this.state.sbwardValues = this.state.sbwardValues.set(sortId, data.sbward);
-                        this.state.sicaseValues = this.state.sicaseValues.set(sortId, data.sicase);
+                        state.isActiveActionValues = state.isActiveActionValues.set(sortId, data.form_action === 'sortx');
+                        state.sattrValues = state.sattrValues.set(sortId, data.sattr);
+                        state.skeyValues = state.skeyValues.set(sortId, data.skey);
+                        state.sposValues = state.sposValues.set(sortId, data.spos);
+                        state.sbwardValues = state.sbwardValues.set(sortId, data.sbward);
+                        state.sicaseValues = state.sicaseValues.set(sortId, data.sicase);
                     }
                 }
             ),
@@ -321,7 +356,7 @@ export class MultiLevelConcSortModel extends KontextStatefulModel implements ISu
 
         this.dispatcherRegister((action:Action) => {
             switch (action.name) {
-                case 'MAIN_MENU_SHOW_SORT':
+                case MainMenuActionName.ShowSort:
                     this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
                     this.emitChange();
                 break;
@@ -337,7 +372,7 @@ export class MultiLevelConcSortModel extends KontextStatefulModel implements ISu
                     this.removeLevel(action.payload['sortId'], action.payload['levelIdx']);
                     this.emitChange();
                 break;
-                case 'SORT_SET_ACTIVE_STORE':
+                case ActionName.SortSetActiveStore:
                     this.isActiveActionValues = this.isActiveActionValues.set(
                         action.payload['sortId'], action.payload['formAction'] === 'mlsortx'
                     );
