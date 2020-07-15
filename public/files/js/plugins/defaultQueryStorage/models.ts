@@ -77,10 +77,10 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
 
     private editingQueryName:string;
 
-    constructor(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number) {
+    constructor(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number, initialData:Array<Kontext.QueryHistoryItem>) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
-        this.data = [];
+        this.data = initialData;
         this.queryType = '';
         this.currentCorpusOnly = false;
         this.offset = offset;

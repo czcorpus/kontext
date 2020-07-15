@@ -1098,7 +1098,8 @@ export class ViewPage {
                 this.layoutModel.pluginApi(),
                 0,
                 this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
-                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords')
+                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
+                []
             );
             this.setupHistoryOnPopState();
             this.initQueryForm();

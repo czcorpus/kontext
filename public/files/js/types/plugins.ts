@@ -240,20 +240,13 @@ export namespace PluginInterfaces {
 
         export interface IPlugin {
 
-            /**
-             * Import data to the model. This is meant to be used right
-             * after plug-in initialization and it should never
-             * notify listeners.
-             */
-            importData(data:Array<Kontext.QueryHistoryItem>):void;
-
             getWidgetView():WidgetView;
 
             getModel():IModel;
         }
 
         export interface Factory {
-            (pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):IPlugin;
+            (pluginApi:IPluginApi, offset:number, limit:number, pageSize:number, initialData:Array<Kontext.QueryHistoryItem>):IPlugin;
         }
     }
 

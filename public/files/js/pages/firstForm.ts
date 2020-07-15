@@ -329,7 +329,8 @@ export class FirstFormPage {
                 this.layoutModel.pluginApi(),
                 0,
                 pageSize,
-                pageSize
+                pageSize,
+                []
             );
             ttAns.queryStorageView = qsPlugin.getWidgetView();
 
