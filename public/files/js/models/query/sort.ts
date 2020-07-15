@@ -18,20 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import * as Immutable from 'immutable';
 
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { ConcSortServerArgs } from './common';
-import { StatefulModel as KontextStatefulModel } from '../base';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
-import { Dict, List } from 'cnc-tskit';
+import { Dict, List, pipe } from 'cnc-tskit';
 
 
 export interface SortFormProperties {
@@ -278,7 +276,29 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
 /**
  *
  */
-export class MultiLevelConcSortModel extends KontextStatefulModel implements ISubmitableConcSortModel {
+export interface MultiLevelConcSortModelState {
+    availAttrList:Array<Kontext.AttrItem>;
+    availStructAttrList:Array<Kontext.AttrItem>;
+    sortlevelValues:{[key:string]:number};
+    mlxattrValues:{[key:string]:Array<string>};
+    mlxicaseValues:{[key:string]:Array<string>};
+    mlxbwardValues:{[key:string]:Array<string>};
+    // there are no server-side 'ml[x]ctxindex' arguments,
+    // we use indices to LEFTMOST_CTX and RIGHTMOST_CTX values instead
+    ctxIndexValues:{[key:string]:Array<number>};
+    // there are no server-side 'ml[x]ctxalign' arguments,
+    // we used this to determine whether to use LEFTMOST_CTX or RIGHTMOST_CTX
+    // based on user's actions
+    ctxAlignValues:{[key:string]:Array<string>};
+    /**
+     * Specifies whether the single-level variant (i.e. this specific sorting model)
+     * is the active one in case of known (= used or in use) sort forms. It must be
+     * mutually-exclusive  when compared with the same attribute and its keys in ConcSortModel.
+     */
+    isActiveActionValues:{[key:string]:boolean};
+}
+
+export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortModelState> implements ISubmitableConcSortModel {
 
     private static LEFTMOST_CTX = ['-3<0', '-2<0', '-1<0', '0~0<0', '1<0', '2<0', '3<0'];
     private static RIGHTMOST_CTX = ['-3>0', '-2>0', '-1>0', '0~0>0', '1>0', '2>0', '3>0'];
@@ -287,120 +307,108 @@ export class MultiLevelConcSortModel extends KontextStatefulModel implements ISu
 
     private readonly syncInitialArgs:AjaxResponse.SortFormArgs;
 
-    private availAttrList:Immutable.List<Kontext.AttrItem>;
-
-    private availStructAttrList:Immutable.List<Kontext.AttrItem>;
-
-    private sortlevelValues:Immutable.Map<string, number>;
-
-    private mlxattrValues:Immutable.Map<string, Immutable.List<string>>;
-
-    private mlxicaseValues:Immutable.Map<string, Immutable.List<string>>;
-
-    private mlxbwardValues:Immutable.Map<string, Immutable.List<string>>;
-
-    // there are no server-side 'ml[x]ctxindex' arguments,
-    // we use indices to LEFTMOST_CTX and RIGHTMOST_CTX values instead
-    ctxIndexValues:Immutable.Map<string, Immutable.List<number>>;
-
-    // there are no server-side 'ml[x]ctxalign' arguments,
-    // we used this to determine whether to use LEFTMOST_CTX or RIGHTMOST_CTX
-    // based on user's actions
-    private ctxAlignValues:Immutable.Map<string, Immutable.List<string>>;
-
-    /**
-     * Specifies whether the single-level variant (i.e. this specific sorting model)
-     * is the active one in case of known (= used or in use) sort forms. It must be
-     * mutually-exclusive  when compared with the same attribute and its keys in ConcSortModel.
-     */
-    private isActiveActionValues:Immutable.Map<string, boolean>;
-
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties, syncInitialArgs:AjaxResponse.SortFormArgs) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                availAttrList: props.attrList,
+                availStructAttrList: props.structAttrList,
+                sortlevelValues: Dict.fromEntries(props.sortlevel),
+                mlxattrValues: Dict.fromEntries(props.mlxattr),
+                mlxicaseValues: Dict.fromEntries(props.mlxicase),
+                mlxbwardValues: Dict.fromEntries(props.mlxbward),
+                ctxIndexValues: pipe(
+                    props.mlxctx,
+                    Dict.fromEntries(),
+                    Dict.map((v, k) => List.map(this.decodeCtxValue, v))
+                ),
+                ctxAlignValues: pipe(
+                    props.mlxctx,
+                    Dict.fromEntries(),
+                    Dict.map((v, k) => List.map(this.decodeCtxAlignValue, v))
+                ),
+                isActiveActionValues: pipe(
+                    props.defaultFormAction,
+                    Dict.fromEntries(),
+                    Dict.map((v, k) => v === 'mlsortx')
+                )
+            }
+        );
         this.pageModel = pageModel;
         this.syncInitialArgs = syncInitialArgs;
-        this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
-        this.availStructAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
-        this.sortlevelValues = Immutable.Map<string, number>(props.sortlevel);
-        this.mlxattrValues = Immutable.Map<string, Immutable.List<string>>(
-            props.mlxattr.map(item => [item[0], Immutable.List<string>(item[1])]));
-        this.mlxicaseValues = Immutable.Map<string, Immutable.List<string>>(
-            props.mlxicase.map(item => [item[0], Immutable.List<string>(item[1])]));
-        this.mlxbwardValues = Immutable.Map<string, Immutable.List<string>>(
-            props.mlxbward.map(item => [item[0], Immutable.List<string>(item[1])]));
 
-
-        this.ctxIndexValues = Immutable.Map<string, Immutable.List<number>>(
-            props.mlxctx.map(item => [item[0], Immutable.List<number>(item[1].map(subitem => this.decodeCtxValue(subitem)))])
-        );
-        this.ctxAlignValues = Immutable.Map<string, Immutable.List<string>>(
-            props.mlxctx.map(item => [item[0], Immutable.List<string>(item[1].map(subitem => this.decodeCtxAlignValue(subitem)))])
-        );
-
-        this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'mlsortx']));
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case MainMenuActionName.ShowSort:
-                    this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_SUBMIT':
-                    this.submit(action.payload['sortId']);
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_ADD_LEVEL':
-                    this.addLevel(action.payload['sortId']);
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_REMOVE_LEVEL':
-                    this.removeLevel(action.payload['sortId'], action.payload['levelIdx']);
-                    this.emitChange();
-                break;
-                case ActionName.SortSetActiveStore:
-                    this.isActiveActionValues = this.isActiveActionValues.set(
-                        action.payload['sortId'], action.payload['formAction'] === 'mlsortx'
-                    );
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_SET_SATTR':
-                    this.mlxattrValues = this.mlxattrValues.set(
-                        action.payload['sortId'],
-                        this.mlxattrValues.get(action.payload['sortId']).set(action.payload['levelIdx'], action.payload['value'])
-                    );
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_SET_SICASE':
-                    this.mlxicaseValues = this.mlxicaseValues.set(
-                        action.payload['sortId'],
-                        this.mlxicaseValues.get(action.payload['sortId']).set(action.payload['levelIdx'], action.payload['value'])
-                    );
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_SET_SBWARD':
-                    this.mlxbwardValues = this.mlxbwardValues.set(
-                        action.payload['sortId'],
-                        this.mlxbwardValues.get(action.payload['sortId']).set(action.payload['levelIdx'], action.payload['value'])
-                    )
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_SET_CTX':
-                    this.ctxIndexValues = this.ctxIndexValues.set(
-                        action.payload['sortId'],
-                        this.ctxIndexValues.get(action.payload['sortId']).set(action.payload['levelIdx'], action.payload['index'])
-                    );
-                    this.emitChange();
-                break;
-                case 'ML_SORT_FORM_SET_CTX_ALIGN':
-                    this.ctxAlignValues = this.ctxAlignValues.set(
-                        action.payload['sortId'],
-                        this.ctxAlignValues.get(action.payload['sortId']).set(action.payload['levelIdx'], action.payload['value'])
-                    );
-                    this.emitChange();
-                break;
+        this.addActionHandler<MainMenuActions.ShowSort>(
+            MainMenuActionName.ShowSort,
+            action => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
             }
-        });
+        );
+
+        this.addActionHandler<Actions.MLSortFormSubmit>(
+            ActionName.MLSortFormSubmit,
+            action => {
+                this.submit(action.payload.sortId);
+            }
+        );
+
+        this.addActionHandler<Actions.MLSortFormAddLevel>(
+            ActionName.MLSortFormAddLevel,
+            action => {
+                this.addLevel(action.payload.sortId);
+            }
+        );
+
+        this.addActionHandler<Actions.MLSortFormRemoveLevel>(
+            ActionName.MLSortFormRemoveLevel,
+            action => {
+                this.removeLevel(action.payload.sortId, action.payload.levelIdx);
+            }
+        );
+
+        this.addActionHandler<Actions.SortSetActiveStore>(
+            ActionName.SortSetActiveStore,
+            action => {this.changeState(state => {
+                state.isActiveActionValues[action.payload.sortId] = action.payload.formAction === 'mlsortx';
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetSattr>(
+            ActionName.MLSortFormSetSattr,
+            action => {this.changeState(state => {
+                state.mlxattrValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetSicase>(
+            ActionName.MLSortFormSetSicase,
+            action => {this.changeState(state => {
+                state.mlxicaseValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetSbward>(
+            ActionName.MLSortFormSetSbward,
+            action => {this.changeState(state => {
+                state.mlxbwardValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetCtx>(
+            ActionName.MLSortFormSetCtx,
+            action => {this.changeState(state => {
+                state.ctxIndexValues[action.payload.sortId][action.payload.levelIdx] = action.payload.index;
+            })}
+        );
+
+        this.addActionHandler<Actions.MLSortFormSetCtxAlign>(
+            ActionName.MLSortFormSetCtxAlign,
+            action => {this.changeState(state => {
+                state.ctxAlignValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
+            })}
+        );
     }
+
+    unregister() {}
 
     syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
         return src.pipe(
@@ -408,20 +416,17 @@ export class MultiLevelConcSortModel extends KontextStatefulModel implements ISu
                 (data) => {
                     if (data.form_type === 'sort') {
                         const sortId = data.op_key;
-                        this.isActiveActionValues = this.isActiveActionValues.set(sortId, data.form_action === 'mlsortx');
-                        this.sortlevelValues = this.sortlevelValues.set(sortId, data.sortlevel);
-                        this.mlxattrValues = this.mlxattrValues.set(sortId, Immutable.List<string>(
-                                importMultiLevelArg<string>('mlxattr', data, (n)=>this.availAttrList.get(0).n)));
-                        this.mlxicaseValues = this.mlxicaseValues.set(sortId, Immutable.List<string>(
-                                importMultiLevelArg<string>('mlxicase', data)));
-                        this.mlxbwardValues = this.mlxbwardValues.set(sortId, Immutable.List<string>(
-                                importMultiLevelArg<string>('mlxbward', data)));
+                        this.changeState(state => {
+                            state.isActiveActionValues[sortId] = data.form_action === 'mlsortx';
+                            state.sortlevelValues[sortId] = data.sortlevel;
+                            state.mlxattrValues[sortId] = importMultiLevelArg('mlxattr', data, n => state.availAttrList[0].n);
+                            state.mlxicaseValues[sortId] = importMultiLevelArg('mlxicase', data);
+                            state.mlxbwardValues[sortId] = importMultiLevelArg('mlxbward', data);
 
-                        const mlxctxTmp = importMultiLevelArg<string>('mlxctx', data);
-                        this.ctxIndexValues = this.ctxIndexValues.set(sortId,
-                                Immutable.List<number>(mlxctxTmp.map(item => this.decodeCtxValue(item))));
-                        this.ctxAlignValues = this.ctxAlignValues.set(sortId,
-                                Immutable.List<string>(mlxctxTmp.map(item => this.decodeCtxAlignValue(item))));
+                            const mlxctxTmp = importMultiLevelArg<string>('mlxctx', data);
+                            state.ctxIndexValues[sortId] = List.map(item => this.decodeCtxValue(item), mlxctxTmp);
+                            state.ctxAlignValues[sortId] = List.map(item => this.decodeCtxAlignValue(item), mlxctxTmp);
+                        });
                     }
                 }
             ),
@@ -449,13 +454,13 @@ export class MultiLevelConcSortModel extends KontextStatefulModel implements ISu
 
     private createSubmitArgs(sortId:string):MultiDict<ConcSortServerArgs> {
         const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
-        for (let i = 0; i < this.sortlevelValues.get(sortId); i += 1) {
-            args.replace('sortlevel', [String(this.sortlevelValues.get(sortId))]);
-            args.replace(`ml${i+1}attr`, [this.mlxattrValues.get(sortId).get(i)]);
-            args.replace(`ml${i+1}icase`, [this.mlxicaseValues.get(sortId).get(i)]);
-            args.replace(`ml${i+1}bward`, [this.mlxbwardValues.get(sortId).get(i)]);
-            args.replace(`ml${i+1}ctx`, [this.encodeCtxValue(this.ctxIndexValues.get(sortId).get(i),
-                                         this.ctxAlignValues.get(sortId).get(i))]);
+        for (let i = 0; i < this.state.sortlevelValues[sortId]; i += 1) {
+            args.replace('sortlevel', [String(this.state.sortlevelValues[sortId])]);
+            args.replace(`ml${i+1}attr`, [this.state.mlxattrValues[sortId][i]]);
+            args.replace(`ml${i+1}icase`, [this.state.mlxicaseValues[sortId][i]]);
+            args.replace(`ml${i+1}bward`, [this.state.mlxbwardValues[sortId][i]]);
+            args.replace(`ml${i+1}ctx`, [this.encodeCtxValue(this.state.ctxIndexValues[sortId][i],
+                                         this.state.ctxAlignValues[sortId][i])]);
         }
         return args;
     }
@@ -505,86 +510,33 @@ export class MultiLevelConcSortModel extends KontextStatefulModel implements ISu
     }
 
     private addLevel(sortId:string):void {
-        const currLevel = this.sortlevelValues.get(sortId);
+        const currLevel = this.state.sortlevelValues[sortId];
         // we expect here that the individual attributes below contain
         // the maximum allowed number of levels. I.e. there should be
         // no need to add/remove levels - we just increase 'sortlevel'.
-        this.sortlevelValues = this.sortlevelValues.set(sortId, currLevel + 1);
+        this.state.sortlevelValues[sortId] = currLevel + 1;
     }
 
     private removeLevel(sortId:string, level:number):void {
-        if (this.sortlevelValues.get(sortId) - 1 === 0) {
+        if (this.state.sortlevelValues[sortId] - 1 === 0) {
             throw new Error('At least one level must be defined');
         }
-        this.mlxattrValues = this.mlxattrValues.set(
-            sortId,
-            this.mlxattrValues.get(sortId).remove(level).push(this.availAttrList.get(0).n)
-        );
-        this.mlxicaseValues = this.mlxicaseValues.set(
-            sortId,
-            this.mlxicaseValues.get(sortId).remove(level).push('')
-        );
-        this.mlxbwardValues = this.mlxbwardValues.set(
-            sortId,
-            this.mlxbwardValues.get(sortId).remove(level).push('')
-        );
-        this.ctxIndexValues = this.ctxIndexValues.set(
-            sortId,
-            this.ctxIndexValues.get(sortId).remove(level).push(0)
-        );
-        this.ctxAlignValues = this.ctxAlignValues.set(
-            sortId,
-            this.ctxAlignValues.get(sortId).remove(level).push('left')
-        );
-        const currLevel = this.sortlevelValues.get(sortId);
-        this.sortlevelValues = this.sortlevelValues.set(sortId, currLevel - 1);
-    }
-
-    getMaxNumLevels(sortId:string):number {
-        return Math.min(
-            this.mlxattrValues.get(sortId).size,
-            this.mlxicaseValues.get(sortId).size,
-            this.mlxbwardValues.get(sortId).size,
-            this.ctxIndexValues.get(sortId).size,
-            this.ctxAlignValues.get(sortId).size
-        );
-    }
-
-    /**
-     * Return both positional and structural attributes
-     * as a single list (positional first).
-     */
-    getAllAvailAttrs():Immutable.List<Kontext.AttrItem> {
-        return this.availAttrList
-                .concat(this.availStructAttrList.sort(sortAttrVals)).toList();
-    }
-
-    getMlxattrValues(sortId:string):Immutable.List<string> {
-        return this.mlxattrValues.get(sortId);
-    }
-
-    getMlxicaseValues(sortId:string):Immutable.List<string> {
-        return this.mlxicaseValues.get(sortId);
-    }
-
-    getMlxbwardValues(sortId:string):Immutable.List<string> {
-        return this.mlxbwardValues.get(sortId);
-    }
-
-    getCtxIndexValues(sortId:string):Immutable.List<number> {
-        return this.ctxIndexValues.get(sortId);
-    }
-
-    getCtxAlignValues(sortId:string):Immutable.List<string> {
-        return this.ctxAlignValues.get(sortId);
-    }
-
-    getLevelIndices(sortId:string):Immutable.List<number> {
-        const sortLevel = this.sortlevelValues.get(sortId);
-        return this.mlxattrValues.get(sortId).slice(0, sortLevel).map((_, i) => i).toList();
+        this.changeState(state => {
+            state.mlxattrValues[sortId] = List.removeAt(level, state.mlxattrValues[sortId]);
+            state.mlxattrValues[sortId].push(state.availAttrList[0].n);
+            state.mlxicaseValues[sortId] = List.removeAt(level, state.mlxicaseValues[sortId]);
+            state.mlxicaseValues[sortId].push('');
+            state.mlxbwardValues[sortId] = List.removeAt(level, state.mlxbwardValues[sortId]);
+            state.mlxbwardValues[sortId].push('');
+            state.ctxIndexValues[sortId] = List.removeAt(level, state.ctxIndexValues[sortId]);
+            state.ctxIndexValues[sortId].push(0);
+            state.ctxAlignValues[sortId] = List.removeAt(level, state.ctxAlignValues[sortId]);
+            state.ctxAlignValues[sortId].push('left');
+            state.sortlevelValues[sortId] = state.sortlevelValues[sortId] - 1;
+        });
     }
 
     isActiveActionValue(sortId:string):boolean {
-        return this.isActiveActionValues.get(sortId);
+        return this.state.isActiveActionValues[sortId];
     }
 }
