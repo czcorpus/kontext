@@ -90,9 +90,6 @@ export interface TextTypesModelState {
 /**
  * Provides essential general operations on available text types
  * (filtering values, updating status - checked/locked, ...).
- *
- * All the state data is based on Immutable.js except for individual data
- * items which are updated via manual copying (i.e. no Immutable.Record).
  */
 export class TextTypesModel extends StatefulModel<TextTypesModelState>
     implements TextTypes.IAdHocSubcorpusDetector, TextTypes.ITextTypesModel<TextTypesModelState> {

@@ -30,8 +30,8 @@ export type ExtendedInfo = {[key:string]:any}; // TODO type
  * the class is able to handle multiple selected values at once (e.g. user writes something
  * and adds it to a temporary list).
  *
- * Instances of this class operate in an immutable way. Any modification call to the
- * object will produce a new copy.
+ * Please note that the class does not preserve data immutability as we expect it
+ * to be handled within Immer.js 'produce' function.
  */
 export class TextInputAttributeSelection implements TextTypes.ITextInputAttributeSelection {
 
@@ -316,8 +316,8 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
  * This class represents a text type selection based on a list of checkboxes user can interactively
  * select.
  *
- * Instances of this class operate in an immutable way. Any modification call to the
- * object will produce a new copy.
+ * Please note that the class does not preserve data immutability as we expect it
+ * to be handled within Immer.js 'produce' function.
  */
 export class FullAttributeSelection implements TextTypes.AttributeSelection {
 
