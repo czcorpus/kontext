@@ -26,6 +26,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
 import { ConcSortModel, MultiLevelConcSortModel, ConcSortModelState } from '../../models/query/sort';
 import { Actions, ActionName } from '../../models/query/actions';
+import { List } from 'cnc-tskit';
 
 
 export interface SortModuleArgs {
@@ -65,16 +66,6 @@ interface SortForms {
     MultiLevelSortForm:React.ComponentClass<MultiLevelSortFormProps>;
 }
 
-const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
-    if (x1.label < x2.label) {
-        return -1;
-    }
-    if (x1.label > x2.label) {
-        return 1;
-    }
-    return 0;
-}
-
 function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:SortModuleArgs):SortForms {
     
     const layoutViews = he.getLayoutViews();
@@ -84,7 +75,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
     const AttributeList:React.SFC<{
         onAttrSelect:(val:string)=>void;
         currValue:string;
-        availAttrs:Immutable.List<Kontext.AttrItem>;
+        availAttrs:Array<Kontext.AttrItem>;
 
     }> = (props) => {
 
@@ -94,7 +85,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
         return (
             <select value={props.currValue} onChange={handleSelectChange}>
-                {props.availAttrs.map((item, i) => <option key={`attr_${i}`} value={item.n}>{item.label}</option>)}
+                {List.map((item, i) => <option key={`attr_${i}`} value={item.n}>{item.label}</option>, props.availAttrs)}
             </select>
         );
     };
@@ -208,10 +199,9 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                                          * Return both positional and structural attributes
                                          * as a single list (positional first).
                                          */
-                                        this.props.availAttrList
-                                        .concat(this.props.availStructAttrList.sort(sortAttrVals)).toList()}
+                                        List.concat(List.sortedAlphaBy(v => v.label, this.props.availStructAttrList), this.props.availAttrList)}
                                         onAttrSelect={this._handleAttrSelect}
-                                        currValue={this.props.sattrValues.get(this.props.sortId)} />
+                                        currValue={this.props.sattrValues[this.props.sortId]} />
                             </td>
                         </tr>
                         <tr>
@@ -219,14 +209,14 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                                 {he.translate('query__sort_th_sort_key')}:
                             </th>
                             <td>
-                                <SortKeySelector sortId={this.props.sortId} currValue={this.props.skeyValues.get(this.props.sortId)} />
+                                <SortKeySelector sortId={this.props.sortId} currValue={this.props.skeyValues[this.props.sortId]} />
                             </td>
                         </tr>
                         <tr>
                             <th>{he.translate('query__sort_th_num_of_tokens_to_sort')}:</th>
                             <td>
                                 <input type="text" name="spos" style={{width: '2em'}}
-                                    value={this.props.sposValues.get(this.props.sortId)} onChange={this._handleSposChange} />
+                                    value={this.props.sposValues[this.props.sortId]} onChange={this._handleSposChange} />
                             </td>
                         </tr>
                         <tr>
@@ -238,7 +228,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                             <td>
                                 <input id="sicase_checkbox" type="checkbox"
                                         onChange={this._handleSicaseCheck}
-                                        checked={this.props.sicaseValues.get(this.props.sortId) === 'i'} />
+                                        checked={this.props.sicaseValues[this.props.sortId] === 'i'} />
                             </td>
                         </tr>
                         <tr>
@@ -251,7 +241,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                                 </layoutViews.InlineHelp>:
                             </th>
                             <td>
-                                <input id="sbward_checkbox" type="checkbox" checked={this.props.sbwardValues.get(this.props.sortId) === 'r'}
+                                <input id="sbward_checkbox" type="checkbox" checked={this.props.sbwardValues[this.props.sortId] === 'r'}
                                         onChange={this._handleSbwardCheck} />
                             </td>
                         </tr>
@@ -404,7 +394,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                                 {he.translate('query__sort_th_attribute')}:
                             </th>
                             <td>
-                                <AttributeList availAttrs={this.props.availAttrs}
+                                <AttributeList availAttrs={this.props.availAttrs.toArray()}
                                         onAttrSelect={this._handleAttrSelect}
                                         currValue={this.props.mlxattr} />
                             </td>

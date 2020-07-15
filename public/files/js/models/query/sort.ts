@@ -31,6 +31,7 @@ import { ConcSortServerArgs } from './common';
 import { StatefulModel as KontextStatefulModel } from '../base';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
+import { Dict, List } from 'cnc-tskit';
 
 
 export interface SortFormProperties {
@@ -107,20 +108,20 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
  *
  */
 export interface ConcSortModelState {
-    availAttrList:Immutable.List<Kontext.AttrItem>;
-    availStructAttrList:Immutable.List<Kontext.AttrItem>;
-    sattrValues:Immutable.Map<string, string>;
-    skeyValues:Immutable.Map<string, string>;
-    sposValues:Immutable.Map<string, string>;
-    sicaseValues:Immutable.Map<string, string>; // value 'i' means 'case insensitive'
-    sbwardValues:Immutable.Map<string, string>; // value 'r' means 'backward'
+    availAttrList:Array<Kontext.AttrItem>;
+    availStructAttrList:Array<Kontext.AttrItem>;
+    sattrValues:{[key:string]:string};
+    skeyValues:{[key:string]:string};
+    sposValues:{[key:string]:string};
+    sicaseValues:{[key:string]:string}; // value 'i' means 'case insensitive'
+    sbwardValues:{[key:string]:string}; // value 'r' means 'backward'
     /**
      * Specifies whether the single-level variant (i.e. this specific sorting model)
      * is the active one in case of known (= used or in use) sort forms. It must be
      * mutually-exclusive when compared with the same attribute and its keys
      * in MultiLevelConcSortModel.
      */
-    isActiveActionValues:Immutable.Map<string, boolean>;
+    isActiveActionValues:{[key:string]:boolean};
 }
 
 export class ConcSortModel extends StatefulModel<ConcSortModelState> implements ISubmitableConcSortModel {
@@ -133,14 +134,14 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         super(
             dispatcher,
             {
-                availAttrList: Immutable.List<Kontext.AttrItem>(props.attrList),
-                availStructAttrList: Immutable.List<Kontext.AttrItem>(props.structAttrList),
-                sattrValues: Immutable.Map<string, string>(props.sattr),
-                skeyValues: Immutable.Map<string, string>(props.skey),
-                sbwardValues: Immutable.Map<string, string>(props.sbward),
-                sicaseValues: Immutable.Map<string, string>(props.sicase),
-                sposValues: Immutable.Map<string, string>(props.spos),
-                isActiveActionValues: Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx'])),
+                availAttrList: props.attrList,
+                availStructAttrList: props.structAttrList,
+                sattrValues: Dict.fromEntries(props.sattr),
+                skeyValues: Dict.fromEntries(props.skey),
+                sbwardValues: Dict.fromEntries(props.sbward),
+                sicaseValues: Dict.fromEntries(props.sicase),
+                sposValues: Dict.fromEntries(props.spos),
+                isActiveActionValues: Dict.fromEntries(List.map(item => [item[0], item[1] === 'sortx'], props.defaultFormAction)),
             }
         );
         this.pageModel = pageModel;
@@ -148,18 +149,15 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
 
         this.addActionHandler<MainMenuActions.ShowSort>(
             MainMenuActionName.ShowSort,
-            action => {this.changeState(state => {
-                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}), state)
-            })}
+            action => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+            }
         );
 
         this.addActionHandler<Actions.SortSetActiveStore>(
             ActionName.SortSetActiveStore,
             action => {this.changeState(state => {
-                state.isActiveActionValues = state.isActiveActionValues.set(
-                    action.payload.sortId,
-                    action.payload.formAction === 'sortx'
-                );
+                state.isActiveActionValues[action.payload.sortId] = action.payload.formAction === 'sortx';
             })}
         );
 
@@ -174,40 +172,28 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         this.addActionHandler<Actions.SortFormSetSattr>(
             ActionName.SortFormSetSattr,
             action => {this.changeState(state => {
-                state.sattrValues = state.sattrValues.set(
-                    action.payload.sortId,
-                    action.payload.value
-                );
+                state.sattrValues[action.payload.sortId] = action.payload.value;
             })}
         );
 
         this.addActionHandler<Actions.SortFormSetSkey>(
             ActionName.SortFormSetSkey,
             action => {this.changeState(state => {
-                state.skeyValues = state.skeyValues.set(
-                    action.payload.sortId,
-                    action.payload.value
-                );
+                state.skeyValues[action.payload.sortId] = action.payload.value;
             })}
         );
 
         this.addActionHandler<Actions.SortFormSetSbward>(
             ActionName.SortFormSetSbward,
             action => {this.changeState(state => {
-                state.sbwardValues = state.sbwardValues.set(
-                    action.payload.sortId,
-                    action.payload.value
-                );
+                state.sbwardValues[action.payload.sortId] = action.payload.value;
             })}
         );
 
         this.addActionHandler<Actions.SortFormSetSicase>(
             ActionName.SortFormSetSicase,
             action => {this.changeState(state => {
-                state.sicaseValues = state.sicaseValues.set(
-                    action.payload.sortId,
-                    action.payload.value
-                );
+                state.sicaseValues[action.payload.sortId] = action.payload.value;
             })}
         );
 
@@ -216,10 +202,7 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
             action => {
                 if (/^([1-9]\d*)*$/.exec(action.payload.value)) {
                     this.changeState(state => {
-                        state.sposValues = state.sposValues.set(
-                            action.payload.sortId,
-                            action.payload.value
-                        );
+                        state.sposValues[action.payload.sortId] = action.payload.value;
                     })
 
                 } else {
@@ -231,18 +214,20 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
 
     unregister() {}
 
-    syncFrom(src:Observable<AjaxResponse.SortFormArgs>, state:ConcSortModelState):Observable<AjaxResponse.SortFormArgs> {
+    syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
         return src.pipe(
             tap(
                 (data) => {
                     if (data.form_type === 'sort') {
                         const sortId = data.op_key;
-                        state.isActiveActionValues = state.isActiveActionValues.set(sortId, data.form_action === 'sortx');
-                        state.sattrValues = state.sattrValues.set(sortId, data.sattr);
-                        state.skeyValues = state.skeyValues.set(sortId, data.skey);
-                        state.sposValues = state.sposValues.set(sortId, data.spos);
-                        state.sbwardValues = state.sbwardValues.set(sortId, data.sbward);
-                        state.sicaseValues = state.sicaseValues.set(sortId, data.sicase);
+                        this.changeState(state => {
+                            state.isActiveActionValues[sortId] = data.form_action === 'sortx';
+                            state.sattrValues[sortId] = data.sattr;
+                            state.skeyValues[sortId] = data.skey;
+                            state.sposValues[sortId] = data.spos;
+                            state.sbwardValues[sortId] = data.sbward;
+                            state.sicaseValues[sortId] = data.sicase;
+                        });
                     }
                 }
             ),
@@ -276,16 +261,16 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         const val2List = (v) => v ? [v] : [];
 
         const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
-        args.replace('sattr', val2List(this.state.sattrValues.get(sortId)));
-        args.replace('skey', val2List(this.state.skeyValues.get(sortId)));
-        args.replace('sbward', val2List(this.state.sbwardValues.get(sortId)));
-        args.replace('sicase', val2List(this.state.sicaseValues.get(sortId)));
-        args.replace('spos', val2List(this.state.sposValues.get(sortId)));
+        args.replace('sattr', val2List(this.state.sattrValues[sortId]));
+        args.replace('skey', val2List(this.state.skeyValues[sortId]));
+        args.replace('sbward', val2List(this.state.sbwardValues[sortId]));
+        args.replace('sicase', val2List(this.state.sicaseValues[sortId]));
+        args.replace('spos', val2List(this.state.sposValues[sortId]));
         return args;
     }
 
     isActiveActionValue(sortId:string):boolean {
-        return this.state.isActiveActionValues.get(sortId);
+        return this.state.isActiveActionValues[sortId];
     }
 }
 
