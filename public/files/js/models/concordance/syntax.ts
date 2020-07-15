@@ -24,7 +24,7 @@ import { PluginInterfaces } from '../../types/plugins';
 /**
  *
  */
-export class DummySyntaxViewModel extends StatefulModel<{}>
+export class DummySyntaxViewModel extends StatefulModel<PluginInterfaces.SyntaxViewer.BaseState>
     implements PluginInterfaces.SyntaxViewer.IPlugin {
 
     render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {}

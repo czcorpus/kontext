@@ -19,9 +19,9 @@
  */
 
 import { Observable } from 'rxjs';
-import {Kontext, TextTypes} from '../types/common';
-import {CoreViews} from './coreViews';
-import {IConcLinesProvider} from '../types/concordance';
+import { Kontext, TextTypes } from '../types/common';
+import { CoreViews } from './coreViews';
+import { IConcLinesProvider } from '../types/concordance';
 import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
@@ -130,16 +130,21 @@ export namespace PluginInterfaces {
 
     export namespace SyntaxViewer {
 
-        export interface IPlugin extends IEventEmitter {
-            render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
+        export interface IPlugin extends IModel<BaseState> {
             close():void;
             onPageResize():void;
             registerOnError(fn:(e:Error)=>void):void;
-            isWaiting():boolean;
         }
 
         export interface Factory {
             (pluginApi:IPluginApi):IPlugin;
+        }
+
+        export interface BaseState {
+            isBusy:boolean;
+            tokenNumber:number;
+            kwicLength:number;
+            targetHTMLElementID:string;
         }
     }
 

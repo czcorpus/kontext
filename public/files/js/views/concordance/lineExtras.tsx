@@ -209,12 +209,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const SyntaxTreeButton:LineExtrasViews['SyntaxTreeButton'] = (props) => {
 
         const handleSyntaxBoxClick = () => {
-
-            dispatcher.dispatch({
-                name: 'SHOW_SYNTAX_VIEW',
+            dispatcher.dispatch<Actions.ShowSyntaxView>({
+                name: ActionName.ShowSyntaxView,
                 payload: {
                     tokenNumber: props.tokenNumber,
-                    kwicLength: props.kwicLength
+                    kwicLength: props.kwicLength,
+                    targetHTMLElementID: 'syntax-view-pane'
                 }
             });
         };

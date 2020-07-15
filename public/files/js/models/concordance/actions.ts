@@ -85,7 +85,9 @@ export enum ActionName {
     PublishStoredLineSelections = 'CONCORDANCE_PUBLISH_STORED_LINE_SELECTIONS',
     ToggleLineGroupRenameForm = 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME',
     MakeConcPermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
-    GetConcArchiveStatus = 'QUERY_GET_CONC_ARCHIVED_STATUS'
+    GetConcArchiveStatus = 'QUERY_GET_CONC_ARCHIVED_STATUS',
+    ShowSyntaxView = 'SHOW_SYNTAX_VIEW',
+    CloseSyntaxView = 'CLOSE_SYNTAX_VIEW'
 }
 
 export interface ConcGroupChangePayload {
@@ -465,5 +467,18 @@ export namespace Actions {
     export interface GetConcArchiveStatus extends Action<{
     }> {
         name:ActionName.GetConcArchiveStatus;
+    }
+
+    export interface ShowSyntaxView extends Action<{
+        tokenNumber:number;
+        kwicLength:number;
+        targetHTMLElementID:string;
+    }> {
+        name:ActionName.ShowSyntaxView;
+    }
+
+    export interface CloseSyntaxView extends Action<{
+    }> {
+        name:ActionName.CloseSyntaxView;
     }
 }

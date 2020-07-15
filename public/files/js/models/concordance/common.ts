@@ -400,14 +400,6 @@ export interface ViewConfiguration {
     supportsTokenConnect:boolean;
 
     anonymousUserConcLoginPrompt:boolean;
-
-    onSyntaxPaneReady:(tokenId:number, kwicLength:number)=>void;
-
-    onSyntaxPaneClose:()=>void;
-
-    onReady:()=>void;
-
-    onChartFrameReady?:(usePrevData:boolean)=>void;
 }
 
 

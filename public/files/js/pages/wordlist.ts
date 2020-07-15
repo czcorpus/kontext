@@ -20,6 +20,7 @@
 
 import { Observable, interval as rxInterval } from 'rxjs';
 import { concatMap, scan, takeWhile, last } from 'rxjs/operators';
+import { HTTP } from 'cnc-tskit';
 
 import { Kontext } from '../types/common';
 import { PageModel, DownloadType } from '../app/page';
@@ -27,14 +28,12 @@ import { MultiDict } from '../multidict';
 import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
 import { init as wordlistResultViewInit } from '../views/wordlist/result';
 import { init as wordlistSaveViewInit } from '../views/wordlist/save';
-import { StatefulModel } from '../models/base';
 import { WordlistFormModel, WordlistModelInitialArgs } from '../models/wordlist/form';
 import { WordlistSaveModel } from '../models/wordlist/save';
 import { KontextPage } from '../app/main';
 import { WordlistResultModel } from '../models/wordlist/main';
 import { ResultItem } from '../models/wordlist/common';
 import { Actions, ActionName } from '../models/wordlist/actions';
-import { HTTP } from 'cnc-tskit';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -52,9 +51,9 @@ interface AsyncProcessStatus extends AsyncProcessResponse {
 /**
  *
  */
-export class WordlistPage extends StatefulModel  {
+export class WordlistPage {
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
     private saveModel:WordlistSaveModel;
 
@@ -67,7 +66,6 @@ export class WordlistPage extends StatefulModel  {
     static STATUS_CHECK_INTERVAL = 3000;
 
     constructor(layoutModel:PageModel) {
-        super(layoutModel.dispatcher);
         this.layoutModel = layoutModel;
     }
 
@@ -271,7 +269,7 @@ export class WordlistPage extends StatefulModel  {
 
             this.layoutModel.getHistory().setOnPopState((evt:PopStateEvent) => {
                 if (evt.state['pagination']) {
-                    this.dispatcher.dispatch<Actions.WordlistHistoryPopState>({
+                    this.layoutModel.dispatcher.dispatch<Actions.WordlistHistoryPopState>({
                         name: ActionName.WordlistHistoryPopState,
                         payload: {
                             currPageInput: evt.state['page']

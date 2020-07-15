@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2016 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
@@ -21,77 +21,103 @@
 /// <reference path="./js-treex-view.d.ts" />
 
 import { empty as rxEmpty } from 'rxjs';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {StatefulModel} from '../../models/base';
+import { StatefulModel } from 'kombo';
+
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+
 
 declare var require:any;
 const $ = require('jquery');
 import './js-treex-view';
 import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
+import { HTTP } from 'cnc-tskit';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
 require('./style.less'); // webpack
+
+
+export interface SyntaxTreeViewerState extends PluginInterfaces.SyntaxViewer.BaseState {
+    data:any; // TODO type
+}
 
 /**
  *
  */
-export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.SyntaxViewer.IPlugin {
+export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements PluginInterfaces.SyntaxViewer.IPlugin {
 
-    private pluginApi:IPluginApi;
-
-    private waitingStatus:boolean;
-
-    private data:any; // TODO type
-
-    private target:HTMLElement;
+    private readonly pluginApi:IPluginApi;
 
     private resizeThrottleTimer:number;
 
     private errorHandler:(e:Error)=>void;
 
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                isBusy: false,
+                data: null,
+                kwicLength: 0,
+                tokenNumber: -1,
+                targetHTMLElementID: null
+            }
+        );
         this.pluginApi = pluginApi;
+
+        this.addActionHandler<ConcActions.ShowSyntaxView>(
+            ConcActionName.ShowSyntaxView,
+            action => {
+                this.changeState(state => {
+                    state.tokenNumber = action.payload.tokenNumber;
+                    state.kwicLength = action.payload.kwicLength;
+                    state.targetHTMLElementID = action.payload.targetHTMLElementID;
+                    state.isBusy = true;
+                });
+                this.render(this.state);
+            }
+        );
     }
 
-    isWaiting():boolean {
-        return this.waitingStatus;
-    }
+    unregister() {}
 
     close():void {
         window.removeEventListener('resize', this.onPageResize);
     }
 
     onPageResize = () => {
+        const target = document.getElementById(this.state.targetHTMLElementID);
         if (this.resizeThrottleTimer) {
             window.clearTimeout(this.resizeThrottleTimer);
         }
         this.resizeThrottleTimer = window.setTimeout(() => {
-            while (this.target.firstChild) {
-                this.target.removeChild(this.target.firstChild);
+            while (target.firstChild) {
+                target.removeChild(target.firstChild);
             }
-            this.renderTree();
+            this.renderTree(target);
 
         }, 250);
     }
 
-    render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {
-        this.target = target;
-        this.waitingStatus = true;
-        this.emitChange();
+    render(state:SyntaxTreeViewerState):void {
+        this.changeState(state => {
+            state.isBusy = true;
+        });
 
         this.pluginApi.ajax$(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
                 corpname: this.pluginApi.getCorpusIdent().id,
-                kwic_id: tokenNumber, // this must be run after finalize
-                kwic_len: kwicLength
+                kwic_id: state.tokenNumber,
+                kwic_len: state.kwicLength
             }
 
         ).pipe(
             concatMap(
                 (data) => {
-                    this.data = data;
+                    this.changeState(state => {
+                        state.data = data;
+                    });
                     return rxEmpty();
                 }
             )
@@ -105,7 +131,8 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
                 }
             },
             () => {
-                this.renderTree();
+                const target = document.getElementById(state.targetHTMLElementID);
+                this.renderTree(target);
                 window.addEventListener('resize', this.onPageResize);
             }
         );
@@ -115,17 +142,17 @@ export class SyntaxTreeViewer extends StatefulModel implements PluginInterfaces.
         this.errorHandler = fn;
     }
 
-    private renderTree():void {
-        while (this.target.firstChild) {
-            this.target.removeChild(this.target.firstChild);
+    private renderTree(target:HTMLElement):void {
+        while (target.firstChild) {
+            target.removeChild(target.firstChild);
         }
         const treexFrame = window.document.createElement('div');
         treexFrame.style['width'] = `${(window.innerWidth - 55).toFixed(0)}px`;
         treexFrame.style['height'] = `${(window.innerHeight - 70).toFixed(0)}px`;
         treexFrame.style['overflow'] = 'auto';
 
-        $(this.target).append(treexFrame);
-        $(treexFrame).treexView(this.data);
+        $(target).append(treexFrame);
+        $(treexFrame).treexView(this.state.data);
     }
 
 }
