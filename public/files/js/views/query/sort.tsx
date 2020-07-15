@@ -21,10 +21,10 @@
 import * as React from 'react';
 import * as Immutable from 'immutable';
 import { Subscription } from 'rxjs';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
-import { ConcSortModel, MultiLevelConcSortModel } from '../../models/query/sort';
+import { ConcSortModel, MultiLevelConcSortModel, ConcSortModelState } from '../../models/query/sort';
 import { Actions, ActionName } from '../../models/query/actions';
 
 
@@ -52,11 +52,32 @@ export interface SortViews {
     SortForm:React.ComponentClass<SortFormProps>;
 }
 
+interface SimpleSortFormProps {
+    sortId:string;
+}
 
-export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortModuleArgs):SortViews {
+interface MultiLevelSortFormProps {
+    sortId:string;
+}
 
+interface SortForms {
+    SimpleSortForm:React.ComponentClass<SimpleSortFormProps>;
+    MultiLevelSortForm:React.ComponentClass<MultiLevelSortFormProps>;
+}
+
+const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
+    if (x1.label < x2.label) {
+        return -1;
+    }
+    if (x1.label > x2.label) {
+        return 1;
+    }
+    return 0;
+}
+
+function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:SortModuleArgs):SortForms {
+    
     const layoutViews = he.getLayoutViews();
-
 
     // -------------------------- <AttributeList /> ---------------------------------
 
@@ -125,20 +146,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
     // -------------------------- <SimpleSortForm /> ---------------------------------
 
-    class SimpleSortForm extends React.Component<{
-        sortId:string;
-    },
-    {
-        availAttrs:Immutable.List<Kontext.AttrItem>;
-        sattr:string;
-        skey:string;
-        spos:string;
-        sicase:string;
-        sbward:string;
-
-    }> {
-
-        private modelSubscription:Subscription;
+    class SimpleSortForm extends React.Component<SimpleSortFormProps & ConcSortModelState> {
 
         constructor(props) {
             super(props);
@@ -146,8 +154,6 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
             this._handleSicaseCheck = this._handleSicaseCheck.bind(this);
             this._handleSbwardCheck = this._handleSbwardCheck.bind(this);
             this._handleSposChange = this._handleSposChange.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
-            this.state = this._fetchStateValues();
         }
 
         _handleAttrSelect(value) {
@@ -190,29 +196,6 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
             });
         }
 
-        _fetchStateValues() {
-            return {
-                availAttrs: sortModel.getAllAvailAttrs(),
-                sattr: sortModel.getSattrValues().get(this.props.sortId),
-                skey: sortModel.getSkeyValues().get(this.props.sortId),
-                spos: sortModel.getSposValues().get(this.props.sortId),
-                sicase: sortModel.getSicaseValues().get(this.props.sortId),
-                sbward: sortModel.getSbwardValues().get(this.props.sortId)
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchStateValues());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = sortModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render() {
             return (
                 <table className="form">
@@ -220,9 +203,15 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                         <tr>
                             <th>{he.translate('query__sort_th_attribute')}:</th>
                             <td>
-                                <AttributeList availAttrs={this.state.availAttrs}
+                                <AttributeList availAttrs={
+                                        /**
+                                         * Return both positional and structural attributes
+                                         * as a single list (positional first).
+                                         */
+                                        this.props.availAttrList
+                                        .concat(this.props.availStructAttrList.sort(sortAttrVals)).toList()}
                                         onAttrSelect={this._handleAttrSelect}
-                                        currValue={this.state.sattr} />
+                                        currValue={this.props.sattrValues.get(this.props.sortId)} />
                             </td>
                         </tr>
                         <tr>
@@ -230,14 +219,14 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                                 {he.translate('query__sort_th_sort_key')}:
                             </th>
                             <td>
-                                <SortKeySelector sortId={this.props.sortId} currValue={this.state.skey} />
+                                <SortKeySelector sortId={this.props.sortId} currValue={this.props.skeyValues.get(this.props.sortId)} />
                             </td>
                         </tr>
                         <tr>
                             <th>{he.translate('query__sort_th_num_of_tokens_to_sort')}:</th>
                             <td>
                                 <input type="text" name="spos" style={{width: '2em'}}
-                                    value={this.state.spos} onChange={this._handleSposChange} />
+                                    value={this.props.sposValues.get(this.props.sortId)} onChange={this._handleSposChange} />
                             </td>
                         </tr>
                         <tr>
@@ -249,7 +238,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                             <td>
                                 <input id="sicase_checkbox" type="checkbox"
                                         onChange={this._handleSicaseCheck}
-                                        checked={this.state.sicase === 'i'} />
+                                        checked={this.props.sicaseValues.get(this.props.sortId) === 'i'} />
                             </td>
                         </tr>
                         <tr>
@@ -262,7 +251,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                                 </layoutViews.InlineHelp>:
                             </th>
                             <td>
-                                <input id="sbward_checkbox" type="checkbox" checked={this.state.sbward === 'r'}
+                                <input id="sbward_checkbox" type="checkbox" checked={this.props.sbwardValues.get(this.props.sortId) === 'r'}
                                         onChange={this._handleSbwardCheck} />
                             </td>
                         </tr>
@@ -481,9 +470,7 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
     // -------------------------- <MultiLevelSortForm /> ---------------------------------
 
-    class MultiLevelSortForm extends React.Component<{
-        sortId:string;
-    },
+    class MultiLevelSortForm extends React.Component<MultiLevelSortFormProps,
     {
         availAttrs:Immutable.List<Kontext.AttrItem>;
         levels:Immutable.List<number>;
@@ -582,6 +569,18 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
     }
 
+    return {
+        SimpleSortForm: BoundWithProps(SimpleSortForm, sortModel),
+        MultiLevelSortForm: MultiLevelSortForm
+    };
+}
+
+
+export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortModuleArgs):SortViews {
+
+    const layoutViews = he.getLayoutViews();
+    const sortForms = initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel});
+
     // -------------------------- <SortForm /> ---------------------------------
 
     class SortForm extends React.Component<SortFormProps, SortFormState> {
@@ -652,8 +651,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
                             callback={this._handleSortTypeChange}
                             items={items.toArray()} >
 
-                            <SimpleSortForm sortId={this.props.sortId} />
-                            <MultiLevelSortForm sortId={this.props.sortId} />
+                            <sortForms.SimpleSortForm sortId={this.props.sortId} />
+                            <sortForms.MultiLevelSortForm sortId={this.props.sortId} />
                         </layoutViews.TabView>
                         <p>
                             <button type="button" className="default-button"

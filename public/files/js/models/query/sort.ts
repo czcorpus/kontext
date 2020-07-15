@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl } from 'kombo';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import * as Immutable from 'immutable';
 
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { StatefulModel } from '../base';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { ConcSortServerArgs } from './common';
+import { StatefulModel as KontextStatefulModel } from '../base';
 
 
 export interface SortFormProperties {
@@ -104,55 +104,54 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
 /**
  *
  */
-export class ConcSortModel extends StatefulModel implements ISubmitableConcSortModel {
-
-    private readonly pageModel:PageModel;
-
-    private readonly syncInitialArgs:AjaxResponse.SortFormArgs;
-
-    private availAttrList:Immutable.List<Kontext.AttrItem>;
-
-    private availStructAttrList:Immutable.List<Kontext.AttrItem>;
-
-    private sattrValues:Immutable.Map<string, string>;
-
-    private skeyValues:Immutable.Map<string, string>;
-
-    private sposValues:Immutable.Map<string, string>;
-
-    private sicaseValues:Immutable.Map<string, string>; // value 'i' means 'case insensitive'
-
-    private sbwardValues:Immutable.Map<string, string>; // value 'r' means 'backward'
-
+export interface ConcSortModelState {
+    availAttrList:Immutable.List<Kontext.AttrItem>;
+    availStructAttrList:Immutable.List<Kontext.AttrItem>;
+    sattrValues:Immutable.Map<string, string>;
+    skeyValues:Immutable.Map<string, string>;
+    sposValues:Immutable.Map<string, string>;
+    sicaseValues:Immutable.Map<string, string>; // value 'i' means 'case insensitive'
+    sbwardValues:Immutable.Map<string, string>; // value 'r' means 'backward'
     /**
      * Specifies whether the single-level variant (i.e. this specific sorting model)
      * is the active one in case of known (= used or in use) sort forms. It must be
      * mutually-exclusive when compared with the same attribute and its keys
      * in MultiLevelConcSortModel.
      */
-    private isActiveActionValues:Immutable.Map<string, boolean>;
+    isActiveActionValues:Immutable.Map<string, boolean>;
+}
+
+export class ConcSortModel extends StatefulModel<ConcSortModelState> implements ISubmitableConcSortModel {
+
+    private readonly pageModel:PageModel;
+
+    private readonly syncInitialArgs:AjaxResponse.SortFormArgs;
 
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties, syncInitialArgs:AjaxResponse.SortFormArgs) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                availAttrList: Immutable.List<Kontext.AttrItem>(props.attrList),
+                availStructAttrList: Immutable.List<Kontext.AttrItem>(props.structAttrList),
+                sattrValues: Immutable.Map<string, string>(props.sattr),
+                skeyValues: Immutable.Map<string, string>(props.skey),
+                sbwardValues: Immutable.Map<string, string>(props.sbward),
+                sicaseValues: Immutable.Map<string, string>(props.sicase),
+                sposValues: Immutable.Map<string, string>(props.spos),
+                isActiveActionValues: Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx'])),
+            }
+        );
         this.pageModel = pageModel;
         this.syncInitialArgs = syncInitialArgs;
-        this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
-        this.availStructAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
-        this.sattrValues = Immutable.Map<string, string>(props.sattr);
-        this.skeyValues = Immutable.Map<string, string>(props.skey);
-        this.sbwardValues = Immutable.Map<string, string>(props.sbward);
-        this.sicaseValues = Immutable.Map<string, string>(props.sicase);
-        this.sposValues = Immutable.Map<string, string>(props.spos);
-        this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx']));
 
-        this.dispatcherRegister((action:Action) => {
+        this.onAction((action:Action) => {
             switch (action.name) {
                 case 'MAIN_MENU_SHOW_SORT':
                     this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
                     this.emitChange();
                 break;
                 case 'SORT_SET_ACTIVE_STORE':
-                    this.isActiveActionValues = this.isActiveActionValues.set(
+                    this.state.isActiveActionValues = this.state.isActiveActionValues.set(
                         action.payload['sortId'], action.payload['formAction'] === 'sortx'
                     );
                     this.emitChange();
@@ -162,28 +161,28 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
                     // no need to notify anybody - we're leaving the page here
                 break;
                 case 'SORT_FORM_SET_SATTR':
-                    this.sattrValues = this.sattrValues.set(action.payload['sortId'],
+                    this.state.sattrValues = this.state.sattrValues.set(action.payload['sortId'],
                             action.payload['value']);
                     this.emitChange();
                 break;
                 case 'SORT_FORM_SET_SKEY':
-                    this.skeyValues = this.skeyValues.set(action.payload['sortId'],
+                    this.state.skeyValues = this.state.skeyValues.set(action.payload['sortId'],
                             action.payload['value']);
                     this.emitChange();
                 break;
                 case 'SORT_FORM_SET_SBWARD':
-                    this.sbwardValues = this.sbwardValues.set(action.payload['sortId'],
+                    this.state.sbwardValues = this.state.sbwardValues.set(action.payload['sortId'],
                             action.payload['value']);
                     this.emitChange();
                 break;
                 case 'SORT_FORM_SET_SICASE':
-                    this.sicaseValues = this.sicaseValues.set(action.payload['sortId'],
+                    this.state.sicaseValues = this.state.sicaseValues.set(action.payload['sortId'],
                             action.payload['value']);
                     this.emitChange();
                 break;
                 case 'SORT_FORM_SET_SPOS':
                     if (/^([1-9]\d*)*$/.exec(action.payload['value'])) {
-                        this.sposValues = this.sposValues.set(action.payload['sortId'],
+                        this.state.sposValues = this.state.sposValues.set(action.payload['sortId'],
                                 action.payload['value']);
 
                     } else {
@@ -195,18 +194,20 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
         });
     }
 
+    unregister() {}
+
     syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
         return src.pipe(
             tap(
                 (data) => {
                     if (data.form_type === 'sort') {
                         const sortId = data.op_key;
-                        this.isActiveActionValues = this.isActiveActionValues.set(sortId, data.form_action === 'sortx');
-                        this.sattrValues = this.sattrValues.set(sortId, data.sattr);
-                        this.skeyValues = this.skeyValues.set(sortId, data.skey);
-                        this.sposValues = this.sposValues.set(sortId, data.spos);
-                        this.sbwardValues = this.sbwardValues.set(sortId, data.sbward);
-                        this.sicaseValues = this.sicaseValues.set(sortId, data.sicase);
+                        this.state.isActiveActionValues = this.state.isActiveActionValues.set(sortId, data.form_action === 'sortx');
+                        this.state.sattrValues = this.state.sattrValues.set(sortId, data.sattr);
+                        this.state.skeyValues = this.state.skeyValues.set(sortId, data.skey);
+                        this.state.sposValues = this.state.sposValues.set(sortId, data.spos);
+                        this.state.sbwardValues = this.state.sbwardValues.set(sortId, data.sbward);
+                        this.state.sicaseValues = this.state.sicaseValues.set(sortId, data.sicase);
                     }
                 }
             ),
@@ -240,45 +241,16 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
         const val2List = (v) => v ? [v] : [];
 
         const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
-        args.replace('sattr', val2List(this.sattrValues.get(sortId)));
-        args.replace('skey', val2List(this.skeyValues.get(sortId)));
-        args.replace('sbward', val2List(this.sbwardValues.get(sortId)));
-        args.replace('sicase', val2List(this.sicaseValues.get(sortId)));
-        args.replace('spos', val2List(this.sposValues.get(sortId)));
+        args.replace('sattr', val2List(this.state.sattrValues.get(sortId)));
+        args.replace('skey', val2List(this.state.skeyValues.get(sortId)));
+        args.replace('sbward', val2List(this.state.sbwardValues.get(sortId)));
+        args.replace('sicase', val2List(this.state.sicaseValues.get(sortId)));
+        args.replace('spos', val2List(this.state.sposValues.get(sortId)));
         return args;
     }
 
-    /**
-     * Return both positional and structural attributes
-     * as a single list (positional first).
-     */
-    getAllAvailAttrs():Immutable.List<Kontext.AttrItem> {
-        return this.availAttrList
-                .concat(this.availStructAttrList.sort(sortAttrVals)).toList();
-    }
-
-    getSattrValues():Immutable.Map<string, string> {
-        return this.sattrValues;
-    }
-
-    getSkeyValues():Immutable.Map<string, string> {
-        return this.skeyValues;
-    }
-
-    getSposValues():Immutable.Map<string, string> {
-        return this.sposValues;
-    }
-
-    getSicaseValues():Immutable.Map<string, string> {
-        return this.sicaseValues;
-    }
-
-    getSbwardValues():Immutable.Map<string, string> {
-        return this.sbwardValues;
-    }
-
     isActiveActionValue(sortId:string):boolean {
-        return this.isActiveActionValues.get(sortId);
+        return this.state.isActiveActionValues.get(sortId);
     }
 }
 
@@ -286,7 +258,7 @@ export class ConcSortModel extends StatefulModel implements ISubmitableConcSortM
 /**
  *
  */
-export class MultiLevelConcSortModel extends StatefulModel implements ISubmitableConcSortModel {
+export class MultiLevelConcSortModel extends KontextStatefulModel implements ISubmitableConcSortModel {
 
     private static LEFTMOST_CTX = ['-3<0', '-2<0', '-1<0', '0~0<0', '1<0', '2<0', '3<0'];
     private static RIGHTMOST_CTX = ['-3>0', '-2>0', '-1>0', '0~0>0', '1>0', '2>0', '3>0'];
