@@ -62,6 +62,7 @@ export interface QueryStorageModelState {
     archivedOnly:boolean;
     editingQueryId:string;
     editingQueryName:string;
+    currentItem:number;
 }
 
 export class QueryStorageModel extends StatefulModel<QueryStorageModelState> implements PluginInterfaces.QueryStorage.IModel {
@@ -83,12 +84,16 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState> imp
                 archivedOnly: false,
                 editingQueryId: null,
                 editingQueryName: null, // null is ok here, a value is attached once the editor is opened
+                currentItem: 0,
             }
         );
         this.pluginApi = pluginApi;
 
         this.onAction((action:Action) => {
             switch (action.name) {
+                case 'QUERY_STORAGE_SELECT_CURRENT_ITEM':
+                    this.changeState(state => {state.currentItem = action.payload['value']});
+                break;
                 case 'QUERY_STORAGE_SET_QUERY_TYPE':
                     this.changeState(state => {
                         state.isBusy = true;
@@ -288,20 +293,6 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState> imp
 
     getData():Array<Kontext.QueryHistoryItem> {
         return this.state.data;
-    }
-
-    getFlatData():Array<InputBoxHistoryItem> {
-        return List.flatMap(
-            v => [{query: v.query, query_type: v.query_type, created: v.created}]
-                .concat(
-                    pipe(
-                        v.aligned,
-                        List.filter(v2 => !!v2.query),
-                        List.map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created}))
-                    )
-            ),
-            this.state.data
-        );
     }
 
     getOffset():number {
