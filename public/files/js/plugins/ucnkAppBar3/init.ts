@@ -23,29 +23,27 @@
 import {PluginInterfaces} from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/page';
-import {StatefulModel} from '../../models/base';
-import { Action, IFullActionControl } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 
-export class AppBarModel extends StatefulModel {
+export class AppBarModel extends StatelessModel<{}> {
 
     private layoutModel:PageModel;
 
     constructor(dispatcher:IFullActionControl) {
-        super(dispatcher);
+        super(dispatcher, {});
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'USER_SHOW_LOGIN_DIALOG':
-                    try {
-                        toolbar.openLoginDialog();
+        this.addActionHandler(
+            'USER_SHOW_LOGIN_DIALOG',
+            (_) => {
+                try {
+                    toolbar.openLoginDialog();
 
-                    } catch (e) {
-                        console.error(e);
-                        this.layoutModel.showMessage('error', this.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar'));
-                    }
-                break;
+                } catch (e) {
+                    console.error(e);
+                    this.layoutModel.showMessage('error', this.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar'));
+                }
             }
-        });
+        );
     }
 }
 
