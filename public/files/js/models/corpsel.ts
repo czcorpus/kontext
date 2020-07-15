@@ -18,18 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
+
 import { Kontext } from '../types/common';
 import { PageModel } from '../app/page';
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { Actions as QueryActions, ActionName as QueryActionName } from './query/actions';
+
 
 
 export interface NonQueryCorpusSelectionModelState {
     currentSubcorp:string;
     origSubcorpName:string;
     isForeignSubcorp:boolean;
-    availSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
-    corpora:Immutable.List<string>;
+    availSubcorpora:Array<Kontext.SubcorpListItem>;
+    corpora:Array<string>;
 }
 
 /**
@@ -55,26 +57,27 @@ export class NonQueryCorpusSelectionModel extends StatefulModel<NonQueryCorpusSe
                 currentSubcorp: usesubcorp,
                 origSubcorpName: origSubcorpName,
                 isForeignSubcorp: foreignSubcorp,
-                availSubcorpora: Immutable.List<Kontext.SubcorpListItem>(availSubcorpora),
-                corpora: Immutable.List<string>(corpora)
+                availSubcorpora: availSubcorpora,
+                corpora: corpora
             }
         );
         this.layoutModel = layoutModel;
-    }
 
-    onAction(action:Action) {
-        switch (action.name) {
-            case 'QUERY_INPUT_SELECT_SUBCORP':
-                if (action.payload['pubName']) {
-                    this.state.currentSubcorp = action.payload['pubName'];
-                    this.state.origSubcorpName = action.payload['subcorp'];
-                    this.state.isForeignSubcorp = action.payload['foreign'];
+        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
+            QueryActionName.QueryInputSelectSubcorp,
+            action => {
+                this.changeState(state => {
+                    if (action.payload.pubName) {
+                        state.currentSubcorp = action.payload.pubName;
+                        state.origSubcorpName = action.payload.subcorp;
+                        state.isForeignSubcorp = action.payload.foreign;
 
-                } else {
-                    this.state.currentSubcorp = action.payload['subcorp'];
-                    this.state.origSubcorpName = action.payload['subcorp'];
-                    this.state.isForeignSubcorp = false;
-                }
+                    } else {
+                        state.currentSubcorp = action.payload.subcorp;
+                        state.origSubcorpName = action.payload.subcorp;
+                        state.isForeignSubcorp = false;
+                    }
+                });
                 const corpIdent = this.layoutModel.getCorpusIdent();
                 this.layoutModel.setConf<Kontext.FullCorpusIdent>(
                     'corpusIdent',
@@ -87,9 +90,8 @@ export class NonQueryCorpusSelectionModel extends StatefulModel<NonQueryCorpusSe
                         foreignSubcorp: this.state.isForeignSubcorp
                     }
                 );
-                this.emitChange();
-            break;
-        }
+            }
+        );
     }
 
     unregister():void {}

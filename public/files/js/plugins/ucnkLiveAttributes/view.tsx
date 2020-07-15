@@ -24,14 +24,15 @@ import {Kontext, TextTypes} from '../../types/common';
 import {LiveAttrsModel, LiveAttrsModelState, TTSelectionStep, AlignedLangSelectionStep, isAlignedSelectionStep} from './models';
 import { PluginInterfaces } from '../../types/plugins';
 import {init as ttViewInit} from '../../views/textTypes';
-import { IActionDispatcher, Bound } from 'kombo';
+import { IActionDispatcher, Bound, IModel } from 'kombo';
+import { TextTypesModelState } from '../../models/textTypes/main';
 
 
 export interface ViewModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     SubcmixerComponent:PluginInterfaces.SubcMixer.View;
-    textTypesModel:TextTypes.ITextTypesModel;
+    textTypesModel:IModel<TextTypesModelState>;
     liveAttrsModel:LiveAttrsModel;
 }
 
