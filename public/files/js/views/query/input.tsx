@@ -32,6 +32,8 @@ import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/u
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
+import { Actions as HintActions,
+    ActionName as HintActionName } from '../../models/usageTips/actions';
 
 
 export interface InputModuleArgs {
@@ -133,9 +135,8 @@ export function init({
         }
 
         _clickHandler() {
-            dispatcher.dispatch({
-                name: 'NEXT_QUERY_HINT',
-                payload: {}
+            dispatcher.dispatch<HintActions.NextQueryHint>({
+                name: HintActionName.NextQueryHint
             });
         }
 

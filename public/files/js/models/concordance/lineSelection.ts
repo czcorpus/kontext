@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatelessModel } from 'kombo';
+import { IFullActionControl, StatelessModel, Action } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
@@ -90,7 +90,8 @@ export interface LineSelectionModelArgs {
  * - binary (checked/unchecked)
  * - categorical (0,1,2,3,4)
  */
-export class LineSelectionModel extends StatelessModel<LineSelectionModelState> implements IPageLeaveVoter<LineSelectionModelState> {
+export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
+        implements IPageLeaveVoter<LineSelectionModelState> {
 
     static FILTER_NEGATIVE = 'n';
 
@@ -109,7 +110,11 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
      * that visiting a different query view will reset
      * the selection.
      */
-    static registerQuery(state:LineSelectionModelState, clStorage:ConcLinesStorage<LineSelectionModelState>, query:Array<string>):void {
+    static registerQuery(
+        state:LineSelectionModelState,
+        clStorage:ConcLinesStorage<LineSelectionModelState>,
+        query:Array<string>
+    ):void {
         clStorage.init(state, query);
     }
 
@@ -157,7 +162,12 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             (state, action) => {
                 const val = action.payload.value;
                 if (this.validateGroupId(state, val)) {
-                    this.selectLine(state, val, action.payload.tokenNumber, action.payload.kwicLength);
+                    this.selectLine(
+                        state,
+                        val,
+                        action.payload.tokenNumber,
+                        action.payload.kwicLength
+                    );
 
                 } else {
                     this.layoutModel.showMessage('error',
@@ -196,12 +206,12 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             (state, action, dispatch) => {
                 this.resetServerLineGroups(state).subscribe(
                     (args) => {
-                        dispatch({
+                        dispatch<Actions.LineSelectionResetOnServerDone>({
                             name: ActionName.LineSelectionResetOnServerDone
                         });
                     },
                     (err) => {
-                        dispatch({
+                        dispatch<Actions.LineSelectionResetOnServerDone>({
                             name: ActionName.LineSelectionResetOnServerDone,
                             error: err
                         });
@@ -215,7 +225,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             ActionName.RemoveSelectedLines,
             null,
             (state, action, dispatch) => {
-                this.removeLines(state, LineSelectionModel.FILTER_NEGATIVE); // we leave the page here
+                // we leave the page here
+                this.removeLines(state, LineSelectionModel.FILTER_NEGATIVE);
             }
         );
 
@@ -223,7 +234,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             ActionName.RemoveNonSelectedLines,
             null,
             (state, action, dispatch) => {
-                this.removeLines(state, LineSelectionModel.FILTER_POSITIVE); // we leave the page here
+                 // we leave the page here
+                this.removeLines(state, LineSelectionModel.FILTER_POSITIVE);
             }
         );
 
@@ -519,7 +531,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
 
     private renameLineGroup(state:LineSelectionModelState, srcGroupNum:number,
             dstGroupNum:number):Observable<AjaxLineGroupRenameResponse> {
-        if (!this.validateGroupId(state, srcGroupNum) || !this.validateGroupId(state, dstGroupNum)) {
+        if (!this.validateGroupId(state, srcGroupNum) ||
+                !this.validateGroupId(state, dstGroupNum)) {
             return throwError(new Error(this.layoutModel.translate(
                     'linesel__error_group_name_please_use{max_group}',
                     {max_group: state.maxGroupId})));
@@ -546,7 +559,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
             ).pipe(
                 tap(data => {
                     this.updateGlobalArgs(data);
-                    this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
+                    this.layoutModel.getHistory().replaceState(
+                        'view', this.layoutModel.getConcArgs());
                 })
             );
         }
@@ -663,7 +677,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
     }
 
     private removeLines(state:LineSelectionModelState, filter:string):void {
-        const args = this.layoutModel.getConcArgs() as MultiDict<ConcServerArgs & {pnfilter:string}>;
+        const args = this.layoutModel.getConcArgs() as MultiDict<
+                ConcServerArgs & {pnfilter:string}>;
         args.set('pnfilter', filter);
         this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
@@ -700,7 +715,11 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState> 
         ));
     }
 
-    private importData(state:LineSelectionModelState, data:Array<[number, number, number]>, mode:LineSelectionModes):void {
+    private importData(
+        state:LineSelectionModelState,
+        data:Array<[number, number, number]>,
+        mode:LineSelectionModes
+    ):void {
         data.forEach(([tokenId, kwicLen, cat]) => {
             this.addLine(state, tokenId, kwicLen, cat);
         });

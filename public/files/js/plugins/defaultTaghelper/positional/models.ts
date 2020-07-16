@@ -23,6 +23,8 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import { IPluginApi } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
 import { Actions, ActionName } from '../actions';
+import { Actions as QueryActions,
+    ActionName as QueryActionName } from '../../../models/query/actions';
 
 
 type RawTagValues = Array<Array<[string, string]>>;
@@ -113,12 +115,12 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
         this.ident = ident;
         this.sourceId = initialState.corpname;
 
-        this.addActionSubtypeHandler<Actions.PresetPattern>(
-            ActionName.PresetPattern,
+        this.addActionSubtypeHandler<QueryActions.QueryTaghelperPresetPattern>(
+            QueryActionName.QueryTaghelperPresetPattern,
             action => action.payload.sourceId === this.sourceId,
             (state, action) => {
                 state.presetPattern = action.payload.pattern;
-                if (List.last(state.data).length > 0) {
+                if (!pipe(state.data, List.last(), List.empty())) {
                     this.applyPresetPattern(state);
                 }
             }
@@ -290,7 +292,8 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                 if (this.ident !== action.payload.value) {
                     this.suspend(
                         {},
-                        (action:Actions.SetActiveTag, syncObj) => this.ident === action.payload.value
+                        (action:Actions.SetActiveTag, syncObj) =>
+                            this.ident === action.payload.value
                         ? null : syncObj
                     ).subscribe(); // TODO is this correct ?
                 }

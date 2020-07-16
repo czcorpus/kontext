@@ -21,6 +21,8 @@
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { tuple, List, pipe, Dict } from 'cnc-tskit';
 
+import { Actions, ActionName } from './actions';
+
 
 
 export enum UsageTipCategory {
@@ -88,15 +90,15 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
         );
         this.translatorFn = translatorFn;
 
-        this.addActionHandler(
-            'NEXT_QUERY_HINT',
+        this.addActionHandler<Actions.NextQueryHint>(
+            ActionName.NextQueryHint,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.QUERY);
             }
         );
 
-        this.addActionHandler(
-            'NEXT_CONC_HINT',
+        this.addActionHandler<Actions.NextConcHint>(
+            ActionName.NextConcHint,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.CONCORDANCE);
             }

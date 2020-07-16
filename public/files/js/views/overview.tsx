@@ -21,8 +21,10 @@
 import * as React from 'react';
 import {IActionDispatcher} from 'kombo';
 import {Kontext} from '../types/common';
-import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo } from '../models/common/layout';
+import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo }
+    from '../models/common/layout';
 import { Subscription } from 'rxjs';
+import { Actions, ActionName } from '../models/common/actions';
 
 
 export interface OverviewAreaProps {
@@ -429,9 +431,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'OVERVIEW_CLOSE',
-                payload: {}
+            dispatcher.dispatch<Actions.OverviewClose>({
+                name: ActionName.OverviewClose
             });
         }
 

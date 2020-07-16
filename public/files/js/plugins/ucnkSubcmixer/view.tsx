@@ -19,12 +19,15 @@
  */
 
 import * as React from 'react';
+import { List, Dict } from 'cnc-tskit';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+
 import { Kontext } from '../../types/common';
 import { SubcMixerModel, SubcMixerModelState } from './model';
 import { init as subcorpViewsInit } from '../../views/subcorp/forms';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { CalculationResults, SubcMixerExpression } from './common';
-import { List, Dict } from 'cnc-tskit';
+import { Actions, ActionName } from './actions';
+import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
 
 
 export interface WidgetProps {
@@ -72,8 +75,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleRatioValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_SET_RATIO',
+            dispatcher.dispatch<Actions.SetRatio>({
+                name: ActionName.SetRatio,
                 payload: {
                     attrName: props.attrName,
                     attrValue: props.attrValue,
@@ -175,9 +178,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleUpdateParamsButton = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_CLEAR_RESULT',
-                payload: {}
+            dispatcher.dispatch<Actions.ClearResult>({
+                name: ActionName.ClearResult
             });
         };
 
@@ -203,15 +205,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleCreateSubcorpClick = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
-                payload: {}
+            dispatcher.dispatch<Actions.SubmitCreateSubcorpus>({
+                name: ActionName.SubmitCreateSubcorpus
             });
         };
 
         const handleSubcnameInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_SUBCNAME',
+            dispatcher.dispatch<SubcActions.FormSetSubcName>({
+                name: SubcActionName.FormSetSubcName,
                 payload: {
                     value: evt.target.value
                 }
@@ -317,9 +318,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleCalculateCategoriesClick = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_SUBMIT_TASK',
-                payload: {}
+            dispatcher.dispatch<Actions.SubmitTask>({
+                name: ActionName.SubmitTask
             });
         };
 
@@ -424,15 +424,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const Widget:React.SFC<WidgetProps & SubcMixerModelState> = (props) => {
 
         const handleCloseWidget = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_HIDE_WIDGET',
-                payload: {}
+            dispatcher.dispatch<Actions.HideWidget>({
+                name: ActionName.HideWidget
             });
         };
 
         const handleActivationButton = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_SHOW_WIDGET'
+            dispatcher.dispatch<Actions.ShowWidget>({
+                name: ActionName.ShowWidget
             });
         }
 

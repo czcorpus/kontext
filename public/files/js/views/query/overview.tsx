@@ -538,8 +538,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const handleEditClickFn = (opIdx) => {
             return () => {
-                dispatcher.dispatch({
-                    name: 'REDIRECT_TO_EDIT_QUERY_OPERATION',
+                dispatcher.dispatch<Actions.RedirectToEditQueryOperation>({
+                    name: ActionName.RedirectToEditQueryOperation,
                     payload: {
                         operationIdx: opIdx
                     }

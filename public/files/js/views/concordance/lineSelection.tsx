@@ -83,19 +83,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const UnsavedLineSelectionMenu:React.SFC<{mode:LineSelectionModes; isBusy:boolean}> = (props) => {
 
         const actionChangeHandler = (evt:React.ChangeEvent<{value:string}>) => {
-            const actionMap = {
-                clear: ActionName.LineSelectionReset,
-                remove: ActionName.RemoveSelectedLines,
-                remove_inverted: ActionName.RemoveNonSelectedLines,
-                apply: ActionName.MarkLines
-            };
-            const eventId = actionMap[evt.target.value] || null;
-
-            if (eventId) {
-                dispatcher.dispatch({
-                    name: eventId,
-                    payload: {}
-                });
+            switch (evt.target.value) {
+                case 'clear':
+                    dispatcher.dispatch<Actions.LineSelectionReset>({
+                        name: ActionName.LineSelectionReset
+                    });
+                break;
+                case 'remove':
+                    dispatcher.dispatch<Actions.RemoveSelectedLines>({
+                        name: ActionName.RemoveSelectedLines
+                    });
+                break;
+                case 'remove_inverted':
+                    dispatcher.dispatch<Actions.RemoveNonSelectedLines>({
+                        name: ActionName.RemoveNonSelectedLines
+                    });
+                break;
+                case 'apply':
+                    dispatcher.dispatch<Actions.MarkLines>({
+                        name: ActionName.MarkLines
+                    });
+                break;
             }
         };
 

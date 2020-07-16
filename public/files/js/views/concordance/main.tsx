@@ -43,6 +43,7 @@ import { UsageTipsModel } from '../../models/usageTips';
 import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/concordance/actions';
 import { LineSelectionModes } from '../../models/concordance/common';
+import { Actions as UserActions, ActionName as UserActionName } from '../../models/user/actions';
 
 
 export class ViewPageModels {
@@ -477,8 +478,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     }> = (props) => {
 
         const handleLoginClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'USER_SHOW_LOGIN_DIALOG',
+            dispatcher.dispatch<UserActions.UserShowLoginDialog>({
+                name: UserActionName.UserShowLoginDialog,
                 payload: {
                     returnUrl: window.location.href
                 }
@@ -556,8 +557,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         }
 
         _handleAnonymousUserWarning() {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_HIDE_ANONYMOUS_USER_WARNING'
+            dispatcher.dispatch<Actions.HideAnonymousUserWarning>({
+                name: ActionName.HideAnonymousUserWarning
             })
         }
 

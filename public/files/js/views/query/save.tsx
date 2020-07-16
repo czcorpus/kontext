@@ -23,6 +23,9 @@ import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {Keyboard} from 'cnc-tskit';
 import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
+import { Actions, ActionName } from '../../models/query/actions';
+import { Actions as MainMenuActions,
+    ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
 
 
 export interface QuerySaveAsFormProps {
@@ -49,8 +52,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch({
-                name: 'QUERY_SAVE_AS_FORM_SET_NAME',
+            dispatcher.dispatch<Actions.SaveAsFormSetName>({
+                name: ActionName.SaveAsFormSetName,
                 payload: {
                     value: evt.target.value
                 }
@@ -111,9 +114,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private _handleCloseEvent() {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                payload: {}
+            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
+                name: MainMenuActionName.ClearActiveItem
             });
         }
 
@@ -126,9 +128,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private submit() {
-            dispatcher.dispatch({
-                name: 'QUERY_SAVE_AS_FORM_SUBMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.SaveAsFormSubmit>({
+                name: ActionName.SaveAsFormSubmit
             });
         }
 

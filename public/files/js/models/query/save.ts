@@ -23,6 +23,8 @@ import {MultiDict} from '../../multidict';
 import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
+import { Actions, ActionName } from './actions';
+import { HTTP, tuple } from 'cnc-tskit';
 
 
 interface IsArchivedResponse extends Kontext.AjaxResponse {
@@ -51,85 +53,46 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, queryId:string, concTTLDays:number,
-            concExplicitPersistenceUI:boolean) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        layoutModel:PageModel,
+        queryId:string,
+        concTTLDays:number,
+        concExplicitPersistenceUI:boolean
+    ) {
         super(
             dispatcher,
             {
                 name: '',
                 isBusy: false,
-                queryId: queryId,
+                queryId,
                 isValidated: false,
-                concTTLDays: concTTLDays,
+                concTTLDays,
                 concIsArchived: false,
-                concExplicitPersistenceUI: concExplicitPersistenceUI
+                concExplicitPersistenceUI
             }
         );
         this.layoutModel = layoutModel;
-    }
 
-    reduce(state:QuerySaveAsFormModelState, action:Action):QuerySaveAsFormModelState {
-        const newState = this.copyState(state);
+        this.addActionHandler<Actions.SaveAsFormSetName>(
+            ActionName.SaveAsFormSetName,
+            (state, action) => {
+                state.name = action.payload.value;
+            }
+        );
 
-        switch (action.name) {
-            case 'QUERY_SAVE_AS_FORM_SET_NAME':
-                newState.isValidated = false;
-                newState.name = action.payload['value'];
-            break;
-            case 'QUERY_SAVE_AS_FORM_SUBMIT':
-                if (newState.name) {
-                    newState.isValidated = true;
-                    newState.isBusy = true;
-
-                } else {
-                    newState.isValidated = false;
-                }
-            break;
-            case 'QUERY_SAVE_AS_FORM_SUBMIT_DONE':
-                newState.isBusy = false;
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
+        this.addActionHandler<Actions.SaveAsFormSubmit>(
+            ActionName.SaveAsFormSubmit,
+            (state, action) => {
+                if (state.name) {
+                    state.isValidated = true;
+                    state.isBusy = true;
 
                 } else {
-                    this.layoutModel.showMessage('info',
-                        this.layoutModel.translate('query__save_as_item_saved'));
+                    state.isValidated = false;
                 }
-            break;
-            case 'QUERY_GET_CONC_ARCHIVED_STATUS':
-                newState.isBusy = true;
-            break;
-            case 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE':
-                newState.isBusy = false;
-                newState.concIsArchived = action.payload['isArchived'];
-            break;
-            case 'QUERY_MAKE_CONCORDANCE_PERMANENT':
-                newState.isBusy = true;
-            break;
-            case 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE':
-                newState.isBusy = false;
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
-
-                } else {
-                    newState.concIsArchived = !action.payload['revoked'];
-                    if (action.payload['revoked']) {
-                        this.layoutModel.showMessage('info',
-                                        this.layoutModel.translate('concview__make_conc_link_permanent_revoked'));
-                    } else {
-                        this.layoutModel.showMessage('info',
-                                        this.layoutModel.translate('concview__make_conc_link_permanent_done'));
-                    }
-                }
-            break;
-            default:
-                return state;
-        }
-        return newState;
-    }
-
-    sideEffects(state:QuerySaveAsFormModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.name) {
-            case 'QUERY_SAVE_AS_FORM_SUBMIT':
+            },
+            (state, action, dispatch) => {
                 if (!state.isValidated) {
                     this.layoutModel.showMessage('error',
                             this.layoutModel.translate('query__save_as_cannot_have_empty_name'));
@@ -138,74 +101,132 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     this.submit(state).subscribe(
                         () => {
                             this.layoutModel.resetMenuActiveItemAndNotify();
-                            dispatch({
-                                name: 'QUERY_SAVE_AS_FORM_SUBMIT_DONE',
-                                payload: {}
+                            dispatch<Actions.SaveAsFormSubmitDone>({
+                                name: ActionName.SaveAsFormSubmitDone
                             });
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
-                            dispatch({
-                                name: 'QUERY_SAVE_AS_FORM_SUBMIT_DONE',
-                                payload: {}
+                            dispatch<Actions.SaveAsFormSubmitDone>({
+                                name: ActionName.SaveAsFormSubmitDone
                             });
                         }
                     );
                 }
-            break;
-            case 'QUERY_MAKE_CONCORDANCE_PERMANENT':
+            }
+        );
+
+        this.addActionHandler<Actions.SaveAsFormSubmitDone>(
+            ActionName.SaveAsFormSubmitDone,
+            (state, action) => {
+                state.isBusy = false;
+                // TODO these are side-effects actually
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+
+                } else {
+                    this.layoutModel.showMessage('info',
+                        this.layoutModel.translate('query__save_as_item_saved'));
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.GetConcArchivedStatus>(
+            ActionName.GetConcArchivedStatus,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.layoutModel.ajax$<IsArchivedResponse>(
+                    HTTP.Method.GET,
+                    this.layoutModel.createActionUrl('get_stored_conc_archived_status'),
+                    {code: state.queryId}
+
+                ).subscribe(
+                    (data) => {
+                        dispatch<Actions.GetConcArchivedStatusDone>({
+                            name: ActionName.GetConcArchivedStatusDone,
+                            payload: {isArchived: data.is_archived}
+                        });
+
+                    },
+                    (err) => {
+                        dispatch<Actions.GetConcArchivedStatusDone>({
+                            name: ActionName.GetConcArchivedStatusDone,
+                            error: err
+                        });
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.GetConcArchivedStatusDone>(
+            ActionName.GetConcArchivedStatusDone,
+            (state, action) => {
+                state.isBusy = false;
+                state.concIsArchived = action.payload.isArchived;
+            }
+        );
+
+        this.addActionHandler<Actions.MakeConcordancePermanent>(
+            ActionName.MakeConcordancePermanent,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
                 this.layoutModel.ajax$<MakePermanentResponse>(
-                    'POST',
+                    HTTP.Method.POST,
                     this.layoutModel.createActionUrl(
                         'archive_concordance',
                         [
-                            ['code', state.queryId],
-                            ['revoke', action.payload['revoke'] ? '1' : '0']
+                            tuple('code', state.queryId),
+                            tuple('revoke', action.payload.revoke ? '1' : '0')
                         ]
                     ),
                     {}
 
                 ).subscribe(
                     (data) => {
-                        dispatch({
-                            name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
+                        dispatch<Actions.MakeConcordancePermanentDone>({
+                            name: ActionName.MakeConcordancePermanentDone,
                             payload: {revoked: data.revoked}
                         });
 
                     },
                     (err) => {
-                        dispatch({
-                            name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
-                            payload: {},
+                        dispatch<Actions.MakeConcordancePermanentDone>({
+                            name: ActionName.MakeConcordancePermanentDone,
                             error: err
                         });
                     }
                 );
-            break;
-            case 'QUERY_GET_CONC_ARCHIVED_STATUS':
-                this.layoutModel.ajax$<IsArchivedResponse>(
-                    'GET',
-                    this.layoutModel.createActionUrl('get_stored_conc_archived_status'),
-                    {code: state.queryId}
+            }
+        );
 
-                ).subscribe(
-                    (data) => {
-                        dispatch({
-                            name: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
-                            payload: {isArchived: data.is_archived}
-                        });
+        this.addActionHandler<Actions.MakeConcordancePermanentDone>(
+            ActionName.MakeConcordancePermanentDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
 
-                    },
-                    (err) => {
-                        dispatch({
-                            name: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
-                            payload: {},
-                            error: err
-                        });
+                } else {
+                    state.concIsArchived = !action.payload.revoked;
+                    if (action.payload.revoked) {
+                        this.layoutModel.showMessage(
+                            'info',
+                            this.layoutModel.translate('concview__make_conc_link_permanent_revoked')
+                        );
+
+                    } else {
+                        this.layoutModel.showMessage(
+                            'info',
+                            this.layoutModel.translate('concview__make_conc_link_permanent_done')
+                        );
                     }
-                );
-            break;
-        }
+                }
+            }
+        );
     }
 
     private submit(state:QuerySaveAsFormModelState):Observable<boolean> {
@@ -213,7 +234,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         args.set('query_id', state.queryId);
         args.set('name', state.name);
         return this.layoutModel.ajax$<any>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('save_query'),
             args
         );

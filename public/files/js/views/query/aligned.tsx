@@ -20,12 +20,13 @@
 
 import * as React from 'react';
 import { List } from 'cnc-tskit';
+import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { InputModuleViews } from './input';
 import { QueryType } from '../../models/query/common';
 import { PluginInterfaces } from '../../types/plugins';
-import { IActionDispatcher } from 'kombo';
+import { Actions, ActionName } from '../../models/query/actions';
 
 
 export interface AlignedModuleArgs {
@@ -105,8 +106,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         }
 
         handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
+            dispatcher.dispatch<Actions.QueryInputRemoveAlignedCorpus>({
+                name: ActionName.QueryInputRemoveAlignedCorpus,
                 payload: {
                     corpname: this.props.corpname
                 }
@@ -114,8 +115,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         }
 
         handleMakeMainClick() {
-            dispatcher.dispatch({
-                name: 'QUERY_MAKE_CORPUS_PRIMARY',
+            dispatcher.dispatch<Actions.QueryInputMakeCorpusPrimary>({
+                name: ActionName.QueryInputMakeCorpusPrimary,
                  payload: {
                     corpname: this.props.corpname
                 }
@@ -178,8 +179,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
     const AlignedCorpora:React.SFC<AlignedCorporaProps> = (props) => {
 
         const handleAddAlignedCorpus = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
+            dispatcher.dispatch<Actions.QueryInputAddAlignedCorpus>({
+                name: ActionName.QueryInputAddAlignedCorpus,
                 payload: {
                     corpname: evt.target.value
                 }

@@ -29,7 +29,12 @@ export enum ActionName {
     SwitchCorpus = 'SWITCH_CORPUS',
     SwitchCorpusReady = 'SWITCH_CORPUS_READY',
     SwitchCorpusDone = 'SWITCH_CORPUS_DONE',
-    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE'
+    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
+    OverviewClose = 'OVERVIEW_CLOSE',
+    OverviewCorpusInfoRequired = 'OVERVIEW_CORPUS_INFO_REQUIRED',
+    OverviewShowCitationInfo = 'OVERVIEW_SHOW_CITATION_INFO',
+    OverviewShowSubcorpusInfo = 'OVERVIEW_SHOW_SUBCORPUS_INFO',
+    OverviewShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS'
 }
 
 export interface CorpusSwitchModelRestorePayload {
@@ -80,4 +85,34 @@ export namespace Actions {
     }> {
         name:ActionName.SwitchCorpusReady;
     }
+
+    export interface OverviewClose extends Action<{
+    }> {
+        name:ActionName.OverviewClose;
+    }
+
+    export interface OverviewCorpusInfoRequired extends Action<{
+        corpusId:string;
+    }> {
+        name:ActionName.OverviewCorpusInfoRequired;
+    }
+
+    export interface OverviewShoActionwCitationInfo extends Action<{
+        corpusId:string;
+    }> {
+        name:ActionName.OverviewShowCitationInfo;
+    }
+
+    export interface OverviewShowSubcorpusInfo extends Action<{
+        corpusId:string;
+        subcorpusId:string;
+    }> {
+        name:ActionName.OverviewShowSubcorpusInfo;
+    }
+
+    export interface OverviewShowKeyShortcuts extends Action<{
+    }> {
+        name:ActionName.OverviewShowKeyShortcuts;
+    }
+
 }

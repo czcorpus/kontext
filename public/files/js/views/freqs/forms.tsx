@@ -21,10 +21,10 @@
 import * as React from 'react';
 import { IActionDispatcher} from 'kombo';
 
-import { Kontext} from '../../types/common';
+import { Kontext } from '../../types/common';
 import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/freqForms';
 import { init as freqFormsFactory } from './freqForms';
-import { ActionName } from '../../models/freqs/actions';
+import { Actions, ActionName } from '../../models/freqs/actions';
 import { init as ctFreqFormFactory } from './twoDimension/form';
 import { Freq2DFormModel } from '../../models/freqs/twoDimension/form';
 
@@ -72,15 +72,22 @@ export function init(
         }
 
         _handleSubmitClick() {
-            const actions = {
-                ml: ActionName.MLSubmit,
-                tt: ActionName.TTSubmit,
-                ct: 'FREQ_CT_SUBMIT'
-            };
-            dispatcher.dispatch({
-                name: actions[this.state.formType],
-                payload: {}
-            });
+            switch (this.state.formType) {
+                case 'ml':
+                    dispatcher.dispatch<Actions.MLSubmit>({
+                        name: ActionName.MLSubmit
+                    });
+                break;
+                case 'tt':
+                    dispatcher.dispatch<Actions.TTSubmit>({
+                        name: ActionName.TTSubmit
+                    });
+                break;
+                case 'ct':
+                    dispatcher.dispatch<Actions.FreqctFormSubmit>({
+                        name: ActionName.FreqctFormSubmit
+                    });
+            }
         }
 
         render() {
