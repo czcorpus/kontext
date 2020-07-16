@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf } from 'rxjs';
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
@@ -63,7 +62,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------- <CQLEditorFallback /> -----------------------------
 
-    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps & QueryFormModelState> {
+    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps &
+            QueryFormModelState> {
 
         constructor(props) {
             super(props);
@@ -73,7 +73,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyUpHandler(evt) {
-            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME || evt.keyCode === Keyboard.Code.END) {
+            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
+                    evt.keyCode === Keyboard.Code.END) {
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
                     payload: {
@@ -231,11 +232,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         const leftIdx = Number(a.getAttribute('data-leftIdx'));
                         const rightIdx = Number(a.getAttribute('data-rightIdx'));
 
-                        dispatcher.dispatch({
-                            name: 'TAGHELPER_PRESET_PATTERN',
+                        dispatcher.dispatch<Actions.QueryTaghelperPresetPattern>({
+                            name: ActionName.QueryTaghelperPresetPattern,
                             payload: {
                                 sourceId: this.props.sourceId,
-                                pattern: this.props.rawCode[this.props.sourceId].substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
+                                pattern: this.props.rawCode[this.props.sourceId].substring(
+                                    leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                             }
                         });
                         dispatcher.dispatch<Actions.SetActiveInputWidget>({
@@ -256,7 +258,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyUpHandler(evt:React.KeyboardEvent) {
-            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME || evt.keyCode === Keyboard.Code.END) {
+            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
+                    evt.keyCode === Keyboard.Code.END) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
@@ -300,8 +303,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawAnchorIdx - 1 : rawAnchorIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawFocusIdx - 1 : rawFocusIdx,
                             insertRange: null
                         }
                     });
@@ -314,8 +319,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawAnchorIdx : rawAnchorIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawAnchorIdx : rawAnchorIdx,
                             insertRange: null
                         }
                     });
@@ -328,8 +335,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawFocusIdx : rawFocusIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawFocusIdx : rawFocusIdx,
                             insertRange: null
                         }
                     });
@@ -345,12 +354,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     payload: {
                         formType: this.props.formType,
                         sourceId: this.props.sourceId,
-                        // We have to add a single whitespace here because otherwise FF cannot handle cursor
-                        // position properly (normally it inserts its custom br type=_moz element which is
-                        // even worse to handle). This is not ideal but by far the most cheap solution.
+                        // We have to add a single whitespace here because otherwise FF cannot
+                        // handle cursor position properly (normally it inserts its custom br
+                        // type=_moz element which is even worse to handle). This is not ideal but
+                        //  by far the most cheap solution.
                         query: rawFocusIdx === query.length ? '\n ' : '\n',
-                        rawAnchorIdx: rawFocusIdx === query.length ? rawAnchorIdx + 2 : rawAnchorIdx + 1,
-                        rawFocusIdx: rawFocusIdx === query.length ? rawFocusIdx + 2 : rawFocusIdx + 1,
+                        rawAnchorIdx: rawFocusIdx === query.length ?
+                            rawAnchorIdx + 2 : rawAnchorIdx + 1,
+                        rawFocusIdx: rawFocusIdx === query.length ?
+                            rawFocusIdx + 2 : rawFocusIdx + 1,
                         insertRange: [rawAnchorIdx, rawFocusIdx]
                     }
                 });
@@ -411,14 +423,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onClick={this.handleEditorClick}
                                 className="cql-input"
                                 ref={this.props.inputRef}
-                                dangerouslySetInnerHTML={{__html: this.props.richCode[this.props.sourceId] || ''}}
+                                dangerouslySetInnerHTML={
+                                    {__html: this.props.richCode[this.props.sourceId] || ''}}
                                 onKeyDown={this.inputKeyDownHandler}
                                 onKeyUp={this.inputKeyUpHandler} />
                     <div className="cql-editor-messages">
                         {
                             this.props.cqlEditorMessage ?
-                            <div className="cql-editor-message"
-                                    dangerouslySetInnerHTML={{__html: this.props.message[this.props.sourceId]}} /> : null
+                                <div className="cql-editor-message"
+                                    dangerouslySetInnerHTML={
+                                        {__html: this.props.message[this.props.sourceId]}} /> :
+                                null
                         }
                     </div>
                 </div>
@@ -428,7 +443,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const BoundEditor = BoundWithProps<CQLEditorProps, CQLEditorModelState>(CQLEditor, editorModel);
 
-    const BoundFallbackEditor = BoundWithProps<CQLEditorFallbackProps, QueryFormModelState>(CQLEditorFallback, queryModel);
+    const BoundFallbackEditor = BoundWithProps<CQLEditorFallbackProps,
+            QueryFormModelState>(CQLEditorFallback, queryModel);
 
     return {
         CQLEditor: BoundEditor,

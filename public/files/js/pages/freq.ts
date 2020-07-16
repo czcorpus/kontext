@@ -36,14 +36,17 @@ import { init as analysisFrameInit } from '../views/analysis';
 import { init as queryOverviewInit } from '../views/query/overview';
 import { init as resultViewFactory } from '../views/freqs/main';
 import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
-import { FreqDataRowsModel, importData as importFreqData, FreqDataRowsModelState } from '../models/freqs/dataRows';
+import { FreqDataRowsModel, importData as importFreqData,
+    FreqDataRowsModelState } from '../models/freqs/dataRows';
 import { FreqCTResultsSaveModel } from '../models/freqs/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
-import { CTFormInputs, CTFormProperties, CTFreqResultData, AlignTypes } from '../models/freqs/twoDimension/common';
+import { CTFormInputs, CTFormProperties, CTFreqResultData,
+    AlignTypes } from '../models/freqs/twoDimension/common';
+import { ActionName as MMActionName } from '../models/mainMenu/actions';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -95,7 +98,8 @@ class FreqPage {
             mlxattr: freqFormInputs.mlxattr || List.repeat(() => attrs[0].n, initFreqLevel),
             mlxicase: freqFormInputs.mlxicase || List.repeat(() => false, initFreqLevel),
             mlxctx: freqFormInputs.mlxctx || List.repeat(() => '0>0', initFreqLevel),
-            alignType: freqFormInputs.alignType || List.repeat(() => AlignTypes.LEFT, initFreqLevel),
+            alignType: freqFormInputs.alignType ||
+                List.repeat(() => AlignTypes.LEFT, initFreqLevel),
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };
@@ -390,7 +394,7 @@ class FreqPage {
             this.layoutModel.dispatcher.registerActionListener(
                 (action) => {
                     switch (action.name) {
-                        case 'MAIN_MENU_SHOW_FILTER':
+                        case MMActionName.ShowFilter:
                             const filterArgs = new MultiDict(Dict.toEntries(action.payload));
                             window.location.replace(
                                 this.layoutModel.createActionUrl(
@@ -399,19 +403,19 @@ class FreqPage {
                                 ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
                             );
                         break;
-                        case 'MAIN_MENU_SHOW_SORT':
+                        case MMActionName.ShowSort:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
                             ) + '#sort');
                         break;
-                        case 'MAIN_MENU_SHOW_SAMPLE':
+                        case MMActionName.ShowSample:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
                             ) + '#sample');
                         break;
-                        case 'MAIN_MENU_APPLY_SHUFFLE':
+                        case MMActionName.ApplyShuffle:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()

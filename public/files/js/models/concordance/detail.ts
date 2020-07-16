@@ -46,7 +46,7 @@ export interface Speech {
     text:ConcDetailText;
     speakerId:string;
     segments:Array<string>;
-    colorCode:Kontext.RGBAColor;
+    colorCode:Color.RGBA;
     metadata:{[ident:string]:string};
 }
 
@@ -101,7 +101,7 @@ export interface ConcDetailModelState {
 
     playingRowIdx:number;
 
-    speakerColors:Array<Kontext.RGBAColor>;
+    speakerColors:Array<Color.RGBA>;
 
     wideCtxGlobals:Array<[string, string]>;
 
@@ -120,7 +120,7 @@ export interface ConcDetailModelState {
      * changed into red one after a context expasion due to
      * some new incoming or outcoming users.
      */
-    speakerColorsAttachments:{[ident:string]:Kontext.RGBAColor};
+    speakerColorsAttachments:{[ident:string]:Color.RGBA};
 
     isBusy:boolean;
 
@@ -154,8 +154,14 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     private readonly tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin;
 
 
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, structCtx:string, speechOpts:SpeechOptions,
-            wideCtxGlobals:Array<[string, string]>, tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin) {
+    constructor(
+        layoutModel:PageModel,
+        dispatcher:IFullActionControl,
+        structCtx:string,
+        speechOpts:SpeechOptions,
+        wideCtxGlobals:Array<[string, string]>,
+        tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin
+    ) {
         super(
             dispatcher,
             {
@@ -169,7 +175,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 wholeDocumentLoaded: false,
                 speakerColors: List.map(
                     item => Color.importColor(ConcDetailModel.SPK_LABEL_OPACITY, item),
-                    ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"] // TODO
+                    ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
+                    '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'] // TODO
                 ),
                 speakerColorsAttachments: {},
                 spkOverlapMode: (speechOpts.speechOverlapAttr || [])[1] ?
@@ -540,7 +547,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             return null;
         };
 
-        const createNewSpeech = (speakerId:string, colorCode:Kontext.RGBAColor,
+        const createNewSpeech = (speakerId:string, colorCode:Color.RGBA,
                     metadata:{[attr:string]:string}):Speech => {
             const importedMetadata = pipe(
                 metadata,

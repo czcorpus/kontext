@@ -19,13 +19,13 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../types/common';
-import {FormsViews as CollFormsViews} from './coll/forms';
-import {FormsViews as FreqFormsViews} from './freqs/forms';
+import { Kontext } from '../types/common';
+import { FormsViews as CollFormsViews } from './coll/forms';
+import { FormsViews as FreqFormsViews } from './freqs/forms';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
-import { Subscription } from 'rxjs';
 import { MainMenuModelState } from '../models/mainMenu';
-
+import { Actions as MMActions, ActionName as MMActionName } from '../models/mainMenu/actions';
+import { List } from 'cnc-tskit';
 
 export interface AnalysisModuleArgs {
     dispatcher:IActionDispatcher;
@@ -60,18 +60,18 @@ export function init({dispatcher, he, collViews, freqViews,
 
         _renderContents() {
             switch ((this.props.activeItem || {actionName: null}).actionName) {
-                case 'MAIN_MENU_SHOW_COLL_FORM':
+                case MMActionName.ShowCollForm:
                     return <collViews.CollForm />;
-                case 'MAIN_MENU_SHOW_FREQ_FORM':
+                case MMActionName.ShowFreqForm:
                     return <freqViews.FrequencyForm initialFreqFormVariant={this.props.initialFreqFormVariant} />;
             }
         }
 
         _getTitle() {
             switch ((this.props.activeItem || {actionName: null}).actionName) {
-                case 'MAIN_MENU_SHOW_COLL_FORM':
+                case MMActionName.ShowCollForm:
                     return he.translate('coll__form_heading');
-                case 'MAIN_MENU_SHOW_FREQ_FORM':
+                case MMActionName.ShowFreqForm:
                     return he.translate('freq__h2_freq_distr');
                 default:
                     return '?';
@@ -79,15 +79,17 @@ export function init({dispatcher, he, collViews, freqViews,
         }
 
         _activeItemIsOurs() {
-            const actions = ['MAIN_MENU_SHOW_COLL_FORM', 'MAIN_MENU_SHOW_FREQ_FORM'];
+            const actions = [
+                MMActionName.ShowCollForm,
+                MMActionName.ShowFreqForm
+            ];
             return this.props.activeItem !== null
-                    && actions.indexOf(this.props.activeItem.actionName) > -1;
+                    && List.some(v => v === this.props.activeItem.actionName, actions);
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                payload: {}
+            dispatcher.dispatch<MMActions.ClearActiveItem>({
+                name: MMActionName.ClearActiveItem
             });
         }
 

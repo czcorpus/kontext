@@ -19,14 +19,17 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {init as ttOverviewInit} from './ttOverview';
-import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
-import {ConcDashboard, ConcDashboardState} from '../../models/concordance/dashboard';
-import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
-import { PluginInterfaces } from '../../types/plugins';
 import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
+
+import { Kontext} from '../../types/common';
+import { init as ttOverviewInit } from './ttOverview';
+import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
+import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
+import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
+import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/concordance/actions';
+import { Actions as HintActions, ActionName as HintActionName }
+        from '../../models/usageTips/actions';
 
 
 export interface ConcExtendedInfoProps {
@@ -59,12 +62,16 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: props.minimized ?
-                    'DASHBOARD_MAXIMIZE_EXTENDED_INFO' :
-                    'DASHBOARD_MINIMIZE_EXTENDED_INFO',
-                payload: {}
-            });
+            if (props.minimized) {
+                dispatcher.dispatch<Actions.DashboardMaximizeExtInfo>({
+                    name: ActionName.DashboardMaximizeExtInfo
+                });
+
+            } else {
+                dispatcher.dispatch<Actions.DashboardMinimizeExtInfo>({
+                    name: ActionName.DashboardMinimizeExtInfo
+                });
+            }
         };
 
         if (props.minimized) {
@@ -93,9 +100,8 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         }
 
         handleNextClick(e:React.MouseEvent<HTMLAnchorElement>) {
-            dispatcher.dispatch({
-                name: 'NEXT_CONC_HINT',
-                payload: {}
+            dispatcher.dispatch<HintActions.NextConcHint>({
+                name: HintActionName.NextConcHint
             });
         }
 

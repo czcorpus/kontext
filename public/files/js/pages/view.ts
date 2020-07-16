@@ -84,6 +84,8 @@ import { openStorage, ConcLinesStorage } from '../models/concordance/selectionSt
 import { Actions, ActionName } from '../models/concordance/actions';
 import { QueryType } from '../models/query/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
+import { ActionName as MMActionName } from '../models/mainMenu/actions';
+
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -176,10 +178,6 @@ export class ViewPage {
         );
     }
 
-    private translate(s:string, values?:any):string {
-        return this.layoutModel.translate(s, values);
-    }
-
     private deserializeHashAction(v:string):Action {
         const [action, rawArgs] = (v || '').substr(1).split('/');
         const args = new MultiDict(parseUrlArgs(rawArgs || ''));
@@ -190,23 +188,23 @@ export class ViewPage {
         switch (actionName) {
             case 'filter':
                 return {
-                    name: 'MAIN_MENU_SHOW_FILTER',
+                    name: MMActionName.ShowFilter,
                     payload: args.toDict()
                 };
             case 'sort':
             case 'sortx':
                 return {
-                    name: 'MAIN_MENU_SHOW_SORT',
+                    name: MMActionName.ShowSort,
                     payload: args.toDict()
                 };
             case 'sample':
                 return {
-                    name: 'MAIN_MENU_SHOW_SAMPLE',
+                    name: MMActionName.ShowSample,
                     payload: args.toDict()
                 };
             case 'shuffle':
                 return {
-                    name: 'MAIN_MENU_APPLY_SHUFFLE',
+                    name: MMActionName.ApplyShuffle,
                     payload: args.toDict()
                 };
             case 'edit_op':
@@ -242,7 +240,10 @@ export class ViewPage {
         });
     }
 
-    renderLines(renderDeps:RenderLinesDeps, kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):void {
+    renderLines(
+        renderDeps:RenderLinesDeps,
+        kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew
+    ):void {
         this.layoutModel.renderReactComponent(
             this.concViews.ConcordanceDashboard,
             window.document.getElementById('conc-dashboard-mount'),

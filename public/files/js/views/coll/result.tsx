@@ -57,8 +57,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
         const handleClick = (args) => {
             return () => {
-                dispatcher.dispatch({
-                    name: 'COLL_RESULT_APPLY_QUICK_FILTER',
+                dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
+                    name: ActionName.ResultApplyQuickFilter,
                     payload: {
                         args: args
                     }
@@ -109,8 +109,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     }> = (props) => {
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'COLL_RESULT_SORT_BY_COLUMN',
+            dispatcher.dispatch<Actions.ResultSortByColumn>({
+                name: ActionName.ResultSortByColumn,
                 payload: {
                     sortFn: props.sortFn
                 }
@@ -186,8 +186,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_RESULT_SET_PAGE_INPUT_VAL',
+            dispatcher.dispatch<Actions.ResultSetPageInputVal>({
+                name: ActionName.ResultSetPageInputVal,
                 payload: {
                     value: evt.target.value
                 }
@@ -217,9 +217,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     const PrevPageLink:React.SFC<{}> = (props) => {
 
         const handleClick = (props) => {
-            dispatcher.dispatch({
-                name: 'COLL_RESULT_GET_PREV_PAGE',
-                payload: {}
+            dispatcher.dispatch<Actions.ResultGetPrevPage>({
+                name: ActionName.ResultGetPrevPage
             });
         };
 
@@ -238,9 +237,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     const NextPageLink:React.SFC<{}> = (props) => {
 
         const handleClick = (props) => {
-            dispatcher.dispatch({
-                name: 'COLL_RESULT_GET_NEXT_PAGE',
-                payload: {}
+            dispatcher.dispatch<Actions.ResultGetNextPage>({
+                name: ActionName.ResultGetNextPage
             });
         };
 
@@ -266,9 +264,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
         const handleKeyPress = (evt) => {
             if (evt.keyCode === Keyboard.Code.ENTER) {
-                dispatcher.dispatch({
-                    name: 'COLL_RESULT_CONFIRM_PAGE_VALUE',
-                    payload: {}
+                dispatcher.dispatch<Actions.ResultConfirmPageValue>({
+                    name: ActionName.ResultConfirmPageValue
                 });
                 evt.preventDefault();
                 evt.stopPropagation();

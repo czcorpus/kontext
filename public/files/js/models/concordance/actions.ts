@@ -87,7 +87,11 @@ export enum ActionName {
     MakeConcPermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
     GetConcArchiveStatus = 'QUERY_GET_CONC_ARCHIVED_STATUS',
     ShowSyntaxView = 'SHOW_SYNTAX_VIEW',
-    CloseSyntaxView = 'CLOSE_SYNTAX_VIEW'
+    CloseSyntaxView = 'CLOSE_SYNTAX_VIEW',
+    HideAnonymousUserWarning = 'CONCORDANCE_HIDE_ANONYMOUS_USER_WARNING',
+    DashboardMinimizeExtInfo = 'DASHBOARD_MINIMIZE_EXTENDED_INFO',
+    DashboardMaximizeExtInfo = 'DASHBOARD_MAXIMIZE_EXTENDED_INFO',
+    DashboardToggleExtInfo = 'DASHBOARD_TOGGLE_EXTENDED_INFO'
 }
 
 export interface ConcGroupChangePayload {
@@ -481,4 +485,25 @@ export namespace Actions {
     }> {
         name:ActionName.CloseSyntaxView;
     }
+
+    export interface HideAnonymousUserWarning extends Action<{
+    }> {
+        name:ActionName.HideAnonymousUserWarning;
+    }
+
+    export interface DashboardMinimizeExtInfo extends Action<{
+    }> {
+        name:ActionName.DashboardMinimizeExtInfo;
+    }
+
+    export interface DashboardMaximizeExtInfo extends Action<{
+    }> {
+        name:ActionName.DashboardMaximizeExtInfo;
+    }
+
+    export interface DashboardToggleExtInfo extends Action<{
+    }> {
+        name:ActionName.DashboardToggleExtInfo;
+    }
+
 }

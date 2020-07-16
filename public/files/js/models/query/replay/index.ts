@@ -315,7 +315,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     null,
                     err => {
                         this.pageModel.showMessage('error', err);
-                        dispatch({
+                        dispatch<Actions.BranchQueryDone>({
                             name: ActionName.BranchQueryDone,
                             error: err
                         });

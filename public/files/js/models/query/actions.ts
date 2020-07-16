@@ -27,8 +27,6 @@ import { WithinBuilderData, QueryType, QueryContextArgs } from './common';
 export enum ActionName {
 
     ClearQueryOverviewData = 'CLEAR_QUERY_OVERVIEW_DATA',
-    MainMenuOverviewShowQueryInfo = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO',
-    MainMenuOverviewShowQueryInfoDone = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO_DONE',
     EditQueryOperation = 'EDIT_QUERY_OPERATION',
     EditLastQueryOperation = 'EDIT_LAST_QUERY_OPERATION',
     EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
@@ -96,17 +94,24 @@ export enum ActionName {
     MLSortFormSetSbward = 'ML_SORT_FORM_SET_SBWARD',
     MLSortFormSetCtx = 'ML_SORT_FORM_SET_CTX',
     MLSortFormSetCtxAlign = 'ML_SORT_FORM_SET_CTX_ALIGN',
-    StorageSelectQueryType = 'QUERY_STORAGE_SET_QUERY_TYPE',
-    StorageSetCurrentCorpusOnly = 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
-    StorageSetArchivedOnly = 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
-    StorageLoadMore = 'QUERY_STORAGE_LOAD_MORE',
-    StorageLoadHistory = 'QUERY_STORAGE_LOAD_HISTORY',
-    StorageOpenQueryForm = 'QUERY_STORAGE_OPEN_QUERY_FORM',
-    StorageSetEditingQueryId = 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
-    StorageClearEditingQueryId = 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
-    StorageEditorSetName = 'QUERY_STORAGE_EDITOR_SET_NAME',
-    StorageDoNotArchive = 'QUERY_STORAGE_DO_NOT_ARCHIVE',
-    StorageEditorClickSave = 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
+    SaveAsFormSetName = 'QUERY_SAVE_AS_FORM_SET_NAME',
+    SaveAsFormSubmit = 'QUERY_SAVE_AS_FORM_SUBMIT',
+    SaveAsFormSubmitDone = 'QUERY_SAVE_AS_FORM_SUBMIT_DONE',
+    GetConcArchivedStatus = 'QUERY_GET_CONC_ARCHIVED_STATUS',
+    GetConcArchivedStatusDone = 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
+    MakeConcordancePermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
+    MakeConcordancePermanentDone = 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
+    QueryStorageSetQueryType = 'QUERY_STORAGE_SET_QUERY_TYPE',
+    QueryStorageSetCurrentCorpusOnly = 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
+    QueryStorageSetArchivedOnly = 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
+    QueryStorageSetEditingQueryId = 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
+    QueryStorageDoNotArchive = 'QUERY_STORAGE_DO_NOT_ARCHIVE',
+    QueryStorageEditorSetName = 'QUERY_STORAGE_EDITOR_SET_NAME',
+    QueryStorageEditorClickSave = 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
+    QueryStorageClearEditingQueryID = 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
+    QueryStorageOpenQueryForm = 'QUERY_STORAGE_OPEN_QUERY_FORM',
+    QueryStorageLoadMore = 'QUERY_STORAGE_LOAD_MORE',
+    QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN',
 }
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
@@ -116,18 +121,6 @@ export namespace Actions {
     export interface ClearQueryOverviewData extends Action<{
     }> {
         name:ActionName.ClearQueryOverviewData
-    }
-
-    export interface MainMenuOverviewShowQueryInfo extends Action<{
-
-    }> {
-        name:ActionName.MainMenuOverviewShowQueryInfo
-    }
-
-    export interface MainMenuOverviewShowQueryInfoDone extends Action<{
-        Desc:Array<Kontext.QueryOperation>;
-    }> {
-        name:ActionName.MainMenuOverviewShowQueryInfoDone
     }
 
     export interface EditQueryOperation extends Action<{
@@ -575,65 +568,109 @@ export namespace Actions {
         name:ActionName.MLSortFormSetCtx;
     }
 
-    export interface StorageSelectQueryType extends Action<{
+    export interface SaveAsFormSetName extends Action<{
         value:string;
     }> {
-        name:ActionName.StorageSelectQueryType;
+        name:ActionName.SaveAsFormSetName
     }
 
-    export interface StorageSetCurrentCorpusOnly extends Action<{
+    export interface SaveAsFormSubmit extends Action<{
+    }> {
+        name:ActionName.SaveAsFormSubmit
+    }
+
+    export interface SaveAsFormSubmitDone extends Action<{
+    }> {
+        name:ActionName.SaveAsFormSubmitDone
+    }
+
+    export interface GetConcArchivedStatus extends Action<{
+    }> {
+        name:ActionName.GetConcArchivedStatus
+    }
+
+    export interface GetConcArchivedStatusDone extends Action<{
+        isArchived:boolean;
+    }> {
+        name:ActionName.GetConcArchivedStatusDone
+    }
+
+    export interface MakeConcordancePermanent extends Action<{
+        revoke:boolean;
+    }> {
+        name:ActionName.MakeConcordancePermanent
+    }
+
+    export interface MakeConcordancePermanentDone extends Action<{
+        revoked:boolean;
+    }> {
+        name:ActionName.MakeConcordancePermanentDone
+    }
+
+    export interface QueryStorageSetQueryType extends Action<{
+        value:string;
+    }> {
+        name:ActionName.QueryStorageSetQueryType;
+    }
+
+    export interface QueryStorageSetCurrentCorpusOnly extends Action<{
         value:boolean;
     }> {
-        name:ActionName.StorageSetCurrentCorpusOnly;
+        name:ActionName.QueryStorageSetCurrentCorpusOnly;
     }
 
-    export interface StorageSetArchivedOnly extends Action<{
+    export interface QueryStorageSetArchivedOnly extends Action<{
         value:boolean;
     }> {
-        name:ActionName.StorageSetArchivedOnly;
+        name:ActionName.QueryStorageSetArchivedOnly;
     }
 
-    export interface StorageLoadMore extends Action<{
-    }> {
-        name:ActionName.StorageLoadMore;
-    }
-
-    export interface StorageLoadHistory extends Action<{
-    }> {
-        name:ActionName.StorageLoadHistory;
-    }
-
-    export interface StorageOpenQueryForm extends Action<{
-        idx:number;
-    }> {
-        name:ActionName.StorageOpenQueryForm;
-    }
-
-    export interface StorageSetEditingQueryId extends Action<{
+    export interface QueryStorageSetEditingQueryId extends Action<{
         value:string;
     }> {
-        name:ActionName.StorageSetEditingQueryId;
+        name:ActionName.QueryStorageSetEditingQueryId;
     }
 
-    export interface StorageClearEditingQueryId extends Action<{
-    }> {
-        name:ActionName.StorageClearEditingQueryId;
-    }
-
-    export interface StorageEditorSetName extends Action<{
-        value:string;
-    }> {
-        name:ActionName.StorageEditorSetName;
-    }
-
-    export interface StorageDoNotArchive extends Action<{
+    export interface QueryStorageDoNotArchive extends Action<{
         queryId:string;
     }> {
-        name:ActionName.StorageDoNotArchive;
+        name:ActionName.QueryStorageDoNotArchive;
     }
 
-    export interface StorageEditorClickSave extends Action<{
+    export interface QueryStorageEditorSetName extends Action<{
+        value:string;
     }> {
-        name:ActionName.StorageEditorClickSave;
+        name:ActionName.QueryStorageEditorSetName;
+    }
+
+    export interface QueryStorageEditorClickSave extends Action<{
+    }> {
+        name:ActionName.QueryStorageEditorClickSave;
+    }
+
+    export interface QueryStorageClearEditingQueryID extends Action<{
+    }> {
+        name:ActionName.QueryStorageClearEditingQueryID;
+    }
+
+    export interface QueryStorageOpenQueryForm extends Action<{
+        idx:number;
+    }> {
+        name:ActionName.QueryStorageOpenQueryForm;
+    }
+
+    export interface QueryStorageLoadMore extends Action<{
+    }> {
+        name:ActionName.QueryStorageLoadMore;
+    }
+
+    /**
+     * This is an action a tag-helper plug-in should be able to respond to
+     */
+    export interface QueryTaghelperPresetPattern extends Action<{
+        sourceId:string;
+        pattern:string;
+    }> {
+        name:ActionName.QueryTaghelperPresetPattern;
     }
 }

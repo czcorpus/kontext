@@ -52,13 +52,13 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleCheckboxChange = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS',
+            dispatcher.dispatch<Actions.WordlistSaveSetIncludeColHeaders>({
+                name: ActionName.WordlistSaveSetIncludeColHeaders,
                 payload: {
                     value: !props.value
                 }
             });
-        }
+        };
 
         return (
             <tr className="separator">
@@ -84,8 +84,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleCheckboxChange = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_SET_INCLUDE_HEADING',
+            dispatcher.dispatch<Actions.WordlistSaveSetIncludeHeading>({
+                name: ActionName.WordlistSaveSetIncludeHeading,
                 payload: {
                     value: !props.value
                 }
@@ -159,11 +159,11 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
     }> = (props) => {
 
-        const handleSaveFormatSelect = (evt:React.ChangeEvent<{}>) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_FORM_SET_FORMAT',
+        const handleSaveFormatSelect = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch<Actions.WordlistSaveFormSetFormat>({
+                name: ActionName.WordlistSaveFormSetFormat,
                 payload: {
-                    value: evt.target['value'] // TODO
+                    value: evt.target.value as SaveData.Format
                 }
             });
         };

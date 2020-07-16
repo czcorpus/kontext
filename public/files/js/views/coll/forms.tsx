@@ -46,8 +46,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CATTR',
+            dispatcher.dispatch<Actions.FormSetCattr>({
+                name: ActionName.FormSetCattr,
                 payload: {
                     value: evt.target.value
                 }
@@ -72,8 +72,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleFromValChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CFROMW',
+            dispatcher.dispatch<Actions.FormSetCfromw>({
+                name: ActionName.FormSetCfromw,
                 payload: {
                     value: evt.target.value
                 }
@@ -81,8 +81,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleToValChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CTOW',
+            dispatcher.dispatch<Actions.FormSetCtow>({
+                name: ActionName.FormSetCtow,
                 payload: {
                     value: evt.target.value
                 }
@@ -112,8 +112,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CMINFREQ',
+            dispatcher.dispatch<Actions.FormSetCminFreq>({
+                name: ActionName.FormSetCminFreq,
                 payload: {
                     value: evt.target.value
                 }
@@ -136,8 +136,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CMINBGR',
+            dispatcher.dispatch<Actions.FormSetCminbgr>({
+                name: ActionName.FormSetCminbgr,
                 payload: {
                     value: evt.target.value
                 }
@@ -253,9 +253,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SUBMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.FormSubmit>({
+                name: ActionName.FormSubmit
             });
         }
 

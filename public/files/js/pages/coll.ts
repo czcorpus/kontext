@@ -37,6 +37,7 @@ import { List, Dict } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
+import { ActionName as MMActionName } from '../models/mainMenu/actions';
 
 
 declare var require:any;
@@ -313,7 +314,7 @@ export class CollPage {
             this.layoutModel.dispatcher.registerActionListener(
                 (action) => {
                     switch (action.name) {
-                        case 'MAIN_MENU_SHOW_FILTER':
+                        case MMActionName.ShowFilter:
                             const filterArgs = new MultiDict(Dict.toEntries(action.payload));
                             window.location.replace(
                                 this.layoutModel.createActionUrl(
@@ -322,19 +323,19 @@ export class CollPage {
                                 ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
                             );
                         break;
-                        case 'MAIN_MENU_SHOW_SORT':
+                        case MMActionName.ShowSort:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
                             ) + '#sort');
                         break;
-                        case 'MAIN_MENU_SHOW_SAMPLE':
+                        case MMActionName.ShowSample:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
                             ) + '#sample');
                         break;
-                        case 'MAIN_MENU_APPLY_SHUFFLE':
+                        case MMActionName.ApplyShuffle:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
