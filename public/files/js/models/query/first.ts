@@ -214,7 +214,8 @@ export interface FirstQueryFormModelSwitchPreserve {
  *
  */
 export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState>
-        implements ICorpusSwitchSerializable<FirstQueryFormModelState, FirstQueryFormModelSwitchPreserve> {
+        implements ICorpusSwitchSerializable<FirstQueryFormModelState,
+            FirstQueryFormModelSwitchPreserve> {
 
     constructor(
             dispatcher:IFullActionControl,
@@ -544,7 +545,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.changeState(state => {
                     this.deserialize(
                         state,
-                        action.payload.data[this.getRegistrationId()] as FirstQueryFormModelSwitchPreserve,
+                        action.payload.data[this.getRegistrationId()] as
+                            FirstQueryFormModelSwitchPreserve,
                         action.payload.corpora,
                     );
                 });
@@ -554,7 +556,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.addActionHandler<GlobalActions.SwitchCorpus>(
             GlobalActionName.SwitchCorpus,
             action => {
-                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<FirstQueryFormModelSwitchPreserve>>({
+                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<
+                        FirstQueryFormModelSwitchPreserve>>({
                     name: GlobalActionName.SwitchCorpusReady,
                     payload: {
                         modelId: this.getRegistrationId(),
@@ -637,7 +640,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         };
     }
 
-    deserialize(state:FirstQueryFormModelState, data:FirstQueryFormModelSwitchPreserve, corpora:Array<[string, string]>):void {
+    deserialize(
+        state:FirstQueryFormModelState,
+        data:FirstQueryFormModelSwitchPreserve,
+        corpora:Array<[string, string]>
+    ):void {
         if (data) {
             pipe(
                 corpora,
@@ -858,7 +865,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             );
         });
 
-
         // text types
         const ttData = this.textTypesModel.exportSelections(false);
         for (let k in ttData) {
@@ -903,11 +909,5 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         const queryType = this.state.queryTypes[corpname];
         return this.validateQuery(query, queryType);
     }
-
-    /* TODO
-    supportsParallelCorpora():boolean {
-        return this.corpora.size > 1 || this.availableAlignedCorpora.size > 0;
-    }
-    */
 
 }

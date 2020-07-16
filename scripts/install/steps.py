@@ -237,7 +237,7 @@ class SetupDefaultUsers(InstallationStep):
 
     def is_done(self):
         redis_keys = self.redis_client.keys()
-        return all(key in redis_keys for key in ['user:1', 'corplist:user:1', 'user:2', 'corplist:user:2', 'user_index'])
+        return all(key in redis_keys for key in ['user:0', 'corplist:user:0', 'user:1', 'corplist:user:1', 'user_index'])
 
     def abort(self):
         self.redis_client.flushdb()
@@ -246,16 +246,14 @@ class SetupDefaultUsers(InstallationStep):
         print('Setting up Kontext users...')
 
         # set up anonymous user in Redis
-        self.redis_client.set('user:1', json.dumps(
-            {'id': 1, 'username': 'anonymous', 'firstname': 'Anonymous', 'lastname': None, 'email': None, 'pwd_hash': None}))
-        self.redis_client.set('corplist:user:1', json.dumps(['susanne']))
+        self.redis_client.set('user:0', json.dumps({'id': 0, 'username': 'anonymous', 'firstname': 'Anonymous', 'lastname': None, 'email': None, 'pwd_hash': None}))
+        self.redis_client.set('corplist:user:0', json.dumps(['susanne']))
 
         # set up kontext user in Redis
         password, password_hash = generate_random_password()
-        self.redis_client.set('user:2', json.dumps(
-            {'id': 2, 'username': 'kontext', 'firstname': 'Kontext', 'lastname': 'Test', 'pwd_hash': password_hash, 'email': 'test@example.com'}))
-        self.redis_client.set('corplist:user:2', json.dumps(['susanne']))
-        self.redis_client.hset('user_index', 'kontext', '"user:2"')
+        self.redis_client.set('user:1', json.dumps({'id': 1, 'username': 'kontext', 'firstname': 'Kontext', 'lastname': 'Test', 'pwd_hash': password_hash, 'email': 'test@example.com'}))
+        self.redis_client.set('corplist:user:1', json.dumps(['susanne']))
+        self.redis_client.hset('user_index', 'kontext', '"user:1"')
 
         self.add_final_message(f'''
             {bcolors.BOLD}{bcolors.OKGREEN}
