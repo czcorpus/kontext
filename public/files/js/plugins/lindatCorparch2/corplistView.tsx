@@ -25,6 +25,7 @@ import { CorpusInfoType } from '../../models/common/layout';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 import { pipe, List } from 'cnc-tskit';
+import { Actions, ActionName } from './actions';
 
 
 export interface CorplistTableProps {
@@ -99,8 +100,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     const FavStar:CorplistViews['FavStar'] = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'LIST_STAR_CLICKED',
+            dispatcher.dispatch<Actions.ListStarClicked>({
+                name: ActionName.ListStarClicked,
                 payload: {
                     corpusId: props.corpusId,
                     favId: props.favId
@@ -212,8 +213,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch({
-                name: 'EXPANSION_CLICKED',
+            dispatcher.dispatch<Actions.ExpansionClicked>({
+                name: ActionName.ExpansionClicked,
                 payload: {
                     offset: props.offset
                 }
@@ -247,8 +248,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         _detailClickHandler(corpusId) {
-            dispatcher.dispatch({
-                name: 'CORPARCH_CORPUS_INFO_REQUIRED',
+            dispatcher.dispatch<Actions.CorpusInfoRequired>({
+                name: ActionName.CorpusInfoRequired,
                 payload: {
                     corpusId: corpusId
                 }
@@ -256,8 +257,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         _detailCloseHandler() {
-            dispatcher.dispatch({
-                name: 'CORPARCH_CORPUS_INFO_CLOSED',
+            dispatcher.dispatch<Actions.CorpusInfoClosed>({
+                name: ActionName.CorpusInfoClosed,
                 payload: {}
             });
         }
@@ -323,8 +324,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_CLICKED',
+            dispatcher.dispatch<Actions.KeywordClicked>({
+                name: ActionName.KeywordClicked,
                 payload: {
                     keyword: props.keyword,
                     status: true,
@@ -356,8 +357,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClickFn = (active) => (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_CLICKED',
+            dispatcher.dispatch<Actions.KeywordClicked>({
+                name: ActionName.KeywordClicked,
                 payload: {
                     keyword: props.keyword.ident,
                     status: active,
@@ -397,8 +398,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_RESET_CLICKED',
+            dispatcher.dispatch<Actions.KeywordResetClicked>({
+                name: ActionName.KeywordResetClicked,
                 payload: {}
             });
         };
@@ -453,8 +454,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
                 payload: {minSize: e.target.value}
             });
         };
@@ -475,8 +476,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
                 payload: {maxSize: e.target.value}
             });
         };
@@ -510,8 +511,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             this.setState({
               sortBySize: !this.state.sortBySize
             });
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
                 payload: {sortBySize: value}
             });
         };
@@ -544,8 +545,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 window.clearTimeout(this._timer);
             }
             this._timer = window.setTimeout(((value) => () => {
-                dispatcher.dispatch({
-                    name: 'FILTER_CHANGED',
+                dispatcher.dispatch<Actions.FilterChanged>({
+                    name: ActionName.FilterChanged,
                     payload: {corpusName: value}
                 });
                 window.clearTimeout(this._timer);
