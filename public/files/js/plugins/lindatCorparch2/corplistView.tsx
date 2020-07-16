@@ -22,9 +22,9 @@ import {CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo} from 
 import { CorplistItem } from './common';
 import { CorpusInfoBoxProps } from '../../views/overview';
 import { CorpusInfoType } from '../../models/common/layout';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { pipe, List } from 'cnc-tskit';
+import { Actions, ActionName } from './actions';
 
 
 export interface CorplistTableProps {
@@ -99,8 +99,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     const FavStar:CorplistViews['FavStar'] = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'LIST_STAR_CLICKED',
+            dispatcher.dispatch<Actions.ListStarClicked>({
+                name: ActionName.ListStarClicked,
                 payload: {
                     corpusId: props.corpusId,
                     favId: props.favId
@@ -212,8 +212,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch({
-                name: 'EXPANSION_CLICKED',
+            dispatcher.dispatch<Actions.ExpansionClicked>({
+                name: ActionName.ExpansionClicked,
                 payload: {
                     offset: props.offset
                 }
@@ -230,25 +230,17 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
     // -------------------------------- <CorplistTable /> -----------------
 
-    class CorplistTable extends React.Component<CorplistTableProps, CorplistTableModelState> {
-
-        private modelSubscription:Subscription;
+    class CorplistTable extends React.Component<CorplistTableProps & CorplistTableModelState> {
 
         constructor(props) {
             super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = listModel.getState();
-        }
-
-        _modelChangeHandler(state) {
-            this.setState(state);
         }
 
         _detailClickHandler(corpusId) {
-            dispatcher.dispatch({
-                name: 'CORPARCH_CORPUS_INFO_REQUIRED',
+            dispatcher.dispatch<Actions.CorpusInfoRequired>({
+                name: ActionName.CorpusInfoRequired,
                 payload: {
                     corpusId: corpusId
                 }
@@ -256,29 +248,21 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         _detailCloseHandler() {
-            dispatcher.dispatch({
-                name: 'CORPARCH_CORPUS_INFO_CLOSED',
+            dispatcher.dispatch<Actions.CorpusInfoClosed>({
+                name: ActionName.CorpusInfoClosed,
                 payload: {}
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderDetailBox() {
-            if (this.state.detailData) {
+            if (this.props.detailData) {
                 return (
                     <layoutViews.PopupBox
                             onCloseClick={this._detailCloseHandler}
                             customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
                             takeFocus={true}>
-                        <CorpusInfoBox data={{...this.state.detailData, type:CorpusInfoType.CORPUS}}
-                                    isWaiting={this.state.isBusy} />
+                        <CorpusInfoBox data={{...this.props.detailData, type:CorpusInfoType.CORPUS}}
+                                    isWaiting={this.props.isBusy} />
                     </layoutViews.PopupBox>
                 );
 
@@ -288,15 +272,15 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         render() {
-            let rows = this.state.rows.map((row, i) => {
+            let rows = List.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
                                     enableUserActions={!this.props.anonymousUser}
                                     detailClickHandler={this._detailClickHandler} />;
-            });
+            }, this.props.rows);
             let expansion = null;
 
-            if (this.state.nextOffset) {
-                expansion = <ListExpansion offset={this.state.nextOffset} />;
+            if (this.props.nextOffset) {
+                expansion = <ListExpansion offset={this.props.nextOffset} />;
             }
 
             return (
@@ -323,8 +307,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_CLICKED',
+            dispatcher.dispatch<Actions.KeywordClicked>({
+                name: ActionName.KeywordClicked,
                 payload: {
                     keyword: props.keyword,
                     status: true,
@@ -356,8 +340,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClickFn = (active) => (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_CLICKED',
+            dispatcher.dispatch<Actions.KeywordClicked>({
+                name: ActionName.KeywordClicked,
                 payload: {
                     keyword: props.keyword.ident,
                     status: active,
@@ -397,8 +381,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_RESET_CLICKED',
+            dispatcher.dispatch<Actions.KeywordResetClicked>({
+                name: ActionName.KeywordResetClicked,
                 payload: {}
             });
         };
@@ -453,8 +437,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
                 payload: {minSize: e.target.value}
             });
         };
@@ -475,8 +459,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
                 payload: {maxSize: e.target.value}
             });
         };
@@ -510,8 +494,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             this.setState({
               sortBySize: !this.state.sortBySize
             });
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
                 payload: {sortBySize: value}
             });
         };
@@ -544,8 +528,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 window.clearTimeout(this._timer);
             }
             this._timer = window.setTimeout(((value) => () => {
-                dispatcher.dispatch({
-                    name: 'FILTER_CHANGED',
+                dispatcher.dispatch<Actions.FilterChanged>({
+                    name: ActionName.FilterChanged,
                     payload: {corpusName: value}
                 });
                 window.clearTimeout(this._timer);
@@ -626,30 +610,10 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * Filter form root component
      */
-    class FilterForm extends React.Component<FilterFormProps, CorplistTableModelState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = listModel.getState();
-        }
-
-        _modelChangeHandler(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class FilterForm extends React.Component<FilterFormProps & CorplistTableModelState> {
 
         _renderLoader() {
-            if (this.state.isBusy) {
+            if (this.props.isBusy) {
                 return <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={he.translate('global__loading')} title={he.translate('global__loading')} />;
 
@@ -665,19 +629,19 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                         {this._renderLoader()}
                     </div>
                     <KeywordsField
-                        keywords={this.state.keywords}
+                        keywords={this.props.keywords}
                         label={he.translate('defaultCorparch__keywords_field_label')} />
                     <FilterInputFieldset
-                        filters={this.state.filters} />
+                        filters={this.props.filters} />
                 </section>
             )
         }
     }
 
     return {
-        CorplistTable: CorplistTable,
+        CorplistTable: BoundWithProps(CorplistTable, listModel),
         CorplistHeader: CorplistHeader,
-        FilterForm: FilterForm,
+        FilterForm: BoundWithProps(FilterForm, listModel),
         FavStar: FavStar,
         CorpKeywordLink: CorpKeywordLink
     };

@@ -25,6 +25,7 @@ import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { List, pipe } from 'cnc-tskit';
+import { Actions, ActionName } from './actions';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -137,188 +138,213 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
         this.pluginApi = pluginApi;
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
-    }
 
-    reduce(state:CorplistTableModelState, action:Action):CorplistTableModelState {
-        const newState = this.copyState(state);
-        switch (action.name) {
-            case 'LOAD_DATA_DONE':
-                newState.isBusy = false;
+        this.addActionHandler<Actions.LoadDataDone>(
+            ActionName.LoadDataDone,
+            (state, action) => {
+                state.isBusy = false;
                 if (action.error) {
                     this.pluginApi.showMessage('error', action.error);
 
                 } else {
-                    this.importData(newState, action.payload['data']);
+                    this.importData(state, action.payload.data);
                 }
-            break;
-            case 'LOAD_EXPANSION_DATA_DONE':
-                newState.isBusy = false;
+            }
+        );
+
+        this.addActionHandler<Actions.LoadExpansionDataDone>(
+            ActionName.LoadExpansionDataDone,
+            (state, action) => {
+                state.isBusy = false;
                 if (action.error) {
                     this.pluginApi.showMessage('error', action.error);
 
                 } else {
-                    this.extendData(newState, action.payload['data']);
+                    this.extendData(state, action.payload.data);
                 }
-            break;
-            case 'KEYWORD_CLICKED': {
-                newState.offset = 0;
-                if (!action.payload['ctrlKey']) {
-                    newState.keywords = List.map(v => ({
+            }
+        );
+
+        this.addActionHandler<Actions.KeywordClicked>(
+            ActionName.KeywordClicked,
+            (state, action) => {
+                state.offset = 0;
+                if (!action.payload.ctrlKey) {
+                    state.keywords = List.map(v => ({
                         ident: v.ident,
                         label: v.label,
                         color: v.color,
                         visible: v.visible,
                         selected: false
-                    }), newState.keywords);
+                    }), state.keywords);
                 }
-                const idx = newState.keywords.findIndex(v => v.ident === action.payload['keyword']);
-                const v = newState.keywords[idx];
-                newState.keywords[idx] = {
+                const idx = state.keywords.findIndex(v => v.ident === action.payload.keyword);
+                const v = state.keywords[idx];
+                state.keywords[idx] = {
                     ident: v.ident,
                     label: v.label,
                     color: v.color,
                     visible: v.visible,
                     selected: !v.selected
                 };
-                newState.isBusy = true;
-            }
-            break;
-            case 'KEYWORD_RESET_CLICKED':
-                newState.offset = 0;
-                newState.keywords = List.map(v => ({
+                state.isBusy = true;
+            },
+            this.handleLoad
+        );
+
+        this.addActionHandler<Actions.KeywordResetClicked>(
+            ActionName.KeywordResetClicked,
+            (state, action) => {
+                state.offset = 0;
+                state.keywords = List.map(v => ({
                     ident: v.ident,
                     label: v.label,
                     color: v.color,
                     visible: v.visible,
                     selected: false
-                }), newState.keywords);
-                newState.isBusy = true;
-            break;
-            case 'EXPANSION_CLICKED':
-                if (action.payload['offset']) {
-                    newState.offset = action.payload['offset'];
+                }), state.keywords);
+                state.isBusy = true;
+            },
+            this.handleLoad
+        );
+
+        this.addActionHandler<Actions.ExpansionClicked>(
+            ActionName.ExpansionClicked,
+            (state, action) => {
+                if (action.payload.offset) {
+                    state.offset = action.payload.offset;
                 }
-                newState.isBusy = true;
-            break;
-            case 'FILTER_CHANGED':
-                newState.offset = 0;
-                if (action.payload.hasOwnProperty('corpusName')) {
-                    newState.searchedCorpName = action.payload['corpusName'];
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.loadData(this.exportQuery(state), this.exportFilter(state), state.offset).subscribe(
+                    (data) => {
+                        dispatch<Actions.LoadExpansionDataDone>({
+                            name: ActionName.LoadExpansionDataDone,
+                            payload: {data: data}
+                        });
+                    },
+                    (err) => {
+                        dispatch<Actions.LoadExpansionDataDone>({
+                            name: ActionName.LoadExpansionDataDone,
+                            error: err
+                        });
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.FilterChanged>(
+            ActionName.FilterChanged,
+            (state, action) => {
+                state.offset = 0;
+                if (action.payload.corpusName) {
+                    state.searchedCorpName = action.payload.corpusName;
                     delete action.payload['corpusName']; // TODO no mutations
                 }
-                this.updateFilter(newState, action.payload as Filters);
-                newState.isBusy = true;
-            break;
-            case 'LIST_STAR_CLICKED':
-                newState.isBusy = true;
-            break;
-            case 'LIST_STAR_CLICKED_DONE':
-                newState.isBusy = false;
-                if (action.error) {
-                    this.pluginApi.showMessage('error', action.error);
+                this.updateFilter(state, action.payload as Filters);
+                state.isBusy = true;
+            },
+            this.handleLoad
+        );
 
-                } else {
-                    this.pluginApi.showMessage('info', action.payload['message']);
-                }
-            break;
-            case 'CORPARCH_CORPUS_INFO_REQUIRED':
-                newState.isBusy = true;
-                newState.detailData = this.createEmptyDetail(); // to force view to show detail box
-            break;
-            case 'CORPARCH_CORPUS_INFO_LOADED':
-                newState.isBusy = false;
-                if (action.error) {
-                    this.pluginApi.showMessage('error', action.error);
-
-                } else {
-                    newState.detailData = action.payload as CorpusInfo;
-                }
-            break;
-            case 'CORPARCH_CORPUS_INFO_CLOSED':
-                newState.detailData = null;
-            break;
-            default:
-                return state;
-        }
-        return newState;
-    }
-
-    sideEffects(state:CorplistTableModelState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.name) {
-            case 'KEYWORD_CLICKED':
-            case 'KEYWORD_RESET_CLICKED':
-            case 'FILTER_CHANGED':
-                this.loadData(this.exportQuery(state), this.exportFilter(state),
-                        state.offset).subscribe(
-                    (data) => {
-                        dispatch({
-                            name: 'LOAD_DATA_DONE',
-                            payload: {data: data}
-                        });
-                    },
-                    (err) => {
-                        dispatch({
-                            name: 'LOAD_DATA_DONE',
-                            error: err,
-                            payload: {}
-                        });
-                    }
-                );
-            break;
-            case 'EXPANSION_CLICKED':
-                this.loadData(this.exportQuery(state), this.exportFilter(state),
-                        state.offset).subscribe(
-                    (data) => {
-                        dispatch({
-                            name: 'LOAD_EXPANSION_DATA_DONE',
-                            payload: {data: data}
-                        });
-                    },
-                    (err) => {
-                        dispatch({
-                            name: 'LOAD_EXPANSION_DATA_DONE',
-                            error: err,
-                            payload: {}
-                        });
-                    }
-                );
-            break;
-            case 'LIST_STAR_CLICKED':
-                this.changeFavStatus(state, action.payload['corpusId'], action.payload['favId']).subscribe(
+        this.addActionHandler<Actions.ListStarClicked>(
+            ActionName.ListStarClicked,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.changeFavStatus(state, action.payload.corpusId, action.payload.favId).subscribe(
                     (message) => {
-                        dispatch({
-                            name: 'LIST_STAR_CLICKED_DONE',
+                        dispatch<Actions.ListStarClickedDone>({
+                            name: ActionName.ListStarClickedDone,
                             payload: {message: message}
                         });
                     },
                     (err) => {
-                        dispatch({
-                            name: 'LIST_STAR_CLICKED_DONE',
-                            payload: {},
+                        dispatch<Actions.ListStarClickedDone>({
+                            name: ActionName.ListStarClickedDone,
                             error: err
                         });
                     }
                 );
-            break;
-            case 'CORPARCH_CORPUS_INFO_REQUIRED':
-                this.loadCorpusInfo(action.payload['corpusId']).subscribe(
+            }
+        );
+
+        this.addActionHandler<Actions.ListStarClickedDone>(
+            ActionName.ListStarClickedDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    this.pluginApi.showMessage('info', action.payload.message);
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.CorpusInfoRequired>(
+            ActionName.CorpusInfoRequired,
+            (state, action) => {
+                state.isBusy = true;
+                state.detailData = this.createEmptyDetail(); // to force view to show detail box
+            },
+            (state, action, dispatch) => {
+                this.loadCorpusInfo(action.payload.corpusId).subscribe(
                     (data) => {
-                        dispatch({
-                            name: 'CORPARCH_CORPUS_INFO_LOADED',
+                        dispatch<Actions.CorpusInfoLoaded>({
+                            name: ActionName.CorpusInfoLoaded,
                             payload: {...data, type: CorpusInfoType.CORPUS}
                         });
                     },
                     (err) => {
-                        dispatch({
-                            name: 'CORPARCH_CORPUS_INFO_LOADED',
-                            payload: {},
+                        dispatch<Actions.CorpusInfoLoaded>({
+                            name: ActionName.CorpusInfoLoaded,
                             error: err
                         });
                     }
                 );
-            break;
-        }
-    };
+            }
+        );
+
+        this.addActionHandler<Actions.CorpusInfoLoaded>(
+            ActionName.CorpusInfoLoaded,
+            (state, action) => {
+                state.isBusy = false;
+                if (action.error) {
+                    this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    state.detailData = action.payload;
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.CorpusInfoClosed>(
+            ActionName.CorpusInfoClosed,
+            (state, action) => {
+                state.detailData = null;
+            }
+        );
+    }
+
+    handleLoad(state:CorplistTableModelState, action:Action, dispatch:SEDispatcher):void {
+        this.loadData(this.exportQuery(state), this.exportFilter(state), state.offset).subscribe(
+            (data) => {
+                dispatch<Actions.LoadDataDone>({
+                    name: ActionName.LoadDataDone,
+                    payload: {data: data}
+                });
+            },
+            (err) => {
+                dispatch<Actions.LoadDataDone>({
+                    name: ActionName.LoadDataDone,
+                    error: err
+                });
+            }
+        );
+    }
 
     public exportFilter(state:CorplistTableModelState):Filters {
         return state.filters;
