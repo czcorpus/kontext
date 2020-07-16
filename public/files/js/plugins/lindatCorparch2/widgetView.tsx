@@ -23,6 +23,8 @@ import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './wi
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
 import { IActionDispatcher } from 'kombo';
+import { Actions, ActionName } from './actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 
 
 export interface WidgetViewModuleArgs {
@@ -49,10 +51,10 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleRemoveClick = () => {
-            dispatcher.dispatch({
+            dispatcher.dispatch<Actions.WidgetFavItemAdd|Actions.WidgetFavItemRemove>({
                 name: props.trashTTL === null ?
-                        'DEFAULT_CORPARCH_FAV_ITEM_REMOVE' :
-                        'DEFAULT_CORPARCH_FAV_ITEM_ADD',
+                        ActionName.WidgetFavItemRemove :
+                        ActionName.WidgetFavItemAdd,
                 payload: {
                     itemId: props.ident
                 }
@@ -82,8 +84,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK',
+            dispatcher.dispatch<Actions.WidgetFavItemClick>({
+                name: ActionName.WidgetFavItemClick,
                 payload: {
                     itemId: props.data.id
                 }
@@ -161,8 +163,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK',
+            dispatcher.dispatch<Actions.WidgetFeatItemClick>({
+                name: ActionName.WidgetFeatItemClick,
                 payload: {
                     itemId: props.data.id
                 }
@@ -233,8 +235,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         };
 
         const handleStarClick = () => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK',
+            dispatcher.dispatch<Actions.WidgetStarIconClick>({
+                name: ActionName.WidgetStarIconClick,
                 payload: {
                     status: props.currFavitemId ? false : true,
                     itemId: props.currFavitemId
@@ -299,18 +301,18 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                 [Keyboard.Code.RIGHT_ARROW]: [1, 0]
             };
             if (Keyboard.isArrowKey(evt.keyCode)) {
-                dispatcher.dispatch({
-                    name: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM',
+                dispatcher.dispatch<Actions.WidgetMoveFocusToNextItem>({
+                    name: ActionName.WidgetMoveFocusToNextItem,
                     payload: {
                         change: argMap[evt.keyCode]
                     }
                 });
                 evt.preventDefault();
                 evt.stopPropagation();
-            
+
             } else if (evt.keyCode === Keyboard.Code.ENTER) {
-                dispatcher.dispatch({
-                    name: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM',
+                dispatcher.dispatch<Actions.WidgetEnterOnActiveItem>({
+                    name: ActionName.WidgetEnterOnActiveItem,
                     payload: {}
                 });
                 evt.preventDefault();
@@ -342,8 +344,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'LINDAT_CORPARCH_KEYWORD_CLICKED',
+            dispatcher.dispatch<Actions.WidgetKeywordClick>({
+                name: ActionName.WidgetKeywordClick,
                 payload: {
                     keywordId: props.id,
                     status: !props.selected,
@@ -375,8 +377,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     const ResetKeyword:React.SFC<{}> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED',
+            dispatcher.dispatch<Actions.WidgetKeywordResetClick>({
+                name: ActionName.WidgetKeywordResetClick,
                 payload: {}
             });
         };
@@ -399,8 +401,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleInput = (evt) => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED',
+            dispatcher.dispatch<Actions.WidgetSearchInputChanged>({
+                name: ActionName.WidgetSearchInputChanged,
                 payload: {
                     value: evt.target.value
                 }
@@ -412,8 +414,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             switch (evt.keyCode) {
                 case Keyboard.Code.DOWN_ARROW:
                 case Keyboard.Code.UP_ARROW:
-                    dispatcher.dispatch({
-                        name: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW',
+                    dispatcher.dispatch<Actions.WidgetFocusSearchRow>({
+                        name: ActionName.WidgetFocusSearchRow,
                         payload: {
                             inc: evt.keyCode === Keyboard.Code.DOWN_ARROW ? 1 : -1
                         }
@@ -422,8 +424,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                     evt.preventDefault();
                 break;
                 case Keyboard.Code.ENTER:
-                    dispatcher.dispatch({
-                        name: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT',
+                    dispatcher.dispatch<Actions.WidgetFocusedItemSelect>({
+                        name: ActionName.WidgetFocusedItemSelect,
                         payload: {}
                     });
                     evt.stopPropagation();
@@ -453,8 +455,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED',
+            dispatcher.dispatch<Actions.WidgetSearchResultClick>({
+                name: ActionName.WidgetSearchResultClick,
                 payload: {
                     itemId: props.data.id
                 }
@@ -576,8 +578,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleSubcorpChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SELECT_SUBCORP',
+            dispatcher.dispatch<QueryActions.QueryInputSelectSubcorp>({
+                name: QueryActionName.QueryInputSelectSubcorp,
                 payload: {
                     subcorp: props.availSubcorpora[evt.target.value].v,
                     pubName: props.availSubcorpora[evt.target.value].pub,
@@ -637,15 +639,15 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         }
 
         _handleOnShow() {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_WIDGET_SHOW',
+            dispatcher.dispatch<Actions.WidgetShow>({
+                name: ActionName.WidgetShow,
                 payload: {}
             });
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_WIDGET_HIDE',
+            dispatcher.dispatch<Actions.WidgetHide>({
+                name: ActionName.WidgetHide,
                 payload: {}
             });
         }
@@ -660,8 +662,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         }
 
         _handleTabSwitch(v) {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
+            dispatcher.dispatch<Actions.WidgetSetActiveTab>({
+                name: ActionName.WidgetSetActiveTab,
                 payload: {
                     value: v
                 }
@@ -669,16 +671,12 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         }
 
         _handleAreaClick() {
-            dispatcher.dispatch({
-                name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
+            dispatcher.dispatch<Actions.WidgetSetActiveTab>({
+                name: ActionName.WidgetSetActiveTab,
                 payload: {
                     value: this.props.activeTab
                 }
             });
-        }
-
-        _handleModelChange(state:CorplistWidgetModelState) {
-            this.setState(state);
         }
 
         _renderWidget() {
