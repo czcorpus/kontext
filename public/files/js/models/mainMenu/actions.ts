@@ -20,6 +20,7 @@
 
 import { Action } from 'kombo';
 import { SaveData } from '../../app/navigation';
+import { Kontext } from '../../types/common';
 
 export enum ActionName {
     SetVisibleSubmenu = 'MAIN_MENU_SET_VISIBLE_SUBMENU',
@@ -29,6 +30,7 @@ export enum ActionName {
     ApplyShuffle = 'MAIN_MENU_APPLY_SHUFFLE',
     ShowSample = 'MAIN_MENU_SHOW_SAMPLE',
     OverviewShowQueryInfo = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO',
+    OverviewShowQueryInfoDone = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO_DONE',
     ShowSaveQueryAsForm = 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM',
     MakeConcLinkPersistent = 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT',
     UndoLastQueryOp = 'MAIN_MENU_UNDO_LAST_QUERY_OP',
@@ -83,6 +85,12 @@ export namespace Actions {
     export interface OverviewShowQueryInfo extends Action<{
     }> {
         name: ActionName.OverviewShowQueryInfo;
+    }
+
+    export interface OverviewShowQueryInfoDone extends Action<{
+        Desc:Array<Kontext.QueryOperation>;
+    }> {
+        name: ActionName.OverviewShowQueryInfoDone;
     }
 
     export interface ShowSaveQueryAsForm extends Action<{

@@ -112,8 +112,8 @@ export function init(
         }
 
         _handlePosNegSelect(evt) {
-            dispatcher.dispatch({
-                name: 'FILTER_QUERY_SET_POS_NEG',
+            dispatcher.dispatch<Actions.FilterInputSetPCQPosNeg>({
+                name: ActionName.FilterInputSetPCQPosNeg,
                 payload: {
                     filterId: this.props.filterId,
                     value: evt.target.value
@@ -122,8 +122,8 @@ export function init(
         }
 
         _handleSelTokenSelect(evt) {
-            dispatcher.dispatch({
-                name: 'FILTER_QUERY_SET_FILFL',
+            dispatcher.dispatch<Actions.FilterInputSetFilfl>({
+                name: ActionName.FilterInputSetFilfl,
                 payload: {
                     filterId: this.props.filterId,
                     value: evt.target.value
@@ -132,8 +132,8 @@ export function init(
         }
 
         _handleToFromRangeValChange(pos, evt) {
-            dispatcher.dispatch({
-                name: 'FILTER_QUERY_SET_RANGE',
+            dispatcher.dispatch<Actions.FilterInputSetRange>({
+                name: ActionName.FilterInputSetRange,
                 payload: {
                     filterId: this.props.filterId,
                     rangeId: ({from: 'filfpos', to: 'filtpos'})[pos],
@@ -151,8 +151,8 @@ export function init(
                     });
 
                 } else {
-                    dispatcher.dispatch({
-                        name: 'FILTER_QUERY_APPLY_FILTER',
+                    dispatcher.dispatch<Actions.ApplyFilter>({
+                        name: ActionName.ApplyFilter,
                         payload: {
                             filterId: this.props.filterId
                         }
@@ -171,8 +171,8 @@ export function init(
                 });
 
             } else {
-                dispatcher.dispatch({
-                    name: 'FILTER_QUERY_APPLY_FILTER',
+                dispatcher.dispatch<Actions.ApplyFilter>({
+                    name: ActionName.ApplyFilter,
                     payload: {
                         filterId: this.props.filterId
                     }
@@ -181,8 +181,8 @@ export function init(
         }
 
         _handleInclKwicCheckbox(evt) {
-            dispatcher.dispatch({
-                name: 'FILTER_QUERY_SET_INCL_KWIC',
+            dispatcher.dispatch<Actions.FilterInputSetInclKwic>({
+                name: ActionName.FilterInputSetInclKwic,
                 payload: {
                     filterId: this.props.filterId,
                     value: !this.props.inclkwicValues[this.props.filterId]

@@ -27,6 +27,8 @@ import { isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
         DynamicSubmenuItem, MainMenuModelState } from '../models/mainMenu';
 import { Actions, ActionName } from '../models/mainMenu/actions';
 import { AsyncTaskCheckerState, AsyncTaskChecker } from '../models/asyncTask';
+import { Actions as ATActions, ActionName as ATActionName }
+    from '../models/asyncTask/actions';
 
 
 export interface MenuModuleArgs {
@@ -315,8 +317,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'INBOX_CLOSE_TASK_OVERVIEW',
+            dispatcher.dispatch<ATActions.InboxCloseTaskOverview>({
+                name: ATActionName.InboxCloseTaskOverview,
                 payload: {
                     preventListClear: true
                 }
@@ -324,8 +326,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _handleOkButtonClick(evt) {
-            dispatcher.dispatch({
-                name: 'INBOX_CLOSE_TASK_OVERVIEW',
+            dispatcher.dispatch<ATActions.InboxCloseTaskOverview>({
+                name: ATActionName.InboxCloseTaskOverview,
                 payload: {
                     preventListClear: false
                 }
@@ -333,20 +335,23 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _handleClearOnCloseCheckbox() {
-            dispatcher.dispatch({
-                name: 'INBOX_TOGGLE_REMOVE_FINISHED_ON_SUBMIT'
+            dispatcher.dispatch<ATActions.InboxToggleRemoveFinishedOnSubmit>({
+                name: ATActionName.InboxToggleRemoveFinishedOnSubmit
             });
         }
 
         _handleViewListClick() {
-            dispatcher.dispatch({
-                name: 'INBOX_TOGGLE_OVERVIEW_VISIBILITY'
+            dispatcher.dispatch<ATActions.InboxToggleOverviewVisibility>({
+                name: ATActionName.InboxToggleOverviewVisibility
             });
         }
 
         _renderHourglass() {
             if (this.props.numRunning > 0) {
-                const title = he.translate('global__there_are_tasks_running_{num_tasks}', {num_tasks: this.props.numRunning});
+                const title = he.translate(
+                    'global__there_are_tasks_running_{num_tasks}',
+                    {num_tasks: this.props.numRunning}
+                );
                 return <a className="hourglass" title={title}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/hourglass.svg')}
                                 src2={he.createStaticUrl('img/hourglass.svg')}
@@ -360,7 +365,10 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         _renderEnvelope() {
             if (this.props.numFinished > 0) {
-                const title = he.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished});
+                const title = he.translate(
+                    'global__there_are_tasks_finished_{num_tasks}',
+                    {num_tasks: this.props.numFinished}
+                );
                 return <a className="envelope" title={title}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/envelope.svg')}
                             alt="envelope icon" />
@@ -384,7 +392,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                     closeClickHandler={this._handleCloseClick}
                                     handleOkButtonClick={this._handleOkButtonClick}
                                     handleClearOnCloseCheckbox={this._handleClearOnCloseCheckbox}
-                                    clearOnCloseCheckboxStatus={this.props.removeFinishedOnSubmit} />
+                                    clearOnCloseCheckboxStatus={this.props.removeFinishedOnSubmit}
+                                     />
                             : null}
                     </li>
                 );
@@ -425,9 +434,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _closeActiveSubmenu() {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
-                payload: {}
+            dispatcher.dispatch<Actions.ClearVisibleSubmenu>({
+                name: ActionName.ClearVisibleSubmenu
             });
         }
 
@@ -436,8 +444,10 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                 <ul id="menu-level-1">
                     {List.map(
                         ([itemId, item]) => {
-                            const mouseOverHandler = item.disabled ? null : this._handleHoverChange.bind(this, itemId, true);
-                            const mouseOutHandler = item.disabled ? null : this._handleHoverChange.bind(this, itemId, false);
+                            const mouseOverHandler = item.disabled ?
+                                null : this._handleHoverChange.bind(this, itemId, true);
+                            const mouseOutHandler = item.disabled ?
+                                null : this._handleHoverChange.bind(this, itemId, false);
                             return <SubMenu key={itemId} label={item.label}
                                         items={item.items}
                                         isDisabled={item.disabled}

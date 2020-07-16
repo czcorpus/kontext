@@ -30,7 +30,8 @@ export enum ActionName {
     SubmitTask = 'UCNK_SUBCMIXER_SUBMIT_TASK',
     SubmitTaskDone = 'UCNK_SUBCMIXER_SUBMIT_TASK_DONE',
     SubmitCreateSubcorpus = 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
-    CreateSubcorpusDone = 'UCNK_SUBCMIXER_CREATE_SUBCORPUS_DONE'
+    CreateSubcorpusDone = 'UCNK_SUBCMIXER_CREATE_SUBCORPUS_DONE',
+    ClearResult = 'UCNK_SUBCMIXER_CLEAR_RESULT'
 
 }
 
@@ -81,5 +82,10 @@ export namespace Actions {
     export interface CreateSubcorpusDone extends Action<{
     }> {
         name: ActionName.CreateSubcorpusDone;
+    }
+
+    export interface ClearResult extends Action<{
+    }> {
+        name: ActionName.ClearResult;
     }
 }

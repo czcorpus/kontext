@@ -311,7 +311,7 @@ export namespace Kontext {
         ident:string;
         label:string;
         category:string;
-        status:string; // one of PENDING, STARTED, RETRY, FAILURE, SUCCESS
+        status:'PENDING'|'STARTED'|'RETRY'|'FAILURE'|'SUCCESS';
         created:number;
         error:string; // = Celery's "result" property in case status == 'FAILURE'
         args:GeneralProps;
@@ -353,7 +353,12 @@ export namespace Kontext {
      *
      */
     export interface IAjaxHandler {
-        ajax$<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):Observable<T>;
+        ajax$<T>(
+            method:string,
+            url:string,
+            args:AjaxArgs,
+            options?:Kontext.AjaxOptions
+        ):Observable<T>;
     }
 
     export interface IHistory {
@@ -363,8 +368,6 @@ export namespace Kontext {
             title?:string):void;
         setOnPopState(fn:(event:PopStateEvent)=>void):void;
     }
-
-    export type RGBAColor = [number, number, number, number];
 
     /**
      * This represent an already encode query
@@ -591,8 +594,8 @@ export namespace ViewOptions {
         Availrefs:Array<{n:string; sel:string; label:string}>;
         curr_structattrs:Array<string>;
         fixed_attr:string;
-        attr_allpos:string;
-        attr_vmode:string;
+        attr_allpos:PosAttrViewScope;
+        attr_vmode:PosAttrViewMode;
         base_viewattr:string;
         use_conc_toolbar:boolean;
         structattrs:{[attr:string]:Array<string>};

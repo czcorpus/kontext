@@ -19,11 +19,12 @@
 import { Keyboard, Client, List } from 'cnc-tskit';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../types/common';
 import { CoreViews } from '../types/coreViews';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { MessageModel, MessageModelState} from '../models/common/layout';
+import { Actions, ActionName } from '../models/common/actions';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -498,8 +499,8 @@ export function init(
 
         const handleCloseClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'MESSAGE_CLOSED',
+            dispatcher.dispatch<Actions.MessageClose>({
+                name: ActionName.MessageClose,
                 payload: {
                     messageId: props.messageId
                 }
@@ -567,8 +568,8 @@ export function init(
     const CorpnameInfoTrigger:React.SFC<CoreViews.CorpnameInfoTrigger.Props> = (props) => {
 
         const handleCorpnameClick = () => {
-            dispatcher.dispatch({
-                name: 'OVERVIEW_CORPUS_INFO_REQUIRED',
+            dispatcher.dispatch<Actions.OverviewCorpusInfoRequired>({
+                name: ActionName.OverviewCorpusInfoRequired,
                 payload: {
                     corpusId: props.corpname
                 }
@@ -576,8 +577,8 @@ export function init(
         };
 
         const handleSubcnameClick = () => {
-            dispatcher.dispatch({
-                name: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
+            dispatcher.dispatch<Actions.OverviewShowSubcorpusInfo>({
+                name: ActionName.OverviewShowSubcorpusInfo,
                 payload: {
                     corpusId: props.corpname,
                     subcorpusId: props.usesubcorp

@@ -178,18 +178,16 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         _handleSubmit() {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SUBMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.QuerySubmit>({
+                name: ActionName.QuerySubmit
             });
         }
 
         _keyEventHandler(evt) {
             if (evt.keyCode === Keyboard.Code.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey && !evt.shiftKey) {
-                    dispatcher.dispatch({
-                        name: 'QUERY_INPUT_SUBMIT',
-                        payload: {}
+                    dispatcher.dispatch<Actions.QuerySubmit>({
+                        name: ActionName.QuerySubmit
                     });
                 }
                 evt.stopPropagation();
@@ -352,9 +350,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         });
 
                     } else {
-                        dispatcher.dispatch({
-                            name: 'QUERY_INPUT_SUBMIT',
-                            payload: {}
+                        dispatcher.dispatch<Actions.QuerySubmit>({
+                            name: ActionName.QuerySubmit
                         });
                     }
                 }
@@ -377,9 +374,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 });
 
             } else {
-                dispatcher.dispatch({
-                    name: 'QUERY_INPUT_SUBMIT',
-                    payload: {}
+                dispatcher.dispatch<Actions.QuerySubmit>({
+                    name: ActionName.QuerySubmit
                 });
             }
         }

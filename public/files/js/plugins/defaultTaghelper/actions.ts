@@ -21,7 +21,6 @@
 import { Action } from 'kombo';
 
 export const enum ActionName {
-    PresetPattern = 'TAGHELPER_PRESET_PATTERN',
     GetInitialData = 'TAGHELPER_GET_INITIAL_DATA',
     GetInitialDataDone = 'TAGHELPER_GET_INITIAL_DATA_DONE',
     CheckboxChanged = 'TAGHELPER_CHECKBOX_CHANGED',
@@ -35,18 +34,9 @@ export const enum ActionName {
     KVRemoveFilter = 'TAGHELPER_REMOVE_FILTER',
     KVGetInitialDataDone = 'TAGHELPER_KV_GET_INITIAL_DATA_DONE',
     KVGetFilteredDataDone = 'TAGHELPER_KV_GET_FILTERED_DATA_DONE'
-
-
 }
 
 export namespace Actions {
-
-    export interface PresetPattern extends Action<{
-        sourceId:string;
-        pattern:string;
-    }> {
-        name:ActionName.PresetPattern;
-    }
 
     export interface GetInitialData extends Action<{
         sourceId:string;

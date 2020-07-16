@@ -44,7 +44,9 @@ import { UserSettings } from './userSettings';
 import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu';
 import { AppNavigation } from './navigation';
 import { EmptyPlugin } from '../plugins/empty/init';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../models/mainMenu/actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName }
+    from '../models/mainMenu/actions';
+import { Actions as ATActions, ActionName as ATActionName } from '../models/asyncTask/actions';
 import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
@@ -224,7 +226,12 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * @param args Parameters to be passed along with request
      * @param options Additional settings
      */
-    ajax$<T>(method:string, url:string, args:Kontext.AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
+    ajax$<T>(
+        method:string,
+        url:string,
+        args:Kontext.AjaxArgs,
+        options?:Kontext.AjaxOptions
+    ):Observable<T> {
         return this.appNavig.ajax$<T>(method, url, args, options);
     }
 
@@ -243,8 +250,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             return 'GET';
         };
 
-        this.dispatcher.dispatch({
-            name: 'INBOX_ADD_ASYNC_TASK',
+        this.dispatcher.dispatch<ATActions.InboxAddAsyncTask>({
+            name: ATActionName.InboxAddAsyncTask,
             payload: {
                 ident: taskId,
                 label: filename,
@@ -253,8 +260,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         });
         this.appNavig.bgDownload(filename, url, method(), args).subscribe(
             () => {
-                this.dispatcher.dispatch({
-                    name: 'INBOX_UPDATE_ASYNC_TASK',
+                this.dispatcher.dispatch<ATActions.InboxUpdateAsyncTask>({
+                    name: ATActionName.InboxUpdateAsyncTask,
                     payload: {
                         ident: taskId,
                         status: AsyncTaskStatus.SUCCESS
@@ -262,8 +269,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 });
             },
             (err) => {
-                this.dispatcher.dispatch({
-                    name: 'INBOX_UPDATE_ASYNC_TASK',
+                this.dispatcher.dispatch<ATActions.InboxUpdateAsyncTask>({
+                    name: ATActionName.InboxUpdateAsyncTask,
                     payload: {
                         ident: taskId,
                         status: AsyncTaskStatus.FAILURE
@@ -271,14 +278,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 });
             }
         );
-    }
-
-    dispatchSideEffect(name:string, props:Kontext.GeneralProps):void {
-        this.dispatcher.dispatch({
-            name,
-            payload: props,
-            isSideEffect: true
-        });
     }
 
     /**
@@ -333,13 +332,13 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * to handle process error-returned XMLHttpRequest objects
      * when using Ajax.
      *
-     * @param msgType - one of 'info', 'warning', 'error', 'plain'
+     * @param msgType - type of the message
      * @param message - text of the message in most cases; in case of
      *                  the 'error' type: Error instance, XMLHttpRequest instance
      *                  or an object containing an attribute 'messages' can
      *                  be used.
      */
-    showMessage(msgType:string, message:any):void {
+    showMessage(msgType:'info'|'warning'|'plain'|'error', message:any):void {
 
         const fetchJsonError = (message:XMLHttpRequest) => {
             const respObj = message.response || {};
@@ -499,7 +498,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * are preserved.
      */
     getConcArgs():MultiDict<ConcServerArgs> {
-        return new MultiDict(this.getConf<Array<[keyof ConcServerArgs, ConcServerArgs[keyof ConcServerArgs]]>>('currentArgs'));
+        return new MultiDict(
+            this.getConf<Array<[keyof ConcServerArgs, ConcServerArgs[keyof ConcServerArgs]]>>(
+                'currentArgs'));
     }
 
     /**
@@ -675,7 +676,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         this.generalViewOptionsModel.unregister();
     }
 
-    registerCorpusSwitchAwareModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
+    registerCorpusSwitchAwareModels(
+        onDone:()=>void,
+        ...models:Array<ICorpusSwitchSerializable<{}, {}>>
+    ):void {
         this.appNavig.registerCorpusSwitchAwareModels(
             () => {
                 this.unregisterAllModels();

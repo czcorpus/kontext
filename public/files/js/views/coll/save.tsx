@@ -68,8 +68,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }> = (props) => {
 
         const handleSelect = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_SAVE_FORM_SET_FORMAT',
+            dispatcher.dispatch<Actions.SaveFormSetFormat>({
+                name: ActionName.SaveFormSetFormat,
                 payload: {
                     value: evt.target.value
                 }
@@ -99,8 +99,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'COLL_SAVE_FORM_SET_INCLUDE_HEADING',
+            dispatcher.dispatch<Actions.SaveFormSetIncludeHeading>({
+                name: ActionName.SaveFormSetIncludeHeading,
                 payload: {
                     value: !props.value
                 }
@@ -125,8 +125,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
+            dispatcher.dispatch<Actions.SaveFormSetIncludeColHeaders>({
+                name: ActionName.SaveFormSetIncludeColHeaders,
                 payload: {
                     value: !props.value
                 }
@@ -155,8 +155,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }> = (props) => {
 
         const handleFromInput = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_SAVE_FORM_SET_FROM_LINE',
+            dispatcher.dispatch<Actions.SaveFormSetFromLine>({
+                name: ActionName.SaveFormSetFromLine,
                 payload: {
                     value: evt.target.value
                 }
@@ -164,8 +164,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
         };
 
         const handleToInput = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_SAVE_FORM_SET_TO_LINE',
+            dispatcher.dispatch<Actions.SaveFormSetToLine>({
+                name: ActionName.SaveFormSetToLine,
                 payload: {
                     value: evt.target.value
                 }

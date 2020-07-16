@@ -35,10 +35,11 @@ import { ConcSaveModel } from './save';
 import { transformVmode } from '../options/structsAttrs';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
-import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse, ServerPagination,
-    ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds, mapIdToIdWithColors,
-    ConcServerArgs} from './common';
-import { Actions, ActionName, ConcGroupChangePayload, PublishLineSelectionPayload } from './actions';
+import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
+    ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
+    mapIdToIdWithColors, ConcServerArgs} from './common';
+import { Actions, ActionName, ConcGroupChangePayload,
+    PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { SwitchMainCorpServerArgs } from '../query/common';
 import { TextTypesModel } from '../textTypes/main';
@@ -334,7 +335,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             action => {
                 forkJoin(
                     this.suspend({}, (action, syncData) => {
-                        return action.name === ActionName.PublishStoredLineSelections ? null : syncData;
+                        return action.name === ActionName.PublishStoredLineSelections ?
+                            null : syncData;
                     }).pipe(
                         map(v => (v as Actions.PublishStoredLineSelections).payload)
                     ),
@@ -364,7 +366,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ActionName.LineSelectionResetOnServer,
             action => {
                 this.suspend({}, (action, syncData) => {
-                    return action.name === ActionName.LineSelectionResetOnServerDone ? null : syncData;
+                    return action.name === ActionName.LineSelectionResetOnServerDone ?
+                        null : syncData;
 
                 }).pipe(
                     concatMap(v => this.reloadPage())
@@ -682,6 +685,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 });
             }
         );
+
+        this.addActionHandler<Actions.HideAnonymousUserWarning>(
+            ActionName.HideAnonymousUserWarning,
+            action => {
+                this.changeState(state => {
+                    state.showAnonymousUserWarn = false;
+                });
+            }
+        );
     }
 
     unregister():void {}
@@ -751,7 +763,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      * currently displayed data page.
      */
     private reloadPage(concId?:string):Observable<MultiDict<ConcServerArgs>> {
-        return this.changePage('customPage', this.state.currentPage, concId ? `~${concId}` : undefined);
+        return this.changePage(
+            'customPage', this.state.currentPage, concId ? `~${concId}` : undefined);
     }
 
     private pageIsInRange(num:number):boolean {
@@ -768,8 +781,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      * The returned promise passes URL argument matching
      * currently displayed data page.
      */
-    private changePage(action:string, pageNumber?:number, concId?:string):Observable<MultiDict<ConcServerArgs>> {
-        const pageNum:number = action === 'customPage' ? pageNumber : this.state.pagination[action];
+    private changePage(
+        action:string, pageNumber?:number, concId?:string
+    ):Observable<MultiDict<ConcServerArgs>> {
+        const pageNum:number = action === 'customPage' ?
+            pageNumber : this.state.pagination[action];
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
             return throwError(new Error(this.layoutModel.translate(
                 'concview__invalid_page_num_err')));
@@ -813,7 +829,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     private changeGroupNaming(data:ConcGroupChangePayload):void {
         this.changeState(state => {
             state.lines = List.map(
-                line => ({...line, lineGroup: line.lineGroup === data.prevId ? data.newId : line.lineGroup}),
+                line => ({
+                    ...line,
+                    lineGroup: line.lineGroup === data.prevId ?
+                        data.newId : line.lineGroup}),
                 state.lines
             );
             state.numItemsInLockedGroups = data.numLinesInGroups;
