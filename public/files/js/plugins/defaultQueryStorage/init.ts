@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {QueryStorageModel} from './models';
 import {init as viewsInit} from './view';
@@ -49,14 +48,10 @@ export class QueryStoragePlugin implements PluginInterfaces.QueryStorage.IPlugin
         return this.model;
     }
 
-    importData(data:Array<Kontext.QueryHistoryItem>):void {
-        this.model.importData(data);
-    }
-
 }
 
-const create:PluginInterfaces.QueryStorage.Factory = (pluginApi, offset, limit, pageSize) => {
-    return new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize));
+const create:PluginInterfaces.QueryStorage.Factory = (pluginApi, offset, limit, pageSize, initialData) => {
+    return new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize, initialData));
 };
 
 export default create;

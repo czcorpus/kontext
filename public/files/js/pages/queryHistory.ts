@@ -80,9 +80,9 @@ class QueryHistoryPage {
                 this.layoutModel.pluginApi(),
                 this.layoutModel.getConf<number>('Offset'),
                 this.layoutModel.getConf<number>('Limit'),
-                this.layoutModel.getConf<number>('PageSize')
+                this.layoutModel.getConf<number>('PageSize'),
+                this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data')
             );
-            qsModel.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
             const qhViews = initQueryHistoryViews(
                 this.layoutModel.dispatcher,
                 this.layoutModel.getComponentHelpers(),

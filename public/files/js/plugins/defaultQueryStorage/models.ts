@@ -20,16 +20,17 @@
 
 import { tap, concatMap, map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { Action } from 'kombo';
+import { StatefulModel } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { StatefulModel } from '../../models/base';
 import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../../models/query/cqleditor/parser';
-import { List, pipe } from 'cnc-tskit';
+import { List, Dict } from 'cnc-tskit';
 import { QueryType } from '../../models/query/common';
+import { Actions, ActionName } from './actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 
 
 
@@ -51,169 +52,214 @@ const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) =>
 /**
  *
  */
-export class QueryStorageModel extends StatefulModel implements PluginInterfaces.QueryStorage.IModel {
+export interface QueryStorageModelState {
+    data:Array<Kontext.QueryHistoryItem>;
+    offset:number;
+    limit:number;
+    queryType:string;
+    currentCorpusOnly:boolean;
+    isBusy:boolean;
+    pageSize:number;
+    hasMoreItems:boolean;
+    archivedOnly:boolean;
+    editingQueryId:string;
+    editingQueryName:string;
+    currentItem:number;
+}
+
+export class QueryStorageModel extends StatefulModel<QueryStorageModelState> implements PluginInterfaces.QueryStorage.IModel {
 
     private pluginApi:IPluginApi;
 
-    private data:Array<Kontext.QueryHistoryItem>;
-
-    private offset:number;
-
-    private limit:number;
-
-    private queryType:string;
-
-    private currentCorpusOnly:boolean;
-
-    private isBusy:boolean;
-
-    private pageSize:number;
-
-    private hasMoreItems:boolean;
-
-    private archivedOnly:boolean;
-
-    private editingQueryId:string;
-
-    private editingQueryName:string;
-
-    constructor(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number) {
-        super(pluginApi.dispatcher());
+    constructor(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number, initialData:Array<Kontext.QueryHistoryItem>) {
+        super(
+            pluginApi.dispatcher(),
+            {
+                data: initialData,
+                queryType: '',
+                currentCorpusOnly: false,
+                offset: offset,
+                limit: limit,
+                pageSize: pageSize,
+                isBusy: false,
+                hasMoreItems: true, // TODO this should be based on initial data (n+1 items)
+                archivedOnly: false,
+                editingQueryId: null,
+                editingQueryName: null, // null is ok here, a value is attached once the editor is opened
+                currentItem: 0,
+            }
+        );
         this.pluginApi = pluginApi;
-        this.data = [];
-        this.queryType = '';
-        this.currentCorpusOnly = false;
-        this.offset = offset;
-        this.limit = limit;
-        this.pageSize = pageSize;
-        this.isBusy = false;
-        this.hasMoreItems = true; // TODO this should be based on initial data (n+1 items)
-        this.archivedOnly = false;
-        this.editingQueryId = null;
-        this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'QUERY_STORAGE_SET_QUERY_TYPE':
-                    this.queryType = action.payload['value'];
-                    this.performLoadAction();
-                break;
-                case 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY':
-                    this.currentCorpusOnly = action.payload['value'];
-                    this.performLoadAction();
-                break;
-                case 'QUERY_STORAGE_SET_ARCHIVED_ONLY':
-                    this.archivedOnly = action.payload['value'];
-                    this.performLoadAction();
-                break;
-                case 'QUERY_STORAGE_LOAD_MORE':
-                    this.limit += this.pageSize;
-                    this.performLoadAction();
+        this.addActionHandler<Actions.SelectItem>(
+            ActionName.SelectItem,
+            action => {this.changeState(state => {state.currentItem = action.payload.value})}
+        );
 
-                break;
-                case 'QUERY_STORAGE_LOAD_HISTORY':
-                    this.performLoadAction();
-                break;
-                case 'QUERY_STORAGE_OPEN_QUERY_FORM':
-                    this.openQueryForm(action.payload['idx']);
-                    // page leaves here
-                break;
-                case 'QUERY_STORAGE_SET_EDITING_QUERY_ID':
-                    this.editingQueryId = action.payload['value'];
-                    const srch = this.data.find(v => v.query_id === this.editingQueryId);
+        this.addActionHandler<QueryActions.StorageSetCurrentCorpusOnly>(
+            QueryActionName.StorageSetCurrentCorpusOnly,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.currentCorpusOnly = action.payload.value;
+                });
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageSelectQueryType>(
+            QueryActionName.StorageSelectQueryType,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.queryType = action.payload.value;
+                });
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageSetArchivedOnly>(
+            QueryActionName.StorageSetArchivedOnly,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.archivedOnly = action.payload.value;
+                });
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageLoadMore>(
+            QueryActionName.StorageLoadMore,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.limit += state.pageSize;
+                });
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageLoadHistory>(
+            QueryActionName.StorageLoadHistory,
+            action => {
+                this.changeState(state => {state.isBusy = true});
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageOpenQueryForm>(
+            QueryActionName.StorageOpenQueryForm,
+            action => {
+                this.openQueryForm(action.payload.idx);
+                // page leaves here
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageSetEditingQueryId>(
+            QueryActionName.StorageSetEditingQueryId,
+            action => {
+                this.changeState(state => {
+                    state.editingQueryId = action.payload.value;
+                    const srch = List.find(v => v.query_id === state.editingQueryId, state.data);
                     if (srch) {
-                        this.editingQueryName = srch.name ? srch.name : '';
+                        state.editingQueryName = srch.name ? srch.name : '';
                     }
-                    this.emitChange();
-                break;
-                case 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID':
-                    this.editingQueryId = null;
-                    this.editingQueryName = null;
-                    this.emitChange();
-                break;
-                case 'QUERY_STORAGE_EDITOR_SET_NAME':
-                    this.editingQueryName = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'QUERY_STORAGE_DO_NOT_ARCHIVE':
-                    this.saveItem(action.payload['queryId'], null).subscribe(
+                });
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageClearEditingQueryId>(
+            QueryActionName.StorageClearEditingQueryId,
+            action => {
+                this.changeState(state => {
+                    state.editingQueryId = null;
+                    state.editingQueryName = null;
+                });
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageEditorSetName>(
+            QueryActionName.StorageEditorSetName,
+            action => {this.changeState(state => {state.editingQueryName = action.payload.value})}
+        );
+
+        this.addActionHandler<QueryActions.StorageDoNotArchive>(
+            QueryActionName.StorageDoNotArchive,
+            action => {
+                this.saveItem(action.payload.queryId, null).subscribe(
+                    (msg) => {
+                        this.changeState(state => {state.isBusy = false});
+                        this.pluginApi.showMessage('info', msg);
+                    },
+                    (err) => {
+                        this.changeState(state => {state.isBusy = false});
+                        this.pluginApi.showMessage('error', err);
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageEditorClickSave>(
+            QueryActionName.StorageEditorClickSave,
+            action => {
+                if (!this.state.editingQueryName) {
+                    this.pluginApi.showMessage('error',
+                        this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
+
+                } else {
+                    this.changeState(state => {state.isBusy = true});
+                    this.saveItem(this.state.editingQueryId, this.state.editingQueryName).subscribe(
                         (msg) => {
-                            this.isBusy = false;
-                            this.emitChange();
+                            this.changeState(state => {state.isBusy = false});
                             this.pluginApi.showMessage('info', msg);
                         },
                         (err) => {
-                            this.isBusy = false;
-                            this.emitChange();
+                            this.changeState(state => {state.isBusy = false});
                             this.pluginApi.showMessage('error', err);
                         }
                     );
-                break;
-                case 'QUERY_STORAGE_EDITOR_CLICK_SAVE':
-                    if (!this.editingQueryName) {
-                        this.pluginApi.showMessage('error',
-                            this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
-                        this.emitChange();
-
-                    } else {
-                        this.isBusy = true;
-                        this.emitChange();
-                        this.saveItem(this.editingQueryId, this.editingQueryName).subscribe(
-                            (msg) => {
-                                this.isBusy = false;
-                                this.emitChange();
-                                this.pluginApi.showMessage('info', msg);
-                            },
-                            (err) => {
-                                this.isBusy = false;
-                                this.emitChange();
-                                this.pluginApi.showMessage('error', err);
-                            }
-                        );
-                    }
-                break;
+                }
             }
-        });
+        );
     }
 
+    unregister() {}
+
     private openQueryForm(idx:number):void {
-        const item = this.data.find(v => v.idx === idx);
+        const item = List.find(v => v.idx === idx, this.state.data);
         const args = new MultiDict();
         args.set('corpname', item.corpname);
         args.set('usesubcorp', item.subcorpname);
         args.set(item.query_type, item.query);
         args.set('queryselector', item.query_type + 'row');
-        args.replace('align', item.aligned.map(v => v.corpname));
+        args.replace('align', List.map(v => v.corpname, item.aligned));
         args.set('lpos', item.lpos);
         args.set('qmcase', item.qmcase ? '1' : '0');
         args.set('default_attr', item.default_attr);
         args.set('pcq_pos_neg', item.pcq_pos_neg);
-        item.aligned.forEach(v => {
+        List.forEach(v => {
             args.set(`${v.query_type}_${v.corpname}`, v.query);
             args.set(`queryselector_${v.corpname}`, v.query_type + 'row');
             args.set(`lpos_${v.corpname}`, v.lpos);
             args.set(`qmcase_${v.corpname}`, v.qmcase ? '1' : '0');
             args.set(`default_attr_${v.corpname}`, v.default_attr);
             args.set(`pcq_pos_neg_${v.corpname}`, v.pcq_pos_neg);
-        });
-        Object.keys(item.selected_text_types).forEach(k => {
+        }, item.aligned);
+        Dict.forEach((v, k) => {
             args.replace(`sca_${k}`, item.selected_text_types[k]);
-        });
+        }, item.selected_text_types);
         window.location.href = this.pluginApi.createActionUrl('first_form', args);
     }
 
     private performLoadAction():void {
-        this.isBusy = true;
-        this.emitChange();
         this.loadData().subscribe(
             () => {
-                this.isBusy = false;
-                this.emitChange();
+                this.changeState(state => {state.isBusy = false})
             },
             (err) => {
-                this.isBusy = false;
+                this.changeState(state => {state.isBusy = false})
                 this.pluginApi.showMessage('error', err);
-                this.emitChange();
             }
         );
     }
@@ -221,20 +267,20 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
     private loadData():Observable<any> {
         const args = new MultiDict();
         args.set('corpname', this.pluginApi.getCorpusIdent().id);
-        args.set('offset', this.offset);
-        args.set('limit', this.limit + 1);
-        args.set('query_type', this.queryType);
-        args.set('current_corpus', this.currentCorpusOnly ? '1' : '0');
-        args.set('archived_only', this.archivedOnly ? '1' : '0');
+        args.set('offset', this.state.offset);
+        args.set('limit', this.state.limit + 1);
+        args.set('query_type', this.state.queryType);
+        args.set('current_corpus', this.state.currentCorpusOnly ? '1' : '0');
+        args.set('archived_only', this.state.archivedOnly ? '1' : '0');
         return this.pluginApi.ajax$<AjaxResponse.QueryHistory>(
             'GET',
             this.pluginApi.createActionUrl('user/ajax_query_history'),
             args
 
         ).pipe(
-            tap((data) => {
-                this.hasMoreItems = data.data.length === this.limit + 1;
-                this.data = this.hasMoreItems ?
+            tap((data) => {this.changeState(state => {
+                state.hasMoreItems = data.data.length === state.limit + 1;
+                state.data = state.hasMoreItems ?
                         List.map(
                             attachSh.bind(null, this.pluginApi.getComponentHelpers()),
                             data.data.slice(0, data.data.length - 1)
@@ -243,7 +289,7 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
                             attachSh.bind(null, this.pluginApi.getComponentHelpers()),
                             data.data
                         );
-            })
+            })})
         );
     }
 
@@ -271,10 +317,10 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
             }
 
         })().pipe(
-            tap((data) => {
-                this.editingQueryId = null;
-                this.editingQueryName = null;
-            }),
+            tap((data) => {this.changeState(state => {
+                state.editingQueryId = null;
+                state.editingQueryName = null;
+            })}),
             concatMap((_) => this.loadData()),
             map(() => name ?
                     this.pluginApi.translate('query__save_as_item_saved') :
@@ -283,64 +329,43 @@ export class QueryStorageModel extends StatefulModel implements PluginInterfaces
         );
     }
 
-    importData(data:Array<Kontext.QueryHistoryItem>):void {
-        this.data = List.map(
-            attachSh.bind(null, this.pluginApi.getComponentHelpers()),
-            data
-        );
-    }
-
     getData():Array<Kontext.QueryHistoryItem> {
-        return this.data;
-    }
-
-    getFlatData():Array<InputBoxHistoryItem> {
-        return List.flatMap(
-            v => [{query: v.query, query_type: v.query_type, created: v.created}]
-                .concat(
-                    pipe(
-                        v.aligned,
-                        List.filter(v2 => !!v2.query),
-                        List.map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created}))
-                    )
-            ),
-            this.data
-        );
+        return this.state.data;
     }
 
     getOffset():number {
-        return this.offset;
+        return this.state.offset;
     }
 
     getLimit():number {
-        return this.limit;
+        return this.state.limit;
     }
 
     getQueryType():string {
-        return this.queryType;
+        return this.state.queryType;
     }
 
     getCurrentCorpusOnly():boolean {
-        return this.currentCorpusOnly;
+        return this.state.currentCorpusOnly;
     }
 
     getIsBusy():boolean {
-        return this.isBusy;
+        return this.state.isBusy;
     }
 
     getHasMoreItems():boolean {
-        return this.hasMoreItems;
+        return this.state.hasMoreItems;
     }
 
     getArchivedOnly():boolean {
-        return this.archivedOnly;
+        return this.state.archivedOnly;
     }
 
     getEditingQueryId():string {
-        return this.editingQueryId;
+        return this.state.editingQueryId;
     }
 
     getEditingQueryName():string {
-        return this.editingQueryName;
+        return this.state.editingQueryName;
     }
 }

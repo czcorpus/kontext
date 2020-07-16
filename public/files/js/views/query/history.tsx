@@ -25,6 +25,7 @@ import { Subscription } from 'rxjs';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
+import { Actions, ActionName } from '../../models/query/actions';
 
 
 export interface RecentQueriesPageListProps {
@@ -70,8 +71,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_SET_QUERY_TYPE',
+            dispatcher.dispatch<Actions.StorageSelectQueryType>({
+                name: ActionName.StorageSelectQueryType,
                 payload: {
                     value: evt.target.value
                 }
@@ -113,8 +114,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
+            dispatcher.dispatch<Actions.StorageSetCurrentCorpusOnly>({
+                name: ActionName.StorageSetCurrentCorpusOnly,
                 payload: {
                     value: !props.value
                 }
@@ -131,8 +132,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
+            dispatcher.dispatch<Actions.StorageSetArchivedOnly>({
+                name: ActionName.StorageSetArchivedOnly,
                 payload: {
                     value: !props.value
                 }
@@ -274,8 +275,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleEditClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
+            dispatcher.dispatch<Actions.StorageSetEditingQueryId>({
+                name: ActionName.StorageSetEditingQueryId,
                 payload: {
                     value: props.queryId
                 }
@@ -283,8 +284,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleDoNotSaveClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_DO_NOT_ARCHIVE',
+            dispatcher.dispatch<Actions.StorageDoNotArchive>({
+                name: ActionName.StorageDoNotArchive,
                 payload: {
                     queryId: props.queryId
                 }
@@ -325,8 +326,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_EDITOR_SET_NAME',
+            dispatcher.dispatch<Actions.StorageEditorSetName>({
+                name: ActionName.StorageEditorSetName,
                 payload: {
                     value: evt.target.value
                 }
@@ -334,15 +335,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
+            dispatcher.dispatch<Actions.StorageEditorClickSave>({
+                name: ActionName.StorageEditorClickSave,
                 payload: {}
             });
         };
 
         const handleCloseClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
+            dispatcher.dispatch<Actions.StorageClearEditingQueryId>({
+                name: ActionName.StorageClearEditingQueryId,
                 payload: {}
             });
         };
@@ -391,8 +392,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleFormClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_OPEN_QUERY_FORM',
+            dispatcher.dispatch<Actions.StorageOpenQueryForm>({
+                name: ActionName.StorageOpenQueryForm,
                 payload: {
                     idx: props.data.idx
                 }
@@ -448,8 +449,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_LOAD_MORE',
+            dispatcher.dispatch<Actions.StorageLoadMore>({
+                name: ActionName.StorageLoadMore,
                 payload: {}
             });
         };
