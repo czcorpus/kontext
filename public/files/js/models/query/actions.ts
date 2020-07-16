@@ -96,6 +96,17 @@ export enum ActionName {
     MLSortFormSetSbward = 'ML_SORT_FORM_SET_SBWARD',
     MLSortFormSetCtx = 'ML_SORT_FORM_SET_CTX',
     MLSortFormSetCtxAlign = 'ML_SORT_FORM_SET_CTX_ALIGN',
+    StorageSelectQueryType = 'QUERY_STORAGE_SET_QUERY_TYPE',
+    StorageSetCurrentCorpusOnly = 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
+    StorageSetArchivedOnly = 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
+    StorageLoadMore = 'QUERY_STORAGE_LOAD_MORE',
+    StorageLoadHistory = 'QUERY_STORAGE_LOAD_HISTORY',
+    StorageOpenQueryForm = 'QUERY_STORAGE_OPEN_QUERY_FORM',
+    StorageSetEditingQueryId = 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
+    StorageClearEditingQueryId = 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
+    StorageEditorSetName = 'QUERY_STORAGE_EDITOR_SET_NAME',
+    StorageDoNotArchive = 'QUERY_STORAGE_DO_NOT_ARCHIVE',
+    StorageEditorClickSave = 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
 }
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
@@ -562,5 +573,67 @@ export namespace Actions {
         index:number;
     }> {
         name:ActionName.MLSortFormSetCtx;
+    }
+
+    export interface StorageSelectQueryType extends Action<{
+        value:string;
+    }> {
+        name:ActionName.StorageSelectQueryType;
+    }
+
+    export interface StorageSetCurrentCorpusOnly extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.StorageSetCurrentCorpusOnly;
+    }
+
+    export interface StorageSetArchivedOnly extends Action<{
+        value:boolean;
+    }> {
+        name:ActionName.StorageSetArchivedOnly;
+    }
+
+    export interface StorageLoadMore extends Action<{
+    }> {
+        name:ActionName.StorageLoadMore;
+    }
+
+    export interface StorageLoadHistory extends Action<{
+    }> {
+        name:ActionName.StorageLoadHistory;
+    }
+
+    export interface StorageOpenQueryForm extends Action<{
+        idx:number;
+    }> {
+        name:ActionName.StorageOpenQueryForm;
+    }
+
+    export interface StorageSetEditingQueryId extends Action<{
+        value:string;
+    }> {
+        name:ActionName.StorageSetEditingQueryId;
+    }
+
+    export interface StorageClearEditingQueryId extends Action<{
+    }> {
+        name:ActionName.StorageClearEditingQueryId;
+    }
+
+    export interface StorageEditorSetName extends Action<{
+        value:string;
+    }> {
+        name:ActionName.StorageEditorSetName;
+    }
+
+    export interface StorageDoNotArchive extends Action<{
+        queryId:string;
+    }> {
+        name:ActionName.StorageDoNotArchive;
+    }
+
+    export interface StorageEditorClickSave extends Action<{
+    }> {
+        name:ActionName.StorageEditorClickSave;
     }
 }

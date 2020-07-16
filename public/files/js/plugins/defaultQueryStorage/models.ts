@@ -20,15 +20,17 @@
 
 import { tap, concatMap, map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { Action, StatefulModel } from 'kombo';
+import { StatefulModel } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../../models/query/cqleditor/parser';
-import { List, pipe, Dict } from 'cnc-tskit';
+import { List, Dict } from 'cnc-tskit';
 import { QueryType } from '../../models/query/common';
+import { Actions, ActionName } from './actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 
 
 
@@ -89,70 +91,125 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState> imp
         );
         this.pluginApi = pluginApi;
 
-        this.onAction((action:Action) => {
-            switch (action.name) {
-                case 'QUERY_STORAGE_SELECT_CURRENT_ITEM':
-                    this.changeState(state => {state.currentItem = action.payload['value']});
-                break;
-                case 'QUERY_STORAGE_SET_QUERY_TYPE':
-                    this.changeState(state => {
-                        state.isBusy = true;
-                        state.queryType = action.payload['value'];
-                    });
-                    this.performLoadAction();
-                break;
-                case 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY':
-                    this.changeState(state => {
-                        state.isBusy = true;
-                        state.currentCorpusOnly = action.payload['value'];
-                    });
-                    this.performLoadAction();
-                break;
-                case 'QUERY_STORAGE_SET_ARCHIVED_ONLY':
-                    this.changeState(state => {
-                        state.isBusy = true;
-                        state.archivedOnly = action.payload['value'];
-                    });
-                    this.performLoadAction();
-                break;
-                case 'QUERY_STORAGE_LOAD_MORE':
-                    this.changeState(state => {
-                        state.isBusy = true;
-                        state.limit += state.pageSize;
-                    });
-                    this.performLoadAction();
+        this.addActionHandler<Actions.SelectItem>(
+            ActionName.SelectItem,
+            action => {this.changeState(state => {state.currentItem = action.payload.value})}
+        );
 
-                break;
-                case 'QUERY_STORAGE_LOAD_HISTORY':
+        this.addActionHandler<QueryActions.StorageSetCurrentCorpusOnly>(
+            QueryActionName.StorageSetCurrentCorpusOnly,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.currentCorpusOnly = action.payload.value;
+                });
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageSelectQueryType>(
+            QueryActionName.StorageSelectQueryType,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.queryType = action.payload.value;
+                });
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageSetArchivedOnly>(
+            QueryActionName.StorageSetArchivedOnly,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.archivedOnly = action.payload.value;
+                });
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageLoadMore>(
+            QueryActionName.StorageLoadMore,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.limit += state.pageSize;
+                });
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageLoadHistory>(
+            QueryActionName.StorageLoadHistory,
+            action => {
+                this.changeState(state => {state.isBusy = true});
+                this.performLoadAction();
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageOpenQueryForm>(
+            QueryActionName.StorageOpenQueryForm,
+            action => {
+                this.openQueryForm(action.payload.idx);
+                // page leaves here
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageSetEditingQueryId>(
+            QueryActionName.StorageSetEditingQueryId,
+            action => {
+                this.changeState(state => {
+                    state.editingQueryId = action.payload.value;
+                    const srch = List.find(v => v.query_id === state.editingQueryId, state.data);
+                    if (srch) {
+                        state.editingQueryName = srch.name ? srch.name : '';
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageClearEditingQueryId>(
+            QueryActionName.StorageClearEditingQueryId,
+            action => {
+                this.changeState(state => {
+                    state.editingQueryId = null;
+                    state.editingQueryName = null;
+                });
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageEditorSetName>(
+            QueryActionName.StorageEditorSetName,
+            action => {this.changeState(state => {state.editingQueryName = action.payload.value})}
+        );
+
+        this.addActionHandler<QueryActions.StorageDoNotArchive>(
+            QueryActionName.StorageDoNotArchive,
+            action => {
+                this.saveItem(action.payload.queryId, null).subscribe(
+                    (msg) => {
+                        this.changeState(state => {state.isBusy = false});
+                        this.pluginApi.showMessage('info', msg);
+                    },
+                    (err) => {
+                        this.changeState(state => {state.isBusy = false});
+                        this.pluginApi.showMessage('error', err);
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<QueryActions.StorageEditorClickSave>(
+            QueryActionName.StorageEditorClickSave,
+            action => {
+                if (!this.state.editingQueryName) {
+                    this.pluginApi.showMessage('error',
+                        this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
+
+                } else {
                     this.changeState(state => {state.isBusy = true});
-                    this.performLoadAction();
-                break;
-                case 'QUERY_STORAGE_OPEN_QUERY_FORM':
-                    this.openQueryForm(action.payload['idx']);
-                    // page leaves here
-                break;
-                case 'QUERY_STORAGE_SET_EDITING_QUERY_ID':
-                    this.changeState(state => {
-                        state.editingQueryId = action.payload['value'];
-                        const srch = List.find(v => v.query_id === state.editingQueryId, state.data);
-                        if (srch) {
-                            state.editingQueryName = srch.name ? srch.name : '';
-                        }
-                    });
-                break;
-                case 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID':
-                    this.changeState(state => {
-                        state.editingQueryId = null;
-                        state.editingQueryName = null;
-                    });
-                break;
-                case 'QUERY_STORAGE_EDITOR_SET_NAME':
-                    this.changeState(state => {
-                        state.editingQueryName = action.payload['value'];
-                    });
-                break;
-                case 'QUERY_STORAGE_DO_NOT_ARCHIVE':
-                    this.saveItem(action.payload['queryId'], null).subscribe(
+                    this.saveItem(this.state.editingQueryId, this.state.editingQueryName).subscribe(
                         (msg) => {
                             this.changeState(state => {state.isBusy = false});
                             this.pluginApi.showMessage('info', msg);
@@ -162,28 +219,9 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState> imp
                             this.pluginApi.showMessage('error', err);
                         }
                     );
-                break;
-                case 'QUERY_STORAGE_EDITOR_CLICK_SAVE':
-                    if (!this.state.editingQueryName) {
-                        this.pluginApi.showMessage('error',
-                            this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
-
-                    } else {
-                        this.changeState(state => {state.isBusy = true});
-                        this.saveItem(this.state.editingQueryId, this.state.editingQueryName).subscribe(
-                            (msg) => {
-                                this.changeState(state => {state.isBusy = false});
-                                this.pluginApi.showMessage('info', msg);
-                            },
-                            (err) => {
-                                this.changeState(state => {state.isBusy = false});
-                                this.pluginApi.showMessage('error', err);
-                            }
-                        );
-                    }
-                break;
+                }
             }
-        });
+        );
     }
 
     unregister() {}
