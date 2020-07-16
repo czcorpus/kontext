@@ -53,6 +53,7 @@ export namespace Actions {
 
     export interface SelectionChanged extends Action<{
         hasSelectedItems:boolean;
+        attributes:Array<TextTypes.AttributeSelection>;
     }> {
         name:ActionName.SelectionChanged;
     };

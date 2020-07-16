@@ -169,7 +169,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                         },
                         (err:Error) => {
                             this.layoutModel.showMessage('error', err);
-                            dispatch({
+                            dispatch<Actions.LoadDataDone>({
                                 name: ActionName.LoadDataDone,
                                 error: err
                             });
@@ -177,7 +177,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     );
 
                 } else {
-                    dispatch({
+                    dispatch<Actions.DataReady>({
                         name: ActionName.DataReady
                     });
                 }

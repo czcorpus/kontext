@@ -52,8 +52,12 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
 
     private readonly pluginApi:IPluginApi;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, userData:Kontext.UserCredentials,
-            message:string) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        pluginApi:IPluginApi,
+        userData:Kontext.UserCredentials,
+        message:string
+    ) {
         super(
             dispatcher,
             {
@@ -70,7 +74,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 newPasswd2: Kontext.newFormValue('', true),
                 isBusy: false,
                 isFinished: false,
-                message: message
+                message
             }
         );
         this.pluginApi = pluginApi;
@@ -78,14 +82,16 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         this.addActionHandler<Actions.SetCurrPassword>(
             ActionName.SetCurrPassword,
             (state, action) => {
-                state.currPasswd = Kontext.updateFormValue(state.currPasswd, {value: action.payload.value});
+                state.currPasswd = Kontext.updateFormValue(
+                    state.currPasswd, {value: action.payload.value});
             }
         );
 
         this.addActionHandler<Actions.SetNewPasswd>(
             ActionName.SetNewPasswd,
             (state, action) => {
-                state.newPasswd = Kontext.updateFormValue(state.newPasswd, {value: action.payload.value});
+                state.newPasswd = Kontext.updateFormValue(
+                    state.newPasswd, {value: action.payload.value});
             }
         );
 
@@ -93,35 +99,40 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         this.addActionHandler<Actions.SetNewPasswd2>(
             ActionName.SetNewPasswd2,
             (state, action) => {
-                state.newPasswd2 = Kontext.updateFormValue(state.newPasswd2, {value: action.payload.value});
+                state.newPasswd2 = Kontext.updateFormValue(
+                    state.newPasswd2, {value: action.payload.value});
             }
         );
 
         this.addActionHandler<Actions.SetUsername>(
             ActionName.SetUsername,
             (state, action) => {
-                state.username = Kontext.updateFormValue(state.username, {value: action.payload.value});
+                state.username = Kontext.updateFormValue(
+                    state.username, {value: action.payload.value});
             }
         );
 
         this.addActionHandler<Actions.SetFirstname>(
             ActionName.SetFirstname,
             (state, action) => {
-                state.firstName = Kontext.updateFormValue(state.firstName, {value: action.payload.value});
+                state.firstName = Kontext.updateFormValue(
+                    state.firstName, {value: action.payload.value});
             }
         );
 
         this.addActionHandler<Actions.SetLastname>(
             ActionName.SetLastname,
             (state, action) => {
-                state.lastName = Kontext.updateFormValue(state.lastName, {value: action.payload.value});
+                state.lastName = Kontext.updateFormValue(
+                    state.lastName, {value: action.payload.value});
             }
         );
 
         this.addActionHandler<Actions.SetEmail>(
             ActionName.SetEmail,
             (state, action) => {
-                state.email = Kontext.updateFormValue(state.email, {value: action.payload.value});
+                state.email = Kontext.updateFormValue(
+                    state.email, {value: action.payload.value});
             }
         );
 
@@ -131,24 +142,30 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 if (action.error) {
                     if (!action.payload.validationStatus.currPasswd) {
                         state.currPasswd = Kontext.updateFormValue(
-                            state.currPasswd, {value: '', isInvalid: !action.payload.validationStatus.currPasswd});
+                            state.currPasswd,
+                            {value: '', isInvalid: !action.payload.validationStatus.currPasswd});
                     }
                     if (!action.payload.validationStatus.newPasswd) {
                         state.newPasswd = Kontext.updateFormValue(
-                            state.newPasswd, {value: '', isInvalid: !action.payload.validationStatus.newPasswd});
+                            state.newPasswd,
+                            {value: '', isInvalid: !action.payload.validationStatus.newPasswd});
                     }
                     if (!action.payload.validationStatus.newPasswd2) {
                         state.newPasswd2 = Kontext.updateFormValue(
-                            state.newPasswd2, {value: '', isInvalid: !action.payload.validationStatus.newPasswd2});
+                            state.newPasswd2,
+                            {value: '', isInvalid: !action.payload.validationStatus.newPasswd2});
                     }
 
                 } else {
                     state.currPasswd = Kontext.updateFormValue(
-                        state.currPasswd, {value: '', isInvalid: !action.payload.validationStatus.currPasswd});
+                        state.currPasswd,
+                        {value: '', isInvalid: !action.payload.validationStatus.currPasswd});
                     state.newPasswd = Kontext.updateFormValue(
-                        state.newPasswd, {value: '', isInvalid: !action.payload.validationStatus.newPasswd});
+                        state.newPasswd,
+                        {value: '', isInvalid: !action.payload.validationStatus.newPasswd});
                     state.newPasswd2 = Kontext.updateFormValue(
-                        state.newPasswd2, {value: '', isInvalid: !action.payload.validationStatus.newPasswd2});
+                        state.newPasswd2,
+                        {value: '', isInvalid: !action.payload.validationStatus.newPasswd2});
 
                  }
             }
@@ -179,17 +196,18 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                             dispatch<Actions.SubmitNewPasswordDone>({
                                 name: ActionName.SubmitNewPasswordDone,
                                 payload: {
-                                    validationStatus: validationStatus
+                                    validationStatus
                                 },
                                 error: new Error()
                             });
-                            validationStatus.messages.forEach(msg => this.pluginApi.showMessage('error', msg));
+                            validationStatus.messages.forEach(
+                                    msg => this.pluginApi.showMessage('error', msg));
 
                         } else {
                             dispatch<Actions.SubmitNewPasswordDone>({
                                 name: ActionName.SubmitNewPasswordDone,
                                 payload: {
-                                    validationStatus: validationStatus
+                                    validationStatus
                                 }
                             });
                             this.pluginApi.showMessage('info',
@@ -282,7 +300,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                         });
                     },
                     (err) => {
-                        dispatch({
+                        dispatch<Actions.SubmitSignUpDone>({
                             name: ActionName.SubmitSignUpDone,
                             payload: {
                                 errors: err.response['error_args']

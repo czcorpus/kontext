@@ -153,8 +153,9 @@ export class WordlistPage {
                 const updateStream = this.startWatching();
                 updateStream.subscribe(
                     (data) => {
-                        this.layoutModel.dispatcher.dispatch({
-                            name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                        this.layoutModel.dispatcher.dispatch<
+                                Actions.WordlistIntermediateBgCalcUpdated>({
+                            name: ActionName.WordlistIntermediateBgCalcUpdated,
                             payload: data
                         });
                     }
@@ -164,14 +165,17 @@ export class WordlistPage {
                         if (data.status === 100) {
                             window.location.href = this.layoutModel.createActionUrl(
                                 'wordlist/result',
-                                new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
+                                new MultiDict(
+                                    this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
                             );
 
                         } else {
-                            this.layoutModel.dispatcher.dispatch({
-                                name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                            this.layoutModel.dispatcher.dispatch<
+                                    Actions.WordlistIntermediateBgCalcUpdated>({
+                                name: ActionName.WordlistIntermediateBgCalcUpdated,
                                 payload: data,
-                                error: new Error(this.layoutModel.translate('global__bg_calculation_failed'))
+                                error: new Error(
+                                    this.layoutModel.translate('global__bg_calculation_failed'))
                             });
                             this.layoutModel.showMessage(
                                 'error',
@@ -184,9 +188,9 @@ export class WordlistPage {
                             'error',
                             this.layoutModel.translate('global__bg_calculation_failed')
                         );
-                        this.layoutModel.dispatcher.dispatch({
-                            name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
-                            payload: {},
+                        this.layoutModel.dispatcher.dispatch<
+                                Actions.WordlistIntermediateBgCalcUpdated>({
+                            name: ActionName.WordlistIntermediateBgCalcUpdated,
                             error: err
                         });
                         console.error(err);

@@ -18,15 +18,14 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Subscription } from 'rxjs';
 
 import { Kontext } from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
 import { Actions, ActionName } from './actions';
-import { Keyboard, Strings } from 'cnc-tskit';
-import { Action } from 'rxjs/internal/scheduler/Action';
+import { Keyboard, Strings, List } from 'cnc-tskit';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 
 
 export interface WidgetViewModuleArgs {
@@ -40,7 +39,11 @@ export interface WidgetViews {
 }
 
 
-export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React.ComponentClass<{}, CorplistWidgetModelState> {
+export function init({
+    dispatcher,
+    util,
+    widgetModel}:WidgetViewModuleArgs
+):React.ComponentClass<{}, CorplistWidgetModelState> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -71,15 +74,15 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             }
         };
 
+        const rmTitle = util.translate('defaultCorparch__click_to_remove_item_from_fav');
+        const addTitle = util.translate('defaultCorparch__not_in_fav');
         return (
             <a onClick={handleRemoveClick}>
                 {props.trashTTL === null ?
                     <img className="starred" src={util.createStaticUrl('img/starred.svg')}
-                            alt={util.translate('defaultCorparch__click_to_remove_item_from_fav')}
-                            title={util.translate('defaultCorparch__click_to_remove_item_from_fav')} /> :
+                        alt={rmTitle} title={rmTitle} /> :
                     <img className="starred" src={util.createStaticUrl('img/starred_grey.svg')}
-                            alt={util.translate('defaultCorparch__not_in_fav')}
-                            title={util.translate('defaultCorparch__not_in_fav')} />
+                            alt={addTitle} title={addTitle} />
                 }
             </a>
         );
@@ -117,7 +120,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                 <td>
                     <a className="corplist-item"
                             title={props.data.trashTTL === null ?
-                                    (shortName.length < props.data.name.length ? props.data.name : props.data.description) :
+                                    (shortName.length < props.data.name.length ?
+                                        props.data.name : props.data.description) :
                                     util.translate('defaultCorparch__item_will_be_removed')}
                             onClick={handleItemClick}>
                         {shortName}
@@ -154,10 +158,18 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                     </tr>
                     {props.anonymousUser ?
                         <tr>
-                            <td colSpan={3}>{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td>
+                            <td colSpan={3}>
+                                {util.translate('defaultCorparch__please_log_in_to_see_fav')}
+                            </td>
                         </tr> :
-                        props.data.map((item, i) =>
-                            <TRFavoriteItem key={item.id} data={item} isActive={i === props.activeIdx} />)
+                        List.map(
+                            (item, i) => (
+                                <TRFavoriteItem key={item.id} data={item}
+                                        isActive={i === props.activeIdx} />
+                            ),
+                            props.data
+                        )
+
                     }
                 </tbody>
             </table>
@@ -338,9 +350,11 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                     tabIndex={-1} ref={item => item ? item.focus() : null}>
                 <FavoritesBox data={props.dataFav}
                         anonymousUser={props.anonymousUser}
-                        activeIdx={props.activeListItem[0] === 0 ? props.activeListItem[1] : null} />
+                        activeIdx={props.activeListItem[0] === 0 ?
+                            props.activeListItem[1] : null} />
                 <FeaturedBox data={props.dataFeat}
-                        activeIdx={props.activeListItem[0] === 1 ? props.activeListItem[1] : null} />
+                        activeIdx={props.activeListItem[0] === 1 ?
+                            props.activeListItem[1] : null} />
             </div>
         );
     };
@@ -530,7 +544,10 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
         return (
             <div>
                 <div className="labels">
-                    {props.availSearchKeywords.map(item => <SearchKeyword key={item.id} {...item} />)}
+                    {List.map(
+                        item => <SearchKeyword key={item.id} {...item} />,
+                        props.availSearchKeywords
+                    )}
                     {props.hasSelectedKeywords ? <ResetKeyword /> : null}
                     <div className="labels-hint">
                         {util.translate('defaultCorparch__hold_ctrl_for_multiple')}
@@ -572,8 +589,13 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             <button type="button"
                     className={`util-button${props.isWaitingToSwitch ? ' waiting': ''}`}
                     onClick={props.onClick} onKeyDown={handleKeyDown}>
-                {props.isWaitingToSwitch ? <layoutViews.AjaxLoaderBarImage htmlClass="loader" /> : null }
-                <span className="corpus-name" title={props.corpusIdent.id}>{props.corpusIdent.name}</span>
+                {props.isWaitingToSwitch ?
+                    <layoutViews.AjaxLoaderBarImage htmlClass="loader" /> :
+                    null
+                }
+                <span className="corpus-name" title={props.corpusIdent.id}>
+                    {props.corpusIdent.name}
+                </span>
             </button>
         );
     };
@@ -588,8 +610,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }> = (props) => {
 
         const handleSubcorpChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_INPUT_SELECT_SUBCORP',
+            dispatcher.dispatch<QueryActions.QueryInputSelectSubcorp>({
+                name: QueryActionName.QueryInputSelectSubcorp,
                 payload: {
                     subcorp: props.availSubcorpora[evt.target.value].v,
                     pubName: props.availSubcorpora[evt.target.value].pub,
@@ -702,7 +724,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                                 isWaitingForSearchResults={this.props.isWaitingForSearchResults}
                                 currSearchResult={this.props.currSearchResult}
                                 currSearchPhrase={this.props.currSearchPhrase}
-                                hasSelectedKeywords={this.props.availSearchKeywords.find(x => x.selected) !== undefined}
+                                hasSelectedKeywords={List.find(
+                                    x => x.selected, this.props.availSearchKeywords) !== undefined}
                                 focusedRowIdx={this.props.focusedRowIdx}
                                 handleTab={this._handleCloseClick} />
                     }
@@ -722,7 +745,8 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
                 <div className="CorplistWidget">
                     <div>
                         <CorpusButton isWaitingToSwitch={this.props.isBusy}
-                                corpusIdent={this.props.corpusIdent} onClick={this._handleWidgetButtonClick}
+                                corpusIdent={this.props.corpusIdent}
+                                onClick={this._handleWidgetButtonClick}
                                 isWidgetVisible={this.props.isVisible} />
                         {this.props.isVisible ? this._renderWidget() : null}
                         {this.props.availableSubcorpora.length > 0 ?

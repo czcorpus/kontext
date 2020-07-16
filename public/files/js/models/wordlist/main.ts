@@ -78,7 +78,11 @@ export interface WordlistResultModelState {
 }
 
 
-function importData(data:Array<ResultItem>, currPage:number, pageSize:number):Array<IndexedResultItem> {
+function importData(
+    data:Array<ResultItem>,
+    currPage:number,
+    pageSize:number
+):Array<IndexedResultItem> {
     return List.map(
         (item, i) => ({
             freq: item.freq,
@@ -99,8 +103,15 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
 
     private readonly formModel:WordlistFormModel;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, formModel:WordlistFormModel,
-            data:ResultData, headings:Array<HeadingItem>, reloadArgs:Kontext.ListOfPairs, isUnfinished:boolean) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        layoutModel:PageModel,
+        formModel:WordlistFormModel,
+        data:ResultData,
+        headings:Array<HeadingItem>,
+        reloadArgs:Kontext.ListOfPairs,
+        isUnfinished:boolean
+    ) {
         super(
             dispatcher,
             {
@@ -112,10 +123,10 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 headings: [...headings],
                 isBusy: false,
                 numItems: null,
-                isUnfinished: isUnfinished,
+                isUnfinished,
                 bgCalcStatus: 0,
                 isError: false,
-                reloadArgs: reloadArgs
+                reloadArgs
             }
         );
         this.layoutModel = layoutModel;
@@ -134,15 +145,18 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
 
                 }).subscribe(
                     otherAction => {
-                        const formArgs = (otherAction as Actions.WordlistFormSubmitReady).payload.args;
+                        const formArgs = (otherAction as Actions.WordlistFormSubmitReady
+                            ).payload.args;
                         const args = new MultiDict();
                         args.set('corpname', formArgs.head('corpname'));
                         args.set('usesubcorp', formArgs.head('usesubcorp'));
                         args.set('default_attr', formArgs.head('wlattr'));
                         args.set('qmcase', '1');
                         args.set('queryselector', 'cqlrow');
-                        args.set('cql', this.createPQuery(action.payload.word, formArgs.head('wlattr')));
-                        window.location.href = this.layoutModel.createActionUrl('first', args.items());
+                        args.set('cql', this.createPQuery(
+                            action.payload.word, formArgs.head('wlattr')));
+                        window.location.href = this.layoutModel.createActionUrl(
+                            'first', args.items());
                     },
                     err => {
                         this.layoutModel.showMessage('error', err);
@@ -235,7 +249,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 }).pipe(
                     concatMap(
                         action => {
-                            const formArgs = (action as Actions.WordlistFormSubmitReady).payload.args;
+                            const formArgs = (action as Actions.WordlistFormSubmitReady
+                                ).payload.args;
                             return this.fetchLastPage(state, formArgs);
                         }
                     )
@@ -247,7 +262,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                                 page: pageNum,
                                 isLast: isLastPage,
                                 newNumOfItems: size,
-                                data: data
+                                data
                             }
                         });
                     },
@@ -272,10 +287,10 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler(
-            'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+        this.addActionHandler<Actions.WordlistIntermediateBgCalcUpdated>(
+            ActionName.WordlistIntermediateBgCalcUpdated,
             (state, action) => {
-                state.bgCalcStatus = action.payload['status'];
+                state.bgCalcStatus = action.payload.status;
                 if (action.error) {
                     state.isError = true;
                 }
@@ -294,7 +309,10 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         )
     }
 
-    private fetchLastPage(state:WordlistResultModelState, formSubmitArgs:MultiDict):Observable<[Array<IndexedResultItem>, number, boolean, number]> {
+    private fetchLastPage(
+        state:WordlistResultModelState,
+        formSubmitArgs:MultiDict
+    ):Observable<[Array<IndexedResultItem>, number, boolean, number]> {
         return (() => {
             if (state.numItems === null) {
                 return this.layoutModel.ajax$<WlSizeAjaxResponse>(
@@ -313,7 +331,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             map(
                 data => tuple(
                     data.size,
-                    ~~Math.ceil(state.numItems / state.pageSize)
+                    Math.ceil(state.numItems / state.pageSize)
                 )
             ),
             concatMap(
@@ -334,7 +352,11 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         return `[${wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
     }
 
-    private pageLoad(state:WordlistResultModelState, newPage:number, skipHistory=false):Observable<[Array<IndexedResultItem>, number, boolean]> {
+    private pageLoad(
+        state:WordlistResultModelState,
+        newPage:number,
+        skipHistory=false
+    ):Observable<[Array<IndexedResultItem>, number, boolean]> {
         return this.suspend({}, (action, syncData) => {
             if (action.name === ActionName.WordlistFormSubmitReady) {
                 return null;
@@ -355,7 +377,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     if (!skipHistory) {
                         this.layoutModel.getHistory().pushState(
                             'wordlist/result',
-                            new MultiDict(state.reloadArgs.concat([['wlpage', state.currPage.toString()]])),
+                            new MultiDict(
+                                state.reloadArgs.concat([['wlpage', state.currPage.toString()]])),
                             {
                                 pagination: true,
                                 page: pageNum
@@ -367,7 +390,12 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         );
     }
 
-    private processPageLoad(state:WordlistResultModelState, newPage:number, dispatch:SEDispatcher, skipHistory=false):void {
+    private processPageLoad(
+        state:WordlistResultModelState,
+        newPage:number,
+        dispatch:SEDispatcher,
+        skipHistory=false
+    ):void {
         this.pageLoad(state, newPage, skipHistory).subscribe(
             ([data, pageNum, isLastPage]) => {
                 dispatch<Actions.WordlistPageLoadDone>({
@@ -375,7 +403,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     payload: {
                         page: pageNum,
                         isLast: isLastPage,
-                        data: data
+                        data
                     }
                 });
             },
@@ -389,7 +417,11 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         );
     }
 
-    private loadData(state:WordlistResultModelState, newPage:number, formModelSubmitArgs:MultiDict):Observable<[Array<IndexedResultItem>, number, boolean]> {
+    private loadData(
+        state:WordlistResultModelState,
+        newPage:number,
+        formModelSubmitArgs:MultiDict
+    ):Observable<[Array<IndexedResultItem>, number, boolean]> {
         formModelSubmitArgs.set('wlpage', newPage);
         return this.layoutModel.ajax$<DataAjaxResponse>(
             HTTP.Method.POST,

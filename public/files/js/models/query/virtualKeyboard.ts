@@ -58,7 +58,10 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState> {
             capsOn: false,
             layouts: kbLayouts,
             activeKey: null,
-            currentLayoutIdx: List.findIndex(v => v.name === pageModel.getConf('DefaultVirtKeyboard'), kbLayouts)
+            currentLayoutIdx: List.findIndex(
+                v => v.name === pageModel.getConf('DefaultVirtKeyboard'),
+                kbLayouts
+            )
         });
         this.pageModel = pageModel;
 
@@ -100,7 +103,9 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState> {
             (state, action, dispatch) => {
                 let timeout;
                 const clickSim = () => {
-                    dispatch({name:ActionName.QueryInputUnhitVirtualKeyboardKey});
+                    dispatch<Actions.QueryInputUnhitVirtualKeyboardKey>({
+                        name:ActionName.QueryInputUnhitVirtualKeyboardKey
+                    });
                     window.clearTimeout(timeout);
                 };
                 timeout = window.setTimeout(clickSim, 200);

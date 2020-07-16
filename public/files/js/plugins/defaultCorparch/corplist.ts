@@ -223,13 +223,13 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 this.loadData(this.exportQuery(state), this.exportFilter(state),
                 state.offset, undefined, state.favouritesOnly).subscribe(
                     (data) => {
-                        dispatch({
+                        dispatch<Actions.LoadExpansionDataDone>({
                             name: ActionName.LoadExpansionDataDone,
                             payload: {data}
                         });
                     },
                     (err) => {
-                        dispatch({
+                        dispatch<Actions.LoadExpansionDataDone>({
                             name: ActionName.LoadExpansionDataDone,
                             error: err
                         });

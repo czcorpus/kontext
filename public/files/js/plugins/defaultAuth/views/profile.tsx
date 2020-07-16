@@ -19,11 +19,12 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../../types/common';
-import {UserProfileModel, UserProfileState} from '../profile';
-import { ReactElement } from 'react';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
+
+import { Kontext } from '../../../types/common';
+import { UserProfileModel, UserProfileState } from '../profile';
+import { Actions, ActionName } from '../actions';
 
 export interface UserProfileViews {
     UserProfileView:React.ComponentClass;
@@ -53,7 +54,11 @@ export interface UserProfileViewProps {
 
 }
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, profileModel:UserProfileModel):UserProfileViews {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    profileModel:UserProfileModel
+):UserProfileViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -64,8 +69,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TRCurrPasswdInput = (props:{value:Kontext.FormValue<string>}) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'USER_PROFILE_SET_CURR_PASSWD',
+            dispatcher.dispatch<Actions.SetCurrPassword>({
+                name: ActionName.SetCurrPassword,
                 payload: {
                     value: evt.target.value
                 }
@@ -94,8 +99,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TRNewPasswdInput:UserProfileViews['TRNewPasswdInput'] = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'USER_PROFILE_SET_NEW_PASSWD',
+            dispatcher.dispatch<Actions.SetNewPasswd>({
+                name: ActionName.SetNewPasswd,
                 payload: {
                     value: evt.target.value
                 }
@@ -123,8 +128,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TRNewPasswdInput2:UserProfileViews['TRNewPasswdInput2'] = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'USER_PROFILE_SET_NEW_PASSWD2',
+            dispatcher.dispatch<Actions.SetNewPasswd2>({
+                name: ActionName.SetNewPasswd2,
                 payload: {
                     value: evt.target.value
                 }
@@ -153,9 +158,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }) => {
 
         const handleSubmitClick = (props) => {
-            dispatcher.dispatch({
-                name: 'USER_PROFILE_SUBMIT_NEW_PASSWORD',
-                payload: {}
+            dispatcher.dispatch<Actions.SubmitNewPassword>({
+                name: ActionName.SubmitNewPassword
             });
         };
 
@@ -254,7 +258,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             this.modelSubscription.unsubscribe();
         }
 
-        render():ReactElement<{}> {
+        render() {
             return (
                 <div className="UserProfileView">
                     <form>

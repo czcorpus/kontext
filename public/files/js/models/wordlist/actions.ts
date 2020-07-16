@@ -60,7 +60,8 @@ export enum ActionName {
     WordlistSaveSetIncludeColHeaders = 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS',
     WordlistSaveFormSubmit = 'WORDLIST_SAVE_FORM_SUBMIT',
     WordlistSaveFormSubmitDone = 'WORDLIST_SAVE_FORM_SUBMIT_DONE',
-    WordlistHistoryPopState = 'WORDLIST_HISTORY_POP_STATE'
+    WordlistHistoryPopState = 'WORDLIST_HISTORY_POP_STATE',
+    WordlistIntermediateBgCalcUpdated = 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED'
 }
 
 
@@ -274,5 +275,11 @@ export namespace Actions {
         currPageInput:string;
     }> {
         name:ActionName.WordlistHistoryPopState;
+    }
+
+    export interface WordlistIntermediateBgCalcUpdated extends Action<{
+        status:number;
+    }> {
+        name:ActionName.WordlistIntermediateBgCalcUpdated;
     }
 }

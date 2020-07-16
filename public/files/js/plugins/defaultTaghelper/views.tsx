@@ -19,16 +19,20 @@
  */
 import * as React from 'react';
 import { IActionDispatcher, StatelessModel, BoundWithProps } from 'kombo';
+import { Dict, List, pipe } from 'cnc-tskit';
+
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { TagBuilderBaseState } from './common';
-import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { Actions as QueryActions, ActionName as QueryActionName,
+        QueryFormType } from '../../models/query/actions';
+import { Actions, ActionName } from './actions';
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    deps:{[key:string]:[StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]}) {
+    deps:{[key:string]:[StatelessModel<TagBuilderBaseState>,
+            React.SFC<{}>|React.ComponentClass<{}>]}) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -45,7 +49,8 @@ export function init(
 
     // ------------------------------ <UndoButton /> ----------------------------
 
-    const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
+    const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> =
+    (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button" value="undo"
@@ -65,7 +70,8 @@ export function init(
 
     // ------------------------------ <ResetButton /> ----------------------------
 
-    const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
+    const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> =
+    (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button cancel"
@@ -98,16 +104,16 @@ export function init(
 
         const buttonClick = (evt) => {
             if (evt.target.value === 'reset') {
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_RESET',
+                dispatcher.dispatch<Actions.Reset>({
+                    name: ActionName.Reset,
                     payload: {
                         sourceId: props.sourceId
                     }
                 });
 
             } else if (evt.target.value === 'undo') {
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_UNDO',
+                dispatcher.dispatch<Actions.Undo>({
+                    name: ActionName.Undo,
                     payload: {
                         sourceId: props.sourceId
                     }
@@ -116,8 +122,8 @@ export function init(
             } else if (evt.target.value === 'insert') {
                 if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
                     const query = `"${props.rawPattern}"`;
-                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                        name: ActionName.QueryInputSetQuery,
+                    dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
+                        name: QueryActionName.QueryInputSetQuery,
                         payload: {
                             formType: props.formType,
                             sourceId: props.sourceId,
@@ -129,8 +135,8 @@ export function init(
                     });
 
                 } else {
-                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                        name: ActionName.QueryInputSetQuery,
+                    dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
+                        name: QueryActionName.QueryInputSetQuery,
                         payload: {
                             formType: props.formType,
                             sourceId: props.sourceId,
@@ -141,8 +147,8 @@ export function init(
                         }
                     });
                 }
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_RESET',
+                dispatcher.dispatch<Actions.Reset>({
+                    name: ActionName.Reset,
                     payload: {
                         sourceId: props.sourceId
                     }
@@ -164,7 +170,8 @@ export function init(
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps & {activeView:React.ComponentClass|React.SFC};
+    type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps &
+            {activeView:React.ComponentClass|React.SFC};
 
     class TagBuilder extends React.PureComponent<ActiveTagBuilderProps & TagBuilderBaseState> {
 
@@ -173,8 +180,8 @@ export function init(
         }
 
         componentDidMount() {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_GET_INITIAL_DATA',
+            dispatcher.dispatch<Actions.GetInitialData>({
+                name: ActionName.GetInitialData,
                 payload: {
                     sourceId: this.props.sourceId
                 }
@@ -207,9 +214,12 @@ export function init(
     const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
 
         const handleTabSelection = (value:string) => {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_SET_ACTIVE_TAG',
-                payload: {value: value}
+            dispatcher.dispatch<Actions.SetActiveTag>({
+                name: ActionName.SetActiveTag,
+                payload: {
+                    sourceId: props.sourceId,
+                    value: value
+                }
             });
         };
 
@@ -228,7 +238,8 @@ export function init(
             deps,
             Dict.toEntries(),
             List.map(([key, [model, view]]) => {
-                const TagBuilderBound = BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model);
+                const TagBuilderBound = BoundWithProps<ActiveTagBuilderProps,
+                    TagBuilderBaseState>(TagBuilder, model);
                 return <TagBuilderBound
                             key={key}
                             activeView={view}

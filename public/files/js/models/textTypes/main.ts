@@ -20,14 +20,15 @@
 
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap, map, timestamp } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
 
 import { TextTypes, Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { IPluginApi } from '../../types/plugins';
 import { TextInputAttributeSelection } from './valueSelections';
-import { SelectedTextTypes, importInitialData, InitialData, SelectionFilterMap, IntervalChar } from './common';
+import { SelectedTextTypes, importInitialData, InitialData, SelectionFilterMap,
+    IntervalChar } from './common';
 import { Actions, ActionName } from './actions';
 
 
@@ -105,7 +106,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         super(
             dispatcher,
             {
-                attributes: attributes,
+                attributes,
                 bibLabelAttr: data.bib_attr,
                 bibIdAttr: data.id_attr,
                 selectionHistory: [attributes],
@@ -139,9 +140,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
         this.pluginApi = pluginApi;
-        this.notifySelectionChange = ():void => { // kind of anti-patter but for now we have no other choice
-            dispatcher.dispatch({
-                name: 'TT_SELECTION_CHANGED',
+
+        // kind of anti-patter but for now we have no other choice
+        this.notifySelectionChange = ():void => {
+            dispatcher.dispatch<Actions.SelectionChanged>({
+                name: ActionName.SelectionChanged,
                 payload: {
                     attributes: this._getAttributes(this.state),
                     hasSelectedItems: this.findHasSelectedItems(this.state)
@@ -196,7 +199,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 this.changeState(state => {
                     this.setRangeMode(
                         action.payload.attrName,
-                        !this.getRangeModes()[action.payload.attrName]
+                        !state.rangeModeStatus[action.payload.attrName]
                     );
                 });
             }
@@ -445,7 +448,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         checkedItems[k].forEach(checkedVal => {
                             attr = (<TextInputAttributeSelection>attr).addValue({
                                 ident: checkedVal,
-                                value: checkedVal in bibMapping ? bibMapping[checkedVal] : checkedVal,
+                                value: checkedVal in bibMapping ?
+                                    bibMapping[checkedVal] : checkedVal,
                                 selected: true,
                                 locked: false,
                                 numGrouped: 0
@@ -518,8 +522,13 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
     }
 
-    private setTextInputAttrValue(state:TextTypesModelState, attrName:string, ident:string, label:string,
-            append:boolean):void {
+    private setTextInputAttrValue(
+        state:TextTypesModelState,
+        attrName:string,
+        ident:string,
+        label:string,
+        append:boolean
+    ):void {
         const attr:TextTypes.AttributeSelection = this.getTextInputAttribute(state, attrName);
         const idx = state.attributes.indexOf(attr);
         const newVal:TextTypes.AttributeValue = {
@@ -556,8 +565,14 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     }
 
     // TODO move notify... out of the method
-    private applyRange(state:TextTypesModelState, attrName:string, fromVal:number, toVal: number, strictInterval:boolean,
-            keepCurrent:boolean):void {
+    private applyRange(
+        state:TextTypesModelState,
+        attrName:string,
+        fromVal:number,
+        toVal: number,
+        strictInterval:boolean,
+        keepCurrent:boolean
+    ):void {
         this._applyRange(state, attrName, fromVal, toVal, strictInterval, keepCurrent)
             .subscribe(
                 (newSelection:TextTypes.AttributeSelection) => {
@@ -600,7 +615,10 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         return state.attributes.find((val) => val.name === ident);
     }
 
-    getTextInputAttribute(state:TextTypesModelState, ident:string):TextTypes.ITextInputAttributeSelection {
+    getTextInputAttribute(
+        state:TextTypesModelState,
+        ident:string
+    ):TextTypes.ITextInputAttributeSelection {
         const ans = state.attributes.find(val => val.name === ident);
         if (ans instanceof TextInputAttributeSelection) {
             return ans;
@@ -608,7 +626,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         return undefined;
     }
 
-    replaceAttribute(state:TextTypesModelState, ident:string, val:TextTypes.AttributeSelection):void {
+    replaceAttribute(
+        state:TextTypesModelState,
+        ident:string,
+        val:TextTypes.AttributeSelection
+    ):void {
         const attr = this.getAttribute(state, ident);
         const idx = state.attributes.indexOf(attr);
         if (idx > -1) {
@@ -692,7 +714,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
     }
 
-    filter(state:TextTypesModelState, attrName:string, fn:(v:TextTypes.AttributeValue)=>boolean):void {
+    filter(
+        state:TextTypesModelState,
+        attrName:string,
+        fn:(v:TextTypes.AttributeValue)=>boolean
+    ):void {
         const attr = this.getAttribute(state, attrName);
         const idx = state.attributes.indexOf(attr);
         if (idx > -1) {
@@ -732,7 +758,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
      * This applies only for TextInputAttributeSelection boxes. In other
      * cases the function has no effect.
      */
-    setAutoComplete(state:TextTypesModelState, attrName:string, values:Array<TextTypes.AutoCompleteItem>):void {
+    setAutoComplete(
+        state:TextTypesModelState,
+        attrName:string,
+        values:Array<TextTypes.AutoCompleteItem>
+    ):void {
         const attr = this.getTextInputAttribute(state, attrName);
         if (attr) {
             const idx = state.attributes.indexOf(attr);
@@ -803,8 +833,14 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         return ans;
     }
 
-    private checkIntervalRange(state:TextTypesModelState, attribName:string, fromVal:number, toVal:number,
-        strictMode:boolean, keepCurrent:boolean):void {
+    private checkIntervalRange(
+        state:TextTypesModelState,
+        attribName:string,
+        fromVal:number,
+        toVal:number,
+        strictMode:boolean,
+        keepCurrent:boolean
+    ):void {
 
         function isEmpty(v) {
             return isNaN(v) || v === null || v === undefined;
@@ -860,11 +896,17 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         return !this.getAttribute(state, attrName).containsFullList();
     }
 
-    private loadAndReplaceRawInput(state:TextTypesModelState, attribName:string, from:number, to:number):Observable<Kontext.GeneralProps> {
+    private loadAndReplaceRawInput(
+        state:TextTypesModelState,
+        attribName:string,
+        from:number,
+        to:number
+    ):Observable<Kontext.GeneralProps> {
         let args:{[key:string]:any} = {};
-        args[attribName] = {from: from, to: to};
+        args[attribName] = {from, to};
         return this.loadData(args).pipe(
-            tap((data:{attr_values:{[key:string]:any}}) => { // TODO data type relies on liveattrs specific returned data
+            // TODO data type relies on liveattrs specific returned data
+            tap((data:{attr_values:{[key:string]:any}}) => {
                 this.setValues(state, attribName,
                         data.attr_values[attribName].map(item=>item[0]));
             }),
@@ -876,7 +918,10 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
      * @param attribArgs Custom attributes overwriting the implicit ones plug-in collects itself
      * @param alignedCorpnames Optional list of aligned corpora
      */
-    private loadData(attribArgs:{[key:string]:any}, alignedCorpnames?:Array<string>):Observable<any> { // TODO type
+    private loadData(
+        attribArgs:{[key:string]:any},
+        alignedCorpnames?:Array<string>
+    ):Observable<any> { // TODO type
         const requestURL:string = this.pluginApi.createActionUrl('filter_attributes');
         const args = {corpname: this.pluginApi.getCorpusIdent().id};
 
@@ -897,8 +942,14 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         );
     }
 
-    _applyRange(state:TextTypesModelState, attrName:string, fromVal:number, toVal:number, strictInterval:boolean,
-        keepCurrent:boolean):Observable<TextTypes.AttributeSelection> {
+    _applyRange(
+        state:TextTypesModelState,
+        attrName:string,
+        fromVal:number,
+        toVal:number,
+        strictInterval:boolean,
+        keepCurrent:boolean
+    ):Observable<TextTypes.AttributeSelection> {
 
         if (isNaN(fromVal) && isNaN(toVal)) {
             this.pluginApi.showMessage('warning',
@@ -912,13 +963,17 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ).pipe(
                 map(() => this.getAttribute(state, attrName)),
                 tap(() => {
-                    this.checkIntervalRange(state, attrName, fromVal, toVal, strictInterval, keepCurrent);
+                    this.checkIntervalRange(
+                        state, attrName, fromVal, toVal, strictInterval, keepCurrent);
                 }),
                 map(currSelection => tuple(currSelection, this.getAttribute(state, attrName))),
                 tap(([currSelection, updatedSelection]) => {
-                    if (currSelection.getNumOfSelectedItems() === updatedSelection.getNumOfSelectedItems()) {
-                        this.pluginApi.showMessage('warning',
-                                this.pluginApi.translate('ucnkLA__nothing_selected'));
+                    if (currSelection.getNumOfSelectedItems() ===
+                            updatedSelection.getNumOfSelectedItems()) {
+                        this.pluginApi.showMessage(
+                            'warning',
+                            this.pluginApi.translate('ucnkLA__nothing_selected')
+                        );
 
                     } else {
                         state.rangeModeStatus[attrName] = false;
@@ -941,7 +996,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         return pipe(
             state.attributes,
             List.filter(
-                (item:TextTypes.AttributeSelection) => item.hasUserChanges() && (!item.isLocked() || includeLocked)
+                (item:TextTypes.AttributeSelection) => item.hasUserChanges() &&
+                    (!item.isLocked() || includeLocked)
             ),
             List.map((item:TextTypes.AttributeSelection)=>item.name)
         );
@@ -951,7 +1007,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         return this.state.metaInfo;
     }
 
-    setExtendedInfo(state:TextTypesModelState, attrName:string, ident:string, data:{[key:string]:string|number}):void {
+    setExtendedInfo(
+        state:TextTypesModelState,
+        attrName:string,
+        ident:string,
+        data:{[key:string]:string|number}
+    ):void {
         const attr = this.getAttribute(state, attrName);
         if (attrName) {
             const attrIdx = this.state.attributes.indexOf(attr);
@@ -974,23 +1035,4 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.setRangeMode(attrName, rangeIsOn);
     }
 
-    getRangeModes():{[key:string]:boolean} {
-        return this.getRangeModes();
-    }
-
-    isBusy():boolean {
-        return this.state.isBusy;
-    }
-
-    getMiminimizedBoxes():{[key:string]:boolean} {
-        return this.state.minimizedBoxes;
-    }
-
-    getBibIdAttr():string {
-        return this.state.bibIdAttr;
-    }
-
-    getBibLabelAttr():string {
-        return this.state.bibLabelAttr;
-    }
 }
