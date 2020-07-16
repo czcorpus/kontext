@@ -71,8 +71,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryStorageSetQueryType>({
-                name: ActionName.QueryStorageSetQueryType,
+            dispatcher.dispatch<Actions.StorageSetQueryType>({
+                name: ActionName.StorageSetQueryType,
                 payload: {
                     value: evt.target.value
                 }
@@ -114,8 +114,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.QueryStorageSetCurrentCorpusOnly>({
-                name: ActionName.QueryStorageSetCurrentCorpusOnly,
+            dispatcher.dispatch<Actions.StorageSetCurrentCorpusOnly>({
+                name: ActionName.StorageSetCurrentCorpusOnly,
                 payload: {
                     value: !props.value
                 }
@@ -132,8 +132,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
         const handleChange = () => {
-            dispatcher.dispatch<Actions.QueryStorageSetArchivedOnly>({
-                name: ActionName.QueryStorageSetArchivedOnly,
+            dispatcher.dispatch<Actions.StorageSetArchivedOnly>({
+                name: ActionName.StorageSetArchivedOnly,
                 payload: {
                     value: !props.value
                 }
@@ -284,8 +284,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleEditClick = (evt) => {
-            dispatcher.dispatch<Actions.QueryStorageSetEditingQueryId>({
-                name: ActionName.QueryStorageSetEditingQueryId,
+            dispatcher.dispatch<Actions.StorageSetEditingQueryId>({
+                name: ActionName.StorageSetEditingQueryId,
                 payload: {
                     value: props.queryId
                 }
@@ -293,8 +293,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleDoNotSaveClick = () => {
-            dispatcher.dispatch<Actions.QueryStorageDoNotArchive>({
-                name: ActionName.QueryStorageDoNotArchive,
+            dispatcher.dispatch<Actions.StorageDoNotArchive>({
+                name: ActionName.StorageDoNotArchive,
                 payload: {
                     queryId: props.queryId
                 }
@@ -337,8 +337,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryStorageEditorSetName>({
-                name: ActionName.QueryStorageEditorSetName,
+            dispatcher.dispatch<Actions.StorageEditorSetName>({
+                name: ActionName.StorageEditorSetName,
                 payload: {
                     value: evt.target.value
                 }
@@ -346,14 +346,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch<Actions.QueryStorageEditorClickSave>({
-                name: ActionName.QueryStorageEditorClickSave
+            dispatcher.dispatch<Actions.StorageEditorClickSave>({
+                name: ActionName.StorageEditorClickSave
             });
         };
 
         const handleCloseClick = () => {
-            dispatcher.dispatch<Actions.QueryStorageClearEditingQueryID>({
-                name: ActionName.QueryStorageClearEditingQueryID
+            dispatcher.dispatch<Actions.StorageClearEditingQueryID>({
+                name: ActionName.StorageClearEditingQueryID
             });
         };
 
@@ -401,8 +401,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleFormClick = () => {
-            dispatcher.dispatch<Actions.QueryStorageOpenQueryForm>({
-                name: ActionName.QueryStorageOpenQueryForm,
+            dispatcher.dispatch<Actions.StorageOpenQueryForm>({
+                name: ActionName.StorageOpenQueryForm,
                 payload: {
                     idx: props.data.idx
                 }
@@ -458,8 +458,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.QueryStorageLoadMore>({
-                name: ActionName.QueryStorageLoadMore
+            dispatcher.dispatch<Actions.StorageLoadMore>({
+                name: ActionName.StorageLoadMore
             });
         };
 

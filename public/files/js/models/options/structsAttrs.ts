@@ -33,22 +33,33 @@ import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '..
  * Transform server-side two-value-encoded view mode into
  * client-side format represented by a single value
  */
-export const transformVmode = (vmode:ViewOptions.PosAttrViewMode, attrAllPos:ViewOptions.PosAttrViewScope):ViewOptions.AttrViewMode => {
-    if (vmode === ViewOptions.PosAttrViewMode.MULTILINE && attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
+export const transformVmode = (
+    vmode:ViewOptions.PosAttrViewMode,
+    attrAllPos:ViewOptions.PosAttrViewScope
+):ViewOptions.AttrViewMode => {
+    if (vmode === ViewOptions.PosAttrViewMode.MULTILINE &&
+            attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
         return ViewOptions.AttrViewMode.VISIBLE_MULTILINE;
 
-    } else if (vmode === ViewOptions.PosAttrViewMode.VISIBLE && attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
+    } else if (vmode === ViewOptions.PosAttrViewMode.VISIBLE &&
+            attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
         return ViewOptions.AttrViewMode.VISIBLE_ALL;
 
-    } else if (vmode === ViewOptions.PosAttrViewMode.MIXED && attrAllPos === ViewOptions.PosAttrViewScope.ALL ||
-            vmode === ViewOptions.PosAttrViewMode.VISIBLE && attrAllPos === ViewOptions.PosAttrViewScope.KWIC /* legacy compatibility variant */) {
+    } else if (vmode === ViewOptions.PosAttrViewMode.MIXED &&
+            attrAllPos === ViewOptions.PosAttrViewScope.ALL ||
+            vmode === ViewOptions.PosAttrViewMode.VISIBLE &&
+            attrAllPos === ViewOptions.PosAttrViewScope.KWIC /* legacy compatibility variant */) {
         return ViewOptions.AttrViewMode.VISIBLE_KWIC;
 
-    } else if (vmode === ViewOptions.PosAttrViewMode.MOUSEOVER && attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
+    } else if (vmode === ViewOptions.PosAttrViewMode.MOUSEOVER &&
+            attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
         return ViewOptions.AttrViewMode.MOUSEOVER;
 
     } else {
-        console.warn(`Fixing incorrect internal attribute viewing mode configuration: [${vmode}, ${attrAllPos}].`);
+        console.warn(
+            'Fixing incorrect internal attribute viewing mode configuration: ' +
+            `[${vmode}, ${attrAllPos}].`
+        );
         return ViewOptions.AttrViewMode.VISIBLE_KWIC;
     }
 }
@@ -86,8 +97,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
 
     private readonly layoutModel:PageModel;
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
-            userIsAnonymous:boolean) {
+    constructor(
+        dispatcher:IFullActionControl,
+        layoutModel:PageModel,
+        corpusIdent:Kontext.FullCorpusIdent,
+        userIsAnonymous:boolean
+    ) {
         super(
             dispatcher,
             {
@@ -104,13 +119,15 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 hasLoadedData: false,
                 attrVmode: ViewOptions.PosAttrViewMode.MIXED,
                 attrAllpos: ViewOptions.PosAttrViewScope.ALL,
-                extendedVmode: transformVmode(ViewOptions.PosAttrViewMode.MIXED, ViewOptions.PosAttrViewScope.ALL),
+                extendedVmode: transformVmode(
+                    ViewOptions.PosAttrViewMode.MIXED, ViewOptions.PosAttrViewScope.ALL),
                 isBusy: false,
-                userIsAnonymous: userIsAnonymous,
-                corpusIdent: corpusIdent,
+                userIsAnonymous,
+                corpusIdent,
                 corpusUsesRTLText: layoutModel.getConf<boolean>('TextDirectionRTL'),
                 basePosAttr: layoutModel.getConf<string>('baseAttr'),
-                baseViewAttr: layoutModel.getConf<string>('baseViewAttr') || layoutModel.getConf<string>('baseAttr')
+                baseViewAttr: layoutModel.getConf<string>('baseViewAttr') ||
+                    layoutModel.getConf<string>('baseAttr')
             }
         );
         this.layoutModel = layoutModel;
@@ -131,7 +148,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                         )
                     ).subscribe(
                         (data:ViewOptions.LoadOptionsResponse) => {
-                            dispatch({
+                            dispatch<Actions.LoadDataDone>({
                                 name: ActionName.LoadDataDone,
                                 payload: {
                                     data: {
@@ -200,7 +217,10 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             (state, action, dispatch) => {
                 const attr = state.attrList[action.payload.idx];
                 if (attr.selected && attr.n === state.baseViewAttr) {
-                    this.layoutModel.showMessage('error', this.layoutModel.translate('options__cannot_remove_attribute_set_as_main'));
+                    this.layoutModel.showMessage(
+                        'error',
+                        this.layoutModel.translate('options__cannot_remove_attribute_set_as_main')
+                    );
                 }
             }
         );
@@ -209,7 +229,11 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             ActionName.ToggleAllAttributes,
             (state, action) => {
                 this.toggleAllAttributes(state);
-                if (!pipe(state.attrList, List.slice(1, state.attrList.length), List.find(v => v.selected))) {
+                if (!pipe(
+                    state.attrList,
+                    List.slice(1, state.attrList.length),
+                    List.find(v => v.selected))
+                ) {
                     state.baseViewAttr = state.attrList[0].n;
                 }
             }
@@ -218,7 +242,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         this.addActionHandler<Actions.ToggleStructure>(
             ActionName.ToggleStructure,
             (state, action) => {
-                this.toggleStructure(state, action.payload.structIdent, action.payload.structAttrIdent);
+                this.toggleStructure(
+                    state, action.payload.structIdent, action.payload.structAttrIdent);
             }
         );
 
@@ -286,7 +311,10 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         );
     }
 
-    private setAttrVisibilityMode(state:CorpusViewOptionsModelState, value:ViewOptions.AttrViewMode):void {
+    private setAttrVisibilityMode(
+        state:CorpusViewOptionsModelState,
+        value:ViewOptions.AttrViewMode
+    ):void {
         switch (value) {
             case ViewOptions.AttrViewMode.VISIBLE_MULTILINE:
                 state.attrVmode = ViewOptions.PosAttrViewMode.MULTILINE;
@@ -377,7 +405,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             tap(
                 () => {
                     if (state.attrAllpos === 'all') {
-                        this.layoutModel.replaceConcArg('ctxattrs', [formArgs['setattrs'].join(',')]);
+                        this.layoutModel.replaceConcArg(
+                            'ctxattrs', [formArgs['setattrs'].join(',')]);
 
                     } else if (state.attrAllpos === 'kw') {
                         this.layoutModel.replaceConcArg('ctxattrs',
@@ -403,7 +432,10 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                         attrVmode: state.attrVmode
                     }
                 });
-                this.layoutModel.showMessage('info', this.layoutModel.translate('options__options_saved'));
+                this.layoutModel.showMessage(
+                    'info',
+                    this.layoutModel.translate('options__options_saved')
+                );
             },
             (err) => {
                 dispatch({
@@ -453,7 +485,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
     private toggleAllStructureAttrs(state:CorpusViewOptionsModelState, structIdent:string):void {
-        const struct = state.structList.find(item => item.n == structIdent);
+        const struct = state.structList.find(item => item.n === structIdent);
         const structIdx = state.structList.indexOf(struct);
 
         struct.selectAllAttrs = !struct.selectAllAttrs;
@@ -472,7 +504,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
     private toggleAllReferenceAttrs(state:CorpusViewOptionsModelState, categoryIdent:string):void {
-        let reference = state.refList.find(item => item.n===categoryIdent);
+        let reference = state.refList.find(item => item.n === categoryIdent);
         const index = state.refList.indexOf(reference);
         reference.selectAllAttrs = !reference.selectAllAttrs;
         reference.selected = reference.selectAllAttrs;
@@ -514,7 +546,11 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         );
     }
 
-    private toggleReference(state:CorpusViewOptionsModelState, refIdent:string, refAttrIdent:string):void {
+    private toggleReference(
+        state:CorpusViewOptionsModelState,
+        refIdent:string,
+        refAttrIdent:string
+    ):void {
         const refAttrs = state.refAttrs[refIdent];
         const reference = List.find(value => value.n === refIdent, state.refList);
         const index = List.findIndex(v => v.n === reference.n, state.refList);
@@ -543,8 +579,14 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     item,
                 refAttrs
             );
-            reference.selected = List.some(value => value.selected, state.refAttrs[refIdent]);
-            reference.selectAllAttrs = List.every(value => value.selected, state.refAttrs[refIdent]);
+            reference.selected = List.some(
+                value => value.selected,
+                state.refAttrs[refIdent]
+            );
+            reference.selectAllAttrs = List.every(
+                value => value.selected,
+                state.refAttrs[refIdent]
+            );
         }
         state.refList[index] = reference;
         state.selectAllRef = List.every(item => item.selectAllAttrs, state.refList);
@@ -567,8 +609,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         return List.find(item => item.selected, state.structAttrs[structIdent]) !== undefined;
     }
 
-    private hasSelectedAllStructAttrs(state:CorpusViewOptionsModelState, structIdent:string):boolean {
-        return Dict.hasKey(structIdent, state.structAttrs) && List.every(item => item.selected, state.structAttrs[structIdent]);
+    private hasSelectedAllStructAttrs(
+        state:CorpusViewOptionsModelState,
+        structIdent:string
+    ):boolean {
+        return Dict.hasKey(structIdent, state.structAttrs) &&
+            List.every(item => item.selected, state.structAttrs[structIdent]);
     }
 
     private hasSelectedAllStructs(state:CorpusViewOptionsModelState):boolean {
@@ -600,8 +646,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
      * 3) switching on a struct does not affect structattrs
      * 4) switching off a struct turns off all its child structattrs
      */
-    private toggleStructure(state:CorpusViewOptionsModelState, structIdent:string, structAttrIdent:string):void {
-        const struct = state.structList.find(item => item.n == structIdent);
+    private toggleStructure(
+        state:CorpusViewOptionsModelState,
+        structIdent:string,
+        structAttrIdent:string
+    ):void {
+        const struct = state.structList.find(item => item.n === structIdent);
 
         if (!struct) {
             throw new Error('structure not found: ' + structIdent);
@@ -668,7 +718,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     List.map(
                         structAttr => ({
                             n: structAttr,
-                            selected: data.CurrStructAttrs.indexOf(key + '.' + structAttr) > -1 ? true : false
+                            selected: data.CurrStructAttrs.indexOf(key + '.' + structAttr) > -1
                         }),
                         data.StructAttrs[key]
                     )
@@ -725,7 +775,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.fixedAttr = data.FixedAttr;
         state.attrVmode = data.AttrVmode;
         state.extendedVmode = transformVmode(state.attrVmode, state.attrAllpos);
-        state.attrAllpos = state.attrVmode !== 'mouseover' ? data.AttrAllpos : ViewOptions.PosAttrViewScope.ALL;
+        state.attrAllpos = state.attrVmode !== 'mouseover' ?
+            data.AttrAllpos : ViewOptions.PosAttrViewScope.ALL;
         state.hasLoadedData = true;
         state.showConcToolbar = data.ShowConcToolbar;
         state.baseViewAttr = data.BaseViewAttr;

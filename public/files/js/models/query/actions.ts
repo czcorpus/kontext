@@ -101,16 +101,17 @@ export enum ActionName {
     GetConcArchivedStatusDone = 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
     MakeConcordancePermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
     MakeConcordancePermanentDone = 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
-    QueryStorageSetQueryType = 'QUERY_STORAGE_SET_QUERY_TYPE',
-    QueryStorageSetCurrentCorpusOnly = 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
-    QueryStorageSetArchivedOnly = 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
-    QueryStorageSetEditingQueryId = 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
-    QueryStorageDoNotArchive = 'QUERY_STORAGE_DO_NOT_ARCHIVE',
-    QueryStorageEditorSetName = 'QUERY_STORAGE_EDITOR_SET_NAME',
-    QueryStorageEditorClickSave = 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
-    QueryStorageClearEditingQueryID = 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
-    QueryStorageOpenQueryForm = 'QUERY_STORAGE_OPEN_QUERY_FORM',
-    QueryStorageLoadMore = 'QUERY_STORAGE_LOAD_MORE',
+    StorageSetQueryType = 'QUERY_STORAGE_SET_QUERY_TYPE',
+    StorageSetCurrentCorpusOnly = 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
+    StorageSetArchivedOnly = 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
+    StorageSetEditingQueryId = 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
+    StorageDoNotArchive = 'QUERY_STORAGE_DO_NOT_ARCHIVE',
+    StorageEditorSetName = 'QUERY_STORAGE_EDITOR_SET_NAME',
+    StorageEditorClickSave = 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
+    StorageClearEditingQueryID = 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
+    StorageOpenQueryForm = 'QUERY_STORAGE_OPEN_QUERY_FORM',
+    StorageLoadHistory = 'QUERY_STORAGE_LOAD_HISTORY',
+    StorageLoadMore = 'QUERY_STORAGE_LOAD_MORE',
     QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN',
 }
 
@@ -607,61 +608,66 @@ export namespace Actions {
         name:ActionName.MakeConcordancePermanentDone
     }
 
-    export interface QueryStorageSetQueryType extends Action<{
+    export interface StorageSetQueryType extends Action<{
         value:string;
     }> {
-        name:ActionName.QueryStorageSetQueryType;
+        name:ActionName.StorageSetQueryType;
     }
 
-    export interface QueryStorageSetCurrentCorpusOnly extends Action<{
+    export interface StorageSetCurrentCorpusOnly extends Action<{
         value:boolean;
     }> {
-        name:ActionName.QueryStorageSetCurrentCorpusOnly;
+        name:ActionName.StorageSetCurrentCorpusOnly;
     }
 
-    export interface QueryStorageSetArchivedOnly extends Action<{
+    export interface StorageSetArchivedOnly extends Action<{
         value:boolean;
     }> {
-        name:ActionName.QueryStorageSetArchivedOnly;
+        name:ActionName.StorageSetArchivedOnly;
     }
 
-    export interface QueryStorageSetEditingQueryId extends Action<{
+    export interface StorageSetEditingQueryId extends Action<{
         value:string;
     }> {
-        name:ActionName.QueryStorageSetEditingQueryId;
+        name:ActionName.StorageSetEditingQueryId;
     }
 
-    export interface QueryStorageDoNotArchive extends Action<{
+    export interface StorageDoNotArchive extends Action<{
         queryId:string;
     }> {
-        name:ActionName.QueryStorageDoNotArchive;
+        name:ActionName.StorageDoNotArchive;
     }
 
-    export interface QueryStorageEditorSetName extends Action<{
+    export interface StorageEditorSetName extends Action<{
         value:string;
     }> {
-        name:ActionName.QueryStorageEditorSetName;
+        name:ActionName.StorageEditorSetName;
     }
 
-    export interface QueryStorageEditorClickSave extends Action<{
+    export interface StorageEditorClickSave extends Action<{
     }> {
-        name:ActionName.QueryStorageEditorClickSave;
+        name:ActionName.StorageEditorClickSave;
     }
 
-    export interface QueryStorageClearEditingQueryID extends Action<{
+    export interface StorageClearEditingQueryID extends Action<{
     }> {
-        name:ActionName.QueryStorageClearEditingQueryID;
+        name:ActionName.StorageClearEditingQueryID;
     }
 
-    export interface QueryStorageOpenQueryForm extends Action<{
+    export interface StorageOpenQueryForm extends Action<{
         idx:number;
     }> {
-        name:ActionName.QueryStorageOpenQueryForm;
+        name:ActionName.StorageOpenQueryForm;
     }
 
-    export interface QueryStorageLoadMore extends Action<{
+    export interface StorageLoadHistory extends Action<{
     }> {
-        name:ActionName.QueryStorageLoadMore;
+        name:ActionName.StorageLoadHistory;
+    }
+
+    export interface StorageLoadMore extends Action<{
+    }> {
+        name:ActionName.StorageLoadMore;
     }
 
     /**

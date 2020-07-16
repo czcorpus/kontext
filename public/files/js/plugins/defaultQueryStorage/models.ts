@@ -67,25 +67,33 @@ export interface QueryStorageModelState {
     currentItem:number;
 }
 
-export class QueryStorageModel extends StatefulModel<QueryStorageModelState> implements PluginInterfaces.QueryStorage.IModel {
+export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
+        implements PluginInterfaces.QueryStorage.IModel {
 
     private pluginApi:IPluginApi;
 
-    constructor(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number, initialData:Array<Kontext.QueryHistoryItem>) {
+    constructor(
+        pluginApi:IPluginApi,
+        offset:number,
+        limit:number,
+        pageSize:number,
+        initialData:Array<Kontext.QueryHistoryItem>
+    ) {
         super(
             pluginApi.dispatcher(),
             {
                 data: initialData,
                 queryType: '',
                 currentCorpusOnly: false,
-                offset: offset,
-                limit: limit,
-                pageSize: pageSize,
+                offset,
+                limit,
+                pageSize,
                 isBusy: false,
                 hasMoreItems: true, // TODO this should be based on initial data (n+1 items)
                 archivedOnly: false,
                 editingQueryId: null,
-                editingQueryName: null, // null is ok here, a value is attached once the editor is opened
+                // null is ok here, a value is attached once the editor is opened
+                editingQueryName: null,
                 currentItem: 0,
             }
         );
@@ -107,8 +115,8 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState> imp
             }
         );
 
-        this.addActionHandler<QueryActions.StorageSelectQueryType>(
-            QueryActionName.StorageSelectQueryType,
+        this.addActionHandler<QueryActions.StorageSetQueryType>(
+            QueryActionName.StorageSetQueryType,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -169,8 +177,8 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState> imp
             }
         );
 
-        this.addActionHandler<QueryActions.StorageClearEditingQueryId>(
-            QueryActionName.StorageClearEditingQueryId,
+        this.addActionHandler<QueryActions.StorageClearEditingQueryID>(
+            QueryActionName.StorageClearEditingQueryID,
             action => {
                 this.changeState(state => {
                     state.editingQueryId = null;
@@ -209,7 +217,11 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState> imp
 
                 } else {
                     this.changeState(state => {state.isBusy = true});
-                    this.saveItem(this.state.editingQueryId, this.state.editingQueryName).subscribe(
+                    this.saveItem(
+                        this.state.editingQueryId,
+                        this.state.editingQueryName
+
+                    ).subscribe(
                         (msg) => {
                             this.changeState(state => {state.isBusy = false});
                             this.pluginApi.showMessage('info', msg);
