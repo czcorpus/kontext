@@ -48,6 +48,7 @@ import { Actions as MainMenuActions, ActionName as MainMenuActionName }
     from '../models/mainMenu/actions';
 import { Actions as ATActions, ActionName as ATActionName } from '../models/asyncTask/actions';
 import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
+import { Actions, ActionName } from '../models/common/actions';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
@@ -302,15 +303,18 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     dispatchServerMessages() {
-        (this.getConf<Array<[string, string]>>('notifications') || []).forEach((msg) => {
-            this.dispatcher.dispatch({
-                name: 'MESSAGE_ADD',
-                payload: {
-                    messageType: msg[0],
-                    messageText: msg[1]
-                }
-            });
-        });
+        List.forEach(
+            ([messageType, messageText]) => {
+                this.dispatcher.dispatch<Actions.MessageAdd>({
+                    name: ActionName.MessageAdd,
+                    payload: {
+                        messageType,
+                        messageText
+                    }
+                });
+            },
+            this.getConf<Array<[Kontext.UserMessageTypes, string]>>('notifications') || []
+        )
     }
 
     /**
@@ -393,8 +397,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         } else {
             outMsg = `${message}`;
         }
-        this.dispatcher.dispatch({
-            name: 'MESSAGE_ADD',
+        this.dispatcher.dispatch<Actions.MessageAdd>({
+            name: ActionName.MessageAdd,
             payload: {
                 messageType: msgType,
                 messageText: outMsg

@@ -674,10 +674,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     }> = (props) => {
 
-
-        // hasExtendedInfo: textTypesModel.getBibIdAttr() && textTypesModel.getBibLabelAttr() === this.props.attrObj.name,
-        //                 metaInfo: textTypesModel.getAttrSummary()[this.props.attrObj.name]
-
         const renderModeSwitch = () => (
             <select className="select-mode" onChange={intervalModeSwitchHandler}
                     value={props.rangeIsOn ? 'r' : 'i'}>

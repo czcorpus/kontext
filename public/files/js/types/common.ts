@@ -98,7 +98,7 @@ export namespace Kontext {
 
     // ----------------
 
-    export type UserMessageTypes = 'info'|'warning'|'error'|'mail';
+    export type UserMessageTypes = 'info'|'warning'|'error'|'mail'|'plain';
 
     //
 
