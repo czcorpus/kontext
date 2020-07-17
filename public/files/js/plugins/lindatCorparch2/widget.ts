@@ -30,6 +30,7 @@ import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as CommonActions, ActionName as CommonActionName } from '../../models/common/actions';
+import { ICorpusSwitchSerializable } from '../../models/common/corpusSwitch';
 
 /**
  *
@@ -123,6 +124,7 @@ export interface CorplistWidgetModelState {
     activeTab:number;
     activeListItem:[number, number];
     corpusIdent:Kontext.FullCorpusIdent;
+    alignedCorpora:Array<string>;
     dataFav:Array<FavListItem>;
     dataFeat:Array<common.CorplistItem>;
     isBusy:boolean;
@@ -138,6 +140,9 @@ export interface CorplistWidgetModelState {
     availableSubcorpora:Array<Kontext.SubcorpListItem>;
 }
 
+export interface CorplistWidgetModelCorpusSwitchPreserve {
+    dataFav:Array<FavListItem>;
+}
 
 export interface CorplistWidgetModelArgs {
     dispatcher:IActionDispatcher;
@@ -155,7 +160,8 @@ export interface CorplistWidgetModelArgs {
 /**
  *
  */
-export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState> {
+export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
+        implements ICorpusSwitchSerializable<CorplistWidgetModelState, CorplistWidgetModelCorpusSwitchPreserve> {
 
     private pluginApi:IPluginApi;
 
@@ -179,6 +185,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             activeTab: 0,
             activeListItem: [null, null],
             corpusIdent: corpusIdent,
+            alignedCorpora: [],
             anonymousUser: anonymousUser,
             dataFav: dataFavImp,
             dataFeat: dataFeat,
@@ -427,7 +434,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     state.dataFav = importServerFavitems(action.payload.data);
                     state.currFavitemId = findCurrFavitemId(
                         state.dataFav,
-                        this.getFullCorpusSelection()
+                        this.getFullCorpusSelection(state)
                     );
                 }
             }
@@ -517,7 +524,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 }
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,
-                    this.getFullCorpusSelection()
+                    this.getFullCorpusSelection(state)
                 );
             }
         );
@@ -527,7 +534,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             (state, action) => {
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,
-                    this.getFullCorpusSelection()
+                    this.getFullCorpusSelection(state)
                 );
             }
         );
@@ -537,19 +544,34 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             (state, action) => {
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,
-                    this.getFullCorpusSelection()
+                    this.getFullCorpusSelection(state)
                 );
+            }
+        );
+
+        this.addActionHandler<CommonActions.SwitchCorpus>(
+            CommonActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<CommonActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
+                    name: CommonActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: this.serialize(state)
+                    }
+                });
             }
         );
 
         this.addActionHandler<CommonActions.CorpusSwitchModelRestore>(
             CommonActionName.CorpusSwitchModelRestore,
             (state, action) => {
-                if (action.payload['key'] === this.getRegistrationId()) {
-                    state.dataFav = List.filter(v => v.trashTTL === null, action.payload.data.dataFav);
+                const storedData = action.payload.data[this.getRegistrationId()];
+                if (storedData) {
+                    state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
                     state.currFavitemId = findCurrFavitemId(
                         state.dataFav,
-                        this.getFullCorpusSelection()
+                        this.getFullCorpusSelection(state)
                     );
                 }
             }
@@ -616,24 +638,38 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     }
 
     getRegistrationId():string {
-        return 'default-corparch-widget';
+        return 'lindat-corparch-widget-2';
+    }
+
+    serialize(state:CorplistWidgetModelState):CorplistWidgetModelCorpusSwitchPreserve {
+        return {
+            dataFav: {...state.dataFav}
+        };
+    }
+
+    deserialize(state:CorplistWidgetModelState, data:CorplistWidgetModelCorpusSwitchPreserve, corpora:Array<[string, string]>):void {
+        if (data) {
+            List.forEach(
+                ([oldCorp, newCorp]) => {
+                    state.dataFav[newCorp] = data.dataFav[oldCorp];
+                },
+                corpora
+            )
+        }
     }
 
     /**
      * According to the state of the current query form, this method creates
      * a new CorplistItem instance with proper type, id, etc.
      */
-    getFullCorpusSelection():common.GeneratedFavListItem {
-        throw new Error('getFullCorpusSelection...'); // TODO
-        /*
+    getFullCorpusSelection(state:CorplistWidgetModelState):common.GeneratedFavListItem {
         return {
-            subcorpus_id: this.corpSelection.getCurrentSubcorpus(),
-            subcorpus_orig_id: this.pluginApi.getCorpusIdent().foreignSubcorp ?
-            `#${this.corpSelection.getCurrentSubcorpusOrigName()}` :
-                    this.corpSelection.getCurrentSubcorpus(),
-            corpora: this.corpSelection.getCorpora().toArray()
+            subcorpus_id: state.corpusIdent.usesubcorp,
+            subcorpus_orig_id: state.corpusIdent.origSubcorpName ?
+                    `#${state.corpusIdent.origSubcorpName}` :
+                    state.corpusIdent.usesubcorp,
+            corpora: [state.corpusIdent.id].concat(state.alignedCorpora)
         };
-        */
     };
 
     private removeFavItemFromServer(itemId:string):Observable<boolean> {
@@ -664,7 +700,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
         state.currFavitemId = findCurrFavitemId(
             state.dataFav,
-            this.getFullCorpusSelection()
+            this.getFullCorpusSelection(state)
         );
         const trashedItem = List.find(x => x.id === itemId, state.dataFav);
         if (trashedItem) {
@@ -698,7 +734,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             };
             state.currFavitemId = findCurrFavitemId(
                 state.dataFav,
-                this.getFullCorpusSelection()
+                this.getFullCorpusSelection(state)
             );
         }
     }
@@ -809,9 +845,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         const message = showMessage ?
                 this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
                 null;
-        const newItem = this.getFullCorpusSelection();
+        const newItem = this.getFullCorpusSelection(state);
         return this.reloadItems(this.pluginApi.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/set_favorite_item'),
             newItem
         ), message);
@@ -822,7 +858,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 this.pluginApi.translate('defaultCorparch__item_removed_from_fav') :
                 null;
         return this.reloadItems(this.pluginApi.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
             {id: id}
         ), message);

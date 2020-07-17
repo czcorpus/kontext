@@ -115,7 +115,7 @@ export interface Node {
  */
 export class TreeWidgetModel extends StatefulModel<{}> {
 
-    protected pluginApi:IPluginApi;
+    protected readonly pluginApi:IPluginApi;
 
     private data:Node;
 
@@ -289,7 +289,7 @@ export class TreeWidgetModel extends StatefulModel<{}> {
 
         } else {
             node = this.data;
-            this.sortedCorplist = serverNode.sort_corplist ? 
+            this.sortedCorplist = serverNode.sort_corplist ?
                 List.map(c => this.importTree(c), serverNode.sort_corplist) :
                 undefined
         }

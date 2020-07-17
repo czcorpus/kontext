@@ -144,10 +144,10 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 this.changeState(state => {
                     state.asyncTasks.push({
                         status: AsyncTaskStatus.PENDING,
-                        ident: action.payload['ident'],
+                        ident: action.payload.ident,
                         created: new Date().getTime() / 1000,
-                        label: action.payload['label'],
-                        category: action.payload['category'],
+                        label: action.payload.label,
+                        category: action.payload.category,
                         error: null,
                         args: {}
                     });
@@ -168,8 +168,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                         const old = state.asyncTasks[srchIdx];
                         state.asyncTasks[srchIdx] = {
                             ...old,
-                            status: action.payload['status'],
-                            ident: action.payload['ident'],
+                            status: action.payload.status,
+                            ident: action.payload.ident,
                         };
                         if ((old.status === AsyncTaskStatus.PENDING ||
                                 old.status === AsyncTaskStatus.STARTED)

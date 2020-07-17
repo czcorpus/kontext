@@ -38,11 +38,12 @@ interface SetFavItemResponse extends Kontext.AjaxResponse {
 
 
 export interface Filters {
-    maxSize:string;
-    minSize:string;
-    name:string;
-    sortBySize:string;
+    maxSize?:string;
+    minSize?:string;
+    name?:string;
+    sortBySize?:string;
     query?:string;
+    corpusName?:string;
 }
 
 export interface CorplistServerData {
@@ -240,7 +241,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 state.offset = 0;
                 if (action.payload.corpusName) {
                     state.searchedCorpName = action.payload.corpusName;
-                    delete action.payload['corpusName']; // TODO no mutations
+                    delete action.payload.corpusName;
                 }
                 this.updateFilter(state, action.payload as Filters);
                 state.isBusy = true;

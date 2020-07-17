@@ -229,7 +229,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 });
                 this.loadConcDetail(
                         [],
-                        action.payload['position']
+                        action.payload.position
                 ).subscribe(
                     () => {
                         this.changeState(state => {
@@ -403,7 +403,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         });
                         return this.reloadConcDetail();
 
-                    } else if (action.payload['value'] === 'speech') {
+                    } else if (action.payload.value === 'speech') {
                         this.changeState(state => {
                             state.mode = 'speech';
                             state.expandLeftArgs = [];

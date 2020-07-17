@@ -125,7 +125,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
-                    this.importData(state, action.payload['data']);
+                    this.importData(state, action.payload.data);
                 }
             },
             (state, action, dispatch) => {
@@ -324,7 +324,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 state.detailData = this.createEmptyDetail(); // to force view to show detail box
             },
             (state, action, dispatch) => {
-                this.loadCorpusInfo(action.payload['corpusId']).subscribe(
+                this.loadCorpusInfo(action.payload.corpusId).subscribe(
                     (data) => {
                         dispatch<Actions.CorpusInfoLoaded>({
                             name: ActionName.CorpusInfoLoaded,

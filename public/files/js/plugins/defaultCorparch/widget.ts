@@ -565,27 +565,41 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler(
-            'QUERY_INPUT_SELECT_SUBCORP',
+        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
+            QueryActionName.QueryInputSelectSubcorp,
             (state, action) => {
-                if (action.payload['pubName']) {
+                if (action.payload.pubName) {
                     state.corpusIdent = {
                         ...state.corpusIdent,
-                        usesubcorp: action.payload['pubName'],
-                        origSubcorpName: action.payload['subcorp']
+                        usesubcorp: action.payload.pubName,
+                        origSubcorpName: action.payload.subcorp
                     };
 
                 } else {
                     state.corpusIdent = {
                         ...state.corpusIdent,
-                        usesubcorp: action.payload['subcorp'],
-                        origSubcorpName: action.payload['subcorp']
+                        usesubcorp: action.payload.subcorp,
+                        origSubcorpName: action.payload.subcorp
                     };
                 }
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,
                     this.getFullCorpusSelection(state)
                 );
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: this.serialize(state)
+                    }
+                });
             }
         );
 
@@ -646,20 +660,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         state, state.dataFeat[state.activeListItem[1]].id
                     );
                 }
-            }
-        );
-
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
-            null,
-            (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
-                    name: GlobalActionName.SwitchCorpusReady,
-                    payload: {
-                        modelId: this.getRegistrationId(),
-                        data: this.serialize(state)
-                    }
-                });
             }
         );
     }

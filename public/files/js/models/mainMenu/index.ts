@@ -245,8 +245,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 };
             },
             (_, action, __) => {
-                if (action.payload['within'] === 1) {
-                    this.pageModel.replaceConcArg('maincorp', [action.payload['maincorp']]);
+                if (action.payload.within === 1) {
+                    this.pageModel.replaceConcArg('maincorp', [action.payload.maincorp]);
                 }
             }
         );

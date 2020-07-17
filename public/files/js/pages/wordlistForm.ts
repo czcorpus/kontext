@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { tap } from 'rxjs/operators';
-
 import { Kontext } from '../types/common';
 import { PageModel } from '../app/page';
 import { PluginInterfaces } from '../types/plugins';
@@ -29,6 +27,7 @@ import { WordlistFormModel } from '../models/wordlist/form';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { WlnumsTypes, WlTypes } from '../models/wordlist/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 import createCorparch from 'plugins/corparch/init';
 
 declare var require:any;
@@ -60,21 +59,13 @@ class WordlistFormPage {
             'wordlist_form',
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                    /* TODO !!!!!!
-                    return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
-                        tap(
-                            () => {
-                                // all the components must be deleted to prevent memory leaks
-                                // and unwanted action handlers from previous instance
-                                this.layoutModel.unmountReactComponent(
-                                    window.document.getElementById('wordlist-form-mount'));
-                                this.layoutModel.unmountReactComponent(
-                                    window.document.getElementById('query-overview-mount'));
-                                this.init();
-                            }
-                        )
-                    );
-                    */
+                    this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                        name: GlobalActionName.SwitchCorpus,
+                        payload: {
+                            corpora: corpora,
+                            subcorpus: subcorpId
+                        }
+                    });
                 }
             }
         );
@@ -145,8 +136,13 @@ class WordlistFormPage {
             );
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
-                    // TODO
-                }
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('wordlist-form-mount'));
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('query-overview-mount'));
+                    this.init();
+                },
+                this.wordlistFormModel
             );
         });
     }

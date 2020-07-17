@@ -274,7 +274,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                     List.map(
                         (item, i) => ({
                             ...item,
-                            isActive: i === action.payload['idx'] ?
+                            isActive: i === action.payload.idx ?
                                 !item.isActive : item.isActive
                         }),
                         latest

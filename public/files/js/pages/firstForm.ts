@@ -69,7 +69,7 @@ class ConfigWrapper extends StatelessModel<{}> {
                 const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
                 this.layoutModel.setConf<Array<string>>(
                     'alignedCorpora',
-                    ac.concat([action.payload['corpname']])
+                    ac.concat([action.payload.corpname])
                 );
             }
         );
@@ -81,7 +81,7 @@ class ConfigWrapper extends StatelessModel<{}> {
                 const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
                 this.layoutModel.setConf<Array<string>>(
                     'alignedCorpora',
-                    ac.filter(v => v !== action.payload['corpname'])
+                    ac.filter(v => v !== action.payload.corpname)
                 );
             }
         );

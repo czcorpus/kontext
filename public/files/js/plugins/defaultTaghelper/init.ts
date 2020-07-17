@@ -29,6 +29,7 @@ import { init as viewInit} from './views';
 import { init as ppTagsetViewInit} from './positional/views';
 import { init as udTagsetViewInit} from './keyval/views';
 import { ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions, ActionName } from './actions';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -146,8 +147,8 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         List.forEach(
             ([key, model,]) => {
                 model.suspend({}, (action, syncObj) => {
-                    if (action.name === 'TAGHELPER_SET_ACTIVE_TAG' &&
-                            key === action.payload['value']) {
+                    if (action.name === ActionName.SetActiveTag &&
+                            (key === (action as Actions.SetActiveTag).payload.value)) {
                         return null;
 
                     } else if (action.name === QueryActionName.SetActiveInputWidget &&
