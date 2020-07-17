@@ -20,7 +20,7 @@
 
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, filter } from 'rxjs/operators';
 import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 
 import { TextTypes, Kontext } from '../../types/common';
@@ -122,17 +122,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
                 this.loadFilteredData(state, selections).subscribe(
                     (data) => {
                         const filterData = this.importFilter(data.attr_values, dispatch);
-                        dispatch<TTActions.SnapshotState>({
-                            name: TTActionName.SnapshotState
-                        });
                         dispatch<TTActions.FilterWholeSelection>({
                             name: TTActionName.FilterWholeSelection,
-                            payload: {
-                                data: filterData
-                            }
-                        });
-                        dispatch<Actions.RefineDone>({
-                            name: ActionName.RefineDone,
                             payload: {
                                 poscount: data.poscount,
                                 filterData: filterData,
@@ -143,8 +134,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch<Actions.RefineDone>({
-                            name: ActionName.RefineDone,
+                        dispatch<TTActions.FilterWholeSelection>({
+                            name: TTActionName.FilterWholeSelection,
                             error: err
                         });
                     }
@@ -152,8 +143,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
             }
         );
 
-        this.addActionHandler<Actions.RefineDone>(
-            ActionName.RefineDone,
+        this.addActionHandler<TTActions.FilterWholeSelection>(
+            TTActionName.FilterWholeSelection,
             (state, action) => {
                 state.isBusy = false;
                 state.alignedCorpora = pipe(
@@ -337,7 +328,17 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
                     }
                 });
             }
-        )
+        );
+
+
+        this.addActionHandler<TTActions.AttributeTextInputAutocompleteRequestDone>(
+            TTActionName.AttributeTextInputAutocompleteRequestDone,
+            (state, action) => {
+                if (Array.isArray(action.payload.filterData[state.bibliographyAttribute])) {
+                    this.attachBibData(state, action.payload.filterData);
+                }
+            }
+        );
     }
 
     private updateAlignedItem(
@@ -555,21 +556,19 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
         );
     }
 
-    loadAutoComplete(state:LiveAttrsModelState, attrName:string, value:string, dispatch:SEDispatcher):void {
+    private loadAutoComplete(state:LiveAttrsModelState, attrName:string, value:string, dispatch:SEDispatcher):void {
         if (value.length > 2) {
             this.loadAutocompleteHint(state, value, attrName, this.getTtSelection(true)).subscribe(
                 (resp) => {
                     const filterData = this.importFilter(resp.attr_values, dispatch);
-                    if (Array.isArray(filterData[state.bibliographyAttribute])) {
-                        this.attachBibData(state, filterData);
-                    }
                     const values = resp.attr_values[attrName];
                     if (Array.isArray(values)) {
                         dispatch<TTActions.AttributeTextInputAutocompleteRequestDone>({
                             name: TTActionName.AttributeTextInputAutocompleteRequestDone,
                             payload: {
                                 attrName: attrName,
-                                data: values.map((v) => ({ident: v[1], label: v[2]}))
+                                filterData: filterData,
+                                autoCompleteData: values.map((v) => ({ident: v[1], label: v[2]}))
                             }
                         });
 

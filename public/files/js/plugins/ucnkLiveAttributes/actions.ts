@@ -19,12 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import { SelectionFilterMap } from '../../models/textTypes/common';
-import { TextTypes } from '../../types/common';
 
 export enum ActionName {
     RefineClicked = 'LIVE_ATTRIBUTES_REFINE_CLICKED',
-    RefineDone = 'LIVE_ATTRIBUTES_REFINE_DONE',
     ResetClicked = 'LIVE_ATTRIBUTES_RESET_CLICKED',
     UndoClicked = 'LIVE_ATTRIBUTES_UNDO_CLICKED',
     ToggleMinimizeAlignedLangList = 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST',
@@ -38,15 +35,6 @@ export namespace Actions {
     export interface RefineClicked extends Action<{
     }> {
         name:ActionName.RefineClicked;
-    }
-
-    export interface RefineDone extends Action<{
-        poscount:number;
-        filterData:SelectionFilterMap;
-        selectedTypes:TextTypes.ServerCheckedValues;
-        bibAttrValsAreListed:boolean;
-    }> {
-        name:ActionName.RefineDone;
     }
 
     export interface ResetClicked extends Action<{

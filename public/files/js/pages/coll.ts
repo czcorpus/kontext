@@ -258,8 +258,7 @@ export class CollPage {
                     tagHelperViews: {},
                     queryStorageView: null,
                     liveAttrsView: null,
-                    liveAttrsCustomTT: null,
-                    attributes: []
+                    liveAttrsCustomTT: null
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,

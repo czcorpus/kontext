@@ -26,7 +26,6 @@
 import { List } from 'cnc-tskit';
 
 import { TextTypes } from '../../types/common';
-import { TextInputAttributeSelection, FullAttributeSelection } from './valueSelections';
 
 
 export enum IntervalChar {
@@ -91,6 +90,8 @@ export interface SelectionFilterValue {
 
 export type SelectionFilterMap = {[k:string]:Array<SelectionFilterValue>};
 
+export type AnyTTSelection = TextTypes.TextInputAttributeSelection|TextTypes.FullAttributeSelection;
+
 
 /**
  * Server-side data representing a group
@@ -129,7 +130,7 @@ const typeIsSelected = (data:SelectedTextTypes, attr:string, v:string):boolean =
 }
 
 export function importInitialData(data:InitialData,
-        selectedItems:SelectedTextTypes):Array<TextTypes.AttributeSelection> {
+        selectedItems:SelectedTextTypes):Array<AnyTTSelection> {
     const mergedBlocks:Array<BlockLine> = List.foldl(
         (prev, curr) => prev.concat(curr.Line),
         [] as Array<BlockLine>,
@@ -139,19 +140,20 @@ export function importInitialData(data:InitialData,
         return mergedBlocks.map((attrItem:BlockLine) => {
             if (attrItem.textboxlength) {
                 // TODO restore selected items also here (must load labels first...)
-                return new TextInputAttributeSelection(
-                    attrItem.name,
-                    attrItem.label,
-                    attrItem.numeric,
-                    !!attrItem.is_interval,
-                    {
+                return {
+                    name: attrItem.name,
+                    label: attrItem.label,
+                    isNumeric: attrItem.numeric,
+                    isInterval: !!attrItem.is_interval,
+                    attrInfo: {
                         doc: attrItem.attr_doc,
                         docLabel: attrItem.attr_doc_label
                     },
-                    '',
-                    [],
-                    []
-                );
+                    autoCompleteHints: [],
+                    values: [],
+                    textFieldValue: '',
+                    type: 'text'
+                };
 
             } else {
                 const values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
@@ -169,17 +171,18 @@ export function importInitialData(data:InitialData,
                         };
                     }
                 );
-                return new FullAttributeSelection(
-                    attrItem.name,
-                    attrItem.label,
-                    attrItem.numeric,
-                    !!attrItem.is_interval,
-                    {
+                return {
+                    name: attrItem.name,
+                    label: attrItem.label,
+                    isNumeric: attrItem.numeric,
+                    isInterval: !!attrItem.is_interval,
+                    attrInfo: {
                         doc: attrItem.attr_doc,
                         docLabel: attrItem.attr_doc_label
                     },
-                    values
-                );
+                    values,
+                    type: 'full'
+                };
             }
         });
     }

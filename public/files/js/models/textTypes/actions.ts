@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { TextTypes } from '../../types/common';
-import { SelectionFilterMap } from './common';
+import { SelectionFilterMap, AnyTTSelection, SelectionFilterValue } from './common';
 
 
 export enum ActionName {
@@ -40,7 +40,6 @@ export enum ActionName {
     MinimizeAll = 'TT_MINIMIZE_ALL',
     MaximizeAll = 'TT_MAXIMIZE_ALL',
     ToggleMinimizeItem = 'TT_TOGGLE_MINIMIZE_ITEM',
-    SnapshotState = 'TT_SNAPSHOT_STATE',
     UndoState = 'TT_UNDO_STATE',
     ResetState = 'TT_RESET_STATE',
     LockSelected = 'TT_LOCK_SELECTED',
@@ -53,7 +52,7 @@ export namespace Actions {
 
     export interface SelectionChanged extends Action<{
         hasSelectedItems:boolean;
-        attributes:Array<TextTypes.AttributeSelection>;
+        attributes:Array<AnyTTSelection>;
     }> {
         name:ActionName.SelectionChanged;
     };
@@ -141,7 +140,8 @@ export namespace Actions {
 
     export interface AttributeTextInputAutocompleteRequestDone extends Action<{
         attrName:string;
-        data:Array<TextTypes.AutoCompleteItem>;
+        autoCompleteData:Array<TextTypes.AutoCompleteItem>;
+        filterData:SelectionFilterMap;
     }> {
         name:ActionName.AttributeTextInputAutocompleteRequestDone;
     };
@@ -163,11 +163,6 @@ export namespace Actions {
         name:ActionName.ToggleMinimizeItem;
     };
 
-    export interface SnapshotState extends Action<{
-    }> {
-        name:ActionName.SnapshotState;
-    };
-
     export interface UndoState extends Action<{
     }> {
         name:ActionName.UndoState;
@@ -184,7 +179,10 @@ export namespace Actions {
     };
 
     export interface FilterWholeSelection extends Action<{
-        data:SelectionFilterMap;
+        poscount:number;
+        filterData:SelectionFilterMap;
+        selectedTypes:TextTypes.ServerCheckedValues;
+        bibAttrValsAreListed:boolean;
     }> {
         name:ActionName.FilterWholeSelection;
     };

@@ -677,132 +677,26 @@ export namespace TextTypes {
         docLabel:string;
     }
 
-    /**
-     * An object representing an abstract selection
-     * of attribute values.
-     *
-     * All the modifier methods are expected to
-     * return a new copy of the original object to
-     * preserve immutability.
-     *
-     * Note: non-checkbox-like implementations must
-     * still implement all the methods even if they do not
-     * make much sense there. This is necessary because
-     * of KonText's React components which use duck typing
-     * to determine which sub-component to use.
-     */
-    export interface AttributeSelection {
-
-        attrInfo:AttrInfo;
-
+    export interface FullAttributeSelection {
+        attrInfo:TextTypes.AttrInfo;
         isInterval:boolean;
-
         isNumeric:boolean;
-
         label:string;
-
         name:string;
-
-
-        /**
-         * Tests whether there is at least one attribute value locked
-         */
-        isLocked():boolean;
-
-        /**
-         */
-        mapValues(mapFn:(item:AttributeValue, i?:number)=>AttributeValue):AttributeSelection;
-
-        /**
-         */
-        getValues():Array<AttributeValue>;
-
-        /**
-         * Set new attribute values
-         *
-         * @return a new copy of the original AttributeSelection
-         */
-        setValues(values:Array<AttributeValue>):AttributeSelection;
-
-        /**
-         * Add a new value to the list of the current ones.
-         */
-        addValue(value:AttributeValue):AttributeSelection;
-
-        /**
-         * Remove a value from the list of the current ones.
-         */
-        removeValue(value:string):AttributeSelection;
-
-        /**
-         *
-         */
-        clearValues():AttributeSelection;
-
-        /**
-         * Flip checked/unchecked status of the value
-         */
-        toggleValueSelection(idx:number):AttributeSelection;
-
-        /**
-         * Return true in case the selection contains a list
-         * of all available values.
-         */
-        containsFullList():boolean;
-
-        /**
-         * Return true if the original status has been
-         * changed.
-         */
-        hasUserChanges():boolean;
-
-        /**
-         * Export selection status to a simple object
-         */
-        exportSelections(lockedOnesOnly:boolean):Array<string>;
-
-        getNumOfSelectedItems():number;
-
-        /**
-         * Preserve only such attribute values whose values can be
-         * found in the items array. In case the selection does
-         * not contain any values then all the values within 'items'
-         * are imported!
-         */
-        updateItems(items:Array<string>):AttributeSelection;
-
-        /**
-         *
-         */
-        filter(fn:(v:AttributeValue)=>boolean):AttributeSelection;
-
-        /**
-         *
-         */
-        setExtendedInfo(ident:string, data:{[key:string]:any}):AttributeSelection; // TODO type
+        values:Array<AttributeValue>;
+        type:'full';
     }
 
-    /**
-     *
-     */
-    export interface ITextInputAttributeSelection extends AttributeSelection {
-
-        getTextFieldValue():string;
-
-        setTextFieldValue(v:string):ITextInputAttributeSelection;
-
-        /**
-         * Sets a list of items containing hints based on
-         * the current (incomplete) user entry. This applies
-         * in raw text input implementations - checkbox ones
-         * should silently ignore this call (unless they
-         * use it in some way).
-         */
-        setAutoComplete(values:Array<AutoCompleteItem>):ITextInputAttributeSelection;
-
-        getAutoComplete():Array<AutoCompleteItem>;
-
-        resetAutoComplete():ITextInputAttributeSelection;
+    export interface TextInputAttributeSelection {
+        attrInfo:AttrInfo;
+        isInterval:boolean;
+        isNumeric:boolean;
+        label:string;
+        name:string;
+        autoCompleteHints:Array<AutoCompleteItem>;
+        values:Array<AttributeValue>; // it supports appending values via a single text input
+        textFieldValue:string;
+        type:'text';
     }
 
     /**
@@ -815,8 +709,7 @@ export namespace TextTypes {
 
     export interface ITextTypesModel<T> extends IModel<T> {
         exportSelections(lockedOnesOnly:boolean):{[attr:string]:Array<string>};
-        getAttributes():Array<TextTypes.AttributeSelection>;
-        getInitialAvailableValues():Array<TextTypes.AttributeSelection>;
+        getInitialAvailableValues():Array<FullAttributeSelection|TextInputAttributeSelection>;
     }
 
     /**

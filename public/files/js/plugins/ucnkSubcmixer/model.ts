@@ -31,6 +31,8 @@ import { Actions as QueryActions, ActionName as QueryActionName } from '../../mo
 import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
 import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
 import { Actions as LAActions, ActionName as LAActionName } from '../ucnkLiveAttributes/actions';
+import { AnyTTSelection } from '../../models/textTypes/common';
+import { TTSelOps } from '../../models/textTypes/selectionOps';
 
 
 export interface SubcMixerModelState {
@@ -45,8 +47,8 @@ export interface SubcMixerModelState {
     subcIsPublic:boolean;
     subcDescription:Kontext.FormValue<string>;
     numOfErrors:number;
-    ttAttributes:Array<TextTypes.AttributeSelection>; // basically a copy of text type model attributes
-    ttInitialAvailableValues:Array<TextTypes.AttributeSelection>;
+    ttAttributes:Array<AnyTTSelection>; // basically a copy of text type model attributes
+    ttInitialAvailableValues:Array<AnyTTSelection>;
     liveattrsSelections:{[key:string]:Array<string>};
 }
 
@@ -118,8 +120,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<LAActions.RefineDone>(
-            LAActionName.RefineDone,
+        this.addActionHandler<TTActions.FilterWholeSelection>(
+            TTActionName.FilterWholeSelection,
             (state, action) => {
                 const newSelections:TextTypes.ServerCheckedValues = action.payload.selectedTypes;
                 state.liveattrsSelections = {
@@ -341,7 +343,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             state.currentSubcname,
             state.subcDescription,
             true,
-            state.ttAttributes.some(item => item.hasUserChanges()),
+            state.ttAttributes.some(item => TTSelOps.hasUserChanges(item)),
             this.pluginApi
         );
 
@@ -395,7 +397,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         );
     }
 
-    private getTtAttribute(state:SubcMixerModelState, ident:string):TextTypes.AttributeSelection {
+    private getTtAttribute(state:SubcMixerModelState, ident:string):AnyTTSelection {
         return state.ttAttributes.find((val) => val.name === ident);
     }
 
@@ -407,16 +409,16 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 state.ttInitialAvailableValues
             );
             return idx > -1 ?
-                List.map(item => item, state.ttInitialAvailableValues[idx].getValues()) :
+                List.map(item => item, state.ttInitialAvailableValues[idx].values) :
                 [];
         };
 
         return pipe(
             state.ttAttributes,
-            List.filter(item => item.hasUserChanges()),
+            List.filter(item => TTSelOps.hasUserChanges(item)),
             List.flatMap(item => {
                 const tmp = pipe(
-                    this.getTtAttribute(state, item.name).getValues(),
+                    this.getTtAttribute(state, item.name).values,
                     List.filter(item => item.selected),
                     List.map(item => item.value)
                 );
@@ -473,7 +475,11 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     getTtAttrSize(state:SubcMixerModelState, attrName:string):number {
         const item = state.ttAttributes.find(item => item.name === attrName);
         if (item) {
-            return item.getValues().reduce((prev, curr) => prev + curr.availItems, 0);
+            return List.foldl(
+                (prev, curr) => prev + curr.availItems,
+                0,
+                item.values
+            );
         }
         return -1;
     }
@@ -507,21 +513,30 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             availableValues,
             List.filter(item => item.isSelected),
             List.map((item, i) => {
-                const attrVal = state.ttAttributes
-                        .find(val => val.name === item.attrName)
-                        .getValues()
-                        .find(item2 => item2.value == item.attrValue);
-                const total = this.getTtAttrSize(state, item.attrName);
-                return {
-                    ...item,
-                    ratio: Kontext.newFormValue(
-                        item.isSelected ? this.safeCalcInitialRatio(numValsPerGroup[item.attrName], i).toFixed(1) : '0',
-                        true
-                    ),
-                    baseRatio: attrVal ? (attrVal.availItems / total * 100).toFixed(1) : '?',
-                    zeroFixed: !item.isSelected
-                };
-            })
+                const srch = List.find(
+                    val => val.name === item.attrName,
+                    state.ttAttributes
+                );
+
+                if (srch) {
+                    const attrVal = List.find(
+                        item2 => item2.value == item.attrValue,
+                        srch.values
+                    );
+                    const total = this.getTtAttrSize(state, item.attrName);
+                    return {
+                        ...item,
+                        ratio: Kontext.newFormValue(
+                            item.isSelected ? this.safeCalcInitialRatio(numValsPerGroup[item.attrName], i).toFixed(1) : '0',
+                            true
+                        ),
+                        baseRatio: attrVal ? (attrVal.availItems / total * 100).toFixed(1) : '?',
+                        zeroFixed: !item.isSelected
+                    };
+                }
+                return null;
+            }),
+            List.filter(v => v !== null)
         );
     }
 }

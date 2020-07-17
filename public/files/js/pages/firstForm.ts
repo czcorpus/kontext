@@ -192,7 +192,6 @@ export class FirstFormPage {
                 liveAttrsViews['LiveAttrsView'] : null,
             liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ?
                 liveAttrsViews['LiveAttrsCustomTT'] : null,
-            attributes: this.textTypesModel.getAttributes(),
             tagHelperViews: {},
             queryStorageView: null,
             allowCorpusSelection: null

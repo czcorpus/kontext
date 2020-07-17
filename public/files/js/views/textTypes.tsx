@@ -24,16 +24,16 @@ import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 
 import { PluginInterfaces } from '../types/plugins';
 import { Kontext, TextTypes } from '../types/common';
-import { ExtendedInfo } from '../models/textTypes/valueSelections';
+import { ExtendedInfo, TTSelOps } from '../models/textTypes/selectionOps';
 import { CoreViews } from '../types/coreViews';
 import { TextTypesModelState } from '../models/textTypes/main';
 import { Actions, ActionName } from '../models/textTypes/actions';
+import { AnyTTSelection } from '../models/textTypes/common';
 
 
 export interface TextTypesPanelProps {
     liveAttrsView:PluginInterfaces.LiveAttributes.View;
     liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
-    onReady:()=>void;
 }
 
 
@@ -194,54 +194,42 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ----------------------------- <CheckboxItem /> --------------------------
 
-    class CheckBoxItem extends React.Component<{
+    const CheckBoxItem:React.SFC<{
         itemName:string;
         itemValue:string;
         itemIdx:number;
         itemIsSelected:boolean;
         itemIsLocked:boolean;
-    }, {}> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._clickHandler = this._clickHandler.bind(this);
-        }
 
-        _clickHandler() {
+        const clickHandler = () => {
             dispatcher.dispatch<Actions.ValueCheckboxClicked>({
                 name: ActionName.ValueCheckboxClicked,
                 payload: {
-                    attrName: this.props.itemName,
-                    itemIdx: this.props.itemIdx
+                    attrName: props.itemName,
+                    itemIdx: props.itemIdx
                 }
             });
         }
 
-        shouldComponentUpdate(nextProps, nextState) {
-            return this.props.itemValue !== nextProps.itemValue ||
-                    this.props.itemIsSelected !== nextProps.itemIsSelected ||
-                    this.props.itemIsLocked !== nextProps.itemIsLocked;
-        }
-
-        render() {
-            const itemName = 'sca_' + this.props.itemName;
-            return (
-                <label className={this.props.itemIsLocked ? 'locked' : null}>
-                    <input
-                        type="checkbox"
-                        name={itemName}
-                        value={this.props.itemValue}
-                        className="attr-selector user-selected"
-                        checked={this.props.itemIsSelected}
-                        onChange={this._clickHandler}
-                        disabled={this.props.itemIsLocked}
-                    />
-                    {this.props.itemIsLocked ?
-                        <input type="hidden" name={itemName} value={this.props.itemValue} /> : null }
-                    {this.props.itemValue}
-                </label>
-            );
-        }
+        const itemName = 'sca_' + props.itemName;
+        return (
+            <label className={props.itemIsLocked ? 'locked' : null}>
+                <input
+                    type="checkbox"
+                    name={itemName}
+                    value={props.itemValue}
+                    className="attr-selector user-selected"
+                    checked={props.itemIsSelected}
+                    onChange={clickHandler}
+                    disabled={props.itemIsLocked}
+                />
+                {props.itemIsLocked ?
+                    <input type="hidden" name={itemName} value={props.itemValue} /> : null }
+                {props.itemValue}
+            </label>
+        );
     }
 
     // ----------------------------- <ExtendedInfoBox /> --------------------------
@@ -331,7 +319,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <FullListContainer /> --------------------------
 
     const FullListContainer:React.SFC<{
-        attrObj:TextTypes.AttributeSelection; // TODO maybe something more serializable here
+        attrObj:AnyTTSelection;
         hasExtendedInfo:boolean;
         hasSelectedItems:boolean;
         rangeIsOn:boolean;
@@ -343,8 +331,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             return (
                 <table className="FullListContainer">
                     <tbody>
-                    {props.attrObj.getValues().map((item, i) => {
-                        return (
+                    {List.map(
+                        (item, i) => (
                             <tr key={item.value + String(i)}>
                                 <td><CheckBoxItem
                                         itemIdx={i}
@@ -363,8 +351,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 }
                                 </td>
                             </tr>
-                        );
-                    })}
+                        ),
+                        props.attrObj.values
+                    )}
                     </tbody>
                 </table>
             );
@@ -383,7 +372,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <AutoCompleteBox /> --------------------------
 
     class AutoCompleteBox extends React.Component<{
-        attrObj:TextTypes.ITextInputAttributeSelection;
+        attrObj:AnyTTSelection;
         customAutoCompleteHintClickHandler:(item:TextTypes.AutoCompleteItem)=>void;
     },
     {
@@ -449,7 +438,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         render() {
-            let data = this.props.attrObj.getAutoComplete();
+            const data = TTSelOps.getAutoComplete(this.props.attrObj);
             return (
                 <ul className="auto-complete"
                     onClick={this._handleAutoCompleteAreaClick}>
@@ -470,7 +459,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <RawInputContainer /> --------------------------
 
     class RawInputContainer extends React.PureComponent<{
-        attrObj:TextTypes.ITextInputAttributeSelection;
+        attrObj:AnyTTSelection;
         customInputName:string;
         textInputPlaceholder:string;
         customAutoCompleteHintClickHandler:(item:TextTypes.AutoCompleteItem)=>void;
@@ -514,7 +503,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _renderAutoComplete() {
-            if (!List.empty(this.props.attrObj.getAutoComplete())) {
+            if (!List.empty(TTSelOps.getAutoComplete(this.props.attrObj))) {
                 return <AutoCompleteBox attrObj={this.props.attrObj}
                                 customAutoCompleteHintClickHandler={this.props.customAutoCompleteHintClickHandler} />;
 
@@ -534,7 +523,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                             ? this.props.customInputName
                                             : 'sca_' + this.props.attrObj.name}
                                     onChange={this._inputChangeHandler}
-                                    value={this.props.attrObj.getTextFieldValue()}
+                                    value={TTSelOps.getTextFieldValue(this.props.attrObj)}
                                     placeholder={this.props.textInputPlaceholder}
                                     autoComplete="off" />
                                 {this._renderAutoComplete()}
@@ -551,7 +540,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <RawInputMultiValueContainer /> --------------------------
 
     const RawInputMultiValueContainer:React.SFC<{
-        attrObj:TextTypes.ITextInputAttributeSelection;
+        attrObj:AnyTTSelection;
         hasExtendedInfo:boolean;
         isLocked:boolean;
         textInputPlaceholder:string;
@@ -572,9 +561,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const renderCheckboxes = () => {
-            const values = props.attrObj.getValues();
-            return values.map((item, i) => {
-                return (
+            return List.map(
+                (item, i) => (
                     <tr key={item.value + String(i)}>
                         <td>
                             <CheckBoxItem
@@ -594,8 +582,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 : null }
                         </td>
                     </tr>
-                );
-            });
+                ),
+                props.attrObj.values
+            );
         };
 
         return (
@@ -616,7 +605,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <ValueSelector /> --------------------------
 
     const ValueSelector:React.SFC<{
-        attrObj:TextTypes.AttributeSelection;
+        attrObj:AnyTTSelection;
         rangeIsOn:boolean;
         isLocked:boolean;
         hasExtendedInfo:boolean;
@@ -626,13 +615,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
         return (
             <div className="ValueSelector">
-            {props.attrObj.containsFullList() || props.rangeIsOn
+            {TTSelOps.containsFullList(props.attrObj) || props.rangeIsOn
                 ? <FullListContainer attrObj={props.attrObj} rangeIsOn={props.rangeIsOn}
                         hasExtendedInfo={props.hasExtendedInfo}
                         isBusy={props.isBusy}
-                        hasSelectedItems={props.attrObj.hasUserChanges()} />
+                        hasSelectedItems={TTSelOps.hasUserChanges(props.attrObj)} />
                 : <RawInputMultiValueContainer
-                        attrObj={(props.attrObj as TextTypes.ITextInputAttributeSelection)}
+                        attrObj={(props.attrObj)}
                         isLocked={props.isLocked}
                         hasExtendedInfo={props.hasExtendedInfo}
                         textInputPlaceholder={props.textInputPlaceholder}
@@ -663,7 +652,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <TableTextTypeAttribute /> --------------------------
 
     const TableTextTypeAttribute:React.SFC<{
-        attrObj:TextTypes.AttributeSelection;
+        attrObj:AnyTTSelection;
         rangeIsOn:boolean;
         isMinimized:boolean;
         metaInfoHelpVisible:boolean;
@@ -708,7 +697,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         );
 
         const renderFooter = () => {
-            if (props.attrObj.containsFullList() && !props.attrObj.isLocked()) {
+            if (TTSelOps.containsFullList(props.attrObj) && !TTSelOps.isLocked(props.attrObj)) {
                 if (props.attrObj.isInterval) {
                     if (props.rangeIsOn) {
                         return renderModeSwitch();
@@ -769,7 +758,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const renderExtendedInfo = () => {
-            const srch = List.find(item => !!item.extendedInfo, props.attrObj.getValues());
+            const srch = List.find(item => !!item.extendedInfo, props.attrObj.values);
             if (srch) {
                 return <ExtendedInfoBox data={srch.extendedInfo} ident={srch.ident}
                                 attrName={props.attrObj.name} />;
@@ -806,7 +795,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
 
         const classes = ['TableTextTypeAttribute'];
-        if (props.attrObj.isLocked()) {
+        if (TTSelOps.isLocked(props.attrObj)) {
             classes.push('locked');
         }
         return (
@@ -815,7 +804,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     <h3 title={props.attrObj.name !== props.attrObj.label ? props.attrObj.name : null}>
                         {props.attrObj.label}
                         {
-                        props.isMinimized && props.attrObj.hasUserChanges() ?
+                        props.isMinimized && TTSelOps.hasUserChanges(props.attrObj) ?
                         <span title={he.translate('query__contains_selected_text_types')}>{'\u00a0\u2713'}</span> :
                         null
                         }
@@ -833,7 +822,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <div className={props.rangeIsOn ? 'range' : 'data-rows'}>
                             <ValueSelector attrObj={props.attrObj}
                                     rangeIsOn={props.rangeIsOn}
-                                    isLocked={props.attrObj.isLocked()}
+                                    isLocked={TTSelOps.isLocked(props.attrObj)}
                                     hasExtendedInfo={props.hasExtendedInfo}
                                     textInputPlaceholder={props.textInputPlaceholder}
                                     isBusy={props.isBusy}  />
@@ -880,48 +869,40 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ----------------------------- <TextTypesPanel /> --------------------------
 
-    class TextTypesPanel extends React.PureComponent<TextTypesPanelProps & TextTypesModelState> {
+    const TextTypesPanel:React.SFC<TextTypesPanelProps & TextTypesModelState> = (props) => {
 
-        componentDidMount() {
-            if (typeof this.props.onReady === 'function') {
-                this.props.onReady();
-            }
-        }
-
-        render() {
             return (
                 <div className="TextTypesPanel">
                     <div className="plugin-controls">
-                    {this.props.liveAttrsView
-                        ? <this.props.liveAttrsView />
+                    {props.liveAttrsView
+                        ? <props.liveAttrsView />
                         : null}
                     </div>
                     <div className="text-type-top-bar">
-                        <TTAttribMinimizeSwitch hasSomeMaximized={Dict.hasValue(false, this.props.minimizedBoxes)} />
+                        <TTAttribMinimizeSwitch hasSomeMaximized={Dict.hasValue(false, props.minimizedBoxes)} />
                     </div>
                     <div className="grid">
-                        {this.props.liveAttrsCustomTT
-                            ? <div><this.props.liveAttrsCustomTT /></div>
+                        {props.liveAttrsCustomTT
+                            ? <div><props.liveAttrsCustomTT /></div>
                             : null}
                         {List.map((attrObj) => {
-                            return <div key={attrObj.name + ':list:' + attrObj.containsFullList()}>
+                            return <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>
                                 <TableTextTypeAttribute
                                         attrObj={attrObj}
-                                        rangeIsOn={this.props.rangeModeStatus[attrObj.name]}
-                                        isMinimized={this.props.minimizedBoxes[attrObj.name]}
-                                        metaInfoHelpVisible={this.props.metaInfoHelpVisible}
-                                        hasExtendedInfo={this.props.bibIdAttr === attrObj.name}
-                                        metaInfo={this.props.metaInfo[attrObj.name]}
-                                        isBusy={this.props.isBusy}
-                                        textInputPlaceholder={this.props.textInputPlaceholder} />
+                                        rangeIsOn={props.rangeModeStatus[attrObj.name]}
+                                        isMinimized={props.minimizedBoxes[attrObj.name]}
+                                        metaInfoHelpVisible={props.metaInfoHelpVisible}
+                                        hasExtendedInfo={props.bibIdAttr === attrObj.name}
+                                        metaInfo={props.metaInfo[attrObj.name]}
+                                        isBusy={props.isBusy}
+                                        textInputPlaceholder={props.textInputPlaceholder} />
                             </div>;
                             },
-                            this.props.attributes
+                            props.attributes
                         )}
                     </div>
                 </div>
             );
-        }
     }
 
     return {

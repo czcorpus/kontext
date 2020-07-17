@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 
-import { Kontext, TextTypes } from '../types/common';
+import { Kontext } from '../types/common';
 import { PluginInterfaces } from '../types/plugins';
 import { PageModel } from '../app/page';
 import { init as subcorpViewsInit } from '../views/subcorp/forms';
@@ -36,7 +36,7 @@ import { KontextPage } from '../app/main';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
-import { SelectedTextTypes } from '../models/textTypes/common';
+import { SelectedTextTypes, AnyTTSelection } from '../models/textTypes/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -45,7 +45,6 @@ require('styles/subcorpForm.less');
 
 interface TTProps {
     alignedCorpora:Array<string>;
-    attributes:Array<TextTypes.AttributeSelection>;
     liveAttrsCustomTT:React.ComponentClass<{}>|null;
     liveAttrsView:React.ComponentClass<{}>;
     manualAlignCorporaMode:boolean;
@@ -154,7 +153,6 @@ export class SubcorpForm {
                     liveAttrsViews['LiveAttrsView'] : null,
                 liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ?
                     liveAttrsViews['LiveAttrsCustomTT'] : null,
-                attributes: this.textTypesModel.getAttributes(),
                 alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
                 manualAlignCorporaMode: true
             },

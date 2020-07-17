@@ -60,7 +60,6 @@ export interface QueryFormProps {
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     liveAttrsView:PluginInterfaces.LiveAttributes.View;
     liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
-    attributes:any; // TODO type once text types JSX->TSX
 }
 
 
@@ -286,8 +285,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         {this.props.textTypesFormVisible ?
                                 <ttViews.TextTypesPanel
                                         liveAttrsView={this.props.liveAttrsView}
-                                        liveAttrsCustomTT={this.props.liveAttrsCustomTT}
-                                        onReady={()=>undefined} />
+                                        liveAttrsCustomTT={this.props.liveAttrsCustomTT} />
                                 : <TextTypesNotes description={this.props.textTypesNotes} />
                         }
                     </fieldset>
