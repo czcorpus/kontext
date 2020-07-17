@@ -130,14 +130,10 @@ export class SubcorpForm {
         );
 
         let subcMixerComponent:React.ComponentClass;
-        if (this.layoutModel.pluginIsActive(PluginName.SUBCMIXER)) {
-            if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
+        if (this.layoutModel.pluginIsActive(PluginName.SUBCMIXER) &&
+                    liveAttrsPlugin &&
+                    this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
                 subcMixerComponent = subcmixerPlg.getWidgetView();
-
-            } else {
-                throw new Error(
-                    'Subcmixer plug-in requires live_attributes plug-in to be operational');
-            }
 
         } else {
             subcMixerComponent = null;
