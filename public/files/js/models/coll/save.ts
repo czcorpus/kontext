@@ -91,7 +91,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
             (state, action, dispatch) => {
                 if (window.confirm(this.layoutModel.translate(
                         'global__quicksave_limit_warning_{format}{lines}',
-                        {format: action.payload['saveformat'], lines: state.quickSaveRowLimit}))) {
+                        {format: action.payload.saveformat, lines: state.quickSaveRowLimit}))) {
                     this.submit(state);
                 }
             }

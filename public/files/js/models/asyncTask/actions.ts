@@ -48,6 +48,9 @@ export namespace Actions {
     }
 
     export interface InboxAddAsyncTask extends Action<{
+        ident:string;
+        label:string;
+        category:string;
     }> {
         name: ActionName.InboxAddAsyncTask;
     }

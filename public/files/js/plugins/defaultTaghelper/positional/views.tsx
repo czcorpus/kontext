@@ -164,10 +164,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         checkboxHandler:CheckboxHandler;
     }> = (props) => {
 
-        const lineClickHandler = () => {
+        const lineClickHandler = (idx) => () => {
             dispatcher.dispatch<Actions.ToggleActivePosition>({
                 name: ActionName.ToggleActivePosition,
                 payload: {
+                    idx: idx,
                     sourceId: props.sourceId
                 }
             });
@@ -177,7 +178,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             <ul className="defaultTaghelper_PositionList">
                 {props.positions.map(
                     (item, i) => <PositionLine key={`${i}:${item.label}`} position={item}
-                                                lineIdx={i} clickHandler={lineClickHandler}
+                                                lineIdx={i} clickHandler={lineClickHandler(i)}
                                                 checkboxHandler={props.checkboxHandler} />)}
             </ul>
         );

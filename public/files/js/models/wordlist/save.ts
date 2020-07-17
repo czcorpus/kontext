@@ -168,11 +168,11 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                     return syncData;
                 }).pipe(
                     concatMap(
-                        action => {
-                            const payload = (action as Actions.WordlistFormSubmitReady).payload;
+                        wAction => {
+                            const payload = (wAction as Actions.WordlistFormSubmitReady).payload;
                             if (window.confirm(this.layoutModel.translate(
                                     'global__quicksave_limit_warning_{format}{lines}',
-                                    {format: action.payload['saveformat'], lines: state.quickSaveRowLimit}))) {
+                                    {format: action.payload.saveformat, lines: state.quickSaveRowLimit}))) {
                                 return this.submit(state, payload.args);
 
                             } else {

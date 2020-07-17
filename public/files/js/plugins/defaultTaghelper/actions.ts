@@ -83,6 +83,7 @@ export namespace Actions {
 
     export interface ToggleActivePosition extends Action<{
         sourceId:string;
+        idx:number;
     }> {
         name:ActionName.ToggleActivePosition;
     }

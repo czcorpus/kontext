@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { MultiDict } from '../../multidict';
 import { IndexedResultItem, WlTypes, FileTarget } from './common';
 import { SaveData } from '../../app/navigation';
+import { FilterEditorData } from './form';
 
 
 export enum ActionName {
@@ -188,7 +189,7 @@ export namespace Actions {
     }
 
     export interface WordlistFormSetFilterDone extends Action<{
-
+        data:FilterEditorData;
     }> {
         name:ActionName.WordlistFormSetFilterDone;
     }

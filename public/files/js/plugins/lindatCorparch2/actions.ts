@@ -98,14 +98,7 @@ export namespace Actions {
         name:ActionName.ExpansionClicked;
     }
 
-    export interface FilterChanged extends Action<{
-        maxSize?:string;
-        minSize?:string;
-        name?:string;
-        sortBySize?:string;
-        query?:string;
-        corpusName?:string;
-    }> {
+    export interface FilterChanged extends Action<Filters> {
         name:ActionName.FilterChanged;
     }
 

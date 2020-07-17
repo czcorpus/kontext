@@ -116,6 +116,7 @@ export namespace Actions {
     }
 
     export interface CorpusInfoRequired extends Action<{
+        corpusId:string;
     }> {
         name:ActionName.CorpusInfoRequired;
     }

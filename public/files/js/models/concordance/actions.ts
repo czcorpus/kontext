@@ -175,6 +175,7 @@ export namespace Actions {
     }
 
     export interface DataWaitTimeInc extends Action<{
+        idx:number;
     }> {
         name:ActionName.DataWaitTimeInc;
     }

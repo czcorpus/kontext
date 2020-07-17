@@ -21,7 +21,7 @@
 import { Observable, Observer, of as rxOf } from 'rxjs';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { concatMap } from 'rxjs/operators';
-import { Dict, List, Ident } from 'cnc-tskit';
+import { Dict, List, Ident, pipe } from 'cnc-tskit';
 
 
 import { Kontext } from '../../types/common';
@@ -33,6 +33,7 @@ import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '..
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { FileTarget, WlnumsTypes, WlTypes } from './common';
+import { ICorpusSwitchSerializable } from '../common/corpusSwitch';
 
 
 /**
@@ -85,6 +86,15 @@ export interface WordlistFormState {
     origSubcorpName:string;
 }
 
+export interface WordlistFormCorpSwitchPreserve {
+    wlpat:string;
+    blacklist:string;
+    wlwords:string;
+    wlFileName:string;
+    blFileName:string;
+    includeNonwords:boolean;
+}
+
 export interface WordlistModelInitialArgs {
     includeNonwords:number; // boolean like
     wlminfreq:number;
@@ -98,11 +108,11 @@ export interface WordlistModelInitialArgs {
     wltype:WlTypes;
 }
 
-
 /**
  *
  */
-export class WordlistFormModel extends StatelessModel<WordlistFormState> {
+export class WordlistFormModel extends StatelessModel<WordlistFormState> implements ICorpusSwitchSerializable<WordlistFormState,
+            WordlistFormCorpSwitchPreserve>  {
 
     private layoutModel:PageModel;
 
@@ -143,17 +153,17 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler(
-            'QUERY_INPUT_SELECT_SUBCORP',
+        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
+            QueryActionName.QueryInputSelectSubcorp,
             (state, action) => {
-                if (action.payload['pubName']) {
-                    state.currentSubcorpus = action.payload['pubName'];
-                    state.origSubcorpName = action.payload['subcorp'];
-                    state.isForeignSubcorp = action.payload['foreign'];
+                if (action.payload.pubName) {
+                    state.currentSubcorpus = action.payload.pubName;
+                    state.origSubcorpName = action.payload.subcorp;
+                    state.isForeignSubcorp = action.payload.foreign;
 
                 } else {
-                    state.currentSubcorpus = action.payload['subcorp'];
-                    state.origSubcorpName = action.payload['subcorp'];
+                    state.currentSubcorpus = action.payload.subcorp;
+                    state.origSubcorpName = action.payload.subcorp;
                     state.isForeignSubcorp = false;
                 }
             },
@@ -299,7 +309,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
         this.addActionHandler<Actions.WordlistFormSetFilterDone>(
             ActionName.WordlistFormSetFilterDone,
             (state, action) => {
-                const props = action.payload['data'] as FilterEditorData;
+                const props = action.payload.data;
                 if (props.target === FileTarget.BLACKLIST) {
                     state.filterEditorData = {
                         target: FileTarget.BLACKLIST,
@@ -324,14 +334,14 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
                     if (state.filterEditorData.target === FileTarget.BLACKLIST) {
                         state.filterEditorData = {
                             target: FileTarget.BLACKLIST,
-                            data: action.payload['value'] as string,
+                            data: action.payload.value,
                             fileName: state.filterEditorData.fileName
                         };
 
                     } else {
                         state.filterEditorData = {
                             target: FileTarget.WHITELIST,
-                            data: action.payload['value'] as string,
+                            data: action.payload.value,
                             fileName: state.filterEditorData.fileName
                         };
                     }
@@ -342,14 +352,14 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
         this.addActionHandler<Actions.WordlistFormReopenEditor>(
             ActionName.WordlistFormReopenEditor,
             (state, action) => {
-                if (action.payload['target'] === FileTarget.WHITELIST) {
+                if (action.payload.target === FileTarget.WHITELIST) {
                     state.filterEditorData = {
                         target: FileTarget.WHITELIST,
                         data: state.wlwords,
                         fileName: state.wlFileName
                     };
 
-                } else if (action.payload['target'] === FileTarget.BLACKLIST) {
+                } else if (action.payload.target === FileTarget.BLACKLIST) {
                     state.filterEditorData = {
                         target: FileTarget.BLACKLIST,
                         data: state.blacklist,
@@ -367,7 +377,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
                         state.wlwords = '';
                         state.wlFileName = ''
 
-                    } else if (action.payload['target'] === FileTarget.BLACKLIST) {
+                    } else if (action.payload.target === FileTarget.BLACKLIST) {
                         state.blacklist = '';
                         state.blFileName = ''
                     }
@@ -398,19 +408,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
             }
         );
 
-        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
-            GlobalActionName.CorpusSwitchModelRestore,
-            (state, action) => {
-                if (action.payload['key'] === this.getRegistrationId()) {
-                    Dict.forEach(
-                        (val, key) => {
-                            state[key] = val;
-                        }
-                    )
-                }
-            }
-        );
-
         this.addActionHandler<Actions.WordlistFormSubmit>(
             ActionName.WordlistFormSubmit,
             (state, action) => {
@@ -424,7 +421,33 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
                     this.layoutModel.showMessage('error', state.wlminfreq.errorDesc);
                 }
             }
-        )
+        );
+
+        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
+            GlobalActionName.CorpusSwitchModelRestore,
+            (state, action)  => {
+                this.deserialize(
+                    state,
+                    action.payload.data[this.getRegistrationId()] as
+                        WordlistFormCorpSwitchPreserve,
+                    action.payload.corpora,
+                );
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            (state, action) => {
+                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<
+                    WordlistFormCorpSwitchPreserve>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: this.serialize(state)
+                    }
+                });
+            }
+        );
     }
 
     private validateForm(state:WordlistFormState):void {
@@ -458,6 +481,36 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
                 }
             )
         );
+    }
+
+    getRegistrationId():string {
+        return 'WordlistFormModel';
+    }
+
+    serialize(state:WordlistFormState):WordlistFormCorpSwitchPreserve {
+        return {
+            wlpat: state.wlpat,
+            blacklist: state.blacklist,
+            wlwords: state.wlwords,
+            wlFileName: state.wlFileName,
+            blFileName: state.blFileName,
+            includeNonwords: state.includeNonwords
+        };
+    }
+
+    deserialize(
+        state:WordlistFormState,
+        data:WordlistFormCorpSwitchPreserve,
+        corpora:Array<[string, string]>
+    ):void {
+        if (data) {
+            state.wlpat = data.wlpat;
+            state.blacklist = data.blacklist,
+            state.wlwords = data.wlwords,
+            state.wlFileName = data.wlFileName,
+            state.blFileName = data.blFileName,
+            state.includeNonwords = data.includeNonwords
+        }
     }
 
     createSubmitArgs(state:WordlistFormState):MultiDict {
@@ -494,10 +547,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> {
             this.layoutModel.createActionUrl(action),
             args.items()
         );
-    }
-
-    getRegistrationId():string {
-        return 'wordlist-form';
     }
 
     getAllowsMultilevelWltype(state:WordlistFormState):boolean {

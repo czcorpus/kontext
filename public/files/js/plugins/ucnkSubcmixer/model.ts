@@ -28,6 +28,9 @@ import { validateSubcProps } from '../../models/subcorp/form';
 import { Actions, ActionName } from './actions';
 import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeAttrVal } from './common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
+import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
+import { Actions as LAActions, ActionName as LAActionName } from '../ucnkLiveAttributes/actions';
 
 
 export interface SubcMixerModelState {
@@ -77,38 +80,48 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler(
-            'TT_SELECTION_CHANGED', // TODO type
+        this.addActionHandler<TTActions.SelectionChanged>(
+            TTActionName.SelectionChanged,
             (state, action) => {
-                state.ttAttributes = action.payload['attributes'];
+                state.ttAttributes = action.payload.attributes;
             }
         );
 
-        this.addActionHandler(
-            'SUBCORP_FORM_SET_SUBCNAME',
+        this.addActionHandler<SubcActions.FormSetSubcName>(
+            SubcActionName.FormSetSubcName,
             (state, action) => {
-                state.currentSubcname = Kontext.updateFormValue(state.currentSubcname, {value: action.payload['value']});
+                state.currentSubcname = Kontext.updateFormValue(
+                    state.currentSubcname,
+                    {
+                        value: action.payload.value
+                    }
+                );
             }
         );
 
-        this.addActionHandler(
-            'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
+        this.addActionHandler<SubcActions.FormSetSubcAsPublic>(
+            SubcActionName.FormSetSubcAsPublic,
             (state, action) => {
-                state.subcIsPublic = !!action.payload['value'];
+                state.subcIsPublic = !!action.payload.value;
             }
         );
 
-        this.addActionHandler(
-            'SUBCORP_FORM_SET_DESCRIPTION',
+        this.addActionHandler<SubcActions.FormSetDescription>(
+            SubcActionName.FormSetDescription,
             (state, action) => {
-                state.subcDescription = Kontext.updateFormValue(state.subcDescription, {value: action.payload['value']});
+                state.subcDescription = Kontext.updateFormValue(
+                    state.subcDescription,
+                    {
+                        value: action.payload.value
+                    }
+                );
             }
         );
 
-        this.addActionHandler(
-            'LIVE_ATTRIBUTES_REFINE_DONE',
+        this.addActionHandler<LAActions.RefineDone>(
+            LAActionName.RefineDone,
             (state, action) => {
-                const newSelections:TextTypes.ServerCheckedValues = action.payload['selectedTypes'];
+                const newSelections:TextTypes.ServerCheckedValues = action.payload.selectedTypes;
                 state.liveattrsSelections = {
                     ...state.liveattrsSelections,
                     ...newSelections,

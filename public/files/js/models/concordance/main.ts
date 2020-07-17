@@ -484,7 +484,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<Actions.DataWaitTimeInc>(
             ActionName.DataWaitTimeInc,
             action => {
-                this.changeState(state => {state.busyWaitSecs = action.payload['idx']});
+                this.changeState(state => {state.busyWaitSecs = action.payload.idx});
             }
         );
 

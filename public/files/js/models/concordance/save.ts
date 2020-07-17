@@ -90,7 +90,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             action => {
                 if (window.confirm(this.layoutModel.translate(
                     'global__quicksave_limit_warning_{format}{lines}',
-                    {format: action.payload['saveformat'], lines: this.quickSaveRowLimit}
+                    {format: action.payload.saveformat, lines: this.quickSaveRowLimit}
                 ))) {
                     const tmp = this.state.toLine;
                     this.changeState(state => {

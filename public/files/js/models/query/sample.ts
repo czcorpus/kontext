@@ -79,7 +79,7 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         this.addActionHandler<Actions.SampleFormSetRlines>(
             ActionName.SampleFormSetRlines,
             action => {
-                const v = action.payload['value'];
+                const v = action.payload.value;
                 if (/^([1-9]\d*)?$/.exec(v)) {
                     this.changeState(state => {
                         state.rlinesValues[action.payload.sampleId] = v;
