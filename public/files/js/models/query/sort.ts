@@ -92,16 +92,6 @@ export interface ISubmitableConcSortModel {
     submit(sortId:string):void;
 }
 
-const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
-    if (x1.label < x2.label) {
-        return -1;
-    }
-    if (x1.label > x2.label) {
-        return 1;
-    }
-    return 0;
-};
-
 /**
  *
  */
