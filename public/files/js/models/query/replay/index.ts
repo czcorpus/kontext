@@ -941,7 +941,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             return this.syncSubhitsForm(state, opIdx).pipe(map(v => tuple(v, '')));
 
         } else if (formType === Kontext.ConcFormTypes.FIRSTHITS) {
-            return this.syncFirstHitsForm(state, opIdx).pipe(map(v => tuple(v, '')));;
+            return this.syncFirstHitsForm(state, opIdx).pipe(map(v => tuple(v, '')));
         }
     }
 }

@@ -160,7 +160,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState>
                 Dict.forEach(
                     (query, sourceId) => {
                         state.richCode[sourceId] = highlightSyntax(
-                            state.rawCode[sourceId],
+                            query,
                             'cql',
                             this.pageModel.getComponentHelpers(),
                             this.attrHelper,

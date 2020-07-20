@@ -92,16 +92,6 @@ export interface ISubmitableConcSortModel {
     submit(sortId:string):void;
 }
 
-const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
-    if (x1.label < x2.label) {
-        return -1;
-    }
-    if (x1.label > x2.label) {
-        return 1;
-    }
-    return 0;
-};
-
 /**
  *
  */
@@ -320,12 +310,12 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
                 ctxIndexValues: pipe(
                     props.mlxctx,
                     Dict.fromEntries(),
-                    Dict.map((v, k) => List.map(this.decodeCtxValue, v))
+                    Dict.map((v, k) => List.map(MultiLevelConcSortModel.decodeCtxValue, v))
                 ),
                 ctxAlignValues: pipe(
                     props.mlxctx,
                     Dict.fromEntries(),
-                    Dict.map((v, k) => List.map(this.decodeCtxAlignValue, v))
+                    Dict.map((v, k) => List.map(MultiLevelConcSortModel.decodeCtxAlignValue, v))
                 ),
                 isActiveActionValues: pipe(
                     props.defaultFormAction,
@@ -424,8 +414,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
                             state.mlxbwardValues[sortId] = importMultiLevelArg('mlxbward', data);
 
                             const mlxctxTmp = importMultiLevelArg<string>('mlxctx', data);
-                            state.ctxIndexValues[sortId] = List.map(item => this.decodeCtxValue(item), mlxctxTmp);
-                            state.ctxAlignValues[sortId] = List.map(item => this.decodeCtxAlignValue(item), mlxctxTmp);
+                            state.ctxIndexValues[sortId] = List.map(item => MultiLevelConcSortModel.decodeCtxValue(item), mlxctxTmp);
+                            state.ctxAlignValues[sortId] = List.map(item => MultiLevelConcSortModel.decodeCtxAlignValue(item), mlxctxTmp);
                         });
                     }
                 }
@@ -459,7 +449,7 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
             args.replace(`ml${i+1}attr`, [this.state.mlxattrValues[sortId][i]]);
             args.replace(`ml${i+1}icase`, [this.state.mlxicaseValues[sortId][i]]);
             args.replace(`ml${i+1}bward`, [this.state.mlxbwardValues[sortId][i]]);
-            args.replace(`ml${i+1}ctx`, [this.encodeCtxValue(this.state.ctxIndexValues[sortId][i],
+            args.replace(`ml${i+1}ctx`, [MultiLevelConcSortModel.encodeCtxValue(this.state.ctxIndexValues[sortId][i],
                                          this.state.ctxAlignValues[sortId][i])]);
         }
         return args;
@@ -473,7 +463,7 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
      * Transform a ctx value (e.g. '-3<0') back to its
      * index in LEFTMOST_CTX or RIGHTMOST_CTX
      */
-    private decodeCtxValue(v:string):number {
+    private static decodeCtxValue(v:string):number {
         let idx = MultiLevelConcSortModel.LEFTMOST_CTX.indexOf(v);
         if (idx > -1) {
             return idx
@@ -485,7 +475,7 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         throw new Error('Unable to decode ctx value ' + v);
     }
 
-    private decodeCtxAlignValue(v:string):string {
+    private static decodeCtxAlignValue(v:string):string {
         let idx = MultiLevelConcSortModel.LEFTMOST_CTX.indexOf(v);
         if (idx > -1) {
             return 'left';
@@ -497,7 +487,7 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         throw new Error('Unable to decode ctx value ' + v);
     }
 
-    private encodeCtxValue(idx:number, align:string):string {
+    private static encodeCtxValue(idx:number, align:string):string {
         if (align === 'left') {
             return MultiLevelConcSortModel.LEFTMOST_CTX[idx];
 
