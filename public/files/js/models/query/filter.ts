@@ -179,7 +179,10 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             queryContextModel:QueryContextModel,
             props:FilterFormProperties,
             syncInitialArgs:AjaxResponse.FilterFormArgs) {
-        const queries = [tuple('__new__', '')];
+        const queries = pipe(
+            [...props.currQueries, ...[tuple('__new__', '')]],
+            Dict.fromEntries()
+        );
         const queryTypes = pipe(
             [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'iquery')]],
             Dict.fromEntries()
@@ -195,15 +198,14 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             posWindowSizes: [], // TODO
             wPoSList: [], // TODO
             currentAction: 'filter_form',
-            queries: Dict.fromEntries(queries), // corpname|filter_id -> query
+            queries: queries, // corpname|filter_id -> query
             useCQLEditor: props.useCQLEditor,
             tagAttr: props.tagAttr,
             widgetArgs: {}, // TODO
             maincorps: Dict.fromEntries(props.maincorps),
             downArrowTriggersHistory: pipe(
                 queries,
-                List.map(([sourceId,]) => tuple(sourceId, false)),
-                Dict.fromEntries()
+                Dict.map(v => false),
             ),
             queryTypes,
             lposValues: pipe(
@@ -268,7 +270,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             inputLanguage: props.inputLanguage,
             isAnonymousUser: props.isAnonymousUser,
             supportedWidgets: determineSupportedWidgets(
-                Dict.fromEntries(queries),
+                queries,
                 queryTypes,
                 Dict.fromEntries(tagBuilderSupport)
             ),
