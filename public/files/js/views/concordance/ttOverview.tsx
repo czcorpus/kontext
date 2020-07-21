@@ -21,12 +21,11 @@
 /// <reference path="../../vendor.d.ts/d3-color.d.ts" />
 
 import * as React from 'react';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { TextTypesDistModel, FreqItem, FreqBlock, TextTypesDistModelState } from '../../models/concordance/ttDistModel';
 import { Actions, ActionName } from '../../models/concordance/actions';
-import { TextTypesModelState } from '../../models/textTypes/main';
 
 
 export interface TtOverviewViews {
@@ -156,6 +155,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }
 
     return {
-        TextTypesDist: TextTypesDist
+        TextTypesDist: BoundWithProps(TextTypesDist, ttDistModel)
     };
 }
