@@ -394,7 +394,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState>
 
         if (state.isEnabled) {
             state.richCode[sourceId] = highlightSyntax(
-                state.rawCode[sourceId],
+                state.rawCode[sourceId] ? state.rawCode[sourceId] : '',
                 'cql',
                 this.pageModel.getComponentHelpers(),
                 this.attrHelper,
