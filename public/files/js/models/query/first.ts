@@ -595,9 +595,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
     }
 
-    unregister():void {
-    }
-
     disableDefaultShuffling():void {
         this.state.shuffleForbidden = true;
         this.emitChange();

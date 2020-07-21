@@ -184,8 +184,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         );
     }
 
-    unregister():void {}
-
     private updateMessageList(state:AsyncTaskCheckerState, data:Array<Kontext.AsyncTaskInfo>) {
         state.asyncTasks = [...data];
     }

@@ -466,10 +466,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 });
             }
         );
-
     }
-
-    unregister():void {}
 
     private validateForm(state:FilterFormModelState, filterId:string):Error|null {
         if (validateNumber(state.filfposValues[filterId].value)) {

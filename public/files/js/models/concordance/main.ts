@@ -696,8 +696,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         );
     }
 
-    unregister():void {}
-
     private stopBusyTimer(subs:Subscription):null {
         if (subs !== null) {
             subs.unsubscribe();

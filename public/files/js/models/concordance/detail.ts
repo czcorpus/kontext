@@ -528,9 +528,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         };
     }
 
-    unregister():void {}
-
-
     private generateSpeechesDetail(state:ConcDetailModelState):SpeechLines {
 
         const parseTag = (name:string, s:string):{[key:string]:string} => {

@@ -239,8 +239,6 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         );
     }
 
-    unregister():void {}
-
     private testMaxPageSize(v:string):boolean {
         return parseInt(v) <= GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE;
     }

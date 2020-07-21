@@ -39,7 +39,5 @@ export class DummySyntaxViewModel extends StatefulModel<PluginInterfaces.SyntaxV
 
     onAction(action:Action) {}
 
-    unregister():void {}
-
     registerOnError(fn:(e:Error)=>void):void {}
 }

@@ -93,6 +93,4 @@ export class NonQueryCorpusSelectionModel extends StatefulModel<NonQueryCorpusSe
             }
         );
     }
-
-    unregister():void {}
 }

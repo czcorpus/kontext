@@ -176,8 +176,6 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         );
     }
 
-    unregister():void {}
-
     private performDataLoad():void {
         if (!this.state.blockedByAsyncConc && this.getConcSize() > 0) {
             const args = this.layoutModel.getConcArgs();
