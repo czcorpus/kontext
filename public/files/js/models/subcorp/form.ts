@@ -142,8 +142,6 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
         );
     }
 
-    unregister() {};
-
     private getSubmitArgs():MultiDict {
         const args = new MultiDict();
         args.set('corpname', this.state.corpname);

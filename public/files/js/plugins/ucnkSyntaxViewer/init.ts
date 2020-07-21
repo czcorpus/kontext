@@ -78,8 +78,6 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         );
     }
 
-    unregister() {}
-
     private renderTree(target:HTMLElement):void {
         const treexFrame = window.document.createElement('div');
         treexFrame.style.width = '90%';

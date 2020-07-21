@@ -50,10 +50,7 @@ export class PageLeaveVoting extends StatefulModel<{}> {
                 event.returnValue = '';
             }
         });
-
     }
-
-    unregister() {}
 
     registerVotingModel<T>(model:IPageLeaveVoter<T>):void {
         this.votingModels[model.getRegistrationId()] = model;

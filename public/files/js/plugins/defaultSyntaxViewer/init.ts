@@ -78,8 +78,6 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         );
     }
 
-    unregister() {}
-
     close():void {
         window.removeEventListener('resize', this.onPageResize);
     }

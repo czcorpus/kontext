@@ -151,8 +151,6 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
         );
     }
 
-    unregister() {}
-
     private recalculateConfIntervals(state:Freq2DFlatViewModelState):void {
         state.origData = List.map(
             (cell, i) => {

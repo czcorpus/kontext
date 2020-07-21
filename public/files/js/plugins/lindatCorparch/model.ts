@@ -181,8 +181,6 @@ export class TreeWidgetModel extends StatefulModel<{}> {
         });
     }
 
-    unregister() {}
-
     private toggleAllNodesActiveStatus(status:boolean):void {
         const srchRecursive = (nodePath:Array<Node>, status:boolean):void => {
             const curr = nodePath[nodePath.length - 1];

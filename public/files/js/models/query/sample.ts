@@ -99,8 +99,6 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         );
     }
 
-    unregister() {}
-
     syncFrom(src:Observable<AjaxResponse.SampleFormArgs>):Observable<AjaxResponse.SampleFormArgs> {
         return src.pipe(
             tap(

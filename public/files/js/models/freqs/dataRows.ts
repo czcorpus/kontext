@@ -282,8 +282,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         );
     }
 
-    unregister() {};
-
     private pushStateToHistory(state:FreqDataRowsModelState):void {
         const args = this.getSubmitArgs(state);
         args.remove('format');
