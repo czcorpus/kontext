@@ -172,8 +172,6 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         );
     }
 
-    unregister() {}
-
     syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
         return src.pipe(
             tap(

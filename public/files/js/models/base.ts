@@ -18,65 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
- import { IEventEmitter, Action, IFullActionControl } from 'kombo';
-import { Subscription, Observable, Subject } from 'rxjs';
-import { share } from 'rxjs/operators';
 
 import { Kontext } from '../types/common';
-
-/**
- * A base class for KonText's legacy models. Using this model
- * is deprecated. In case you have to implement a stateful model,
- * please use Kombo's StatefulModel instead as it provides easier
- * integration with React component properties and has separated
- * state properties from "internal" ones.
- *
- * @deprecated
- */
-export class StatefulModel implements IEventEmitter {
-
-    dispatcher:IFullActionControl;
-
-    private changeTicks:Subject<{}>;
-
-    private sharedTicks:Observable<{}>;
-
-    public static CHANGE_EVENT:string = 'change';
-
-    private subscription:Subscription;
-
-    constructor(dispatcher:IFullActionControl) {
-        this.dispatcher = dispatcher;
-        this.changeTicks = new Subject();
-        this.sharedTicks = this.changeTicks.pipe(share());
-    }
-
-    dispatcherRegister(fn:(action:Action)=>void):void {
-        this.subscription = this.dispatcher.registerActionListener(fn);
-    }
-
-    /**
-     * Function for React components to register model change listening.
-     * (typically on 'componentDidMount()')
-     * @param fn
-     */
-    addListener(fn:Kontext.ModelListener):Subscription {
-        return this.sharedTicks.subscribe(fn);
-    }
-
-    /**
-     * This method is used to notify all the registered listeners about
-     * change in models internal state.
-     */
-    emitChange():void {
-        this.changeTicks.next();
-    }
-
-    unregister():void {
-        this.subscription.unsubscribe();
-    }
-
-}
 
 /**
  * Test whether a string 's' represents an integer

@@ -187,8 +187,6 @@ export class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, p
         );
     }
 
-    unregister() {}
-
     registerModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
         this.onDone = onDone;
         this.changeState(state => {

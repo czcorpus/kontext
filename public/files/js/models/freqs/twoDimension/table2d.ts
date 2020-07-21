@@ -341,8 +341,6 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         )
     }
 
-    unregister() {}
-
     private pushStateToHistory():void {
         const args = this.getSubmitArgs();
         args.remove('format');

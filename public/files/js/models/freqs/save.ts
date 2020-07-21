@@ -159,8 +159,6 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
         );
     }
 
-    unregister() {}
-
     private validateForm(state:FreqResultsSaveModelState):Error|null {
         state.fromLine.isInvalid = false;
         state.toLine.isInvalid = false;
@@ -235,7 +233,5 @@ export class FreqCTResultsSaveModel extends StatefulModel<FreqCTResultsSaveModel
             }
         );
     }
-
-    unregister() {}
 
 }

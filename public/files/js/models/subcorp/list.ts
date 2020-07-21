@@ -402,7 +402,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         if (removeOrig) {
                             state.lines = List.filter((v, i) => i !== idx, state.lines);
                         }
-                    });                    
+                    });
                 });
             }),
             concatMap((data) => data.processed_subc.length > 0 ?
@@ -546,7 +546,4 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             })
         );
     }
-
-    unregister() {};
 }
-

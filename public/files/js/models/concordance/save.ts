@@ -168,8 +168,6 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
         );
     }
 
-    unregister = () => {}
-
     private validateForm():Error|null {
         if (validateNumber(this.state.fromLine.value) && parseInt(this.state.fromLine.value, 10) >= 1 &&
                 parseInt(this.state.fromLine.value) <= this.concSize) {

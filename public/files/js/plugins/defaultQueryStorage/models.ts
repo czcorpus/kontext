@@ -236,8 +236,6 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
         );
     }
 
-    unregister() {}
-
     private openQueryForm(idx:number):void {
         const item = List.find(v => v.idx === idx, this.state.data);
         const args = new MultiDict();

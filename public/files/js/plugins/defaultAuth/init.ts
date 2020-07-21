@@ -80,8 +80,6 @@ export class UserStatusModel extends StatefulModel<UsersStatusModelState> {
             }
         );
     }
-
-    unregister() {}
 }
 
 /**

@@ -91,7 +91,7 @@
                                 </oneOrMore>
                             </choice>
                         </element>
-                        <option>
+                        <optional>
                             <element name="css_mobile">
                                 <choice>
                                     <text />
@@ -102,7 +102,7 @@
                                     </oneOrMore>
                                 </choice>
                             </element>
-                        </option>
+                        </optional>
                         <element name="logo">
                             <a:documentation>Path to a logo</a:documentation>
                             <text />
