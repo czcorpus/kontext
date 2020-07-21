@@ -28,7 +28,6 @@ import { Kontext } from '../../../types/common';
 import { PageModel } from '../../../app/page';
 import { FirstQueryFormModel } from '../first';
 import { FilterFormModel } from '../filter';
-import { ConcSortModel, MultiLevelConcSortModel, ISubmitableConcSortModel } from '../sort';
 import { ConcSampleModel } from '../sample';
 import { SwitchMainCorpModel } from '../switchmc';
 import { TextTypesModel } from '../../textTypes/main';
@@ -39,6 +38,9 @@ import { ExtendedQueryOperation, importEncodedOperations, QueryPipelineResponse 
 import { AjaxConcResponse } from '../../concordance/common';
 import { QueryContextModel } from '../context';
 import { QueryContextArgs } from '../common';
+import { ConcSortModel } from '../sort/single';
+import { MultiLevelConcSortModel } from '../sort/multi';
+import { ISubmitableConcSortModel } from '../sort/common';
 
 
 /*
@@ -90,10 +92,6 @@ export interface QueryReplayModelState {
      * There are also two special keys:
      * __new__: contains arguments for a form of a new operation which will be submitted
      *          and appended to the current query (e.g. we add a filter/sort/...)
-     * __latest__: contains arguments of a just submitted form. Due to the server-side
-     *             architecture, the (server) action itself does not know the actual
-     *             key yet. But after the action is processed, KonText stores the action
-     *             and passes the new ID (key) to response arguments.
      */
     concArgsCache:{[key:string]:AjaxResponse.ConcFormArgs};
 
@@ -110,24 +108,6 @@ export interface QueryReplayModelState {
     editIsLocked:boolean;
 
     overviewVisible:boolean;
-}
-
-/**
- * Because server operations do not know a newly created query ID (it is handled
- * in controller's post dispatche when a concrete action is already finished)
- * it uses a special value '__latest__' to mark arguments which have been just created.
- * But unlike the server, we know the ID so we update the '__latest__' pseudo-key by
- * the real one. This makes further processing a little bit easier.
- */
-function syncCache(state:QueryReplayModelState, pageModel:PageModel):void {
-    const opKey = getCurrentQueryKey(pageModel);
-    if (Dict.hasKey('__latest__', state.concArgsCache) && opKey !== undefined) {
-        const tmp = state.concArgsCache['__latest__'];
-        tmp.op_key = opKey;
-        delete state.concArgsCache['__latest__'];
-        state.concArgsCache[opKey] = tmp;
-        state.replayOperations[state.replayOperations.length - 1] = opKey;
-    }
 }
 
 function getCurrentQueryKey(pageModel:PageModel):string {
@@ -185,22 +165,20 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
     constructor({dispatcher, pageModel, replayModelDeps, currentOperations,
                 concArgsCache}:QueryReplayModelArgs) {
-        const state = {
-            currentQueryOverview: null,
-            currEncodedOperations: importEncodedOperations(currentOperations),
-            replayOperations: List.map(_ => null, currentOperations),
-            concArgsCache: {...concArgsCache},
-            branchReplayIsRunning: false,
-            editedOperationIdx: null,
-            stopAfterOpIdx: null,
-            editIsLocked: pageModel.getConf<number>('NumLinesInGroups') > 0,
-            overviewVisible: false
-        };
-        syncCache(state, pageModel);
         super(
             dispatcher,
             pageModel,
-            state
+            {
+                currentQueryOverview: null,
+                currEncodedOperations: importEncodedOperations(currentOperations),
+                replayOperations: List.map(_ => null, currentOperations),
+                concArgsCache: {...concArgsCache},
+                branchReplayIsRunning: false,
+                editedOperationIdx: null,
+                stopAfterOpIdx: null,
+                editIsLocked: pageModel.getConf<number>('NumLinesInGroups') > 0,
+                overviewVisible: false
+            }
         );
         this.queryModel = replayModelDeps.queryModel;
         this.queryContextModel = replayModelDeps.queryContextModel;

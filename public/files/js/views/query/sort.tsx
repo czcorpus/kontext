@@ -22,9 +22,10 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
-import { ConcSortModel, MultiLevelConcSortModel, ConcSortModelState, MultiLevelConcSortModelState } from '../../models/query/sort';
+import { ConcSortModel, ConcSortModelState } from '../../models/query/sort/single';
 import { Actions, ActionName } from '../../models/query/actions';
 import { List } from 'cnc-tskit';
+import { MultiLevelConcSortModel, MultiLevelConcSortModelState } from '../../models/query/sort/multi';
 
 
 export interface SortModuleArgs {
@@ -65,7 +66,7 @@ interface SortForms {
 }
 
 function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:SortModuleArgs):SortForms {
-    
+
     const layoutViews = he.getLayoutViews();
 
     // -------------------------- <AttributeList /> ---------------------------------
@@ -565,8 +566,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
 
         _handleSortTypeChange(formType) {
-            dispatcher.dispatch<Actions.SortSetActiveStore>({
-                name: ActionName.SortSetActiveStore,
+            dispatcher.dispatch<Actions.SortSetActiveModel>({
+                name: ActionName.SortSetActiveModel,
                 payload: {
                     sortId: this.props.sortId,
                     formAction: formType

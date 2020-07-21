@@ -67,19 +67,19 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
 /**
  * import {GeneralViewOptionsModel} from '../options/general';
  */
-export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
-        initialArgs:AjaxResponse.FilterFormArgs,
-        key:(item:AjaxResponse.FilterFormArgs)=>T):Array<[string, T]> {
-    const ans = [];
-    for (let formId in args) {
-        if (args.hasOwnProperty(formId) && args[formId].form_type === 'filter') {
-            ans.push([formId, key(<AjaxResponse.FilterFormArgs>args[formId])]);
-        }
-    }
-    if (args['__new__'] === undefined) {
-        args['__new__'] = initialArgs;
-    }
-    return ans;
+export function fetchFilterFormArgs<T extends AjaxResponse.FilterFormArgs[keyof AjaxResponse.FilterFormArgs]>(
+    args:{[ident:string]:AjaxResponse.ConcFormArgs},
+    initialArgs:AjaxResponse.FilterFormArgs,
+    key:(item:AjaxResponse.FilterFormArgs)=>T
+
+):Array<[string, T]> {
+    return pipe(
+        args,
+        Dict.toEntries(),
+        List.filter(([, v]) => v.form_type === 'filter'),
+        List.map(([formId, args]) => tuple(formId, key(<AjaxResponse.FilterFormArgs>args[formId]))),
+        List.concat([tuple('__new__', key(initialArgs))])
+    );
 }
 
 

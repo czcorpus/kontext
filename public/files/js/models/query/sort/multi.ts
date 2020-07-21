@@ -18,252 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
+ import { StatefulModel, IFullActionControl } from 'kombo';
+ import { Dict, pipe, List } from 'cnc-tskit';
+ import { of as rxOf, Observable } from 'rxjs';
+
+import { Kontext } from '../../../types/common';
+import { ISubmitableConcSortModel, SortFormProperties, importMultiLevelArg } from './common';
+import { PageModel } from '../../../app/page';
+import { AjaxResponse } from '../../../types/ajaxResponses';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../mainMenu/actions';
+import { Actions, ActionName } from '../actions';
 import { tap, map } from 'rxjs/operators';
-
-import { Kontext } from '../../types/common';
-import { AjaxResponse } from '../../types/ajaxResponses';
-import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
-import { ConcSortServerArgs } from './common';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
-import { Actions, ActionName } from './actions';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { MultiDict } from '../../../multidict';
+import { ConcSortServerArgs } from '../common';
 
 
-export interface SortFormProperties {
-    attrList:Array<Kontext.AttrItem>;
-    structAttrList:Array<Kontext.AttrItem>;
-    sbward:Array<[string, string]>;
-    skey:Array<[string, string]>;
-    spos:Array<[string, string]>;
-    sicase:Array<[string, string]>;
-    sattr:Array<[string, string]>;
-    // multi-level form specific stuff
-    sortlevel:Array<[string, number]>; // specifies an actual number of levels to be used from the lists below
-    defaultFormAction:Array<[string, string]>; // specifies whether 'sortx' or 'mlsortx' is the default sub-form
-    mlxattr:Array<[string, Array<string>]>;
-    mlxicase:Array<[string, Array<string>]>;
-    mlxbward:Array<[string, Array<string>]>;
-    mlxpos:Array<[string, Array<number>]>;
-    mlxctx:Array<[string, Array<string>]>;
-}
-
-
-export function importMultiLevelArg<T>(name:string, data:AjaxResponse.SortFormArgs, dflt?:(n:string)=>T):Array<T> {
-    const ans:Array<T> = [];
-    const srch = /mlx(.+)/.exec(name);
-    const dfltFn = dflt ? dflt : (n:string) => '';
-    if (!srch) {
-        throw new Error('failed to parse name - not a multi-level sort identifier: ' + name);
-    }
-    const mkid = (i) => `ml${i}${srch[1]}`;
-    let key;
-    for (let i = 1; i <= 9; i += 1) {
-        key = mkid(i);
-        if (data.hasOwnProperty(key)) {
-            ans.push(data[key] || dfltFn(key));
-
-        } else {
-            break;
-        }
-    }
-    return ans;
-}
-
-
-export function fetchSortFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
-        key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]> {
-    const ans = [];
-    for (let formId in args) {
-        if (args.hasOwnProperty(formId) && args[formId].form_type === 'sort') {
-            ans.push([formId, key(<AjaxResponse.SortFormArgs>args[formId])]);
-        }
-    }
-    return ans;
-}
-
-/**
- *
- */
-export interface ISubmitableConcSortModel {
-    getSubmitUrl(sortId:string):string;
-    submit(sortId:string):void;
-}
-
-/**
- *
- */
-export interface ConcSortModelState {
-    availAttrList:Array<Kontext.AttrItem>;
-    availStructAttrList:Array<Kontext.AttrItem>;
-    sattrValues:{[key:string]:string};
-    skeyValues:{[key:string]:string};
-    sposValues:{[key:string]:string};
-    sicaseValues:{[key:string]:string}; // value 'i' means 'case insensitive'
-    sbwardValues:{[key:string]:string}; // value 'r' means 'backward'
-    /**
-     * Specifies whether the single-level variant (i.e. this specific sorting model)
-     * is the active one in case of known (= used or in use) sort forms. It must be
-     * mutually-exclusive when compared with the same attribute and its keys
-     * in MultiLevelConcSortModel.
-     */
-    isActiveActionValues:{[key:string]:boolean};
-}
-
-export class ConcSortModel extends StatefulModel<ConcSortModelState> implements ISubmitableConcSortModel {
-
-    private readonly pageModel:PageModel;
-
-    private readonly syncInitialArgs:AjaxResponse.SortFormArgs;
-
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties, syncInitialArgs:AjaxResponse.SortFormArgs) {
-        super(
-            dispatcher,
-            {
-                availAttrList: props.attrList,
-                availStructAttrList: props.structAttrList,
-                sattrValues: Dict.fromEntries(props.sattr),
-                skeyValues: Dict.fromEntries(props.skey),
-                sbwardValues: Dict.fromEntries(props.sbward),
-                sicaseValues: Dict.fromEntries(props.sicase),
-                sposValues: Dict.fromEntries(props.spos),
-                isActiveActionValues: Dict.fromEntries(List.map(item => [item[0], item[1] === 'sortx'], props.defaultFormAction)),
-            }
-        );
-        this.pageModel = pageModel;
-        this.syncInitialArgs = syncInitialArgs;
-
-        this.addActionHandler<MainMenuActions.ShowSort>(
-            MainMenuActionName.ShowSort,
-            action => {
-                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
-            }
-        );
-
-        this.addActionHandler<Actions.SortSetActiveStore>(
-            ActionName.SortSetActiveStore,
-            action => {this.changeState(state => {
-                state.isActiveActionValues[action.payload.sortId] = action.payload.formAction === 'sortx';
-            })}
-        );
-
-        this.addActionHandler<Actions.SortFormSubmit>(
-            ActionName.SortFormSubmit,
-            action => {
-                this.submit(action.payload.sortId);
-                // no need to notify anybody - we're leaving the page here
-            }
-        );
-
-        this.addActionHandler<Actions.SortFormSetSattr>(
-            ActionName.SortFormSetSattr,
-            action => {this.changeState(state => {
-                state.sattrValues[action.payload.sortId] = action.payload.value;
-            })}
-        );
-
-        this.addActionHandler<Actions.SortFormSetSkey>(
-            ActionName.SortFormSetSkey,
-            action => {this.changeState(state => {
-                state.skeyValues[action.payload.sortId] = action.payload.value;
-            })}
-        );
-
-        this.addActionHandler<Actions.SortFormSetSbward>(
-            ActionName.SortFormSetSbward,
-            action => {this.changeState(state => {
-                state.sbwardValues[action.payload.sortId] = action.payload.value;
-            })}
-        );
-
-        this.addActionHandler<Actions.SortFormSetSicase>(
-            ActionName.SortFormSetSicase,
-            action => {this.changeState(state => {
-                state.sicaseValues[action.payload.sortId] = action.payload.value;
-            })}
-        );
-
-        this.addActionHandler<Actions.SortFormSetSpos>(
-            ActionName.SortFormSetSpos,
-            action => {
-                if (/^([1-9]\d*)*$/.exec(action.payload.value)) {
-                    this.changeState(state => {
-                        state.sposValues[action.payload.sortId] = action.payload.value;
-                    })
-
-                } else {
-                    this.pageModel.showMessage('error', this.pageModel.translate('query__sort_set_spos_error_msg'));
-                }
-            }
-        );
-    }
-
-    unregister() {}
-
-    syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
-        return src.pipe(
-            tap(
-                (data) => {
-                    if (data.form_type === 'sort') {
-                        const sortId = data.op_key;
-                        this.changeState(state => {
-                            state.isActiveActionValues[sortId] = data.form_action === 'sortx';
-                            state.sattrValues[sortId] = data.sattr;
-                            state.skeyValues[sortId] = data.skey;
-                            state.sposValues[sortId] = data.spos;
-                            state.sbwardValues[sortId] = data.sbward;
-                            state.sicaseValues[sortId] = data.sicase;
-                        });
-                    }
-                }
-            ),
-            map(
-                (data) => {
-                    if (data.form_type === 'sort') {
-                        return data;
-
-                    } else if (data.form_type === 'locked') {
-                        return null;
-
-                    } else {
-                        throw new Error('Cannot sync sort model - invalid form data type: ' + data.form_type);
-                    }
-                }
-            )
-        );
-    }
-
-    submit(sortId:string):void {
-        const args = this.createSubmitArgs(sortId);
-        const url = this.pageModel.createActionUrl('sortx', args.items());
-        window.location.href = url;
-    }
-
-    getSubmitUrl(sortId:string):string {
-        return this.pageModel.createActionUrl('sortx', this.createSubmitArgs(sortId).items());
-    }
-
-    private createSubmitArgs(sortId:string):MultiDict<ConcSortServerArgs> {
-        const val2List = (v) => v ? [v] : [];
-
-        const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
-        args.replace('sattr', val2List(this.state.sattrValues[sortId]));
-        args.replace('skey', val2List(this.state.skeyValues[sortId]));
-        args.replace('sbward', val2List(this.state.sbwardValues[sortId]));
-        args.replace('sicase', val2List(this.state.sicaseValues[sortId]));
-        args.replace('spos', val2List(this.state.sposValues[sortId]));
-        return args;
-    }
-
-    isActiveActionValue(sortId:string):boolean {
-        return this.state.isActiveActionValues[sortId];
-    }
-}
-
-
-/**
+ /**
  *
  */
 export interface MultiLevelConcSortModelState {
@@ -344,19 +114,23 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         this.addActionHandler<Actions.MLSortFormAddLevel>(
             ActionName.MLSortFormAddLevel,
             action => {
-                this.addLevel(action.payload.sortId);
+                this.changeState(state => {
+                    this.addLevel(state, action.payload.sortId);
+                });
             }
         );
 
         this.addActionHandler<Actions.MLSortFormRemoveLevel>(
             ActionName.MLSortFormRemoveLevel,
             action => {
-                this.removeLevel(action.payload.sortId, action.payload.levelIdx);
+                this.changeState(state => {
+                    this.removeLevel(state, action.payload.sortId, action.payload.levelIdx);
+                });
             }
         );
 
-        this.addActionHandler<Actions.SortSetActiveStore>(
-            ActionName.SortSetActiveStore,
+        this.addActionHandler<Actions.SortSetActiveModel>(
+            ActionName.SortSetActiveModel,
             action => {this.changeState(state => {
                 state.isActiveActionValues[action.payload.sortId] = action.payload.formAction === 'mlsortx';
             })}
@@ -499,31 +273,29 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         }
     }
 
-    private addLevel(sortId:string):void {
-        const currLevel = this.state.sortlevelValues[sortId];
+    private addLevel(state:MultiLevelConcSortModelState, sortId:string):void {
+        const currLevel = state.sortlevelValues[sortId];
         // we expect here that the individual attributes below contain
         // the maximum allowed number of levels. I.e. there should be
         // no need to add/remove levels - we just increase 'sortlevel'.
-        this.state.sortlevelValues[sortId] = currLevel + 1;
+        state.sortlevelValues[sortId] = currLevel + 1;
     }
 
-    private removeLevel(sortId:string, level:number):void {
-        if (this.state.sortlevelValues[sortId] - 1 === 0) {
+    private removeLevel(state:MultiLevelConcSortModelState, sortId:string, level:number):void {
+        if (state.sortlevelValues[sortId] - 1 === 0) {
             throw new Error('At least one level must be defined');
         }
-        this.changeState(state => {
-            state.mlxattrValues[sortId] = List.removeAt(level, state.mlxattrValues[sortId]);
-            state.mlxattrValues[sortId].push(state.availAttrList[0].n);
-            state.mlxicaseValues[sortId] = List.removeAt(level, state.mlxicaseValues[sortId]);
-            state.mlxicaseValues[sortId].push('');
-            state.mlxbwardValues[sortId] = List.removeAt(level, state.mlxbwardValues[sortId]);
-            state.mlxbwardValues[sortId].push('');
-            state.ctxIndexValues[sortId] = List.removeAt(level, state.ctxIndexValues[sortId]);
-            state.ctxIndexValues[sortId].push(0);
-            state.ctxAlignValues[sortId] = List.removeAt(level, state.ctxAlignValues[sortId]);
-            state.ctxAlignValues[sortId].push('left');
-            state.sortlevelValues[sortId] = state.sortlevelValues[sortId] - 1;
-        });
+        state.mlxattrValues[sortId] = List.removeAt(level, state.mlxattrValues[sortId]);
+        state.mlxattrValues[sortId].push(state.availAttrList[0].n);
+        state.mlxicaseValues[sortId] = List.removeAt(level, state.mlxicaseValues[sortId]);
+        state.mlxicaseValues[sortId].push('');
+        state.mlxbwardValues[sortId] = List.removeAt(level, state.mlxbwardValues[sortId]);
+        state.mlxbwardValues[sortId].push('');
+        state.ctxIndexValues[sortId] = List.removeAt(level, state.ctxIndexValues[sortId]);
+        state.ctxIndexValues[sortId].push(0);
+        state.ctxAlignValues[sortId] = List.removeAt(level, state.ctxAlignValues[sortId]);
+        state.ctxAlignValues[sortId].push('left');
+        state.sortlevelValues[sortId] = state.sortlevelValues[sortId] - 1;
     }
 
     isActiveActionValue(sortId:string):boolean {
