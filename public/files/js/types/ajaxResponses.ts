@@ -112,6 +112,7 @@ export namespace AjaxResponse {
     }
 
     export interface QueryFormArgs extends ConcFormArgs {
+        form_type:Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.LOCKED;
         curr_query_types:{[corpname:string]:QueryType};
         curr_queries:{[corpname:string]:string};
         curr_pcq_pos_neg_values:{[corpname:string]:'pos'|'neg'};
@@ -133,6 +134,7 @@ export namespace AjaxResponse {
     export interface QueryFormArgsResponse extends QueryFormArgs, Kontext.AjaxResponse {}
 
     export interface FilterFormArgs extends ConcFormArgs {
+        form_type:Kontext.ConcFormTypes.FILTER|Kontext.ConcFormTypes.LOCKED;
         query_type:QueryType;
         query:string;
         maincorp:string;
@@ -158,6 +160,7 @@ export namespace AjaxResponse {
     export interface FilterFormArgsResponse extends FilterFormArgs, Kontext.AjaxResponse {}
 
     export interface SortFormArgs extends ConcFormArgs {
+        form_type:Kontext.ConcFormTypes.SORT|Kontext.ConcFormTypes.LOCKED;
         sattr:string;
         skey:string;
         spos:string;
@@ -190,14 +193,17 @@ export namespace AjaxResponse {
     }
 
     export interface SampleFormArgs extends ConcFormArgs {
+        form_type:Kontext.ConcFormTypes.SAMPLE|Kontext.ConcFormTypes.LOCKED;
         rlines:string;
     }
 
     export interface SwitchMainCorpArgs extends ConcFormArgs {
+        form_type:Kontext.ConcFormTypes.SWITCHMC|Kontext.ConcFormTypes.LOCKED;
         maincorp:string;
     }
 
     export interface FirstHitsFormArgs extends ConcFormArgs {
+        form_type:Kontext.ConcFormTypes.FIRSTHITS|Kontext.ConcFormTypes.LOCKED;
         doc_struct:string;
     }
 

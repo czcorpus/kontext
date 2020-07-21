@@ -79,7 +79,7 @@ export enum ActionName {
     CQLEditorInitializeDone = 'CQL_EDITOR_INITIALIZE_DONE',
     CQLEditorEnable = 'CQL_EDITOR_ENABLE',
     CQLEditorDisable = 'CQL_EDITOR_DISABLE',
-    SortSetActiveStore = 'SORT_SET_ACTIVE_STORE',
+    SortSetActiveModel = 'SORT_SET_ACTIVE_STORE',
     SortFormSubmit = 'SORT_FORM_SUBMIT',
     SortFormSetSattr = 'SORT_FORM_SET_SATTR',
     SortFormSetSkey = 'SORT_FORM_SET_SKEY',
@@ -462,11 +462,11 @@ export namespace Actions {
         name:ActionName.CQLEditorDisable;
     }
 
-    export interface SortSetActiveStore extends Action<{
+    export interface SortSetActiveModel extends Action<{
         sortId:string;
         formAction:string;
     }> {
-        name:ActionName.SortSetActiveStore;
+        name:ActionName.SortSetActiveModel;
     }
 
     export interface SortFormSubmit extends Action<{

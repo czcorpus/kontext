@@ -52,8 +52,6 @@ import { TextTypesModel } from '../models/textTypes/main';
 import { WithinBuilderModel } from '../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
 import { QueryContextModel } from '../models/query/context';
-import { ConcSortModel, MultiLevelConcSortModel, SortFormProperties, fetchSortFormArgs,
-    importMultiLevelArg } from '../models/query/sort';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
     from '../models/freqs/freqForms';
@@ -85,6 +83,9 @@ import { Actions, ActionName } from '../models/concordance/actions';
 import { QueryType } from '../models/query/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
+import { ConcSortModel } from '../models/query/sort/single';
+import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs } from '../models/query/sort/common';
+import { MultiLevelConcSortModel } from '../models/query/sort/multi';
 
 
 declare var require:any;
@@ -491,9 +492,10 @@ export class ViewPage {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
         );
-        const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(
-            concFormsArgs, this.concFormsInitialArgs.filter, key);
+        const fetchArgs = <T extends AjaxResponse.FilterFormArgs[keyof AjaxResponse.FilterFormArgs]>(key:(item:AjaxResponse.FilterFormArgs)=>T) =>
+                fetchFilterFormArgs(concFormsArgs, this.concFormsInitialArgs.filter, key);
 
+        const x = fetchArgs(item => item.maincorp)
         const filterFormProps:FilterFormProperties = {
             filters: pipe(
                 concFormsArgs,
@@ -501,7 +503,7 @@ export class ViewPage {
                 List.filter(v => v.form_type === 'filter'),
                 List.map(v => v.op_key)
             ),
-            maincorps: fetchArgs<string>(item => item.maincorp),
+            maincorps: fetchArgs(item => item.maincorp),
             currPnFilterValues: fetchArgs<string>(item => item.pnfilter),
             currQueryTypes: fetchArgs<QueryType>(item => item.query_type),
             currQueries: fetchArgs<string>(item => item.query),
@@ -556,30 +558,33 @@ export class ViewPage {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
         );
-        const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>
-            fetchSortFormArgs(concFormsArgs, key);
-        const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
+        const fetchArgs = <T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
+            key:(item:AjaxResponse.SortFormArgs)=>T
+        ):Array<[string, T]> => List.map(
+            ([k, v]) => tuple(k, v[0]),
+            fetchSortFormArgs(concFormsArgs, this.concFormsInitialArgs.sort, key)
+        );
 
+        const fetchMLArgs = <T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
+            key:(item:AjaxResponse.SortFormArgs)=>Array<T>
+        ):Array<[string, Array<T>]> => fetchSortFormArgs(concFormsArgs, this.concFormsInitialArgs.sort, key);
+
+        const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         const sortModelProps:SortFormProperties = {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            sattr: fetchArgs<string>(item => item.sattr),
-            sbward: fetchArgs<string>(item => item.sbward),
-            sicase: fetchArgs<string>(item => item.sicase),
-            skey: fetchArgs<string>(item => item.skey),
-            spos: fetchArgs<string>(item => item.spos),
-            sortlevel : fetchArgs<number>(item => item.sortlevel),
-            defaultFormAction : fetchSortFormArgs<string>(concFormsArgs, item => item.form_action),
-            mlxattr : fetchArgs<Array<string>>(
-                item => importMultiLevelArg<string>('mlxattr', item, (n)=>availAttrs[0].n)),
-            mlxicase : fetchArgs<Array<string>>(
-                item => importMultiLevelArg<string>('mlxicase', item)),
-            mlxbward : fetchArgs<Array<string>>(
-                item => importMultiLevelArg<string>('mlxbward', item)),
-            mlxctx : fetchArgs<Array<string>>(
-                item => importMultiLevelArg<string>('mlxctx', item)),
-            mlxpos : fetchArgs<Array<number>>(
-                item => importMultiLevelArg<number>('mlxpos', item)),
+            sattr: fetchArgs(item => item.sattr),
+            sbward: fetchArgs(item => item.sbward),
+            sicase: fetchArgs(item => item.sicase),
+            skey: fetchArgs(item => item.skey),
+            spos: fetchArgs(item => item.spos),
+            sortlevel : fetchArgs(item => item.sortlevel),
+            defaultFormAction : fetchArgs(item => item.form_action),
+            mlxattr : fetchMLArgs(item => importMultiLevelArg('mlxattr', item, (n)=>availAttrs[0].n)),
+            mlxicase : fetchMLArgs(item => importMultiLevelArg('mlxicase', item)),
+            mlxbward : fetchMLArgs(item => importMultiLevelArg('mlxbward', item)),
+            mlxctx : fetchMLArgs(item => importMultiLevelArg('mlxctx', item)),
+            mlxpos : fetchMLArgs(item => importMultiLevelArg('mlxpos', item))
         };
 
         this.queryModels.sortModel = new ConcSortModel(

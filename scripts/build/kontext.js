@@ -183,7 +183,6 @@
             'styles': cssPath,
             ...module.exports.findThemeCss(confDoc, cssPath, themesPath)
         };
-
         const pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
         for (let p in pluginBuildConf) {
             const remapModules = pluginBuildConf[p]['remapModules'] || {};
