@@ -36,7 +36,7 @@ import { KontextPage } from '../app/main';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
-import { SelectedTextTypes, AnyTTSelection } from '../models/textTypes/common';
+import { SelectedTextTypes } from '../models/textTypes/common';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page

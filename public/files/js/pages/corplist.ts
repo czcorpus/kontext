@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import corparch from 'plugins/corparch/init';
+import { Kontext } from '../types/common';
 import { KontextPage } from '../app/main';
+import corparch from 'plugins/corparch/init';
 
 declare var require:any;
  // weback - ensure a style (even empty one) is created for the page

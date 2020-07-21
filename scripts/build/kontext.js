@@ -101,6 +101,10 @@
      *
      */
     module.exports.findThemeCss = function (doc, cssPath, themesPath) {
+        const ans = {
+            'custom-styles/theme.less': null,
+            'custom-styles/theme-mobile.less': null
+        };
         const kontextNode = doc.getElementsByTagName('kontext')[0];
         let themeNode = null;
         for (let i = 0; i < kontextNode.childNodes.length; i += 1) {
@@ -115,16 +119,22 @@
             themeName = srch.textContent.trim();
         }
 
-        if (themeNode && themeName) {
-            const cssNode = themeNode.getElementsByTagName('css')[0];
+        function srchCSS(variant) {
+            const cssNode = themeNode.getElementsByTagName('css' + variant)[0];
             if (cssNode) {
                 const css = cssNode.textContent.trim();
                 if (css) {
                     return path.resolve(themesPath, themeName, css);
                 }
             }
+            return path.resolve(cssPath, 'empty.less');
         }
-        return path.resolve(cssPath, 'empty.less');
+
+        if (themeNode) {
+            ans['custom-styles/theme.less'] = srchCSS('');
+            ans['custom-styles/theme-mobile.less'] = srchCSS('_mobile');
+        }
+        return ans;
     }
 
     /**
@@ -171,8 +181,9 @@
             'cqlParser/parser': cqlParserPath,
             'misc/keyboardLayouts': path.resolve(jsPath, 'kb-layouts.json'),
             'styles': cssPath,
-            'custom-styles/theme.less': module.exports.findThemeCss(confDoc, cssPath, themesPath)
+            ...module.exports.findThemeCss(confDoc, cssPath, themesPath)
         };
+
         const pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
         for (let p in pluginBuildConf) {
             const remapModules = pluginBuildConf[p]['remapModules'] || {};
