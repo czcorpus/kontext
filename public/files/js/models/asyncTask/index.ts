@@ -73,7 +73,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     static CHECK_INTERVAL = 10000;
 
-
     constructor(
         dispatcher:IFullActionControl,
         pageModel:IPluginApi,

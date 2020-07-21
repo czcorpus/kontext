@@ -262,6 +262,13 @@ export interface CorpColumn {
 }
 
 /**
+ * A callback used to draw line selection rations once a related
+ * React wrapper is ready. This connects React world with d3 oldschool
+ * chart drawing.
+ */
+export type DrawLineSelectionChart = (rootElm:HTMLElement, corpusId:string, size:[number, number]) => void;
+
+/**
  * ViewConfiguration specifies props for the root React component
  * providing concordances.
  */
@@ -400,6 +407,8 @@ export interface ViewConfiguration {
     supportsTokenConnect:boolean;
 
     anonymousUserConcLoginPrompt:boolean;
+
+    onLineSelChartFrameReady:DrawLineSelectionChart;
 }
 
 

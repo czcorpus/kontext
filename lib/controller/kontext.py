@@ -627,7 +627,7 @@ class Kontext(Controller):
                             'user_id', None) == self.session_get('user', 'id')
                 else:  # initial query => ownership is clear
                     tpl_data['user_owns_conc'] = True
-                if '__latest__' in tpl_data['conc_forms_args']:
+                if '__latest__' in tpl_data.get('conc_forms_args', {}):
                     tpl_data['conc_forms_args'][op_id] = tpl_data['conc_forms_args']['__latest__']
                     del tpl_data['conc_forms_args']['__latest__']
             else:

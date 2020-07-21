@@ -23,7 +23,7 @@ import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { AjaxError } from 'rxjs/ajax';
-import { List } from 'cnc-tskit';
+import { List, HTTP } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
 import { Kontext } from '../types/common';
@@ -245,10 +245,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     bgDownload(filename:string, type:DownloadType, url:string, args?:Kontext.AjaxArgs):void {
         const taskId = `${new Date().getTime()}:${url}`;
         const method = () => {
-            if (type === DownloadType.FREQ2D) {
-                return 'POST';
+            if (type === DownloadType.FREQ2D || type === DownloadType.LINE_SELECTION) {
+                return HTTP.Method.POST;
             }
-            return 'GET';
+            return HTTP.Method.GET;
         };
 
         this.dispatcher.dispatch<ATActions.InboxAddAsyncTask>({
@@ -380,7 +380,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 }
 
             } else if (message instanceof AjaxError) {
-                if (Array.isArray(message.response['messages'])) {
+                if (message.response && Array.isArray(message.response['messages'])) {
                     outMsg = message.response['messages'][0][1];
 
                 } else {

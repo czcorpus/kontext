@@ -22,7 +22,7 @@
 /// <reference path="../vendor.d.ts/d3-color.d.ts" />
 
 import * as d3 from 'vendor/d3';
-import { HTTP, Dict, List, pipe } from 'cnc-tskit';
+import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
 import { of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
@@ -52,24 +52,18 @@ export interface LineGroupStats extends Kontext.AjaxResponse {
  */
 export class LineSelGroupsRatiosChart {
 
+    private readonly layoutModel:PageModel;
 
-    private layoutModel:PageModel;
-
-    private lastGroupStats:LineGroupStats; // group stats cache
+    private readonly exportFormats:Array<string>;
 
     private currWidth:number;
 
     private currHeight:number;
 
-    private exportFormats:Array<string>;
 
-
-    constructor(layoutModel:PageModel, exportFormats:Array<string>, data?:LineGroupStats) {
+    constructor(layoutModel:PageModel, exportFormats:Array<string>) {
         this.layoutModel = layoutModel;
         this.exportFormats = exportFormats;
-        if (data) {
-            this.lastGroupStats = data;
-        }
         this.currWidth = 200;
         this.currHeight = 200;
     }
@@ -165,7 +159,7 @@ export class LineSelGroupsRatiosChart {
         rootElm.append(() => labelWrapper);
     }
 
-    private renderExportLinks(rootElm:d3.Selection<any>, corpusId:string) {
+    private renderExportLinks(data:LineGroupChartData, rootElm:d3.Selection<any>, corpusId:string) {
         if (this.exportFormats.length > 0) {
             const div = rootElm.append('div');
             div.attr('class', 'footer');
@@ -181,43 +175,43 @@ export class LineSelGroupsRatiosChart {
                 aElm.attr('class', 'export');
                 aElm.text(ef);
                 aElm.on('click', () => {
-                    const args = new MultiDict();
+                    const args = new MultiDict<{corpname:String; cformat:string}>();
                     args.set('corpname', corpusId);
-                    args.set('data', JSON.stringify(this.lastGroupStats));
                     args.set('cformat', ef);
-                    args.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
+                    const postArgs = new MultiDict<{data:string; title:string}>();
+                    postArgs.set(
+                        'data',
+                        pipe(
+                            data,
+                            List.map(({groupId, count}) => tuple(
+                                groupId, count
+                            )),
+                            (data) => JSON.stringify(data)
+                        )
+                    );
+                    postArgs.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
                     this.layoutModel.bgDownload(
                         'line-selection-overview.xlsx',
                         DownloadType.LINE_SELECTION,
-                        this.layoutModel.createActionUrl('export_line_groups_chart', args)
+                        this.layoutModel.createActionUrl('export_line_groups_chart', args),
+                        postArgs
                     );
                 });
             });
         }
     }
 
-    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean, corpusId:string, size:[number, number]):void {
+    showGroupsStats(rootElm:HTMLElement, corpusId:string, size:[number, number]):void {
         [this.currWidth, this.currHeight] = size;
-        (() => {
-            if (this.lastGroupStats && usePrevData) {
-                return rxOf(this.lastGroupStats);
+        this.layoutModel.ajax$<LineGroupStats>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl(
+                'ajax_get_line_groups_stats',
+                this.layoutModel.getConcArgs().items()
+            ),
+            {}
 
-            } else {
-                return this.layoutModel.ajax$<LineGroupStats>(
-                    HTTP.Method.GET,
-                    this.layoutModel.createActionUrl(
-                        'ajax_get_line_groups_stats',
-                        this.layoutModel.getConcArgs().items()
-                    ),
-                    {}
-
-                ).pipe(
-                    tap((data) => {
-                        this.lastGroupStats = data;
-                    })
-                );
-            }
-        })().subscribe(
+        ).subscribe(
             (resp) => {
                 const chartData:LineGroupChartData = pipe(
                     resp.groups,
@@ -238,7 +232,7 @@ export class LineSelGroupsRatiosChart {
                     .text(this.layoutModel.translate('linesel__groups_stats_heading'));
                 const colors = this.renderChart(d3Root, chartData);
                 this.renderLabels(chartData, colors, d3Root);
-                this.renderExportLinks(d3Root, corpusId);
+                this.renderExportLinks(chartData, d3Root, corpusId);
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);

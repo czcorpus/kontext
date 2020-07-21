@@ -24,12 +24,14 @@ import { Kontext } from '../../types/common';
 import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
 import { ActionName, Actions } from '../../models/concordance/actions';
 import { ActionName as UserActionName, Actions as UserActions } from '../../models/user/actions';
-import { LineSelectionModes } from '../../models/concordance/common';
+import { LineSelectionModes, DrawLineSelectionChart } from '../../models/concordance/common';
 
 
 export interface LockedLineGroupsMenuProps {
+    corpusId:string;
     canSendEmail:boolean;
-    mode:string; // TODO enum
+    mode:LineSelectionModes;
+    onChartFrameReady:DrawLineSelectionChart;
 }
 
 export interface LineSelectionViews {
@@ -303,6 +305,37 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ----------------------------- <LockedLineGroupsChart /> -----------------------------
+
+    const LockedLineGroupsChart:React.SFC<{
+        corpusId:string;
+        onReady:DrawLineSelectionChart;
+
+    }> = (props) => {
+
+        const ref = React.useRef(null);
+        React.useEffect(
+            () => {
+                if (ref.current) {
+                    const width = ref.current.getBoundingClientRect().width;
+                    const height = ref.current.getBoundingClientRect().height;
+                    props.onReady(ref.current, props.corpusId, [width, height]);
+                }
+            },
+            []
+        );
+
+        return (
+            <fieldset className="chart-area" ref={ref}>
+                {ref.current ?
+                    null :
+                    <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                        title={he.translate('global__loading')} />
+                }
+            </fieldset>
+        );
+    };
+
 
     // ----------------------------- <LockedLineGroupsMenu /> ------------------------------
 
@@ -393,10 +426,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <RenameLabelPanel handleCancel={this._handleRenameCancel} /> :
                         <ActionSwitch waiting={this.props.isBusy} changeHandler={this._actionSwitchHandler} />}
 
-                    <fieldset className="chart-area">
-                        <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={he.translate('global__loading')} />
-                    </fieldset>
+                    <LockedLineGroupsChart onReady={this.props.onChartFrameReady} corpusId={this.props.corpusId} />
 
                     <SelectionLinkAndTools
                             lastCheckpointUrl={this.props.lastCheckpointUrl}

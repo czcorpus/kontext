@@ -42,8 +42,9 @@ import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dash
 import { UsageTipsModel } from '../../models/usageTips';
 import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/concordance/actions';
-import { LineSelectionModes } from '../../models/concordance/common';
+import { LineSelectionModes, DrawLineSelectionChart } from '../../models/concordance/common';
 import { Actions as UserActions, ActionName as UserActionName } from '../../models/user/actions';
+import { timestamp } from 'rxjs/operators';
 
 
 export class ViewPageModels {
@@ -78,6 +79,7 @@ export interface ConcordanceDashboardProps {
         canSendEmail:boolean;
         ShowConcToolbar:boolean;
         anonymousUserConcLoginPrompt:boolean;
+        onLineSelChartFrameReady:DrawLineSelectionChart;
     };
     kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
 }
@@ -133,15 +135,19 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         canSendEmail:boolean;
         mode:LineSelectionModes;
         isBusy:boolean;
+        corpusId:string;
         onCloseClick:()=>void;
+        onChartFrameReady:DrawLineSelectionChart;
 
     }> = (props) => {
 
         const renderContents = () => {
             if (props.isLocked) {
                 return <lineSelViews.LockedLineGroupsMenu
-                        canSendEmail={props.canSendEmail}
-                        mode={props.mode} />;
+                            canSendEmail={props.canSendEmail}
+                            mode={props.mode}
+                            corpusId={props.corpusId}
+                            onChartFrameReady={props.onChartFrameReady} />;
 
             } else {
                 return <lineSelViews.UnsavedLineSelectionMenu mode={props.mode} isBusy={props.isBusy} />;
@@ -162,6 +168,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     interface LineSelectionOpsProps {
         numLinesInLockedGroups:number;
         visible:boolean;
+        onChartFrameReady:DrawLineSelectionChart;
     }
 
     class LineSelectionOps extends React.PureComponent<LineSelectionOpsProps & LineSelectionModelState> {
@@ -252,7 +259,9 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 isBusy={this.props.isBusy}
                                 isLocked={this.props.isLocked}
                                 onCloseClick={this._closeMenuHandler}
-                                canSendEmail={!!this.props.emailDialogCredentials} />
+                                canSendEmail={!!this.props.emailDialogCredentials}
+                                corpusId={this.props.corpusId}
+                                onChartFrameReady={this.props.onChartFrameReady} />
                         :  null}
                 </div>
             );
@@ -450,6 +459,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         viewMode:ViewOptions.AttrViewMode;
         lineSelOpsVisible:boolean;
         numLinesInLockedGroups:number;
+        onChartFrameReady:DrawLineSelectionChart;
     }
 
     class ConcToolbarWrapper extends React.Component<ConcToolbarWrapperProps & LineSelectionModelState> {
@@ -459,7 +469,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 <div className="toolbar-level">
                     <BoundLineSelectionOps
                             visible={this.props.lineSelOpsVisible}
-                            numLinesInLockedGroups={this.props.numLinesInLockedGroups} />
+                            numLinesInLockedGroups={this.props.numLinesInLockedGroups}
+                            onChartFrameReady={this.props.onChartFrameReady} />
                     {this.props.showConcToolbar ?
                         <ConcOptions viewMode={this.props.viewMode} />
                         : null}
@@ -604,7 +615,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
                                 numLinesInLockedGroups={this.props.numItemsInLockedGroups}
-                                viewMode={ConcordanceModel.getViewAttrsVmode(this.props)} />
+                                viewMode={ConcordanceModel.getViewAttrsVmode(this.props)}
+                                onChartFrameReady={this.props.onLineSelChartFrameReady} />
                         {this.props.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
