@@ -323,9 +323,6 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
         );
     }
 
-    unregister():void {
-    }
-
     private loadCorpusInfo(corpusId:string):Observable<any> {
         if (this.state.corpusData && this.state.currentCorpus === corpusId) {
             return rxOf(this.state.corpusData);

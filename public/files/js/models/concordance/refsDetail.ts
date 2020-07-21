@@ -109,8 +109,6 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
         );
     }
 
-    unregister():void {}
-
     importData(data:AjaxResponse.FullRef):Array<[RefsColumn, RefsColumn]> {
         const ans:Array<[RefsColumn, RefsColumn]> = [];
         for (let i = 0; i < data.Refs.length; i += 2) {

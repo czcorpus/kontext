@@ -426,8 +426,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         ));
     }
 
-    unregister():void {}
-
     enableAutoCompleteSupport():void {
         this.changeState(state => {
             state.autoCompleteSupport = true;
