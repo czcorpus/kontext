@@ -495,12 +495,11 @@ export class ViewPage {
         const fetchArgs = <T extends AjaxResponse.FilterFormArgs[keyof AjaxResponse.FilterFormArgs]>(key:(item:AjaxResponse.FilterFormArgs)=>T) =>
                 fetchFilterFormArgs(concFormsArgs, this.concFormsInitialArgs.filter, key);
 
-        const x = fetchArgs(item => item.maincorp)
         const filterFormProps:FilterFormProperties = {
             filters: pipe(
                 concFormsArgs,
                 Dict.values(),
-                List.filter(v => v.form_type === 'filter'),
+                List.filter(v => v.form_type === Kontext.ConcFormTypes.FILTER),
                 List.map(v => v.op_key)
             ),
             maincorps: fetchArgs(item => item.maincorp),
@@ -1147,4 +1146,4 @@ export class ViewPage {
 
 export function init(conf):void {
     new ViewPage(new KontextPage(conf)).init();
-};
+}

@@ -76,8 +76,8 @@ export function fetchFilterFormArgs<T extends AjaxResponse.FilterFormArgs[keyof 
     return pipe(
         args,
         Dict.toEntries(),
-        List.filter(([, v]) => v.form_type === 'filter'),
-        List.map(([formId, args]) => tuple(formId, key(<AjaxResponse.FilterFormArgs>args[formId]))),
+        List.filter(([, v]) => v.form_type === Kontext.ConcFormTypes.FILTER),
+        List.map(([formId, args]) => tuple(formId, key(<AjaxResponse.FilterFormArgs>args))),
         List.concat([tuple('__new__', key(initialArgs))])
     );
 }
