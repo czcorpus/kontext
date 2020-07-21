@@ -596,8 +596,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     disableDefaultShuffling():void {
-        this.state.shuffleForbidden = true;
-        this.emitChange();
+        this.changeState(state => {
+            state.shuffleForbidden = true;
+        });
     }
 
     private testPrimaryQueryNonEmpty():boolean {
