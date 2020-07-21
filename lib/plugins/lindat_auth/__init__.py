@@ -35,7 +35,7 @@ def uni(str_str, encoding="utf-8"):
     return str_str.decode(encoding=encoding, errors="ignore")
 
 
-@exposed()
+@exposed(http_method=('GET', 'POST'))
 def lindat_login(self, request):
     with plugins.runtime.AUTH as auth:
         ans = {}
