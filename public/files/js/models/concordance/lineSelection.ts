@@ -95,10 +95,6 @@ export interface LineSelectionModelArgs {
 export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
         implements IPageLeaveVoter<LineSelectionModelState> {
 
-    static FILTER_NEGATIVE = 'n';
-
-    static FILTER_POSITIVE = 'p';
-
     private readonly layoutModel:PageModel;
 
     private readonly clStorage:ConcLinesStorage<LineSelectionModelState>;
@@ -204,7 +200,8 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             (state, action) => {
                 state.isBusy = true;
                 state.currentGroupIds = [];
-                this.clStorage.clear(state);
+                state.isLocked = false;
+                this.clStorage.clear(state, state.queryHash);
             },
             (state, action, dispatch) => {
                 this.resetServerLineGroups(state).subscribe(
@@ -229,7 +226,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             null,
             (state, action, dispatch) => {
                 // we leave the page here
-                this.removeLines(state, LineSelectionModel.FILTER_NEGATIVE);
+                this.removeLines(state, 'n');
             }
         );
 
@@ -238,7 +235,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             null,
             (state, action, dispatch) => {
                  // we leave the page here
-                this.removeLines(state, LineSelectionModel.FILTER_POSITIVE);
+                this.removeLines(state, 'p');
             }
         );
 
@@ -335,7 +332,9 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             ActionName.RenameSelectionGroupDone,
             (state, action) => {
                 state.isBusy = false;
-                state.currentGroupIds = action.payload.lineGroupIds;
+                if (!action.error) {
+                    state.currentGroupIds = action.payload.lineGroupIds;
+                }
             }
         );
 
@@ -681,7 +680,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
         );
     }
 
-    private removeLines(state:LineSelectionModelState, filter:string):void {
+    private removeLines(state:LineSelectionModelState, filter:'n'|'p'):void {
         const args = this.layoutModel.getConcArgs() as MultiDict<
                 ConcServerArgs & {pnfilter:string}>;
         args.set('pnfilter', filter);

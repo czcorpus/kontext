@@ -382,7 +382,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                     }
                 );
             }
-        )
+        );
+
+        this.addActionHandler<Actions.LineSelectionResetOnServerDone>(
+            ActionName.LineSelectionResetOnServerDone,
+            action => {
+                this.changeState(state => {
+                    state.lineSelOptionsVisible = false;
+                });
+            }
+        );
 
         this.addActionHandler<Actions.AsyncCalculationUpdated>(
             ActionName.AsyncCalculationUpdated,
@@ -663,7 +672,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ActionName.RenameSelectionGroupDone,
             action => {
                 if (!action.error) {
-                    this.changeGroupNaming(action.payload)
+                    this.changeState(state => {
+                        this.changeGroupNaming(state, action.payload);
+                        state.lineSelOptionsVisible = false;
+                    });
                 }
             }
         );
@@ -821,21 +833,20 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             state.numItemsInLockedGroups = data.num_lines_in_groups;
             state.pagination = data.pagination;
             state.unfinishedCalculation = !!data.running_calc;
+            state.lineGroupIds = [];
         });
     }
 
-    private changeGroupNaming(data:ConcGroupChangePayload):void {
-        this.changeState(state => {
-            state.lines = List.map(
-                line => ({
-                    ...line,
-                    lineGroup: line.lineGroup === data.prevId ?
-                        data.newId : line.lineGroup}),
-                state.lines
-            );
-            state.numItemsInLockedGroups = data.numLinesInGroups;
-            state.lineGroupIds = data.lineGroupIds;
-        })
+    private changeGroupNaming(state:ConcordanceModelState, data:ConcGroupChangePayload):void {
+        state.lines = List.map(
+            line => ({
+                ...line,
+                lineGroup: line.lineGroup === data.prevId ?
+                    data.newId : line.lineGroup}),
+            state.lines
+        );
+        state.numItemsInLockedGroups = data.numLinesInGroups;
+        state.lineGroupIds = data.lineGroupIds;
     }
 
     private changeViewMode():Observable<any> {
