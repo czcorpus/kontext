@@ -257,8 +257,8 @@ export class CollPage {
                     allowCorpusSelection: false,
                     tagHelperViews: {},
                     queryStorageView: null,
-                    liveAttrsView: null,
-                    liveAttrsCustomTT: null
+                    LiveAttrsView: null,
+                    LiveAttrsCustomTT: null
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,

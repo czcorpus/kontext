@@ -306,9 +306,23 @@ export namespace PluginInterfaces {
 
     export namespace LiveAttributes {
 
+        export type View = React.ComponentClass|React.SFC;
+
+        export type CustomAttribute = React.ComponentClass|React.SFC;
+
+        export interface Views {
+            LiveAttrsView:View;
+            LiveAttrsCustomTT:CustomAttribute;
+        }
+
         export interface IPlugin {
-            getViews(subcMixerView:React.ComponentClass,
-                textTypesModel:IModel<{}>):any; // TODO types
+
+            getViews(subcMixerView:React.ComponentClass, textTypesModel:IModel<{}>):Views;
+
+            /**
+             * Unregister models e.g. in case of a corpus switch
+             */
+            unregister():void;
         }
 
         /**
@@ -344,10 +358,6 @@ export namespace PluginInterfaces {
              */
             manualAlignCorporaMode:boolean;
         }
-
-        export type View = React.ComponentClass<{}>;
-
-        export type CustomAttribute = React.ComponentClass<{}>;
 
         export interface Factory {
             (

@@ -101,6 +101,8 @@ export class FirstFormPage {
 
     private textTypesModel:TextTypesModel;
 
+    private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
+
     private queryHintModel:UsageTipsModel;
 
     private withinBuilderModel:WithinBuilderModel;
@@ -160,7 +162,7 @@ export class FirstFormPage {
             queryFormArgs.bib_mapping
         );
 
-        const liveAttrsPlugin = liveAttributes(
+        this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
             this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
@@ -177,21 +179,22 @@ export class FirstFormPage {
             }
         );
 
-        let liveAttrsViews;
-        if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
+        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
+        if (this.layoutModel.isNotEmptyPlugin(this.liveAttrsPlugin) &&
+                this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
             this.textTypesModel.enableAutoCompleteSupport();
             // TODO 'this' reference = antipattern
-            liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel);
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
 
         } else {
-            liveAttrsViews = {};
+            liveAttrsViews = {
+                LiveAttrsCustomTT: null,
+                LiveAttrsView: null
+            };
         }
         return {
-            formType:Kontext.ConcFormTypes.QUERY,
-            liveAttrsView: 'LiveAttrsView' in liveAttrsViews ?
-                liveAttrsViews['LiveAttrsView'] : null,
-            liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ?
-                liveAttrsViews['LiveAttrsCustomTT'] : null,
+            ...liveAttrsViews,
+            formType: Kontext.ConcFormTypes.QUERY,
             tagHelperViews: {},
             queryStorageView: null,
             allowCorpusSelection: null
@@ -375,6 +378,7 @@ export class FirstFormPage {
                     this.queryContextModel.unregister();
                     this.withinBuilderModel.unregister();
                     this.virtualKeyboardModel.unregister();
+                    this.liveAttrsPlugin.unregister();
                     this.layoutModel.unmountReactComponent(
                         window.document.getElementById('view-options-mount'));
                     this.layoutModel.unmountReactComponent(
