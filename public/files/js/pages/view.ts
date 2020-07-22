@@ -71,7 +71,7 @@ import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
 import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
-import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData } from '../models/concordance/common';
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, DrawLineSelectionChart } from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
@@ -969,7 +969,10 @@ export class ViewPage {
             supportsTokenConnect: tokenConnect ? tokenConnect.providesAnyTokenInfo() : false,
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
-            )
+            ),
+            onLineSelChartFrameReady:(rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
+                this.lineGroupsChart.showGroupsStats(rootElm, corpusId, size);
+            }
         };
 
         this.viewModels = new ViewPageModels();

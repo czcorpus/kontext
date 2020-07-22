@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatelessModel, Action } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
@@ -45,6 +45,8 @@ interface SendSelToMailResponse extends AjaxConcResponse {
 
 
 export interface LineSelectionModelState {
+
+    corpusId:string;
 
     /**
      * Selected lines information. Encoding is as follows:
@@ -132,6 +134,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
     constructor({layoutModel, dispatcher, clStorage}:LineSelectionModelArgs) {
         const query = layoutModel.getConf<Array<string>>('compiledQuery');
         const initState:LineSelectionModelState = {
+            corpusId: layoutModel.getCorpusIdent().id,
             currentGroupIds: attachColorsToIds(
                 layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
                 v => v,
@@ -243,8 +246,10 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             ActionName.MarkLinesDone,
             (state, action) => {
                 state.isBusy = false;
-                state.currentGroupIds = action.payload.groupIds;
-                state.isLocked = true;
+                if (!action.error) {
+                    state.currentGroupIds = action.payload.groupIds;
+                    state.isLocked = true;
+                }
             }
         );
 
