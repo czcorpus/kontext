@@ -104,7 +104,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
     constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:LiveAttrsModelState,
             controlsAlignedCorpora:boolean,
             getTtSelection:(lockedOnesOnly:boolean)=>{[attr:string]:Array<string>}) {
-        super(dispatcher,initialState);
+        super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.controlsAlignedCorpora = controlsAlignedCorpora;
         this.getTtSelection = getTtSelection;

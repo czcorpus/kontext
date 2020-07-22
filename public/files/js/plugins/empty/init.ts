@@ -39,6 +39,8 @@ export class EmptyPlugin {
     create() {
         return null;
     }
+
+    unregister():void {}
 }
 
 

@@ -42,13 +42,8 @@ export interface ViewModuleArgs {
 export interface LiveAttrsCustomTTProps {
 }
 
-export interface Views {
-    LiveAttrsView:React.ComponentClass<{}, LiveAttrsModelState>;
-    LiveAttrsCustomTT:React.ComponentClass<{}, LiveAttrsModelState>;
-}
 
-
-export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAttrsModel}:ViewModuleArgs):Views {
+export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAttrsModel}:ViewModuleArgs):PluginInterfaces.LiveAttributes.Views {
 
     const ttViews = ttViewInit(dispatcher, he, textTypesModel);
 

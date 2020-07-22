@@ -58,8 +58,8 @@ export interface QueryFormProps {
     allowCorpusSelection:boolean;
     tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
-    liveAttrsView:PluginInterfaces.LiveAttributes.View;
-    liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
+    LiveAttrsView:PluginInterfaces.LiveAttributes.View;
+    LiveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
 }
 
 
@@ -284,8 +284,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 title={he.translate('query__specify_tt')} />
                         {this.props.textTypesFormVisible ?
                                 <ttViews.TextTypesPanel
-                                        liveAttrsView={this.props.liveAttrsView}
-                                        liveAttrsCustomTT={this.props.liveAttrsCustomTT} />
+                                        liveAttrsView={this.props.LiveAttrsView}
+                                        liveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
                                 : <TextTypesNotes description={this.props.textTypesNotes} />
                         }
                     </fieldset>

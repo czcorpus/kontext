@@ -20,7 +20,7 @@
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { TextTypesModel } from '../../models/textTypes/main';
 import * as liveAttrsModel from './models';
-import { init as viewInit, Views } from './view';
+import { init as viewInit } from './view';
 import { List } from 'cnc-tskit';
 
 declare var require:any;
@@ -44,7 +44,7 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
         this.isEnabled = isEnabled;
     }
 
-    getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):Views {
+    getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):PluginInterfaces.LiveAttributes.Views {
         const views = viewInit({
             dispatcher: this.pluginApi.dispatcher(),
             he: this.pluginApi.getComponentHelpers(),
@@ -56,6 +56,10 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
             views.LiveAttrsCustomTT = null;
         }
         return views;
+    }
+
+    unregister():void {
+        this.model.unregister();
     }
 
     getTextInputPlaceholder():string {
