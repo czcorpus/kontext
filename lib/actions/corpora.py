@@ -11,6 +11,8 @@
 # GNU General Public License for more details.
 
 import logging
+import glob
+import os
 from functools import partial
 from collections import defaultdict
 
@@ -72,11 +74,18 @@ class Corpora(Kontext):
                 for (ident, name) in corp_conf_info.metadata.keywords
             ]
 
+        subcorplist = []
+    	subcorp_folder = corpus.get_conf('SUBCBASE')
+        for x in glob.glob(os.path.join(subcorp_folder, '*.subc').encode('utf-8')):
+        	subcorp_name = os.path.splitext(os.path.basename(x))[0]
+        	subcorplist.append(dict(n=subcorp_name, v=subcorp_name, pub=subcorp_folder + '/' + subcorp_name, globalSubcorp=True));
+
         ans = {
             'corpname': corpus_name,
             'description': corp_conf_info.description,
             'size': int(corpus.size()),
             'attrlist': [],
+            'subcorpora': subcorplist,
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
             'citation_info': citation_info,

@@ -22,6 +22,7 @@ import werkzeug.urls
 from werkzeug.datastructures import MultiDict
 from . import Controller
 
+import glob
 import json
 from functools import partial
 import logging
@@ -510,10 +511,20 @@ class Kontext(Controller):
                 else:
                     raise UserActionException(translate('Invalid or expired query'))
 
+    def global_subc_names(self, corpname):
+    	namelist = []
+    	subcorp_folder = self._curr_corpus.get_conf('SUBCBASE')
+        for x in glob.glob(os.path.join(subcorp_folder, '*.subc').encode('utf-8')):
+        	subcorp_name = os.path.splitext(os.path.basename(x))[0]
+        	namelist.append(dict(n=subcorp_name, v=subcorp_name, pub=subcorp_folder + '/' + subcorp_name, globalSubcorp=True));
+        return namelist
+
     def user_subc_names(self, corpname):
-        if self.user_is_anonymous():
-            return []
-        return self.cm.subcorp_names(corpname)
+    	namelist = []
+    	namelist = namelist + self.global_subc_names(corpname)
+    	if not self.user_is_anonymous(): 
+			namelist = namelist + self.cm.subcorp_names(corpname)
+        return namelist
 
     def get_saveable_conc_data(self) -> Dict[str, Any]:
         """
@@ -1011,7 +1022,7 @@ class Kontext(Controller):
             name=self._human_readable_corpname(),
             usesubcorp=usesubcorp,
             origSubcorpName=getattr(self.corp, 'orig_subcname', usesubcorp),
-            foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id)
+            foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id and not self.corp.get_conf('SUBCBASE') in usesubcorp)
 
         if getattr(self.args, 'usesubcorp'):
             result['subcorp_size'] = self.corp.search_size()
@@ -1364,7 +1375,7 @@ class Kontext(Controller):
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
             try:
-                srch = next((x for x in subcorp_list if x['pub'] == self.corp.subcname))
+                srch = next((x for x in subcorp_list if x['pub'] == self.corp.subcname or x['globalSubcorp']))
             except StopIteration:
                 srch = None
             if srch is None:

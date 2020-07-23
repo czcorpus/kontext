@@ -173,7 +173,7 @@ class Subcorpus(Querying):
         else:
             raise SubcorpusError(translate('Empty subcorpus!'))
 
-    @exposed(access_level=1, template='subcorpus/subcorp_form.html', page_model='subcorpForm',
+    @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm',
              http_method='POST', return_type='json')
     def subcorp(self, request):
         try:
@@ -315,16 +315,23 @@ class Subcorpus(Querying):
         )
         return ans
 
-    @exposed(access_level=1, return_type='json')
+    @exposed(access_level=0, return_type='json')
     def ajax_subcorp_info(self, request):
         subcname = request.args.get('subcname', '')
+        subcnametxt = os.path.split(subcname)[-1]
         sc = self.cm.get_Corpus(self.args.corpname, subcname=subcname)
+        gs = False
+        if sc.corp.get_conf('SUBCBASE') in subcname:
+        	sc.is_published = True
+        	sc.orig_subcname = subcnametxt
+        	gs = True
         ans = dict(
             corpusId=self.args.corpname,
             corpusName=self._human_readable_corpname(),
-            subCorpusName=subcname,
-            origSubCorpusName=sc.orig_subcname if sc.is_published else subcname,
+            subCorpusName=subcnametxt,
+            origSubCorpusName=sc.orig_subcname if sc.is_published else subcnametxt,
             corpusSize=sc.size(),
+            globalSubCorpus=gs,
             subCorpusSize=sc.search_size(),
             created=time.mktime(sc.created.timetuple()),
             description=sc.description,
