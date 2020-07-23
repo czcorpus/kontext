@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
@@ -114,13 +114,13 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
 
     // ------------------------- <RefDetail /> ---------------------------
 
-    class RefDetail extends React.PureComponent<RefDetailProps & RefsDetailModelState> {
+    const RefDetail:React.SFC<RefDetailProps & RefsDetailModelState> = (props) => {
 
-        _renderContents() {
-            if (this.props.isBusy) {
+        const renderContents = () => {
+            if (props.isBusy) {
                 return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
 
-            } else if (this.props.data.length === 0) {
+            } else if (props.data.length === 0) {
                 return <p><strong>{he.translate('global__no_data_avail')}</strong></p>;
 
             } else {
@@ -129,7 +129,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
                         <tbody>
                             {List.map(
                                 (item, i) => <RefLine key={i} colGroups={item} />,
-                                this.props.data
+                                props.data
                             )}
                         </tbody>
                     </table>
@@ -137,16 +137,14 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
             }
         }
 
-        render() {
-            return (
-                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="refs-detail"
-                        takeFocus={true}>
-                    <div className="wrapper">
-                        {this._renderContents()}
-                    </div>
-                </layoutViews.PopupBox>
-            );
-        }
+        return (
+            <layoutViews.PopupBox onCloseClick={props.closeClickHandler} customClass="refs-detail"
+                    takeFocus={true}>
+                <div className="wrapper">
+                    {renderContents()}
+                </div>
+            </layoutViews.PopupBox>
+        );
     }
 
     const BoundRefDetail = BoundWithProps<RefDetailProps, RefsDetailModelState>(RefDetail, refsDetailModel);

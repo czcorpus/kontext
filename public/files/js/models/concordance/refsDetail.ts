@@ -48,7 +48,8 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
             {
                 lineIdx: null,
                 data: [],
-                isBusy: false
+                isBusy: true // this is related to an RxJS issue with getState()
+                            // where a component mounted "late" starts with initial state...
             }
         );
         this.layoutModel = layoutModel;
@@ -61,15 +62,14 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
             (state, action, dispatch) => {
                 this.loadRefs(
                     action.payload.corpusId,
-                    action.payload.tokenNumber,
-                    action.payload.lineIdx
+                    action.payload.tokenNumber
 
                 ).subscribe(
                     (data) => {
                         dispatch<Actions.ShowRefDetailDone>({
                             name: ActionName.ShowRefDetailDone,
                             payload: {
-                                data: data,
+                                data,
                                 lineIdx: action.payload.lineIdx
                             }
                         });
@@ -117,7 +117,10 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
         return ans;
     }
 
-    private loadRefs(corpusId:string, tokenNum:number, lineIdx:number):Observable<Array<[RefsColumn, RefsColumn]>> {
+    private loadRefs(
+        corpusId:string,
+        tokenNum:number,
+    ):Observable<Array<[RefsColumn, RefsColumn]>> {
         return this.layoutModel.ajax$<AjaxResponse.FullRef>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('fullref'),
