@@ -24,6 +24,7 @@ import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
 import { ActionName, Actions } from './actions';
+import { HTTP } from 'cnc-tskit';
 
 export interface LoadDataResponse extends Kontext.AjaxResponse {
     data:Array<DataItem>;
@@ -70,7 +71,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             dispatcher,
             {
                 isBusy: false,
-                data: data,
+                data,
                 searchQuery: '',
                 minQuerySize: minCodePrefix,
                 searchType: SearchTypes.BY_CODE,
@@ -154,7 +155,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                             dispatch<Actions.DataLoadDone>({
                                 name: ActionName.DataLoadDone,
                                 payload: {
-                                    data: data
+                                    data
                                 }
                             });
                         },
@@ -174,7 +175,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         dispatch<Actions.SetInputPrefixThrottle>({
             name: ActionName.SetInputPrefixThrottle,
             payload: {
-                timerId: timerId
+                timerId
             }
         });
     }
@@ -188,7 +189,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         args.set('offset', 0); // TODO
         args.set('limit', 20); // TODO
         return this.pageModel.ajax$<LoadDataResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pageModel.createActionUrl('subcorpus/list_published'),
             args
         );

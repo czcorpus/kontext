@@ -19,7 +19,7 @@
  */
 
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -97,7 +97,7 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
 
     private loadQueryOverview():Observable<Array<Kontext.QueryOperation>> {
         return this.pageModel.ajax$<QueryOverviewResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pageModel.createActionUrl('concdesc_json'),
             this.pageModel.getConcArgs(),
             {}

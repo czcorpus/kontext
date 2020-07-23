@@ -31,7 +31,7 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
 
     constructor(data?:Array<[keyof T, T[keyof T]]>) {
         this.data = {};
-        if (data !== undefined) {
+        if (Array.isArray(data)) {
             for (let i = 0; i < data.length; i += 1) {
                 const [k, v] = data[i];
                 if (this.data[k] === undefined) {
@@ -40,6 +40,14 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
                 this.data[k].push(this.importValue(v));
             }
         }
+    }
+
+    static fromDict<U>(data:{[k in keyof U]:U[keyof U]}):MultiDict<U> {
+        const ans = new MultiDict<U>();
+        for (let k in data) {
+            ans.set(k, data[k]);
+        }
+        return ans;
     }
 
     private importValue(v:T[keyof T]):string|undefined {

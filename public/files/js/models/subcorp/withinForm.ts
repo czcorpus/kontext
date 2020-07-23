@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PageModel} from '../../app/page';
+import { Kontext } from '../../types/common';
+import { PageModel } from '../../app/page';
 import { InputMode } from './common';
-import {SubcorpFormModel} from './form';
+import { SubcorpFormModel } from './form';
 import { MultiDict } from '../../multidict';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
-import { List, pipe } from 'cnc-tskit';
+import { List, pipe, HTTP } from 'cnc-tskit';
 import { ActionName, Actions } from './actions';
 
 /**
@@ -37,7 +37,13 @@ export class WithinLine {
     structureName:string;
     attributeCql:Kontext.FormValue<string>;
 
-    constructor(rowIdx:number, negated:boolean, structureName:string, attributeCql:Kontext.FormValue<string>) {
+    constructor(
+        rowIdx:number,
+        negated:boolean,
+        structureName:string,
+        attributeCql:Kontext.FormValue<string>
+    ) {
+
         this.rowIdx = rowIdx;
         this.negated = negated;
         this.structureName = structureName;
@@ -78,8 +84,8 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                     {value: '', isRequired: true, isInvalid: false}
                 )],
                 lineIdGen: 0,
-                inputMode: inputMode,
-                structsAndAttrs: structsAndAttrs,
+                inputMode,
+                structsAndAttrs,
                 helpHintVisible: false
             }
         );
@@ -96,7 +102,12 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         this.addActionHandler<Actions.FormWithinLineAdded>(
             ActionName.FormWithinLineAdded,
             (state, action) => {
-                this.addLine(state, action.payload.structureName, action.payload.negated, action.payload.attributeCql);
+                this.addLine(
+                    state,
+                    action.payload.structureName,
+                    action.payload.negated,
+                    action.payload.attributeCql
+                );
             }
         );
 
@@ -151,15 +162,19 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                     const err = this.validateForm(state);
                     (err === null ?
                         this.pageModel.ajax$<any>(
-                            'POST',
-                            this.pageModel.createActionUrl('/subcorpus/subcorp', [['format', 'json']]),
+                            HTTP.Method.POST,
+                            this.pageModel.createActionUrl(
+                                '/subcorpus/subcorp',
+                                MultiDict.fromDict({format: 'json'})
+                            ),
                             args
                         ) :
                         throwError(err)
 
                     ).subscribe(
                         () => {
-                            window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
+                            window.location.href = this.pageModel.createActionUrl(
+                                'subcorpus/subcorp_list');
                         },
                         (err) => {
                             this.pageModel.showMessage('error', err);
@@ -206,7 +221,12 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         }
     }
 
-    addLine(state:SubcorpWithinFormModelState, structName:string, negated:boolean, cql:string):void {
+    addLine(
+        state:SubcorpWithinFormModelState,
+        structName:string,
+        negated:boolean,
+        cql:string
+    ):void {
         state.lineIdGen += 1;
         state.lines.push(new WithinLine(
             state.lineIdGen,
@@ -257,7 +277,10 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         args.set('method', state.inputMode);
         const alignedCorpora = List.map(v => v.value, this.subcFormModel.getAlignedCorpora());
         if (alignedCorpora.length > 0) {
-            args.replace('aligned_corpora', List.map(v => v.value, this.subcFormModel.getAlignedCorpora()));
+            args.replace(
+                'aligned_corpora',
+                List.map(v => v.value, this.subcFormModel.getAlignedCorpora())
+            );
             args.set('attrs', JSON.stringify(this.subcFormModel.getTTSelections()));
         }
         args.set(

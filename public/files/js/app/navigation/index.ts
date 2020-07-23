@@ -21,15 +21,14 @@
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
-import { IModel, IFullActionControl } from 'kombo';
-import { pipe, List } from 'cnc-tskit';
+import { IFullActionControl } from 'kombo';
+import { pipe, List, HTTP } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
 import { CorpusSwitchModel, ICorpusSwitchSerializable } from '../../models/common/corpusSwitch';
 import { createHistory } from './history';
 import { PageLeaveVoting, IPageLeaveVoter } from '../../models/common/pageLeave';
-import { Actions, ActionName } from '../../models/common/actions';
 
 
 /**
@@ -152,7 +151,8 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         if (typeof path !== 'string') {
             throw new Error(`Cannot create static url. Invalid path: ${path}`);
         }
-        return this.conf.getConf<string>('staticPath') + (path.indexOf('/') === 0 ? '' : '/') + path;
+        return this.conf.getConf<string>('staticPath') +
+            (path.indexOf('/') === 0 ? '' : '/') + path;
     }
 
     /**
@@ -174,7 +174,10 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             urlArgs = pipe(
                 nArgs,
                 List.filter(([, value]) => value !== null && value !== undefined),
-                List.map(([key, value]) => encodeURIComponent(key + '') + '=' + encodeURIComponent(value + ''))
+                List.map(
+                    ([key, value]) => encodeURIComponent(key + '') + '=' +
+                            encodeURIComponent(value + '')
+                )
             ).join('&');
         }
         return this.conf.getConf('rootPath') +
@@ -182,7 +185,13 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
                 (urlArgs ? '?' + urlArgs : '');
     }
 
-    private prepareAjax(method:string, url:string, args:Kontext.AjaxArgs, options?:Kontext.AjaxOptions):AjaxRequestProps {
+    private prepareAjax(
+        method:string,
+        url:string,
+        args:Kontext.AjaxArgs,
+        options?:Kontext.AjaxOptions
+    ):AjaxRequestProps {
+
         if (options === undefined) {
             options = {};
         }
@@ -206,7 +215,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             for (p in obj) {
                 if (obj.hasOwnProperty(p)) {
                     const val = obj[p] !== null && obj[p] !== undefined ? obj[p] : '';
-                    if (Object.prototype.toString.apply(val) === '[object Array]') {
+                    if (Array.isArray(val)) {
                         val.forEach(item => {
                             ans.push(encodeURIComponent(p) + '=' + exportValue(item));
                         });
@@ -239,7 +248,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             throw new Error('ajax() error: unsupported args type ' + (typeof args));
         }
 
-        if (method === 'GET') {
+        if (method === HTTP.Method.GET) {
             let elms = url.split('?');
             if (!elms[1]) {
                 url += '?' + body;
@@ -253,9 +262,9 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             accept: options.accept,
             contentType: options.contentType,
             responseType: options.responseType,
-            method: method,
+            method,
             requestBody: body,
-            url: url
+            url
         }
     }
 
@@ -270,7 +279,12 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
      * @param args Parameters to be passed along with request
      * @param options Additional settings
      */
-    ajax$<T>(method:string, url:string, args:Kontext.AjaxArgs, options?:Kontext.AjaxOptions):Observable<T> {
+    ajax$<T>(
+        method:HTTP.Method,
+        url:string,
+        args:Kontext.AjaxArgs,
+        options?:Kontext.AjaxOptions
+    ):Observable<T> {
         const callArgs = this.prepareAjax(method, url, args, options);
         return ajax({
             url: callArgs.url,
@@ -283,8 +297,15 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         }).pipe(map<RxAjaxResponse, T>(v => v.response));
     }
 
-
-    bgDownload(filename:string, url:string, method:string, args?:Kontext.AjaxArgs):Observable<boolean> {
+    /**
+     * Downloads a remote file using window.URL.
+     */
+    bgDownload(
+        filename:string,
+        url:string,
+        method:HTTP.Method,
+        args?:Kontext.AjaxArgs
+    ):Observable<boolean> {
         return this.ajax$<Blob>(
             method,
             url,
@@ -341,17 +362,20 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         }
 
         const overwriteArgs2 = importArgs(overwriteArgs);
-        overwriteArgs2.forEach(item => {
-            tmp.replace(item[0], []);
+        overwriteArgs2.forEach(([key,]) => {
+            tmp.replace(key, []);
         });
 
-        overwriteArgs2.concat(importArgs(appendArgs)).forEach(item => {
-            tmp.add(item[0], item[1]);
+        overwriteArgs2.concat(importArgs(appendArgs)).forEach(([key, value]) => {
+            tmp.add(key, value);
         });
         return this.encodeURLParameters(tmp);
     }
 
-    registerCorpusSwitchAwareModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
+    registerCorpusSwitchAwareModels(
+        onDone:()=>void,
+        ...models:Array<ICorpusSwitchSerializable<{}, {}>>
+    ):void {
         this.corpusSwitchModel.registerModels(onDone, ...models);
     }
 

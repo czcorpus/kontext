@@ -18,16 +18,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as viewInit, View} from './views';
-import {init as renderersInit, Views as RenderersView} from './renderers';
-import {KwicConnectModel, KnownRenderers} from './model';
+import { Kontext } from '../../types/common';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { init as viewInit, View } from './views';
+import { init as renderersInit, Views as RenderersView } from './renderers';
+import { KwicConnectModel, KnownRenderers } from './model';
 import { IConcLinesProvider } from '../../types/concordance';
 import { List } from 'cnc-tskit';
 
 declare var require:any;
 require('./style.less'); // webpack
+
+
+interface PluginData {
+    kwic_connect: {
+        load_chunk_size:number;
+        max_kwic_words:number
+    }
+}
 
 
 export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IPlugin {
@@ -41,22 +49,28 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
     private renderers:RenderersView;
 
 
-    constructor(pluginApi:IPluginApi, concLinesProvider:IConcLinesProvider, maxKwicWords:number, loadChunkSize:number) {
+    constructor(
+        pluginApi:IPluginApi,
+        concLinesProvider:IConcLinesProvider,
+        maxKwicWords:number,
+        loadChunkSize:number
+    ) {
         this.pluginApi = pluginApi;
         const concArgs = this.pluginApi.getConcArgs();
-
         this.model = new KwicConnectModel({
             dispatcher: pluginApi.dispatcher(),
-            pluginApi: pluginApi,
+            pluginApi,
             corpora: List.concat(
                 pluginApi.getConf<Array<string>>('alignedCorpora'),
                 [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
             ),
-            mainCorp: 'maincorp' in concArgs ? concArgs['maincorp'] : concArgs['corpname'],
+            mainCorp: concArgs.has('maincorp') ?
+                concArgs.head('maincorp') :
+                concArgs.head('corpname'),
             rendererMap: this.selectRenderer.bind(this),
-            concLinesProvider: concLinesProvider,
-            loadChunkSize: loadChunkSize,
-            maxKwicWords: maxKwicWords
+            concLinesProvider,
+            loadChunkSize,
+            maxKwicWords
         });
     }
 
@@ -97,7 +111,7 @@ export const create:PluginInterfaces.KwicConnect.Factory = (
             pluginApi:IPluginApi,
             concLinesProvider:IConcLinesProvider,
             alignedCorpora:Array<string>) => {
-    const conf = pluginApi.getConf<{kwic_connect: {load_chunk_size:number; max_kwic_words:number}}>('pluginData');
+    const conf = pluginApi.getConf<PluginData>('pluginData');
     const plg = new DefaultKwicConnectPlugin(
         pluginApi,
         concLinesProvider,

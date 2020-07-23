@@ -16,15 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {MultiDict} from '../../multidict';
+import { Kontext } from '../../types/common';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { MultiDict } from '../../multidict';
 import * as common from './common';
-import {CorpusInfo, CorpusInfoType, CorpusInfoResponse} from '../../models/common/layout';
+import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { List, pipe } from 'cnc-tskit';
+import { List, pipe, HTTP } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
 
 
@@ -76,7 +76,8 @@ export interface KeywordInfo {
     selected:boolean;
 }
 
-const importKeywordInfo = (preselected:Array<string>) => (v:[string, string, boolean, string]):KeywordInfo => {
+const importKeywordInfo = (preselected:Array<string>) =>
+        (v:[string, string, boolean, string]):KeywordInfo => {
     return {
         ident: v[0],
         label: v[1],
@@ -122,12 +123,20 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
      *
      * @param pluginApi
      */
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData, preselectedKeywords:Array<string>) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        pluginApi:IPluginApi,
+        initialData:CorplistServerData,
+        preselectedKeywords:Array<string>
+    ) {
         super(
             dispatcher,
             {
                 filters: { maxSize: '', minSize: '', name: '', sortBySize: 'name'},
-                keywords: List.map(importKeywordInfo(preselectedKeywords), initialData.search_params.keywords),
+                keywords: List.map(
+                    importKeywordInfo(preselectedKeywords),
+                    initialData.search_params.keywords
+                ),
                 detailData: null,
                 isBusy: false,
                 offset: 0,
@@ -218,11 +227,15 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.loadData(this.exportQuery(state), this.exportFilter(state), state.offset).subscribe(
+                this.loadData(
+                    this.exportQuery(state),
+                    this.exportFilter(state),
+                    state.offset
+                ).subscribe(
                     (data) => {
                         dispatch<Actions.LoadExpansionDataDone>({
                             name: ActionName.LoadExpansionDataDone,
-                            payload: {data: data}
+                            payload: {data}
                         });
                     },
                     (err) => {
@@ -255,11 +268,15 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.changeFavStatus(state, action.payload.corpusId, action.payload.favId).subscribe(
+                this.changeFavStatus(
+                    state,
+                    action.payload.corpusId,
+                    action.payload.favId
+                ).subscribe(
                     (message) => {
                         dispatch<Actions.ListStarClickedDone>({
                             name: ActionName.ListStarClickedDone,
-                            payload: {message: message}
+                            payload: {message}
                         });
                     },
                     (err) => {
@@ -335,7 +352,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             (data) => {
                 dispatch<Actions.LoadDataDone>({
                     name: ActionName.LoadDataDone,
-                    payload: {data: data}
+                    payload: {data}
                 });
             },
             (err) => {
@@ -352,7 +369,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     }
 
     protected updateFilter(state:CorplistTableModelState, filter:Filters):void {
-        for (var p in filter) {
+        for (let p in filter) {
             if (filter.hasOwnProperty(p)) {
                 state.filters[p] = filter[p];
             }
@@ -395,7 +412,11 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         };
     }
 
-    private changeFavStatus(state:CorplistTableModelState, corpusId:string, favId:string):Observable<string> {
+    private changeFavStatus(
+        state:CorplistTableModelState,
+        corpusId:string,
+        favId:string
+    ):Observable<string> {
         if (favId === null) {
             const item:common.GeneratedFavListItem = {
                 subcorpus_id: null,
@@ -403,7 +424,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 corpora:[corpusId]
             };
             return this.pluginApi.ajax$<SetFavItemResponse>(
-                'POST',
+                HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 item
 
@@ -416,7 +437,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
 
         } else {
             return this.pluginApi.ajax$<SetFavItemResponse>(
-                'POST',
+                HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/unset_favorite_item'),
                 {id: favId}
 
@@ -431,7 +452,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
 
     private loadCorpusInfo(corpusId:string):Observable<CorpusInfoResponse> {
         return this.pluginApi.ajax$<CorpusInfoResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('corpora/ajax_get_corp_details'),
             {
                 corpname: corpusId
@@ -439,7 +460,12 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
     }
 
-    private loadData(query:string, filters:Filters, offset:number, limit?:number):Observable<CorplistDataResponse> {
+    private loadData(
+        query:string,
+        filters:Filters,
+        offset:number,
+        limit?:number
+    ):Observable<CorplistDataResponse> {
         const args = new MultiDict();
         args.set('query', query);
         args.set('offset', offset);
@@ -453,7 +479,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         }
         args.set('requestable', '1');
         return this.pluginApi.ajax$<CorplistDataResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
             args
         );
@@ -462,7 +488,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     protected updateDataItem(state:CorplistTableModelState, corpusId, data):void {
         state.rows.forEach((item:common.CorplistItem) => {
             if (item.id === corpusId) {
-                for (var p in data) {
+                for (let p in data) {
                     if (data.hasOwnProperty(p)) {
                         item[p] = data[p];
                     }
@@ -521,7 +547,12 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
 
     protected corplistTableModel:CorplistTableModel;
 
-    constructor(pluginApi:IPluginApi, initialData:CorplistServerData, viewsInit:((...args:any[])=>any)) {
+    constructor(
+        pluginApi:IPluginApi,
+        initialData:CorplistServerData,
+        viewsInit:((...args:any[])=>any)
+    ) {
+
         this.pluginApi = pluginApi;
         this.corplistTableModel = new CorplistTableModel(pluginApi.dispatcher(),
             pluginApi, initialData,

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
@@ -29,6 +29,7 @@ import { ConcDetailModel, ConcDetailModelState } from '../../../models/concordan
 import { ConcordanceModel } from '../../../models/concordance/main';
 import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordance/refsDetail';
 import { Actions, ActionName } from '../../../models/concordance/actions';
+import { DetailExpandPositions } from '../../../models/concordance/common';
 
 
 
@@ -54,10 +55,9 @@ export interface DetailModuleArgs {
     he:Kontext.ComponentHelpers;
     concDetailModel:ConcDetailModel;
     refsDetailModel:RefsDetailModel;
-    lineModel:ConcordanceModel;
 }
 
-export function init({dispatcher, he, concDetailModel, refsDetailModel, lineModel}:DetailModuleArgs):DetailViews {
+export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailModuleArgs):DetailViews {
 
     const layoutViews = he.getLayoutViews();
     const SpeechView = initSpeechViews(dispatcher, he, concDetailModel);
@@ -152,7 +152,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
     // ------------------------- <ExpandConcDetail /> ---------------------------
 
     const ExpandConcDetail:React.SFC<{
-        position:string; // TODO enum
+        position:DetailExpandPositions;
         isWaiting:boolean;
         clickHandler:()=>void;
 
@@ -167,23 +167,13 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel, lineMode
             }
         };
 
-        const createAlt = () => {
-            if (props.position === 'left') {
-                return he.translate('concview__expand_left_symbol');
+        const createAlt = () => props.position === 'left' ?
+            he.translate('concview__expand_left_symbol') :
+            he.translate('concview__expand_right_symbol');
 
-            } else if (props.position === 'right') {
-                return he.translate('concview__expand_right_symbol');
-            }
-        };
-
-        const createImgPath = () => {
-            if (props.position === 'left') {
-                return he.createStaticUrl('/img/prev-page.svg');
-
-            } else if (props.position === 'right') {
-                return he.createStaticUrl('/img/next-page.svg');
-            }
-        };
+        const createImgPath = () => props.position === 'left' ?
+            he.createStaticUrl('/img/prev-page.svg') :
+            he.createStaticUrl('/img/next-page.svg');
 
         if (!props.isWaiting) {
             return (

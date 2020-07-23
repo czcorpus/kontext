@@ -246,7 +246,13 @@ export namespace PluginInterfaces {
         }
 
         export interface Factory {
-            (pluginApi:IPluginApi, offset:number, limit:number, pageSize:number, initialData:Array<Kontext.QueryHistoryItem>):IPlugin;
+            (
+                pluginApi:IPluginApi,
+                offset:number,
+                limit:number,
+                pageSize:number,
+                initialData:Array<Kontext.QueryHistoryItem>
+            ):IPlugin;
         }
     }
 
@@ -399,7 +405,7 @@ export namespace PluginInterfaces {
         }
 
         export enum Actions {
-            FETCH_INFO = 'KWIC_CONNECT_FETCH_INFO'
+            FetchInfo = 'KWIC_CONNECT_FETCH_INFO'
         }
 
         export type Factory = (pluginApi:IPluginApi, concLinesProvider:IConcLinesProvider,

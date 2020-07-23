@@ -23,7 +23,7 @@
 import { Action } from 'kombo';
 import { of as rxOf, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
-import { List, tuple, Dict, pipe } from 'cnc-tskit';
+import { List, tuple, Dict, pipe, HTTP } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main';
 import { Kontext, ViewOptions } from '../types/common';
@@ -71,7 +71,8 @@ import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
 import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
-import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, DrawLineSelectionChart } from '../models/concordance/common';
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData }
+    from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
@@ -84,7 +85,8 @@ import { QueryType } from '../models/query/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
 import { ConcSortModel } from '../models/query/sort/single';
-import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs } from '../models/query/sort/common';
+import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
+    from '../models/query/sort/common';
 import { MultiLevelConcSortModel } from '../models/query/sort/multi';
 
 
@@ -304,7 +306,7 @@ export class ViewPage {
                 concatMap(
                     (interval) => zip(
                         this.layoutModel.ajax$<AjaxResponse.ConcStatus>(
-                            'GET',
+                            HTTP.Method.GET,
                             this.layoutModel.createActionUrl('get_cached_conc_sizes'),
                             this.layoutModel.getConcArgs()
                         ),
@@ -492,8 +494,10 @@ export class ViewPage {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
         );
-        const fetchArgs = <T extends AjaxResponse.FilterFormArgs[keyof AjaxResponse.FilterFormArgs]>(key:(item:AjaxResponse.FilterFormArgs)=>T) =>
-                fetchFilterFormArgs(concFormsArgs, this.concFormsInitialArgs.filter, key);
+        const fetchArgs = <T extends AjaxResponse.FilterFormArgs[
+                keyof AjaxResponse.FilterFormArgs]>
+                (key:(item:AjaxResponse.FilterFormArgs)=>T) =>
+            fetchFilterFormArgs(concFormsArgs, this.concFormsInitialArgs.filter, key);
 
         const filterFormProps:FilterFormProperties = {
             filters: pipe(
@@ -566,7 +570,8 @@ export class ViewPage {
 
         const fetchMLArgs = <T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
             key:(item:AjaxResponse.SortFormArgs)=>Array<T>
-        ):Array<[string, Array<T>]> => fetchSortFormArgs(concFormsArgs, this.concFormsInitialArgs.sort, key);
+        ):Array<[string, Array<T>]> => fetchSortFormArgs(
+            concFormsArgs, this.concFormsInitialArgs.sort, key);
 
         const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         const sortModelProps:SortFormProperties = {
@@ -579,7 +584,8 @@ export class ViewPage {
             spos: fetchArgs(item => item.spos),
             sortlevel : fetchArgs(item => item.sortlevel),
             defaultFormAction : fetchArgs(item => item.form_action),
-            mlxattr : fetchMLArgs(item => importMultiLevelArg('mlxattr', item, (n)=>availAttrs[0].n)),
+            mlxattr : fetchMLArgs(item => importMultiLevelArg(
+                'mlxattr', item, ()=>availAttrs[0].n)),
             mlxicase : fetchMLArgs(item => importMultiLevelArg('mlxicase', item)),
             mlxbward : fetchMLArgs(item => importMultiLevelArg('mlxbward', item)),
             mlxctx : fetchMLArgs(item => importMultiLevelArg('mlxctx', item)),
@@ -970,7 +976,8 @@ export class ViewPage {
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
             ),
-            onLineSelChartFrameReady:(rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
+            onLineSelChartFrameReady:(
+                    rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
                 this.lineGroupsChart.showGroupsStats(rootElm, corpusId, size);
             }
         };

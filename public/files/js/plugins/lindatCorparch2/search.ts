@@ -23,7 +23,7 @@ import {MultiDict} from '../../multidict';
 import {Kontext} from '../../types/common';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { pipe, List, tuple } from 'cnc-tskit';
+import { pipe, List, tuple, HTTP } from 'cnc-tskit';
 
 
 /**
@@ -119,7 +119,7 @@ export class SearchEngine {
             const args = new MultiDict();
             args.set('query', q);
             return this.pluginApi.ajax$<SearchResponse>(
-                'GET',
+                HTTP.Method.GET,
                 this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
                 args
 

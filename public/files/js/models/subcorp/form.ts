@@ -18,19 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, TextTypes} from '../../types/common';
-import {MultiDict} from '../../multidict';
-import {PageModel} from '../../app/page';
-import {TextTypesModel} from '../../models/textTypes/main';
-import {InputMode} from './common';
+import { Kontext, TextTypes } from '../../types/common';
+import { MultiDict } from '../../multidict';
+import { PageModel } from '../../app/page';
+import { TextTypesModel } from '../../models/textTypes/main';
+import { InputMode } from './common';
 import { ITranslator, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
-import { List } from 'cnc-tskit';
+import { List, HTTP } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
 
 
-export function validateSubcProps(subcname:Kontext.FormValue<string>, description:Kontext.FormValue<string>,
-        mustHaveTTSelection:boolean, hasSelectedTTItems:boolean, translator:ITranslator):Error|null {
+export function validateSubcProps(
+        subcname:Kontext.FormValue<string>,
+        description:Kontext.FormValue<string>,
+        mustHaveTTSelection:boolean,
+        hasSelectedTTItems:boolean,
+        translator:ITranslator
+):Error|null {
+
     if (subcname.value === '') {
         subcname.isInvalid = true;
         return new Error(translator.translate('subcform__missing_subcname'));
@@ -71,13 +77,18 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
 
     private textTypesModel:TextTypesModel;
 
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, textTypesModel:TextTypesModel, corpname:string,
-            inputMode:InputMode) {
+    constructor(
+        dispatcher:IFullActionControl,
+        pageModel:PageModel,
+        textTypesModel:TextTypesModel,
+        corpname:string,
+        inputMode:InputMode
+    ) {
         super(
             dispatcher,
             {
-                corpname: corpname,
-                inputMode: inputMode,
+                corpname,
+                inputMode,
                 subcname: {value: '', isRequired: true, isInvalid: false},
                 isPublic: false,
                 description: {value: '', isRequired: false, isInvalid: false},
@@ -102,7 +113,8 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
         this.addActionHandler<Actions.FormSetDescription>(
             ActionName.FormSetDescription,
             action => this.changeState(state => {
-                state.description = Kontext.updateFormValue(this.state.description, {value: action.payload.value})
+                state.description = Kontext.updateFormValue(
+                    this.state.description, {value: action.payload.value})
             })
         );
 
@@ -113,8 +125,11 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
                     this.changeState(state => {state.isBusy = true});
                     this.submit().subscribe(
                         () => {
-                            this.changeState(state => {state.isBusy = false});
-                            window.location.href = this.pageModel.createActionUrl('subcorpus/subcorp_list');
+                            this.changeState(state => {
+                                state.isBusy = false
+                            });
+                            window.location.href = this.pageModel.createActionUrl(
+                                'subcorpus/subcorp_list');
                         },
                         (err) => {
                             this.changeState(state => {state.isBusy = false});
@@ -138,11 +153,22 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
 
         this.addActionHandler<Actions.FormSetAlignedCorpora>(
             ActionName.FormSetAlignedCorpora,
-            action => this.changeState(state => {state.alignedCorpora = action.payload.alignedCorpora})
+            action => this.changeState(state => {
+                state.alignedCorpora = action.payload.alignedCorpora
+            })
         );
     }
 
-    private getSubmitArgs():MultiDict {
+    private getSubmitArgs():MultiDict<{
+        corpname:string;
+        subcname:string;
+        publish:boolean;
+        description:string;
+        method:string;
+        aligned_corpora:string;
+        attrs:string;
+    } & {[scaKey:string]:string}> {
+
         const args = new MultiDict();
         args.set('corpname', this.state.corpname);
         args.set('subcname', this.state.subcname.value);
@@ -180,8 +206,11 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
         const err = this.validateForm(true);
         if (err === null) {
             return this.pageModel.ajax$<any>(
-                'POST',
-                this.pageModel.createActionUrl('/subcorpus/subcorp', [['format', 'json']]),
+                HTTP.Method.POST,
+                this.pageModel.createActionUrl(
+                    '/subcorpus/subcorp',
+                    MultiDict.fromDict({format: 'json'})
+                ),
                 args
             );
 
