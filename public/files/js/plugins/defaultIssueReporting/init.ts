@@ -22,6 +22,7 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
 import { StatelessModel } from 'kombo';
 import { Actions, ActionName } from './actions';
+import { HTTP } from 'cnc-tskit';
 
 
 export interface IssueReportingModelState {
@@ -60,7 +61,7 @@ export class IssueReportingModel extends StatelessModel<IssueReportingModelState
             (state, action) => {state.isBusy = true},
             (state, action, dispatch) => {
                 this.pluginApi.ajax$(
-                    'POST',
+                    HTTP.Method.POST,
                     this.pluginApi.createActionUrl('user/submit_issue'),
                     {
                         body: state.issueBody,
@@ -79,7 +80,7 @@ export class IssueReportingModel extends StatelessModel<IssueReportingModelState
                 );
             }
         );
-        
+
         this.addActionHandler<Actions.SubmitIssueDone>(
             ActionName.SubmitIssueDone,
             (state, action) => {

@@ -222,13 +222,13 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * - default contentType is 'application/x-www-form-urlencoded; charset=UTF-8'
      * - default accept is 'application/json'
      *
-     * @param method A HTTP method (GET, POST, PUT,...)
+     * @param method An HTTP method
      * @param url A URL of the resource
      * @param args Parameters to be passed along with request
      * @param options Additional settings
      */
     ajax$<T>(
-        method:string,
+        method:HTTP.Method,
         url:string,
         args:Kontext.AjaxArgs,
         options?:Kontext.AjaxOptions

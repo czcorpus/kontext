@@ -20,13 +20,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
+import { Kontext } from '../../types/common';
 import { IPluginApi } from '../../types/plugins';
 import { Action, StatefulModel } from 'kombo';
 import { forkJoin, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { AjaxConcResponse } from '../../models/concordance/common';
-import { List } from 'cnc-tskit';
+import { List, HTTP } from 'cnc-tskit';
 
 export enum ParallelType {
     DEFAULT = 'default',
@@ -62,10 +62,12 @@ interface CorplistWrapper {
 }
 
 /**
- * A TS type guard to distinguish between root corplist response (which is kind of a root node of the tree),
+ * A TS type guard to distinguish between root corplist response
+ * (which is kind of a root node of the tree),
  * actual tree nodes and ad-hoc corplist wrapper.
  */
-function isCorplistNodeServer(n:CorplistNodeServer|CorplistNodeServerResponse|CorplistWrapper):n is CorplistNodeServer {
+function isCorplistNodeServer(n:CorplistNodeServer|CorplistNodeServerResponse|CorplistWrapper
+        ):n is CorplistNodeServer {
     return (<CorplistNodeServerResponse>n).messages === undefined;
 }
 
@@ -74,7 +76,8 @@ function isCorplistNodeServer(n:CorplistNodeServer|CorplistNodeServerResponse|Co
  */
 export interface CorplistNodeServerResponse extends AjaxConcResponse {
     corplist:Array<CorplistNodeServer>;
-    sort_corplist:Array<CorplistNodeServer>; // TODO this can be generated on client (=> 50% less data via network)
+    // TODO this can be generated on client (=> 50% less data via network)
+    sort_corplist:Array<CorplistNodeServer>;
 }
 
 /**
@@ -265,7 +268,10 @@ export class TreeWidgetModel extends StatefulModel<{}> {
         return null;
     }
 
-    private importTree(serverNode:CorplistNodeServer|CorplistNodeServerResponse, nodeId:string='a'):Node {
+    private importTree(
+        serverNode:CorplistNodeServer|CorplistNodeServerResponse,
+        nodeId:string='a'
+    ):Node {
         let node:Node;
         if (isCorplistNodeServer(serverNode)) {
             node = {
@@ -333,7 +339,10 @@ export class TreeWidgetModel extends StatefulModel<{}> {
         for (let i = 0; i < indent; i += 1) {
             indentSpc.push(' ');
         }
-        console.log(`${indentSpc.join('')}node[${rootNode.ident}]: active: ${rootNode.active}, name: ${rootNode.name}`);
+        console.log(
+            `${indentSpc.join('')}node[${rootNode.ident}]: ` +
+            `active: ${rootNode.active}, name: ${rootNode.name}`
+        );
         rootNode.corplist.forEach(v => this.dumpNode(v, indent + 4));
     }
 
@@ -343,12 +352,12 @@ export class TreeWidgetModel extends StatefulModel<{}> {
     loadData():Observable<boolean> {
         return forkJoin(
             this.pluginApi.ajax$<CorplistNodeServerResponse>(
-                'GET',
+                HTTP.Method.GET,
                 this.pluginApi.createActionUrl('corpora/ajax_get_corptree_data'),
                 {}
             ),
             this.pluginApi.ajax$<PermittedCorporaResponse>(
-                'GET',
+                HTTP.Method.GET,
                 this.pluginApi.createActionUrl('corpora/ajax_get_permitted_corpora'),
                 {}
             )

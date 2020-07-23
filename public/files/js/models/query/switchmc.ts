@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { Kontext } from '../../types/common';
@@ -28,7 +28,8 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { SwitchMainCorpServerArgs } from './common';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName }
+    from '../../models/mainMenu/actions';
 import { Actions, ActionName } from './actions';
 
 
@@ -61,7 +62,12 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
 
     private readonly syncInitialArgs:AjaxResponse.SwitchMainCorpArgs;
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, data:SwitchMainCorpFormProperties, syncInitialArgs:AjaxResponse.SwitchMainCorpArgs) {
+    constructor(
+        dispatcher:IFullActionControl,
+        layoutModel:PageModel,
+        data:SwitchMainCorpFormProperties,
+        syncInitialArgs:AjaxResponse.SwitchMainCorpArgs
+    ) {
         super(
             dispatcher,
             {
@@ -92,7 +98,10 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
         return this.layoutModel.createActionUrl('switch_main_corp', args);
     }
 
-    syncFrom(src:Observable<AjaxResponse.SwitchMainCorpArgs>):Observable<AjaxResponse.SwitchMainCorpArgs> {
+    syncFrom(
+        src:Observable<AjaxResponse.SwitchMainCorpArgs>
+    ):Observable<AjaxResponse.SwitchMainCorpArgs> {
+
         return src.pipe(
             tap(
                 (data) => {
@@ -112,7 +121,10 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
                         return null;
 
                     } else {
-                        throw new Error('Cannot sync switchmc model - invalid form data type: ' + data.form_type);
+                        throw new Error(
+                            'Cannot sync switchmc model - invalid form data type: ' +
+                            data.form_type
+                        );
                     }
                 }
             )

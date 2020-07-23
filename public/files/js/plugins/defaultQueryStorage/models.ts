@@ -27,7 +27,7 @@ import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../../models/query/cqleditor/parser';
-import { List, Dict } from 'cnc-tskit';
+import { List, Dict, HTTP } from 'cnc-tskit';
 import { QueryType } from '../../models/query/common';
 import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
@@ -283,7 +283,7 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
         args.set('current_corpus', this.state.currentCorpusOnly ? '1' : '0');
         args.set('archived_only', this.state.archivedOnly ? '1' : '0');
         return this.pluginApi.ajax$<AjaxResponse.QueryHistory>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('user/ajax_query_history'),
             args
 
@@ -310,7 +310,7 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
             args.set('name', name);
             if (name) {
                 return this.pluginApi.ajax$<any>(
-                    'POST',
+                    HTTP.Method.POST,
                     this.pluginApi.createActionUrl('save_query'),
                     args
 
@@ -320,7 +320,7 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
                 const args = new MultiDict();
                 args.set('query_id', queryId);
                 return this.pluginApi.ajax$<any>(
-                    'POST',
+                    HTTP.Method.POST,
                     this.pluginApi.createActionUrl('delete_query'),
                     args
                 );

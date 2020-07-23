@@ -18,15 +18,3 @@
     -   id: lesshint
         additional_dependencies:
         - lesshint@4.1.1
--   repo: https://github.com/pre-commit/mirrors-eslint
-    rev: 'v7.5.0'  # Use the sha / tag you want to point at
-    hooks:
-    -   id: eslint
-        files: \.[jt]sx?$  # *.js, *.jsx, *.ts and *.tsx
-        types: [file]
-        additional_dependencies:
-        -   eslint@7.5.0
-        -   typescript@3.7.3
-        -   typescript-eslint@latest
-        -   '@typescript-eslint/parser@latest'
-        -   '@typescript-eslint/eslint-plugin@latest'

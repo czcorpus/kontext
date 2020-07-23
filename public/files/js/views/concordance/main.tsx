@@ -44,7 +44,6 @@ import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/concordance/actions';
 import { LineSelectionModes, DrawLineSelectionChart } from '../../models/concordance/common';
 import { Actions as UserActions, ActionName as UserActionName } from '../../models/user/actions';
-import { timestamp } from 'rxjs/operators';
 
 
 export class ViewPageModels {
@@ -52,7 +51,7 @@ export class ViewPageModels {
     lineViewModel:ConcordanceModel;
     concDetailModel:ConcDetailModel;
     refsDetailModel:RefsDetailModel;
-    userInfoModel:IModel<{}>;
+    userInfoModel:IModel<Record<string, unknown>>;
     collFormModel:CollFormModel;
     mainMenuModel:IModel<MainMenuModelState>;
     ttDistModel:TextTypesDistModel;
@@ -121,8 +120,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         dispatcher: dispatcher,
         he: he,
         concDetailModel: concDetailModel,
-        refsDetailModel: refsDetailModel,
-        lineModel: lineViewModel
+        refsDetailModel: refsDetailModel
     });
     const concSaveViews = concSaveViewsInit(dispatcher, he, lconcSaveModel);
     const extendedInfoViews = extendedInfoViewsInit({dispatcher, he, ttDistModel, usageTipsModel, dashboardModel});

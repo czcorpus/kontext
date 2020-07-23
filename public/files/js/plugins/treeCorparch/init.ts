@@ -23,7 +23,7 @@ import {init as viewInit, Views as TreeCorparchViews} from './view';
 import { StatelessModel, SEDispatcher } from 'kombo';
 import { map } from 'rxjs/operators';
 import { ActionName, Actions } from './actions';
-import { List } from 'cnc-tskit';
+import { List, HTTP } from 'cnc-tskit';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -61,7 +61,7 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
             pluginApi.dispatcher(),
             {
                 active: false,
-                corpusIdent: corpusIdent,
+                corpusIdent,
                 data: null,
                 nodeActive: {}
             }
@@ -107,7 +107,11 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
         );
     }
 
-    private importTree(nodeActive:{[key:string]:boolean}, rootNode:Node, nodeId:string='a'):{node:Node, nodeActive:{[key:string]:boolean}} {
+    private importTree(
+        nodeActive:{[key:string]:boolean},
+        rootNode:Node, nodeId:string='a'
+    ):{node:Node, nodeActive:{[key:string]:boolean}} {
+
         const node = {
             name: rootNode.name,
             ident: rootNode.ident,
@@ -125,7 +129,7 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
             );
         }
         nodeActive[node.ident] = false;
-        return {node: node, nodeActive: nodeActive};
+        return {node, nodeActive};
     }
 
     dumpNode(rootNode:Node):void {
@@ -136,7 +140,7 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
 
     loadData(state:TreeWidgetModelState, dispatch:SEDispatcher) {
         return this.pluginApi.ajax$<any>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('corpora/ajax_get_corptree_data'),
             {}
 
@@ -174,7 +178,8 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
             pluginApi,
             pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
             (corpora:Array<string>, subcorpId:string) => {
-                window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpora[0]);
+                window.location.href = pluginApi.createActionUrl(
+                    'first_form?corpname=' + corpora[0]);
                 return null; // just to keep the type check cool
             }
         );

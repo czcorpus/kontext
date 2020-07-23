@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatefulModel} from 'kombo';
-import { Observable, throwError, of as rxOf, pipe as rxPipe } from 'rxjs';
+import { Observable, throwError, of as rxOf } from 'rxjs';
 import { tap, concatMap } from 'rxjs/operators';
 
 import { AjaxResponse } from '../../types/ajaxResponses';
@@ -27,7 +27,7 @@ import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { AsyncTaskStatus } from '../asyncTask';
-import { pipe, List } from 'cnc-tskit';
+import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
 
 
@@ -89,8 +89,8 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             {
                 lines: [],
                 unfinished: [],
-                relatedCorpora: relatedCorpora,
-                sortKey: sortKey,
+                relatedCorpora,
+                sortKey,
                 filter: initialFilter || {show_deleted: false, corpname: ''},
                 actionBoxVisibleRow: -1,
                 actionBoxActionType: 'pub',
@@ -105,7 +105,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         })
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
-            const subcTasks = itemList.filter(item => item.category == 'subcorpus');
+            const subcTasks = itemList.filter(item => item.category === 'subcorpus');
             if (subcTasks.length > 0) {
                 this.layoutModel.showMessage('info',
                     this.layoutModel.translate('task__type_subcorpus_done'));
@@ -301,7 +301,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         args.set('description', data.description);
 
         return this.layoutModel.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/update_public_desc'),
             args
         );
@@ -329,7 +329,10 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
     }
 
     private publishSubcorpus(rowIdx:number, description:string):Observable<any> {
-        const srchIdx = List.findIndex((_, i) => i === this.state.actionBoxVisibleRow, this.state.lines);
+        const srchIdx = List.findIndex(
+            (_, i) => i === this.state.actionBoxVisibleRow,
+            this.state.lines
+        );
         if (srchIdx === -1) {
             throw new Error('Row not found');
         }
@@ -343,7 +346,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         args.set('subcname', data.usesubcorp);
         args.set('description', description);
         return this.layoutModel.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/publish_subcorpus'),
             args
 
@@ -360,14 +363,17 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         cql: data.cql,
                         size: data.size,
                         published: true,
-                        description: description
+                        description
                     }
                 })
             })
         );
     }
 
-    private createSubcorpus(idx:number, removeOrig:boolean, subcname?:string, cql?:string):Observable<any> {
+    private createSubcorpus(
+        idx:number, removeOrig:boolean, subcname?:string, cql?:string
+    ):Observable<any> {
+
         const srcRow = this.state.lines[idx];
         const params = new MultiDict();
         params.set('corpname', srcRow.corpname);
@@ -376,7 +382,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         params.set('cql', cql !== undefined ? cql : srcRow.cql);
 
         return this.layoutModel.ajax$<AjaxResponse.CreateSubcorpus>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
             params
 
@@ -414,7 +420,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
     private wipeSubcorpus(lineIdx:number):Observable<any> {
         const delRow = this.state.lines[lineIdx];
         return this.layoutModel.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/ajax_wipe_subcorpus'),
             {
                 corpname: delRow.corpname,
@@ -423,7 +429,9 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         ).pipe(
             tap((_) => {
-                this.changeState(state => {state.lines = List.filter((v, i) => i !== lineIdx, state.lines)});
+                this.changeState(state => {
+                    state.lines = List.filter((v, i) => i !== lineIdx, state.lines)
+                });
             })
         );
     }
@@ -466,7 +474,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         args.set('corpname', item.corpname);
         args.set('usesubcorp', item.usesubcorp);
         return this.layoutModel.ajax$<Kontext.AjaxResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/delete'),
             args,
 
@@ -483,7 +491,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.mergeFilter(args, this.state.filter);
 
         return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
-            'GET',
+            HTTP.Method.GET,
             this.layoutModel.createActionUrl('subcorpus/subcorp_list'),
             args
 
@@ -527,7 +535,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         }
         this.mergeFilter(args, filter);
         return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
-            'GET',
+            HTTP.Method.GET,
             this.layoutModel.createActionUrl('subcorpus/subcorp_list'),
             args
 

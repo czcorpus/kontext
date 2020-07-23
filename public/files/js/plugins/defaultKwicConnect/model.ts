@@ -138,8 +138,8 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
             {
                 isBusy: false,
                 data: [],
-                corpora: corpora,
-                mainCorp: mainCorp,
+                corpora,
+                mainCorp,
                 freqType: FreqDistType.LEMMA,
                 blockedByAsyncConc: concLinesProvider.isUnfinishedCalculation(),
                 hasOmittedItems: false
@@ -152,13 +152,40 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         this.concLinesProvider = concLinesProvider;
 
         this.addActionHandler(
-            PluginInterfaces.KwicConnect.Actions.FETCH_INFO,
+            PluginInterfaces.KwicConnect.Actions.FetchInfo,
             (state, action) => {
                 if (state.data.length === 0) {
                     state.isBusy = true;
                 }
             },
-            this.getData
+            (state, action, dispatch) => {
+                if (state.blockedByAsyncConc || state.data.length > 0) {
+                    return;
+                }
+                const freqType = this.selectFreqType();
+                this.fetchResponses(state, freqType, dispatch).subscribe(
+                    (data) => {
+                        dispatch<Actions.FetchInfoDone>({
+                            name: ActionName.FetchInfoDone,
+                            payload: {
+                                data,
+                                freqType
+                            }
+                        });
+                    },
+                    (err) => {
+                        this.pluginApi.showMessage('error', err);
+                        dispatch<Actions.FetchInfoDone>({
+                            name: ActionName.FetchInfoDone,
+                            payload: {
+                                data: [],
+                                freqType: null
+                            },
+                            error: err
+                        });
+                    }
+                );
+            }
         );
 
         this.addActionHandler<Actions.FetchPartialInfoDone>(
@@ -186,50 +213,21 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                 state.blockedByAsyncConc = !action.payload.finished;
             }
         );
-
-        this.addActionHandler<ConcActions.AsyncCalculationUpdated>(
-            '@' + ConcActionName.AsyncCalculationUpdated,
-            (state, action) => {},
-            this.getData
-        );
     }
 
-    private getData(state:KwicConnectState, action:Action, dispatch:SEDispatcher) {    
-        if (state.blockedByAsyncConc || state.data.length > 0) {
-            return;
-        }
-        const freqType = this.selectFreqType();
-        this.fetchResponses(state, freqType, dispatch).subscribe(
-            (data) => {
-                dispatch<Actions.FetchInfoDone>({
-                    name: ActionName.FetchInfoDone,
-                    payload: {
-                        data: data,
-                        freqType: freqType
-                    }
-                });
-            },
-            (err) => {
-                this.pluginApi.showMessage('error', err);
-                dispatch<Actions.FetchInfoDone>({
-                    name: ActionName.FetchInfoDone,
-                    payload: {
-                        data: [],
-                        freqType: null
-                    },
-                    error: err
-                });
-            }
-        );
-    }
-
-    private fetchResponses(state:KwicConnectState, freqType:FreqDistType, dispatch:SEDispatcher):Observable<Array<ProviderWordMatch>> {
+    private fetchResponses(
+        state:KwicConnectState,
+        freqType:FreqDistType,
+        dispatch:SEDispatcher
+    ):Observable<Array<ProviderWordMatch>> {
 
         return this.fetchUniqValues(freqType).pipe(
             concatMap(
                 (kwics) => {
-                    const procItems = List.filter(v => v.split(' ').length <= KwicConnectModel.MAX_WORDS_PER_PHRASE, kwics);
-                    const procData = this.makeStringGroups(List.slice(0, this.maxKwicWords, procItems), this.loadChunkSize);
+                    const procItems = List.filter(v => v.split(' ').length <=
+                        KwicConnectModel.MAX_WORDS_PER_PHRASE, kwics);
+                    const procData = this.makeStringGroups(
+                        List.slice(0, this.maxKwicWords, procItems), this.loadChunkSize);
                     let ans:Observable<Array<ProviderWordMatch>>;
 
                     if (procData.length > 0) {
@@ -242,7 +240,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                                                 dispatch<Actions.FetchPartialInfoDone>({
                                                     name: ActionName.FetchPartialInfoDone,
                                                     payload: {
-                                                        data: data
+                                                        data
                                                     }
                                                 });
                                             }
@@ -257,7 +255,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
                     } else {
                         ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
-                            'GET',
+                            HTTP.Method.GET,
                             'get_corpus_kc_providers',
                             {corpname: state.corpora[0]}
 
@@ -277,7 +275,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
                     if (procItems.length < kwics.length) {
                         ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
-                            'GET',
+                            HTTP.Method.GET,
                             'get_corpus_kc_providers',
                             {corpname: state.corpora[0]}
 
@@ -288,7 +286,8 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                                         data: [{
                                             found: false,
                                             kwic: null,
-                                            contents: this.pluginApi.translate('default_kwic_connect__item_been_ommitted_due_size')
+                                            contents: this.pluginApi.translate(
+                                                'default_kwic_connect__item_been_ommitted_due_size')
                                         }],
                                         heading: p.label,
                                         note: null,
@@ -355,15 +354,19 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
         return ans;
     };
 
-    private fetchKwicInfo(state:KwicConnectState, items:Array<string>):Observable<Array<ProviderWordMatch>> {
-        const args = new MultiDict();
+    private fetchKwicInfo(
+        state:KwicConnectState,
+        items:Array<string>
+    ):Observable<Array<ProviderWordMatch>> {
+
+        const args = new MultiDict<{corpname:string; align:string; w:string}>();
         args.set('corpname', state.mainCorp);
         args.replace('align', List.filter(v => v !== state.mainCorp, state.corpora));
         const procItems = List.slice(0, KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE, items);
         if (procItems.length > 0) {
             List.forEach(v => args.add('w', v), procItems);
             return this.pluginApi.ajax$<AjaxResponseFetchData>(
-                'GET',
+                HTTP.Method.GET,
                 this.pluginApi.createActionUrl('fetch_external_kwic_info'),
                 args
 

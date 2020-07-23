@@ -22,6 +22,7 @@ import { Kontext } from '../../types/common';
 import { KwicConnectModel, KwicConnectState } from './model';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
+import { PluginInterfaces } from '../../types/plugins';
 
 export interface KwicConnectContainerProps {
 
@@ -38,7 +39,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // --------------------- <KwicConnectContainer /> ------------------------------------
 
-    class KwicConnectContainer extends React.Component<KwicConnectContainerProps & KwicConnectState> {
+    class KwicConnectContainer extends React.PureComponent<KwicConnectContainerProps & KwicConnectState> {
+
+        componentDidMount() {
+            dispatcher.dispatch({
+                name: PluginInterfaces.KwicConnect.Actions.FetchInfo
+            });
+        }
 
         render() {
             const outList = this.props.data.filter(output => !!output);

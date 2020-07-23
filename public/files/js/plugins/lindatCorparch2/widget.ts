@@ -28,8 +28,10 @@ import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Actions, ActionName } from './actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { Actions as CommonActions, ActionName as CommonActionName } from '../../models/common/actions';
+import { Actions as QueryActions, ActionName as QueryActionName
+    } from '../../models/query/actions';
+import { Actions as CommonActions, ActionName as CommonActionName
+    } from '../../models/common/actions';
 import { ICorpusSwitchSerializable } from '../../models/common/corpusSwitch';
 
 /**
@@ -161,7 +163,8 @@ export interface CorplistWidgetModelArgs {
  *
  */
 export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
-        implements ICorpusSwitchSerializable<CorplistWidgetModelState, CorplistWidgetModelCorpusSwitchPreserve> {
+        implements ICorpusSwitchSerializable<CorplistWidgetModelState,
+        CorplistWidgetModelCorpusSwitchPreserve> {
 
     private pluginApi:IPluginApi;
 
@@ -184,18 +187,21 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             isVisible: false,
             activeTab: 0,
             activeListItem: [null, null],
-            corpusIdent: corpusIdent,
+            corpusIdent,
             alignedCorpora: [],
-            anonymousUser: anonymousUser,
+            anonymousUser,
             dataFav: dataFavImp,
-            dataFeat: dataFeat,
+            dataFeat,
             isBusy: false,
             currFavitemId: findCurrFavitemId(
                 dataFavImp,
                 {
                     subcorpus_id: pluginApi.getCorpusIdent().usesubcorp,
                     subcorpus_orig_id: pluginApi.getCorpusIdent().origSubcorpName,
-                    corpora: List.concat(pluginApi.getConf<Array<string>>('alignedCorpora'), [pluginApi.getCorpusIdent().id])
+                    corpora: List.concat(
+                        pluginApi.getConf<Array<string>>('alignedCorpora'),
+                        [pluginApi.getCorpusIdent().id]
+                    )
                 }
             ),
             isWaitingForSearchResults: false,
@@ -316,7 +322,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                             name: ActionName.WidgetFavItemAddDone,
                             payload: {
                                 trashedItemId: action.payload.itemId,
-                                rescuedItem: rescuedItem
+                                rescuedItem
                             }
                         });
                     },
@@ -340,7 +346,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
-                    const idx = List.findIndex(v => v.id === action.payload.trashedItemId, state.dataFav);
+                    const idx = List.findIndex(
+                        v => v.id === action.payload.trashedItemId,
+                        state.dataFav
+                    );
                     if (action.payload.rescuedItem) {
                         state.dataFav[idx] = importServerFavitem(action.payload.rescuedItem);
 
@@ -357,7 +366,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             (state, action, dispatch) => {
                 this.removeFavItemFromServer(action.payload.itemId).subscribe(
                     (favItem) => {
-                        const src = rxTimer(0, 1000).pipe(take(CorplistWidgetModel.TRASH_TTL_TICKS));
+                        const src = rxTimer(0, 1000).pipe(
+                            take(CorplistWidgetModel.TRASH_TTL_TICKS)
+                        );
                         if (this.trashTimerSubsc) {
                             this.trashTimerSubsc.unsubscribe();
                         }
@@ -411,7 +422,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     (data) => {
                         dispatch<Actions.WidgetStarIconClickDone>({
                             name: ActionName.WidgetStarIconClickDone,
-                            payload: {data: data}
+                            payload: {data}
                         });
                     },
                     (err) => {
@@ -490,7 +501,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.addActionHandler<Actions.WidgetFocusSearchRow>(
             ActionName.WidgetFocusSearchRow,
             (state, action) => {
-                state.focusedRowIdx = Math.abs((state.focusedRowIdx + action.payload.inc) % state.currSearchResult.length);
+                state.focusedRowIdx = Math.abs(
+                    (state.focusedRowIdx + action.payload.inc) % state.currSearchResult.length);
             }
         );
 
@@ -590,7 +602,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     const rotationLen = newCol === 0 ? state.dataFav.length : state.dataFeat.length;
                     state.activeListItem = [
                         newCol,
-                        colInc !== 0 ? 0 : (row + rowInc) >= 0 ? Math.abs((row + rowInc) % rotationLen) : rotationLen - 1
+                        colInc !== 0 ?
+                            0 :
+                            (row + rowInc) >= 0 ?
+                                Math.abs((row + rowInc) % rotationLen) :
+                                rotationLen - 1
                     ];
                 }
             }
@@ -623,7 +639,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             (data) => {
                 dispatch<Actions.WidgetSearchDone>({
                     name: ActionName.WidgetSearchDone,
-                    payload: {data: data}
+                    payload: {data}
                 });
             },
             (err) => {
@@ -647,7 +663,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         };
     }
 
-    deserialize(state:CorplistWidgetModelState, data:CorplistWidgetModelCorpusSwitchPreserve, corpora:Array<[string, string]>):void {
+    deserialize(
+        state:CorplistWidgetModelState,
+        data:CorplistWidgetModelCorpusSwitchPreserve,
+        corpora:Array<[string, string]>
+    ):void {
         if (data) {
             List.forEach(
                 ([oldCorp, newCorp]) => {
@@ -693,9 +713,13 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
      * Returns (promise wrapped) newly created item
      * as a result of "rescue" operation or null if the item is lost.
      */
-    private removeItemFromTrash(state:CorplistWidgetModelState, itemId:string):Observable<common.ServerFavlistItem> {
+    private removeItemFromTrash(
+        state:CorplistWidgetModelState,
+        itemId:string
+    ):Observable<common.ServerFavlistItem> {
 
-        if (this.trashTimerSubsc && List.find(x => x.trashTTL !== null, state.dataFav) === undefined) {
+        if (this.trashTimerSubsc &&
+                List.find(x => x.trashTTL !== null, state.dataFav) === undefined) {
             this.trashTimerSubsc.unsubscribe();
         }
         state.currFavitemId = findCurrFavitemId(
@@ -705,7 +729,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         const trashedItem = List.find(x => x.id === itemId, state.dataFav);
         if (trashedItem) {
             return this.pluginApi.ajax$<common.ServerFavlistItem>(
-                'POST',
+                HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 {
                     subcorpus_id: trashedItem.subcorpus_id,
@@ -757,8 +781,9 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     }
 
     private shouldStartSearch(state:CorplistWidgetModelState):boolean {
-        return state.currSearchPhrase.length >= CorplistWidgetModel.MIN_SEARCH_PHRASE_ACTIVATION_LENGTH ||
-            List.find(x => x.selected, state.availSearchKeywords) !== undefined;
+        return state.currSearchPhrase.length >=
+            CorplistWidgetModel.MIN_SEARCH_PHRASE_ACTIVATION_LENGTH ||
+                List.find(x => x.selected, state.availSearchKeywords) !== undefined;
     }
 
     private searchDelayed(state:CorplistWidgetModelState):Observable<Array<SearchResultRow>> {
@@ -820,7 +845,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         }
     }
 
-    private reloadItems(editAction:Observable<Array<common.CorplistItem>>, message:string|null):Observable<FavitemsList> {
+    private reloadItems(
+        editAction:Observable<Array<common.CorplistItem>>,
+        message:string|null
+    ):Observable<FavitemsList> {
         return editAction.pipe(
             tap((_) => {
                 if (message !== null) {
@@ -841,7 +869,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     // TODO: this.dataFav = this.importServerItems(favItems);
 
-    private setFavItem(state:CorplistWidgetModelState, showMessage:boolean=true):Observable<FavitemsList> {
+    private setFavItem(
+        state:CorplistWidgetModelState,
+        showMessage:boolean=true
+    ):Observable<FavitemsList> {
+
         const message = showMessage ?
                 this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
                 null;
@@ -860,7 +892,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         return this.reloadItems(this.pluginApi.ajax$(
             HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
-            {id: id}
+            {id}
         ), message);
     }
 
