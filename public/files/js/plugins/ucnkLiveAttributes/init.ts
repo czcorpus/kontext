@@ -62,6 +62,10 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
         this.model.unregister();
     }
 
+    getRegistrationId():string {
+        return this.model.getRegistrationId();
+    }
+
     getTextInputPlaceholder():string {
         if (this.isEnabled) {
             return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');

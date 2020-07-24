@@ -38,7 +38,7 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
         this.model = model;
     }
 
-    getWidgetView():React.ComponentClass {
+    getWidgetView():PluginInterfaces.SubcMixer.View {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
@@ -59,7 +59,10 @@ const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, co
         {
             ttAttributes: [],
             ttInitialAvailableValues: textTypesModel.getInitialAvailableValues(),
-            currentSubcname: Kontext.newFormValue('', true),
+            subcname: Kontext.newFormValue('', true),
+            description: Kontext.newFormValue('', false),
+            otherValidationError: null,
+            subcIsPublic: false,
             shares: [],
             alignedCorpora: [],
             corpusIdAttr: corpusIdAttr,
@@ -68,8 +71,6 @@ const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, co
             isBusy: false,
             isVisible: false,
             numOfErrors: 0,
-            subcIsPublic: false,
-            subcDescription: Kontext.newFormValue('', false),
             liveattrsSelections: {}
         }
     );

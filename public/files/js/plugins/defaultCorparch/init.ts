@@ -20,7 +20,7 @@
 
 import { Kontext} from '../../types/common';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { CorplistWidgetModel } from './widget';
+import { CorplistWidgetModel, CorplistWidgetModelState, CorplistWidgetModelCorpusSwitchPreserve } from './widget';
 import { CorplistPage, CorplistServerData } from './corplist';
 import { init as viewInit } from './corplistView';
 import { init as widgetInit } from './widgetView';
@@ -79,6 +79,7 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
             dispatcher: this.pluginApi.dispatcher(),
             util: this.pluginApi.getComponentHelpers(),
             widgetModel: this.model,
+            corpusSwitchModel: this.pluginApi.getModels().corpusSwitchModel
         });
     }
 
@@ -104,8 +105,12 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
         return new CorplistPage(this.pluginApi, initialData, initViews);
     }
 
-    disposeWidget():void {
+    unregister():void {
         this.model.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.model.getRegistrationId();
     }
 }
 

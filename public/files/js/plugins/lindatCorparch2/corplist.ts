@@ -148,6 +148,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
         this.pluginApi = pluginApi;
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
+        this.handleLoad = this.handleLoad.bind(this);
 
         this.addActionHandler<Actions.LoadDataDone>(
             ActionName.LoadDataDone,

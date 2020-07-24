@@ -17,7 +17,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, Bound } from 'kombo';
+import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
@@ -26,12 +26,14 @@ import { SearchKeyword, SearchResultRow } from './search';
 import { Actions, ActionName } from './actions';
 import { Keyboard, Strings, List } from 'cnc-tskit';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch';
 
 
 export interface WidgetViewModuleArgs {
     dispatcher:IActionDispatcher;
     util:Kontext.ComponentHelpers;
     widgetModel:CorplistWidgetModel;
+    corpusSwitchModel:CorpusSwitchModel;
 }
 
 export interface WidgetViews {
@@ -42,7 +44,8 @@ export interface WidgetViews {
 export function init({
     dispatcher,
     util,
-    widgetModel}:WidgetViewModuleArgs
+    widgetModel,
+    corpusSwitchModel}:WidgetViewModuleArgs
 ):React.ComponentClass<{}, CorplistWidgetModelState> {
 
     const layoutViews = util.getLayoutViews();
@@ -569,13 +572,13 @@ export function init({
 
     // ----------------------------- <CorpusButton /> --------------------------
 
-    const CorpusButton:React.SFC<{
-        isWaitingToSwitch:boolean;
+    interface CorpusButtonProps {
         corpusIdent:Kontext.FullCorpusIdent;
         isWidgetVisible:boolean;
         onClick:()=>void;
+    }
 
-    }> = (props) => {
+    const CorpusButton:React.SFC<CorpusSwitchModelState & CorpusButtonProps> = (props) => {
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
             if (evt.keyCode === Keyboard.Code.ENTER || evt.keyCode === Keyboard.Code.ESC) {
@@ -587,9 +590,9 @@ export function init({
 
         return (
             <button type="button"
-                    className={`util-button${props.isWaitingToSwitch ? ' waiting': ''}`}
+                    className={`util-button${props.isBusy ? ' waiting': ''}`}
                     onClick={props.onClick} onKeyDown={handleKeyDown}>
-                {props.isWaitingToSwitch ?
+                {props.isBusy ?
                     <layoutViews.AjaxLoaderBarImage htmlClass="loader" /> :
                     null
                 }
@@ -599,6 +602,10 @@ export function init({
             </button>
         );
     };
+
+    // ----------------------------- <BoundCorpusButton /> --------------------------
+
+    const BoundCorpusButton = BoundWithProps<CorpusButtonProps, CorpusSwitchModelState>(CorpusButton, corpusSwitchModel);
 
     // ------------------------------- <SubcorpSelection /> -----------------------------
 
@@ -744,10 +751,10 @@ export function init({
             return (
                 <div className="CorplistWidget">
                     <div>
-                        <CorpusButton isWaitingToSwitch={this.props.isBusy}
-                                corpusIdent={this.props.corpusIdent}
-                                onClick={this._handleWidgetButtonClick}
-                                isWidgetVisible={this.props.isVisible} />
+                        <BoundCorpusButton
+                            corpusIdent={this.props.corpusIdent}
+                            onClick={this._handleWidgetButtonClick}
+                            isWidgetVisible={this.props.isVisible} />
                         {this.props.isVisible ? this._renderWidget() : null}
                         {this.props.availableSubcorpora.length > 0 ?
                             (<span>

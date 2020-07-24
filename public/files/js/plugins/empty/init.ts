@@ -18,6 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { IUnregistrable } from '../../models/common/common';
+import { IPluginApi } from '../../types/plugins';
+import { IFullActionControl } from 'kombo';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+
 /**
  * This type is used by KonText build scripts whenever
  * an optional plugin is set to none (i.e. a tag without children
@@ -30,7 +35,21 @@
  *
  * See also PageModel.isNotEmptyPlugin()
  */
-export class EmptyPlugin {
+export class EmptyPlugin implements IUnregistrable {
+
+    constructor(dispatcher:IFullActionControl) {
+        dispatcher.registerActionListener((action, dispatch) => {
+            if (action.name === GlobalActionName.SwitchCorpus) {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name:GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        });
+    }
 
     getViews() {
         return {};
@@ -41,9 +60,13 @@ export class EmptyPlugin {
     }
 
     unregister():void {}
+
+    getRegistrationId():string {
+        return 'empty-plugin';
+    }
 }
 
 
-export default function create(...args:Array<any>):any {
-    return new EmptyPlugin();
+export default function create(pluginApi:IPluginApi, ...args:Array<any>) {
+    return new EmptyPlugin(pluginApi.dispatcher());
 }

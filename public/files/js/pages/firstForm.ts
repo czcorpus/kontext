@@ -165,7 +165,7 @@ export class FirstFormPage {
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
-            this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
+            this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             false,
             {
                 bibAttr: textTypesData['bib_attr'],
@@ -180,8 +180,7 @@ export class FirstFormPage {
         );
 
         let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
-        if (this.layoutModel.isNotEmptyPlugin(this.liveAttrsPlugin) &&
-                this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
+        if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
             this.textTypesModel.enableAutoCompleteSupport();
             // TODO 'this' reference = antipattern
             liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
@@ -257,7 +256,7 @@ export class FirstFormPage {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             structList: this.layoutModel.getConf<Array<string>>('StructList'),
-            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ?
+            tagAttr: this.layoutModel.pluginTypeIsActive(PluginName.TAGHELPER) ?
                 this.layoutModel.getConf<string>('tagAttr') : null,
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             currQueries: queryFormArgs.curr_queries
@@ -365,20 +364,11 @@ export class FirstFormPage {
             this.attachQueryForm(ttAns, corparchWidget);
             this.initCorpnameLink();
             const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
+            // all the models must be unregistered and components must
+            // be unmounted to prevent memory leaks and unwanted action handlers
+            // from previous instance
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
-                    // all the models must be unregistered and components must
-                    // be unmounted to prevent memory leaks and unwanted action handlers
-                    // from previous instance
-                    corparchPlg.disposeWidget();
-                    this.queryModel.unregister();
-                    this.cqlEditorModel.unregister();
-                    this.queryHintModel.unregister();
-                    this.textTypesModel.unregister();
-                    this.queryContextModel.unregister();
-                    this.withinBuilderModel.unregister();
-                    this.virtualKeyboardModel.unregister();
-                    this.liveAttrsPlugin.unregister();
                     this.layoutModel.unmountReactComponent(
                         window.document.getElementById('view-options-mount'));
                     this.layoutModel.unmountReactComponent(
@@ -388,7 +378,14 @@ export class FirstFormPage {
                     this.init();
                 },
                 this.queryModel,
-                this.cqlEditorModel
+                this.cqlEditorModel,
+                corparchPlg,
+                this.queryHintModel,
+                this.textTypesModel,
+                this.queryContextModel,
+                this.withinBuilderModel,
+                this.virtualKeyboardModel,
+                this.liveAttrsPlugin
             );
         });
     }

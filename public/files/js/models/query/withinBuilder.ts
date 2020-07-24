@@ -24,8 +24,9 @@ import { Observable } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { HTTP, List, Dict, pipe, tuple } from 'cnc-tskit';
-import { Kontext } from '../../types/common';
 import { WithinBuilderData } from './common';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 
 
 export interface WithinBuilderModelState {
@@ -38,7 +39,8 @@ export interface WithinBuilderModelState {
 /**
  *
  */
-export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState> {
+export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState>
+        implements IUnregistrable {
 
     private readonly pageModel:PageModel;
 
@@ -109,6 +111,24 @@ export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState> 
                 }
             }
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'within-builder-model';
     }
 
     private loadAttrs():Observable<WithinBuilderData> {

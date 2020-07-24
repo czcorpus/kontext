@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2020 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2020 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,15 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../types/common';
+import { Action } from 'kombo';
 
-export enum InputMode {
-    GUI = 'gui',
-    RAW = 'raw'
+
+export enum ActionName {
+
+    ShowLoginDialog = 'USER_SHOW_LOGIN_DIALOG'
 }
 
-export interface BaseSubcorFormState {
-    subcname:Kontext.FormValue<string>;
-    description:Kontext.FormValue<string>;
-    otherValidationError:Error|null;
+
+export namespace Actions {
+
+
+    export interface ShowLoginDialog extends Action<{}> {
+        name:ActionName.ShowLoginDialog;
+    }
+
 }

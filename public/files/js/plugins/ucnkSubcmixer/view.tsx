@@ -462,13 +462,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             selectedValues={props.shares}
                             currentResult={props.currentResult}
                             numOfErrors={props.numOfErrors}
-                            currentSubcname={props.currentSubcname}
+                            currentSubcname={props.subcname}
                             usedAttributes={Dict.map(v => true, props.liveattrsSelections)}
                             alignedCorpora={props.alignedCorpora}
                             ratioLimit={props.ratioLimit}
                             isBusy={props.isBusy}
                             isPublic={props.subcIsPublic}
-                            description={props.subcDescription} />
+                            description={props.description} />
                     : null}
             </div>
         );

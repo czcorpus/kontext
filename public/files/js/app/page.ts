@@ -53,8 +53,9 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
-import { ICorpusSwitchSerializable } from '../models/common/corpusSwitch';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
+import { IUnregistrable } from '../models/common/common';
+import { PluginName } from './plugin';
 
 
 export enum DownloadType {
@@ -111,6 +112,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     private authPlugin:PluginInterfaces.Auth.IPlugin;
 
+    private appBarPlugin:PluginInterfaces.ApplicationBar.IPlugin;
+
     private readonly l10n:L10n;
 
     private asyncTaskChecker:AsyncTaskChecker;
@@ -147,7 +150,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             corpusViewOptionsModel: this.corpViewOptionsModel,
             generalViewOptionsModel: this.generalViewOptionsModel,
             asyncTaskInfoModel: this.asyncTaskChecker,
-            mainMenuModel: this.mainMenuModel
+            mainMenuModel: this.mainMenuModel,
+            corpusSwitchModel: this.appNavig.corpusSwitchModel
         };
     }
 
@@ -531,18 +535,22 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     abstract pluginApi():IPluginApi;
 
     /**
-     * Test whether a plug-in is currently active (= configured, loaded and
-     * active for the current corpus). The method considers only the client-side
-     * part of a plug-in which means it is perfectly correct to have a server-side
-     * plug-in enabled while this method returns false.
-     *
-     * Please note that plug-ins here are identified by their respective
-     * server names and not by JS camel-case names - i.e. use
-     * 'live_attributes' and not 'liveAttributes' to test the plug-in status.
-     *
+     * Test whether a plug-in is currently active - i.e.:
+     * - configured + built
+     * - loaded and active for the current corpus
      */
-    pluginIsActive(name:string):boolean {
+    pluginTypeIsActive(name:PluginName):boolean {
         return this.getConf<Array<string>>('activePlugins').indexOf(name) > -1;
+    }
+
+    /**
+     * If false then KonText is not compiled with this plug-in and uses
+     * a dummy replacement EmptyPlugin. I.e. this tests a static plug-in
+     * configuration. If you want/need to test runtime situation please
+     * use pluginTypeIsActive().
+     */
+    isNotEmptyPlugin(plugin:any):boolean {
+        return plugin && !(plugin instanceof EmptyPlugin);
     }
 
     resetMenuActiveItemAndNotify():void {
@@ -611,7 +619,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * @return true if the plug-in has been installed else false
      */
     private initIssueReporting():boolean {
-        if (this.pluginIsActive('issue_reporting')) {
+        if (this.pluginTypeIsActive(PluginName.ISSUE_REPORTING)) {
             const mount = document.getElementById('error-reporting-mount');
             if (mount) {
                 const plugin = issueReportingPlugin(this.pluginApi())
@@ -630,10 +638,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             }
         }
         return false;
-    }
-
-    isNotEmptyPlugin(plugin:any):boolean {
-        return plugin && !(plugin instanceof EmptyPlugin);
     }
 
     /**
@@ -682,7 +686,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     registerCorpusSwitchAwareModels(
         onDone:()=>void,
-        ...models:Array<ICorpusSwitchSerializable<{}, {}>>
+        ...models:Array<IUnregistrable>
     ):void {
         this.appNavig.registerCorpusSwitchAwareModels(
             () => {
@@ -767,7 +771,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.corpViewOptionsModel
             );
             this.asyncTaskChecker.init();
-            applicationBar(this.pluginApi());
+            this.appBarPlugin = applicationBar(this.pluginApi());
             footerBar(this.pluginApi());
 
             const auth:PluginInterfaces.Auth.IPlugin = authPlugin(this.pluginApi());
@@ -787,6 +791,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             }
             this.authPlugin = auth;
             this.initIssueReporting();
+            this.registerCorpusSwitchAwareModels(
+                () => undefined,
+                this.appBarPlugin
+            )
 
             pageInitFn();
 

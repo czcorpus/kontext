@@ -27,6 +27,7 @@ import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
 import { AsyncTaskChecker } from '../models/asyncTask';
 import { GeneralViewOptionsModelState } from '../models/options/general';
 import { QueryType } from '../models/query/common';
+import { CorpusSwitchModel } from '../models/common/corpusSwitch';
 
 /**
  *
@@ -299,6 +300,7 @@ export namespace Kontext {
         generalViewOptionsModel:StatelessModel<GeneralViewOptionsModelState>;
         asyncTaskInfoModel:AsyncTaskChecker,
         mainMenuModel:MainMenuModel;
+        corpusSwitchModel:CorpusSwitchModel;
     }
 
     export interface AjaxOptions {

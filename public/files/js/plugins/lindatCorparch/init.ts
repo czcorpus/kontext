@@ -100,8 +100,12 @@ export class Plugin {
         return viewsLib.CorptreeWidget;
     }
 
-    disposeWidget():void {
+    unregister():void {
         this.treeModel.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.treeModel.getRegistrationId();
     }
 
     initCorplistPageComponents():PluginInterfaces.Corparch.ICorplistPage {

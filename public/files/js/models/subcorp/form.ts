@@ -22,39 +22,43 @@ import { Kontext, TextTypes } from '../../types/common';
 import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../../models/textTypes/main';
-import { InputMode } from './common';
+import { InputMode, BaseSubcorFormState } from './common';
 import { ITranslator, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { List, HTTP } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
 
-
+/**
+ * Validates form fields and stored possible errors there. In case of errors
+ * spreading across multiple fields an error is returned.
+ *
+ */
 export function validateSubcProps(
-        subcname:Kontext.FormValue<string>,
-        description:Kontext.FormValue<string>,
+        state:BaseSubcorFormState,
         mustHaveTTSelection:boolean,
         hasSelectedTTItems:boolean,
         translator:ITranslator
-):Error|null {
+):void {
 
-    if (subcname.value === '') {
-        subcname.isInvalid = true;
-        return new Error(translator.translate('subcform__missing_subcname'));
+    if (state.subcname.value === '') {
+        state.subcname.isInvalid = true;
+        state.subcname.errorDesc = translator.translate('subcform__missing_subcname');
 
     } else {
-        subcname.isInvalid = false;
+        state.subcname.isInvalid = false;
     }
 
-    if (description.isRequired && description.value === '') {
-        description.isInvalid = true;
-        return new Error(translator.translate('subcform__missing_description'));
+    if (state.description.isRequired && state.description.value === '') {
+        state.description.isInvalid = true;
+        state.description.errorDesc = translator.translate('subcform__missing_description');
 
     } else {
-        subcname.isInvalid = false;
+        state.subcname.isInvalid = false;
     }
 
     if (mustHaveTTSelection && !hasSelectedTTItems) {
-        return new Error(translator.translate('subcform__at_least_one_type_must_be_selected'));
+        state.otherValidationError = new Error(
+            translator.translate('subcform__at_least_one_type_must_be_selected'));
     }
     return null;
 }
@@ -67,6 +71,7 @@ export interface SubcorpFormModelState {
     isPublic:boolean;
     description:Kontext.FormValue<string>;
     isBusy:boolean;
+    otherValidationError:Error|null;
     alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
 }
 
@@ -93,8 +98,8 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
                 isPublic: false,
                 description: {value: '', isRequired: false, isInvalid: false},
                 isBusy: false,
-                alignedCorpora: []
-
+                alignedCorpora: [],
+                otherValidationError: null
             }
         );
         this.pageModel = pageModel;
@@ -139,7 +144,9 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
 
                 } else if (this.state.inputMode === InputMode.RAW) {
                     this.validateForm(false);
-                    this.emitChange();
+                    if (this.state.otherValidationError) {
+                        this.pageModel.showMessage('error', this.state.otherValidationError);
+                    }
                 }
             }
         );
@@ -187,18 +194,16 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
         return args;
     }
 
-    validateForm(mustHaveTTSelection:boolean):Error|null {
-        let result;
+    validateForm(mustHaveTTSelection:boolean):void {
         this.changeState(state => {
-            result = validateSubcProps(
-                state.subcname,
-                state.description,
+            state.otherValidationError = null;
+            validateSubcProps(
+                state,
                 mustHaveTTSelection,
                 this.textTypesModel.hasSelectedItems(),
                 this.pageModel
             );
         });
-        return result;
     }
 
     submit():Observable<any> {

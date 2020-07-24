@@ -49,13 +49,15 @@ class WordlistFormPage {
 
     private subcorpSel:NonQueryCorpusSelectionModel;
 
+    private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
+
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
 
-    private initCorparchPlugin():PluginInterfaces.Corparch.WidgetView {
-        return createCorparch(this.layoutModel.pluginApi()).createWidget(
+    private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
+        return plg.createWidget(
             'wordlist_form',
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
@@ -105,11 +107,11 @@ class WordlistFormPage {
                     wltype: WlTypes.SIMPLE
                 }
             );
-            const corparchWidget = this.initCorparchPlugin();
+            this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
             this.views = wordlistFormInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
-                CorparchWidget: corparchWidget,
+                CorparchWidget: this.initCorparchWidget(this.corparchPlugin),
                 wordlistFormModel: this.wordlistFormModel
             });
 
@@ -142,7 +144,8 @@ class WordlistFormPage {
                         window.document.getElementById('query-overview-mount'));
                     this.init();
                 },
-                this.wordlistFormModel
+                this.wordlistFormModel,
+                this.corparchPlugin
             );
         });
     }

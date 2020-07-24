@@ -32,8 +32,8 @@ import { AnyTTSelection } from '../models/textTypes/common';
 
 
 export interface TextTypesPanelProps {
-    liveAttrsView:PluginInterfaces.LiveAttributes.View;
-    liveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
+    LiveAttrsView:PluginInterfaces.LiveAttributes.View;
+    LiveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
 }
 
 
@@ -874,16 +874,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             return (
                 <div className="TextTypesPanel">
                     <div className="plugin-controls">
-                    {props.liveAttrsView
-                        ? <props.liveAttrsView />
+                    {props.LiveAttrsView
+                        ? <props.LiveAttrsView />
                         : null}
                     </div>
                     <div className="text-type-top-bar">
                         <TTAttribMinimizeSwitch hasSomeMaximized={Dict.hasValue(false, props.minimizedBoxes)} />
                     </div>
                     <div className="grid">
-                        {props.liveAttrsCustomTT
-                            ? <div><props.liveAttrsCustomTT /></div>
+                        {props.LiveAttrsCustomTT
+                            ? <div><props.LiveAttrsCustomTT /></div>
                             : null}
                         {List.map((attrObj) => {
                             return <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>

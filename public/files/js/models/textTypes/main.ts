@@ -30,6 +30,9 @@ import { TTSelOps } from './selectionOps';
 import { SelectedTextTypes, importInitialData, InitialData, SelectionFilterMap,
     IntervalChar, AnyTTSelection} from './common';
 import { Actions, ActionName } from './actions';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName }
+    from '../common/actions';
 
 
 
@@ -92,7 +95,8 @@ export interface TextTypesModelState {
  * (filtering values, updating status - checked/locked, ...).
  */
 export class TextTypesModel extends StatefulModel<TextTypesModelState>
-    implements TextTypes.IAdHocSubcorpusDetector, TextTypes.ITextTypesModel<TextTypesModelState> {
+    implements TextTypes.IAdHocSubcorpusDetector, TextTypes.ITextTypesModel<TextTypesModelState>,
+        IUnregistrable {
 
     private readonly pluginApi:IPluginApi;
 
@@ -417,6 +421,20 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 });
             }
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            action => {
+                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+
     }
 
     private snapshotState(state:TextTypesModelState):void {
@@ -509,6 +527,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         });
     }
 
+    getRegistrationId():string {
+        return 'text-types-model';
+    }
 
     private clearExtendedInfo(state:TextTypesModelState, attrName:string, ident:string):void {
         const attrIdx = this.getAttributeIdx(state, attrName);

@@ -19,12 +19,15 @@
  */
 
 import { Observable } from 'rxjs';
+import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
+
 import { Kontext, TextTypes } from '../types/common';
 import { CoreViews } from './coreViews';
 import { IConcLinesProvider } from '../types/concordance';
-import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
+import { IUnregistrable } from '../models/common/common';
+import { BaseSubcorFormState } from '../models/subcorp/common';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -46,12 +49,12 @@ export interface IPluginApi extends ITranslator {
     unmountReactComponent(element:HTMLElement):boolean;
     getModels():Kontext.LayoutModel;
     getViews():CoreViews.Runtime;
-    pluginIsActive(name:string):boolean;
+    pluginTypeIsActive(name:string):boolean;
     getConcArgs():Kontext.IMultiDict<ConcServerArgs>;
     getCorpusIdent():Kontext.FullCorpusIdent;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
+    setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean):void;
 }
 
 
@@ -82,7 +85,7 @@ export namespace PluginInterfaces {
 
     export namespace ApplicationBar {
 
-        export interface IPlugin {
+        export interface IPlugin extends IUnregistrable {
         }
 
         export interface Factory {
@@ -109,11 +112,15 @@ export namespace PluginInterfaces {
 
     export namespace SubcMixer {
 
-        export interface IPlugin {
-            getWidgetView():React.ComponentClass;
+        export interface Props {
+            isActive:Boolean;
         }
 
-        export type View = React.ComponentClass<{isActive:boolean}>;
+        export interface IPlugin {
+            getWidgetView():View;
+        }
+
+        export type View = React.ComponentClass<Props>|React.SFC<Props>;
 
         export interface Factory {
             (
@@ -286,18 +293,13 @@ export namespace PluginInterfaces {
             getList():React.ComponentClass|React.SFC<{}>;
         }
 
-        export interface IPlugin {
+        export interface IPlugin extends IUnregistrable {
 
             /**
              * Create a corpus selection widget used on the query page
              */
             createWidget(targetAction:string,
                 options:Kontext.GeneralProps):React.ComponentClass<{}>;
-
-            /**
-             * This is needed when corpus change is performed.
-             */
-            disposeWidget():void;
 
             initCorplistPageComponents(initialData:any):ICorplistPage;
         }
@@ -321,14 +323,10 @@ export namespace PluginInterfaces {
             LiveAttrsCustomTT:CustomAttribute;
         }
 
-        export interface IPlugin {
+        export interface IPlugin extends IUnregistrable {
 
-            getViews(subcMixerView:React.ComponentClass, textTypesModel:IModel<{}>):Views;
+            getViews(subcMixerView:SubcMixer.View, textTypesModel:IModel<{}>):Views;
 
-            /**
-             * Unregister models e.g. in case of a corpus switch
-             */
-            unregister():void;
         }
 
         /**

@@ -18,11 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PageModel} from '../../app/page';
-import {ActionName, Actions} from './actions';
+import { Kontext } from '../../types/common';
+import { PageModel } from '../../app/page';
+import { ActionName, Actions } from './actions';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { List } from 'cnc-tskit';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+
 
 declare var require:(ident:string)=>any; // Webpack
 const kbLayouts:Array<Kontext.VirtualKeyboardLayout> = require('misc/keyboardLayouts');
@@ -40,7 +43,8 @@ export interface VirtualKeyboardState {
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
 
 
-export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState> {
+export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
+        implements IUnregistrable {
 
     private pageModel:PageModel;
 
@@ -118,6 +122,24 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState> {
                 state.currentLayoutIdx = action.payload.idx;
             }
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'virtual-keyboard-model';
     }
 
     getActiveKey(keyCode:number):[number, number] {

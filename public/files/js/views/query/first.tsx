@@ -284,8 +284,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 title={he.translate('query__specify_tt')} />
                         {this.props.textTypesFormVisible ?
                                 <ttViews.TextTypesPanel
-                                        liveAttrsView={this.props.LiveAttrsView}
-                                        liveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
+                                        LiveAttrsView={this.props.LiveAttrsView}
+                                        LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
                                 : <TextTypesNotes description={this.props.textTypesNotes} />
                         }
                     </fieldset>

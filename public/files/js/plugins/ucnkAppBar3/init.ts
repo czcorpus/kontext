@@ -20,30 +20,42 @@
 
 /// <reference path="./external.d.ts" />
 
-import {PluginInterfaces} from '../../types/plugins';
-import * as toolbar from 'plugins/applicationBar/toolbar';
-import {PageModel} from '../../app/page';
 import { IFullActionControl, StatelessModel } from 'kombo';
 
-export class AppBarModel extends StatelessModel<{}> {
+import { PluginInterfaces } from '../../types/plugins';
+import * as toolbar from 'plugins/applicationBar/toolbar';
+import { PageModel } from '../../app/page';
+import { ActionName, Actions } from './actions';
+import { IUnregistrable } from '../../models/common/common';
 
-    private layoutModel:PageModel;
+
+export class AppBarModel extends StatelessModel<{}> implements IUnregistrable {
+
+    private readonly layoutModel:PageModel;
 
     constructor(dispatcher:IFullActionControl) {
         super(dispatcher, {});
 
-        this.addActionHandler(
-            'USER_SHOW_LOGIN_DIALOG',
-            (_) => {
+        this.addActionHandler<Actions.ShowLoginDialog>(
+            ActionName.ShowLoginDialog,
+            null,
+            (state, action, dispatch) => {
                 try {
                     toolbar.openLoginDialog();
 
                 } catch (e) {
                     console.error(e);
-                    this.layoutModel.showMessage('error', this.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar'));
+                    this.layoutModel.showMessage(
+                        'error',
+                        this.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar')
+                    );
                 }
             }
         );
+    }
+
+    getRegistrationId():string {
+        return 'ucnk-app-bar-model-3';
     }
 }
 
@@ -53,6 +65,14 @@ export class AppBarPlugin implements PluginInterfaces.ApplicationBar.IPlugin {
 
     constructor(model:AppBarModel) {
         this.model = model;
+    }
+
+    unregister():void {
+        this.model.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.model.getRegistrationId();
     }
 }
 

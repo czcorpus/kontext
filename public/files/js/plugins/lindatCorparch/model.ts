@@ -27,6 +27,7 @@ import { forkJoin, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { AjaxConcResponse } from '../../models/concordance/common';
 import { List, HTTP } from 'cnc-tskit';
+import { IUnregistrable } from '../../models/common/common';
 
 export enum ParallelType {
     DEFAULT = 'default',
@@ -116,7 +117,7 @@ export interface Node {
 /**
  *
  */
-export class TreeWidgetModel extends StatefulModel<{}> {
+export class TreeWidgetModel extends StatefulModel<{}> implements IUnregistrable {
 
     protected readonly pluginApi:IPluginApi;
 
@@ -182,6 +183,10 @@ export class TreeWidgetModel extends StatefulModel<{}> {
                     break;
             }
         });
+    }
+
+    getRegistrationId():string {
+        return 'lindat-corparch-widget-1';
     }
 
     private toggleAllNodesActiveStatus(status:boolean):void {
