@@ -19,19 +19,20 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../types/common';
-import {FormsViews as CollFormsViews} from './coll/forms';
-import {FormsViews as FreqFormsViews} from './freqs/forms';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
-
+import { Kontext } from '../types/common';
+import { FormsViews as CollFormsViews } from './coll/forms';
+import { FormsViews as FreqFormsViews } from './freqs/forms';
+import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
+import { MainMenuModelState } from '../models/mainMenu';
+import { Actions as MMActions, ActionName as MMActionName } from '../models/mainMenu/actions';
+import { List } from 'cnc-tskit';
 
 export interface AnalysisModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     collViews:CollFormsViews;
     freqViews:FreqFormsViews;
-    mainMenuModel:Kontext.IMainMenuModel;
+    mainMenuModel:IModel<MainMenuModelState>;
 }
 
 export interface AnalysisFrameProps {
@@ -50,33 +51,27 @@ export function init({dispatcher, he, collViews, freqViews,
 
     // ------------------------- <AnalysisFrame /> ---------------------------
 
-    class AnalysisFrame extends React.Component<AnalysisFrameProps, {
-        activeItem:Kontext.MainMenuActiveItem;
-    }> {
+    class AnalysisFrame extends React.PureComponent<AnalysisFrameProps & MainMenuModelState> {
 
         constructor(props) {
             super(props);
-            this.state = {activeItem: mainMenuModel.getActiveItem()};
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleCloseClick = this._handleCloseClick.bind(this);
         }
 
-        private modelSubscription:Subscription;
-
         _renderContents() {
-            switch ((this.state.activeItem || {actionName: null}).actionName) {
-                case 'MAIN_MENU_SHOW_COLL_FORM':
+            switch ((this.props.activeItem || {actionName: null}).actionName) {
+                case MMActionName.ShowCollForm:
                     return <collViews.CollForm />;
-                case 'MAIN_MENU_SHOW_FREQ_FORM':
+                case MMActionName.ShowFreqForm:
                     return <freqViews.FrequencyForm initialFreqFormVariant={this.props.initialFreqFormVariant} />;
             }
         }
 
         _getTitle() {
-            switch ((this.state.activeItem || {actionName: null}).actionName) {
-                case 'MAIN_MENU_SHOW_COLL_FORM':
+            switch ((this.props.activeItem || {actionName: null}).actionName) {
+                case MMActionName.ShowCollForm:
                     return he.translate('coll__form_heading');
-                case 'MAIN_MENU_SHOW_FREQ_FORM':
+                case MMActionName.ShowFreqForm:
                     return he.translate('freq__h2_freq_distr');
                 default:
                     return '?';
@@ -84,30 +79,18 @@ export function init({dispatcher, he, collViews, freqViews,
         }
 
         _activeItemIsOurs() {
-            const actions = ['MAIN_MENU_SHOW_COLL_FORM', 'MAIN_MENU_SHOW_FREQ_FORM'];
-            return this.state.activeItem !== null
-                    && actions.indexOf(this.state.activeItem.actionName) > -1;
-        }
-
-        _handleModelChange() {
-            this.setState({
-                activeItem: mainMenuModel.getActiveItem()
-            });
+            const actions = [
+                MMActionName.ShowCollForm,
+                MMActionName.ShowFreqForm
+            ];
+            return this.props.activeItem !== null
+                    && List.some(v => v === this.props.activeItem.actionName, actions);
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                payload: {}
+            dispatcher.dispatch<MMActions.ClearActiveItem>({
+                name: MMActionName.ClearActiveItem
             });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = mainMenuModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -127,7 +110,9 @@ export function init({dispatcher, he, collViews, freqViews,
         }
     }
 
+    const BoundAnalysisFrame = BoundWithProps<AnalysisFrameProps, MainMenuModelState>(AnalysisFrame, mainMenuModel);
+
     return {
-        AnalysisFrame: AnalysisFrame
+        AnalysisFrame: BoundAnalysisFrame
     };
 }

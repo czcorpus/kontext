@@ -21,10 +21,10 @@
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as initView, Views as DefaultTokenConnectRenderers} from './view';
 import {MultiDict} from '../../multidict';
-import * as Immutable from 'immutable';
 import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { HTTP, List } from 'cnc-tskit';
 
 
 declare var require:any;
@@ -44,15 +44,18 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
 
     protected views:DefaultTokenConnectRenderers;
 
-    protected alignedCorpora:Immutable.List<string>;
+    protected alignedCorpora:Array<string>;
 
-    protected providers:Immutable.List<{ident:string, isKwicView:boolean}>;
+    protected providers:Array<{ident:string, isKwicView:boolean}>;
 
     constructor(pluginApi:IPluginApi, views:DefaultTokenConnectRenderers, alignedCorpora:Array<string>, conf:ServerExportedConf) {
         this.pluginApi = pluginApi;
         this.views = views;
-        this.alignedCorpora = Immutable.List<string>(alignedCorpora);
-        this.providers = Immutable.List<{ident:string; isKwicView:boolean}>(conf.providers.map(v => ({ident: v.ident, isKwicView: v.is_kwic_view})));
+        this.alignedCorpora = alignedCorpora;
+        this.providers = List.map(
+            v => ({ident: v.ident, isKwicView: v.is_kwic_view}),
+            conf.providers
+        );
     }
 
     fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<PluginInterfaces.TokenConnect.TCData> {
@@ -60,9 +63,9 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
         args.set('corpname', corpusId);
         args.set('token_id', tokenId);
         args.set('num_tokens', numTokens);
-        args.replace('align', this.alignedCorpora.toArray());
+        args.replace('align', this.alignedCorpora);
         return this.pluginApi.ajax$<PluginInterfaces.TokenConnect.Response>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('fetch_token_detail'),
             args
 
@@ -70,15 +73,13 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
             map(
                 (data:PluginInterfaces.TokenConnect.Response) => ({
                     token: data.token,
-                    renders: Immutable.List<PluginInterfaces.TokenConnect.DataAndRenderer>(
-                        data.items.map(x => ({
-                            renderer: this.selectRenderer(x.renderer),
-                            isKwicView: x.is_kwic_view,
-                            contents: x.contents,
-                            found: x.found,
-                            heading: x.heading
-                        }))
-                    )
+                    renders: data.items.map(x => ({
+                        renderer: this.selectRenderer(x.renderer),
+                        isKwicView: x.is_kwic_view,
+                        contents: x.contents,
+                        found: x.found,
+                        heading: x.heading
+                    }))
                 })
             )
         );

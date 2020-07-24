@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
-import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem} from '../../models/subcorp/list';
+import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem, SubcorpListModelState} from '../../models/subcorp/list';
 import { CoreViews } from '../../types/coreViews';
-import { Subscription } from 'rxjs';
+import { List } from 'cnc-tskit';
+import { Actions, ActionName } from '../../models/subcorp/actions';
 
 
 export interface SubcorpListProps {
@@ -86,8 +86,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmit = () => {
             if (window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
-                dispatcher.dispatch({
-                    name: 'SUBCORP_LIST_DELETE_SUBCORPUS',
+                dispatcher.dispatch<Actions.DeleteSubcorpus>({
+                    name: ActionName.DeleteSubcorpus,
                     payload: {
                         rowIdx: props.rowIdx
                     }
@@ -187,8 +187,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleSortClick = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_SORT_LINES',
+            dispatcher.dispatch<Actions.SortLines>({
+                name: ActionName.SortLines,
                 payload: {
                     colName: props.ident,
                     reverse: props.sortKey ? !props.sortKey.reverse : false
@@ -217,53 +217,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     class DataTable extends React.Component<{
         actionButtonHandle:(action:string, idx:number)=>void;
-    },
-    {
-        lines:Immutable.List<SubcorpListItem>;
+        lines:Array<SubcorpListItem>;
         sortKey:SortKey;
-        unfinished:Immutable.List<UnfinishedSubcorp>;
+        unfinished:Array<UnfinishedSubcorp>;
     }> {
-
-        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handlePublishCheckbox = this._handlePublishCheckbox.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                lines: subcorpLinesModel.getLines(),
-                sortKey: subcorpLinesModel.getSortKey(),
-                unfinished: subcorpLinesModel.getUnfinished()
-            }
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = subcorpLinesModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _exportSortKey(name) {
-            if (name === this.state.sortKey.name) {
-                return this.state.sortKey;
+            if (name === this.props.sortKey.name) {
+                return this.props.sortKey;
             }
             return null;
         }
 
         _handlePublishCheckbox(corpname:string, subcname:string):void {
             if (window.confirm(he.translate('subclist__publish_warning'))) {
-                dispatcher.dispatch({
-                    name: 'SUBCORP_LIST_PUBLISH_ITEM',
+                dispatcher.dispatch<Actions.PublishItem>({
+                    name: ActionName.PublishItem,
                     payload: {
                         corpname: corpname,
                         subcname: subcname
@@ -284,12 +258,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <th>{he.translate('subclist__col_backed_up')}</th>
                             <th />
                         </tr>
-                        {this.state.unfinished.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} /> )}
-                        {this.state.lines.map((item, i) => (
+                        {List.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />, this.props.unfinished)}
+                        {List.map((item, i) => (
                             <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
                                     actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')}
                                     publishCheckboxHandle={this.props.actionButtonHandle.bind(null, 'pub')} />
-                        ))}
+                        ), this.props.lines)}
                     </tbody>
                 </table>
             );
@@ -300,27 +274,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const FilterForm:React.SFC<{
         filter:SubcListFilter;
-        relatedCorpora:Immutable.List<string>;
+        relatedCorpora:Array<string>;
         usesSubcRestore:boolean;
 
     }> = (props) => {
 
         const handleShowDeleted = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_UPDATE_FILTER',
+            dispatcher.dispatch<Actions.UpdateFilter>({
+                name: ActionName.UpdateFilter,
                 payload: {
-                    corpname: props.filter['corpname'],
-                    show_deleted: !props.filter['show_deleted']
+                    corpname: props.filter.corpname,
+                    show_deleted: !props.filter.show_deleted
                 }
             });
         };
 
         const handleCorpusSelection = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_UPDATE_FILTER',
+            dispatcher.dispatch<Actions.UpdateFilter>({
+                name: ActionName.UpdateFilter,
                 payload: {
                     corpname: evt.target.value,
-                    show_deleted: props.filter['show_deleted']
+                    show_deleted: props.filter.show_deleted
                 }
             });
         };
@@ -334,7 +308,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <select id="inp_YT2rx" value={props.filter.corpname}
                                     onChange={handleCorpusSelection}>
                                 <option value="">--</option>
-                                {props.relatedCorpora.map(item => <option key={item} value={item}>{item}</option>)}
+                                {List.map(item => <option key={item} value={item}>{item}</option>, props.relatedCorpora)}
                             </select>
                     </div>
                     {props.usesSubcRestore ?
@@ -388,8 +362,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmit() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_REUSE_QUERY',
+            dispatcher.dispatch<Actions.ReuseQuery>({
+                name: ActionName.ReuseQuery,
                 payload: {
                     idx: this.props.idx,
                     newName: this.state.newName,
@@ -448,8 +422,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmit = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_WIPE_SUBCORPUS',
+            dispatcher.dispatch<Actions.WipeSubcorpus>({
+                name: ActionName.WipeSubcorpus,
                 payload: {
                     idx: props.idx
                 }
@@ -476,8 +450,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmit = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_RESTORE_SUBCORPUS',
+            dispatcher.dispatch<Actions.RestoreSubcorpus>({
+                name: ActionName.RestoreSubcorpus,
                 payload: {
                     idx: props.idx
                 }
@@ -529,8 +503,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleSubmitPublish() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS',
+            dispatcher.dispatch<Actions.PublishSubcorpus>({
+                name: ActionName.PublishSubcorpus,
                 payload: {
                     rowIdx: this.props.rowIdx,
                     description: this.props.description
@@ -539,8 +513,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleSubmitUpdateDesc() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT',
+            dispatcher.dispatch<Actions.SubmitPublicDescription>({
+                name: ActionName.SubmitPublicDescription,
                 payload: {
                     rowIdx: this.props.rowIdx
                 }
@@ -548,8 +522,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleTextAreaChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION',
+            dispatcher.dispatch<Actions.UpdatePublicDescription>({
+                name: ActionName.UpdatePublicDescription,
                 payload: {
                     rowIdx: this.props.rowIdx,
                     description: evt.target.value
@@ -599,29 +573,29 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         handleActionSelect(action) {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE',
+            dispatcher.dispatch<Actions.SetActionBoxType>({
+                name: ActionName.SetActionBoxType,
                 payload: {value: action}
             });
         }
 
         render() {
-            let items = Immutable.List<{id:string, label:string}>();
-            let children = Immutable.List();
+            let items: Array<{id:string, label:string}> = [];
+            let children = [];
             if (!this.props.data.deleted) {
-                items = items.push({id: 'pub', label: he.translate('subclist__public_access_btn')});
-                children = children.push(<PublishingTab key="publish" published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />)
+                items.push({id: 'pub', label: he.translate('subclist__public_access_btn')});
+                children.push(<PublishingTab key="publish" published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />)
             }
             if (!!this.props.data.cql) {
-                items = items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
-                children = children.push(<FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />);
+                items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
+                children.push(<FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />);
             }
             if (!!this.props.data.cql && this.props.data.deleted) {
-                items = items.push(
+                items.push(
                     {id: 'restore', label: he.translate('subclist__action_restore')},
                     {id: 'wipe', label: he.translate('subclist__action_wipe')}
                 )
-                children = children.push(<FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />);
+                children.push(<FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />);
             }
 
             return (
@@ -635,7 +609,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     className="ActionMenu"
                                     callback={this.handleActionSelect}
                                     items={items} >
-                                {children.toArray()}
+                                {children}
                             </layoutViews.TabView>
                             <div className="loader-wrapper">
                                 {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
@@ -650,57 +624,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <SubcorpList /> --------------------------
 
-    class SubcorpList extends React.Component<SubcorpListProps, {
-        filter:SubcListFilter;
-        relatedCorpora:Immutable.List<string>;
-        actionBoxVisible:number;
-        actionBoxData:SubcorpListItem;
-        actionBoxname:string;
-        modelIsBusy:boolean;
-        usesSubcRestore:boolean;
-        actionBoxActionType:string;
-
-    }> {
-
-        private modelSubscription:Subscription;
+    class SubcorpList extends React.Component<SubcorpListProps & SubcorpListModelState> {
 
         constructor(props) {
             super(props);
-            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._handleActionButton = this._handleActionButton.bind(this);
             this._handleActionsClose = this._handleActionsClose.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            const visibleRow = subcorpLinesModel.getActionBoxVisibleRow();
-            return {
-                filter: subcorpLinesModel.getFilter(),
-                relatedCorpora: subcorpLinesModel.getRelatedCorpora(),
-                actionBoxVisible: visibleRow,
-                actionBoxData: visibleRow > -1 ? subcorpLinesModel.getRow(visibleRow) : null,
-                actionBoxname: subcorpLinesModel.getActionBoxActionType(),
-                modelIsBusy: subcorpLinesModel.getIsBusy(),
-                usesSubcRestore: subcorpLinesModel.getUsesSubcRestore(),
-                actionBoxActionType: subcorpLinesModel.getActionBoxActionType()
-            };
-        }
-
-        _modelChangeListener() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = subcorpLinesModel.addListener(this._modelChangeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _handleActionButton(action:string, idx:number) {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_SHOW_ACTION_WINDOW',
+            dispatcher.dispatch<Actions.ShowActionWindow>({
+                name: ActionName.ShowActionWindow,
                 payload: {
                     value: idx,
                     action: action
@@ -709,8 +643,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleActionsClose() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_LIST_HIDE_ACTION_WINDOW',
+            dispatcher.dispatch<Actions.HideActionWindow>({
+                name: ActionName.HideActionWindow,
                 payload: {}
             });
         }
@@ -719,23 +653,26 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <div className="SubcorpList">
                     <section className="inner">
-                        <FilterForm filter={this.state.filter} relatedCorpora={this.state.relatedCorpora}
-                                usesSubcRestore={this.state.usesSubcRestore} />
+                        <FilterForm filter={this.props.filter} relatedCorpora={this.props.relatedCorpora}
+                                usesSubcRestore={this.props.usesSubcRestore} />
                     </section>
-                    {this.state.actionBoxVisible > -1
+                    {this.props.actionBoxVisibleRow > -1
                         ? <ActionBox onCloseClick={this._handleActionsClose}
-                                idx={this.state.actionBoxVisible}
-                                data={this.state.actionBoxData}
-                                action={this.state.actionBoxActionType}
-                                modelIsBusy={this.state.modelIsBusy} />
+                                idx={this.props.actionBoxVisibleRow}
+                                data={this.props.actionBoxVisibleRow > -1 ? this.props.lines[this.props.actionBoxVisibleRow] : null}
+                                action={this.props.actionBoxActionType}
+                                modelIsBusy={this.props.isBusy} />
                         : null}
-                    <DataTable actionButtonHandle={this._handleActionButton} />
+                    <DataTable actionButtonHandle={this._handleActionButton}
+                        lines={this.props.lines}
+                        sortKey={this.props.sortKey}
+                        unfinished={this.props.unfinished} />
                 </div>
             );
         }
     }
 
     return {
-        SubcorpList: SubcorpList
+        SubcorpList: BoundWithProps(SubcorpList, subcorpLinesModel)
     };
 }

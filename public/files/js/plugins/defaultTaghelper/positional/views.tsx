@@ -19,11 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {PositionValue, PositionOptions, TagHelperModelState} from './models';
-import {Kontext, KeyCodes} from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
-import { ConcSortModel } from '../../../models/query/sort';
+import { List } from 'cnc-tskit';
+
+import {PositionValue, PositionOptions, TagHelperModelState} from './models';
+import { Kontext } from '../../../types/common';
+import { Actions, ActionName } from '../actions';
 
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
@@ -73,7 +74,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     // ------------------------------ <ValueList /> ----------------------------
 
     const ValueList:React.SFC<{
-                positionValues:Immutable.Iterable<number, PositionValue>,
+                positionValues:Array<PositionValue>,
                 lineIdx:number;
                 isLocked:boolean;
                 checkboxHandler:CheckboxHandler;
@@ -88,7 +89,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         };
 
         const hasOnlyUnfulfilledChild = () => {
-            return props.positionValues.size === 1 && props.positionValues.get(0).id === '-';
+            return props.positionValues.length === 1 && List.head(props.positionValues).id === '-';
         };
 
         const renderUnfulfilledCheckbox = () => {
@@ -100,7 +101,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             );
         };
         return (
-            props.positionValues.filter(item => item.available).size > 0 ?
+            List.filter(item => item.available, props.positionValues).length > 0 ?
             (
                 <table className="checkbox-list">
                 <tbody>
@@ -144,7 +145,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             <li className="defaultTaghelper_PositionLine">
                 <a className={linkClass} onClick={clickHandler}>
                     <span className="pos-num">{props.lineIdx + 1})</span> {props.position['label']}
-                    <span className="status-text">[ {getAvailableChildren().size} ]</span>
+                    <span className="status-text">[ {getAvailableChildren().length} ]</span>
                 </a>
                 {props.position.isActive ?
                 <ValueList positionValues={getAvailableChildren()}
@@ -159,16 +160,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     const PositionList:React.SFC<{
         sourceId:string;
-        positions:Immutable.List<PositionOptions>;
+        positions:Array<PositionOptions>;
         checkboxHandler:CheckboxHandler;
     }> = (props) => {
 
-        const lineClickHandler = (idx:number) => () => {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_TOGGLE_ACTIVE_POSITION',
+        const lineClickHandler = (idx) => () => {
+            dispatcher.dispatch<Actions.ToggleActivePosition>({
+                name: ActionName.ToggleActivePosition,
                 payload: {
-                    sourceId: props.sourceId,
-                    idx: idx
+                    idx: idx,
+                    sourceId: props.sourceId
                 }
             });
         };
@@ -188,8 +189,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     const TagBuilder:React.SFC<TagHelperModelState> = (props) => {
 
         const checkboxHandler = (lineIdx:number, value:string, checked:boolean) => {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_CHECKBOX_CHANGED',
+            dispatcher.dispatch<Actions.CheckboxChanged>({
+                name: ActionName.CheckboxChanged,
                 payload: {
                     sourceId: props.corpname,
                     position: lineIdx,
@@ -197,10 +198,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                     checked: checked
                 }
             });
-        };
-
-        const escKeyHandler = () => {
-
         };
 
         return (

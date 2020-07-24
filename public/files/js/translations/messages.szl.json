@@ -202,6 +202,8 @@
         "linesel__rename_drop_heading": "Zmiana nazwy abo skasowanie ôznaczyniŏ grupy",
         "linesel__group_does_not_exist_{group}": "Niy ma grupy zdrzōdłowyj '{group}'",
         "linesel__group_missing": "Grupa zdrzōdłowŏ niy może być prōznŏ",
+        "linesel__operations_modal_heading": "Line selection operations",
+        "linesel__current_sel_not_saved_confirm": "The current line selection is not saved yet and will be lost once you leave the page",
         "query__qt_basic": "Podstawowy",
         "query__qt_lemma": "Lymma",
         "query__qt_phrase": "Fraza",

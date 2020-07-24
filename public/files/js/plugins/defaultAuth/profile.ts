@@ -18,43 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
-import * as Immutable from 'immutable';
+import { StatelessModel, IActionDispatcher } from 'kombo';
+import { Observable, of as rxOf, throwError } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
+import { HTTP, Dict } from 'cnc-tskit';
+
 import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../multidict';
-import { concatMap } from 'rxjs/operators';
+import { Actions, ActionName } from './actions';
+import { UsernameTestResponse, validationStatusHasErrors, SignUpResponse, ValidationStatus,
+    PasswordSetResponse, newValidationStatus } from './common';
 
-
-export enum Actions {
-    SET_CURR_PASSWD = 'USER_PROFILE_SET_CURR_PASSWD',
-    SET_NEW_PASSWD = 'USER_PROFILE_SET_NEW_PASSWD',
-    SET_NEW_PASSWD2 = 'USER_PROFILE_SET_NEW_PASSWD2',
-    SUBMIT_NEW_PASSWORD = 'USER_PROFILE_SUBMIT_NEW_PASSWORD',
-    SUBMIT_NEW_PASSWORD_DONE = 'USER_PROFILE_SUBMIT_NEW_PASSWORD_DONE',
-    SET_USERNAME = 'USER_PROFILE_SET_USERNAME',
-    CHECK_USERNAME = 'USER_PROFILE_CHECK_USERNAME',
-    CHECK_USERNAME_DONE = 'USER_PROFILE_CHECK_USERNAME_DONE',
-    SET_FIRSTNAME = 'USER_PROFILE_SET_FIRSTNAME',
-    SET_LASTNAME = 'USER_PROFILE_SET_LASTNAME',
-    SET_EMAIL = 'USER_PROFILE_SET_EMAIL',
-    SUBMIT_SIGN_UP = 'USER_PROFILE_SUBMIT_SIGN_UP',
-    SUBMIT_SIGN_UP_DONE = 'USER_PROFILE_SUBMIT_SIGN_UP_DONE',
-    NEW_REGISTRATION = 'USER_PROFILE_NEW_REGISTRATION',
-    GO_TO_MAIN_PAGE = 'USER_PROFILE_GO_TO_MAIN_PAGE'
-}
-
-export enum UsernameAvailability {
-    UNKNOWN = 1,
-    AVAILABLE = 2,
-    NOT_AVAILABLE = 3
-}
 
 export interface UserProfileState {
     id:number,
     username:Kontext.FormValue<string>,
-    usernameAvail:UsernameAvailability;
+    usernameAvail:boolean;
     usernameAvailBusy:boolean;
     firstName:Kontext.FormValue<string>;
     lastName:Kontext.FormValue<string>;
@@ -68,54 +48,22 @@ export interface UserProfileState {
     message:string;
 }
 
-interface PasswordSetResponse extends Kontext.AjaxResponse {
-    fields:{
-        curr_passwd:boolean;
-        new_passwd:boolean;
-        new_passwd2:boolean;
-    }
-}
-
-interface UsernameAvailResponse extends Kontext.AjaxResponse {
-    available:boolean;
-    valid:boolean;
-}
-
-interface SignUpResponse extends Kontext.AjaxResponse {
-    ok:boolean;
-    error_args:Array<[string, string]>;
-}
-
-interface ValidationStatus {
-    currPasswd:boolean;
-    newPasswd:boolean;
-    newPasswd2:boolean;
-    messages:Array<string>;
-}
-
-const newValidationStatus = () => ({
-    currPasswd: true,
-    newPasswd: true,
-    newPasswd2: true,
-    messages: []
-});
-
-
-const validationStatusHasErrors = (vs:ValidationStatus):boolean => !vs.currPasswd || !vs.newPasswd || !vs.newPasswd2;
-
-
 export class UserProfileModel extends StatelessModel<UserProfileState> {
 
-    private pluginApi:IPluginApi;
+    private readonly pluginApi:IPluginApi;
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, userData:Kontext.UserCredentials,
-            message:string) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        pluginApi:IPluginApi,
+        userData:Kontext.UserCredentials,
+        message:string
+    ) {
         super(
             dispatcher,
             {
                 id: userData.id,
                 username: Kontext.newFormValue(userData.username, true),
-                usernameAvail: UsernameAvailability.UNKNOWN,
+                usernameAvail: false,
                 usernameAvailBusy: false,
                 firstName: Kontext.newFormValue(userData.firstname, true),
                 lastName: Kontext.newFormValue(userData.lastname, true),
@@ -126,182 +74,140 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 newPasswd2: Kontext.newFormValue('', true),
                 isBusy: false,
                 isFinished: false,
-                message: message
+                message
             }
         );
         this.pluginApi = pluginApi;
-    }
 
-    reduce(state:UserProfileState, action:Action):UserProfileState {
-        let newState:UserProfileState;
-        switch (action.name) {
-            case Actions.SET_CURR_PASSWD:
-                newState = this.copyState(state);
-                newState.currPasswd = Kontext.updateFormValue(newState.currPasswd, {value: action.payload['value']});
-            break;
-            case Actions.SET_NEW_PASSWD:
-                newState = this.copyState(state);
-                newState.newPasswd = Kontext.updateFormValue(newState.newPasswd, {value: action.payload['value']});
-            break;
-            case Actions.SET_NEW_PASSWD2:
-                newState = this.copyState(state);
-                newState.newPasswd2 = Kontext.updateFormValue(newState.newPasswd2, {value: action.payload['value']});
-            break;
-            case Actions.SET_USERNAME:
-                newState = this.copyState(state);
-                newState.username = Kontext.updateFormValue(newState.username, {value: action.payload['value']});
-            break;
-            case Actions.SET_FIRSTNAME:
-                newState = this.copyState(state);
-                newState.firstName = Kontext.updateFormValue(newState.firstName, {value: action.payload['value']});
-            break;
-            case Actions.SET_LASTNAME:
-                newState = this.copyState(state);
-                newState.lastName = Kontext.updateFormValue(newState.lastName, {value: action.payload['value']});
-            break;
-            case Actions.SET_EMAIL:
-                newState = this.copyState(state);
-                newState.email = Kontext.updateFormValue(newState.email, {value: action.payload['value']});
-            break;
-            case Actions.SUBMIT_NEW_PASSWORD_DONE:
-                const validStatus = action.payload['validationStatus'] as ValidationStatus;
-                newState = this.copyState(state);
+        this.addActionHandler<Actions.SetCurrPassword>(
+            ActionName.SetCurrPassword,
+            (state, action) => {
+                state.currPasswd = Kontext.updateFormValue(
+                    state.currPasswd, {value: action.payload.value});
+            }
+        );
+
+        this.addActionHandler<Actions.SetNewPasswd>(
+            ActionName.SetNewPasswd,
+            (state, action) => {
+                state.newPasswd = Kontext.updateFormValue(
+                    state.newPasswd, {value: action.payload.value});
+            }
+        );
+
+
+        this.addActionHandler<Actions.SetNewPasswd2>(
+            ActionName.SetNewPasswd2,
+            (state, action) => {
+                state.newPasswd2 = Kontext.updateFormValue(
+                    state.newPasswd2, {value: action.payload.value});
+            }
+        );
+
+        this.addActionHandler<Actions.SetUsername>(
+            ActionName.SetUsername,
+            (state, action) => {
+                state.username = Kontext.updateFormValue(
+                    state.username, {value: action.payload.value});
+            }
+        );
+
+        this.addActionHandler<Actions.SetFirstname>(
+            ActionName.SetFirstname,
+            (state, action) => {
+                state.firstName = Kontext.updateFormValue(
+                    state.firstName, {value: action.payload.value});
+            }
+        );
+
+        this.addActionHandler<Actions.SetLastname>(
+            ActionName.SetLastname,
+            (state, action) => {
+                state.lastName = Kontext.updateFormValue(
+                    state.lastName, {value: action.payload.value});
+            }
+        );
+
+        this.addActionHandler<Actions.SetEmail>(
+            ActionName.SetEmail,
+            (state, action) => {
+                state.email = Kontext.updateFormValue(
+                    state.email, {value: action.payload.value});
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitNewPasswordDone>(
+            ActionName.SubmitNewPasswordDone,
+            (state, action) => {
                 if (action.error) {
-                    if (!validStatus.currPasswd) {
-                        newState.currPasswd = Kontext.updateFormValue(
-                            newState.currPasswd, {value: '', isInvalid: !validStatus.currPasswd});
+                    if (!action.payload.validationStatus.currPasswd) {
+                        state.currPasswd = Kontext.updateFormValue(
+                            state.currPasswd,
+                            {value: '', isInvalid: !action.payload.validationStatus.currPasswd});
                     }
-                    if (!validStatus.newPasswd) {
-                        newState.newPasswd = Kontext.updateFormValue(
-                            newState.newPasswd, {value: '', isInvalid: !validStatus.newPasswd});
+                    if (!action.payload.validationStatus.newPasswd) {
+                        state.newPasswd = Kontext.updateFormValue(
+                            state.newPasswd,
+                            {value: '', isInvalid: !action.payload.validationStatus.newPasswd});
                     }
-                    if (!validStatus.newPasswd2) {
-                        newState.newPasswd2 = Kontext.updateFormValue(
-                            newState.newPasswd2, {value: '', isInvalid: !validStatus.newPasswd2});
+                    if (!action.payload.validationStatus.newPasswd2) {
+                        state.newPasswd2 = Kontext.updateFormValue(
+                            state.newPasswd2,
+                            {value: '', isInvalid: !action.payload.validationStatus.newPasswd2});
                     }
 
                 } else {
-                    newState.currPasswd = Kontext.updateFormValue(newState.currPasswd, {value: '', isInvalid: !validStatus.currPasswd});
-                    newState.newPasswd = Kontext.updateFormValue(newState.newPasswd, {value: '', isInvalid: !validStatus.newPasswd});
-                    newState.newPasswd2 = Kontext.updateFormValue(newState.newPasswd2, {value: '', isInvalid: !validStatus.newPasswd2});
-                    this.pluginApi.ajax$(
-                        'GET',
-                        this.pluginApi.createActionUrl('user/test_username'),
-                        {
-                            username: state.username
-                        }
-                    )                }
-            break;
-            case Actions.CHECK_USERNAME:
-                newState = this.copyState(state);
-                newState.usernameAvailBusy = true;
-            break;
-            case Actions.CHECK_USERNAME_DONE:
-                newState = this.copyState(state);
-                newState.usernameAvail = action.payload['available'];
-                newState.username.isInvalid = !action.payload['valid'];
-                newState.usernameAvailBusy = false;
-            break;
-            case Actions.SUBMIT_SIGN_UP:
-                newState = this.copyState(state);
-                newState.isBusy = true;
-            break;
-            case Actions.SUBMIT_SIGN_UP_DONE:
-                newState = this.copyState(state);
-                newState.isBusy = false;
-                if (action.error) {
-                    newState.usernameAvail = UsernameAvailability.UNKNOWN;
-                    const data = action.payload['errors'] as Immutable.Map<string, string>;
-                    if (data.has('username')) {
-                        newState.username.isInvalid = true;
-                        newState.username.errorDesc = data.get('username');
+                    state.currPasswd = Kontext.updateFormValue(
+                        state.currPasswd,
+                        {value: '', isInvalid: !action.payload.validationStatus.currPasswd});
+                    state.newPasswd = Kontext.updateFormValue(
+                        state.newPasswd,
+                        {value: '', isInvalid: !action.payload.validationStatus.newPasswd});
+                    state.newPasswd2 = Kontext.updateFormValue(
+                        state.newPasswd2,
+                        {value: '', isInvalid: !action.payload.validationStatus.newPasswd2});
 
-                    } else {
-                        newState.username.isInvalid = false;
-                        newState.username.errorDesc = undefined;
+                 }
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitNewPassword>(
+            ActionName.SubmitNewPassword,
+            (state, action) => {
+
+            },
+            (state, action, dispatch) => {
+                this.pluginApi.ajax$<UsernameTestResponse>(
+                    HTTP.Method.GET,
+                    this.pluginApi.createActionUrl('user/test_username'),
+                    {
+                        username: state.username
                     }
-                    if (data.has('password')) {
-                        newState.newPasswd.isInvalid = true;
-                        newState.newPasswd.errorDesc = data.get('password');
+                ).pipe(
+                    concatMap(
+                        resp => resp.valid && resp.available ?
+                            this.submitNewPassword(state) :
+                            throwError(this.pluginApi.translate('defaultAuth__cannot_use_username'))
+                    )
 
-                    } else {
-                        newState.newPasswd.isInvalid = false;
-                        newState.newPasswd.errorDesc = undefined;
-                    }
-                    if (data.has('password2')) {
-                        newState.newPasswd2.isInvalid = true;
-                        newState.newPasswd2.errorDesc = data.get('password2');
-
-                    } else {
-                        newState.newPasswd2.isInvalid = false;
-                        newState.newPasswd2.errorDesc = undefined;
-                    }
-                    if (data.has('first_name')) {
-                        newState.firstName.isInvalid = true;
-                        newState.firstName.errorDesc = data.get('first_name');
-
-                    } else {
-                        newState.firstName.isInvalid = false;
-                        newState.firstName.errorDesc = undefined;
-                    }
-                    if (data.has('last_name')) {
-                        newState.lastName.isInvalid = true;
-                        newState.lastName.errorDesc = data.get('last_name');
-
-                    } else {
-                        newState.lastName.isInvalid = false;
-                        newState.lastName.errorDesc = undefined;
-                    }
-                    if (data.has('email')) {
-                        newState.email.isInvalid = true;
-                        newState.email.errorDesc = data.get('email');
-
-                    } else {
-                        newState.email.isInvalid = false;
-                        newState.email.errorDesc = undefined;
-                    }
-
-                } else {
-                    newState.isFinished = true;
-                }
-            break;
-            case Actions.NEW_REGISTRATION:
-                newState = this.copyState(state);
-                newState.isFinished = false;
-                newState.username = Kontext.resetFormValue(newState.username, '');
-                newState.newPasswd = Kontext.resetFormValue(newState.newPasswd, '');
-                newState.newPasswd2 = Kontext.resetFormValue(newState.newPasswd2, '');
-                newState.firstName = Kontext.resetFormValue(newState.firstName, '');
-                newState.lastName = Kontext.resetFormValue(newState.lastName, '');
-                newState.email = Kontext.resetFormValue(newState.email, '');
-            break;
-            default:
-                newState = state;
-            break;
-        }
-        return newState;
-    }
-
-    sideEffects(state:UserProfileState, action:Action, dispatch:SEDispatcher):void {
-        switch (action.name) {
-            case Actions.SUBMIT_NEW_PASSWORD:
-                this.submitNewPassword(state).subscribe(
+                ).subscribe(
                     (validationStatus) => {
                         if (validationStatusHasErrors(validationStatus)) {
-                            dispatch({
-                                name: Actions.SUBMIT_NEW_PASSWORD_DONE,
+                            dispatch<Actions.SubmitNewPasswordDone>({
+                                name: ActionName.SubmitNewPasswordDone,
                                 payload: {
-                                    validationStatus: validationStatus
+                                    validationStatus
                                 },
                                 error: new Error()
                             });
-                            validationStatus.messages.forEach(msg => this.pluginApi.showMessage('error', msg));
+                            validationStatus.messages.forEach(
+                                    msg => this.pluginApi.showMessage('error', msg));
 
                         } else {
-                            dispatch({
-                                name: Actions.SUBMIT_NEW_PASSWORD_DONE,
+                            dispatch<Actions.SubmitNewPasswordDone>({
+                                name: ActionName.SubmitNewPasswordDone,
                                 payload: {
-                                    validationStatus: validationStatus
+                                    validationStatus
                                 }
                             });
                             this.pluginApi.showMessage('info',
@@ -311,45 +217,72 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                     (err) => {
                         this.pluginApi.showMessage('error', err);
                         console.error(err);
-                        dispatch({
-                            name: Actions.SUBMIT_NEW_PASSWORD_DONE,
-                            payload: {},
+                        dispatch<Actions.SubmitNewPasswordDone>({
+                            name: ActionName.SubmitNewPasswordDone,
+                            payload: {
+                                validationStatus: {
+                                    currPasswd: false,
+                                    newPasswd: false,
+                                    newPasswd2: false,
+                                    messages: [err]
+                                }
+                            },
                             error: err
                         });
                     }
                 );
-            break;
-            case Actions.CHECK_USERNAME:
-                this.pluginApi.ajax$<UsernameAvailResponse>(
-                    'GET',
+            }
+        );
+
+        this.addActionHandler<Actions.CheckUsername>(
+            ActionName.CheckUsername,
+            (state, action) => {
+                state.usernameAvailBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.pluginApi.ajax$<UsernameTestResponse>(
+                    HTTP.Method.GET,
                     this.pluginApi.createActionUrl('user/test_username'),
                     {
                         username: state.username.value
                     }
                 ).subscribe(
                     (resp) => {
-                        dispatch({
-                            name: Actions.CHECK_USERNAME_DONE,
+                        dispatch<Actions.CheckUsernameDone>({
+                            name: ActionName.CheckUsernameDone,
                             payload: {
-                                available: resp.available ? UsernameAvailability.AVAILABLE : UsernameAvailability.NOT_AVAILABLE,
+                                available: resp.available,
                                 valid: resp.valid
                             }
                         });
                     },
                     (err) => {
-                        dispatch({
-                            name: Actions.CHECK_USERNAME_DONE,
-                            payload: {
-                                status: UsernameAvailability.UNKNOWN
-                            },
+                        dispatch<Actions.CheckUsernameDone>({
+                            name: ActionName.CheckUsernameDone,
                             error: err
                         });
                     }
                 );
-            break;
-            case Actions.SUBMIT_SIGN_UP:
+            }
+        );
+
+        this.addActionHandler<Actions.CheckUsernameDone>(
+            ActionName.CheckUsernameDone,
+            (state, action) => {
+                state.usernameAvail = action.payload.available;
+                state.username.isInvalid = !action.payload.valid;
+                state.usernameAvailBusy = false;
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitSignUp>(
+            ActionName.SubmitSignUp,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
                 this.pluginApi.ajax$<SignUpResponse>(
-                    'POST',
+                    HTTP.Method.POST,
                     this.pluginApi.createActionUrl('user/sign_up'),
                     {
                         username: state.username.value,
@@ -361,16 +294,16 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                     }
                 ).subscribe(
                     (resp) => {
-                        dispatch({
-                            name: Actions.SUBMIT_SIGN_UP_DONE,
-                            payload: {}
+                        dispatch<Actions.SubmitSignUpDone>({
+                            name: ActionName.SubmitSignUpDone,
+                            payload: {errors: {}}
                         });
                     },
                     (err) => {
-                        dispatch({
-                            name: Actions.SUBMIT_SIGN_UP_DONE,
+                        dispatch<Actions.SubmitSignUpDone>({
+                            name: ActionName.SubmitSignUpDone,
                             payload: {
-                                errors: Immutable.Map<string, string>(err.response['error_args'])
+                                errors: err.response['error_args']
                             },
                             error: err
                         });
@@ -378,11 +311,92 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                             this.pluginApi.showMessage(msg[0], msg[1]));
                     }
                 );
-            break;
-            case Actions.GO_TO_MAIN_PAGE:
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitSignUpDone>(
+            ActionName.SubmitSignUpDone,
+            (state, action) => {
+                state = this.copyState(state);
+                state.isBusy = false;
+                if (action.error) {
+                    state.usernameAvail = false;
+                    const data = action.payload.errors;
+                    if (Dict.hasKey('username', data)) {
+                        state.username.isInvalid = true;
+                        state.username.errorDesc = data['username'];
+
+                    } else {
+                        state.username.isInvalid = false;
+                        state.username.errorDesc = undefined;
+                    }
+                    if (Dict.hasKey('password', data)) {
+                        state.newPasswd.isInvalid = true;
+                        state.newPasswd.errorDesc = data['password'];
+
+                    } else {
+                        state.newPasswd.isInvalid = false;
+                        state.newPasswd.errorDesc = undefined;
+                    }
+                    if (Dict.hasKey('password2', data)) {
+                        state.newPasswd2.isInvalid = true;
+                        state.newPasswd2.errorDesc = data['password2'];
+
+                    } else {
+                        state.newPasswd2.isInvalid = false;
+                        state.newPasswd2.errorDesc = undefined;
+                    }
+                    if (Dict.hasKey('first_name', data)) {
+                        state.firstName.isInvalid = true;
+                        state.firstName.errorDesc = data['first_name'];
+
+                    } else {
+                        state.firstName.isInvalid = false;
+                        state.firstName.errorDesc = undefined;
+                    }
+                    if (Dict.hasKey('last_name', data)) {
+                        state.lastName.isInvalid = true;
+                        state.lastName.errorDesc = data['last_name'];
+
+                    } else {
+                        state.lastName.isInvalid = false;
+                        state.lastName.errorDesc = undefined;
+                    }
+                    if (Dict.hasKey('email', data)) {
+                        state.email.isInvalid = true;
+                        state.email.errorDesc = data['email'];
+
+                    } else {
+                        state.email.isInvalid = false;
+                        state.email.errorDesc = undefined;
+                    }
+
+                } else {
+                    state.isFinished = true;
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.NewRegistration>(
+            ActionName.NewRegistration,
+            (state, action) => {
+                state.isFinished = false;
+                state.username = Kontext.resetFormValue(state.username, '');
+                state.newPasswd = Kontext.resetFormValue(state.newPasswd, '');
+                state.newPasswd2 = Kontext.resetFormValue(state.newPasswd2, '');
+                state.firstName = Kontext.resetFormValue(state.firstName, '');
+                state.lastName = Kontext.resetFormValue(state.lastName, '');
+                state.email = Kontext.resetFormValue(state.email, '');
+            }
+        );
+
+        this.addActionHandler<Actions.GoToMainPage>(
+            ActionName.GoToMainPage,
+            null,
+            (state, action, dispatch) => {
                 window.location.href = this.pluginApi.createActionUrl('first_form');
-            break;
-        }
+            }
+        )
     }
 
     private submitNewPassword(state:UserProfileState):Observable<ValidationStatus> {
@@ -392,7 +406,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         args.set('new_passwd2', state.newPasswd2.value);
 
         return this.pluginApi.ajax$<PasswordSetResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/set_user_password'),
             args
 

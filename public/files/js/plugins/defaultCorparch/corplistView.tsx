@@ -17,38 +17,27 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
-import {CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo} from './corplist';
-import { CorplistItem } from './common';
+import { IActionDispatcher, Bound } from 'kombo';
+import { Actions, ActionName } from './actions';
+import { pipe, List } from 'cnc-tskit';
+
+import { Kontext } from '../../types/common';
+import { CorplistTableModel, CorplistTableModelState, KeywordInfo } from './corplist';
+import { CorplistItem, Filters } from './common';
 import { CorpusInfoBoxProps } from '../../views/overview';
 import { CorpusInfoType } from '../../models/common/layout';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { Action } from 'rxjs/internal/scheduler/Action';
 
-
-export interface CorplistTableProps {
-    anonymousUser:boolean;
-}
-
-export interface FilterFormProps {
-    keywords:Array<[string, string, boolean, string]>;
-    filters:{
-        name:Array<string>;
-        minSize:Array<string>;
-        maxSize:Array<string>;
-    };
-}
 
 export interface CorplistViews {
 
-    CorplistTable:React.ComponentClass<CorplistTableProps>;
+    CorplistTable:React.ComponentClass<{}, CorplistTableModelState>;
 
     CorplistHeader:React.SFC<{
 
     }>;
 
-    FilterForm:React.ComponentClass<FilterFormProps>;
+    FilterForm:React.ComponentClass<{}, CorplistTableModelState>;
 
     FavStar:React.SFC<{
         corpusId:string;
@@ -99,8 +88,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     const FavStar:CorplistViews['FavStar'] = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'LIST_STAR_CLICKED',
+            dispatcher.dispatch<Actions.ListStarClicked>({
+                name: ActionName.ListStarClicked,
                 payload: {
                     corpusId: props.corpusId,
                     favId: props.favId
@@ -183,8 +172,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch({
-                name: 'EXPANSION_CLICKED',
+            dispatcher.dispatch<Actions.ExpansionClicked>({
+                name: ActionName.ExpansionClicked,
                 payload: {
                     offset: props.offset
                 }
@@ -201,25 +190,17 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
     // -------------------------------- <CorplistTable /> -----------------
 
-    class CorplistTable extends React.Component<CorplistTableProps, CorplistTableModelState> {
-
-        private modelSubscription:Subscription;
+    class CorplistTable extends React.PureComponent<CorplistTableModelState> {
 
         constructor(props) {
             super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = listModel.getState();
-        }
-
-        _modelChangeHandler(state) {
-            this.setState(state);
         }
 
         _detailClickHandler(corpusId) {
-            dispatcher.dispatch({
-                name: 'CORPARCH_CORPUS_INFO_REQUIRED',
+            dispatcher.dispatch<Actions.CorpusInfoRequired>({
+                name: ActionName.CorpusInfoRequired,
                 payload: {
                     corpusId: corpusId
                 }
@@ -227,29 +208,20 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         _detailCloseHandler() {
-            dispatcher.dispatch({
-                name: 'CORPARCH_CORPUS_INFO_CLOSED',
-                payload: {}
+            dispatcher.dispatch<Actions.CorpusInfoClosed>({
+                name: ActionName.CorpusInfoClosed
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderDetailBox() {
-            if (this.state.detailData) {
+            if (this.props.detailData) {
                 return (
                     <layoutViews.PopupBox
                             onCloseClick={this._detailCloseHandler}
                             customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
                             takeFocus={true}>
-                        <CorpusInfoBox data={{...this.state.detailData, type:CorpusInfoType.CORPUS}}
-                                    isWaiting={this.state.isBusy} />
+                        <CorpusInfoBox data={{...this.props.detailData, type:CorpusInfoType.CORPUS}}
+                                    isWaiting={this.props.isBusy} />
                     </layoutViews.PopupBox>
                 );
 
@@ -259,16 +231,15 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         render() {
-            let rows = this.state.rows.map((row, i) => {
-                return <CorplistRow key={row.id} row={row}
+            const rows = List.map(
+                (row, i) => <CorplistRow key={row.id} row={row}
                                     enableUserActions={!this.props.anonymousUser}
-                                    detailClickHandler={this._detailClickHandler} />;
-            });
-            let expansion = null;
-
-            if (this.state.nextOffset) {
-                expansion = <ListExpansion offset={this.state.nextOffset} />;
-            }
+                                    detailClickHandler={this._detailClickHandler} />,
+                this.props.rows
+            );
+            const expansion = this.props.nextOffset ?
+                <ListExpansion offset={this.props.nextOffset} /> :
+                null;
 
             return (
                 <div>
@@ -294,12 +265,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_CLICKED',
+            dispatcher.dispatch<Actions.KeywordClicked>({
+                name: ActionName.KeywordClicked,
                 payload: {
-                    keyword: props.keyword,
+                    keywordId: props.keyword,
                     status: true,
-                    ctrlKey: e.ctrlKey || e.metaKey
+                    attachToCurrent: e.ctrlKey || e.metaKey
                 }
             });
         };
@@ -328,17 +299,17 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClickFn = (active) => (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_CLICKED',
+            dispatcher.dispatch<Actions.KeywordClicked>({
+                name: ActionName.KeywordClicked,
                 payload: {
-                    keyword: props.keyword.ident,
+                    keywordId: props.keyword.ident,
                     status: active,
-                    ctrlKey: e.ctrlKey || e.metaKey
+                    attachToCurrent: e.ctrlKey || e.metaKey
                 }
             });
         };
 
-        const style = props.keyword.color ? {backgroundColor: props.keyword.color} : null;
+        const style = props.keyword.color && !props.keyword.selected ? {backgroundColor: props.keyword.color} : null;
         if (!props.keyword.selected) {
             const link = he.createActionLink('corplist', [['keyword', props.keyword.ident]]);
             return (
@@ -353,7 +324,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         } else {
             return (
-                <span className={`keyword current${props.iconFile ? ' iconized' : ''}`}
+                <span className={`keyword selected${props.iconFile ? ' iconized' : ''}`}
                             onClick={handleClickFn(false)}>
                     <span className="overlay" style={style}>
                         {props.iconFile ? <img className="icon" src={props.iconFile} /> : null}
@@ -375,9 +346,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'KEYWORD_RESET_CLICKED',
-                payload: {}
+            dispatcher.dispatch<Actions.KeywordResetClicked>({
+                name: ActionName.KeywordResetClicked
             });
         };
 
@@ -395,13 +365,13 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     const KeywordsField:React.SFC<{
         label:string;
-        keywords:Immutable.List<KeywordInfo>;
+        keywords:Array<KeywordInfo>;
         favouritesOnly:boolean;
         anonymousUser:boolean;
     }> = (props) => {
 
         const hasSelectedKeywords = () => {
-            return props.keywords.some(v => v.selected);
+            return List.some(v => v.selected, props.keywords);
         };
 
         return (
@@ -420,8 +390,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                             iconFile={he.createStaticUrl('img/starred.svg')} /> :
                         null
                     }
-                    {props.keywords.filter(v => v.visible).map((keyword, i) =>
-                            <KeywordLink key={i} keyword={keyword} />
+                    {pipe(
+                        props.keywords,
+                        List.filter(v => v.visible),
+                        List.map(
+                            (keyword, i) => <KeywordLink key={i} keyword={keyword} />
+                        )
                     )}
                     {hasSelectedKeywords() || props.favouritesOnly ? <ResetLink  /> : null}
                     <div className="inline-label hint">
@@ -439,13 +413,14 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     const MinSizeInput:React.SFC<{
         value:string;
+        currFilter:Filters;
 
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
-                payload: {minSize: e.target.value}
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
+                payload: {...props.currFilter, minSize: e.target.value}
             });
         };
 
@@ -461,13 +436,17 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      */
     const MaxSizeInput:React.SFC<{
         value:string;
+        currFilter:Filters;
 
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch({
-                name: 'FILTER_CHANGED',
-                payload: {maxSize: e.target.value}
+            dispatcher.dispatch<Actions.FilterChanged>({
+                name: ActionName.FilterChanged,
+                payload: {
+                    ...props.currFilter,
+                    maxSize: e.target.value
+                }
             });
         };
 
@@ -480,6 +459,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
     class NameSearchInput extends React.PureComponent<{
         value:string;
+        currFilter:Filters;
 
     }> {
 
@@ -496,9 +476,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 window.clearTimeout(this._timer);
             }
             this._timer = window.setTimeout(((value) => () => {
-                dispatcher.dispatch({
-                    name: 'FILTER_CHANGED',
-                    payload: {corpusName: value}
+                dispatcher.dispatch<Actions.FilterChanged>({
+                    name: ActionName.FilterChanged,
+                    payload: {
+                        ...this.props.currFilter,
+                        corpusName: value
+                    }
                 });
                 window.clearTimeout(this._timer);
             })(e.target.value), 300);
@@ -542,16 +525,16 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 fields = (
                     <div>
                         <span>{he.translate('defaultCorparch__size_from')}: </span>
-                        <MinSizeInput value={this.props.filters.minSize}  />
+                        <MinSizeInput value={this.props.filters.minSize} currFilter={this.props.filters}  />
                         <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
-                        <MaxSizeInput value={this.props.filters.maxSize}  />
+                        <MaxSizeInput value={this.props.filters.maxSize} currFilter={this.props.filters}  />
                         <div className="hint">
                             {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
                         </div>
                         <p>
                             <span>
                             {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
-                            <NameSearchInput value={this.props.filters.name} />
+                            <NameSearchInput value={this.props.filters.name} currFilter={this.props.filters} />
                         </p>
                     </div>
                 );
@@ -575,30 +558,10 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * Filter form root component
      */
-    class FilterForm extends React.Component<FilterFormProps, CorplistTableModelState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = listModel.getState();
-        }
-
-        _modelChangeHandler(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = listModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class FilterForm extends React.PureComponent<CorplistTableModelState> {
 
         _renderLoader() {
-            if (this.state.isBusy) {
+            if (this.props.isBusy) {
                 return <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={he.translate('global__loading')} title={he.translate('global__loading')} />;
 
@@ -614,21 +577,21 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                         {this._renderLoader()}
                     </div>
                     <KeywordsField
-                        keywords={this.state.keywords}
+                        keywords={this.props.keywords}
                         label={he.translate('defaultCorparch__keywords_field_label')}
-                        favouritesOnly={this.state.favouritesOnly}
-                        anonymousUser={this.state.anonymousUser}/>
+                        favouritesOnly={this.props.favouritesOnly}
+                        anonymousUser={this.props.anonymousUser}/>
                     <FilterInputFieldset
-                        filters={this.state.filters} />
+                        filters={this.props.filters} />
                 </section>
             )
         }
     }
 
     return {
-        CorplistTable: CorplistTable,
+        CorplistTable: Bound(CorplistTable, listModel),
         CorplistHeader: CorplistHeader,
-        FilterForm: FilterForm,
+        FilterForm: Bound(FilterForm, listModel),
         FavStar: FavStar,
         CorpKeywordLink: CorpKeywordLink
     };

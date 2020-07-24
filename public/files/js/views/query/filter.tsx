@@ -19,14 +19,12 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext, KeyCodes} from '../../types/common';
+import { Kontext } from '../../types/common';
 import { init as inputInit } from './input';
-import { FilterFormModel } from '../../models/query/filter';
-import { WidgetsMap } from '../../models/query/common';
+import { FilterFormModel, FilterFormModelState } from '../../models/query/filter';
+import { FirstHitsModelState } from '../../models/query/firstHits';
 import { WithinBuilderModel } from '../../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { FirstHitsModel } from '../../models/query/firstHits';
@@ -34,6 +32,7 @@ import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { PluginInterfaces } from '../../types/plugins';
 import { UsageTipsModel } from '../../models/usageTips';
 import { ActionName, Actions } from '../../models/query/actions';
+import { Keyboard } from 'cnc-tskit';
 
 
 
@@ -51,33 +50,6 @@ export interface FilterFormProps {
     operationIdx?:number;
     tagHelperView:PluginInterfaces.TagHelper.View;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
-    actionPrefix:string;
-}
-
-export interface FilterFormState {
-    contextFormVisible:boolean;
-    inclKwicValue:boolean;
-    withinArg:number;
-    queryTypes:Immutable.Map<string, string>;
-    supportedWidgets:WidgetsMap;
-    lposValues:Immutable.Map<string, string>;
-    matchCaseValues:Immutable.Map<string, boolean>;
-    forcedAttr:string;
-    defaultAttrValues:Immutable.Map<string, string>;
-    attrList:Immutable.List<Kontext.AttrItem>;
-    tagsetDocUrl:string;
-    lemmaWindowSizes:Immutable.List<number>;
-    posWindowSizes:Immutable.List<number>;
-    hasLemmaAttr:boolean;
-    wPoSList:Immutable.List<{v:string; n:string}>;
-    inputLanguage:string;
-    pnFilterValue:string;
-    filfposValue:Kontext.FormValue<string>;
-    filtposValue:Kontext.FormValue<string>;
-    filflValue:string;
-    isLocked:boolean;
-    tagAttr:string;
-    useCQLEditor:boolean;
 }
 
 // ---------
@@ -99,11 +71,6 @@ export interface FirstHitsFormProps {
     formType:Kontext.ConcFormTypes.FIRSTHITS;
     operationIdx?:number;
     opKey:string;
-}
-
-export interface FirstHitsFormState {
-    isAutoSubmit:boolean;
-    docStructs:Immutable.Map<string, string>;
 }
 
 // ---------
@@ -132,67 +99,21 @@ export function init(
 
     // -------- <FilterForm /> ---------------------------------------
 
-    class FilterForm extends React.Component<FilterFormProps, FilterFormState> {
-
-        private modelSubscription:Subscription;
+    class FilterForm extends React.PureComponent<FilterFormProps & FilterFormModelState> {
 
         constructor(props) {
             super(props);
             this._keyEventHandler = this._keyEventHandler.bind(this);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
             this._handlePosNegSelect = this._handlePosNegSelect.bind(this);
             this._handleSelTokenSelect = this._handleSelTokenSelect.bind(this);
             this._handleToFromRangeValChange = this._handleToFromRangeValChange.bind(this);
             this._handleSubmit = this._handleSubmit.bind(this);
             this._handleInclKwicCheckbox = this._handleInclKwicCheckbox.bind(this);
-            this.state = this._fetchState();
-        }
-
-        _fetchState() {
-            return {
-                queryTypes: filterModel.getQueryTypes(),
-                supportedWidgets: filterModel.getSupportedWidgets(),
-                lposValues: filterModel.getLposValues(),
-                matchCaseValues: filterModel.getMatchCaseValues(),
-                forcedAttr: filterModel.getForcedAttr(),
-                defaultAttrValues: filterModel.getDefaultAttrValues(),
-                attrList: filterModel.getAttrList(),
-                tagsetDocUrl: filterModel.getTagsetDocUrls().get(this.props.filterId),
-                lemmaWindowSizes: filterModel.getLemmaWindowSizes(),
-                posWindowSizes: filterModel.getPosWindowSizes(),
-                hasLemmaAttr: filterModel.getHasLemmaAttr().get(this.props.filterId),
-                wPoSList: filterModel.getwPoSList(),
-                contextFormVisible: false,
-                inputLanguage: filterModel.getInputLanguage(),
-                pnFilterValue: filterModel.getPnFilterValues().get(this.props.filterId),
-                filfposValue: filterModel.getFilfposValues().get(this.props.filterId),
-                filtposValue: filterModel.getFiltposValues().get(this.props.filterId),
-                filflValue: filterModel.getFilflValues().get(this.props.filterId),
-                inclKwicValue: filterModel.getInclKwicValues().get(this.props.filterId),
-                isLocked: filterModel.getOpLocks().get(this.props.filterId),
-                withinArg: filterModel.getWithinArgs().get(this.props.filterId),
-                useCQLEditor: filterModel.getUseCQLEditor(),
-                tagAttr: filterModel.getTagAttr()
-            };
-        }
-
-        _modelChangeHandler() {
-            const ans = this._fetchState();
-            ans['contextFormVisible'] = this.state.contextFormVisible;
-            this.setState(ans);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = filterModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _handlePosNegSelect(evt) {
-            dispatcher.dispatch({
-                name: 'FILTER_QUERY_SET_POS_NEG',
+            dispatcher.dispatch<Actions.FilterInputSetPCQPosNeg>({
+                name: ActionName.FilterInputSetPCQPosNeg,
                 payload: {
                     filterId: this.props.filterId,
                     value: evt.target.value
@@ -201,8 +122,8 @@ export function init(
         }
 
         _handleSelTokenSelect(evt) {
-            dispatcher.dispatch({
-                name: 'FILTER_QUERY_SET_FILFL',
+            dispatcher.dispatch<Actions.FilterInputSetFilfl>({
+                name: ActionName.FilterInputSetFilfl,
                 payload: {
                     filterId: this.props.filterId,
                     value: evt.target.value
@@ -211,8 +132,8 @@ export function init(
         }
 
         _handleToFromRangeValChange(pos, evt) {
-            dispatcher.dispatch({
-                name: 'FILTER_QUERY_SET_RANGE',
+            dispatcher.dispatch<Actions.FilterInputSetRange>({
+                name: ActionName.FilterInputSetRange,
                 payload: {
                     filterId: this.props.filterId,
                     rangeId: ({from: 'filfpos', to: 'filtpos'})[pos],
@@ -222,7 +143,7 @@ export function init(
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === KeyCodes.ENTER && !evt.ctrlKey && !evt.shiftKey) {
+            if (evt.keyCode === Keyboard.Code.ENTER && !evt.ctrlKey && !evt.shiftKey) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch<Actions.BranchQuery>({
                         name: ActionName.BranchQuery,
@@ -230,8 +151,8 @@ export function init(
                     });
 
                 } else {
-                    dispatcher.dispatch({
-                        name: 'FILTER_QUERY_APPLY_FILTER',
+                    dispatcher.dispatch<Actions.ApplyFilter>({
+                        name: ActionName.ApplyFilter,
                         payload: {
                             filterId: this.props.filterId
                         }
@@ -250,8 +171,8 @@ export function init(
                 });
 
             } else {
-                dispatcher.dispatch({
-                    name: 'FILTER_QUERY_APPLY_FILTER',
+                dispatcher.dispatch<Actions.ApplyFilter>({
+                    name: ActionName.ApplyFilter,
                     payload: {
                         filterId: this.props.filterId
                     }
@@ -260,17 +181,17 @@ export function init(
         }
 
         _handleInclKwicCheckbox(evt) {
-            dispatcher.dispatch({
-                name: 'FILTER_QUERY_SET_INCL_KWIC',
+            dispatcher.dispatch<Actions.FilterInputSetInclKwic>({
+                name: ActionName.FilterInputSetInclKwic,
                 payload: {
                     filterId: this.props.filterId,
-                    value: !this.state.inclKwicValue
+                    value: !this.props.inclkwicValues[this.props.filterId]
                 }
             });
         }
 
         _renderForm() {
-            if (this.state.withinArg === 1) {
+            if (this.props.withinArgs[this.props.filterId] === 1) {
                 return this._renderSwitchMaincorpForm();
 
             } else {
@@ -284,28 +205,27 @@ export function init(
                     <table className="form">
                         <tbody>
                             <inputViews.TRQueryTypeField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
+                                queryType={this.props.queryTypes[this.props.filterId]}
                                 sourceId={this.props.filterId}
-                                actionPrefix={this.props.actionPrefix}
-                                hasLemmaAttr={this.state.hasLemmaAttr} />
+                                formType={this.props.formType}
+                                hasLemmaAttr={this.props.hasLemma[this.props.filterId]} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
-                                widgets={this.state.supportedWidgets.get(this.props.filterId)}
+                                queryType={this.props.queryTypes[this.props.filterId]}
+                                widgets={this.props.supportedWidgets[this.props.filterId]}
                                 sourceId={this.props.filterId}
-                                wPoSList={this.state.wPoSList}
-                                lposValue={this.state.lposValues.get(this.props.filterId)}
-                                matchCaseValue={this.state.matchCaseValues.get(this.props.filterId)}
-                                forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttrValues.get(this.props.filterId)}
-                                attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrl}
+                                wPoSList={this.props.wPoSList}
+                                lposValue={this.props.lposValues[this.props.filterId]}
+                                matchCaseValue={this.props.matchCaseValues[this.props.filterId]}
+                                forcedAttr={this.props.forcedAttr}
+                                defaultAttr={this.props.defaultAttrValues[this.props.filterId]}
+                                attrList={this.props.attrList}
+                                tagsetDocUrl={this.props.tagsetDocs[this.props.filterId]}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.state.inputLanguage}
-                                actionPrefix={this.props.actionPrefix}
-                                useCQLEditor={this.state.useCQLEditor}
+                                inputLanguage={this.props.inputLanguage}
+                                useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this._handleSubmit} />
                         </tbody>
                     </table>
@@ -328,18 +248,18 @@ export function init(
                             <tr>
                                 <th>{he.translate('query__filter_th')}:</th>
                                 <td>
-                                    <select value={this.state.pnFilterValue} onChange={this._handlePosNegSelect}>
+                                    <select value={this.props.pnFilterValues[this.props.filterId]} onChange={this._handlePosNegSelect}>
                                         <option value="p">{he.translate('query__qfilter_pos')}</option>
                                         <option value="n">{he.translate('query__qfilter_neg')}</option>
                                     </select>
                                 </td>
                             </tr>
-                            {this.state.pnFilterValue === 'p' ?
+                            {this.props.pnFilterValues[this.props.filterId] === 'p' ?
                                 (<tr>
                                     <th>{he.translate('query__qlfilter_sel_token')}:</th>
                                     <td>
                                         <select onChange={this._handleSelTokenSelect}
-                                                value={this.state.filflValue}>
+                                                value={this.props.filflValues[this.props.filterId]}>
                                             <option value="f">{he.translate('query__token_first')}</option>
                                             <option value="l">{he.translate('query__token_last')}</option>
                                         </select>
@@ -355,25 +275,25 @@ export function init(
                                 <td>
                                     <label>
                                         {he.translate('query__qfilter_range_from')}:{'\u00a0'}
-                                        <layoutViews.ValidatedItem invalid={this.state.filfposValue.isInvalid}>
+                                        <layoutViews.ValidatedItem invalid={this.props.filfposValues[this.props.filterId].isInvalid}>
                                             <input type="text" style={{width: '3em'}}
-                                                value={this.state.filfposValue.value}
+                                                value={this.props.filfposValues[this.props.filterId].value}
                                                 onChange={this._handleToFromRangeValChange.bind(this, 'from')} />
                                         </layoutViews.ValidatedItem>
                                     </label>
                                     {'\u00a0'}
                                     <label>
                                         {he.translate('query__qfilter_range_to')}:{'\u00a0'}
-                                        <layoutViews.ValidatedItem invalid={this.state.filtposValue.isInvalid}>
+                                        <layoutViews.ValidatedItem invalid={this.props.filtposValues[this.props.filterId].isInvalid}>
                                             <input type="text" style={{width: '3em'}}
-                                                value={this.state.filtposValue.value}
+                                                value={this.props.filtposValues[this.props.filterId].value}
                                                 onChange={this._handleToFromRangeValChange.bind(this, 'to')} />
                                         </layoutViews.ValidatedItem>
                                     </label>
                                     {'\u00a0,\u00a0'}
                                     <label>
                                         {he.translate('query__qfilter_include_kwic')}
-                                        <input type="checkbox" checked={this.state.inclKwicValue}
+                                        <input type="checkbox" checked={this.props.inclkwicValues[this.props.filterId]}
                                             onChange={this._handleInclKwicCheckbox} />
                                     </label>
                                 </td>
@@ -381,28 +301,27 @@ export function init(
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryTypeField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
+                                queryType={this.props.queryTypes[this.props.filterId]}
+                                formType={this.props.formType}
                                 sourceId={this.props.filterId}
-                                actionPrefix={this.props.actionPrefix}
-                                hasLemmaAttr={this.state.hasLemmaAttr} />
+                                hasLemmaAttr={this.props.hasLemma[this.props.filterId]} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
-                                widgets={this.state.supportedWidgets.get(this.props.filterId)}
+                                queryType={this.props.queryTypes[this.props.filterId]}
+                                widgets={this.props.supportedWidgets[this.props.filterId]}
                                 sourceId={this.props.filterId}
-                                wPoSList={this.state.wPoSList}
-                                lposValue={this.state.lposValues.get(this.props.filterId)}
-                                matchCaseValue={this.state.matchCaseValues.get(this.props.filterId)}
-                                forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttrValues.get(this.props.filterId)}
-                                attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrl}
+                                wPoSList={this.props.wPoSList}
+                                lposValue={this.props.lposValues[this.props.filterId]}
+                                matchCaseValue={this.props.matchCaseValues[this.props.filterId]}
+                                forcedAttr={this.props.forcedAttr}
+                                defaultAttr={this.props.defaultAttrValues[this.props.filterId]}
+                                attrList={this.props.attrList}
+                                tagsetDocUrl={this.props.tagsetDocs[this.props.filterId]}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.state.inputLanguage}
-                                actionPrefix={this.props.actionPrefix}
-                                useCQLEditor={this.state.useCQLEditor}
+                                inputLanguage={this.props.inputLanguage}
+                                useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this._handleSubmit}
                                 takeFocus={false} />
                         </tbody>
@@ -419,7 +338,7 @@ export function init(
         }
 
         render() {
-            if (this.state.isLocked) {
+            if (this.props.opLocks[this.props.filterId]) {
                 return (
                     <div>
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')}
@@ -494,14 +413,10 @@ export function init(
     /**
      *
      */
-    class FirstHitsForm extends React.Component<FirstHitsFormProps, FirstHitsFormState> {
+    class FirstHitsForm extends React.PureComponent<FirstHitsFormProps & FirstHitsModelState> {
 
         constructor(props) {
             super(props);
-            this.state = {
-                isAutoSubmit: this.props.operationIdx === undefined,
-                docStructs: firstHitsModel.getDocStructValues()
-            }
             this._handleSubmit = this._handleSubmit.bind(this);
         }
 
@@ -514,7 +429,7 @@ export function init(
         }
 
         componentDidMount() {
-            if (this.state.isAutoSubmit) {
+            if (this.props.operationIdx === undefined) {
                 window.setTimeout(this._handleSubmit, 0);
             }
         }
@@ -527,8 +442,8 @@ export function init(
                 });
 
             } else {
-                dispatcher.dispatch({
-                    name: 'FILTER_FIRST_HITS_SUBMIT',
+                dispatcher.dispatch<Actions.FilterFirstHitsSubmit>({
+                    name: ActionName.FilterFirstHitsSubmit,
                     payload: {
                         opKey: this.props.opKey
                     }
@@ -537,7 +452,7 @@ export function init(
         }
 
         _renderContents() {
-            if (this.state.isAutoSubmit) {
+            if (this.props.operationIdx === undefined) {
                 return this._renderAutoSubmitState();
 
             } else {
@@ -555,7 +470,7 @@ export function init(
                     <label>
                         {he.translate('query__used_first_hits_struct')}:{'\u00a0'}
                         <select disabled>
-                            <option>{this.state.docStructs.get(this.props.opKey)}</option>
+                            <option>{this.props.docStructValues[this.props.opKey]}</option>
                         </select>
                     </label>
                     <p>{he.translate('query__the_form_no_params_to_change')}.</p>
@@ -571,8 +486,8 @@ export function init(
     }
 
     return {
-        FilterForm: FilterForm,
+        FilterForm: BoundWithProps<FilterFormProps, FilterFormModelState>(FilterForm, filterModel),
         SubHitsForm: SubHitsForm,
-        FirstHitsForm: FirstHitsForm
+        FirstHitsForm: BoundWithProps<FirstHitsFormProps, FirstHitsModelState>(FirstHitsForm, firstHitsModel)
     };
 }

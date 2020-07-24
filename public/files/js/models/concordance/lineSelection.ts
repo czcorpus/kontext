@@ -18,27 +18,73 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {MultiDict} from '../../multidict';
-import {StatefulModel} from '../base';
-import {ConcLinesStorage} from '../../conclines';
-import {PageModel} from '../../app/page';
-import {ConcLineModel} from './lines';
-import * as Immutable from 'immutable';
-import { Action, IFullActionControl } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
-import { tap, map, concatMap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
+
+import { Kontext } from '../../types/common';
+import { ConcLinesStorage } from './selectionStorage';
+import { PageModel } from '../../app/page';
+import { HTTP, List } from 'cnc-tskit';
+import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse,
+    LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse, ConcServerArgs
+} from './common';
+import { Actions, ActionName } from './actions';
+import { Actions as UserInfoActions, ActionName as UserInfoActionName } from '../user/actions';
+import { MultiDict } from '../../multidict';
+import { IPageLeaveVoter } from '../common/pageLeave';
 
 
-interface ReenableEditResponse extends Kontext.AjaxConcResponse {
-    selection:Array<[number, number, number]>;
+interface ReenableEditResponse extends AjaxConcResponse {
+    selection:Array<LineSelValue>;
 }
 
-interface SendSelToMailResponse extends Kontext.AjaxConcResponse {
+interface SendSelToMailResponse extends AjaxConcResponse {
     ok:boolean;
 }
 
-export type LineSelValue = [number, number];
+
+export interface LineSelectionModelState {
+
+    corpusId:string;
+
+    /**
+     * Selected lines information. Encoding is as follows:
+     * query_hash => [kwic_token_id, kwic_length, cat_num]
+     * where query_hash is an internal hash of provided query
+     * (i.e. in case KonText provides 'q' argument as has already
+     * it is hashed here again)
+     */
+    data:LineSelections;
+
+    /**
+     * An internal hash of actual query. It hashes
+     * whatever is provided in the 'q' argument
+     * (which can be a list of Manatee operations but
+     * also a query ID).
+     */
+    queryHash:string;
+
+    isLocked:boolean;
+
+    currentGroupIds:Array<LineGroupId>;
+
+    maxGroupId:number;
+
+    isBusy:boolean;
+
+    emailDialogCredentials:Kontext.UserCredentials|null;
+
+    lastCheckpointUrl:string;
+
+    renameLabelDialogVisible:boolean;
+}
+
+export interface LineSelectionModelArgs {
+    layoutModel:PageModel;
+    dispatcher:IFullActionControl;
+    clStorage:ConcLinesStorage<LineSelectionModelState>;
+}
 
 /**
  * This class handles state of selected concordance lines.
@@ -46,259 +92,466 @@ export type LineSelValue = [number, number];
  * - binary (checked/unchecked)
  * - categorical (0,1,2,3,4)
  */
-export class LineSelectionModel extends StatefulModel {
+export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
+        implements IPageLeaveVoter<LineSelectionModelState> {
 
-    static FILTER_NEGATIVE = 'n';
+    private readonly layoutModel:PageModel;
 
-    static FILTER_POSITIVE = 'p';
+    private readonly clStorage:ConcLinesStorage<LineSelectionModelState>;
 
-    private layoutModel:PageModel;
+    static numSelectedItems(state:LineSelectionModelState):number {
+        return state.data[state.queryHash] ? state.data[state.queryHash].selections.length : 0;
+    }
 
-    private mode:string;
+    /**
+     * Pair the store with a concrete query. This ensures
+     * that visiting a different query view will reset
+     * the selection.
+     */
+    static registerQuery(
+        state:LineSelectionModelState,
+        clStorage:ConcLinesStorage<LineSelectionModelState>,
+        query:Array<string>
+    ):void {
+        clStorage.init(state, query);
+    }
 
-    private clStorage:ConcLinesStorage;
+    static actualSelection(state:LineSelectionModelState):ConcLineSelection {
+        const ans = state.data[state.queryHash];
+        return ans ?
+            ans :
+            {
+                created: new Date().getTime() / 1000,
+                selections: [],
+                mode: 'simple'
+            };
+    }
 
-    private actionFinishHandlers:Array<()=>void>;
-
-    private concLineModel:ConcLineModel;
-
-    private currentGroupIds:Array<number>;
-
-    private maxGroupId:number;
-
-    private _isBusy:boolean;
-
-    private userInfoModel:Kontext.IUserInfoModel;
-
-    private onLeavePage:()=>void;
-
-    private emailDialogCredentials:Kontext.UserCredentials;
-
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
-            concLineModel:ConcLineModel, userInfoModel:Kontext.IUserInfoModel, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
-        super(dispatcher);
+    constructor({layoutModel, dispatcher, clStorage}:LineSelectionModelArgs) {
+        const query = layoutModel.getConf<Array<string>>('compiledQuery');
+        const initState:LineSelectionModelState = {
+            corpusId: layoutModel.getCorpusIdent().id,
+            currentGroupIds: attachColorsToIds(
+                layoutModel.getConf<Array<number>>('LinesGroupsNumbers'),
+                v => v,
+                mapIdToIdWithColors
+            ),
+            maxGroupId: layoutModel.getConf<number>('concLineMaxGroupNum'),
+            isLocked: layoutModel.getConf<number>('NumLinesInGroups') > 0,
+            isBusy: false,
+            emailDialogCredentials: null,
+            data: {},
+            queryHash: '',
+            lastCheckpointUrl: layoutModel.createActionUrl(
+                'view',
+                layoutModel.getConcArgs().items()
+            ),
+            renameLabelDialogVisible: false
+        };
+        LineSelectionModel.registerQuery(initState, clStorage, query);
+        super(
+            dispatcher,
+            initState
+        );
         this.layoutModel = layoutModel;
-        this.concLineModel = concLineModel;
-        this.userInfoModel = userInfoModel;
         this.clStorage = clStorage;
-        this.onLeavePage = onLeavePage;
-        if (clStorage.size() > 0) {
-            this.mode = this.clStorage.getMode();
 
-        } else if (concLineModel.getNumItemsInLockedGroups() > 0) {
-            this.mode = 'groups';
+        this.addActionHandler<Actions.SelectLines>(
+            ActionName.SelectLine,
+            (state, action) => {
+                const val = action.payload.value;
+                if (this.validateGroupId(state, val)) {
+                    this.selectLine(
+                        state,
+                        val,
+                        action.payload.tokenNumber,
+                        action.payload.kwicLength
+                    );
+
+                } else {
+                    this.layoutModel.showMessage('error',
+                            this.layoutModel.translate(
+                                'linesel__error_group_name_please_use{max_group}',
+                                {max_group: this.getState().maxGroupId}
+                            )
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.LineSelectionReset>(
+            ActionName.LineSelectionReset,
+            (state, action) => {
+                this.clearSelection(state);
+            }
+        );
+
+        this.addActionHandler<Actions.LineSelectionResetOnServerDone>(
+            ActionName.LineSelectionResetOnServerDone,
+            (state, action) => {
+                if (!action.error) {
+                    state.isBusy = false;
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.LineSelectionResetOnServer>(
+            ActionName.LineSelectionResetOnServer,
+            (state, action) => {
+                state.isBusy = true;
+                state.currentGroupIds = [];
+                state.isLocked = false;
+                this.clStorage.clear(state, state.queryHash);
+            },
+            (state, action, dispatch) => {
+                this.resetServerLineGroups(state).subscribe(
+                    (args) => {
+                        dispatch<Actions.LineSelectionResetOnServerDone>({
+                            name: ActionName.LineSelectionResetOnServerDone
+                        });
+                    },
+                    (err) => {
+                        dispatch<Actions.LineSelectionResetOnServerDone>({
+                            name: ActionName.LineSelectionResetOnServerDone,
+                            error: err
+                        });
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.RemoveSelectedLines>(
+            ActionName.RemoveSelectedLines,
+            null,
+            (state, action, dispatch) => {
+                // we leave the page here
+                this.removeLines(state, 'n');
+            }
+        );
+
+        this.addActionHandler<Actions.RemoveNonSelectedLines>(
+            ActionName.RemoveNonSelectedLines,
+            null,
+            (state, action, dispatch) => {
+                 // we leave the page here
+                this.removeLines(state, 'p');
+            }
+        );
+
+        this.addActionHandler<Actions.MarkLinesDone>(
+            ActionName.MarkLinesDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.currentGroupIds = action.payload.groupIds;
+                    state.isLocked = true;
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.MarkLines>(
+            ActionName.MarkLines,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.saveGroupsToServerConc(state).subscribe(
+                    (response) => {
+                        dispatch<Actions.MarkLinesDone>({
+                            name: ActionName.MarkLinesDone,
+                            payload: {
+                                data: response,
+                                groupIds: attachColorsToIds(
+                                    response.lines_groups_numbers,
+                                    v => v,
+                                    mapIdToIdWithColors
+                                )
+                            }
+                        });
+                    },
+                    (err) => {
+                        dispatch<Actions.MarkLinesDone>({
+                            name: ActionName.MarkLinesDone,
+                            error: err
+                        });
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.RemoveLinesNotInGroups>(
+            ActionName.RemoveLinesNotInGroups,
+            null,
+            (state, action, dispatch) => {
+                this.removeNonGroupLines(); // we leave the page here ...
+            }
+        );
+
+        this.addActionHandler<Actions.UnlockLineSelection>(
+            ActionName.UnlockLineSelection,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.reenableEdit().subscribe(
+                    (data:ReenableEditResponse) => {
+                        dispatch<Actions.UnlockLineSelectionDone>({
+                            name: ActionName.UnlockLineSelectionDone,
+                            payload: {
+                                selection: data.selection,
+                                query: data.Q,
+                                mode: 'groups'
+                            }
+                        });
+
+                    },
+                    (err) => {
+                        dispatch<Actions.UnlockLineSelectionDone>({
+                            name: ActionName.UnlockLineSelectionDone,
+                            error: err
+                        });
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.UnlockLineSelectionDone>(
+            ActionName.UnlockLineSelectionDone,
+            (state, action) => {
+                state.isBusy = false;
+                state.isLocked = false;
+                LineSelectionModel.registerQuery(state, this.clStorage, action.payload.query);
+                this.importData(state, action.payload.selection, action.payload.mode);
+            }
+        );
+
+        this.addActionHandler<Actions.RenameSelectionGroupDone>(
+            ActionName.RenameSelectionGroupDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.currentGroupIds = action.payload.lineGroupIds;
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.RenameSelectionGroup>(
+            ActionName.RenameSelectionGroup,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.renameLineGroup(
+                    state,
+                    action.payload.srcGroupNum,
+                    action.payload.dstGroupNum
+
+                ).subscribe(
+                    (resp) => {
+                        dispatch<Actions.RenameSelectionGroupDone>({
+                            name: ActionName.RenameSelectionGroupDone,
+                            payload: {
+                                concId: resp.conc_persistence_op_id,
+                                numLinesInGroups: resp.num_lines_in_groups,
+                                lineGroupIds: attachColorsToIds(
+                                    resp.lines_groups_numbers,
+                                    v => v,
+                                    mapIdToIdWithColors
+                                ),
+                                prevId: action.payload.srcGroupNum,
+                                newId: action.payload.dstGroupNum
+                            }
+                        });
+
+                    },
+                    (err) => {
+                        this.layoutModel.showMessage('error', err);
+                        dispatch<Actions.RenameSelectionGroupDone>({
+                            name: ActionName.RenameSelectionGroupDone,
+                            error: err
+                        });
+                    }
+                );
+            }
+        );
+
+
+        this.addActionHandler<Actions.ChangePage>(
+            ActionName.ChangePage,
+            null,
+            (state, action, dispatch) => {
+                dispatch<Actions.PublishStoredLineSelections>({
+                    name: ActionName.PublishStoredLineSelections,
+                    payload: {
+                        selections: state.data[state.queryHash] ?
+                            state.data[state.queryHash].selections : [],
+                        mode: state.data[state.queryHash] ?
+                            state.data[state.queryHash].mode : 'simple'
+                    }
+                })
+            }
+        );
+
+        this.addActionHandler<Actions.SendLineSelectionToEmailDone>(
+            ActionName.SendLineSelectionToEmailDone,
+            (state, action) => {
+                state.isBusy = false;
+            }
+        );
+
+        this.addActionHandler<Actions.SendLineSelectionToEmail>(
+            ActionName.SendLineSelectionToEmail,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.sendSelectionUrlToEmail(action.payload.email).subscribe(
+                    (data) => {
+                        dispatch<Actions.SendLineSelectionToEmailDone>({
+                            name: ActionName.SendLineSelectionToEmailDone
+                        });
+                    },
+                    (err) => {
+                        dispatch<Actions.SendLineSelectionToEmailDone>({
+                            name: ActionName.SendLineSelectionToEmailDone,
+                            error: err
+                        });
+                        this.layoutModel.showMessage('error', err);
+                    }
+                )
+            }
+        );
+
+        this.addActionHandler<Actions.SortLineSelection>(
+            ActionName.SortLineSelection,
+            null,
+            (state, action, dispatch) => {
+                this.sortLines(); // we leave the page here ...
+            }
+        );
+
+        this.addActionHandler<Actions.SetLineSelectionMode>(
+            ActionName.SetLineSelectionMode,
+            (state, action) => {
+                this.setMode(state, action.payload.mode);
+            }
+        );
+
+        this.addActionHandler<UserInfoActions.UserInfoLoaded>(
+            UserInfoActionName.UserInfoLoaded,
+            (state, action) => {
+                state.isBusy = false;
+                state.emailDialogCredentials = action.payload.data;
+            }
+        );
+
+        this.addActionHandler<UserInfoActions.UserInfoRequested>(
+            UserInfoActionName.UserInfoRequested,
+            (state, action) => {
+                state.isBusy = true;
+            }
+        );
+
+        this.addActionHandler<Actions.ClearUserCredentials>(
+            ActionName.ClearUserCredentials,
+            (state, action) => {
+                state.emailDialogCredentials = null;
+            }
+        );
+
+        this.addActionHandler<Actions.SaveLineSelection>(
+            ActionName.SaveLineSelection,
+            null,
+            (state, action, dispatcher) => {
+                this.clStorage.serialize(state.data);
+            }
+        );
+
+        this.addActionHandler<Actions.ApplyStoredLineSelections>(
+            ActionName.ApplyStoredLineSelections,
+            null,
+            (state, action, dispatch) => {
+                dispatch<Actions.ApplyStoredLineSelectionsDone>({
+                    name: ActionName.ApplyStoredLineSelectionsDone,
+                    payload: {
+                        selections: state.data[state.queryHash] ?
+                            state.data[state.queryHash].selections : [],
+                        mode: state.data[state.queryHash] ?
+                            state.data[state.queryHash].mode : 'simple'
+                    }
+                })
+            }
+        );
+
+        this.addActionHandler<Actions.ToggleLineGroupRenameForm>(
+            ActionName.ToggleLineGroupRenameForm,
+            (state, action) => {
+                state.renameLabelDialogVisible = !state.renameLabelDialogVisible;
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'LineSelectionModel';
+    }
+
+    reasonNotLeave():string|null {
+        return LineSelectionModel.numSelectedItems(this.getState()) > 0 ?
+            this.layoutModel.translate('linesel__current_sel_not_saved_confirm') : null;
+    }
+
+    private validateGroupId(state:LineSelectionModelState, value:number|undefined):boolean {
+        if (value === undefined) {
+            return true;
+        }
+        if (this.clStorage.actualData(state).mode === 'groups') {
+            return value >= 1 && value <= state.maxGroupId;
+        }
+        return value === ConcLinesStorage.DEFAULT_GROUP_ID;
+    }
+
+    private selectLine(state:LineSelectionModelState, value:number, tokenNumber:number,
+            kwiclen:number) {
+        if (value === undefined) {
+            this.clStorage.removeLine(state, tokenNumber);
 
         } else {
-            this.mode = 'simple';
-        }
-        this.actionFinishHandlers = [];
-        this.currentGroupIds = this.layoutModel.getConf<Array<number>>('LinesGroupsNumbers');
-        this.maxGroupId = this.layoutModel.getConf<number>('concLineMaxGroupNum');
-        this._isBusy = false;
-        this.emailDialogCredentials = null;
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'LINE_SELECTION_SELECT_LINE':
-                    let val = action.payload['value'];
-                    if (this.validateGroupId(val)) {
-                        this.selectLine(val, action.payload['tokenNumber'], action.payload['kwicLength']);
-                        this.emitChange();
-
-                    } else {
-                        this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
-                                        {max_group: this.maxGroupId})
-                        );
-                    }
-                    break;
-                case 'LINE_SELECTION_STATUS_REQUEST':
-                    this.emitChange();
-                    break;
-                case 'LINE_SELECTION_RESET':
-                    this.clearSelection();
-                    this.concLineModel.emitChange();
-                    this.emitChange();
-                    break;
-                case 'LINE_SELECTION_RESET_ON_SERVER':
-                    this._isBusy = true;
-                    this.emitChange();
-                    this.resetServerLineGroups().subscribe(
-                        (args:MultiDict) => {
-                            this._isBusy = false;
-                            this.concLineModel.emitChange();
-                            this.emitChange();
-                            this.layoutModel.getHistory().replaceState('view', args);
-                        },
-                        (err) => {
-                            this._isBusy = false;
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    )
-                    break;
-                case 'LINE_SELECTION_REMOVE_LINES':
-                    this.removeLines(LineSelectionModel.FILTER_NEGATIVE);
-                    this.emitChange();
-                    break;
-                case 'LINE_SELECTION_REMOVE_OTHER_LINES':
-                    this.removeLines(LineSelectionModel.FILTER_POSITIVE);
-                    this.emitChange();
-                    break;
-                case 'LINE_SELECTION_MARK_LINES':
-                    this._isBusy = true;
-                    this.emitChange();
-                    this.markLines().subscribe(
-                        (args:MultiDict) => {
-                            this._isBusy = false;
-                            this.emitChange();
-                            this.concLineModel.emitChange();
-                            this.layoutModel.getHistory().replaceState('view', args);
-                        },
-                        (err) => {
-                            this._isBusy = false;
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
-                    break;
-                case 'LINE_SELECTION_REMOVE_NON_GROUP_LINES':
-                    this.removeNonGroupLines(); // this redirects ...
-                    break;
-                case 'LINE_SELECTION_REENABLE_EDIT':
-                    this._isBusy = true;
-                    this.emitChange();
-                    this.reenableEdit().subscribe(
-                        (args:MultiDict) => {
-                            this._isBusy = false;
-                            this.concLineModel.emitChange();
-                            this.emitChange();
-                            this.layoutModel.getHistory().replaceState('view', args);
-                        },
-                        (err) => {
-                            this._isBusy = false;
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    )
-                    break;
-                case 'LINE_SELECTION_GROUP_RENAME':
-                    this._isBusy = true;
-                    this.emitChange();
-                    this.renameLineGroup(action.payload['srcGroupNum'], action.payload['dstGroupNum']).subscribe(
-                        (args:MultiDict) => {
-                            this._isBusy = false;
-                            this.concLineModel.emitChange();
-                            this.emitChange();
-                            this.layoutModel.getHistory().replaceState('view', args);
-                        },
-                        (err) => {
-                            this._isBusy = false;
-                            this.layoutModel.showMessage('error', err);
-                            this.emitChange();
-                        }
-                    )
-                    break;
-                case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
-                    this._isBusy = true;
-                    this.emitChange();
-                    this.sendSelectionUrlToEmail(action.payload['email']).subscribe(
-                        (data) => {
-                            this._isBusy = false;
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this._isBusy = false;
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    )
-                    break;
-                case 'LINE_SELECTION_SORT_LINES':
-                    this.sortLines(); // this redirects ...
-                    break;
-                case 'CONCORDANCE_SET_LINE_SELECTION_MODE':
-                    if (this.setMode(action.payload['mode'])) {
-                        this.emitChange();
-                    }
-                    break;
-                case 'LINE_SELECTION_LOAD_USER_CREDENTIALS':
-                    this.userInfoModel.loadUserInfo(false).subscribe(
-                        () => {
-                            this.emailDialogCredentials = this.userInfoModel.getCredentials();
-                            this.emitChange();
-                        },
-                        (err) => {
-                            this.emitChange();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
-                break;
-                case 'LINE_SELECTION_CLEAR_USER_CREDENTIALS':
-                    this.emailDialogCredentials = null;
-                    this.emitChange();
-                break;
-            }
-        });
-    }
-
-    private validateGroupId(value:string|number):boolean {
-        const v = typeof value === 'string' ? parseInt(value) : value;
-        if (isNaN(v)) {
-            return false;
-        }
-        if (this.mode === 'groups') {
-            return v >= 1 && v <= this.maxGroupId || v === -1;
-        }
-        return v === 1 || v === null;
-    }
-
-    private selectLine(value:number, tokenNumber:number, kwiclen:number) {
-        if (this.mode === 'simple') {
-            if (value === 1) {
-                this.clStorage.addLine(String(tokenNumber), kwiclen, null);
-
-            } else {
-                this.clStorage.removeLine(String(tokenNumber));
-            }
-            this.clStorage.serialize();
-
-        } else if (this.mode === 'groups') {
-            if (value !== -1) {
-                this.clStorage.addLine(String(tokenNumber), kwiclen, value);
-
-            } else {
-                this.clStorage.removeLine(String(tokenNumber));
-            }
-            this.clStorage.serialize();
+            this.clStorage.addLine(state, tokenNumber, kwiclen, value);
         }
     }
 
-    private updateGlobalArgs(data:Kontext.AjaxConcResponse):void {
+    private updateGlobalArgs(data:AjaxLineGroupRenameResponse):void {
         this.layoutModel.setConf<number>('NumLinesInGroups', data.num_lines_in_groups);
         this.layoutModel.setConf<Array<number>>('LinesGroupsNumbers', data.lines_groups_numbers);
         this.layoutModel.replaceConcArg('q', data.Q);
     }
 
-    private clearSelection():void {
-        this.clStorage.clear();
+    private clearSelection(state:LineSelectionModelState):void {
+        this.clStorage.clear(state, state.queryHash);
     }
 
-    private renameLineGroup(srcGroupNum:number, dstGroupNum:number):Observable<MultiDict> {
-        if (!this.validateGroupId(srcGroupNum) || !this.validateGroupId(dstGroupNum)) {
-            return throwError(new Error(this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
-                        {max_group: this.maxGroupId})));
+    private renameLineGroup(state:LineSelectionModelState, srcGroupNum:number,
+            dstGroupNum:number):Observable<AjaxLineGroupRenameResponse> {
+        if (!this.validateGroupId(state, srcGroupNum) ||
+                !this.validateGroupId(state, dstGroupNum)) {
+            return throwError(new Error(this.layoutModel.translate(
+                    'linesel__error_group_name_please_use{max_group}',
+                    {max_group: state.maxGroupId})));
 
         } else if (!srcGroupNum) {
             return throwError(new Error(this.layoutModel.translate('linesel__group_missing')));
 
-        } else if (this.currentGroupIds.indexOf(srcGroupNum) < 0) {
-            return throwError(new Error(this.layoutModel.translate('linesel__group_does_not_exist_{group}',
+        } else if (!List.some(v => v.id === srcGroupNum, state.currentGroupIds)) {
+            return throwError(new Error(this.layoutModel.translate(
+                    'linesel__group_does_not_exist_{group}',
                     {group: srcGroupNum})));
 
         } else {
-            return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
-                'POST',
+            return this.layoutModel.ajax$<AjaxConcResponse>(
+                HTTP.Method.POST,
                 this.layoutModel.createActionUrl(
                     'ajax_rename_line_group',
                     this.layoutModel.getConcArgs().items()
@@ -306,23 +559,20 @@ export class LineSelectionModel extends StatefulModel {
                 {
                     'from_num': srcGroupNum,
                     'to_num': dstGroupNum
-                },
-                {
-                    contentType : 'application/x-www-form-urlencoded'
                 }
             ).pipe(
-                tap((data) => {
-                    this.currentGroupIds = data['lines_groups_numbers'];
+                tap(data => {
                     this.updateGlobalArgs(data);
-                }),
-                concatMap(_ => this.concLineModel.reloadPage())
+                    this.layoutModel.getHistory().replaceState(
+                        'view', this.layoutModel.getConcArgs());
+                })
             );
         }
     }
 
     private sendSelectionUrlToEmail(email:string):Observable<boolean> {
         return this.layoutModel.ajax$<SendSelToMailResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_send_group_selection_link_to_mail',
                 [
@@ -348,72 +598,63 @@ export class LineSelectionModel extends StatefulModel {
         );
     }
 
-    private finishAjaxActionWithRedirect(src:Observable<Kontext.AjaxConcResponse>):void {
+    private finishAjaxActionWithRedirect(src:Observable<AjaxConcResponse>):void {
         /*
          * please note that we do not have to update layout model
          * query code or any other state parameter here because client
          * is redirected to a new URL once the action is done
          */
         src.subscribe(
-            (data:Kontext.AjaxConcResponse) => { // TODO type
-                this.performActionFinishHandlers();
-                this.clStorage.clear();
+            (data:AjaxConcResponse) => {
                 const args = this.layoutModel.getConcArgs();
                 args.replace('q', data.Q);
                 const nextUrl = this.layoutModel.createActionUrl('view', args.items());
-                this.onLeavePage();
-                window.location.href = nextUrl; // we're leaving Flux world here so it's ok
+                window.location.href = nextUrl;
             },
             (err) => {
-                this.performActionFinishHandlers();
                 this.layoutModel.showMessage('error', err);
             }
         );
     }
 
-    public resetServerLineGroups():Observable<MultiDict> {
-        return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
-            'POST',
+    private resetServerLineGroups(state:LineSelectionModelState):Observable<AjaxConcResponse> {
+        return this.layoutModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                     'ajax_unset_lines_groups',
                     this.layoutModel.getConcArgs().items()
             ),
             {},
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
 
         ).pipe(
             tap((data) => {
-                this.clStorage.clear();
                 this.updateGlobalArgs(data);
-            }),
-            concatMap(_ => this.concLineModel.reloadPage())
+                this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
+            })
         );
     }
 
-    private markLines():Observable<MultiDict> {
-        return this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
-            'POST',
+    private saveGroupsToServerConc(state:LineSelectionModelState):Observable<AjaxConcResponse> {
+        return this.layoutModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_apply_lines_groups',
                 this.layoutModel.getConcArgs().items()
             ),
             {
-                rows : JSON.stringify(this.clStorage.getAll())
+                rows : JSON.stringify(this.clStorage.exportAll(state))
             }
         ).pipe(
-            tap((data) => {
+            tap(data => {
                 this.updateGlobalArgs(data);
-                this.currentGroupIds = data['lines_groups_numbers'];
-            }),
-            concatMap(_ => this.concLineModel.reloadPage())
+                this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
+            })
         );
     }
 
     private removeNonGroupLines():void {
-        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
-            'POST',
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_remove_non_group_lines',
                 this.layoutModel.getConcArgs().items()
@@ -422,18 +663,9 @@ export class LineSelectionModel extends StatefulModel {
         ));
     }
 
-    private queryChecksum(q:string):number {
-        let cc = 0;
-        for(let i = 0; i < q.length; i += 1) {
-            cc = (cc << 5) - cc + q.charCodeAt(i);
-            cc &= cc;
-        }
-        return cc;
-    }
-
-    private reenableEdit():Observable<MultiDict> {
+    private reenableEdit():Observable<ReenableEditResponse> {
         return this.layoutModel.ajax$<ReenableEditResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_reedit_line_selection',
                 this.layoutModel.getConcArgs().items()
@@ -442,75 +674,35 @@ export class LineSelectionModel extends StatefulModel {
 
         ).pipe(
             tap((data) => {
-                this.registerQuery(data.Q);
-                this.importData(data.selection);
+                this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
                 this.updateGlobalArgs(data);
-            }),
-            concatMap(_ => this.concLineModel.reloadPage())
+            })
         );
     }
 
-    private removeLines(filter:string):void {
-        const args = this.layoutModel.getConcArgs();
+    private removeLines(state:LineSelectionModelState, filter:'n'|'p'):void {
+        const args = this.layoutModel.getConcArgs() as MultiDict<
+                ConcServerArgs & {pnfilter:string}>;
         args.set('pnfilter', filter);
-        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
-            'POST',
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_remove_selected_lines',
                 args.items()
             ),
             {
-                rows : JSON.stringify(this.getAll())
+                rows : JSON.stringify(this.clStorage.exportAll(state))
             }
         ));
     }
 
     /**
-     * Pair the store with a concrete query. This ensures
-     * that visiting a different query view will reset
-     * the selection.
-     */
-    registerQuery(query:Array<string>):void {
-        this.clStorage.init(this.queryChecksum(query.join('')));
-    }
-
-    addActionFinishHandler(fn:()=>void):void {
-        this.actionFinishHandlers.push(fn);
-    }
-
-    removeActionFinishHandler(fn:()=>void):void {
-        for (let i = 0; i < this.actionFinishHandlers.length; i += 1) {
-            if (this.actionFinishHandlers[i] === fn) {
-                this.actionFinishHandlers.splice(i, 1);
-                break;
-            }
-        }
-    }
-
-    removeAllActionFinishHandlers():void {
-        this.actionFinishHandlers = [];
-    }
-
-    private performActionFinishHandlers():void {
-        this.actionFinishHandlers.forEach((fn:()=>void)=> fn());
-    }
-
-    getMode():string {
-        return this.mode;
-    }
-
-    getLastCheckpointUrl() {
-        return this.layoutModel.createActionUrl('view', this.layoutModel.getConcArgs().items());
-    }
-
-    /**
      * @return true if mode has been changed, false otherwise
      */
-    setMode(mode:string):boolean {
-        if (this.mode !== mode) {
-            this.clStorage.setMode(mode);
-            this.clStorage.serialize();
-            this.mode = mode;
+    private setMode(state:LineSelectionModelState, mode:LineSelectionModes):boolean {
+        if (this.clStorage.actualData(state).mode !== mode) {
+            this.clStorage.setMode(state, mode);
+            this.clStorage.actualData(state).mode = mode;
             return true;
 
         } else {
@@ -518,74 +710,48 @@ export class LineSelectionModel extends StatefulModel {
         }
     }
 
-    sortLines():void {
-        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<Kontext.AjaxConcResponse>(
-            'POST',
+    private sortLines():void {
+        this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('ajax_sort_group_lines',
                     this.layoutModel.getConcArgs().items()),
             {}
         ));
     }
 
-    private importData(data:Array<[number, number, number]>):void {
-        data.forEach((item) => {
-            this.addLine(String(item[0]), item[1], item[2]);
+    private importData(
+        state:LineSelectionModelState,
+        data:Array<[number, number, number]>,
+        mode:LineSelectionModes
+    ):void {
+        data.forEach(([tokenId, kwicLen, cat]) => {
+            this.addLine(state, tokenId, kwicLen, cat);
         });
-        this.mode = this.clStorage.getMode();
-        this.clStorage.serialize();
+        this.clStorage.actualData(state).mode = mode;
     }
 
-    addLine(id:string, kwiclen:number, category:number):void {
-        this.clStorage.addLine(id, kwiclen, category);
-        this.clStorage.serialize();
+    addLine(state:LineSelectionModelState, id:number, kwiclen:number, category:number):void {
+        this.clStorage.addLine(state, id, kwiclen, category);
     }
 
-    removeLine(id):void {
-        this.clStorage.removeLine(id);
-        this.clStorage.serialize();
+    removeLine(state:LineSelectionModelState, id:number):void {
+        this.clStorage.removeLine(state, id);
     }
 
-    containsLine(id:string):boolean {
-        return this.clStorage.containsLine(id);
+    containsLine(state:LineSelectionModelState, id:number):boolean {
+        return this.clStorage.containsLine(state, id);
     }
 
-    getLine(id:number):LineSelValue {
-        return this.clStorage.getLine(String(id));
+    getLine(state:LineSelectionModelState, id:number):LineSelValue {
+        return this.clStorage.getLine(state, id);
     }
 
-    getAll():Array<LineSelValue> {
-        return this.clStorage.getAll();
-    }
-
-    asMap():Immutable.Map<string, LineSelValue> {
-        return this.clStorage.asMap();
-    }
-
-    clear():void {
-        return this.clStorage.clear();
-    }
-
-    /**
-     * Return number of selected/group-attached lines
-     */
-    size():number {
-        return this.clStorage.size();
+    clear(state:LineSelectionModelState):void {
+        return this.clStorage.clear(state);
     }
 
     supportsSessionStorage():boolean {
         return this.clStorage.supportsSessionStorage();
-    }
-
-    serialize():void {
-        this.clStorage.serialize();
-    }
-
-    isBusy():boolean {
-        return this._isBusy;
-    }
-
-    getEmailDialogCredentials():Kontext.UserCredentials {
-        return this.emailDialogCredentials;
     }
 
 }

@@ -18,12 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable, Subscription } from 'rxjs';
-import * as Immutable from 'immutable';
-import {Kontext, TextTypes} from '../types/common';
-import {CoreViews} from './coreViews';
-import {IConcLinesProvider} from '../types/concordance';
-import { IEventEmitter, ITranslator, IFullActionControl } from 'kombo';
+import { Observable } from 'rxjs';
+import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
+
+import { Kontext, TextTypes } from '../types/common';
+import { CoreViews } from './coreViews';
+import { IConcLinesProvider } from '../types/concordance';
+import { ConcServerArgs } from '../models/concordance/common';
+import { QueryFormType } from '../models/query/actions';
+import { IUnregistrable } from '../models/common/common';
+import { BaseSubcorFormState } from '../models/subcorp/common';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -34,7 +38,7 @@ export interface IPluginApi extends ITranslator {
     getConf<T>(key:string):T;
     getNestedConf<T>(...keys:Array<string>):T;
     createStaticUrl(path:string):string;
-    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
+    createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string;
     ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
     userIsAnonymous():boolean;
@@ -45,13 +49,12 @@ export interface IPluginApi extends ITranslator {
     unmountReactComponent(element:HTMLElement):boolean;
     getModels():Kontext.LayoutModel;
     getViews():CoreViews.Runtime;
-    pluginIsActive(name:string):boolean;
-    getConcArgs():Kontext.IMultiDict;
+    pluginTypeIsActive(name:string):boolean;
+    getConcArgs():Kontext.IMultiDict<ConcServerArgs>;
     getCorpusIdent():Kontext.FullCorpusIdent;
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
+    setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean):void;
 }
 
 
@@ -82,7 +85,7 @@ export namespace PluginInterfaces {
 
     export namespace ApplicationBar {
 
-        export interface IPlugin {
+        export interface IPlugin extends IUnregistrable {
         }
 
         export interface Factory {
@@ -109,25 +112,20 @@ export namespace PluginInterfaces {
 
     export namespace SubcMixer {
 
+        export interface Props {
+            isActive:Boolean;
+        }
+
         export interface IPlugin {
-            getWidgetView():React.ComponentClass;
+            getWidgetView():View;
         }
 
-        export type View = React.ComponentClass<{isActive:boolean}>;
-
-        export interface ISubcorpFormModel {
-            getIsPublic():boolean;
-            getDescription():Kontext.FormValue<string>;
-            getSubcName():Kontext.FormValue<string>;
-            addListener(fn:Kontext.ModelListener):Subscription;
-            validateForm():Error|null;
-        }
+        export type View = React.ComponentClass<Props>|React.SFC<Props>;
 
         export interface Factory {
             (
                 pluginApi:IPluginApi,
-                textTypesModel:TextTypes.ITextTypesModel,
-                subcorpFormModel:PluginInterfaces.SubcMixer.ISubcorpFormModel,
+                textTypesModel:TextTypes.ITextTypesModel<{}>,
                 corpusIdAttr:string
             ):IPlugin;
         }
@@ -139,16 +137,21 @@ export namespace PluginInterfaces {
 
     export namespace SyntaxViewer {
 
-        export interface IPlugin extends IEventEmitter {
-            render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
+        export interface IPlugin extends IModel<BaseState> {
             close():void;
             onPageResize():void;
             registerOnError(fn:(e:Error)=>void):void;
-            isWaiting():boolean;
         }
 
         export interface Factory {
             (pluginApi:IPluginApi):IPlugin;
+        }
+
+        export interface BaseState {
+            isBusy:boolean;
+            tokenNumber:number;
+            kwicLength:number;
+            targetHTMLElementID:string;
         }
     }
 
@@ -198,7 +201,7 @@ export namespace PluginInterfaces {
 
         export interface ViewProps {
             sourceId:string;
-            actionPrefix:string;
+            formType:QueryFormType;
             range:[number, number];
             onInsert:()=>void;
             onEscKey:()=>void;
@@ -207,7 +210,8 @@ export namespace PluginInterfaces {
         export type View = React.ComponentClass<ViewProps>|React.SFC<ViewProps>;
 
         export interface IPlugin {
-            getWidgetView(corpname:string, tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;
+            getWidgetView(corpname:string,
+                tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;
         }
 
         export interface Factory {
@@ -223,7 +227,7 @@ export namespace PluginInterfaces {
         export interface IModel extends IEventEmitter {
 
             getCurrentCorpusOnly():boolean;
-            getData():Immutable.List<Kontext.QueryHistoryItem>;
+            getData():Array<Kontext.QueryHistoryItem>;
             getQueryType():string;
             getOffset():number;
             getIsBusy():boolean;
@@ -235,7 +239,7 @@ export namespace PluginInterfaces {
 
         export interface WidgetProps {
             sourceId:string;
-            actionPrefix:string;
+            formType:QueryFormType;
             onCloseTrigger:()=>void;
         }
 
@@ -243,20 +247,19 @@ export namespace PluginInterfaces {
 
         export interface IPlugin {
 
-            /**
-             * Import data to the model. This is meant to be used right
-             * after plug-in initialization and it should never
-             * notify listeners.
-             */
-            importData(data:Array<Kontext.QueryHistoryItem>):void;
-
             getWidgetView():WidgetView;
 
             getModel():IModel;
         }
 
         export interface Factory {
-            (pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):IPlugin;
+            (
+                pluginApi:IPluginApi,
+                offset:number,
+                limit:number,
+                pageSize:number,
+                initialData:Array<Kontext.QueryHistoryItem>
+            ):IPlugin;
         }
     }
 
@@ -266,17 +269,15 @@ export namespace PluginInterfaces {
 
     export namespace Corparch {
 
-        export type WidgetView = React.ComponentClass<{}>;
 
-
-        export interface ICorpSelection extends IEventEmitter {
-            getCurrentSubcorpus():string;
-            getCurrentSubcorpusOrigName():string;
-            getIsForeignSubcorpus():boolean;
-            getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem>;
-            getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
-            getCorpora():Immutable.List<string>;
+        /**
+         * A general click action performed on featured/favorite/searched item
+         */
+        export interface CorplistItemClick {
+            (corpora:Array<string>, subcorpId:string):void;
         }
+
+        export type WidgetView = React.ComponentClass<{}>;
 
         /**
          * A factory class for generating corplist page. The page is expected
@@ -292,18 +293,13 @@ export namespace PluginInterfaces {
             getList():React.ComponentClass|React.SFC<{}>;
         }
 
-        export interface IPlugin {
+        export interface IPlugin extends IUnregistrable {
 
             /**
              * Create a corpus selection widget used on the query page
              */
-            createWidget(targetAction:string, corpSel:ICorpSelection,
-                    options:Kontext.GeneralProps):React.ComponentClass<{}>;
-
-            /**
-             * This is needed when corpus change is performed.
-             */
-            disposeWidget():void;
+            createWidget(targetAction:string,
+                options:Kontext.GeneralProps):React.ComponentClass<{}>;
 
             initCorplistPageComponents(initialData:any):ICorplistPage;
         }
@@ -318,8 +314,19 @@ export namespace PluginInterfaces {
 
     export namespace LiveAttributes {
 
-        export interface IPlugin {
-            getViews(subcMixerView:React.ComponentClass, textTypesModel:TextTypes.ITextTypesModel):any; // TODO types
+        export type View = React.ComponentClass|React.SFC;
+
+        export type CustomAttribute = React.ComponentClass|React.SFC;
+
+        export interface Views {
+            LiveAttrsView:View;
+            LiveAttrsCustomTT:CustomAttribute;
+        }
+
+        export interface IPlugin extends IUnregistrable {
+
+            getViews(subcMixerView:SubcMixer.View, textTypesModel:IModel<{}>):Views;
+
         }
 
         /**
@@ -356,14 +363,10 @@ export namespace PluginInterfaces {
             manualAlignCorporaMode:boolean;
         }
 
-        export type View = React.ComponentClass<{}>;
-
-        export type CustomAttribute = React.ComponentClass<{}>;
-
         export interface Factory {
             (
                 pluginApi:IPluginApi,
-                textTypesModel:TextTypes.ITextTypesModel,
+                textTypesModel:TextTypes.ITextTypesModel<{}>,
                 isEnabled:boolean,
                 controlsAlignedCorpora:boolean,
                 args:PluginInterfaces.LiveAttributes.InitArgs
@@ -400,7 +403,7 @@ export namespace PluginInterfaces {
         }
 
         export enum Actions {
-            FETCH_INFO = 'KWIC_CONNECT_FETCH_INFO'
+            FetchInfo = 'KWIC_CONNECT_FETCH_INFO'
         }
 
         export type Factory = (pluginApi:IPluginApi, concLinesProvider:IConcLinesProvider,
@@ -429,7 +432,8 @@ export namespace PluginInterfaces {
             data: Array<[string, string]>;
         }
 
-        export type Renderer = React.ComponentClass<Kontext.GeneralProps>|React.SFC<Kontext.GeneralProps>;
+        export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
+            React.SFC<Kontext.GeneralProps>;
 
         export interface DataAndRenderer {
             renderer:Renderer;
@@ -441,7 +445,7 @@ export namespace PluginInterfaces {
 
         export interface TCData {
             token:string;
-            renders:Immutable.List<DataAndRenderer>;
+            renders:Array<DataAndRenderer>;
         }
 
         export interface IPlugin {

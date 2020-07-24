@@ -19,11 +19,13 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
-import {Kontext, KeyCodes} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import { IActionDispatcher } from 'kombo';
+import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 import { Subscription } from 'rxjs';
+
+import { Kontext } from '../../types/common';
+import { PluginInterfaces } from '../../types/plugins';
+import { Actions, ActionName } from '../../models/query/actions';
 
 
 export interface RecentQueriesPageListProps {
@@ -69,8 +71,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_SET_QUERY_TYPE',
+            dispatcher.dispatch<Actions.StorageSetQueryType>({
+                name: ActionName.StorageSetQueryType,
                 payload: {
                     value: evt.target.value
                 }
@@ -112,8 +114,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
+            dispatcher.dispatch<Actions.StorageSetCurrentCorpusOnly>({
+                name: ActionName.StorageSetCurrentCorpusOnly,
                 payload: {
                     value: !props.value
                 }
@@ -130,8 +132,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
         const handleChange = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
+            dispatcher.dispatch<Actions.StorageSetArchivedOnly>({
+                name: ActionName.StorageSetArchivedOnly,
                 payload: {
                     value: !props.value
                 }
@@ -211,7 +213,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         render() {
-            if (Object.keys(this.props.textTypes).length > 0) {
+            if (!Dict.empty(this.props.textTypes)) {
                 return (
                     <div className="text-types-info">
                         <a className="switch" onClick={this._handleExpandClick}
@@ -222,7 +224,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {this.state.expanded ? ':' : null}
                         {this.state.expanded ?
                             (<ul>
-                                {Object.keys(this.props.textTypes).map(k => <li key={k}><strong>{k}</strong>: {this.props.textTypes[k].join(', ')}</li>)}
+                                {pipe(
+                                    this.props.textTypes,
+                                    Dict.keys(),
+                                    List.map(k => (
+                                        <li key={k}>
+                                            <strong>{k}</strong>:
+                                            {this.props.textTypes[k].join(', ')}
+                                        </li>
+                                    ))
+                                )}
                             </ul>) : null
                         }
                     </div>
@@ -273,8 +284,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleEditClick = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
+            dispatcher.dispatch<Actions.StorageSetEditingQueryId>({
+                name: ActionName.StorageSetEditingQueryId,
                 payload: {
                     value: props.queryId
                 }
@@ -282,8 +293,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleDoNotSaveClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_DO_NOT_ARCHIVE',
+            dispatcher.dispatch<Actions.StorageDoNotArchive>({
+                name: ActionName.StorageDoNotArchive,
                 payload: {
                     queryId: props.queryId
                 }
@@ -300,7 +311,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('query__save_as_saved_as')}:{'\u00a0'}
                         <span className="saved-name">{props.name}</span>
                         {'\u00a0'}
-                        <a className="util-button" onClick={handleDoNotSaveClick}>{he.translate('query__save_as_transient')}</a>
+                        <a className="util-button" onClick={handleDoNotSaveClick}>
+                            {he.translate('query__save_as_transient')}
+                        </a>
                     </div>
                 );
 
@@ -324,8 +337,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_EDITOR_SET_NAME',
+            dispatcher.dispatch<Actions.StorageEditorSetName>({
+                name: ActionName.StorageEditorSetName,
                 payload: {
                     value: evt.target.value
                 }
@@ -333,26 +346,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
-                payload: {}
+            dispatcher.dispatch<Actions.StorageEditorClickSave>({
+                name: ActionName.StorageEditorClickSave
             });
         };
 
         const handleCloseClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
-                payload: {}
+            dispatcher.dispatch<Actions.StorageClearEditingQueryID>({
+                name: ActionName.StorageClearEditingQueryID
             });
         };
 
         const handleKeyDown = (evt) => {
-            if (evt.keyCode === KeyCodes.ESC) {
+            if (evt.keyCode === Keyboard.Code.ESC) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleCloseClick();
 
-            } else if (evt.keyCode === KeyCodes.ENTER) {
+            } else if (evt.keyCode === Keyboard.Code.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleSubmitClick();
@@ -390,8 +401,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleFormClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_OPEN_QUERY_FORM',
+            dispatcher.dispatch<Actions.StorageOpenQueryForm>({
+                name: ActionName.StorageOpenQueryForm,
                 payload: {
                     idx: props.data.idx
                 }
@@ -447,9 +458,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_LOAD_MORE',
-                payload: {}
+            dispatcher.dispatch<Actions.StorageLoadMore>({
+                name: ActionName.StorageLoadMore
             });
         };
 
@@ -507,7 +517,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         editingQueryName:string;
         hasMoreItems:boolean;
         modelIsBusy:boolean;
-        data:Immutable.List<Kontext.QueryHistoryItem>;
+        data:Array<Kontext.QueryHistoryItem>;
 
     }> = (props) => {
         return (
@@ -519,7 +529,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                             editingQueryName={hasEditor ? props.editingQueryName : undefined} />;
                         })}
                     </ul>
-                    <DataTableFooter dataLength={props.data.size} modelIsBusy={props.modelIsBusy}
+                    <DataTableFooter dataLength={props.data.length} modelIsBusy={props.modelIsBusy}
                             hasMoreItems={props.hasMoreItems} />
             </div>
         );

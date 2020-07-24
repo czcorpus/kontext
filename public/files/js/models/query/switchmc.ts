@@ -18,14 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import { Action, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
+import { IFullActionControl, StatefulModel } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { Kontext } from '../../types/common';
+import { Dict } from 'cnc-tskit';
+
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { SwitchMainCorpServerArgs } from './common';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName }
+    from '../../models/mainMenu/actions';
+import { Actions, ActionName } from './actions';
+
 
 
 export interface SwitchMainCorpFormProperties {
@@ -45,38 +51,64 @@ export function fetchSwitchMainCorpFormArgs<T>(args:{[ident:string]:AjaxResponse
 }
 
 
-export class SwitchMainCorpModel extends StatefulModel {
+export interface SwitchMainCorpModelState {
+    maincorpValues:{[key:string]:string};
+}
 
-    private layoutModel:PageModel;
 
-    private maincorpValues:Immutable.Map<string, string>;
+export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState> {
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, data:SwitchMainCorpFormProperties) {
-        super(dispatcher);
-        this.layoutModel = layoutModel;
-        this.maincorpValues = Immutable.Map<string, string>(data);
+    private readonly layoutModel:PageModel;
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'SWITCH_MC_FORM_SUBMIT':
-                    window.location.href = this.getSubmitUrl(action.payload['operationId']);
-                break;
+    private readonly syncInitialArgs:AjaxResponse.SwitchMainCorpArgs;
+
+    constructor(
+        dispatcher:IFullActionControl,
+        layoutModel:PageModel,
+        data:SwitchMainCorpFormProperties,
+        syncInitialArgs:AjaxResponse.SwitchMainCorpArgs
+    ) {
+        super(
+            dispatcher,
+            {
+                maincorpValues: Dict.fromEntries(data.maincorp)
             }
-        });
+        );
+        this.layoutModel = layoutModel;
+        this.syncInitialArgs = syncInitialArgs;
+
+        this.addActionHandler<MainMenuActions.ShowSwitchMc>(
+            MainMenuActionName.ShowSwitchMc,
+            action => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+            }
+        );
+
+        this.addActionHandler<Actions.SwitchMcFormSubmit>(
+            ActionName.SwitchMcFormSubmit,
+            action => {
+                window.location.href = this.getSubmitUrl(action.payload.operationId);
+            }
+        );
     }
 
     getSubmitUrl(opId:string):string {
-        const args = this.layoutModel.getConcArgs();
-        args.set('maincorp', this.maincorpValues.get(opId));
+        const args = this.layoutModel.getConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
+        args.set('maincorp', this.state.maincorpValues[opId]);
         return this.layoutModel.createActionUrl('switch_main_corp', args);
     }
 
-    syncFrom(src:Observable<AjaxResponse.SwitchMainCorpArgs>):Observable<AjaxResponse.SwitchMainCorpArgs> {
+    syncFrom(
+        src:Observable<AjaxResponse.SwitchMainCorpArgs>
+    ):Observable<AjaxResponse.SwitchMainCorpArgs> {
+
         return src.pipe(
             tap(
                 (data) => {
                     if (data.form_type === Kontext.ConcFormTypes.SWITCHMC) {
-                        this.maincorpValues = this.maincorpValues.set(data.op_key, data.maincorp);
+                        this.changeState(state => {
+                            state.maincorpValues[data.op_key] = data.maincorp;
+                        });
                     }
                 }
             ),
@@ -89,16 +121,14 @@ export class SwitchMainCorpModel extends StatefulModel {
                         return null;
 
                     } else {
-                        throw new Error('Cannot sync switchmc model - invalid form data type: ' + data.form_type);
+                        throw new Error(
+                            'Cannot sync switchmc model - invalid form data type: ' +
+                            data.form_type
+                        );
                     }
                 }
             )
         );
-    }
-
-
-    getMainCorpValues():Immutable.Map<string, string> {
-        return this.maincorpValues;
     }
 
 }

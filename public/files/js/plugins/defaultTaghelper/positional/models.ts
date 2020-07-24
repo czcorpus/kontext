@@ -16,16 +16,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {IPluginApi} from '../../../types/plugins';
-import * as Immutable from 'immutable';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
-import { TagBuilderBaseState } from '../common';
 import { Observable, of as rxOf } from 'rxjs';
+import { List, pipe, HTTP, Dict } from 'cnc-tskit';
+import { StatelessModel, IActionDispatcher } from 'kombo';
+
+import { IPluginApi } from '../../../types/plugins';
+import { TagBuilderBaseState } from '../common';
+import { Actions, ActionName } from '../actions';
+import { Actions as QueryActions,
+    ActionName as QueryActionName } from '../../../models/query/actions';
 
 
-type RawTagValues = Array<Array<Array<string>>>;
+type RawTagValues = Array<Array<[string, string]>>;
 
-type UpdateTagValues = {[idx:number]:Array<Array<string>>};
 
 /**
  * Defines a JSON format used by server
@@ -53,7 +56,7 @@ export interface PositionValue {
  */
 export interface PositionOptions {
     label:string;
-    values:Immutable.List<PositionValue>;
+    values:Array<PositionValue>;
     isLocked:boolean;
     isActive:boolean;
 }
@@ -65,9 +68,9 @@ export interface TagHelperModelState extends TagBuilderBaseState {
      * Contains all the values (inner lists) along with selection
      * status through whole user interaction (outer list).
      */
-    data:Immutable.List<Immutable.List<PositionOptions>>;
+    data:Array<Array<PositionOptions>>;
 
-    positions:Immutable.List<PositionOptions>;
+    positions:Array<PositionOptions>;
 
     presetPattern:string;
 
@@ -78,6 +81,19 @@ export interface TagHelperModelState extends TagBuilderBaseState {
     srchPattern:string;
 
     tagAttr:string;
+}
+
+function cloneSelection(data:Array<PositionOptions>):Array<PositionOptions> {
+    return List.map(
+        item => ({
+            ...item,
+            values: List.map(
+                value => ({...value}),
+                item.values
+            )
+        }),
+        data
+    );
 }
 
 /**
@@ -92,186 +108,202 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     private readonly sourceId:string;
 
 
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:TagHelperModelState, ident:string) {
+    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi,
+            initialState:TagHelperModelState, ident:string) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.ident = ident;
         this.sourceId = initialState.corpname;
-        this.actionMatch = {
-            'TAGHELPER_PRESET_PATTERN': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.presetPattern = action.payload['pattern'];
-                    if (newState.data.last().size > 0) {
-                        this.applyPresetPattern(newState);
-                    }
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_GET_INITIAL_DATA': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.isBusy = true;
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_GET_INITIAL_DATA_DONE': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.isBusy = false;
-                    if (!action.error) {
-                        if (Array.isArray(action.payload['tags']) && action.payload['tags'].length > 0) {
-                            this.importData(newState, action.payload['labels'], action.payload['tags']);
-                            if (newState.presetPattern) {
-                                this.applyPresetPattern(newState);
-                            }
-                        }
 
-                    } else {
-                        // TODO fix side effect here
-                        this.pluginApi.showMessage('error', action.error);
-                    }
-                    return newState;
+        this.addActionSubtypeHandler<QueryActions.QueryTaghelperPresetPattern>(
+            QueryActionName.QueryTaghelperPresetPattern,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.presetPattern = action.payload.pattern;
+                if (!pipe(state.data, List.last(), List.empty())) {
+                    this.applyPresetPattern(state);
                 }
-                return state;
-            },
-            'TAGHELPER_CHECKBOX_CHANGED': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    this.updateSelectedItem(newState, action.payload['position'], action.payload['value'],
-                            action.payload['checked']);
-                    newState.isBusy = true;
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_LOAD_FILTERED_DATA_DONE': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    newState.isBusy = false;
-                    if (!action.error) {
-                        this.mergeData(
-                            newState,
-                            action.payload['tags'],
-                            action.payload['triggerRow']
-                        );
-
-                    } else {
-                        // TODO fix side effect
-                        this.pluginApi.showMessage('error', action.error);
-                    }
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_UNDO': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    this.undo(newState);
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_RESET': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    this.resetSelections(newState);
-                    return newState;
-                }
-                return state;
-            },
-            'TAGHELPER_TOGGLE_ACTIVE_POSITION': (state, action) => {
-                if (action.payload['sourceId'] === this.sourceId) {
-                    const newState = this.copyState(state);
-                    const latest = newState.data.last();
-                    newState.data = newState.data.push(latest.map((item, i) => ({
-                        label: item.label,
-                        values: item.values,
-                        isLocked: item.isLocked,
-                        isActive: i === action.payload['idx'] ? !item.isActive : item.isActive
-                    })).toList());
-                    newState.positions = newState.data.last();
-                    return newState;
-                }
-                return state;
             }
-        }
-    }
+        );
 
-    sideEffects(state:TagHelperModelState, action:Action, dispatch:SEDispatcher) {
-        switch (action.name) {
-            case 'TAGHELPER_GET_INITIAL_DATA':
-                if (action.payload['sourceId'] === this.sourceId) {
-                    (state.data.last().size === 0 ?
-                        this.loadInitialData(state) :
-                        rxOf({
-                            labels: [],
-                            tags: []
-                        })
-                    ).subscribe(
-                        (data) => {
-                            dispatch({
-                                name: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                payload: {
-                                    sourceId: this.sourceId,
-                                    labels: data.labels,
-                                    tags: data.tags
-                                }
-                            });
-
-                        },
-                        (err) => {
-                            dispatch({
-                                name: 'TAGHELPER_GET_INITIAL_DATA_DONE',
-                                payload: {
-                                    sourceId: this.sourceId,
-                                    labels: [],
-                                    tags: []
-                                },
-                                error: err
-                            });
-                        }
-                    );
-                }
-            break;
-            case 'TAGHELPER_CHECKBOX_CHANGED':
-            if (action.payload['sourceId'] === this.sourceId) {
-                this.updateData(state, action.payload['position']).subscribe(
+        this.addActionSubtypeHandler<Actions.GetInitialData>(
+            ActionName.GetInitialData,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                (List.last(state.data).length === 0 ?
+                    this.loadInitialData(state) :
+                    rxOf({
+                        labels: [],
+                        tags: []
+                    })
+                ).subscribe(
                     (data) => {
-                        dispatch({
-                            name: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                        dispatch<Actions.GetInitialDataDone>({
+                            name: ActionName.GetInitialDataDone,
                             payload: {
                                 sourceId: this.sourceId,
-                                tags: data.tags,
-                                triggerRow: action.payload['position']
+                                labels: data.labels,
+                                tags: data.tags
                             }
                         });
+
                     },
                     (err) => {
-                        dispatch({
-                            name: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                        dispatch<Actions.GetInitialDataDone>({
+                            name: ActionName.GetInitialDataDone,
                             payload: {
-                                sourceId: this.sourceId
+                                sourceId: this.sourceId,
+                                labels: [],
+                                tags: []
                             },
                             error: err
                         });
                     }
                 );
             }
-            break;
-            case 'TAGHELPER_SET_ACTIVE_TAG':
-                if (action.payload['sourceId'] === this.sourceId && this.ident !== action.payload['value']) {
-                    this.suspend({}, (action, syncObj) => this.ident === action.payload['value'] ? null : syncObj);
+        );
+
+        this.addActionSubtypeHandler<Actions.GetInitialDataDone>(
+            ActionName.GetInitialDataDone,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    if (Array.isArray(action.payload.tags) &&
+                            action.payload.tags.length > 0) {
+                        this.importData(
+                            state,
+                            action.payload.labels,
+                            action.payload.tags
+                        );
+                        if (state.presetPattern) {
+                            this.applyPresetPattern(state);
+                        }
+                    }
+
+                } else {
+                    // TODO fix side effect here
+                    this.pluginApi.showMessage('error', action.error);
                 }
-            break;
-        }
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.CheckboxChanged>(
+            ActionName.CheckboxChanged,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                this.updateSelectedItem(
+                    state,
+                    action.payload.position,
+                    action.payload.value,
+                    action.payload.checked
+                );
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.updateData(state, action.payload.position).subscribe(
+                    (data) => {
+                        dispatch<Actions.LoadFilteredDataDone>({
+                            name: ActionName.LoadFilteredDataDone,
+                            payload: {
+                                sourceId: this.sourceId,
+                                tags: data.tags,
+                                triggerRow: action.payload.position
+                            }
+                        });
+                    },
+                    (err) => {
+                        dispatch<Actions.LoadFilteredDataDone>({
+                            name: ActionName.LoadFilteredDataDone,
+                            payload: {
+                                sourceId: this.sourceId,
+                                tags: [],
+                                triggerRow: action.payload.position
+                            },
+                            error: err
+                        });
+                    }
+                );
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.LoadFilteredDataDone>(
+            ActionName.LoadFilteredDataDone,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    this.mergeData(
+                        state,
+                        action.payload.tags,
+                        action.payload.triggerRow
+                    );
+
+                } else {
+                    // TODO fix side effect
+                    this.pluginApi.showMessage('error', action.error);
+                }
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.Undo>(
+            ActionName.Undo,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                this.undo(state);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.Reset>(
+            ActionName.Reset,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                this.resetSelections(state);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.ToggleActivePosition>(
+            ActionName.ToggleActivePosition,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
+                const latest = List.last(state.data);
+                state.data.push(
+                    List.map(
+                        (item, i) => ({
+                            ...item,
+                            isActive: i === action.payload.idx ?
+                                !item.isActive : item.isActive
+                        }),
+                        latest
+                    )
+                );
+                state.positions = List.last(state.data);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.SetActiveTag>(
+            ActionName.SetActiveTag,
+            action => action.payload.sourceId === this.sourceId,
+            null,
+            (state, action, dispatch) => {
+                if (this.ident !== action.payload.value) {
+                    this.suspend(
+                        {},
+                        (action:Actions.SetActiveTag, syncObj) =>
+                            this.ident === action.payload.value
+                        ? null : syncObj
+                    ).subscribe(); // TODO is this correct ?
+                }
+            }
+        );
     }
 
     private loadInitialData(state:TagHelperModelState):Observable<TagDataResponse> {
         return this.pluginApi.ajax$<TagDataResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
                 [
@@ -285,7 +317,7 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
 
     private updateData(state:TagHelperModelState, triggerRow:number):Observable<TagDataResponse> {
         return this.pluginApi.ajax$<TagDataResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
                 [
@@ -299,17 +331,17 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     }
 
     private resetSelections(state:TagHelperModelState):void {
-        state.data = state.data.slice(0, 2).toList();
-        state.positions = state.data.last();
+        state.data = state.data.slice(0, 2);
+        state.positions = List.last(state.data);
         state.canUndo = this.canUndo(state);
         state.srchPattern = this.getCurrentPattern(state);
         [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
     }
 
     private undo(state:TagHelperModelState):void {
-        if (state.data.size > 2) {
-            state.data = state.data.slice(0, -1).toList();
-            state.positions = state.data.last();
+        if (state.data.length > 2) {
+            state.data = state.data.slice(0, -1);
+            state.positions = List.last(state.data);
         }
         state.canUndo = this.canUndo(state);
         state.srchPattern = this.getCurrentPattern(state);
@@ -323,32 +355,44 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      */
     private applyPresetPattern(state:TagHelperModelState):void {
         if (/^\||[^\\]\|/.exec(state.presetPattern)) {
-            this.pluginApi.showMessage('warning', this.pluginApi.translate('taghelper__cannot_parse'));
+            this.pluginApi.showMessage(
+                'warning',
+                this.pluginApi.translate('taghelper__cannot_parse')
+            );
         }
         const parsePattern = /\[\\?[^\]]+\]|\\?[^\]^\[^\.]|\.\*|\./g;
         const values = [];
-        let item = null;
-        while ((item = parsePattern.exec(state.presetPattern)) !== null) {
-            values.push(item[0].substr(0, 1) === '[' ? item[0].substring(1, item[0].length - 1) : item[0]);
+        let item = parsePattern.exec(state.presetPattern);
+        while (item !== null) {
+            values.push(item[0].substr(0, 1) === '[' ?
+                item[0].substring(1, item[0].length - 1) : item[0]);
+            item = parsePattern.exec(state.presetPattern);
         }
-        for (let i = 0; i < state.data.last().size; i +=1 ) {
-            const oldPos = state.data.last().get(i);
-            const newPos:PositionOptions = {
-                label: oldPos.label,
-                values: oldPos.values.map((item:PositionValue) => {
-                    return {
-                        id: item.id,
-                        title: item.title,
-                        selected: (values[i] || '').indexOf(item.id) > -1 ? true : false,
-                        available: item.available
-                    }
-                }).toList(),
-                isLocked: oldPos.isLocked,
-                isActive: oldPos.isActive
-            };
-            state.data = state.data.push(state.data.last().set(i, newPos));
-        }
-        state.positions = state.data.last();
+        pipe(
+            state.data,
+            List.last(),
+            List.forEach(
+                (oldPos, i) => {
+                    const newPos:PositionOptions = {
+                        label: oldPos.label,
+                        values: oldPos.values.map((item:PositionValue) => {
+                            return {
+                                id: item.id,
+                                title: item.title,
+                                selected: (values[i] || '').indexOf(item.id) > -1 ? true : false,
+                                available: item.available
+                            }
+                        }),
+                        isLocked: oldPos.isLocked,
+                        isActive: oldPos.isActive
+                    };
+                    const lst = List.last(state.data);
+                    lst[i] = newPos;
+                    state.data.push(lst);
+                }
+            )
+        );
+        state.positions = List.last(state.data);
         state.canUndo = false;
         state.srchPattern = this.getCurrentPattern(state);
         [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
@@ -359,24 +403,24 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      * Performs an initial import (i.e. any previous data is lost)
      */
     private importData(state:TagHelperModelState, labels:Array<string>, data:RawTagValues):void {
-        state.data = state.data.push(Immutable.List<PositionOptions>(
-            data.map<PositionOptions>((position:Array<Array<string>>, i:number) => {
-                return {
-                    label: labels[i],
-                    isLocked: false,
-                    isActive: false,
-                    values:  Immutable.List<PositionValue>(position.map<PositionValue>((item: Array<string>) => {
-                        return {
-                            id: item[0],
-                            title: item[1],
-                            selected: false,
-                            available: true
-                        }
-                    }))
-                };
-            })
+        state.data.push(List.map(
+            (position:Array<Array<string>>, i:number) => ({
+                label: labels[i],
+                isLocked: false,
+                isActive: false,
+                values: List.map(
+                    (item:Array<string>) => ({
+                        id: item[0],
+                        title: item[1],
+                        selected: false,
+                        available: true
+                    }),
+                    position
+                )
+            }),
+            data
         ));
-        state.positions = state.data.last();
+        state.positions = List.last(state.data);
         state.canUndo = this.canUndo(state);
     }
 
@@ -385,10 +429,13 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
     }
 
     private hasSelectedItems(state:TagHelperModelState):boolean {
-        return state.data.last()
-            .flatMap(item => item.values
-            .map(subitem => subitem.selected))
-            .find(x => x === true) !== undefined;
+        return pipe(
+            state.data,
+            List.last(),
+            List.flatMap(item => item.values),
+            List.map(subitem => subitem.selected),
+            List.some(x => x === true)
+        );
     }
 
     /**
@@ -398,40 +445,46 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      *    current one is locked
      * 2) any position option value not found in server response is made unavalilable
      */
-    private mergeData(state:TagHelperModelState, tags:UpdateTagValues, triggerRow:number):void {
-        const newItem = state.data.last().map((item:PositionOptions, i:number) => {
-            let posOpts:PositionOptions;
-            if (!item.isLocked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
-                posOpts = {
-                    label: item.label,
-                    values: item.values,
-                    isLocked: true,
-                    isActive: item.isActive
-                };
+    private mergeData(state:TagHelperModelState, tags:RawTagValues, triggerRow:number):void {
+        const mappedTags = pipe(
+            tags,
+            List.map(Dict.fromEntries())
+        );
 
-            } else if (i !== triggerRow && !item.isLocked) {
-                const tmp = Immutable.Map(tags[i]);
-                posOpts = {
-                    label: item.label,
-                    values: item.values.map((v:PositionValue) => {
-                        return {
-                            id: v.id,
-                            title: v.title,
-                            selected: v.selected,
-                            available: tmp.get(v.id) === undefined ? false : true
-                        }
+        const newItem = pipe(
+            state.data,
+            List.last(),
+            List.map(
+                (item:PositionOptions, i:number) => {
+                    let posOpts:PositionOptions;
+                    if (!item.isLocked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
+                        posOpts = {
+                            ...item,
+                            isLocked: true
+                        };
 
-                    }).toList(),
-                    isLocked: item.isLocked,
-                    isActive: item.isActive
-                };
-            } else {
-                posOpts = item;
-            }
-            return posOpts;
-        }).toList();
-        state.data = state.data.pop().push(newItem);
-        state.positions = state.data.last();
+                    } else if (i !== triggerRow && !item.isLocked) {
+                        const serverFiltered = mappedTags[i];
+                        posOpts = {
+                            ...item,
+                            values: List.map(
+                                v => ({
+                                    ...v,
+                                    available: serverFiltered && serverFiltered[v.id] !== undefined
+                                }),
+                                item.values
+                            )
+                        };
+                    } else {
+                        posOpts = item;
+                    }
+                    return posOpts;
+                },
+            )
+        );
+        state.data.pop();
+        state.data.push(newItem);
+        state.positions = List.last(state.data);
         state.canUndo = this.canUndo(state);
     }
 
@@ -439,49 +492,57 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      * Changes the 'checked' status of an item specified by a position and a value
      * (.e.g. 2nd position (gender), F value (feminine))
      */
-    private updateSelectedItem(state:TagHelperModelState, position:number, value:string, checked:boolean):void {
-        const oldPos = state.data.last().get(position);
+    private updateSelectedItem(state:TagHelperModelState, position:number, value:string,
+            checked:boolean):void {
+        const oldPos = List.last(state.data)[position];
         const newPos:PositionOptions = {
-            label: oldPos.label,
-            values: oldPos.values.map((item:PositionValue) => {
-                return {
-                    id: item.id,
-                    title: item.title,
+            ...oldPos,
+            values: List.map(
+                (item:PositionValue) => ({
+                    ...item,
                     selected: item.id === value ? checked : item.selected,
-                    available: item.available
-                }
-            }).toList(),
-            isLocked: oldPos.isLocked,
-            isActive: oldPos.isActive
+                }),
+                oldPos.values
+            )
         };
-        state.data = state.data.push(state.data.last().set(position, newPos));
+        const newSelection = cloneSelection(List.last(state.data));
+        newSelection[position] = newPos;
+        state.data.push(newSelection);
         state.srchPattern = this.getCurrentPattern(state);
         [state.rawPattern, state.generatedQuery] = this.exportCurrentPattern(state);
     }
 
     private canUndo(state:TagHelperModelState):boolean {
-        return state.data.size > 2;
+        return state.data.length > 2;
     }
 
     private getCurrentPattern(state:TagHelperModelState):string {
-        function exportPosition(v) {
-            if (v.size > 1) {
+
+        function exportPosition(v:Array<string>):string {
+            if (v.length > 1) {
                 return '[' + v.join('') + ']';
 
-            } else if (v.size === 1) {
-                return v.join('');
+            } else if (v.length === 1) {
+                return v[0];
 
             } else {
                 return '.';
             }
         }
         if (this.hasSelectedItems(state)) {
-            return state.data.last().map<string>((item:PositionOptions) => {
-                return exportPosition(item.values
-                            .filter((s:PositionValue) => s.selected)
-                            .map<string>((s:PositionValue) => s.id)
-                );
-            }).join('');
+            return pipe(
+                state.data,
+                List.last(),
+                List.map(
+                    item => exportPosition(
+                        pipe(
+                            item.values,
+                            List.filter(s => s.selected),
+                            List.map(s => s.id)
+                        )
+                    )
+                )
+            ).join('');
 
         } else {
             return '.*';
@@ -497,6 +558,6 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
      * Return options for a selected position (e.g. position 2: M, I, F, N, X)
      */
     getOptions(state:TagHelperModelState, position:number):PositionOptions {
-        return state.data.last().get(position);
+        return List.last(state.data)[position];
     }
 }

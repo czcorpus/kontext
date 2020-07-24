@@ -18,7 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Kontext } from '../../types/common';
+
 export enum InputMode {
     GUI = 'gui',
     RAW = 'raw'
+}
+
+export interface BaseSubcorFormState {
+    subcname:Kontext.FormValue<string>;
+    description:Kontext.FormValue<string>;
+    otherValidationError:Error|null;
 }

@@ -19,18 +19,21 @@
  */
 
 import { Observable, interval as rxInterval } from 'rxjs';
-import {Kontext} from '../types/common';
-import {PageModel, DownloadType} from '../app/page';
-import {MultiDict} from '../multidict';
-import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
-import {init as wordlistResultViewInit} from '../views/wordlist/result';
-import {init as wordlistSaveViewInit} from '../views/wordlist/save';
-import {StatefulModel} from '../models/base';
-import {WordlistResultModel, ResultItem} from '../models/wordlist/main';
-import {WordlistFormModel, WordlistModelInitialArgs} from '../models/wordlist/form';
-import {WordlistSaveModel} from '../models/wordlist/save';
 import { concatMap, scan, takeWhile, last } from 'rxjs/operators';
+import { HTTP } from 'cnc-tskit';
+
+import { Kontext } from '../types/common';
+import { PageModel, DownloadType } from '../app/page';
+import { MultiDict } from '../multidict';
+import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
+import { init as wordlistResultViewInit } from '../views/wordlist/result';
+import { init as wordlistSaveViewInit } from '../views/wordlist/save';
+import { WordlistFormModel, WordlistModelInitialArgs } from '../models/wordlist/form';
+import { WordlistSaveModel } from '../models/wordlist/save';
 import { KontextPage } from '../app/main';
+import { WordlistResultModel } from '../models/wordlist/main';
+import { ResultItem } from '../models/wordlist/common';
+import { Actions, ActionName } from '../models/wordlist/actions';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -48,9 +51,9 @@ interface AsyncProcessStatus extends AsyncProcessResponse {
 /**
  *
  */
-export class WordlistPage extends StatefulModel  {
+export class WordlistPage {
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
     private saveModel:WordlistSaveModel;
 
@@ -63,12 +66,16 @@ export class WordlistPage extends StatefulModel  {
     static STATUS_CHECK_INTERVAL = 3000;
 
     constructor(layoutModel:PageModel) {
-        super(layoutModel.dispatcher);
         this.layoutModel = layoutModel;
     }
 
     private startWatching():Observable<AsyncProcessStatus> {
-        const args = new MultiDict([
+        const args = new MultiDict<{
+            corpname:string;
+            usesubcorp:string;
+            attrname:string;
+            worker_tasks:string}>
+        ([
             ['corpname', this.layoutModel.getCorpusIdent().id],
             ['usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp],
             ['attrname', this.layoutModel.getConf<string>('attrname')]
@@ -80,7 +87,7 @@ export class WordlistPage extends StatefulModel  {
         return rxInterval(WordlistPage.STATUS_CHECK_INTERVAL).pipe(
             concatMap((v, i) => {
                 return this.layoutModel.ajax$<AsyncProcessResponse>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.layoutModel.createActionUrl('wordlist/process'),
                     args
                 );
@@ -141,13 +148,14 @@ export class WordlistPage extends StatefulModel  {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             if (this.layoutModel.getConf<boolean>('IsUnfinished')) {
                 const updateStream = this.startWatching();
                 updateStream.subscribe(
                     (data) => {
-                        this.layoutModel.dispatcher.dispatch({
-                            name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                        this.layoutModel.dispatcher.dispatch<
+                                Actions.WordlistIntermediateBgCalcUpdated>({
+                            name: ActionName.WordlistIntermediateBgCalcUpdated,
                             payload: data
                         });
                     }
@@ -157,14 +165,17 @@ export class WordlistPage extends StatefulModel  {
                         if (data.status === 100) {
                             window.location.href = this.layoutModel.createActionUrl(
                                 'wordlist/result',
-                                new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
+                                new MultiDict(
+                                    this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
                             );
 
                         } else {
-                            this.layoutModel.dispatcher.dispatch({
-                                name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
+                            this.layoutModel.dispatcher.dispatch<
+                                    Actions.WordlistIntermediateBgCalcUpdated>({
+                                name: ActionName.WordlistIntermediateBgCalcUpdated,
                                 payload: data,
-                                error: new Error(this.layoutModel.translate('global__bg_calculation_failed'))
+                                error: new Error(
+                                    this.layoutModel.translate('global__bg_calculation_failed'))
                             });
                             this.layoutModel.showMessage(
                                 'error',
@@ -177,9 +188,9 @@ export class WordlistPage extends StatefulModel  {
                             'error',
                             this.layoutModel.translate('global__bg_calculation_failed')
                         );
-                        this.layoutModel.dispatcher.dispatch({
-                            name: 'WORDLIST_IMTERMEDIATE_BG_CALC_UPDATED',
-                            payload: {},
+                        this.layoutModel.dispatcher.dispatch<
+                                Actions.WordlistIntermediateBgCalcUpdated>({
+                            name: ActionName.WordlistIntermediateBgCalcUpdated,
                             error: err
                         });
                         console.error(err);
@@ -200,8 +211,7 @@ export class WordlistPage extends StatefulModel  {
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
                 quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
-                saveLinkFn: this.setDownloadLink.bind(this),
-                wordlistArgsProviderFn: () => formModel.createSubmitArgs(formModel.getState())
+                saveLinkFn: this.setDownloadLink.bind(this)
             });
 
             const resultModel = new WordlistResultModel(
@@ -240,7 +250,7 @@ export class WordlistPage extends StatefulModel  {
                 utils: this.layoutModel.getComponentHelpers(),
                 wordlistSaveViews:saveViews,
                 wordlistResultModel: resultModel,
-                wordlistSaveModel: this.saveModel
+                wordlistFormModel: formModel
             });
 
             this.layoutModel.renderReactComponent(
@@ -260,6 +270,17 @@ export class WordlistPage extends StatefulModel  {
                 },
                 ''
             );
+
+            this.layoutModel.getHistory().setOnPopState((evt:PopStateEvent) => {
+                if (evt.state['pagination']) {
+                    this.layoutModel.dispatcher.dispatch<Actions.WordlistHistoryPopState>({
+                        name: ActionName.WordlistHistoryPopState,
+                        payload: {
+                            currPageInput: evt.state['page']
+                        }
+                    });
+                }
+            });
         });
     }
 }

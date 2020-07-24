@@ -18,277 +18,307 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, ViewOptions} from '../../types/common';
-import {StatefulModel, validateGzNumber} from '../base';
-import * as Immutable from 'immutable';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
-import { Action, IFullActionControl } from 'kombo';
-import { tap, map } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { IFullActionControl, StatelessModel } from 'kombo';
+import { HTTP, List } from 'cnc-tskit';
+
+import { Kontext } from '../../types/common';
+import { validateGzNumber } from '../base';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions, ActionName } from './actions';
+import { ViewOptsResponse } from './common';
 
 
-interface ViewOptsResponse extends Kontext.AjaxResponse {
-    pagesize:number;
-    newctxsize:number;
-    ctxunit:string;
-    line_numbers:number;
-    shuffle:number;
-    wlpagesize:number;
-    fmaxitems:number;
-    citemsperpage:number;
-    tt_overview:number;
-    cql_editor:number;
+export interface GeneralViewOptionsModelState {
+
+    pageSize:Kontext.FormValue<string>;
+
+    newCtxSize:Kontext.FormValue<string>;
+
+    wlpagesize:Kontext.FormValue<string>;
+
+    fmaxitems:Kontext.FormValue<string>;
+
+    citemsperpage:Kontext.FormValue<string>;
+
+    ctxUnit:string;
+
+    lineNumbers:boolean;
+
+    shuffle:boolean;
+
+    useCQLEditor:boolean;
+
+    isBusy:boolean;
+
+    userIsAnonymous:boolean;
 }
 
 
-export class GeneralViewOptionsModel extends StatefulModel implements ViewOptions.IGeneralViewOptionsModel {
+export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsModelState> {
 
     private static readonly MAX_ITEMS_PER_PAGE = 500;
 
     private static readonly MAX_CTX_SIZE = 100;
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
-    // ---- concordance opts
-
-    private pageSize:Kontext.FormValue<string>;
-
-    private newCtxSize:Kontext.FormValue<string>;
-
-    private ctxUnit:string;
-
-    private lineNumbers:boolean;
-
-    private shuffle:boolean;
-
-    private useCQLEditor:boolean;
-
-    // --- word list opts
-
-    private wlpagesize:Kontext.FormValue<string>;
-
-    // --- freq. page opts
-
-    private fmaxitems:Kontext.FormValue<string>;
-
-    // ---- coll. page opts
-
-    private citemsperpage:Kontext.FormValue<string>;
-
-    private isBusy:boolean;
-
-    private userIsAnonymous:boolean;
-
-    private submitResponseHandlers:Immutable.List<(store:ViewOptions.IGeneralViewOptionsModel)=>void>;
+    private readonly submitResponseHandlers:Array<(store:GeneralViewOptionsModel)=>void>;
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel, userIsAnonymous:boolean) {
-        super(dispatcher);
+        super(
+            dispatcher,
+            {
+                userIsAnonymous,
+                pageSize: Kontext.newFormValue('0', true),
+                newCtxSize: Kontext.newFormValue('0', true),
+                ctxUnit: '',
+                lineNumbers: false,
+                shuffle: false,
+                useCQLEditor: false,
+                wlpagesize: Kontext.newFormValue('0', true),
+                fmaxitems: Kontext.newFormValue('0', true),
+                citemsperpage: Kontext.newFormValue('0', true),
+                isBusy: false
+            }
+        );
         this.layoutModel = layoutModel;
-        this.userIsAnonymous = userIsAnonymous;
-        this.submitResponseHandlers = Immutable.List<()=>void>();
-        this.isBusy = false;
+        this.submitResponseHandlers = [];
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE':
-                    this.pageSize.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE':
-                    this.newCtxSize.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS':
-                    this.lineNumbers = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE':
-                    this.shuffle = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR':
-                    this.useCQLEditor = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE':
-                    this.wlpagesize.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS':
-                    this.fmaxitems.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE':
-                    this.citemsperpage.value = action.payload['value'];
-                    this.emitChange();
-                break;
-                case 'GENERAL_VIEW_OPTIONS_SUBMIT':
-                    const err = this.validateForm();
-                    if (!err) {
-                        this.isBusy = true;
-                        this.emitChange();
-                        this.submit().subscribe(
-                            () => {
-                                this.isBusy = false;
-                                this.emitChange();
-                                this.submitResponseHandlers.forEach(fn => fn(this));
-                            },
-                            (err) => {
-                                this.isBusy = false;
-                                this.emitChange();
-                                this.layoutModel.showMessage('error', err);
+        this.addActionHandler<MainMenuActions.ShowGeneralViewOptions>(
+            MainMenuActionName.ShowGeneralViewOptions,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.loadData().subscribe(
+                    (data) => {
+                        dispatch<Actions.GeneralInitalDataLoaded>({
+                            name: ActionName.GeneralInitalDataLoaded,
+                            payload: {
+                                data: data
                             }
-                        );
-
-                    } else {
+                        });
+                    },
+                    (err) => {
                         this.layoutModel.showMessage('error', err);
-                        this.emitChange();
+                        dispatch<Actions.GeneralInitalDataLoaded>({
+                            name: ActionName.GeneralInitalDataLoaded,
+                            error: err
+                        });
                     }
-
-                break;
+                );
             }
-        });
-    }
+        );
 
-    private testMaxPageSize(v:string):Error|null {
-        if (parseInt(v) > GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE) {
-            return new Error(this.layoutModel.translate('options__max_items_per_page_exceeded_{num}',
-                    {num: GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE}));
-        }
-        return null;
-    }
-
-    private testMaxCtxSize(v:string):Error|null {
-        if (parseInt(v) > GeneralViewOptionsModel.MAX_CTX_SIZE) {
-            return new Error(this.layoutModel.translate('options__max_context_exceeded_{num}',
-                    {num: GeneralViewOptionsModel.MAX_CTX_SIZE}));
-        }
-        return null;
-    }
-
-    private validateForm():Error|null {
-        const valItems = [this.pageSize, this.newCtxSize, this.wlpagesize,
-                          this.fmaxitems, this.citemsperpage];
-        for (let i = 0; i < valItems.length; i += 1) {
-            if (validateGzNumber(valItems[i].value)) {
-                valItems[i].isInvalid = false;
-
-            } else {
-                valItems[i].isInvalid = true;
-                return new Error(this.layoutModel.translate('global__invalid_number_format'));
-            }
-        }
-
-        const pagingItems = [this.pageSize, this.wlpagesize, this.fmaxitems, this.citemsperpage];
-        for (let i = 0; i < pagingItems.length; i += 1) {
-            const err = this.testMaxPageSize(pagingItems[i].value);
-            if (err) {
-                return err;
-            }
-        }
-
-        const ctxItems = [this.newCtxSize];
-        for (let i = 0; i < ctxItems.length; i += 1) {
-            const err = this.testMaxCtxSize(ctxItems[i].value);
-            if (err) {
-                return err;
-            }
-        }
-        return null;
-    }
-
-    addOnSubmitResponseHandler(fn:(model:ViewOptions.IGeneralViewOptionsModel)=>void):void {
-        this.submitResponseHandlers = this.submitResponseHandlers.push(fn);
-    }
-
-    loadData():Observable<boolean> {
-        return this.layoutModel.ajax$<ViewOptsResponse>(
-            'GET',
-            this.layoutModel.createActionUrl('options/viewopts'),
-            {}
-
-        ).pipe(
-            tap(
-                (data) => {
-                    this.pageSize = {value: `${data.pagesize}`, isInvalid: false, isRequired: true};
-                    this.newCtxSize = {value: `${data.newctxsize}`, isInvalid: false, isRequired: true};
-                    this.ctxUnit = data.ctxunit;
-                    this.lineNumbers = !!data.line_numbers;
-                    this.shuffle = !!data.shuffle;
-                    this.wlpagesize = {value: `${data.wlpagesize}`, isInvalid: false, isRequired: true};
-                    this.fmaxitems = {value: `${data.fmaxitems}`, isInvalid: false, isRequired: true};
-                    this.citemsperpage = {value: `${data.citemsperpage}`, isInvalid: false, isRequired: true};
-                    this.useCQLEditor = !!data.cql_editor;
+        this.addActionHandler<Actions.GeneralInitalDataLoaded>(
+            ActionName.GeneralInitalDataLoaded,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.pageSize = {value: `${action.payload.data.pagesize}`, isInvalid: false, isRequired: true};
+                    state.newCtxSize = {value: `${action.payload.data.newctxsize}`, isInvalid: false, isRequired: true};
+                    state.ctxUnit = action.payload.data.ctxunit;
+                    state.lineNumbers = !!action.payload.data.line_numbers;
+                    state.shuffle = !!action.payload.data.shuffle;
+                    state.wlpagesize = {value: `${action.payload.data.wlpagesize}`, isInvalid: false, isRequired: true};
+                    state.fmaxitems = {value: `${action.payload.data.fmaxitems}`, isInvalid: false, isRequired: true};
+                    state.citemsperpage = {value: `${action.payload.data.citemsperpage}`, isInvalid: false, isRequired: true};
+                    state.useCQLEditor = !!action.payload.data.cql_editor;
                 }
-            ),
-            map(
-                data => true
-            )
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSetPageSize>(
+            ActionName.GeneralSetPageSize,
+            (state, action) => {
+                state.pageSize.value = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSetContextSize>(
+            ActionName.GeneralSetContextSize,
+            (state, action) => {
+                state.newCtxSize.value = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSetLineNums>(
+            ActionName.GeneralSetLineNums,
+            (state, action) => {
+                state.lineNumbers = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSetShuffle>(
+            ActionName.GeneralSetShuffle,
+            (state, action) => {
+                state.shuffle = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSetUseCQLEditor>(
+            ActionName.GeneralSetUseCQLEditor,
+            (state, action) => {
+                state.useCQLEditor = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSetWlPageSize>(
+            ActionName.GeneralSetWlPageSize,
+            (state, action) => {
+                state.wlpagesize.value = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSetFmaxItems>(
+            ActionName.GeneralSetFmaxItems,
+            (state, action) => {
+                state.fmaxitems.value = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSetCitemsPerPage>(
+            ActionName.GeneralSetCitemsPerPage,
+            (state, action) => {
+                state.citemsperpage.value = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSubmit>(
+            ActionName.GeneralSubmit,
+            (state, action) => {
+                state.isBusy = true;
+                this.validateForm(state);
+            },
+            (state, action, dispatch) => {
+                if (this.hasErrorInputs(state)) {
+                    const err = new Error(this.layoutModel.translate('global__the_form_contains_errors_msg'));
+                    this.layoutModel.showMessage('error', err);
+                    dispatch<Actions.GeneralSubmitDone>({
+                        name: ActionName.GeneralSubmitDone,
+                        error: err
+                    });
+
+                } else {
+                    this.submit(state).subscribe(
+                        () => {
+                            dispatch<Actions.GeneralSubmitDone>({
+                                name: ActionName.GeneralSubmitDone,
+                                payload: {
+                                    showLineNumbers: state.lineNumbers,
+                                    pageSize: parseInt(state.pageSize.value),
+                                    newCtxSize: parseInt(state.newCtxSize.value),
+                                    wlpagesize: parseInt(state.wlpagesize.value),
+                                    fmaxitems: parseInt(state.fmaxitems.value),
+                                    citemsperpage: parseInt(state.citemsperpage.value)
+                                }
+                            });
+                            List.forEach(fn => fn(this), this.submitResponseHandlers);
+                        },
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                            dispatch<Actions.GeneralSubmitDone>({
+                                name: ActionName.GeneralSubmitDone,
+                                error: err
+                            });
+                        }
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.GeneralSubmitDone>(
+            ActionName.GeneralSubmitDone,
+            (state, action) => {
+                state.isBusy = false;
+            }
         );
     }
 
-    private submit():Observable<Kontext.AjaxResponse> {
+    private testMaxPageSize(v:string):boolean {
+        return parseInt(v) <= GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE;
+    }
+
+    private testMaxCtxSize(v:string):boolean {
+        return parseInt(v) <= GeneralViewOptionsModel.MAX_CTX_SIZE;
+    }
+
+    private hasErrorInputs(state:GeneralViewOptionsModelState):boolean {
+        return List.some(
+            x => x.isInvalid,
+            [state.pageSize, state.newCtxSize, state.wlpagesize, state.citemsperpage, state.newCtxSize]
+        );
+    }
+
+    private validateForm(state:GeneralViewOptionsModelState):void {
+        List.forEach(
+            val => {
+                if (Kontext.isFormValue(val)) {
+                    if (!validateGzNumber(val.value)) {
+                        val.isInvalid = true;
+                        val.errorDesc = this.layoutModel.translate('global__invalid_number_format');
+
+                    } else if (!this.testMaxPageSize(val.value)) {
+                        val.isInvalid = true;
+                        val.errorDesc = this.layoutModel.translate('options__max_items_per_page_exceeded_{num}',
+                                            {num: GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE});
+
+                    } else {
+                        val.isInvalid = false;
+                        val.errorDesc = undefined;
+                    }
+                }
+            },
+            [state.pageSize, state.newCtxSize, state.wlpagesize, state.citemsperpage]
+        );
+
+        if (!this.testMaxCtxSize(state.newCtxSize.value)) {
+            state.newCtxSize.isInvalid = true;
+            state.newCtxSize.errorDesc = this.layoutModel.translate('options__max_context_exceeded_{num}',
+                    {num: GeneralViewOptionsModel.MAX_CTX_SIZE});
+
+        } else {
+            state.newCtxSize.isInvalid = false;
+            state.newCtxSize.errorDesc = undefined;
+        }
+    }
+
+    addOnSubmitResponseHandler(fn:(model:GeneralViewOptionsModel)=>void):void {
+        this.submitResponseHandlers.push(fn);
+    }
+
+    loadData():Observable<ViewOptsResponse> {
+        return this.layoutModel.ajax$<ViewOptsResponse>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl('options/viewopts'),
+            {}
+        );
+    }
+
+    private submit(state:GeneralViewOptionsModelState):Observable<Kontext.AjaxResponse> {
         const args = new MultiDict();
-        args.set('pagesize', this.pageSize.value);
-        args.set('newctxsize', this.newCtxSize.value);
-        args.set('ctxunit', this.ctxUnit);
-        args.set('line_numbers', this.lineNumbers ? '1' : '0');
-        args.set('shuffle', this.shuffle ? '1' : '0');
-        args.set('wlpagesize', this.wlpagesize.value);
-        args.set('fmaxitems', this.fmaxitems.value);
-        args.set('citemsperpage', this.citemsperpage.value);
-        args.set('cql_editor', this.useCQLEditor ? '1' : '0');
+        args.set('pagesize', state.pageSize.value);
+        args.set('newctxsize', state.newCtxSize.value);
+        args.set('ctxunit', state.ctxUnit);
+        args.set('line_numbers', state.lineNumbers ? '1' : '0');
+        args.set('shuffle', state.shuffle ? '1' : '0');
+        args.set('wlpagesize', state.wlpagesize.value);
+        args.set('fmaxitems', state.fmaxitems.value);
+        args.set('citemsperpage', state.citemsperpage.value);
+        args.set('cql_editor', state.useCQLEditor ? '1' : '0');
         return this.layoutModel.ajax$<Kontext.AjaxResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl('options/viewoptsx'),
             args
 
         ).pipe(
-            tap((d) => {
-                this.layoutModel.replaceConcArg('pagesize', [this.pageSize.value]);
-                return d;
+            tap(d => {
+                this.layoutModel.replaceConcArg('pagesize', [state.pageSize.value]);
             })
         );
-    }
-
-    getPageSize():Kontext.FormValue<string> {
-        return this.pageSize;
-    }
-
-    getNewCtxSize():Kontext.FormValue<string> {
-        return this.newCtxSize;
-    }
-
-    getLineNumbers():boolean {
-        return this.lineNumbers;
-    }
-
-    getShuffle():boolean {
-        return this.shuffle;
-    }
-
-    getWlPageSize():Kontext.FormValue<string> {
-        return this.wlpagesize;
-    }
-
-    getFmaxItems():Kontext.FormValue<string> {
-        return this.fmaxitems;
-    }
-
-    getCitemsPerPage():Kontext.FormValue<string> {
-        return this.citemsperpage;
-    }
-
-    getIsBusy():boolean {
-        return this.isBusy;
-    }
-
-    getUseCQLEditor():boolean {
-        return this.useCQLEditor;
-    }
-
-    getUserIsAnonymous():boolean {
-        return this.userIsAnonymous;
     }
 }

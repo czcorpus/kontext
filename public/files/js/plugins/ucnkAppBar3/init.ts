@@ -20,32 +20,42 @@
 
 /// <reference path="./external.d.ts" />
 
-import {PluginInterfaces} from '../../types/plugins';
+import { IFullActionControl, StatelessModel } from 'kombo';
+
+import { PluginInterfaces } from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
-import {PageModel} from '../../app/page';
-import {StatefulModel} from '../../models/base';
-import { Action, IFullActionControl } from 'kombo';
+import { PageModel } from '../../app/page';
+import { ActionName, Actions } from './actions';
+import { IUnregistrable } from '../../models/common/common';
 
-export class AppBarModel extends StatefulModel {
 
-    private layoutModel:PageModel;
+export class AppBarModel extends StatelessModel<{}> implements IUnregistrable {
+
+    private readonly layoutModel:PageModel;
 
     constructor(dispatcher:IFullActionControl) {
-        super(dispatcher);
+        super(dispatcher, {});
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'USER_SHOW_LOGIN_DIALOG':
-                    try {
-                        toolbar.openLoginDialog();
+        this.addActionHandler<Actions.ShowLoginDialog>(
+            ActionName.ShowLoginDialog,
+            null,
+            (state, action, dispatch) => {
+                try {
+                    toolbar.openLoginDialog();
 
-                    } catch (e) {
-                        console.error(e);
-                        this.layoutModel.showMessage('error', this.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar'));
-                    }
-                break;
+                } catch (e) {
+                    console.error(e);
+                    this.layoutModel.showMessage(
+                        'error',
+                        this.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar')
+                    );
+                }
             }
-        });
+        );
+    }
+
+    getRegistrationId():string {
+        return 'ucnk-app-bar-model-3';
     }
 }
 
@@ -55,6 +65,14 @@ export class AppBarPlugin implements PluginInterfaces.ApplicationBar.IPlugin {
 
     constructor(model:AppBarModel) {
         this.model = model;
+    }
+
+    unregister():void {
+        this.model.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.model.getRegistrationId();
     }
 }
 

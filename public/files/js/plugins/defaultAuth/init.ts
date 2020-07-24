@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2017 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
  *
@@ -18,58 +18,67 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {StatefulModel} from '../../models/base';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 
-import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
-import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';
-import {init as userSignUpViewsFactory, UserSignUpViews} from './views/signUp';
-import {UserProfileModel} from './profile';
-import { Action, IFullActionControl } from 'kombo';
+import { Kontext} from '../../types/common';
+import { PluginInterfaces, IPluginApi} from '../../types/plugins';
+import { init as userPaneViewsFactory, UserPaneViews} from './views/pane';
+import { init as userProfileViewsFactory, UserProfileViews} from './views/profile';
+import { init as userSignUpViewsFactory, UserSignUpViews} from './views/signUp';
+import { UserProfileModel } from './profile';
+import { Actions, ActionName } from '../../models/user/actions';
 
+
+export interface UsersStatusModelState {
+
+    loginFormVisible:boolean;
+
+    returnUrl:string;
+
+}
 
 /**
  *
  */
-export class UserStatusModel extends StatefulModel {
+export class UserStatusModel extends StatefulModel<UsersStatusModelState> {
 
-    pluginApi:IPluginApi;
-
-    private loginFormVisible:boolean;
-
-    private returnUrl:string;
+    private readonly pluginApi:IPluginApi;
 
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
-        super(dispatcher);
-        this.pluginApi = pluginApi;
-        this.loginFormVisible = false;
-        this.returnUrl = null;
-
-        dispatcher.registerActionListener((action:Action) => {
-            switch (action.name) {
-                case 'USER_SHOW_LOGIN_DIALOG':
-                    this.loginFormVisible = true;
-                    this.returnUrl = action.payload['returnUrl'];
-                    this.emitChange();
-                break;
-                case 'USER_HIDE_LOGIN_DIALOG':
-                    this.loginFormVisible = false;
-                    this.emitChange();
-                break;
-                case 'USER_LOGOUTX':
-                    this.pluginApi.setLocationPost(this.pluginApi.createActionUrl('user/logoutx'), []);
-                break;
+        super(
+            dispatcher,
+            {
+                loginFormVisible: false,
+                returnUrl: null
             }
-        });
-    }
+        );
+        this.pluginApi = pluginApi;
 
-    getLoginFormVisible():boolean {
-        return this.loginFormVisible;
-    }
+        this.addActionHandler<Actions.UserShowLoginDialog>(
+            ActionName.UserShowLoginDialog,
+            action => {
+                this.changeState(state => {
+                    state.loginFormVisible = true;
+                    state.returnUrl = action.payload.returnUrl;
+                });
+            }
+        );
 
-    getReturnUrl():string {
-        return this.returnUrl;
+        this.addActionHandler<Actions.UserHideLoginDialog>(
+            ActionName.UserHideLoginDialog,
+            action => {
+                this.changeState(state => {
+                    state.loginFormVisible = false;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.UserLogoutx>(
+            ActionName.UserLogoutx,
+            action => {
+                this.pluginApi.setLocationPost(this.pluginApi.createActionUrl('user/logoutx'), []);
+            }
+        );
     }
 }
 

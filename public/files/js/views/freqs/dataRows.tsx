@@ -20,15 +20,15 @@
 
 import {Kontext} from '../../types/common';
 import * as React from 'react';
-import * as Immutable from 'immutable';
 import {FreqDataRowsModel, ResultHeader, ResultItem} from '../../models/freqs/dataRows';
 import {IActionDispatcher} from 'kombo';
+import { Actions, ActionName } from '../../models/freqs/actions';
+import { List } from 'cnc-tskit';
 
 interface DataTableProps {
-    head:Immutable.List<ResultHeader>;
-    rows:Immutable.List<ResultItem>;
+    head:Array<ResultHeader>;
+    rows:Array<ResultItem>;
     sortColumn:string;
-    setLoadingFlag:()=>void;
 }
 
 
@@ -118,15 +118,13 @@ export function init(
     interface TableColHeadProps {
         data:ResultHeader;
         sortColumn:string;
-        setLoadingFlag:()=>void;
     }
 
     const TableColHead:React.SFC<TableColHeadProps> = (props) => {
 
         const handleClick = () => {
-            props.setLoadingFlag();
-            dispatcher.dispatch({
-                name: 'FREQ_RESULT_SORT_BY_COLUMN',
+            dispatcher.dispatch<Actions.ResultSortByColumn>({
+                name: ActionName.ResultSortByColumn,
                 payload: {
                     value: props.data.s
                 }
@@ -165,14 +163,14 @@ export function init(
     const DataTable:React.SFC<DataTableProps> = (props) => {
 
         const getBarChartTitle = () => {
-            if (props.head.size > 0) {
-                return props.head.get(-1).s || '';
+            if (props.head.length > 0) {
+                return List.last(props.head).s || '';
             }
             return '';
         };
 
         const renderRows = () => {
-            if (props.rows.size === 0 || props.rows.get(0).relbar) {
+            if (props.rows.length === 0 || props.rows[0].relbar) {
                 return props.rows.map(item => {
                     return <DataRow key={item.idx} data={item} />;
                 });
@@ -191,7 +189,7 @@ export function init(
                         <th />
                         <th>Filter</th>
                         {props.head.map(item => <TableColHead key={item.n} sortColumn={props.sortColumn}
-                                    data={item} setLoadingFlag={props.setLoadingFlag} />)}
+                                    data={item} />)}
                         <th title={getBarChartTitle()} />
                     </tr>
                     {renderRows()}

@@ -22,7 +22,6 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {TreeWidgetModel, Node} from './model';
-import * as Immutable from 'immutable';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
@@ -43,7 +42,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         active:boolean;
         name:string;
         permitted:boolean;
-        corplist:Immutable.List<Node>;
+        corplist:Array<Node>;
 
     }> {
 
@@ -119,13 +118,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const WidgetItemList:React.SFC<{
         name:string;
         htmlClass?:string;
-        corplist:Immutable.List<Node>;
+        corplist:Array<Node>;
 
     }> = (props) => {
 
         const renderChildren = () => {
             return props.corplist.map((item, i) => {
-                if (item.corplist.size > 0) {
+                if (item.corplist.length > 0) {
                     return <WidgetTreeNode key={i} name={item.name} ident={item.ident}
                                         corplist={item.corplist} active={item.active}
                                         permitted={item.permitted} />;

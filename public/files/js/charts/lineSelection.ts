@@ -22,69 +22,62 @@
 /// <reference path="../vendor.d.ts/d3-color.d.ts" />
 
 import * as d3 from 'vendor/d3';
-import * as d3Color from 'vendor/d3-color';
-import { MultiDict } from '../multidict';
-import { PageModel, DownloadType } from '../app/page';
+import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
 import { of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
+import { MultiDict } from '../multidict';
+import { PageModel, DownloadType } from '../app/page';
+import { Kontext } from '../types/common';
+import { color } from 'vendor/d3-color';
+import { attachColorsToIds } from '../models/concordance/common';
 
-export type LineGroupChartData = Array<{groupId:number; group:string; count:number}>;
+export interface LineGroupChartItem {
+    groupId:number;
+    group:string;
+    count:number;
+    fgColor:string;
+    bgColor:string;
+}
 
-export type LineGroupStats = {[groupId:number]:number};
+export type LineGroupChartData = Array<LineGroupChartItem>;
+
+
+export interface LineGroupStats extends Kontext.AjaxResponse {
+    groups:{[groupId:string]:number};
+}
 
 /**
  *
  */
 export class LineSelGroupsRatiosChart {
 
-    /**
-     * Color scheme derived from d3.schemeCategory20
-     * by changing the order.
-     */
-    private static BASE_COLOR_SCHEME = [
-        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
-    ];
+    private readonly layoutModel:PageModel;
 
-    private layoutModel:PageModel;
-
-    private lastGroupStats:LineGroupStats; // group stats cache
+    private readonly exportFormats:Array<string>;
 
     private currWidth:number;
 
     private currHeight:number;
 
-    private exportFormats:Array<string>;
 
-
-    constructor(layoutModel:PageModel, exportFormats:Array<string>, data?:LineGroupStats) {
+    constructor(layoutModel:PageModel, exportFormats:Array<string>) {
         this.layoutModel = layoutModel;
         this.exportFormats = exportFormats;
-        if (data) {
-            this.lastGroupStats = data;
-        }
         this.currWidth = 200;
         this.currHeight = 200;
     }
 
-    /**
-     * @todo this must be tuned quite a bit to make
-     * categories and chart elements distinguishable
-     */
-    extendBaseColorPalette(offset:number=0):Array<string> {
-        const ans:Array<string> = ['RGB(0, 0, 0)']; // we don't use the first color
-        const coeff = [0, 0.7, 1.2, 1.8, 2.1, 2.2, 2.3, 2.3, 2.3, 2.3];
-        for (let i = 0; i < 10; i += 1) {
-            LineSelGroupsRatiosChart.BASE_COLOR_SCHEME.forEach((color, j) => {
-                const c = d3Color.color(color);
-                ans.push(c.brighter(coeff[i]).toString());
-            });
-        }
-        return ans.slice(offset);
-    }
-
     private renderChart(rootElm:d3.Selection<any>, data:LineGroupChartData):Array<string> {
+        const coloredData = attachColorsToIds(
+            data,
+            item => item.groupId,
+            (item, fgColor, bgColor) => ({
+                ...item,
+                fgColor,
+                bgColor
+            })
+        );
         const radius = Math.min(this.currWidth, this.currHeight) / 2;
         const arc = d3.arc()
             .outerRadius(radius - 10)
@@ -96,7 +89,7 @@ export class LineSelGroupsRatiosChart {
             .value((d) => d['count'])
             .sort(null);
 
-        const pieData = pie(data);
+        const pieData = pie(coloredData);
         const wrapper = rootElm.append('svg')
             .attr('width', this.currWidth)
             .attr('height', this.currHeight)
@@ -110,18 +103,23 @@ export class LineSelGroupsRatiosChart {
                 .append('g')
                 .attr('class', 'arc');
 
-        const color = this.extendBaseColorPalette();
-
         g.append('path')
             .attr('d', arc)
-            .style('fill', (d:any) => color[d.data['groupId']]);
+            .style('fill', (d:any) => d.data['bgColor']);
 
         if (pieData.length <= 5) { // direct labels only for small num of portions
             g.append('text')
                 .attr('transform', (d:any) => ('translate(' + labelArc.centroid(d) + ')'))
                 .text((d:any) => d.data['group']);
         }
-        return color;
+        const ans = List.repeat(() => '#000000', List.maxItem(v => v.groupId, coloredData).groupId);
+        List.forEach(
+            v => {
+                ans[v.groupId] = v.bgColor;
+            },
+            coloredData
+        );
+        return ans;
     }
 
     private renderLabels(data:LineGroupChartData, colors:Array<string>, rootElm:d3.Selection<any>):void {
@@ -161,7 +159,7 @@ export class LineSelGroupsRatiosChart {
         rootElm.append(() => labelWrapper);
     }
 
-    private renderExportLinks(rootElm:d3.Selection<any>, corpusId:string) {
+    private renderExportLinks(data:LineGroupChartData, rootElm:d3.Selection<any>, corpusId:string) {
         if (this.exportFormats.length > 0) {
             const div = rootElm.append('div');
             div.attr('class', 'footer');
@@ -177,52 +175,56 @@ export class LineSelGroupsRatiosChart {
                 aElm.attr('class', 'export');
                 aElm.text(ef);
                 aElm.on('click', () => {
-                    const args = new MultiDict();
+                    const args = new MultiDict<{corpname:String; cformat:string}>();
                     args.set('corpname', corpusId);
-                    args.set('data', JSON.stringify(this.lastGroupStats));
                     args.set('cformat', ef);
-                    args.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
+                    const postArgs = new MultiDict<{data:string; title:string}>();
+                    postArgs.set(
+                        'data',
+                        pipe(
+                            data,
+                            List.map(({groupId, count}) => tuple(
+                                groupId, count
+                            )),
+                            (data) => JSON.stringify(data)
+                        )
+                    );
+                    postArgs.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
                     this.layoutModel.bgDownload(
                         'line-selection-overview.xlsx',
                         DownloadType.LINE_SELECTION,
-                        this.layoutModel.createActionUrl('export_line_groups_chart', args)
+                        this.layoutModel.createActionUrl('export_line_groups_chart', args),
+                        postArgs
                     );
                 });
             });
         }
     }
 
-    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean, corpusId:string, size:[number, number]):void {
+    showGroupsStats(rootElm:HTMLElement, corpusId:string, size:[number, number]):void {
         [this.currWidth, this.currHeight] = size;
-        (() => {
-            if (this.lastGroupStats && usePrevData) {
-                return rxOf(this.lastGroupStats);
+        this.layoutModel.ajax$<LineGroupStats>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl(
+                'ajax_get_line_groups_stats',
+                this.layoutModel.getConcArgs().items()
+            ),
+            {}
 
-            } else {
-                return this.layoutModel.ajax$<LineGroupStats>(
-                    'GET',
-                    this.layoutModel.createActionUrl(
-                        'ajax_get_line_groups_stats',
-                        this.layoutModel.getConcArgs().items()
-                    ),
-                    {}
-
-                ).pipe(
-                    tap((data) => {
-                        this.lastGroupStats = data;
-                    })
+        ).subscribe(
+            (resp) => {
+                const chartData:LineGroupChartData = pipe(
+                    resp.groups,
+                    Dict.toEntries(),
+                    List.map(([ident, num]) => ({
+                        groupId: parseInt(ident, 10),
+                        group: `#${ident}`,
+                        count: num,
+                        fgColor: '#abcdef',
+                        bgColor: '#111111'
+                    })),
+                    List.sortBy(v => v.groupId)
                 );
-            }
-        })().subscribe(
-            (data) => {
-                const chartData:LineGroupChartData = [];
-                for (let p in data) {
-                    chartData.push({
-                        groupId: parseInt(p, 10),
-                        group: `#${p}`,
-                        count: data[p]
-                    });
-                }
                 const d3Root = d3.select(rootElm);
                 d3Root.selectAll('*').remove(); // remove loader
                 d3Root
@@ -230,7 +232,7 @@ export class LineSelGroupsRatiosChart {
                     .text(this.layoutModel.translate('linesel__groups_stats_heading'));
                 const colors = this.renderChart(d3Root, chartData);
                 this.renderLabels(chartData, colors, d3Root);
-                this.renderExportLinks(d3Root, corpusId);
+                this.renderExportLinks(chartData, d3Root, corpusId);
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);

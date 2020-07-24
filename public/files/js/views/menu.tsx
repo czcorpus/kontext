@@ -19,39 +19,28 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext} from '../types/common';
-import {IActionDispatcher} from 'kombo';
-import { MultiDict } from '../multidict';
-import {isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
-        DynamicSubmenuItem} from '../models/mainMenu';
-import { Subscription } from 'rxjs';
+import { List } from 'cnc-tskit';
+import { IActionDispatcher, IModel, Bound } from 'kombo';
+
+import { Kontext } from '../types/common';
+import { isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
+        DynamicSubmenuItem, MainMenuModelState } from '../models/mainMenu';
+import { Actions, ActionName } from '../models/mainMenu/actions';
+import { AsyncTaskCheckerState, AsyncTaskChecker } from '../models/asyncTask';
+import { Actions as ATActions, ActionName as ATActionName }
+    from '../models/asyncTask/actions';
 
 
 export interface MenuModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    mainMenuModel:Kontext.IMainMenuModel;
-    asyncTaskModel:Kontext.IAsyncTaskModel;
-}
-
-
-export interface MainMenuProps {
-
-}
-
-
-interface MainMenuState {
-    numRunningTasks:number;
-    numFinishedTasks:number;
-    menuItems:Immutable.List<Kontext.MenuEntry>;
-    concArgs:Kontext.IMultiDict;
-    visibleSubmenu:string;
+    mainMenuModel:IModel<MainMenuModelState>;
+    asyncTaskModel:AsyncTaskChecker;
 }
 
 
 export interface MainMenuViews {
-    MainMenu:React.ComponentClass<MainMenuProps>;
+    MainMenu:React.ComponentClass<{}, MainMenuModelState>;
 }
 
 
@@ -63,17 +52,16 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
     // ----------------------------- <ConcDependentItem /> --------------------------
 
     const ConcDependentItem:React.SFC<{
-        concArgs:Kontext.IMultiDict;
+        concArgs:Array<[string, string]>;
         data:StaticSubmenuItem;
 
     }> = (props) => {
 
         const createLink = () => {
-            const args = new MultiDict(props.concArgs.items());
-            props.data.args.forEach(([k, v]) => {
-                args.add(k, v);
-            });
-            return he.createActionLink(props.data.action, args);
+            return he.createActionLink(
+                props.data.action,
+                List.concat(props.data.args, props.concArgs)
+            )
         };
 
         return (
@@ -197,8 +185,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         isOpened:boolean;
         isDisabled:boolean;
         label:string;
-        items:Immutable.List<Kontext.SubmenuItem>;
-        concArgs:Kontext.IMultiDict;
+        items:Array<Kontext.SubmenuItem>;
+        concArgs:Array<[string, string]>;
         closeActiveSubmenu:()=>void;
         handleMouseOver:()=>void;
         handleMouseOut:()=>void;
@@ -227,7 +215,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         };
 
         const renderSubmenu = () => {
-            if (props.items.size > 0) {
+            if (props.items.length > 0) {
                 return (
                     <ul className="submenu">
                         {props.items.map((item, i) => createItem(item, i))}
@@ -244,7 +232,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         if (props.isOpened) {
             htmlClasses.push('active');
         }
-        if (props.items.size === 0 || props.isDisabled) {
+        if (props.items.length === 0 || props.isDisabled) {
             htmlClasses.push('disabled');
         }
 
@@ -263,7 +251,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     const AsyncTaskList:React.SFC<{
         clearOnCloseCheckboxStatus:boolean;
-        items:Immutable.List<Kontext.AsyncTaskInfo>;
+        items:Array<Kontext.AsyncTaskInfo>;
         closeClickHandler:()=>void;
         handleClearOnCloseCheckbox:()=>void;
         handleOkButtonClick:(evt:React.MouseEvent<{}>)=>void;
@@ -321,61 +309,52 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <LiAsyncTaskNotificator /> --------------------------
 
-    class LiAsyncTaskNotificator extends React.Component<{
-        numRunning:number;
-        numFinished:number;
-    },
-    {
-        removeFinishedOnSubmit:boolean;
-        taskList:Immutable.List<Kontext.AsyncTaskInfo>;
-    }> {
+    class LiAsyncTaskNotificator extends React.PureComponent<AsyncTaskCheckerState> {
 
         constructor(props) {
             super(props);
             this._handleCloseClick = this._handleCloseClick.bind(this);
-            this._handleViewListClick = this._handleViewListClick.bind(this);
             this._handleClearOnCloseCheckbox = this._handleClearOnCloseCheckbox.bind(this);
             this._handleOkButtonClick = this._handleOkButtonClick.bind(this);
-            this.state = {
-                taskList: null,
-                removeFinishedOnSubmit: true
-            };
+            this._handleViewListClick = this._handleViewListClick.bind(this);
         }
 
         _handleCloseClick() {
-            this.setState({
-                taskList: null,
-                removeFinishedOnSubmit: true
-            });
-        }
-
-        _handleViewListClick() {
-            this.setState({
-                taskList: asyncTaskModel.getAsyncTasks(),
-                removeFinishedOnSubmit: this.state.removeFinishedOnSubmit
-            });
-        }
-
-        _handleClearOnCloseCheckbox() {
-            this.setState({
-                taskList: this.state.taskList,
-                removeFinishedOnSubmit: !this.state.removeFinishedOnSubmit
+            dispatcher.dispatch<ATActions.InboxCloseTaskOverview>({
+                name: ATActionName.InboxCloseTaskOverview,
+                payload: {
+                    preventListClear: true
+                }
             });
         }
 
         _handleOkButtonClick(evt) {
-            if (this.state.removeFinishedOnSubmit) {
-                dispatcher.dispatch({
-                    name: 'INBOX_CLEAR_FINISHED_TASKS',
-                    payload: {}
-                });
-            }
-            this._handleCloseClick();
+            dispatcher.dispatch<ATActions.InboxCloseTaskOverview>({
+                name: ATActionName.InboxCloseTaskOverview,
+                payload: {
+                    preventListClear: false
+                }
+            });
+        }
+
+        _handleClearOnCloseCheckbox() {
+            dispatcher.dispatch<ATActions.InboxToggleRemoveFinishedOnSubmit>({
+                name: ATActionName.InboxToggleRemoveFinishedOnSubmit
+            });
+        }
+
+        _handleViewListClick() {
+            dispatcher.dispatch<ATActions.InboxToggleOverviewVisibility>({
+                name: ATActionName.InboxToggleOverviewVisibility
+            });
         }
 
         _renderHourglass() {
             if (this.props.numRunning > 0) {
-                const title = he.translate('global__there_are_tasks_running_{num_tasks}', {num_tasks: this.props.numRunning});
+                const title = he.translate(
+                    'global__there_are_tasks_running_{num_tasks}',
+                    {num_tasks: this.props.numRunning}
+                );
                 return <a className="hourglass" title={title}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/hourglass.svg')}
                                 src2={he.createStaticUrl('img/hourglass.svg')}
@@ -389,7 +368,10 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         _renderEnvelope() {
             if (this.props.numFinished > 0) {
-                const title = he.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished});
+                const title = he.translate(
+                    'global__there_are_tasks_finished_{num_tasks}',
+                    {num_tasks: this.props.numFinished}
+                );
                 return <a className="envelope" title={title}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/envelope.svg')}
                             alt="envelope icon" />
@@ -408,12 +390,13 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                             {this._renderHourglass()}
                             {this._renderEnvelope()}
                         </span>
-                        {this.state.taskList !== null ?
-                            <AsyncTaskList items={this.state.taskList}
+                        {this.props.overviewVisible ?
+                            <AsyncTaskList items={this.props.asyncTasks}
                                     closeClickHandler={this._handleCloseClick}
                                     handleOkButtonClick={this._handleOkButtonClick}
                                     handleClearOnCloseCheckbox={this._handleClearOnCloseCheckbox}
-                                    clearOnCloseCheckboxStatus={this.state.removeFinishedOnSubmit} />
+                                    clearOnCloseCheckboxStatus={this.props.removeFinishedOnSubmit}
+                                     />
                             : null}
                     </li>
                 );
@@ -425,87 +408,61 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
     }
 
 
+    const BoundLiAsyncTaskNotificator = Bound(LiAsyncTaskNotificator, asyncTaskModel);
+
+
     // ----------------------------- <MainMenu /> --------------------------
 
-    class MainMenu extends React.Component<MainMenuProps, MainMenuState> {
-
-        private modelSubscriptions:Array<Subscription>;
+    class MainMenu extends React.PureComponent<MainMenuModelState> {
 
         constructor(props) {
             super(props);
             this._handleHoverChange = this._handleHoverChange.bind(this);
-            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._closeActiveSubmenu = this._closeActiveSubmenu.bind(this);
-            this.state = {
-                visibleSubmenu: mainMenuModel.getVisibleSubmenu(),
-                numRunningTasks: asyncTaskModel.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
-                menuItems: mainMenuModel.getData(),
-                concArgs: mainMenuModel.getConcArgs()
-            };
-            this.modelSubscriptions = [];
         }
 
         _handleHoverChange(ident, enable) {
             if (!enable) {
-                dispatcher.dispatch({
-                    name: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
+                dispatcher.dispatch<Actions.ClearVisibleSubmenu>({
+                    name: ActionName.ClearVisibleSubmenu,
                     payload: {value: ident}
                 });
 
             } else {
-                dispatcher.dispatch({
-                    name: 'MAIN_MENU_SET_VISIBLE_SUBMENU',
+                dispatcher.dispatch<Actions.SetVisibleSubmenu>({
+                    name: ActionName.SetVisibleSubmenu,
                     payload: {value: ident}
                 });
             }
         }
 
-        _modelChangeListener() {
-            this.setState({
-                visibleSubmenu: mainMenuModel.getVisibleSubmenu(),
-                numRunningTasks: asyncTaskModel.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskModel.getNumFinishedTasks(),
-                menuItems: mainMenuModel.getData(),
-                concArgs: mainMenuModel.getConcArgs()
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscriptions = [
-                asyncTaskModel.addListener(this._modelChangeListener),
-                mainMenuModel.addListener(this._modelChangeListener)
-            ];
-        }
-
-        componentWillUnmount() {
-            this.modelSubscriptions.forEach(s => s.unsubscribe());
-        }
-
         _closeActiveSubmenu() {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
-                payload: {}
+            dispatcher.dispatch<Actions.ClearVisibleSubmenu>({
+                name: ActionName.ClearVisibleSubmenu
             });
         }
 
         render() {
             return (
                 <ul id="menu-level-1">
-                    {this.state.menuItems.map(item => {
-                        const mouseOverHandler = item[1].disabled ? null : this._handleHoverChange.bind(this, item[0], true);
-                        const mouseOutHandler = item[1].disabled ? null : this._handleHoverChange.bind(this, item[0], false);
-                        return <SubMenu key={item[0]} label={item[1].label}
-                                    items={item[1].items}
-                                    isDisabled={item[1].disabled}
-                                    isOpened={this.state.visibleSubmenu === item[0]}
-                                    handleMouseOver={mouseOverHandler}
-                                    handleMouseOut={mouseOutHandler}
-                                    closeActiveSubmenu={this._closeActiveSubmenu}
-                                    concArgs={this.state.concArgs} />;
-                    })}
-                    <LiAsyncTaskNotificator numRunning={this.state.numRunningTasks}
-                        numFinished={this.state.numFinishedTasks} />
+                    {List.map(
+                        ([itemId, item]) => {
+                            const mouseOverHandler = item.disabled ?
+                                null : this._handleHoverChange.bind(this, itemId, true);
+                            const mouseOutHandler = item.disabled ?
+                                null : this._handleHoverChange.bind(this, itemId, false);
+                            return <SubMenu key={itemId} label={item.label}
+                                        items={item.items}
+                                        isDisabled={item.disabled}
+                                        isOpened={this.props.visibleSubmenu === itemId}
+                                        handleMouseOver={mouseOverHandler}
+                                        handleMouseOut={mouseOutHandler}
+                                        closeActiveSubmenu={this._closeActiveSubmenu}
+                                        concArgs={this.props.concArgs} />;
+                        },
+                        this.props.data
+                    )}
+                    <BoundLiAsyncTaskNotificator  />
                 </ul>
             );
         }
@@ -513,6 +470,6 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
 
     return {
-        MainMenu: MainMenu
+        MainMenu: Bound(MainMenu, mainMenuModel)
     }
 }

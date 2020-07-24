@@ -18,22 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {CorplistWidgetModel} from './widget';
-import {CorplistPage, CorplistServerData} from './corplist';
-import {init as viewInit} from './corplistView';
-import {init as widgetInit} from './widgetView';
-import {init as overviewViewInit} from '../../views/overview';
-import {CorplistTableModel} from './corplist';
+import { Kontext} from '../../types/common';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { CorplistWidgetModel } from './widget';
+import { CorplistPage, CorplistServerData } from './corplist';
+import { init as viewInit } from './corplistView';
+import { init as widgetInit } from './widgetView';
+import { init as overviewViewInit } from '../../views/overview';
+import { CorplistTableModel } from './corplist';
 import * as common from './common';
-import {SearchEngine} from './search';
+import { SearchEngine } from './search';
+import { IUnregistrable } from '../../models/common/common';
 
 declare var require:any;
 require('./style.less'); // webpack
 
 
-export class Plugin {
+export class Plugin implements IUnregistrable {
 
     protected pluginApi:IPluginApi;
 
@@ -51,8 +52,7 @@ export class Plugin {
      * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
      * @param options A configuration for the widget
      */
-    createWidget(targetAction:string, corpSel:PluginInterfaces.Corparch.ICorpSelection,
-                options:Kontext.GeneralProps):React.ComponentClass<{}> { // TODO opts type
+    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}> { // TODO opts type
 
         const pluginData = this.pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
         const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
@@ -69,7 +69,6 @@ export class Plugin {
             dispatcher: this.pluginApi.dispatcher(),
             pluginApi: this.pluginApi,
             corpusIdent: this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            corpSelection: corpSel,
             anonymousUser: this.pluginApi.getConf<boolean>('anonymousUser'),
             searchEngine: searchEngine,
             dataFav: favData,
@@ -77,18 +76,20 @@ export class Plugin {
             onItemClick: options.itemClickAction,
             corporaLabels: corporaLabels
         });
-        this.pluginApi.registerSwitchCorpAwareObject(this.model);
         return widgetInit({
             dispatcher: this.pluginApi.dispatcher(),
             util: this.pluginApi.getComponentHelpers(),
             widgetModel: this.model,
-            corpusSelection: corpSel
+            corpusSwitchModel: this.pluginApi.getModels().corpusSwitchModel
         });
-        // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
     }
 
-    disposeWidget():void {
+    unregister():void {
         this.model.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.model.getRegistrationId();
     }
 
     /**

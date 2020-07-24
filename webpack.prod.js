@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const common = require('./scripts/build/webpack.common');
 const webpack = require('webpack');
 const OptimizeCss = require('optimize-css-assets-webpack-plugin');
@@ -49,8 +49,10 @@ module.exports = (env) => merge(common.wpConf(env), {
 					{
 						loader: 'less-loader',
 						options: {
-							strictMath: true,
-							noIeCompat: true
+							lessOptions: {
+								strictMath: true,
+								noIeCompat: true
+							}
 						}
 					}
 				]

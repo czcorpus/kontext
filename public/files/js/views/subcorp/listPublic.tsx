@@ -19,18 +19,17 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
-import {PublicSubcorpListState, PublicSubcorpListModel,
-    DataItem, Actions, SearchTypes} from '../../models/subcorp/listPublic';
-import { Subscription } from 'rxjs';
+import {PublicSubcorpListState, PublicSubcorpListModel, DataItem, SearchTypes} from '../../models/subcorp/listPublic';
+import {Actions, ActionName} from '../../models/subcorp/actions';
+import { List } from 'cnc-tskit';
 
 export interface Views {
-    List:React.ComponentClass<ListProps>;
+    ListPublic:React.ComponentClass<ListPublicProps>;
 }
 
-export interface ListProps {
+export interface ListPublicProps {
 
 }
 
@@ -42,15 +41,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------------- <SearchTypeSelect /> -------------------
 
     const SearchTypeSelect:React.SFC<{
-        value:string;
+        value:SearchTypes;
 
     }> = (props) => {
 
         const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            dispatcher.dispatch({
-                name: Actions.SET_SEARCH_TYPE,
+            dispatcher.dispatch<Actions.SetSearchType>({
+                name: ActionName.SetSearchType,
                 payload: {
-                    value: evt.target.value
+                    value: evt.target.value as SearchTypes
                 }
             });
         };
@@ -87,8 +86,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         handleChange(evt:React.ChangeEvent<HTMLInputElement>) {
-            dispatcher.dispatch({
-                name: Actions.SET_SEARCH_QUERY,
+            dispatcher.dispatch<Actions.SetSearchQuery>({
+                name: ActionName.SetSearchQuery,
                 payload: {
                     value: evt.target.value
                 }
@@ -179,8 +178,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private _handleUseInQueryButton():void {
-            dispatcher.dispatch({
-                name: Actions.USE_IN_QUERY,
+            dispatcher.dispatch<Actions.UseInQuery>({
+                name: ActionName.UseInQuery,
                 payload: {
                     corpname: this.props.item.corpname,
                     id: this.props.item.ident
@@ -218,14 +217,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const DataList:React.SFC<{
         hasQuery:boolean;
-        data:Immutable.List<DataItem>;
+        data:Array<DataItem>;
 
     }> = (props) => {
         if (props.hasQuery) {
             return (
                 <ul className="DataList">
-                    {props.data.size > 0 ?
-                        props.data.map(item => <DataRow key={item.ident} item={item} />) :
+                    {props.data.length > 0 ?
+                        List.map(item => <DataRow key={item.ident} item={item} />, props.data) :
                         <li>
                             <p className="no-result">
                                 {he.translate('pubsubclist__no_result')}
@@ -242,39 +241,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <List /> -------------------------
 
-    class List extends React.Component<ListProps, PublicSubcorpListState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-            this.state = model.getState();
-        }
-
-        _modelChangeHandler(state:PublicSubcorpListState):void {
-            this.setState(state);
-        }
-
-        componentDidMount():void {
-            this.modelSubscription = model.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount():void {
-            this.modelSubscription.unsubscribe();
-        }
+    class ListPublic extends React.PureComponent<ListPublicProps & PublicSubcorpListState> {
 
         render() {
             return (
                 <div className="List">
                     <form>
-                        <Filter searchType={this.state.searchType}
-                                query={this.state.searchQuery}
-                                minQuerySize={this.state.minQuerySize} />
+                        <Filter searchType={this.props.searchType}
+                                query={this.props.searchQuery}
+                                minQuerySize={this.props.minQuerySize} />
                     </form>
-                    {this.state.isBusy ?
+                    {this.props.isBusy ?
                         <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                        <DataList data={this.state.data} hasQuery={this.state.searchQuery.length >= this.state.minQuerySize} />
+                        <DataList data={this.props.data} hasQuery={this.props.searchQuery.length >= this.props.minQuerySize} />
                     }
                     <p className="disclaimer">
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
@@ -286,7 +265,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        List: List
+        ListPublic: BoundWithProps(ListPublic, model)
     };
 
 }

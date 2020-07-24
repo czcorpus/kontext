@@ -18,15 +18,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { timer as rxTimer, Observable, of as rxOf, throwError } from 'rxjs';
-import {Kontext} from '../../types/common';
-import * as common from './common';
-import {IPluginApi, PluginInterfaces} from '../../types/plugins';
-import * as Immutable from 'immutable';
-import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
-import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
+import { HTTP, List, pipe } from 'cnc-tskit';
+import { timer as rxTimer, Observable, of as rxOf } from 'rxjs';
+import { Kontext } from '../../types/common';
+import * as common from './common';
+import {IPluginApi, PluginInterfaces} from '../../types/plugins';
+import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
+import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
+import { Actions, ActionName } from './actions';
+import { Actions as QueryActions, ActionName as QueryActionName
+    } from '../../models/query/actions';
+import { Actions as CommonActions, ActionName as CommonActionName
+    } from '../../models/common/actions';
+import { IUnregistrable } from '../../models/common/common';
 
 /**
  *
@@ -40,7 +46,7 @@ export interface Options  {
      * which means formTarget and submitMethod options have no effect unless you use
      * them directly in some way.
      */
-    itemClickAction?:Kontext.CorplistItemClick;
+    itemClickAction?:PluginInterfaces.Corparch.CorplistItemClick;
 }
 
 /**
@@ -81,8 +87,8 @@ const importServerFavitem = (item:common.ServerFavlistItem):FavListItem => {
     };
 };
 
-const importServerFavitems = (items:Array<common.ServerFavlistItem>):Immutable.List<FavListItem> => {
-    return Immutable.List<FavListItem>(items.map(importServerFavitem));
+const importServerFavitems = (items:Array<common.ServerFavlistItem>):Array<FavListItem> => {
+    return List.map(importServerFavitem, items);
 };
 
 
@@ -93,18 +99,22 @@ const importServerFavitems = (items:Array<common.ServerFavlistItem>):Immutable.L
  * @param item
  * @returns an ID if the current item is set as favorite else undefined
  */
-const findCurrFavitemId = (dataFav:Immutable.List<FavListItem>, item:common.GeneratedFavListItem):string => {
+const findCurrFavitemId = (dataFav:Array<FavListItem>, item:common.GeneratedFavListItem):string => {
     const normalize = (v:string) => v ? v : '';
-    const srch = dataFav.filter(x => x.trashTTL === null).find(x => {
+    const srch = pipe(
+        dataFav,
+        List.filter(x => x.trashTTL === null),
+        List.find(x => {
             return normalize(x.subcorpus_id) === normalize(item.subcorpus_id) &&
-                item.corpora.join('') === x.corpora.map(x => x.id).join('');
-    });
+                item.corpora.join('') === List.map(x => x.id, x.corpora).join('');
+        })
+    )
     return srch ? srch.id : undefined;
 }
 
 
 export interface CorpusSwitchPreserved {
-    dataFav:Immutable.List<FavListItem>;
+    dataFav:Array<FavListItem>;
 }
 
 
@@ -116,33 +126,35 @@ export interface CorplistWidgetModelState {
     activeTab:number;
     activeListItem:[number, number];
     corpusIdent:Kontext.FullCorpusIdent;
-    dataFav:Immutable.List<FavListItem>;
-    dataFeat:Immutable.List<common.CorplistItem>;
+    alignedCorpora:Array<string>;
+    dataFav:Array<FavListItem>;
+    dataFeat:Array<common.CorplistItem>;
     isBusy:boolean;
     currFavitemId:string;
-    origSubcorpName:string;
     anonymousUser:boolean;
     isWaitingForSearchResults:boolean;
-    currSearchResult:Immutable.List<SearchResultRow>;
+    currSearchResult:Array<SearchResultRow>;
     currSearchPhrase:string;
-    currentSubcorp:string;
-    availSearchKeywords:Immutable.List<SearchKeyword>;
-    availableSubcorpora:Immutable.List<Kontext.SubcorpListItem>;
+    availSearchKeywords:Array<SearchKeyword>;
     currSubcorpus:string;
+    currSubcorpusOrigName:string;
     focusedRowIdx:number;
+    availableSubcorpora:Array<Kontext.SubcorpListItem>;
 }
 
+export interface CorplistWidgetModelCorpusSwitchPreserve {
+    dataFav:Array<FavListItem>;
+}
 
 export interface CorplistWidgetModelArgs {
     dispatcher:IActionDispatcher;
     pluginApi:IPluginApi;
     corpusIdent:Kontext.FullCorpusIdent;
-    corpSelection:PluginInterfaces.Corparch.ICorpSelection;
     anonymousUser:boolean;
     searchEngine:SearchEngine;
     dataFav:Array<common.ServerFavlistItem>;
     dataFeat:Array<common.CorplistItem>;
-    onItemClick:Kontext.CorplistItemClick;
+    onItemClick:PluginInterfaces.Corparch.CorplistItemClick;
     corporaLabels:Array<[string, string, string]>;
 }
 
@@ -151,15 +163,13 @@ export interface CorplistWidgetModelArgs {
  *
  */
 export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
-                                 implements Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
+        implements IUnregistrable {
 
     private pluginApi:IPluginApi;
 
     private searchEngine:SearchEngine;
 
-    private onItemClick:Kontext.CorplistItemClick;
-
-    private corpSelection:PluginInterfaces.Corparch.ICorpSelection;
+    private onItemClick:PluginInterfaces.Corparch.CorplistItemClick;
 
     private inputThrottleTimer:number;
 
@@ -169,96 +179,130 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     private trashTimerSubsc:Subscription;
 
-    constructor({dispatcher, pluginApi, corpusIdent, corpSelection, anonymousUser, searchEngine,
+    constructor({dispatcher, pluginApi, corpusIdent, anonymousUser, searchEngine,
             dataFav, dataFeat, onItemClick, corporaLabels}:CorplistWidgetModelArgs) {
         const dataFavImp = importServerFavitems(dataFav);
         super(dispatcher, {
             isVisible: false,
             activeTab: 0,
             activeListItem: [null, null],
-            corpusIdent: corpusIdent,
-            currentSubcorp: corpSelection.getCurrentSubcorpus(),
-            origSubcorpName: corpSelection.getCurrentSubcorpusOrigName(),
-            anonymousUser: anonymousUser,
+            corpusIdent,
+            alignedCorpora: [],
+            anonymousUser,
             dataFav: dataFavImp,
-            dataFeat: Immutable.List<common.CorplistItem>(dataFeat),
+            dataFeat,
             isBusy: false,
             currFavitemId: findCurrFavitemId(
                 dataFavImp,
                 {
-                    subcorpus_id: corpSelection.getCurrentSubcorpus(),
-                    subcorpus_orig_id: corpSelection.getCurrentSubcorpusOrigName(),
-                    corpora: corpSelection.getCorpora().toArray()
+                    subcorpus_id: pluginApi.getCorpusIdent().usesubcorp,
+                    subcorpus_orig_id: pluginApi.getCorpusIdent().origSubcorpName,
+                    corpora: List.concat(
+                        pluginApi.getConf<Array<string>>('alignedCorpora'),
+                        [pluginApi.getCorpusIdent().id]
+                    )
                 }
             ),
             isWaitingForSearchResults: false,
             currSearchPhrase: '',
-            currSearchResult: Immutable.List<SearchResultRow>(),
-            availSearchKeywords: Immutable.List<SearchKeyword>(corporaLabels.map(item => (
-                {id: item[0], label: item[1], color: item[2], selected:false}))),
-            availableSubcorpora: corpSelection.getAvailableSubcorpora(),
-            currSubcorpus: corpSelection.getCurrentSubcorpus(),
-            focusedRowIdx: -1
+            currSearchResult: [],
+            availSearchKeywords: List.map(item => (
+                {id: item[0], label: item[1], color: item[2], selected:false}), corporaLabels),
+            currSubcorpus: pluginApi.getCorpusIdent().usesubcorp,
+            currSubcorpusOrigName: pluginApi.getCorpusIdent().origSubcorpName,
+            focusedRowIdx: -1,
+            availableSubcorpora: pluginApi.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList')
         });
         this.pluginApi = pluginApi;
         this.searchEngine = searchEngine;
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
-        this.corpSelection = corpSelection;
-    }
 
-    reduce(state:CorplistWidgetModelState, action:Action):CorplistWidgetModelState {
-        let newState:CorplistWidgetModelState;
-        switch (action.name) {
-            case 'DEFAULT_CORPARCH_WIDGET_SHOW':
-                newState = this.copyState(state);
-                newState.isVisible = true;
-                return newState;
-            case 'DEFAULT_CORPARCH_WIDGET_HIDE':
-                newState = this.copyState(state);
-                newState.activeTab = 0;
-                newState.isVisible = false;
-                return newState;
-            case 'DEFAULT_CORPARCH_SET_ACTIVE_TAB':
-                newState = this.copyState(state);
-                newState.activeTab = action.payload['value'];
-                return newState;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_CLICK':
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                return newState;
-            case 'DEFAULT_CORPARCH_UPDATE_LIST':
-                newState = this.copyState(state);
-                newState.dataFav = importServerFavitems(action.payload['data']);
-                return newState;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE':
-                newState = this.copyState(state);
-                newState.isBusy = false;
-                return newState;
-            case 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK':
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                return newState;
-            case 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE':
-                newState = this.copyState(state);
-                newState.isBusy = false;
-                return newState;
-            case 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED':
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                return newState;
-            case 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE':
-                newState = this.copyState(state);
-                newState.focusedRowIdx = -1;
-                newState.isBusy = false;
-                return newState;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_ADD':
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                const idx = state.dataFav.findIndex(x => x.id === action.payload['itemId']);
+        this.addActionHandler<Actions.WidgetShow>(
+            ActionName.WidgetShow,
+            (state, action) => {state.isVisible = true}
+        );
+
+        this.addActionHandler<Actions.WidgetHide>(
+            ActionName.WidgetHide,
+            (state, action) => {
+                state.activeTab = 0;
+                state.isVisible = false;
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetSetActiveTab>(
+            ActionName.WidgetSetActiveTab,
+            (state, action) => {state.activeTab = action.payload.value}
+        );
+
+        this.addActionHandler<Actions.WidgetFavItemClick>(
+            ActionName.WidgetFavItemClick,
+            (state, action) => {state.isBusy = true},
+            (state, action, dispatch) => {
+                dispatch<Actions.WidgetFavItemClickDone>({
+                    name: ActionName.WidgetFavItemClickDone,
+                    payload: {}
+                });
+                this.handleFavItemClick(state, action.payload.itemId);
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetUpdateList>(
+            ActionName.WidgetUpdateList,
+            (state, action) => {state.dataFav = importServerFavitems(action.payload.data)}
+        );
+
+        this.addActionHandler<Actions.WidgetFavItemClickDone>(
+            ActionName.WidgetFavItemClickDone,
+            (state, action) => {state.isBusy = false}
+        );
+
+        this.addActionHandler<Actions.WidgetFeatItemClick>(
+            ActionName.WidgetFeatItemClick,
+            (state, action) => {state.isBusy = true},
+            (state, action, dispatch) => {
+                dispatch<Actions.WidgetFeatItemClickDone>({
+                    name: ActionName.WidgetFeatItemClickDone,
+                    payload: {}
+                });
+                this.handleFeatItemClick(state, action.payload.itemId);
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetFeatItemClickDone>(
+            ActionName.WidgetFeatItemClickDone,
+            (state, action) => {state.isBusy = false}
+        );
+
+        this.addActionHandler<Actions.WidgetSearchResultClick>(
+            ActionName.WidgetSearchResultClick,
+            (state, action) => {state.isBusy = true},
+            (state, action, dispatch) => {
+                dispatch<Actions.WidgetSearchResultClickDone>({
+                    name: ActionName.WidgetSearchResultClickDone,
+                    payload: {}
+                });
+                this.handleSearchItemClick(state, action.payload.itemId);
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetSearchResultClickDone>(
+            ActionName.WidgetSearchResultClickDone,
+            (state, action) => {
+                state.focusedRowIdx = -1;
+                state.isBusy = false;
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetFavItemAdd>(
+            ActionName.WidgetFavItemAdd,
+            (state, action) => {
+                state.isBusy = true;
+                const idx = List.findIndex(x => x.id === action.payload.itemId, state.dataFav);
                 if (idx > -1) {
-                    const item = newState.dataFav.get(idx);
-                    newState.dataFav = newState.dataFav.set(idx, {
+                    const item = state.dataFav[idx];
+                    state.dataFav[idx] = {
                         id: item.id,
                         name: item.name,
                         subcorpus_id: item.subcorpus_id,
@@ -267,397 +311,389 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                         corpora: item.corpora,
                         description: item.description,
                         trashTTL: null
-                    });
+                    };
                 }
-                return newState;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_ADD_DONE':
-                newState = this.copyState(state);
-                newState.isBusy = false;
-                if (!action.error) {
-                    const idx = newState.dataFav.findIndex(v => v.id === action.payload['trashedItemId']);
-                    if (action.payload['rescuedItem']) {
-                        newState.dataFav = newState.dataFav.set(
-                            idx, importServerFavitem(action.payload['rescuedItem']));
-
-                    } else {
-                        newState.dataFav = newState.dataFav.remove(idx);
-                    }
-                }
-                return newState;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE':
-                newState = this.copyState(state);
-                this.moveItemToTrash(newState, action.payload['itemId']);
-                return newState;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE_DONE':
-                newState = this.copyState(state);
-                if (!action.error) {
-                    const idx = newState.dataFav.findIndex(v => v.id === action.payload['itemId']);
-                    if (idx > -1) {
-                        newState.dataFav = newState.dataFav.remove(idx);
-                    }
-                }
-                return newState;
-            case 'DEFAULT_CORPARCH_CHECK_TRASHED_ITEMS':
-                newState = this.copyState(state);
-                this.checkTrashedItems(newState);
-                return newState;
-            case 'DEFAULT_CORPARCH_STAR_ICON_CLICK':
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                return newState;
-            case 'DEFAULT_CORPARCH_STAR_ICON_CLICK_DONE':
-                newState = this.copyState(state);
-                newState.isBusy = false;
-                if (!action.error) {
-                    newState.dataFav = importServerFavitems(action.payload['data']);
-                    newState.currFavitemId = findCurrFavitemId(
-                        newState.dataFav,
-                        this.getFullCorpusSelection()
-                    );
-                }
-                return newState;
-            case 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED':
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                this.resetKeywordSelectStatus(newState);
-                newState.currSearchResult = Immutable.List<SearchResultRow>();
-                newState.focusedRowIdx = -1;
-                return newState;
-            case 'LINDAT_CORPARCH_KEYWORD_CLICKED':
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                newState.focusedRowIdx = -1;
-                this.setKeywordSelectedStatus(
-                    newState,
-                    action.payload['keywordId'],
-                    action.payload['status'],
-                    action.payload['exclusive']
-                );
-                return newState;
-            case 'DEFAULT_CORPARCH_SEARCH_DONE':
-                newState = this.copyState(state);
-                newState.isBusy = false;
-                newState.focusedRowIdx = -1;
-                if (!action.error && action.payload['data'] !== null) {
-                    newState.currSearchResult = <Immutable.List<SearchResultRow>>action.payload['data'];
-                }
-                return newState;
-            case 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED':
-                newState = this.copyState(state);
-                newState.currSearchPhrase = action.payload['value'];
-                newState.currSearchResult = Immutable.List<SearchResultRow>();
-                newState.focusedRowIdx = -1;
-                return newState;
-            case 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW':
-                if (state.currSearchResult.size > 0) {
-                    newState = this.copyState(state);
-                    const inc = action.payload['inc'] as number;
-                    newState.focusedRowIdx = Math.abs((newState.focusedRowIdx + inc) % newState.currSearchResult.size);
-                    return newState;
-                }
-                return state;
-            case 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT':
-                newState = this.copyState(state);
-                newState.isBusy = true;
-                return newState;
-            case 'QUERY_INPUT_SELECT_SUBCORP':
-                newState = this.copyState(state);
-                if (action.payload['pubName']) {
-                    newState.currentSubcorp = action.payload['pubName'];
-                    newState.origSubcorpName = action.payload['subcorp'];
-
-                } else {
-                    newState.currentSubcorp = action.payload['subcorp'];
-                    newState.origSubcorpName = action.payload['subcorp'];
-                }
-                newState.currFavitemId = findCurrFavitemId(
-                    newState.dataFav,
-                    this.getFullCorpusSelection()
-                );
-                return newState;
-            case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
-                newState = this.copyState(state);
-                newState.currFavitemId = findCurrFavitemId(
-                    newState.dataFav,
-                    this.getFullCorpusSelection()
-                );
-                return newState;
-            case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
-                newState = this.copyState(state);
-                newState.currFavitemId = findCurrFavitemId(
-                    newState.dataFav,
-                    this.getFullCorpusSelection()
-                );
-                return newState;
-            case 'CORPUS_SWITCH_MODEL_RESTORE':
-                if (action.payload['key'] === this.csGetStateKey()) {
-                    newState = this.copyState(state);
-                    newState.dataFav = action.payload['data'].dataFav.filter(v => v.trashTTL === null);
-                    newState.currFavitemId = findCurrFavitemId(
-                        newState.dataFav,
-                        this.getFullCorpusSelection()
-                    );
-                    return newState;
-
-                } else {
-                    return state;
-                }
-            case 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM':
-                newState = this.copyState(state);
-                const [colInc, rowInc] = action.payload['change'];
-                const [col, row] = newState.activeListItem;
-                if (col === null || row === null) {
-                    newState.activeListItem = [0, 0];
-
-                } else {
-                    const newCol = Math.abs((col + colInc) % 2);
-                    const rotationLen = newCol === 0 ? newState.dataFav.size : newState.dataFeat.size;
-                    newState.activeListItem = [
-                        newCol,
-                        colInc !== 0 ? 0 : (row + rowInc) >= 0 ? Math.abs((row + rowInc) % rotationLen) : rotationLen - 1
-                    ];
-                }
-                return newState;
-            case 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM':
-                newState = this.copyState(state);
-                newState.isBusy = false;
-                return newState;
-            default:
-                return state;
-        }
-    }
-
-    sideEffects(state:CorplistWidgetModelState, action:Action, dispatch:SEDispatcher) {
-        switch (action.name) {
-            case 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM':
-                if (state.activeListItem[0] === 0) {
-                    this.handleFavItemClick(state, state.dataFav.get(state.activeListItem[1]).id).subscribe(
-                        (_) => {
-                            dispatch({
-                                name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
-                                payload: {}
-                            });
-                        },
-                        (err) => {
-                            dispatch({
-                                name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
-                                payload: {}
-                            });
-                            this.pluginApi.showMessage('error', err);
-                        }
-                    );
-
-                } else {
-                    this.handleFeatItemClick(state, state.dataFeat.get(state.activeListItem[1]).id).subscribe(
-                        () => {
-                            dispatch({
-                                name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
-                                payload: {}
-                            });
-                        },
-                        (err) => {
-                            dispatch({
-                                name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
-                                payload: {}
-                            });
-                            this.pluginApi.showMessage('error', err);
-                        }
-                    );
-                }
-            break;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_CLICK':
-                this.handleFavItemClick(state, action.payload['itemId']).subscribe(
-                    (_) => {
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
-                            payload: {}
-                        });
-                    },
-                    (err) => {
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
-                            payload: {}
-                        });
-                        this.pluginApi.showMessage('error', err);
-                    }
-                );
-            break;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_ADD':
-                this.removeItemFromTrash(state, action.payload['itemId']).subscribe(
+            },
+            (state, action, dispatch) => {
+                this.removeItemFromTrash(state, action.payload.itemId).subscribe(
                     (rescuedItem) => {
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_FAV_ITEM_ADD_DONE',
+                        dispatch<Actions.WidgetFavItemAddDone>({
+                            name: ActionName.WidgetFavItemAddDone,
                             payload: {
-                                trashedItemId: action.payload['itemId'],
-                                rescuedItem: rescuedItem
+                                trashedItemId: action.payload.itemId,
+                                rescuedItem
                             }
                         });
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_FAV_ITEM_ADD_DONE',
+                        dispatch<Actions.WidgetFavItemAddDone>({
+                            name: ActionName.WidgetFavItemAddDone,
                             payload: {
-                                trashedItemId: action.payload['itemId']
+                                trashedItemId: action.payload.itemId,
+                                rescuedItem: null
                             },
                             error: err
                         });
                     }
                 );
-            break;
-            case 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK':
-                this.handleFeatItemClick(state, action.payload['itemId']).subscribe(
-                    () => {
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
-                            payload: {}
-                        });
-                    },
-                    (err) => {
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
-                            payload: {}
-                        });
-                        this.pluginApi.showMessage('error', err);
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetFavItemAddDone>(
+            ActionName.WidgetFavItemAddDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    const idx = List.findIndex(
+                        v => v.id === action.payload.trashedItemId,
+                        state.dataFav
+                    );
+                    if (action.payload.rescuedItem) {
+                        state.dataFav[idx] = importServerFavitem(action.payload.rescuedItem);
+
+                    } else {
+                        state.dataFav = List.removeAt(idx, state.dataFav);
                     }
-                );
-            break;
-            case 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED':
-                this.handleSearchItemClick(state, action.payload['itemId']).subscribe(
-                () => {
-                    dispatch({
-                        name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE',
-                        payload: {}
-                    });
-                },
-                (err) => {
-                    dispatch({
-                        name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE',
-                        payload: {}
-                    });
-                    this.pluginApi.showMessage('error', err);
                 }
-            );
-            break;
-            case 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE':
-                this.removeFavItemFromServer(action.payload['itemId']).subscribe(
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetFavItemRemove>(
+            ActionName.WidgetFavItemRemove,
+            (state, action) => {this.moveItemToTrash(state, action.payload.itemId)},
+            (state, action, dispatch) => {
+                this.removeFavItemFromServer(action.payload.itemId).subscribe(
                     (favItem) => {
-                        const src = rxTimer(0, 1000).pipe(take(CorplistWidgetModel.TRASH_TTL_TICKS));
+                        const src = rxTimer(0, 1000).pipe(
+                            take(CorplistWidgetModel.TRASH_TTL_TICKS)
+                        );
                         if (this.trashTimerSubsc) {
                             this.trashTimerSubsc.unsubscribe();
                         }
                         this.trashTimerSubsc = src.subscribe(
                             () => {
-                                dispatch({
-                                    name: 'DEFAULT_CORPARCH_CHECK_TRASHED_ITEMS',
+                                dispatch<Actions.WidgetCheckTrashedItems>({
+                                    name: ActionName.WidgetCheckTrashedItems,
                                     payload: {}
                                 });
                             },
                             (_) => undefined,
                             () => {
-                                dispatch({
-                                    name: 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE_DONE',
+                                dispatch<Actions.WidgetFavItemRemoveDone>({
+                                    name: ActionName.WidgetFavItemRemoveDone,
                                     payload: {
-                                        itemId: action.payload['itemId']
+                                        itemId: action.payload.itemId
                                     }
                                 });
                             }
                         );
                     }
                 );
-            break;
-            case 'DEFAULT_CORPARCH_STAR_ICON_CLICK':
-                (action.payload['status'] ?
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetFavItemRemoveDone>(
+            ActionName.WidgetFavItemRemoveDone,
+            (state, action) => {
+                if (!action.error) {
+                    const idx = List.findIndex(v => v.id === action.payload.itemId, state.dataFav);
+                    if (idx > -1) {
+                        state.dataFav = List.removeAt(idx, state.dataFav);
+                    }
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetCheckTrashedItems>(
+            ActionName.WidgetCheckTrashedItems,
+            (state, action) => {this.checkTrashedItems(state)}
+        );
+
+        this.addActionHandler<Actions.WidgetStarIconClick>(
+            ActionName.WidgetStarIconClick,
+            (state, action) => {state.isBusy = true},
+            (state, action, dispatch) => {
+                (action.payload.status ?
                     this.setFavItem(state) :
-                    this.unsetFavItem(action.payload['itemId'])
+                    this.unsetFavItem(action.payload.itemId)
                 ).subscribe(
                     (data) => {
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK_DONE',
-                            payload: {data: data}
+                        dispatch<Actions.WidgetStarIconClickDone>({
+                            name: ActionName.WidgetStarIconClickDone,
+                            payload: {data}
                         });
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK_DONE',
+                        dispatch<Actions.WidgetStarIconClickDone>({
+                            name: ActionName.WidgetStarIconClickDone,
                             payload: {data: null},
                             error: err
                         });
                     }
                 );
-            break;
-            case 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED':
-            case 'LINDAT_CORPARCH_KEYWORD_CLICKED':
-            case 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED':
-                this.searchDelayed(state).subscribe(
-                    (data) => {
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_SEARCH_DONE',
-                            payload: {data: data}
-                        });
-                    },
-                    (err) => {
-                        dispatch({
-                            name: 'DEFAULT_CORPARCH_SEARCH_DONE',
-                            payload: {data: null},
-                            error: err
-                        });
-                        this.pluginApi.showMessage('error', err);
-                    }
-                );
-            break;
-            case 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT':
-                if (state.focusedRowIdx > -1) {
-                    this.handleSearchItemClick(
-                            state,
-                            state.currSearchResult.get(state.focusedRowIdx).id).subscribe(
-                        () => {
-                            dispatch({
-                                name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE',
-                                payload: {}
-                            });
-                        },
-                        (err) => {
-                            dispatch({
-                                name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE',
-                                payload: {}
-                            });
-                            this.pluginApi.showMessage('error', err);
-                        }
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetStarIconClickDone>(
+            ActionName.WidgetStarIconClickDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.dataFav = importServerFavitems(action.payload.data);
+                    state.currFavitemId = findCurrFavitemId(
+                        state.dataFav,
+                        this.getFullCorpusSelection(state)
                     );
                 }
-            break;
+            }
+        );
+
+        this.addActionHandler<Actions.KeywordResetClicked>(
+            ActionName.KeywordResetClicked,
+            (state, action) => {
+                state.isBusy = true;
+                this.resetKeywordSelectStatus(state);
+                state.currSearchResult = [];
+                state.focusedRowIdx = -1;
+            },
+            this.handleSearchDelay
+        );
+
+        this.addActionHandler<Actions.WidgetKeywordClick>(
+            ActionName.WidgetKeywordClick,
+            (state, action) => {
+                state.isBusy = true;
+                state.focusedRowIdx = -1;
+                this.setKeywordSelectedStatus(
+                    state,
+                    action.payload.keywordId,
+                    action.payload.status,
+                    action.payload.exclusive
+                );
+            },
+            this.handleSearchDelay
+        );
+
+        this.addActionHandler<Actions.WidgetSearchDone>(
+            ActionName.WidgetSearchDone,
+            (state, action) => {
+                state.isBusy = false;
+                state.focusedRowIdx = -1;
+                if (!action.error && action.payload.data !== null) {
+                    state.currSearchResult = action.payload.data;
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetSearchInputChanged>(
+            ActionName.WidgetSearchInputChanged,
+            (state, action) => {
+                state.currSearchPhrase = action.payload.value;
+                state.currSearchResult = [];
+                state.focusedRowIdx = -1;
+            },
+            this.handleSearchDelay
+        );
+
+        this.addActionHandler<Actions.WidgetFocusSearchRow>(
+            ActionName.WidgetFocusSearchRow,
+            (state, action) => {
+                state.focusedRowIdx = Math.abs(
+                    (state.focusedRowIdx + action.payload.inc) % state.currSearchResult.length);
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetFocusedItemSelect>(
+            ActionName.WidgetFocusedItemSelect,
+            (state, action) => {state.isBusy = true},
+            (state, action, dispatch) => {
+                if (state.focusedRowIdx > -1) {
+                    dispatch<Actions.WidgetSearchResultClickDone>({
+                        name: ActionName.WidgetSearchResultClickDone,
+                        payload: {}
+                    });
+                    this.handleSearchItemClick(
+                        state,
+                        state.currSearchResult[state.focusedRowIdx].id
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
+            QueryActionName.QueryInputSelectSubcorp,
+            (state, action) => {
+                if (action.payload.pubName) {
+                    state.currSubcorpus = action.payload.pubName;
+                    state.currSubcorpusOrigName = action.payload.subcorp;
+
+                } else {
+                    state.currSubcorpus = action.payload.subcorp;
+                    state.currSubcorpusOrigName = action.payload.subcorp;
+                }
+                state.currFavitemId = findCurrFavitemId(
+                    state.dataFav,
+                    this.getFullCorpusSelection(state)
+                );
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActionName.QueryInputAddAlignedCorpus,
+            (state, action) => {
+                state.currFavitemId = findCurrFavitemId(
+                    state.dataFav,
+                    this.getFullCorpusSelection(state)
+                );
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActionName.QueryInputRemoveAlignedCorpus,
+            (state, action) => {
+                state.currFavitemId = findCurrFavitemId(
+                    state.dataFav,
+                    this.getFullCorpusSelection(state)
+                );
+            }
+        );
+
+        this.addActionHandler<CommonActions.SwitchCorpus>(
+            CommonActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<CommonActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
+                    name: CommonActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: this.serialize(state)
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler<CommonActions.CorpusSwitchModelRestore>(
+            CommonActionName.CorpusSwitchModelRestore,
+            (state, action) => {
+                const storedData = action.payload.data[this.getRegistrationId()];
+                if (storedData) {
+                    state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
+                    state.currFavitemId = findCurrFavitemId(
+                        state.dataFav,
+                        this.getFullCorpusSelection(state)
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetMoveFocusToNextItem>(
+            ActionName.WidgetMoveFocusToNextItem,
+            (state, action) => {
+                const [colInc, rowInc] = action.payload.change;
+                const [col, row] = state.activeListItem;
+                if (col === null || row === null) {
+                    state.activeListItem = [0, 0];
+
+                } else {
+                    const newCol = Math.abs((col + colInc) % 2);
+                    const rotationLen = newCol === 0 ? state.dataFav.length : state.dataFeat.length;
+                    state.activeListItem = [
+                        newCol,
+                        colInc !== 0 ?
+                            0 :
+                            (row + rowInc) >= 0 ?
+                                Math.abs((row + rowInc) % rotationLen) :
+                                rotationLen - 1
+                    ];
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.WidgetEnterOnActiveItem>(
+            ActionName.WidgetEnterOnActiveItem,
+            (state, action) => {state.isBusy = false},
+            (state, action, dispatch) => {
+                if (state.activeListItem[0] === 0) {
+                    dispatch<Actions.WidgetFavItemClickDone>({
+                        name: ActionName.WidgetFavItemClickDone,
+                        payload: {}
+                    });
+                    this.handleFavItemClick(state, state.dataFav[state.activeListItem[1]].id);
+
+                } else {
+                    dispatch<Actions.WidgetFavItemClickDone>({
+                        name: ActionName.WidgetFavItemClickDone,
+                        payload: {}
+                    });
+                    this.handleFeatItemClick(state, state.dataFeat[state.activeListItem[1]].id);
+                }
+            }
+        );
+    }
+
+    handleSearchDelay(state:CorplistWidgetModelState, action:Action, dispatch:SEDispatcher) {
+        this.searchDelayed(state).subscribe(
+            (data) => {
+                dispatch<Actions.WidgetSearchDone>({
+                    name: ActionName.WidgetSearchDone,
+                    payload: {data}
+                });
+            },
+            (err) => {
+                dispatch<Actions.WidgetSearchDone>({
+                    name: ActionName.WidgetSearchDone,
+                    payload: {data: null},
+                    error: err
+                });
+                this.pluginApi.showMessage('error', err);
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'lindat-corparch-widget-2';
+    }
+
+    serialize(state:CorplistWidgetModelState):CorplistWidgetModelCorpusSwitchPreserve {
+        return {
+            dataFav: [...state.dataFav]
+        };
+    }
+
+    deserialize(
+        state:CorplistWidgetModelState,
+        data:CorplistWidgetModelCorpusSwitchPreserve,
+        corpora:Array<[string, string]>
+    ):void {
+        if (data) {
+            List.forEach(
+                ([oldCorp, newCorp]) => {
+                    state.dataFav[newCorp] = data.dataFav[oldCorp];
+                },
+                corpora
+            )
         }
     }
-
-
-    csExportState():CorpusSwitchPreserved {
-        return {dataFav: this.getState().dataFav};
-    }
-
-    csGetStateKey():string {
-        return 'default-corparch-widget';
-    }
-
 
     /**
      * According to the state of the current query form, this method creates
      * a new CorplistItem instance with proper type, id, etc.
      */
-    getFullCorpusSelection():common.GeneratedFavListItem {
+    getFullCorpusSelection(state:CorplistWidgetModelState):common.GeneratedFavListItem {
         return {
-            subcorpus_id: this.corpSelection.getCurrentSubcorpus(),
-            subcorpus_orig_id: this.pluginApi.getCorpusIdent().foreignSubcorp ?
-            `#${this.corpSelection.getCurrentSubcorpusOrigName()}` :
-                    this.corpSelection.getCurrentSubcorpus(),
-            corpora: this.corpSelection.getCorpora().toArray()
+            subcorpus_id: state.corpusIdent.usesubcorp,
+            subcorpus_orig_id: state.corpusIdent.origSubcorpName ?
+                    `#${state.corpusIdent.origSubcorpName}` :
+                    state.corpusIdent.usesubcorp,
+            corpora: [state.corpusIdent.id].concat(state.alignedCorpora)
         };
     };
 
     private removeFavItemFromServer(itemId:string):Observable<boolean> {
         return this.pluginApi.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
             {id: itemId}
 
@@ -676,23 +712,27 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
      * Returns (promise wrapped) newly created item
      * as a result of "rescue" operation or null if the item is lost.
      */
-    private removeItemFromTrash(state:CorplistWidgetModelState, itemId:string):Observable<SetFavItemResponse> {
+    private removeItemFromTrash(
+        state:CorplistWidgetModelState,
+        itemId:string
+    ):Observable<common.ServerFavlistItem> {
 
-        if (this.trashTimerSubsc && state.dataFav.find(x => x.trashTTL !== null) === undefined) {
+        if (this.trashTimerSubsc &&
+                List.find(x => x.trashTTL !== null, state.dataFav) === undefined) {
             this.trashTimerSubsc.unsubscribe();
         }
         state.currFavitemId = findCurrFavitemId(
             state.dataFav,
-            this.getFullCorpusSelection()
+            this.getFullCorpusSelection(state)
         );
-        const trashedItem = state.dataFav.find(x => x.id === itemId);
+        const trashedItem = List.find(x => x.id === itemId, state.dataFav);
         if (trashedItem) {
-            return this.pluginApi.ajax$<SetFavItemResponse>(
-                'POST',
+            return this.pluginApi.ajax$<common.ServerFavlistItem>(
+                HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 {
                     subcorpus_id: trashedItem.subcorpus_id,
-                    corpora: trashedItem.corpora.map(v => v.id)
+                    corpora: List.map(v => v.id, trashedItem.corpora)
                 }
             );
 
@@ -702,10 +742,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     }
 
     private moveItemToTrash(state:CorplistWidgetModelState, itemId:string):void {
-        const idx = state.dataFav.findIndex(x => x.id === itemId);
+        const idx = List.findIndex(x => x.id === itemId, state.dataFav);
         if (idx > -1) {
-            const item = state.dataFav.get(idx);
-            state.dataFav = state.dataFav.set(idx, {
+            const item = state.dataFav[idx];
+            state.dataFav[idx] = {
                 id: item.id,
                 name: item.name,
                 subcorpus_id: item.subcorpus_id,
@@ -714,38 +754,43 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 corpora: item.corpora,
                 description: item.description,
                 trashTTL: CorplistWidgetModel.TRASH_TTL_TICKS
-            });
+            };
             state.currFavitemId = findCurrFavitemId(
                 state.dataFav,
-                this.getFullCorpusSelection()
+                this.getFullCorpusSelection(state)
             );
         }
     }
 
     private checkTrashedItems(state:CorplistWidgetModelState):void {
-        state.dataFav = state.dataFav.map(item => ({
-            id: item.id,
-            name: item.name,
-            subcorpus_id: item.subcorpus_id,
-            size: item.size,
-            size_info: item.size_info,
-            corpora: item.corpora,
-            description: item.description,
-            trashTTL: item.trashTTL !== null ? item.trashTTL -= 1 : null
-        })).filter(item => item.trashTTL > 0 || item.trashTTL === null).toList();
+        state.dataFav = pipe(
+            state.dataFav,
+            List.map(item => ({
+                id: item.id,
+                name: item.name,
+                subcorpus_id: item.subcorpus_id,
+                size: item.size,
+                size_info: item.size_info,
+                corpora: item.corpora,
+                description: item.description,
+                trashTTL: item.trashTTL !== null ? item.trashTTL -= 1 : null
+            })),
+            List.filter(item => item.trashTTL > 0 || item.trashTTL === null)
+        );
     }
 
     private shouldStartSearch(state:CorplistWidgetModelState):boolean {
-        return state.currSearchPhrase.length >= CorplistWidgetModel.MIN_SEARCH_PHRASE_ACTIVATION_LENGTH ||
-            state.availSearchKeywords.find(x => x.selected) !== undefined;
+        return state.currSearchPhrase.length >=
+            CorplistWidgetModel.MIN_SEARCH_PHRASE_ACTIVATION_LENGTH ||
+                List.find(x => x.selected, state.availSearchKeywords) !== undefined;
     }
 
-    private searchDelayed(state:CorplistWidgetModelState):Observable<Immutable.List<SearchResultRow>> {
+    private searchDelayed(state:CorplistWidgetModelState):Observable<Array<SearchResultRow>> {
         if (this.inputThrottleTimer) {
             window.clearTimeout(this.inputThrottleTimer);
         }
         if (this.shouldStartSearch(state)) {
-            return new Observable<Immutable.List<SearchResultRow>>(observer => {
+            return new Observable<Array<SearchResultRow>>(observer => {
                 this.inputThrottleTimer = window.setTimeout(() => { // TODO antipattern here
                     this.searchEngine.search(
                         state.currSearchPhrase,
@@ -765,32 +810,44 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             );
 
         } else {
-            return rxOf(Immutable.List<SearchResultRow>());
+            return rxOf([]);
         }
     }
 
-    private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
-        const item = state.dataFav.find(item => item.id === itemId);
-        return item !== undefined ?
-                this.onItemClick(item.corpora.map(x => x.id), item.subcorpus_id) :
-                throwError(new Error(`Favorite item ${itemId} not found`));
+    private handleFavItemClick(state:CorplistWidgetModelState, itemId:string):void {
+        const item = List.find(item => item.id === itemId, state.dataFav);
+        if (item !== undefined) {
+            this.onItemClick(List.map(x => x.id, item.corpora), item.subcorpus_id);
+
+        } else {
+            throw new Error(`Favorite item ${itemId} not found`);
+        }
     }
 
-    private handleFeatItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
-        const item = state.dataFeat.find(item => item.id === itemId);
-        return item !== undefined ?
-                this.onItemClick([item.corpus_id], item.subcorpus_id) :
-                throwError(new Error(`Featured item ${itemId} not found`));
+    private handleFeatItemClick(state:CorplistWidgetModelState, itemId:string):void {
+        const item = List.find(item => item.id === itemId, state.dataFeat);
+        if (item !== undefined) {
+                this.onItemClick([item.corpus_id], item.subcorpus_id);
+
+        } else {
+            throw new Error(`Featured item ${itemId} not found`);
+        }
     }
 
-    private handleSearchItemClick(state:CorplistWidgetModelState, itemId:string):Observable<any> {
-        const item = state.currSearchResult.find(item => item.id === itemId);
-        return item !== undefined ?
-                this.onItemClick([item.id], '') :
-                throwError(new Error(`Clicked item ${itemId} not found in search results`));
+    private handleSearchItemClick(state:CorplistWidgetModelState, itemId:string):void {
+        const item = List.find(item => item.id === itemId, state.currSearchResult);
+        if (item !== undefined) {
+            this.onItemClick([item.id], '');
+
+        } else {
+            throw new Error(`Clicked item ${itemId} not found in search results`);
+        }
     }
 
-    private reloadItems(editAction:Observable<Array<common.CorplistItem>>, message:string|null):Observable<FavitemsList> {
+    private reloadItems(
+        editAction:Observable<Array<common.CorplistItem>>,
+        message:string|null
+    ):Observable<FavitemsList> {
         return editAction.pipe(
             tap((_) => {
                 if (message !== null) {
@@ -799,7 +856,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }),
             concatMap(
                 (_) => this.pluginApi.ajax$<Array<common.CorplistItem>>(
-                    'GET',
+                    HTTP.Method.GET,
                     this.pluginApi.createActionUrl('user/get_favorite_corpora'),
                     {}
                 )
@@ -811,13 +868,17 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     // TODO: this.dataFav = this.importServerItems(favItems);
 
-    private setFavItem(state:CorplistWidgetModelState, showMessage:boolean=true):Observable<FavitemsList> {
+    private setFavItem(
+        state:CorplistWidgetModelState,
+        showMessage:boolean=true
+    ):Observable<FavitemsList> {
+
         const message = showMessage ?
                 this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
                 null;
-        const newItem = this.getFullCorpusSelection();
+        const newItem = this.getFullCorpusSelection(state);
         return this.reloadItems(this.pluginApi.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/set_favorite_item'),
             newItem
         ), message);
@@ -828,21 +889,19 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 this.pluginApi.translate('defaultCorparch__item_removed_from_fav') :
                 null;
         return this.reloadItems(this.pluginApi.ajax$(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/unset_favorite_item'),
-            {id: id}
+            {id}
         ), message);
     }
 
     private resetKeywordSelectStatus(state:CorplistWidgetModelState):void {
-        state.availSearchKeywords = state.availSearchKeywords.map(item => {
-            return {
-                id: item.id,
-                label: item.label,
-                color: item.color,
-                selected: false
-            };
-        }).toList();
+        state.availSearchKeywords = List.map(item => ({
+            id: item.id,
+            label: item.label,
+            color: item.color,
+            selected: false
+        }), state.availSearchKeywords);
     }
 
     private setKeywordSelectedStatus(state:CorplistWidgetModelState, id:string, status:boolean,
@@ -850,17 +909,15 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         if (exclusive) {
             this.resetKeywordSelectStatus(state);
         }
-        const idx = state.availSearchKeywords.findIndex(x => x.id === id);
+        const idx = List.findIndex(x => x.id === id, state.availSearchKeywords);
         if (idx > -1) {
-            const v = state.availSearchKeywords.get(idx);
-            state.availSearchKeywords = state.availSearchKeywords.set(idx,
-                {
-                    id: v.id,
-                    label: v.label,
-                    color: v.color,
-                    selected: status
-                }
-            );
+            const v = state.availSearchKeywords[idx];
+            state.availSearchKeywords[idx] = {
+                id: v.id,
+                label: v.label,
+                color: v.color,
+                selected: status
+            }
 
         } else {
             throw new Error(`Cannot change label status - label ${id} not found`);

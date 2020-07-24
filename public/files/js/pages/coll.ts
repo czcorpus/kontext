@@ -16,17 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Kontext, TextTypes } from '../types/common';
-import { PluginInterfaces } from '../types/plugins';
 import { PageModel, DownloadType } from '../app/page';
 import { KontextPage } from '../app/main';
 import { MultiDict } from '../multidict';
-import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
+import { CollFormModel, CollFormInputs, CollFormProps } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
-import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { QuerySaveAsFormModel } from '../models/query/save';
-import { CollResultModel, CollResultData, CollResultHeading } from '../models/coll/result';
+import { CollResultModel } from '../models/coll/result';
 import { init as analysisFrameInit } from '../views/analysis';
 import { init as collFormInit } from '../views/coll/forms';
 import { init as collResultViewInit, CollResultViewProps } from '../views/coll/result';
@@ -36,6 +34,10 @@ import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
+import { CollResultsSaveModel } from '../models/coll/save';
+import { CollResultData, CollResultHeading } from '../models/coll/common';
+import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
+import { ActionName as MMActionName } from '../models/mainMenu/actions';
 
 
 declare var require:any;
@@ -61,9 +63,11 @@ export class CollPage {
 
     private collResultModel:CollResultModel;
 
+    private collResultSaveModel:CollResultsSaveModel;
+
     private querySaveAsFormModel:QuerySaveAsFormModel;
 
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
+    private subcorpSel:NonQueryCorpusSelectionModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -86,7 +90,7 @@ export class CollPage {
             mlxattr: List.repeat(() => attrs[0].n, initFreqLevel),
             mlxicase: List.repeat(() => false, initFreqLevel),
             mlxctx: List.repeat(() => '0>0', initFreqLevel),  // = "Node'"
-            alignType: List.repeat(() => 'left', initFreqLevel)
+            alignType: List.repeat(() => AlignTypes.LEFT, initFreqLevel)
         }
 
         this.mlFreqModel = new MLFreqFormModel(
@@ -103,6 +107,7 @@ export class CollPage {
         );
 
         const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
+        const tt = this.initAdhocSubcDetector();
         const ctFormProps:CTFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
@@ -111,15 +116,16 @@ export class CollPage {
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
-            ctminfreq_type: ctFormInputs.ctminfreq_type
+            ctminfreq_type: ctFormInputs.ctminfreq_type,
+            usesAdHocSubcorpus: tt.usesAdHocSubcorpus(),
+            selectedTextTypes: tt.exportSelections(false)
         };
 
 
         this.ctFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            this.initAdhocSubcDetector()
+            ctFormProps
         );
 
         const freqFormViews = freqFormInit(
@@ -146,6 +152,7 @@ export class CollPage {
                 csortfn: currArgs.csortfn
             }
         );
+
         const collFormViews = collFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
@@ -176,9 +183,16 @@ export class CollPage {
             initialData: this.layoutModel.getConf<CollResultData>('CollResultData'),
             resultHeading: this.layoutModel.getConf<CollResultHeading>('CollResultHeading'),
             pageSize: this.layoutModel.getConf<number>('CollPageSize'),
-            saveLinkFn: this.setDownloadLink.bind(this),
             saveLinesLimit: this.layoutModel.getConf<number>('CollSaveLinesLimit'),
             unfinished: !!this.layoutModel.getConf<number>('CollUnfinished'),
+            sortFn: this.layoutModel.getConf<CollFormProps>('CollFormProps').csortfn,
+            cattr: this.layoutModel.getConf<CollFormProps>('CollFormProps').cattr
+        });
+
+        this.collResultSaveModel = new CollResultsSaveModel({
+            dispatcher: this.layoutModel.dispatcher,
+            layoutModel: this.layoutModel,
+            saveLinkFn: this.setDownloadLink.bind(this),
             quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
             saveCollMaxLines: this.layoutModel.getConf<number>('SaveCollMaxLines')
         });
@@ -186,7 +200,8 @@ export class CollPage {
         const collResultViews = collResultViewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.collResultModel
+            this.collResultModel,
+            this.collResultSaveModel
         );
 
         this.layoutModel.renderReactComponent<CollResultViewProps>(
@@ -226,8 +241,7 @@ export class CollPage {
             },
             queryReplayModel: this.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.querySaveAsFormModel,
-            corparchModel: this.subcorpSel
+            querySaveAsModel: this.querySaveAsFormModel
         });
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,
@@ -240,17 +254,14 @@ export class CollPage {
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
-                    actionPrefix: '',
                     allowCorpusSelection: false,
-                    tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
+                    tagHelperViews: {},
                     queryStorageView: null,
-                    liveAttrsView: null,
-                    liveAttrsCustomTT: null,
-                    attributes: []
+                    LiveAttrsView: null,
+                    LiveAttrsCustomTT: null
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,
-                    actionPrefix: '',
                     filterId: null,
                     tagHelperView: null,
                     queryStorageView: null
@@ -283,7 +294,7 @@ export class CollPage {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             this.subcorpSel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
                 dispatcher: this.layoutModel.dispatcher,
@@ -299,36 +310,36 @@ export class CollPage {
             // the 'view' action with additional information (encoded in
             // the fragment part of the URL) which form should be opened
             // once the 'view' page is loaded
-            mainMenuModel.addListener(() => {
-                const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
-                switch (activeItem.actionName) {
-                    case 'MAIN_MENU_SHOW_FILTER':
-                        const filterArgs = new MultiDict(Dict.toEntries(activeItem.actionArgs));
-                        window.location.replace(
-                            this.layoutModel.createActionUrl(
+            this.layoutModel.dispatcher.registerActionListener(
+                (action) => {
+                    switch (action.name) {
+                        case MMActionName.ShowFilter:
+                            const filterArgs = new MultiDict(Dict.toEntries(action.payload));
+                            window.location.replace(
+                                this.layoutModel.createActionUrl(
+                                    'view',
+                                    this.layoutModel.getConcArgs().items()
+                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
+                            );
+                        break;
+                        case MMActionName.ShowSort:
+                            window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
-                            ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
-                        );
-                    break;
-                    case 'MAIN_MENU_SHOW_SORT':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#sort');
-                    break;
-                    case 'MAIN_MENU_SHOW_SAMPLE':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#sample');
-                    break;
-                    case 'MAIN_MENU_APPLY_SHUFFLE':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#shuffle');
-                    break;
+                            ) + '#sort');
+                        break;
+                        case MMActionName.ShowSample:
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#sample');
+                        break;
+                        case MMActionName.ApplyShuffle:
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#shuffle');
+                        break;
                 }
             });
             this.initAnalysisViews();

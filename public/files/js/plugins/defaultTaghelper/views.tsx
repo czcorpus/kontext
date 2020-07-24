@@ -19,17 +19,20 @@
  */
 import * as React from 'react';
 import { IActionDispatcher, StatelessModel, BoundWithProps } from 'kombo';
+import { Dict, List, pipe } from 'cnc-tskit';
+
 import { Kontext } from '../../types/common';
-import { AppendQueryInputAction, SetQueryInputAction } from '../../models/query/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { TagBuilderBaseState } from './common';
-import * as Immutable from 'immutable';
+import { Actions as QueryActions, ActionName as QueryActionName,
+        QueryFormType } from '../../models/query/actions';
+import { Actions, ActionName } from './actions';
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    models:Immutable.Map<string, StatelessModel<TagBuilderBaseState>>,
-    widgetViews:Immutable.Map<string, any>) {
+    deps:{[key:string]:[StatelessModel<TagBuilderBaseState>,
+            React.SFC<{}>|React.ComponentClass<{}>]}) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -46,7 +49,8 @@ export function init(
 
     // ------------------------------ <UndoButton /> ----------------------------
 
-    const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
+    const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> =
+    (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button" value="undo"
@@ -66,7 +70,8 @@ export function init(
 
     // ------------------------------ <ResetButton /> ----------------------------
 
-    const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> = (props) => {
+    const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> =
+    (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button cancel"
@@ -89,26 +94,26 @@ export function init(
 
     const TagButtons:React.SFC<{
                 range:[number, number];
+                formType:QueryFormType;
                 sourceId:string;
                 onInsert?:()=>void;
                 canUndo:boolean;
                 rawPattern:string;
                 generatedQuery:string;
-                actionPrefix:string;
             }> = (props) => {
 
         const buttonClick = (evt) => {
             if (evt.target.value === 'reset') {
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_RESET',
+                dispatcher.dispatch<Actions.Reset>({
+                    name: ActionName.Reset,
                     payload: {
                         sourceId: props.sourceId
                     }
                 });
 
             } else if (evt.target.value === 'undo') {
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_UNDO',
+                dispatcher.dispatch<Actions.Undo>({
+                    name: ActionName.Undo,
                     payload: {
                         sourceId: props.sourceId
                     }
@@ -117,9 +122,10 @@ export function init(
             } else if (evt.target.value === 'insert') {
                 if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
                     const query = `"${props.rawPattern}"`;
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
+                        name: QueryActionName.QueryInputSetQuery,
                         payload: {
+                            formType: props.formType,
                             sourceId: props.sourceId,
                             query: query,
                             insertRange: [props.range[0], props.range[1]],
@@ -129,16 +135,20 @@ export function init(
                     });
 
                 } else {
-                    dispatcher.dispatch<AppendQueryInputAction>({
-                        name: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
+                    dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
+                        name: QueryActionName.QueryInputSetQuery,
                         payload: {
+                            formType: props.formType,
                             sourceId: props.sourceId,
-                            query: `[${props.generatedQuery}]`
+                            query: `[${props.generatedQuery}]`,
+                            insertRange: [props.range[0], props.range[1]],
+                            rawAnchorIdx: null,
+                            rawFocusIdx: null
                         }
                     });
                 }
-                dispatcher.dispatch({
-                    name: 'TAGHELPER_RESET',
+                dispatcher.dispatch<Actions.Reset>({
+                    name: ActionName.Reset,
                     payload: {
                         sourceId: props.sourceId
                     }
@@ -160,17 +170,18 @@ export function init(
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps & {activeView:React.ComponentClass|React.SFC};
+    type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps &
+            {activeView:React.ComponentClass|React.SFC};
 
-    class TagBuilder extends React.Component<ActiveTagBuilderProps & TagBuilderBaseState> {
+    class TagBuilder extends React.PureComponent<ActiveTagBuilderProps & TagBuilderBaseState> {
 
         constructor(props) {
             super(props);
         }
 
         componentDidMount() {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_GET_INITIAL_DATA',
+            dispatcher.dispatch<Actions.GetInitialData>({
+                name: ActionName.GetInitialData,
                 payload: {
                     sourceId: this.props.sourceId
                 }
@@ -186,7 +197,7 @@ export function init(
                                     onInsert={this.props.onInsert}
                                     canUndo={this.props.canUndo}
                                     range={this.props.range}
-                                    actionPrefix={this.props.actionPrefix}
+                                    formType={this.props.formType}
                                     rawPattern={this.props.rawPattern}
                                     generatedQuery={this.props.generatedQuery} />
                         <div>
@@ -198,47 +209,56 @@ export function init(
         }
     }
 
-    const AvailableTagBuilderBound = models.map(model => BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model));
-
     // ---------------- <ActiveTagBuilder /> -----------------------------------
 
     const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
+
         const handleTabSelection = (value:string) => {
-            dispatcher.dispatch({
-                name: 'TAGHELPER_SET_ACTIVE_TAG',
-                payload: {value: value}
+            dispatcher.dispatch<Actions.SetActiveTag>({
+                name: ActionName.SetActiveTag,
+                payload: {
+                    sourceId: props.sourceId,
+                    value: value
+                }
             });
         };
 
-        const tagsetTabs = widgetViews.keySeq()
-            .map(
+        const tagsetTabs = pipe(
+            deps,
+            Dict.keys(),
+            List.map(
                 tagset => ({
                     id: tagset,
                     label: tagset
                 })
-            ).toList();
+            )
+        );
 
-        const children = widgetViews.entrySeq().map(tagset => {
-            const TagBuilderBound = AvailableTagBuilderBound.get(tagset[0]);
-            return <TagBuilderBound
-                        key={tagset[0]}
-                        activeView={tagset[1]}
-                        sourceId={props.sourceId}
-                        actionPrefix={props.actionPrefix}
-                        range={props.range}
-                        onInsert={props.onInsert}
-                        onEscKey={props.onEscKey} />;
-        });
+        const children = pipe(
+            deps,
+            Dict.toEntries(),
+            List.map(([key, [model, view]]) => {
+                const TagBuilderBound = BoundWithProps<ActiveTagBuilderProps,
+                    TagBuilderBaseState>(TagBuilder, model);
+                return <TagBuilderBound
+                            key={key}
+                            activeView={view}
+                            sourceId={props.sourceId}
+                            formType={props.formType}
+                            range={props.range}
+                            onInsert={props.onInsert}
+                            onEscKey={props.onEscKey} />;
+            })
+        );
 
         return (
             <div>
                 <h3>{he.translate('taghelper__create_tag_heading')}</h3>
                 <layoutViews.TabView
-                    className="TagsetFormSelector"
-                    callback={handleTabSelection}
-                    items={tagsetTabs} >
-
-                    {children.toArray()}
+                        className="TagsetFormSelector"
+                        callback={handleTabSelection}
+                        items={tagsetTabs} >
+                    {children}
                 </layoutViews.TabView>
             </div>
         );

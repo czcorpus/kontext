@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../../types/common';
-import * as Immutable from 'immutable';
+import { Kontext } from '../../../types/common';
+import { List, pipe } from 'cnc-tskit';
 
 /**
  * IAttrHelper defines a general object able to
@@ -34,9 +34,9 @@ export interface IAttrHelper {
 
     attrExists(attr:string):boolean;
 
-    getAttrsOfStruct(struct:string):Immutable.List<string>;
+    getAttrsOfStruct(struct:string):Array<string>;
 
-    getPosAttrs():Immutable.List<string>;
+    getPosAttrs():Array<string>;
 
     isTagAttr(attr:string):boolean;
 }
@@ -48,40 +48,53 @@ export interface IAttrHelper {
  */
 export class AttrHelper implements IAttrHelper {
 
-    private readonly attrList:Immutable.List<Kontext.AttrItem>;
+    private readonly attrList:Array<Kontext.AttrItem>;
 
-    private readonly structAttrList:Immutable.List<Kontext.AttrItem>;
+    private readonly structAttrList:Array<Kontext.AttrItem>;
 
-    private readonly structList:Immutable.List<string>;
+    private readonly structList:Array<string>;
 
     private readonly tagAttr:string;
 
     constructor(attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>,
             structList:Array<string>, tagAttr:string) {
-        this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
-        this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
-        this.structList = Immutable.List<string>(structList);
+        this.attrList = attrList;
+        this.structAttrList = structAttrList;
+        this.structList = structList;
         this.tagAttr = tagAttr;
     }
 
     structExists(struct:string):boolean {
-        return this.structList.contains(struct);
+        return List.some(v => v === struct, this.structList);
     }
 
     structAttrExists(struct:string, attr:string):boolean {
-        return !!this.structAttrList.find(v => `${struct}.${attr}` === v.n);
+        return List.some(
+            v => `${struct}.${attr}` === v.n,
+            this.structAttrList
+        );
     }
 
     attrExists(attr:string):boolean {
-        return !!this.attrList.find(v => attr === v.n);
+        return List.some(
+            v => attr === v.n,
+            this.attrList
+        );
     }
 
-    getAttrsOfStruct(struct:string):Immutable.List<string> {
-        return this.structAttrList.filter(v => v.n === struct).map(v => v.n).toList();
+    getAttrsOfStruct(struct:string):Array<string> {
+        return pipe(
+            this.structAttrList,
+            List.filter(v => v.n === struct),
+            List.map(v => v.n)
+        );
     }
 
-    getPosAttrs():Immutable.List<string> {
-        return this.attrList.map(v => v.n).toList();
+    getPosAttrs():Array<string> {
+        return List.map(
+            v => v.n,
+            this.attrList
+        );
     }
 
     isTagAttr(attr:string):boolean {
@@ -107,12 +120,12 @@ export class NullAttrHelper implements IAttrHelper {
         return true;
     }
 
-    getAttrsOfStruct(struct:string):Immutable.List<string> {
-        return Immutable.List<string>();
+    getAttrsOfStruct(struct:string):Array<string> {
+        return Array<string>();
     }
 
-    getPosAttrs():Immutable.List<string> {
-        return Immutable.List<string>();
+    getPosAttrs():Array<string> {
+        return Array<string>();
     }
 
     isTagAttr(attr:string):boolean {

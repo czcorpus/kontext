@@ -18,12 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import { IEventEmitter } from 'kombo';
-import {CoreViews} from './coreViews';
-import { ObservablePrerequisite } from '../models/mainMenu';
 import { Observable } from 'rxjs';
+import { IEventEmitter, IModel, StatelessModel } from 'kombo';
+
+import { CoreViews } from './coreViews';
+import { MainMenuModel } from '../models/mainMenu';
 import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
+import { AsyncTaskChecker } from '../models/asyncTask';
+import { GeneralViewOptionsModelState } from '../models/options/general';
+import { QueryType } from '../models/query/common';
+import { CorpusSwitchModel } from '../models/common/corpusSwitch';
 
 /**
  *
@@ -55,7 +59,7 @@ export namespace Kontext {
 
     }
 
-    export var isFormValue = <T>(v:any):v is FormValue<T> => {
+    export const isFormValue = <T>(v:any):v is FormValue<T> => {
         return v !== null && v !== undefined && v.hasOwnProperty('value') &&
                 v.hasOwnProperty('isRequired') && v.hasOwnProperty('isInvalid');
     }
@@ -68,7 +72,8 @@ export namespace Kontext {
      * @param formValue
      * @param data
      */
-    export var updateFormValue = <T>(formValue:FormValue<T>, data:{[P in keyof FormValue<T>]?: FormValue<T>[P]}) => {
+    export const updateFormValue = <T>(formValue:FormValue<T>,
+            data:{[P in keyof FormValue<T>]?: FormValue<T>[P]}) => {
         return {
             value: data.value !== undefined ? data.value : formValue.value,
             isInvalid: data.isInvalid !== undefined ? data.isInvalid : formValue.isInvalid,
@@ -77,13 +82,26 @@ export namespace Kontext {
         };
     }
 
-    export var newFormValue = <T>(v:T, isRequired:boolean):FormValue<T> => {
-        return {value: v, isInvalid: false, isRequired: isRequired, errorDesc: undefined};
-    }
+    export const newFormValue = <T>(v:T, isRequired:boolean):FormValue<T> => ({
+        value: v,
+        isInvalid: false,
+        isRequired,
+        errorDesc: undefined
+    });
 
-    export var resetFormValue = <T>(formValue:FormValue<T>, val:T) => {
-        return {value: val, isInvalid: false, isRequired: formValue.isRequired, errorDesc: undefined};
-    };
+    export const resetFormValue = <T>(formValue:FormValue<T>, val:T) => ({
+        value: val,
+        isInvalid: false,
+        isRequired:
+        formValue.isRequired,
+        errorDesc: undefined
+    });
+
+    // ----------------
+
+    export type UserMessageTypes = 'info'|'warning'|'error'|'mail'|'plain';
+
+    //
 
     /**
      * Represents possible sources for MultiDict
@@ -119,7 +137,6 @@ export namespace Kontext {
         getConf<T>(item:string):T;
         getNestedConf<T>(...keys:Array<string>):T;
         setConf<T>(key:string, value:T):void;
-        addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void;
     }
 
     export interface FullCorpusIdent {
@@ -131,47 +148,11 @@ export namespace Kontext {
         foreignSubcorp?:boolean;
     }
 
-    /**
-     * A general click action performed on featured/favorite/searched item
-     */
-    export interface CorplistItemClick {
-        (corpora:Array<string>, subcorpId:string):Observable<any>;
-    }
-
-    /**
-     * managing access to a user information
-     */
-    export interface IUserInfoModel extends IEventEmitter {
-        getCredentials():UserCredentials;
-        loadUserInfo(forceReload:boolean):Observable<boolean>;
-    }
-
     export interface ICorpusInfoModel extends IEventEmitter {
         getCurrentInfoData():any; // TODO
         isLoading():boolean;
     }
 
-    /**
-     * handling state of server-asynchronous
-     * tasks.
-     */
-    export interface IAsyncTaskModel extends IEventEmitter {
-
-        registerTask(task:Kontext.AsyncTaskInfo):void;
-
-        getAsyncTasks():Immutable.List<Kontext.AsyncTaskInfo>;
-
-        getNumRunningTasks():number;
-
-        getNumFinishedTasks():number;
-
-        init():void;
-
-        /**
-         * Add an external callback
-         */
-        addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void;
-    }
 
     // ---------------------- main menu ---------------------------------
 
@@ -209,7 +190,7 @@ export namespace Kontext {
         disabled:boolean;
         fallbackAction:string;
         label:string;
-        items:Immutable.List<SubmenuItem>;
+        items:Array<SubmenuItem>;
     }
 
     export type MenuEntry = [string, MenuItem];
@@ -220,55 +201,6 @@ export namespace Kontext {
     export interface IMainMenuShortcutMapper {
         get(keyCode:number, keyMod:string):EventTriggeringSubmenuItem;
         register(keyCode:number, keyMod:string, message:string, args:GeneralProps):void;
-    }
-
-    /**
-     * A model watched by components which are
-     * able to render user content based on a selected
-     * menu item.
-     *
-     */
-    export interface IMainMenuModel extends IEventEmitter {
-
-        getActiveItem():MainMenuActiveItem;
-        disableMenuItem(itemId:string, subItemId?:string):void;
-        enableMenuItem(itemId:string, subItemId?:string):void;
-        getVisibleSubmenu():string;
-        unregister():void;
-
-        /**
-         * Register an action which is run before listeners
-         * are notified. This is used to allow other models
-         * to prepare themselves before their views are
-         * shown. Please note that StatelessModel has a more
-         * general mechanism to solve this (suspend()).
-         */
-        addItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
-
-        removeItemActionPrerequisite(actionName:string, fn:ObservablePrerequisite):void;
-
-        exportKeyShortcutActions():IMainMenuShortcutMapper;
-
-        /**
-         * Bind a custom event handler (typically a one dispatching a custom
-         * Flux action) to a server-defined main menu sub-item. Server config
-         * (see conf/main-menu.sample.json) is expected to provide a unique
-         * 'ident' for the item which is then used when calling this method.
-         * In case such an item is defined and no binding is called for the item,
-         * main menu React component will omit it when rendering the result.
-         *
-         * This is an ideal solution for miscellaneous plug-in features not
-         * included in KonText core.
-         */
-        bindDynamicItem(ident:string, label:string, hint:string, indirect:boolean, handler:()=>void);
-
-        getData():Immutable.List<MenuEntry>;
-
-        resetActiveItemAndNotify():void;
-
-        getConcArgs():IMultiDict;
-
-        isBusy():boolean;
     }
 
     // ---------------------------------------------------------
@@ -346,9 +278,7 @@ export namespace Kontext {
         removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void;
 
         /**
-         * Make a shallow copy of a (state) object.
-         * It is best used with state objects containing
-         * primitive values or Immutable.js instances.
+         * @deprecated
          */
         cloneState<T>(obj:Readonly<T>|T):Mutable<T>;
 
@@ -359,13 +289,18 @@ export namespace Kontext {
         browserInfo:IBrowserInfo;
     }
 
+    export interface AjaxResponse {
+        messages:Array<[string, string]>;
+    }
+
     export interface LayoutModel {
         corpusInfoModel:ICorpusInfoModel,
-        userInfoModel:IUserInfoModel,
+        userInfoModel:IModel<{}>,
         corpusViewOptionsModel:CorpusViewOptionsModel,
-        generalViewOptionsModel:ViewOptions.IGeneralViewOptionsModel;
-        asyncTaskInfoModel:IAsyncTaskModel,
-        mainMenuModel:IMainMenuModel;
+        generalViewOptionsModel:StatelessModel<GeneralViewOptionsModelState>;
+        asyncTaskInfoModel:AsyncTaskChecker,
+        mainMenuModel:MainMenuModel;
+        corpusSwitchModel:CorpusSwitchModel;
     }
 
     export interface AjaxOptions {
@@ -374,73 +309,67 @@ export namespace Kontext {
         accept?:string;
     }
 
-    export interface AjaxResponse {
-        messages:Array<[string, string]>;
-    }
-
-    export interface AjaxConcResponse extends AjaxResponse {
-        Q:Array<string>;
-        conc_persistence_op_id:string;
-        num_lines_in_groups:number;
-        lines_groups_numbers:Array<number>;
-    }
-
     export interface AsyncTaskInfo {
         ident:string;
         label:string;
         category:string;
-        status:string; // one of PENDING, STARTED, RETRY, FAILURE, SUCCESS
+        status:'PENDING'|'STARTED'|'RETRY'|'FAILURE'|'SUCCESS';
         created:number;
         error:string; // = Celery's "result" property in case status == 'FAILURE'
         args:GeneralProps;
     }
 
     export interface AsyncTaskOnUpdate {
-        (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
+        (taskInfoList:Array<AsyncTaskInfo>):void;
     }
 
     /**
      * A dictionary allowing multiple values per-key.
      * It is mostly used to carry URL arguments.
      */
-    export interface IMultiDict {
-        head(key:string):string;
-        getList(key:string):Array<string>;
-        set(key:string, value:number|boolean|string):void;
-        replace(key:string, values:Array<string>):void;
-        remove(key:string):void;
-        add(key:string, value:any):void;
+    export interface IMultiDict<T={[k:string]:string|number|boolean}> {
+        head<K extends keyof T>(key:K):string;
+        getList<K extends keyof T>(key:K):Array<string>;
+        set<K extends keyof T>(key:K, value:T[K]):Kontext.IMultiDict<T>;
+        replace<K extends keyof T>(key:K, values:Array<T[K]>):Kontext.IMultiDict<T>;
+        remove<K extends keyof T>(key:K):Kontext.IMultiDict<T>;
+        add<K extends keyof T>(key:K, value:T[K]):Kontext.IMultiDict<T>;
         items():Array<[string, string]>;
         toDict():{[key:string]:string};
-        has(key:string):boolean;
+        has<K extends keyof T>(key:K):boolean;
         size():number;
     }
 
     export interface IURLHandler {
         createStaticUrl(path:string):string;
-        createActionUrl(path:string, args?:Array<Array<string>>|IMultiDict):string;
-        encodeURLParameters(params:IMultiDict):string
+        createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string;
+        encodeURLParameters<T>(params:IMultiDict<T>):string
     }
 
-    export interface IConcArgsHandler {
-        getConcArgs():IMultiDict;
-        replaceConcArg(name:string, values:Array<string>):void;
+    /**
+     * Possible types for PageModel's ajax method request args
+     */
+    export type AjaxArgs = IMultiDict|{[key:string]:any}|string;
 
-        /**
-         * Export current conc args to a URL with additional
-         * argument updates. Original arguments stored in model
-         * are unchanged.
-         */
-        exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string;
+    /**
+     *
+     */
+    export interface IAjaxHandler {
+        ajax$<T>(
+            method:string,
+            url:string,
+            args:AjaxArgs,
+            options?:Kontext.AjaxOptions
+        ):Observable<T>;
     }
 
     export interface IHistory {
-        pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
-        replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
+        pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any,
+            title?:string):void;
+        replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any,
+            title?:string):void;
         setOnPopState(fn:(event:PopStateEvent)=>void):void;
     }
-
-    export type RGBAColor = [number, number, number, number];
 
     /**
      * This represent an already encode query
@@ -517,7 +446,7 @@ export namespace Kontext {
          * Query with syntax highlighting (using embedded HTML)
          */
         query_sh?:string;
-        query_type:string;
+        query_type:QueryType;
         query_id:string;
         subcorpname:string;
         lpos:string;
@@ -546,7 +475,7 @@ export namespace Kontext {
         bib_mapping:TextTypes.BibMapping;
 
         aligned:Array<{
-            query_type:string;
+            query_type:QueryType;
             query:string;
             corpname:string;
             human_corpname:string;
@@ -555,46 +484,6 @@ export namespace Kontext {
             pcq_pos_neg:string;
             default_attr:string;
         }>;
-    }
-
-    /**
-     * ICorpusSwitchAware represents an object which keeps
-     * some of its properties persistent even when KonText
-     * switches active corpus (which deletes most of the
-     * client-side objects - typically all the models and views).
-     * I.e. the object stores some of the attributes and
-     * its successor will use these values to set the
-     * same properties.
-     *
-     * Please note that the model is expected to
-     * respond to the action
-     * CORPUS_SWITCH_MODEL_RESTORE where data
-     * along with model state key are passed.
-     * The action is passed for all the key+data
-     * pair so each model must check for the key
-     * to be sure it works with its own serialized
-     * data.
-     */
-    export interface ICorpusSwitchAware<T> {
-
-        /**
-         * Export desired properties packed into
-         * a single object T
-         */
-        csExportState():T;
-
-        /**
-         * Return a key under which the data will
-         * be stored.
-         */
-        csGetStateKey():string;
-    }
-
-    export interface CorpusSwitchActionProps<T> {
-        key:string;
-        data:T;
-        prevCorpora:Immutable.List<string>;
-        currCorpora:Immutable.List<string>;
     }
 
     export type AttrItem = {n:string; label:string};
@@ -616,7 +505,9 @@ export namespace Kontext {
         SHUFFLE = 'shuffle',
         SWITCHMC = 'switchmc',
         SUBHITS = 'subhits',
-        FIRSTHITS = 'firsthits'
+        FIRSTHITS = 'firsthits',
+        LOCKED = 'locked',
+        LGROUP = 'lgroup'
     }
 }
 
@@ -683,7 +574,7 @@ export namespace ViewOptions {
         MOUSEOVER = 'mouseover'
     }
 
-    export type AvailStructAttrs = Immutable.Map<string, Immutable.List<StructAttrDesc>>;
+    export type AvailStructAttrs = {[key:string]:Array<StructAttrDesc>};
 
     export interface PageData {
         AttrList:Array<AttrDesc>;
@@ -705,8 +596,8 @@ export namespace ViewOptions {
         Availrefs:Array<{n:string; sel:string; label:string}>;
         curr_structattrs:Array<string>;
         fixed_attr:string;
-        attr_allpos:string;
-        attr_vmode:string;
+        attr_allpos:PosAttrViewScope;
+        attr_vmode:PosAttrViewMode;
         base_viewattr:string;
         use_conc_toolbar:boolean;
         structattrs:{[attr:string]:Array<string>};
@@ -715,20 +606,6 @@ export namespace ViewOptions {
 
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
         widectx_globals:Array<[string, string]>;
-    }
-
-    export interface IGeneralViewOptionsModel extends IEventEmitter {
-        getPageSize():Kontext.FormValue<string>;
-        getNewCtxSize():Kontext.FormValue<string>;
-        getLineNumbers():boolean;
-        getShuffle():boolean;
-        getWlPageSize():Kontext.FormValue<string>;
-        getFmaxItems():Kontext.FormValue<string>;
-        getCitemsPerPage():Kontext.FormValue<string>;
-        getIsBusy():boolean;
-        addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsModel)=>void):void;
-        getUseCQLEditor():boolean;
-        getUserIsAnonymous():boolean;
     }
 
 }
@@ -786,7 +663,7 @@ export namespace TextTypes {
     }
 
     export interface BibMapping {
-        [bib_id:string]:string;
+        [bibId:string]:string;
     }
 
     export interface AttrInfo {
@@ -802,132 +679,26 @@ export namespace TextTypes {
         docLabel:string;
     }
 
-    /**
-     * An object representing an abstract selection
-     * of attribute values.
-     *
-     * All the modifier methods are expected to
-     * return a new copy of the original object to
-     * preserve immutability.
-     *
-     * Note: non-checkbox-like implementations must
-     * still implement all the methods even if they do not
-     * make much sense there. This is necessary because
-     * of KonText's React components which use duck typing
-     * to determine which sub-component to use.
-     */
-    export interface AttributeSelection {
-
-        attrInfo:AttrInfo;
-
+    export interface FullAttributeSelection {
+        attrInfo:TextTypes.AttrInfo;
         isInterval:boolean;
-
         isNumeric:boolean;
-
         label:string;
-
         name:string;
-
-
-        /**
-         * Tests whether there is at least one attribute value locked
-         */
-        isLocked():boolean;
-
-        /**
-         */
-        mapValues(mapFn:(item:AttributeValue, i?:number)=>AttributeValue):AttributeSelection;
-
-        /**
-         */
-        getValues():Immutable.List<AttributeValue>;
-
-        /**
-         * Set new attribute values
-         *
-         * @return a new copy of the original AttributeSelection
-         */
-        setValues(values:Array<AttributeValue>):AttributeSelection;
-
-        /**
-         * Add a new value to the list of the current ones.
-         */
-        addValue(value:AttributeValue):AttributeSelection;
-
-        /**
-         * Remove a value from the list of the current ones.
-         */
-        removeValue(value:string):AttributeSelection;
-
-        /**
-         *
-         */
-        clearValues():AttributeSelection;
-
-        /**
-         * Flip checked/unchecked status of the value
-         */
-        toggleValueSelection(idx:number):AttributeSelection;
-
-        /**
-         * Return true in case the selection contains a list
-         * of all available values.
-         */
-        containsFullList():boolean;
-
-        /**
-         * Return true if the original status has been
-         * changed.
-         */
-        hasUserChanges():boolean;
-
-        /**
-         * Export selection status to a simple object
-         */
-        exportSelections(lockedOnesOnly:boolean):Array<string>;
-
-        getNumOfSelectedItems():number;
-
-        /**
-         * Preserve only such attribute values whose values can be
-         * found in the items array. In case the selection does
-         * not contain any values then all the values within 'items'
-         * are imported!
-         */
-        updateItems(items:Array<string>):AttributeSelection;
-
-        /**
-         *
-         */
-        filter(fn:(v:AttributeValue)=>boolean):AttributeSelection;
-
-        /**
-         *
-         */
-        setExtendedInfo(ident:string, data:Immutable.Map<string, any>):AttributeSelection;
+        values:Array<AttributeValue>;
+        type:'full';
     }
 
-    /**
-     *
-     */
-    export interface ITextInputAttributeSelection extends AttributeSelection {
-
-        getTextFieldValue():string;
-
-        setTextFieldValue(v:string):ITextInputAttributeSelection;
-
-        /**
-         * Sets a list of items containing hints based on
-         * the current (incomplete) user entry. This applies
-         * in raw text input implementations - checkbox ones
-         * should silently ignore this call (unless they
-         * use it in some way).
-         */
-        setAutoComplete(values:Array<AutoCompleteItem>):ITextInputAttributeSelection;
-
-        getAutoComplete():Immutable.List<AutoCompleteItem>;
-
-        resetAutoComplete():ITextInputAttributeSelection;
+    export interface TextInputAttributeSelection {
+        attrInfo:AttrInfo;
+        isInterval:boolean;
+        isNumeric:boolean;
+        label:string;
+        name:string;
+        autoCompleteHints:Array<AutoCompleteItem>;
+        values:Array<AttributeValue>; // it supports appending values via a single text input
+        textFieldValue:string;
+        type:'text';
     }
 
     /**
@@ -938,97 +709,9 @@ export namespace TextTypes {
         exportSelections(lockedOnesOnly:boolean):ExportedSelection;
     }
 
-    /**
-     *
-     */
-    export interface ITextTypesModel extends IEventEmitter, IAdHocSubcorpusDetector {
-
-        applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void;
-
-        /**
-         * Return a defined structural attribute
-         */
-        getAttribute(ident:string):TextTypes.AttributeSelection;
-
-        getBibIdAttr():string;
-
-        getBibLabelAttr():string;
-
-        /**
-         *
-         */
-        getTextInputAttribute(ident:string):ITextInputAttributeSelection
-
-        /**
-         * Return a list of all the defined attributes
-         */
-        getAttributes():Immutable.List<TextTypes.AttributeSelection>;
-
-        /**
-         * Get all available values of a specific attribute before
-         * any filters were applied.
-         */
-        getInitialAvailableValues():Immutable.List<TextTypes.AttributeSelection>;
-
-        /**
-         * Export checkbox selections (e.g. for ajax requests)
-         */
-        exportSelections(lockedOnesOnly:boolean):TextTypes.ServerCheckedValues;
-
-        /**
-         *
-         */
-        filter(attrName:string, fn:(v:AttributeValue)=>boolean):void;
-
-        /**
-         * Update existing values of an attribute via provided map function.
-         * If the map function updates a record then it should create
-         * a new copy. Unchanged objects can be returned directly.
-         */
-        mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i:number)=>TextTypes.AttributeValue);
-
-        /**
-         * Sets a new list of values for a specific attribute.
-         */
-        setValues(attrName:string, values:Array<string>):void;
-
-        /**
-         * Please note that this may not apply for all the
-         * attribute items.
-         */
-        setAutoComplete(attrName:string, values:Array<AutoCompleteItem>):void;
-
-        /**
-         * Returns true if a specific attribute (or at least one attribute
-         * if attrName is undefined) contains at least one selected value.
-         */
-        hasSelectedItems(attrName?:string):boolean;
-
-        /**
-         * Returns a list of attribute names passing 'hasSelectedItems' test.
-         */
-        getAttributesWithSelectedItems(includeLocked:boolean):Array<string>;
-
-        /**
-         * Returns a (typically) numeric summary for a specific attribute.
-         */
-        getAttrSummary():Immutable.Map<string, AttrSummary>;
-
-        getTextInputPlaceholder():string;
-
-        setTextInputPlaceholder(s:string):void;
-
-        setRangeMode(attrName:string, rangeIsOn:boolean);
-
-        getRangeModes():Immutable.Map<string, boolean>;
-
-        canUndoState():boolean;
-
-        isBusy():boolean;
-
-        getMiminimizedBoxes():Immutable.Map<string, boolean>;
-
-        hasSomeMaximizedBoxes():boolean;
+    export interface ITextTypesModel<T> extends IModel<T> {
+        exportSelections(lockedOnesOnly:boolean):{[attr:string]:Array<string>};
+        getInitialAvailableValues():Array<FullAttributeSelection|TextInputAttributeSelection>;
     }
 
     /**
@@ -1052,31 +735,5 @@ export namespace TextTypes {
 
 }
 
-declare module Legacy {
-
-    export interface IPopupBox {
-        getContentElement():HTMLElement;
-        close():void;
-    }
-}
-
-export namespace KeyCodes {
-    export const ENTER = 13;
-    export const ESC = 27;
-    export const TAB = 9;
-    export const DOWN_ARROW = 40;
-    export const UP_ARROW = 38;
-    export const LEFT_ARROW = 37;
-    export const RIGHT_ARROW = 39;
-    export const BACKSPACE = 8;
-    export const DEL = 46;
-    export const HOME = 36;
-    export const END = 35;
-
-    export const isArrowKey = (code:number):boolean => {
-        return code === UP_ARROW || code === DOWN_ARROW ||
-                code === LEFT_ARROW || code === RIGHT_ARROW;
-    }
-}
 
 export const typedProps = <T>(props) => <T>props;

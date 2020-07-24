@@ -17,8 +17,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import {PageModel} from '../../app/page';
+
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+
+import { PageModel } from '../../app/page';
+import { Actions, ActionName } from './actions';
+
 
 export interface ConcDashboardConf {
     showFreqInfo:boolean;
@@ -43,40 +47,42 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
         super(
             dispatcher,
             {
-                expanded: layoutModel.getLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, true),
+                expanded: layoutModel.getLocal(
+                    ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY,
+                    true
+                ),
                 showKwicConnect: conf.hasKwicConnect,
                 showFreqInfo: conf.showFreqInfo
             });
         this.layoutModel = layoutModel;
-    }
 
-    reduce(state:ConcDashboardState, action:Action) {
-        let newState:ConcDashboardState;
-        switch (action.name) {
-            case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
-                newState = this.copyState(state);
-                newState.expanded = false;
-                this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, true);
-                return newState;
-            case 'DASHBOARD_MAXIMIZE_EXTENDED_INFO':
-                newState = this.copyState(state);
-                newState.expanded = true;
-                return newState;
-            case 'DASHBOARD_TOGGLE_EXTENDED_INFO':
-                newState = this.copyState(state);
-                newState.expanded = !newState.expanded;
-                return newState;
-            default:
-                return state;
-        }
-    }
+        this.addActionHandler<Actions.DashboardMinimizeExtInfo>(
+            ActionName.DashboardMinimizeExtInfo,
+            (state, action) => {
+                state.expanded = false;
+            },
+            (state, action, dispatch) => {
+                this.layoutModel.setLocal(
+                    ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, state.expanded);
+            }
+        );
 
-    sideEffects(state:ConcDashboardState, action:Action, dispatch:SEDispatcher) {
-        switch (action.name) {
-            case 'DASHBOARD_MINIMIZE_EXTENDED_INFO':
-            case 'DASHBOARD_MAXIMIZE_EXTENDED_INFO':
-                this.layoutModel.setLocal(ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, state.expanded);
-            break;
-        }
+        this.addActionHandler<Actions.DashboardMaximizeExtInfo>(
+            ActionName.DashboardMaximizeExtInfo,
+            (state, action) => {
+                state.expanded = true;
+            },
+            (state, action,dispatch) => {
+                this.layoutModel.setLocal(
+                    ConcDashboard.EXTENDED_INFO_MINIMIZED_LOCAL_KEY, state.expanded);
+            }
+        );
+
+        this.addActionHandler<Actions.DashboardToggleExtInfo>(
+            ActionName.DashboardToggleExtInfo,
+            (state, action) => {
+                state.expanded = !state.expanded;
+            }
+        );
     }
 }

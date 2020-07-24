@@ -17,11 +17,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {TextTypesModel} from '../../models/textTypes/main';
-import liveAttrsModel = require('./models');
-import * as Immutable from 'immutable';
-import {init as viewInit, Views} from './view';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { TextTypesModel } from '../../models/textTypes/main';
+import * as liveAttrsModel from './models';
+import { init as viewInit } from './view';
+import { List } from 'cnc-tskit';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -35,13 +35,16 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 
     private readonly useAlignedCorpBox:boolean;
 
-    constructor(pluginApi:IPluginApi, store:liveAttrsModel.LiveAttrsModel, useAlignedCorpBox:boolean) {
+    private readonly isEnabled:boolean;
+
+    constructor(pluginApi:IPluginApi, store:liveAttrsModel.LiveAttrsModel, useAlignedCorpBox:boolean, isEnabled:boolean) {
         this.pluginApi = pluginApi;
         this.model = store;
         this.useAlignedCorpBox = useAlignedCorpBox;
+        this.isEnabled = isEnabled;
     }
 
-    getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):Views {
+    getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):PluginInterfaces.LiveAttributes.Views {
         const views = viewInit({
             dispatcher: this.pluginApi.dispatcher(),
             he: this.pluginApi.getComponentHelpers(),
@@ -55,8 +58,19 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
         return views;
     }
 
+    unregister():void {
+        this.model.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.model.getRegistrationId();
+    }
+
     getTextInputPlaceholder():string {
-        return this.model.getTextInputPlaceholder();
+        if (this.isEnabled) {
+            return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
+        }
+        return this.pluginApi.translate('ucnkLA__too_many_values_placeholder');
     }
 
 }
@@ -70,26 +84,26 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 const create:PluginInterfaces.LiveAttributes.Factory = (
         pluginApi, textTypesModel, isEnabled, controlsAlignedCorpora, args) => {
     const currAligned = pluginApi.getConf<Array<string>>('alignedCorpora') || [];
-    const alignedCorpora = Immutable.List(args.availableAlignedCorpora
-        .map((item) => {
-            return {
-                value: item.n,
-                label: item.label,
-                selected: currAligned.indexOf(item.n) > -1,
-                locked: !controlsAlignedCorpora
-            };
-    }));
+    const alignedCorpora = List.map(
+        item => ({
+            value: item.n,
+            label: item.label,
+            selected: currAligned.indexOf(item.n) > -1,
+            locked: !controlsAlignedCorpora
+        }),
+        args.availableAlignedCorpora
+    );
 
     const store = new liveAttrsModel.LiveAttrsModel(
         pluginApi.dispatcher(),
         pluginApi,
         {
-            selectionSteps: Immutable.List<liveAttrsModel.TTSelectionStep|liveAttrsModel.AlignedLangSelectionStep>([]),
+            selectionSteps: [],
             lastRemovedStep: null,
             alignedCorpora: alignedCorpora,
             initialAlignedCorpora: alignedCorpora,
             bibliographyAttribute: args.bibAttr,
-            bibliographyIds: Immutable.OrderedSet<string>(),
+            bibliographyIds: [],
             manualAlignCorporaMode: args.manualAlignCorporaMode,
             controlsEnabled: args.refineEnabled,
             isBusy: false,
@@ -100,20 +114,25 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
         textTypesModel.exportSelections.bind(textTypesModel)
     );
 
+    let numSelectionSteps = 0;
+    store.addListener((state) => {
+        numSelectionSteps = state.selectionSteps.length;
+    })
+
     // we must capture (= decide whether they should really be passed to the action queue)
     // as we have no control on how the action is triggered in a core KonText component
     // (which we cannot modify as plug-in developers here).
 
     pluginApi.dispatcher().captureAction(
         'QUERY_INPUT_ADD_ALIGNED_CORPUS',
-        _ => store.getState().selectionSteps.size === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
+        _ => numSelectionSteps === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
     );
     pluginApi.dispatcher().captureAction(
         'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-        _ => store.getState().selectionSteps.size === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
+        _ => numSelectionSteps === 0 || window.confirm(pluginApi.translate('ucnkLA__are_you_sure_to_mod_align_lang'))
     );
 
-    return new LiveAttributesPlugin(pluginApi, store, alignedCorpora.size > 0);
+    return new LiveAttributesPlugin(pluginApi, store, !List.empty(alignedCorpora), isEnabled);
 }
 
 export default create;

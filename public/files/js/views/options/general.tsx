@@ -19,22 +19,21 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
-import {Kontext, ViewOptions} from '../../types/common';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, Bound, StatelessModel } from 'kombo';
 
+import { Kontext } from '../../types/common';
+import { GeneralViewOptionsModelState } from '../../models/options/general';
+import { Actions, ActionName } from '../../models/options/actions';
+import { Action } from 'rxjs/internal/scheduler/Action';
 
-export interface GeneralOptionsProps {
-
-}
 
 export interface GeneralViews {
-    GeneralOptions:React.ComponentClass<GeneralOptionsProps>;
+    GeneralOptions:React.ComponentClass<{}>;
 }
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-        generalOptionsModel:ViewOptions.IGeneralViewOptionsModel):GeneralViews {
+        generalOptionsModel:StatelessModel<GeneralViewOptionsModelState>):GeneralViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -46,8 +45,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE',
+            dispatcher.dispatch<Actions.GeneralSetPageSize>({
+                name: ActionName.GeneralSetPageSize,
                 payload: {
                     value: evt.target.value
                 }
@@ -77,8 +76,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE',
+            dispatcher.dispatch<Actions.GeneralSetContextSize>({
+                name: ActionName.GeneralSetContextSize,
                 payload: {
                     value: evt.target.value
                 }
@@ -108,8 +107,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = () => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS',
+            dispatcher.dispatch<Actions.GeneralSetLineNums>({
+                name: ActionName.GeneralSetLineNums,
                 payload: {
                     value: !props.value
                 }
@@ -139,8 +138,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = () => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE',
+            dispatcher.dispatch<Actions.GeneralSetShuffle>({
+                name: ActionName.GeneralSetShuffle,
                 payload: {
                     value: !props.value
                 }
@@ -175,8 +174,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleCheckbox = () => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR',
+            dispatcher.dispatch<Actions.GeneralSetUseCQLEditor>({
+                name: ActionName.GeneralSetUseCQLEditor,
                 payload: {
                     value: !props.value
                 }
@@ -233,8 +232,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE',
+            dispatcher.dispatch<Actions.GeneralSetWlPageSize>({
+                name: ActionName.GeneralSetWlPageSize,
                 payload: {
                     value: evt.target.value
                 }
@@ -284,8 +283,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS',
+            dispatcher.dispatch<Actions.GeneralSetFmaxItems>({
+                name: ActionName.GeneralSetFmaxItems,
                 payload: {
                     value: evt.target.value
                 }
@@ -335,8 +334,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE',
+            dispatcher.dispatch<Actions.GeneralSetCitemsPerPage>({
+                name: ActionName.GeneralSetCitemsPerPage,
                 payload: {
                     value: evt.target.value
                 }
@@ -386,9 +385,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch({
-                name: 'GENERAL_VIEW_OPTIONS_SUBMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.GeneralSubmit>({
+                name: ActionName.GeneralSubmit
             });
         };
 
@@ -409,54 +407,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // --------------------- <GeneralOptions /> -------------------------
 
-    class GeneralOptions extends React.Component<GeneralOptionsProps,
-    {
-        pageSize:Kontext.FormValue<string>;
-        newCtxSize:Kontext.FormValue<string>;
-        lineNumbers:boolean;
-        shuffle:boolean;
-        wlPageSize:Kontext.FormValue<string>;
-        fmaxItems:Kontext.FormValue<string>;
-        citemsPerPage:Kontext.FormValue<string>;
-        modelIsBusy:boolean;
-        useCQLEditor:boolean;
-        userIsAnonymous:boolean;
-    }> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                pageSize: generalOptionsModel.getPageSize(),
-                newCtxSize: generalOptionsModel.getNewCtxSize(),
-                lineNumbers: generalOptionsModel.getLineNumbers(),
-                shuffle: generalOptionsModel.getShuffle(),
-                wlPageSize: generalOptionsModel.getWlPageSize(),
-                fmaxItems: generalOptionsModel.getFmaxItems(),
-                citemsPerPage: generalOptionsModel.getCitemsPerPage(),
-                modelIsBusy: generalOptionsModel.getIsBusy(),
-                useCQLEditor: generalOptionsModel.getUseCQLEditor(),
-                userIsAnonymous: generalOptionsModel.getUserIsAnonymous()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = generalOptionsModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class GeneralOptions extends React.PureComponent<GeneralViewOptionsModelState> {
 
         render() {
             return (
@@ -465,15 +416,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('options__this_applies_for_all_the_corpora')}
                     </p>
                     <form>
-                        <FieldsetConcordance pageSize={this.state.pageSize}
-                                newCtxSize={this.state.newCtxSize}
-                                lineNumbers={this.state.lineNumbers}
-                                shuffle={this.state.shuffle}
-                                useCQLEditor={this.state.useCQLEditor} />
-                        <FieldsetWordlist wlPageSize={this.state.wlPageSize}  />
-                        <FieldsetFreqDistrib fmaxItems={this.state.fmaxItems} />
-                        <FieldsetColl citemsPerPage={this.state.citemsPerPage} />
-                        {this.state.userIsAnonymous ?
+                        <FieldsetConcordance pageSize={this.props.pageSize}
+                                newCtxSize={this.props.newCtxSize}
+                                lineNumbers={this.props.lineNumbers}
+                                shuffle={this.props.shuffle}
+                                useCQLEditor={this.props.useCQLEditor} />
+                        <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
+                        <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems} />
+                        <FieldsetColl citemsPerPage={this.props.citemsperpage} />
+                        {this.props.userIsAnonymous ?
                             <p className="warn">
                                 <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
                                 {he.translate('global__anon_user_opts_save_warn')}
@@ -481,7 +432,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             null
                         }
                         <div className="buttons">
-                            <SubmitButton modelIsBusy={this.state.modelIsBusy} />
+                            <SubmitButton modelIsBusy={this.props.isBusy} />
                         </div>
                     </form>
                 </div>
@@ -489,7 +440,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
+    const BoundGeneralOptions = Bound(GeneralOptions, generalOptionsModel);
+
     return {
-        GeneralOptions: GeneralOptions
+        GeneralOptions: BoundGeneralOptions
     }
 }

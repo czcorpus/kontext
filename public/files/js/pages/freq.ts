@@ -18,17 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
 import { Kontext, TextTypes } from '../types/common';
-import { PluginInterfaces } from '../types/plugins';
 import { AjaxResponse, FreqResultResponse } from '../types/ajaxResponses';
 import { PageModel, DownloadType } from '../app/page';
 import { MultiDict } from '../multidict';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
-import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
-import { Freq2DTableModel } from '../models/freqs/ctable';
-import { Freq2DFlatViewModel } from '../models/freqs/flatCtable';
-import { CTFormProperties, CTFormInputs, Freq2DFormModel } from '../models/freqs/ctFreqForm';
+import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
+    from '../models/freqs/freqForms';
+import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d';
+import { Freq2DFlatViewModel } from '../models/freqs/twoDimension/flatTable';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { QuerySaveAsFormModel } from '../models/query/save';
 import { fetchQueryFormArgs } from '../models/query/first';
 import { init as freqFormFactory } from '../views/freqs/forms';
@@ -36,15 +35,18 @@ import { init as collFormFactory } from '../views/coll/forms';
 import { init as analysisFrameInit } from '../views/analysis';
 import { init as queryOverviewInit } from '../views/query/overview';
 import { init as resultViewFactory } from '../views/freqs/main';
-import { init as ctResultViewInit } from '../views/freqs/ctResult';
-import { FreqDataRowsModel } from '../models/freqs/dataRows';
+import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
+import { FreqDataRowsModel, importData as importFreqData,
+    FreqDataRowsModelState } from '../models/freqs/dataRows';
 import { FreqCTResultsSaveModel } from '../models/freqs/save';
-import { ConfIntervals, DataPoint } from '../charts/confIntervals';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
+import { CTFormInputs, CTFormProperties, CTFreqResultData,
+    AlignTypes } from '../models/freqs/twoDimension/common';
+import { ActionName as MMActionName } from '../models/mainMenu/actions';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -77,8 +79,6 @@ class FreqPage {
 
     private querySaveAsFormModel:QuerySaveAsFormModel;
 
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
-
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
@@ -98,7 +98,8 @@ class FreqPage {
             mlxattr: freqFormInputs.mlxattr || List.repeat(() => attrs[0].n, initFreqLevel),
             mlxicase: freqFormInputs.mlxicase || List.repeat(() => false, initFreqLevel),
             mlxctx: freqFormInputs.mlxctx || List.repeat(() => '0>0', initFreqLevel),
-            alignType: freqFormInputs.alignType || List.repeat(() => 'left', initFreqLevel),
+            alignType: freqFormInputs.alignType ||
+                List.repeat(() => AlignTypes.LEFT, initFreqLevel),
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };
@@ -125,26 +126,25 @@ class FreqPage {
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
-            ctminfreq_type: ctFormInputs.ctminfreq_type
+            ctminfreq_type: ctFormInputs.ctminfreq_type,
+            usesAdHocSubcorpus: adhocSubcDetector.usesAdHocSubcorpus(),
+            selectedTextTypes: adhocSubcDetector.exportSelections(false)
         };
 
         this.cTFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            adhocSubcDetector
+            ctFormProps
         );
         this.ctFreqModel = new Freq2DTableModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            adhocSubcDetector
+            ctFormProps
         );
         this.ctFlatFreqModel = new Freq2DFlatViewModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            adhocSubcDetector,
+            ctFormProps
         );
         this.ctResultSaveModel = new FreqCTResultsSaveModel(
             this.layoutModel.dispatcher,
@@ -229,8 +229,7 @@ class FreqPage {
             },
             queryReplayModel: this.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.querySaveAsFormModel,
-            corparchModel: null
+            querySaveAsModel: this.querySaveAsFormModel
         });
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,
@@ -243,17 +242,14 @@ class FreqPage {
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 queryFormProps: {
                     formType: Kontext.ConcFormTypes.QUERY,
-                    actionPrefix: '',
                     allowCorpusSelection: false,
-                    tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
+                    tagHelperViews: {},
                     queryStorageView: null,
-                    liveAttrsView: null,
-                    liveAttrsCustomTT: null,
-                    attributes: []
+                    LiveAttrsView: null,
+                    LiveAttrsCustomTT: null
                 },
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,
-                    actionPrefix: '',
                     filterId: null,
                     tagHelperView: null,
                     queryStorageView: null
@@ -287,13 +283,14 @@ class FreqPage {
                     freqCrit: this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     saveLinkFn: this.setDownloadLink.bind(this),
-                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
+                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
+                    initialData: importFreqData(
+                        this.layoutModel,
+                        this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
+                        this.layoutModel.getConf<number>('FreqItemsPerPage'),
+                        1
+                    )
                 });
-                this.freqResultModel.importData(
-                    this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
-                    this.layoutModel.getConf<number>('FreqItemsPerPage'),
-                    1
-                );
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
@@ -302,38 +299,27 @@ class FreqPage {
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
                     window.document.getElementById('result-mount'),
-                    {}
+                    {} as FreqDataRowsModelState
                 );
             break;
             case 'ct':
-                const data = this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>('CTFreqResultData');
-                this.ctFreqModel.importData(data);
-                this.ctFlatFreqModel.importData(data);
-                this.ctFreqModel.addOnNewDataHandler((newData) =>
-                    this.ctFlatFreqModel.importDataAndNotify(newData)
+                const data = this.layoutModel.getConf<CTFreqResultData>(
+                    'CTFreqResultData'
                 );
+                this.ctFreqModel.initialImportData(data);
+                this.ctFlatFreqModel.initialImportData(data);
                 const ctFreqResultView = ctResultViewInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
                     this.ctFreqModel,
                     this.ctFlatFreqModel
                 );
-                const width = 600;
-                const height = 14 * (this.ctFreqModel.getD1Labels().filter(x => x[1]).size +
-                    this.ctFreqModel.getD2Labels().filter(x => x[1]).size) / 2;
+                const [width, height, onFrameReady] = this.ctFreqModel.getOnTableFrameReady();
                 this.layoutModel.renderReactComponent(
                     ctFreqResultView.CTFreqResultView,
                     window.document.getElementById('result-mount'),
                     {
-                        onConfIntervalFrameReady: (data:Array<DataPoint>, heading:string) => {
-                            const charts = new ConfIntervals(
-                                this.layoutModel,
-                                width,
-                                height,
-                                document.getElementById('confidence-intervals-frame')
-                            );
-                            charts.renderChart(data, heading);
-                        },
+                        onConfIntervalFrameReady: onFrameReady,
                         d3PaneWidth: width,
                         d3PaneHeight: height
                     }
@@ -343,7 +329,9 @@ class FreqPage {
     }
 
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
         const ttModel = new TextTypesModel(
             this.layoutModel.dispatcher,
@@ -371,6 +359,7 @@ class FreqPage {
             break;
             case 'tt':
             case 'ml': {
+                /* TODO
                 const args = this.freqResultModel.getSubmitArgs();
                 args.remove('format');
                 this.layoutModel.getHistory().replaceState(
@@ -378,14 +367,15 @@ class FreqPage {
                     args,
                     window.document.title
                 );
+                */
             }
             break;
         }
     }
 
     init() {
-        this.layoutModel.init(() => {
-            this.subcorpSel = new NonQueryCorpusSelectionModel({
+        this.layoutModel.init(true, [], () => {
+            const subcorpSel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
                 dispatcher: this.layoutModel.dispatcher,
                 usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
@@ -400,38 +390,39 @@ class FreqPage {
             // the 'view' action with additional information (encoded in
             // the fragment part of the URL) which form should be opened
             // once the 'view' page is loaded
-            mainMenuModel.addListener(() => {
-                const activeItem = mainMenuModel.getActiveItem() || {actionName: null, actionArgs: []};
-                switch (activeItem.actionName) {
-                    case 'MAIN_MENU_SHOW_FILTER':
-                        const filterArgs = new MultiDict(Dict.toEntries(activeItem.actionArgs));
-                        window.location.replace(
-                            this.layoutModel.createActionUrl(
+            this.layoutModel.dispatcher.registerActionListener(
+                (action) => {
+                    switch (action.name) {
+                        case MMActionName.ShowFilter:
+                            const filterArgs = new MultiDict(Dict.toEntries(action.payload));
+                            window.location.replace(
+                                this.layoutModel.createActionUrl(
+                                    'view',
+                                    this.layoutModel.getConcArgs().items()
+                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
+                            );
+                        break;
+                        case MMActionName.ShowSort:
+                            window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.getConcArgs().items()
-                            ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
-                        );
-                    break;
-                    case 'MAIN_MENU_SHOW_SORT':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#sort');
-                    break;
-                    case 'MAIN_MENU_SHOW_SAMPLE':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#sample');
-                    break;
-                    case 'MAIN_MENU_APPLY_SHUFFLE':
-                        window.location.replace(this.layoutModel.createActionUrl(
-                            'view',
-                            this.layoutModel.getConcArgs().items()
-                        ) + '#shuffle');
-                    break;
+                            ) + '#sort');
+                        break;
+                        case MMActionName.ShowSample:
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#sample');
+                        break;
+                        case MMActionName.ApplyShuffle:
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#shuffle');
+                        break;
+                    }
                 }
-            });
+            );
             const adhocSubcIdentifier = this.initAdhocSubcDetector();
             this.initAnalysisViews(adhocSubcIdentifier);
             this.initQueryOpNavigation();

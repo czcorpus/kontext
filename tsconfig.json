@@ -3,9 +3,10 @@
         "outDir": "./public/files/js/min",
         "sourceMap": true,
         "noImplicitAny": false,
-        "module": "commonjs",
-        "target": "es5",
-        "jsx": "react"
+        "module": "esnext",
+        "target": "esnext",
+        "jsx": "react",
+        "moduleResolution": "node"
     },
     "include": [
         "./public/files/js/**/*"

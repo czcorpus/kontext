@@ -113,7 +113,7 @@ class RequestArgsProxy(object):
         return list(self.keys()).__iter__()
 
     def __contains__(self, item):
-        return self._forced.__contains__(item) or self._form.__contains__(item) or self._args.__contains__(item)
+        return item in self._forced or item in self._form or item in self._args
 
     def keys(self):
         return list(set(list(self._forced.keys()) + list(self._form.keys()) + list(self._args.keys())))
@@ -627,6 +627,9 @@ class Kontext(Controller):
                             'user_id', None) == self.session_get('user', 'id')
                 else:  # initial query => ownership is clear
                     tpl_data['user_owns_conc'] = True
+                if '__latest__' in tpl_data.get('conc_forms_args', {}):
+                    tpl_data['conc_forms_args'][op_id] = tpl_data['conc_forms_args']['__latest__']
+                    del tpl_data['conc_forms_args']['__latest__']
             else:
                 tpl_data['Q'] = []
                 tpl_data['conc_persistence_op_id'] = None
@@ -916,7 +919,6 @@ class Kontext(Controller):
         # 1st option: fetch required corpus name from html form or from URL params
         if 'corpname' in form:
             cn = form.getvalue('corpname')
-
         # 2nd option: try currently initialized corpname (e.g. from restored semi-persistent args)
         if not cn:
             cn = getattr(self.args, 'corpname')
@@ -1447,7 +1449,7 @@ class Kontext(Controller):
     @exposed(return_type='json', skip_corpus_init=True)
     def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
-        if backend in('celery', 'konserver'):
+        if backend in ('celery', 'konserver'):
             import bgcalc
             app = bgcalc.calc_backend_client(settings)
             at_list = self.get_async_tasks()

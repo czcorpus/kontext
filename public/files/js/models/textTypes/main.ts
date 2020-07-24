@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2016 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
@@ -18,516 +18,563 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {TextTypes} from '../../types/common';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel} from '../base';
-import {IPluginApi} from '../../types/plugins';
-import * as Immutable from 'immutable';
-import rangeSelector = require('./rangeSelector');
-import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
-import { Action, SEDispatcher, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { IFullActionControl, StatefulModel } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
+import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
+
+import { TextTypes, Kontext } from '../../types/common';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { IPluginApi } from '../../types/plugins';
+import { TTSelOps } from './selectionOps';
+import { SelectedTextTypes, importInitialData, InitialData, SelectionFilterMap,
+    IntervalChar, AnyTTSelection} from './common';
+import { Actions, ActionName } from './actions';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName }
+    from '../common/actions';
 
 
-/**
- * Server-side data representing a single text types box (= a single [struct].[attr])
- * as returned by respective AJAX calls.
- */
-export interface BlockLine {
 
+export interface TextTypesModelState {
 
-    Values?:Array<{v:string; xcnt?:number}>;
-
-    /**
-     * Specifies a size (approx. in chars) of a text input
-     * box required for this specific BlockLine. This is
-     * Bonito-open approach but KonText still uses sthe
-     * value to distinguish between enumerated items
-     * and input-text ones.
-     *
-     * Please note that 'Values' and 'textboxlength' are
-     * mutually exclusive.
-     */
-    textboxlength?:number;
-
-    attr_doc:string;
-
-    attr_doc_label:string;
-
-    is_interval:number;
-
-    label:string;
-
-    name:string;
-
-    numeric:boolean;
-}
-
-/**
- * Server-side data
- */
-export interface Block {
-    Line:Array<BlockLine>;
-}
-
-
-export interface SelectionFilterValue {
-
-    ident:string;
-
-    v:string;
-
-    lock:boolean;
-
-    /*
-     * Specifies how many items in returned list is actually behind the item.
-     * This typically happens in case there are multiple items with the same name.
-     */
-    numGrouped:number;
-
-    availItems?:number;
-}
-
-
-export type SelectionFilterMap = {[k:string]:Array<SelectionFilterValue>};
-
-
-/**
- * Server-side data representing a group
- * of structures, structural attributes and
- * their values.
- *
- * Please note that for bib_attr, the initial
- * data is not expected to contain items IDs
- * which means that bibliography attribute box
- * model must be always an instance of
- * ./valueSelections.TextInputAttributeSelection
- * (otherwise a user would click on a label but
- * there would be no corresponding ID underneath)
- * On server, this is ensured by passing the
- * bib. attr. name to 'shrink_list' argument
- * (see lib/texttypes.py method export_with_norms())
- */
-export interface InitialData {
-    Blocks:Array<Block>;
-    Normslist:Array<any>;
-    bib_attr:string; // bib item label (possibly non-unique)
-    id_attr:string; // actual bib item identifier (unique)
-}
-
-
-export interface SelectedTextTypes {
-    [key:string]:Array<string>;
-}
-
-
-const typeIsSelected = (data:SelectedTextTypes, attr:string, v:string):boolean => {
-    if (data.hasOwnProperty(attr)) {
-        return data[attr].indexOf(v) > -1;
-    }
-    return false;
-}
-
-
-/**
- * Provides essential general operations on available text types
- * (filtering values, updating status - checked/locked, ...).
- *
- * All the state data is based on Immutable.js except for individual data
- * items which are updated via manual copying (i.e. no Immutable.Record).
- */
-export class TextTypesModel extends StatefulModel implements TextTypes.ITextTypesModel,
-        TextTypes.IAdHocSubcorpusDetector {
-
-    private attributes:Immutable.List<TextTypes.AttributeSelection>;
+    attributes:Array<AnyTTSelection>;
 
     /**
      * A text type attribute which serves as a title (possibly non-unique)
      * of a bibliography item. The value can be undefined.
      */
-    private bibLabelAttr:string;
+    bibLabelAttr:string;
 
     /**
      * A text type attribute which is able to uniquely determine a single document.
      * The value can be undefined (in such case we presume there are no bibliography
      * items present)
      */
-    private bibIdAttr:string;
+    bibIdAttr:string;
 
     /**
-     * A list of selection snapshots generated by calling
-     * the snapshotState() method. At least one item
-     * (initial state) is always present.
+     * A list of selection snapshots generated when values are filtered out.
+     *  At least one item (initial state) is always present.
      */
-    private selectionHistory:Immutable.List<Immutable.List<TextTypes.AttributeSelection>>;
+    selectionHistory:Array<Array<AnyTTSelection>>;
 
     /**
      * Select-all request flags
      */
-    private selectAll:Immutable.Map<string, boolean>;
-
-    /**
-     * A helper class used to process range-like selection requests
-     * (e.g. "select years between 1980 and 1990").
-     */
-    private rangeSelector:rangeSelector.RangeSelector;
-
-    private pluginApi:IPluginApi;
+    selectAll:{[key:string]:boolean};
 
     /**
      * Represents meta information related to the whole attribute
      * (i.e. not just to a single value).
      */
-    private metaInfo:Immutable.Map<string, TextTypes.AttrSummary>;
+    metaInfo:{[key:string]:TextTypes.AttrSummary};
 
-    private minimizedBoxes:Immutable.Map<string, boolean>;
+    minimizedBoxes:{[key:string]:boolean};
 
-    private textInputPlaceholder:string;
+    textInputPlaceholder:string;
 
-    private _isBusy:boolean;
+    isBusy:boolean;
 
-    private autoCompleteSupport:boolean;
+    autoCompleteSupport:boolean;
+
+    hasSelectedItems:boolean;
+
+    rangeModeStatus:{[key:string]:boolean};
+
+    intervalChars:Array<string>;
+
+    metaInfoHelpVisible:boolean;
+
+}
 
 
-    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, data:InitialData, selectedItems?:SelectedTextTypes) {
-        super(dispatcher);
-        this.attributes = Immutable.List(this.importInitialData(data, selectedItems || {}));
-        this.bibLabelAttr = data.bib_attr;
-        this.bibIdAttr = data.id_attr;
-        this.selectionHistory = Immutable.List<Immutable.List<TextTypes.AttributeSelection>>();
-        this.selectionHistory = this.selectionHistory.push(this.attributes);
-        this.selectAll = Immutable.Map<string, boolean>(
-                this.attributes.map(
-                    (item:TextTypes.AttributeSelection)=>[item.name, false]
-                ).toList());
-        this.pluginApi = pluginApi;
-        this.rangeSelector = new rangeSelector.RangeSelector(pluginApi, this);
-        this.metaInfo = Immutable.Map<string, TextTypes.AttrSummary>();
-        this.textInputPlaceholder = null;
-        this._isBusy = false;
-        this.minimizedBoxes = Immutable.Map<string, boolean>(this.attributes.map(v => [v.name, false]));
-        // the autocomplete is enabled by outside conditions (e.g. liveattrs plug-in
-        // is enabled) so it must be turned on via enableAutoCompleteSupport() by the
-        // user of this model.
-        this.autoCompleteSupport = false;
 
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'TT_VALUE_CHECKBOX_CLICKED':
-                    this.changeValueSelection(action.payload['attrName'], action.payload['itemIdx']);
-                    this.notifySelectionChange();
-                    break;
-                case 'TT_SELECT_ALL_CHECKBOX_CLICKED':
-                    this.applySelectAll(action.payload['attrName']);
-                    this.notifySelectionChange();
-                case 'TT_RANGE_BUTTON_CLICKED':
-                    this.applyRange(action.payload['attrName'], action.payload['fromVal'],
-                            action.payload['toVal'], action.payload['strictInterval'],
-                            action.payload['keepCurrent']);
-                    this.notifySelectionChange();
-                    break;
-                case 'TT_TOGGLE_RANGE_MODE':
-                    this.setRangeMode(action.payload['attrName'], !this.getRangeModes().get(action.payload['attrName']));
-                    this.emitChange();
-                    break;
-                case 'TT_EXTENDED_INFORMATION_REQUEST':
-                    this._isBusy = true;
-                    const attr = this.getAttribute(action.payload['attrName']);
-                    const ident = action.payload['ident'];
-                    const attrIdx = this.attributes.indexOf(attr);
-                    const srchIdx = attr.getValues().findIndex(v => v.ident === ident);
-                    if (srchIdx > - 1 && attr.getValues().get(srchIdx).numGrouped < 2) {
-                        this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
-                            return {
-                                availItems: item.availItems,
-                                extendedInfo: undefined,
-                                ident: item.ident,
-                                locked: item.locked,
-                                numGrouped: item.numGrouped,
-                                selected: item.selected,
-                                value: item.value
-                            };
-                        }));
-                        this.emitChange();
+/**
+ * Provides essential general operations on available text types
+ * (filtering values, updating status - checked/locked, ...).
+ */
+export class TextTypesModel extends StatefulModel<TextTypesModelState>
+    implements TextTypes.IAdHocSubcorpusDetector, TextTypes.ITextTypesModel<TextTypesModelState>,
+        IUnregistrable {
 
-                    } else if (srchIdx > -1) {
-                        const message = this.pluginApi.translate(
-                            'query__tt_multiple_items_same_name_{num_items}',
-                            {num_items: attr.getValues().get(srchIdx).numGrouped}
-                        );
-                        this.setExtendedInfo(attr.name, ident, Immutable.Map({__message__: message}));
-                        this.emitChange();
-                    }
-                    break;
-                break;
-                case 'TT_EXTENDED_INFORMATION_REQUEST_DONE':
-                    this._isBusy = false;
-                    this.setExtendedInfo(
-                        action.payload['attrName'],
-                        action.payload['ident'],
-                        Immutable.OrderedMap<string, string|number>(action.payload['data'])
-                    );
-                    this.emitChange();
-                break;
-                case 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST':
-                    this.clearExtendedInfo(action.payload['attrName'], action.payload['ident']);
-                    this.emitChange();
-                    break;
-                case 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED':
-                    this.setTextInputAttrValue(action.payload['attrName'], action.payload['ident'],
-                            action.payload['label'], action.payload['append']);
-                    this.emitChange();
-                    this.notifySelectionChange();
-                    break;
-                case 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED':
-                    this.handleAttrTextInputChange(action.payload['attrName'], action.payload['value']);
-                    this.emitChange();
-                    break;
-                case 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET':
-                    this.resetAutoComplete(action.payload['attrName']);
-                    this.emitChange();
-                    break;
-                case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST':
-                    this._isBusy = true;
-                    this.emitChange();
-                    break;
-                case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST_DONE':
-                    this._isBusy = false;
-                    this.setAutoComplete(
-                        action.payload['attrName'],
-                        action.payload['data']
-                    );
-                    this.emitChange();
-                break;
-                case 'TT_MINIMIZE_ALL':
-                    this.minimizedBoxes = this.minimizedBoxes.map((v, k) => true).toMap();
-                    this.emitChange();
-                break;
-                case 'TT_MAXIMIZE_ALL':
-                    this.minimizedBoxes = this.minimizedBoxes.map((v, k) => false).toMap();
-                    this.emitChange();
-                break;
-                case 'TT_TOGGLE_MINIMIZE_ITEM':
-                    this.minimizedBoxes = this.minimizedBoxes.set(
-                        action.payload['ident'],
-                        !this.minimizedBoxes.get(action.payload['ident'])
-                    );
-                    this.emitChange();
-                break;
-                case 'TT_SNAPSHOT_STATE':
-                    this.selectionHistory = this.selectionHistory.push(this.attributes);
-                    this.emitChange();
-                break;
-                case 'TT_UNDO_STATE':
-                    this.selectionHistory = this.selectionHistory.pop();
-                    this.attributes = this.selectionHistory.last();
-                    this.emitChange();
-                    this.notifySelectionChange();
-                break;
-                case 'TT_RESET_STATE':
-                    this.reset();
-                    this.emitChange();
-                    this.notifySelectionChange();
-                break;
-                case 'TT_LOCK_SELECTED':
-                    this.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
-                        this.mapItems(attrName, (item:TextTypes.AttributeValue) => ({
-                            ident: item.ident,
-                            value: item.value,
-                            selected: item.selected,
-                            locked: true,
-                            availItems: item.availItems,
-                            numGrouped: item.numGrouped,
-                            extendedInfo: item.extendedInfo
-                        }));
-                    });
-                    this.emitChange();
-                break;
-                case 'TT_FILTER_WHOLE_SELECTION':
-                    this.filterWholeSelection(action.payload['data']);
-                    this.emitChange();
-                break;
-                case 'TT_SET_ATTR_SUMMARY':
-                    this.metaInfo = this.metaInfo.set(action.payload['attrName'], action.payload['value']);
-                    this.emitChange();
-                break;
+    private readonly pluginApi:IPluginApi;
+
+    private readonly notifySelectionChange:()=>void; // TODO this is an ungly antipattern;
+
+
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, data:InitialData,
+            selectedItems?:SelectedTextTypes) {
+        const attributes = importInitialData(data, selectedItems || {});
+        super(
+            dispatcher,
+            {
+                attributes,
+                bibLabelAttr: data.bib_attr,
+                bibIdAttr: data.id_attr,
+                selectionHistory: [List.map(
+                    x => TTSelOps.mapValues(x, x => x),
+                    attributes
+                )],
+                selectAll: pipe(
+                    attributes,
+                    List.map(
+                        (item:AnyTTSelection) => tuple(item.name, false)
+                    ),
+                    Dict.fromEntries()
+                ),
+                metaInfo: {},
+                textInputPlaceholder: null,
+                isBusy: false,
+                minimizedBoxes: pipe(
+                    attributes,
+                    List.map(v => tuple(v.name, false)),
+                    Dict.fromEntries()
+                ),
+                // the autocomplete is enabled by outside conditions (e.g. liveattrs plug-in
+                // is enabled) so it must be turned on via enableAutoCompleteSupport() by the
+                // user of this model.
+                autoCompleteSupport: false,
+                hasSelectedItems: false,
+                rangeModeStatus: pipe(
+                    attributes,
+                    List.map(item => tuple(item.name, item.isInterval ? true : false)),
+                    Dict.fromEntries()
+                ),
+                intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),
+                metaInfoHelpVisible: false
             }
-        });
+        );
+        this.pluginApi = pluginApi;
+
+        // kind of anti-pattern but for now we have no other choice
+        this.notifySelectionChange = ():void => {
+            dispatcher.dispatch<Actions.SelectionChanged>({
+                name: ActionName.SelectionChanged,
+                payload: {
+                    attributes: this._getAttributes(this.state),
+                    hasSelectedItems: this.findHasSelectedItems(this.state)
+                }
+            });
+        }
+
+        this.addActionHandler<Actions.ValueCheckboxClicked>(
+            ActionName.ValueCheckboxClicked,
+            action => {
+                this.changeState(state => {
+                    this.changeValueSelection(
+                        state,
+                        action.payload.attrName,
+                        action.payload.itemIdx
+                    );
+                });
+                this.notifySelectionChange();
+            }
+        );
+
+        this.addActionHandler<Actions.SelectAllClicked>(
+            ActionName.SelectAllClicked,
+            action => {
+                this.changeState(state => {
+                    this.applySelectAll(state, action.payload.attrName);
+                });
+                this.notifySelectionChange();
+            }
+        );
+
+        this.addActionHandler<Actions.RangeButtonClicked>(
+            ActionName.RangeButtonClicked,
+            action => {
+                this.changeState(state => {
+                    this.applyRange(
+                        state,
+                        action.payload.attrName,
+                        action.payload.fromVal,
+                        action.payload.toVal,
+                        action.payload.strictInterval,
+                        action.payload.keepCurrent
+                    );
+                });
+                this.notifySelectionChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ToggleRangeMode>(
+            ActionName.ToggleRangeMode,
+            action => {
+                this.changeState(state => {
+                    this.setRangeMode(
+                        action.payload.attrName,
+                        !state.rangeModeStatus[action.payload.attrName]
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.ExtendedInformationRequest>(
+            ActionName.ExtendedInformationRequest,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    const attrIdx = this.getAttributeIdx(state, action.payload.attrName);
+                    if (attrIdx > -1) {
+                        const ident = action.payload.ident;
+                        const attr = state.attributes[attrIdx];
+                        const srchIdx = attr.values.findIndex(v => v.ident === ident);
+                        if (srchIdx > - 1 && attr.values[srchIdx].numGrouped < 2) {
+                            state.attributes[attrIdx] = TTSelOps.mapValues(
+                                attr,
+                                item => ({
+                                    ...item,
+                                    extendedInfo: undefined
+                                })
+                            );
+
+                        } else if (srchIdx > -1) {
+                            const message = this.pluginApi.translate(
+                                'query__tt_multiple_items_same_name_{num_items}',
+                                {num_items: attr.values[srchIdx].numGrouped}
+                            );
+                            this.setExtendedInfo(state, attr.name, ident, {__message__: message});
+                        }
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.ExtendedInformationRequestDone>(
+            ActionName.ExtendedInformationRequestDone,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    this.setExtendedInfo(
+                        state,
+                        action.payload.attrName,
+                        action.payload.ident,
+                        // TODO type?? !!!!
+                        action.payload.data
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.ExtendedInformationRemoveRequest>(
+            ActionName.ExtendedInformationRemoveRequest,
+            action => {
+                this.changeState(state => {
+                    this.clearExtendedInfo(
+                        state,
+                        action.payload.attrName,
+                        action.payload.ident
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.AttributeAutoCompleteHintClicked>(
+            ActionName.AttributeAutoCompleteHintClicked,
+            action => {
+                this.changeState(state => {
+                    this.setTextInputAttrValue(
+                        state,
+                        action.payload.attrName,
+                        action.payload.ident,
+                        action.payload.label,
+                        action.payload.append
+                    );
+                });
+                this.notifySelectionChange();
+            }
+        );
+
+        this.addActionHandler<Actions.AttributeTextInputChanged>(
+            ActionName.AttributeTextInputChanged,
+            action => {
+                this.changeState(state => {
+                    this.handleAttrTextInputChange(
+                        state,
+                        action.payload.attrName,
+                        action.payload.value
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.AttributeAutoCompleteReset>(
+            ActionName.AttributeAutoCompleteReset,
+            action => {
+                this.changeState(state => {
+                    this.resetAutoComplete(state, action.payload.attrName);
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.AttributeTextInputAutocompleteRequest>(
+            ActionName.AttributeTextInputAutocompleteRequest,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.AttributeTextInputAutocompleteRequestDone>(
+            ActionName.AttributeTextInputAutocompleteRequestDone,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    this.setAutoComplete(
+                        state,
+                        action.payload.attrName,
+                        action.payload.autoCompleteData
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.MinimizeAll>(
+            ActionName.MinimizeAll,
+            action => {
+                this.changeState(state => {
+                    state.minimizedBoxes = Dict.map(
+                        (v, k) => true,
+                        state.minimizedBoxes
+                    );
+                })
+            }
+        );
+
+        this.addActionHandler<Actions.MaximizeAll>(
+            ActionName.MaximizeAll,
+            action => {
+                this.changeState(state => {
+                    state.minimizedBoxes = Dict.map(
+                        (v, k) => false,
+                        this.state.minimizedBoxes
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.ToggleMinimizeItem>(
+            ActionName.ToggleMinimizeItem,
+            action => {
+                this.changeState(state => {
+                    state.minimizedBoxes[action.payload.ident] =
+                        !this.state.minimizedBoxes[action.payload.ident];
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.UndoState>(
+            ActionName.UndoState,
+            action => {
+                this.changeState(state => {
+                    state.selectionHistory.pop();
+                    state.attributes = List.last(state.selectionHistory);
+                });
+                this.notifySelectionChange();
+            }
+        );
+
+        this.addActionHandler<Actions.ResetState>(
+            ActionName.ResetState,
+            action => {
+                this.changeState(state => {
+                    this.reset(state);
+                });
+                this.notifySelectionChange();
+            }
+        );
+
+        this.addActionHandler<Actions.LockSelected>(
+            ActionName.LockSelected,
+            action => {
+                this.changeState(state => {
+                    this.getAttributesWithSelectedItems(state, false).forEach(
+                        (attrName:string) => {
+                            this.mapItems(state, attrName, (item:TextTypes.AttributeValue) => ({
+                                ...item,
+                                locked: true,
+                            }))
+                        }
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.FilterWholeSelection>(
+            ActionName.FilterWholeSelection,
+            action => {
+                this.changeState(state => {
+                    this.snapshotState(state);
+                    this.filterWholeSelection(state, action.payload.filterData);
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.SetAttrSummary>(
+            ActionName.SetAttrSummary,
+            action => {
+                this.changeState(state => {
+                    state.metaInfo[action.payload.attrName] = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            action => {
+                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+
     }
 
-    notifySelectionChange():void {
-        this.dispatcher.dispatch({
-            name: 'TT_SELECTION_CHANGED',
-            payload: {
-                attributes: this.getAttributes(),
-                hasSelectedItems: this.hasSelectedItems()
-            }
-        });
+    private snapshotState(state:TextTypesModelState):void {
+        state.selectionHistory.push(pipe(
+            state.attributes,
+            List.map(attr => TTSelOps.mapValues(attr, v => ({...v})))
+        ));
     }
 
     enableAutoCompleteSupport():void {
-        this.autoCompleteSupport = true;
-    }
-
-    applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void {
-        Object.keys(checkedItems).forEach(k => {
-            const attrIdx = this.attributes.findIndex(v => k === this.bibIdAttr ? v.name === this.bibLabelAttr : v.name === k);
-            if (attrIdx === -1) {
-                console.warn(`Cannot apply checked value for ${k}`);
-                return;
-            }
-            let attr = this.attributes.get(attrIdx);
-            // now we must distinguish 4 cases:
-            // [structattr box is configured as bibliography list] x [structattr box is a list of items or a text input box]
-            if (attr.name === this.bibLabelAttr) {
-                if (attr instanceof TextInputAttributeSelection) {
-                    checkedItems[k].forEach(checkedVal => {
-                        attr = (<TextInputAttributeSelection>attr).addValue({
-                            ident: checkedVal,
-                            value: checkedVal in bibMapping ? bibMapping[checkedVal] : checkedVal,
-                            selected: true,
-                            locked: false,
-                            numGrouped: 0
-                        });
-                    });
-                    this.attributes = this.attributes.set(attrIdx, attr);
-
-                } else {
-                    this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
-                        return {
-                            ident: item.ident,
-                            value: item.ident in bibMapping ? bibMapping[item.ident] : item.value,
-                            selected: checkedItems[k].indexOf(item.value) > -1 ? true : false,
-                            locked: false,
-                            availItems: item.availItems,
-                            numGrouped: item.numGrouped,
-                            extendedInfo: item.extendedInfo
-                        }
-                    }));
-                }
-
-            } else {
-                if (attr instanceof TextInputAttributeSelection) {
-                    checkedItems[k].forEach(checkedVal => {
-                        attr = (<TextInputAttributeSelection>attr).addValue({
-                            ident: checkedVal,
-                            value: checkedVal,
-                            selected: true,
-                            locked: false,
-                            numGrouped: 0
-                        });
-                    });
-                    this.attributes = this.attributes.set(attrIdx, attr);
-
-                } else {
-                    this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
-                        return {
-                            ident: item.ident,
-                            value: item.value,
-                            selected: checkedItems[k].indexOf(item.value) > -1 ? true : false,
-                            locked: false,
-                            availItems: item.availItems,
-                            numGrouped: item.numGrouped,
-                            extendedInfo: item.extendedInfo
-                        }
-                    }));
-                }
-            }
+        this.changeState(state => {
+            state.autoCompleteSupport = true;
         });
     }
 
+    applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues,
+            bibMapping:TextTypes.BibMapping):void {
+        this.changeState(state => {
+            Object.keys(checkedItems).forEach(k => {
+                const attrIdx = state.attributes.findIndex(
+                    v => k === state.bibIdAttr ?
+                        v.name === state.bibLabelAttr : v.name === k);
+                if (attrIdx === -1) {
+                    console.warn(`Cannot apply checked value for ${k}`);
+                    return;
+                }
+                let attr = state.attributes[attrIdx];
+                // now we must distinguish 4 cases:
+                // [structattr box is configured as bibliography list] x
+                // [structattr box is a list of items or a text input box]
+                if (attr.name === state.bibLabelAttr) {
+                    if (attr.type === 'text') {
+                        checkedItems[k].forEach(checkedVal => {
+                            attr = TTSelOps.addValue(
+                                attr,
+                                {
+                                    ident: checkedVal,
+                                    value: checkedVal in bibMapping ?
+                                        bibMapping[checkedVal] : checkedVal,
+                                    selected: true,
+                                    locked: false,
+                                    numGrouped: 0
+                                }
+                            );
+                        });
+                        state.attributes[attrIdx] = attr;
 
-    private clearExtendedInfo(attrName:string, ident:string):void {
-        const attr = this.getAttribute(attrName);
-        if (attr) {
-            const attrIdx = this.attributes.indexOf(attr);
-            const newAttr = attr.setExtendedInfo(ident, null);
-            this.attributes = this.attributes.set(attrIdx, newAttr);
+                    } else {
+                        state.attributes[attrIdx] =
+                            TTSelOps.mapValues(
+                                attr,
+                                item => ({
+                                    ...item,
+                                    value: item.ident in bibMapping ?
+                                        bibMapping[item.ident] : item.value,
+                                    selected: checkedItems[k].indexOf(item.value) > -1 ? true : false,
+                                    locked: false
+                                })
+                            );
+                    }
+
+                } else {
+                    if (attr.type === 'text') {
+                        checkedItems[k].forEach(checkedVal => {
+                            attr = TTSelOps.addValue(
+                                attr,
+                                {
+                                    ident: checkedVal,
+                                    value: checkedVal,
+                                    selected: true,
+                                    locked: false,
+                                    numGrouped: 0
+                                }
+                            );
+                        });
+                        state.attributes[attrIdx] = attr;
+
+                    } else {
+                        state.attributes[attrIdx] = TTSelOps.mapValues(
+                            attr,
+                            item => ({
+                                ...item,
+                                selected: checkedItems[k].indexOf(item.value) > -1 ? true : false,
+                                locked: false
+                            })
+                        );
+                    }
+                }
+            });
+        });
+    }
+
+    getRegistrationId():string {
+        return 'text-types-model';
+    }
+
+    private clearExtendedInfo(state:TextTypesModelState, attrName:string, ident:string):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        if (attrIdx > -1) {
+            const attr = state.attributes[attrIdx];
+            const newAttr = TTSelOps.setExtendedInfo(attr, ident, null);
+            state.attributes[attrIdx] = newAttr;
 
         } else {
             throw new Error('Attribute not found: ' + attrName);
         }
     }
 
-    private resetAutoComplete(attrName:string):void {
-        const attr = this.getTextInputAttribute(attrName);
-        if (attr) {
-            const idx = this.attributes.indexOf(attr);
-            this.attributes = this.attributes.set(idx, attr.resetAutoComplete());
+    private resetAutoComplete(state:TextTypesModelState, attrName:string):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        if (attrIdx > -1) {
+            state.attributes[attrIdx] = TTSelOps.resetAutoComplete(state.attributes[attrIdx]);
         }
     }
 
-    private handleAttrTextInputChange(attrName:string, value:string) {
-        const attr = this.getTextInputAttribute(attrName);
-        if (attr) {
-            const idx = this.attributes.indexOf(attr);
-            this.attributes = this.attributes.set(idx, attr.setTextFieldValue(value));
+    private handleAttrTextInputChange(state:TextTypesModelState, attrName:string, value:string) {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        if (attrIdx) {
+            state.attributes[attrIdx] = TTSelOps.setTextFieldValue(state.attributes[attrIdx], value);
         }
     }
 
-    private setTextInputAttrValue(attrName:string, ident:string, label:string, append:boolean):void {
-        const attr:TextTypes.AttributeSelection = this.getTextInputAttribute(attrName);
-        const idx = this.attributes.indexOf(attr);
+    private setTextInputAttrValue(
+        state:TextTypesModelState,
+        attrName:string,
+        ident:string,
+        label:string,
+        append:boolean
+    ):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
         const newVal:TextTypes.AttributeValue = {
-            ident: ident,
+            ident,
             value: label,
             selected: true,
             locked: false,
             numGrouped: 1
         };
-        const updatedAttr = append ? attr.addValue(newVal) : attr.clearValues().addValue(newVal);
-        this.attributes = this.attributes.set(idx, updatedAttr);
-    }
-
-    private importInitialData(data:InitialData, selectedItems:SelectedTextTypes):Array<TextTypes.AttributeSelection> {
-        const mergedBlocks:Array<BlockLine> = data.Blocks.reduce((prev:Array<BlockLine>, curr:Block) => {
-            return prev.concat(curr.Line);
-        }, []);
-        if (mergedBlocks.length > 0) {
-            return mergedBlocks.map((attrItem:BlockLine) => {
-                if (attrItem.textboxlength) {
-                    // TODO restore selected items also here (must load labels first...)
-                    return new TextInputAttributeSelection(
-                        attrItem.name,
-                        attrItem.label,
-                        attrItem.numeric,
-                        !!attrItem.is_interval,
-                        {
-                            doc: attrItem.attr_doc,
-                            docLabel: attrItem.attr_doc_label
-                        },
-                        '',
-                        Immutable.List([]), Immutable.List([]));
-
-                } else {
-                    const values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
-                        (valItem:{v:string, xcnt:number}) => {
-                            return {
-                                value: valItem.v,
-                                ident: valItem.v, // TODO what about bib items?
-                                selected: typeIsSelected(selectedItems, attrItem.name, valItem.v) ? true : false,
-                                locked:false,
-                                availItems:valItem.xcnt,
-                                numGrouped: 1 // TODO here we expect that initial data do not have any name duplicities
-                            };
-                        }
-                    );
-                    return new FullAttributeSelection(
-                        attrItem.name,
-                        attrItem.label,
-                        attrItem.numeric,
-                        !!attrItem.is_interval,
-                        {
-                            doc: attrItem.attr_doc,
-                            docLabel: attrItem.attr_doc_label
-                        },
-                        Immutable.List(values)
-                    );
-                }
-            });
-        }
-        return null;
+        state.attributes[attrIdx] = append ?
+            TTSelOps.addValue(state.attributes[attrIdx], newVal) :
+            TTSelOps.addValue(TTSelOps.clearValues(state.attributes[attrIdx]), newVal);
     }
 
     syncFrom(src:Observable<AjaxResponse.QueryFormArgs>):Observable<AjaxResponse.QueryFormArgs> {
@@ -540,25 +587,30 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         );
     }
 
-    private changeValueSelection(attrIdent:string, itemIdx:number):void {
-        const attr = this.getAttribute(attrIdent);
-        const idx = this.attributes.indexOf(attr);
-        if (attr) {
-            this.attributes = this.attributes.set(idx, attr.toggleValueSelection(itemIdx));
+    private changeValueSelection(state:TextTypesModelState, attrIdent:string, itemIdx:number):void {
+        const attrIdx = this.getAttributeIdx(state, attrIdent);
+        if (attrIdx > -1) {
+            state.attributes[attrIdx] = TTSelOps.toggleValueSelection(state.attributes[attrIdx], itemIdx);
 
         } else {
             throw new Error('no such attribute value: ' + attrIdent);
         }
-        this.emitChange();
+        state.hasSelectedItems = this.findHasSelectedItems(state);
+
     }
 
     // TODO move notify... out of the method
-    private applyRange(attrName:string, fromVal:number, toVal: number, strictInterval:boolean,
-            keepCurrent:boolean):void {
-        this.rangeSelector
-            .applyRange(attrName, fromVal, toVal, strictInterval, keepCurrent)
+    private applyRange(
+        state:TextTypesModelState,
+        attrName:string,
+        fromVal:number,
+        toVal: number,
+        strictInterval:boolean,
+        keepCurrent:boolean
+    ):void {
+        this._applyRange(state, attrName, fromVal, toVal, strictInterval, keepCurrent)
             .subscribe(
-                (newSelection:TextTypes.AttributeSelection) => {
+                (newSelection:AnyTTSelection) => {
                     this.emitChange();
                 },
                 (err) => {
@@ -567,81 +619,84 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
             );
     }
 
-    private applySelectAll(ident:string) {
-        const item = this.getAttribute(ident);
-        const idx = this.attributes.indexOf(item);
-        if (item.containsFullList()) {
-            this.selectAll = this.selectAll.set(ident, !this.selectAll.get(ident));
-            const newVal = this.selectAll.get(ident);
-            this.attributes = this.attributes.set(idx, item.mapValues((item) => {
-                return {
-                    ident: item.ident,
-                    value: item.value,
+    private applySelectAll(state:TextTypesModelState, ident:string) {
+        const attrIdx = this.getAttributeIdx(state, ident);
+        const item = state.attributes[attrIdx];
+        if (TTSelOps.containsFullList(item)) {
+            state.selectAll[ident] = !state.selectAll[ident];
+            const newVal = state.selectAll[ident];
+            state.attributes[attrIdx] = TTSelOps.mapValues(
+                item,
+                item => ({
+                    ...item,
                     selected: newVal,
-                    locked: item.locked,
-                    numGrouped: item.numGrouped,
-                    availItems: item.availItems
-                };
-            }));
+                })
+            );
+            state.hasSelectedItems = this.findHasSelectedItems(state);
             this.emitChange();
         }
     }
 
     canUndoState():boolean {
-        return this.selectionHistory.size > 1;
+        return this.state.selectionHistory.length > 1;
     }
 
-    private reset():void {
-        this.attributes = this.selectionHistory.first();
-        this.selectionHistory = this.selectionHistory.slice(0, 1).toList();
-        this.selectAll = this.selectAll.map((item)=>false).toMap();
-        this.metaInfo = this.metaInfo.clear();
+    private reset(state:TextTypesModelState):void {
+        state.attributes = List.head(state.selectionHistory);
+        state.selectionHistory = [List.head(state.selectionHistory)];
+        state.selectAll = Dict.map(_ => false, state.selectAll);
+        state.metaInfo = {};
+        state.hasSelectedItems = false;
     }
 
-    getAttribute(ident:string):TextTypes.AttributeSelection {
-        return this.attributes.find((val) => val.name === ident);
+    private getAttribute(state:TextTypesModelState, ident:string):AnyTTSelection {
+        return state.attributes.find((val) => val.name === ident);
     }
 
-    getTextInputAttribute(ident:string):TextTypes.ITextInputAttributeSelection {
-        const ans = this.attributes.find(val => val.name === ident);
-        if (ans instanceof TextInputAttributeSelection) {
-            return ans;
-        }
-        return undefined;
+    private getAttributeIdx(state:TextTypesModelState, ident:string):number {
+        return List.findIndex(val => val.name === ident, state.attributes);
     }
 
-    replaceAttribute(ident:string, val:TextTypes.AttributeSelection):void {
-        const attr = this.getAttribute(ident);
-        const idx = this.attributes.indexOf(attr);
-        if (idx > -1) {
-            this.attributes = this.attributes.set(idx, val);
+    replaceAttribute(
+        state:TextTypesModelState,
+        ident:string,
+        val:AnyTTSelection
+    ):void {
+        const attrIdx = this.getAttributeIdx(state, ident);
+        if (attrIdx > -1) {
+            state.attributes[attrIdx] = val;
 
         } else {
             throw new Error('Failed to find attribute ' + ident);
         }
     }
 
-    getAttributes():Immutable.List<TextTypes.AttributeSelection> {
-        return this.attributes;
+    private _getAttributes(state:TextTypesModelState):Array<AnyTTSelection> {
+        return state.attributes;
     }
 
-    getInitialAvailableValues():Immutable.List<TextTypes.AttributeSelection> {
-        return this.selectionHistory.get(0);
+    getInitialAvailableValues():Array<AnyTTSelection> {
+        return List.head(this.state.selectionHistory);
     }
 
+    /**
+     * @deprecated use actions along with model.suspend()
+     */
     exportSelections(lockedOnesOnly:boolean):{[attr:string]:Array<string>} {
         const ans = {};
-        this.attributes.forEach((attrSel:TextTypes.AttributeSelection) => {
-            if (attrSel.hasUserChanges()) {
-                if (this.autoCompleteSupport) {
-                    ans[attrSel.name !== this.bibLabelAttr ? attrSel.name : this.bibIdAttr] = attrSel.exportSelections(lockedOnesOnly);
+        this.state.attributes.forEach((attrSel:AnyTTSelection) => {
+            if (TTSelOps.hasUserChanges(attrSel)) {
+                if (this.state.autoCompleteSupport) {
+                    ans[attrSel.name !== this.state.bibLabelAttr ?
+                        attrSel.name :
+                        this.state.bibIdAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
 
                 } else {
-                    if (attrSel instanceof TextInputAttributeSelection) {
-                        ans[attrSel.name] = [attrSel.getTextFieldValue()];
+                    if (attrSel.type === 'text') {
+                        ans[attrSel.name] = [attrSel.textFieldValue];
 
                     } else {
-                        ans[attrSel.name] = attrSel.exportSelections(lockedOnesOnly);
+                        ans[attrSel.name] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
                     }
                 }
             }
@@ -649,69 +704,76 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
         return ans;
     }
 
-    private filterWholeSelection(filterData:SelectionFilterMap) {
-        let k; // must be defined here (ES5 cannot handle for(let k...) here)
-        for (k in filterData) {
-            this.updateItems(k, filterData[k].map(v => v.ident));
-            this.mapItems(k, (v, i) => {
-                if (filterData[k][i]) {
-                    return {
-                        ident: filterData[k][i].ident,
-                        value: filterData[k][i].v,
-                        selected: v.selected,
-                        locked: v.locked,
-                        numGrouped: filterData[k][i].numGrouped,
-                        availItems: filterData[k][i].availItems,
-                        extendedInfo: v.extendedInfo
-                    };
+    private filterWholeSelection(state:TextTypesModelState, filterData:SelectionFilterMap) {
+        Dict.forEach(
+            (block, k) => {
+                this.removeOtherAttrValues(state, k, block.map(v => v.ident));
+                this.mapItems(
+                    state,
+                    k,
+                    (attrVal, i) => {
+                        if (block[i]) {
+                            return {
+                                ident: block[i].ident,
+                                value: block[i].v,
+                                selected: attrVal.selected,
+                                locked: attrVal.locked,
+                                numGrouped: block[i].numGrouped,
+                                availItems: block[i].availItems,
+                                extendedInfo: attrVal.extendedInfo
+                            };
 
-                } else {
-                    return null;
-                }
-            });
-            this.filter(k, (item) => item !== null);
+                        } else {
+                            return null;
+                        }
+                    }
+                );
+                this.filter(state, k, (item) => item !== null);
+            },
+            filterData
+        );
+    }
+
+    /**
+     * Remove values of attribute 'attrName' if the're not present in 'items'.
+     */
+    private removeOtherAttrValues(state:TextTypesModelState, attrName:string, items:Array<string>):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        if (attrIdx > -1) {
+            state.attributes[attrIdx] = TTSelOps.keepIfPresentIn(state.attributes[attrIdx], items);
         }
     }
 
-    private updateItems(attrName:string, items:Array<string>):void {
-        const attr = this.getAttribute(attrName);
-        const idx = this.attributes.indexOf(attr);
-        if (idx > -1) {
-            this.attributes = this.attributes.set(idx, attr.updateItems(items));
+    filter(
+        state:TextTypesModelState,
+        attrName:string,
+        fn:(v:TextTypes.AttributeValue)=>boolean
+    ):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        if (attrIdx > -1) {
+            state.attributes[attrIdx] = TTSelOps.filter(state.attributes[attrIdx], fn);
         }
     }
 
-    filter(attrName:string, fn:(v:TextTypes.AttributeValue)=>boolean):void {
-        const attr = this.getAttribute(attrName);
-        const idx = this.attributes.indexOf(attr);
-        if (idx > -1) {
-            this.attributes = this.attributes.set(idx, attr.filter(fn));
+    private mapItems(state:TextTypesModelState, attrName:string, mapFn:(v:TextTypes.AttributeValue,
+            i?:number)=>TextTypes.AttributeValue):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        if (attrIdx > -1) {
+            state.attributes[attrIdx] = TTSelOps.mapValues(state.attributes[attrIdx], mapFn);
         }
     }
 
-    mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):void {
-        const attr = this.getAttribute(attrName);
-        const idx = this.attributes.indexOf(attr);
-        if (idx > -1) {
-            const newAttr = attr.mapValues(mapFn);
-            this.attributes = this.attributes.set(idx, newAttr);
-        }
-    }
-
-    setValues(attrName:string, values:Array<string>):void {
-        const attr = this.getAttribute(attrName);
-        const idx = this.attributes.indexOf(attr);
-        const values2:Array<TextTypes.AttributeValue> = values.map((item:string) => {
-            return {
-                ident: item, // TODO what about bib items?
-                value: item,
-                selected: false,
-                locked: false,
-                numGrouped: 1 // TODO is it always OK here?
-            };
-        });
-        if (idx > -1) {
-            this.attributes = this.attributes.set(idx, attr.setValues(values2));
+    private setValues(state:TextTypesModelState, attrName:string, values:Array<string>):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        const values2:Array<TextTypes.AttributeValue> = values.map((item:string) => ({
+            ident: item, // TODO what about bib items?
+            value: item,
+            selected: false,
+            locked: false,
+            numGrouped: 1 // TODO is it always OK here?
+        }));
+        if (attrIdx > -1) {
+            state.attributes[attrIdx] = TTSelOps.setValues(state.attributes[attrIdx], values2);
 
         } else {
             throw new Error('Failed to find attribute ' + attrName);
@@ -722,48 +784,263 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
      * This applies only for TextInputAttributeSelection boxes. In other
      * cases the function has no effect.
      */
-    setAutoComplete(attrName:string, values:Array<TextTypes.AutoCompleteItem>):void {
-        const attr = this.getTextInputAttribute(attrName);
-        if (attr) {
-            let idx = this.attributes.indexOf(attr);
-            this.attributes = this.attributes.set(idx, attr.setAutoComplete(values));
+    setAutoComplete(
+        state:TextTypesModelState,
+        attrName:string,
+        values:Array<TextTypes.AutoCompleteItem>
+    ):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        if (attrIdx) {
+            state.attributes[attrIdx] = TTSelOps.setAutoComplete(state.attributes[attrIdx], values);
         }
     }
 
-    hasSelectedItems(attrName?:string):boolean {
+    private findHasSelectedItems(state:TextTypesModelState, attrName?:string):boolean {
         if (attrName !== undefined) {
-            const attr = this.getAttribute(attrName);
+            const attr = state.attributes.find((val) => val.name === attrName);
             if (attr) {
-                return attr.hasUserChanges();
+                return TTSelOps.hasUserChanges(attr);
 
             } else {
                 throw new Error('Failed to find attribute ' + attrName);
             }
 
         } else {
-            return this.getAttributes().some(item => item.hasUserChanges());
+            return this._getAttributes(state).some(item => TTSelOps.hasUserChanges(item));
         }
     }
 
+    /**
+     * Decode a string-encoded interval (e.g. 1900±50) into
+     * a pair of values specifying an interval (e.g. [1850, 1950])
+     */
+    private decodeRange(s:string):{lft:number, rgt:number} {
+        let center:number;
+        let ans:{lft:number; rgt:number};
+        let parsed:Array<string>;
+        let intervalChars = this.pluginApi.getConf<Array<string>>('ttIntervalChars');
+        let defines = (ic) => intervalChars[ic] && s.indexOf(intervalChars[ic]) > -1;
+
+
+        if (defines(IntervalChar.LEFT)) {
+            parsed = s.split(intervalChars[IntervalChar.LEFT]);
+            center = parseInt(parsed[0]);
+            ans = {
+                lft: center - parseInt(parsed[1]),
+                rgt: center
+            };
+
+        } else if (defines(IntervalChar.BOTH)) {
+            parsed = s.split(intervalChars[IntervalChar.BOTH]);
+            center = parseInt(parsed[0]);
+            ans = {
+                lft: center - parseInt(parsed[1]),
+                rgt: center + parseInt(parsed[1])
+            };
+
+        } else if (defines(IntervalChar.RIGHT)) {
+            parsed = s.split(intervalChars[IntervalChar.RIGHT]);
+            center = parseInt(parsed[0]);
+            ans = {
+                lft: center,
+                rgt: center + parseInt(parsed[1])
+            };
+
+        } else if (/^\d+$/.exec(s)) {
+            ans = {
+                lft: parseInt(s),
+                rgt: parseInt(s)
+            };
+
+        } else {
+            ans = null;
+        }
+        return ans;
+    }
+
+    private checkIntervalRange(
+        state:TextTypesModelState,
+        attribName:string,
+        fromVal:number,
+        toVal:number,
+        strictMode:boolean,
+        keepCurrent:boolean
+    ):void {
+
+        function isEmpty(v) {
+            return isNaN(v) || v === null || v === undefined;
+        }
+
+        if (isEmpty(fromVal) && isEmpty(toVal)) {
+            throw new Error(this.pluginApi.translate('ucnkLA__at_least_one_required'));
+        }
+
+        this.mapItems(state, attribName, (item:TextTypes.AttributeValue) => {
+            const newItem = {
+                ident: item.ident,
+                value: item.value,
+                locked: item.locked,
+                selected: item.selected,
+                numGrouped: item.numGrouped
+            };
+            const interval = this.decodeRange(item.value);
+            if (!interval) {
+                return newItem; // silently ignore non-expanded entries
+
+            } else {
+                let [lft, rgt] = [interval.lft, interval.rgt];
+                if (strictMode) {
+                    if ((lft >= fromVal && rgt >= fromVal && lft <= toVal && rgt <= toVal)
+                            || (lft <= toVal && rgt <= toVal && isEmpty(fromVal))
+                            || (lft >= fromVal && rgt >= fromVal && isEmpty(toVal))) {
+                        newItem.selected = true;
+
+                    } else if (!keepCurrent) {
+                        newItem.selected = false;
+                    }
+
+                } else {
+                    if ((lft >= fromVal && lft <= toVal)
+                            || (lft >= fromVal && isEmpty(toVal))
+                            || (rgt >= fromVal && isNaN(toVal))
+                            || (rgt >= fromVal && rgt <= toVal)
+                            || (lft <= toVal && isEmpty(fromVal))
+                            || (rgt <= toVal && isNaN(fromVal))) {
+                        newItem.selected = true;
+
+                    } else if (!keepCurrent) {
+                        newItem.selected = false;
+                    }
+                }
+                return newItem;
+            }
+        });
+    }
+
+    private isEmptyAttr(state:TextTypesModelState, attrName:string):boolean {
+        return !TTSelOps.containsFullList(this.getAttribute(state, attrName));
+    }
+
+    private loadAndReplaceRawInput(
+        state:TextTypesModelState,
+        attribName:string,
+        from:number,
+        to:number
+    ):Observable<Kontext.GeneralProps> {
+        let args:{[key:string]:any} = {};
+        args[attribName] = {from, to};
+        return this.loadData(args).pipe(
+            // TODO data type relies on liveattrs specific returned data
+            tap((data:{attr_values:{[key:string]:any}}) => {
+                this.setValues(state, attribName,
+                        data.attr_values[attribName].map(item=>item[0]));
+            }),
+            map((data) => data.attr_values)
+        );
+    }
+
+    /**
+     * @param attribArgs Custom attributes overwriting the implicit ones plug-in collects itself
+     * @param alignedCorpnames Optional list of aligned corpora
+     */
+    private loadData(
+        attribArgs:{[key:string]:any},
+        alignedCorpnames?:Array<string>
+    ):Observable<any> { // TODO type
+        const requestURL:string = this.pluginApi.createActionUrl('filter_attributes');
+        const args = {corpname: this.pluginApi.getCorpusIdent().id};
+
+        if (alignedCorpnames !== undefined) {
+            args['aligned'] = JSON.stringify(alignedCorpnames);
+        }
+
+        const attrs = this.exportSelections(false);
+        for (let p in attribArgs) {
+            attrs[p] = attribArgs[p];
+        }
+        args['attrs'] = JSON.stringify(attrs);
+
+        return this.pluginApi.ajax$(
+            HTTP.Method.GET,
+            requestURL,
+            args
+        );
+    }
+
+    _applyRange(
+        state:TextTypesModelState,
+        attrName:string,
+        fromVal:number,
+        toVal:number,
+        strictInterval:boolean,
+        keepCurrent:boolean
+    ):Observable<AnyTTSelection> {
+
+        if (isNaN(fromVal) && isNaN(toVal)) {
+            this.pluginApi.showMessage('warning',
+                    this.pluginApi.translate('ucnkLA__at_least_one_required'));
+            return rxOf(this.getAttribute(state, attrName));
+
+        } else {
+            return (this.isEmptyAttr(state, attrName) ?
+                this.loadAndReplaceRawInput(state, attrName, fromVal, toVal) :
+                rxOf(null)
+            ).pipe(
+                map(() => this.getAttribute(state, attrName)),
+                tap(() => {
+                    this.checkIntervalRange(
+                        state, attrName, fromVal, toVal, strictInterval, keepCurrent);
+                }),
+                map(currSelection => tuple(currSelection, this.getAttribute(state, attrName))),
+                tap(([currSelection, updatedSelection]) => {
+                    if (TTSelOps.getNumOfSelectedItems(currSelection) ===
+                            TTSelOps.getNumOfSelectedItems(updatedSelection)) {
+                        this.pluginApi.showMessage(
+                            'warning',
+                            this.pluginApi.translate('ucnkLA__nothing_selected')
+                        );
+
+                    } else {
+                        state.rangeModeStatus[attrName] = false;
+                    }
+                }),
+                map(([,updatedSelection]) => updatedSelection)
+            );
+        }
+    }
+
+    hasSelectedItems(attrName?:string):boolean {
+        return this.findHasSelectedItems(this.state, attrName);
+    }
+
     usesAdHocSubcorpus():boolean {
-        return this.hasSelectedItems();
+        return this.findHasSelectedItems(this.state);
     }
 
-    getAttributesWithSelectedItems(includeLocked:boolean):Array<string> {
-        return this.attributes.filter((item:TextTypes.AttributeSelection) => {
-            return item.hasUserChanges() && (!item.isLocked() || includeLocked);
-        }).map((item:TextTypes.AttributeSelection)=>item.name).toArray();
+    private getAttributesWithSelectedItems(state:TextTypesModelState, includeLocked:boolean):Array<string> {
+        return pipe(
+            state.attributes,
+            List.filter(
+                (item:AnyTTSelection) => TTSelOps.hasUserChanges(item) &&
+                    (!TTSelOps.isLocked(item) || includeLocked)
+            ),
+            List.map((item:AnyTTSelection)=>item.name)
+        );
     }
 
-    getAttrSummary():Immutable.Map<string, TextTypes.AttrSummary> {
-        return this.metaInfo;
+    getAttrSummary():{[key:string]:TextTypes.AttrSummary} {
+        return this.state.metaInfo;
     }
 
-    setExtendedInfo(attrName:string, ident:string, data:Immutable.Map<string, string|number>):void {
-        let attr = this.getAttribute(attrName);
-        if (attrName) {
-            let attrIdx = this.attributes.indexOf(attr);
-            this.attributes = this.attributes.set(attrIdx, attr.setExtendedInfo(ident, data));
+    setExtendedInfo(
+        state:TextTypesModelState,
+        attrName:string,
+        ident:string,
+        data:{[key:string]:string|number}
+    ):void {
+        const attrIdx = this.getAttributeIdx(state, attrName);
+        if (attrIdx > -1) {
+            state.attributes[attrIdx] = TTSelOps.setExtendedInfo(state.attributes[attrIdx], ident, data);
 
         } else {
             throw new Error('Failed to find attribute ' + attrName);
@@ -771,38 +1048,19 @@ export class TextTypesModel extends StatefulModel implements TextTypes.ITextType
     }
 
     setTextInputPlaceholder(s:string):void {
-        this.textInputPlaceholder = s;
+        this.changeState(state => {
+            state.textInputPlaceholder = s;
+        });
     }
 
     getTextInputPlaceholder():string {
-        return this.textInputPlaceholder;
+        return this.state.textInputPlaceholder;
     }
 
     setRangeMode(attrName:string, rangeIsOn:boolean) {
-        this.rangeSelector.setRangeMode(attrName, rangeIsOn);
+        this.changeState(state => {
+            state.rangeModeStatus[attrName] = rangeIsOn;
+        });
     }
 
-    getRangeModes():Immutable.Map<string, boolean> {
-        return this.rangeSelector.getRangeModes();
-    }
-
-    isBusy():boolean {
-        return this._isBusy;
-    }
-
-    getMiminimizedBoxes():Immutable.Map<string, boolean> {
-        return this.minimizedBoxes;
-    }
-
-    hasSomeMaximizedBoxes():boolean {
-        return this.minimizedBoxes.find(v => v === false) !== undefined;
-    }
-
-    getBibIdAttr():string {
-        return this.bibIdAttr;
-    }
-
-    getBibLabelAttr():string {
-        return this.bibLabelAttr;
-    }
 }

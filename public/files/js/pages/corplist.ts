@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import corparch from 'plugins/corparch/init';
+import { Kontext } from '../types/common';
 import { KontextPage } from '../app/main';
+import corparch from 'plugins/corparch/init';
 
 declare var require:any;
  // weback - ensure a style (even empty one) is created for the page
@@ -29,8 +29,9 @@ require('styles/corplist.less');
  */
 export function init(conf:Kontext.Conf, corplistData:any):void {
     const layoutModel = new KontextPage(conf);
-    layoutModel.init(() => {
-        const pagePlugin = corparch(layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
+    layoutModel.init(true, [], () => {
+        const pagePlugin = corparch(
+            layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
         layoutModel.renderReactComponent(
             pagePlugin.getForm(),
             <HTMLElement>document.getElementById('content').querySelector('form.filter'),

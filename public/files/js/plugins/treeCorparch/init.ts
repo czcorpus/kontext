@@ -16,137 +16,172 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf, Observable } from 'rxjs';
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {StatefulModel} from '../../models/base';
-import * as Immutable from 'immutable';
-import {init as viewInit, Views as TreeCorparchViews} from './view';
-import {FirstQueryFormModel} from '../../models/query/first';
-import { Action } from 'kombo';
-import { Subscription } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { throwError } from 'rxjs';
+import { Kontext } from '../../types/common';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { init as viewInit, Views as TreeCorparchViews } from './view';
+import { StatelessModel, SEDispatcher } from 'kombo';
+import { map } from 'rxjs/operators';
+import { ActionName, Actions } from './actions';
+import { List, HTTP } from 'cnc-tskit';
+import { IUnregistrable } from '../../models/common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName }
+    from '../../models/common/actions';
 
 declare var require:any;
 require('./style.less'); // webpack
 
 
 export interface Node {
-    active: boolean;
     name: string;
     ident?: string;
-    corplist?: Immutable.List<Node>
-}
-
-export interface TreeResponseNode {
-    name:string;
-    ident?:string;
-    corplist:Array<TreeResponseNode>;
+    corplist?: Array<Node>
 }
 
 export interface TreeResponseData extends Kontext.AjaxResponse {
-    corplist:Array<TreeResponseNode>;
+    corplist:Array<Node>;
+}
+
+export interface TreeWidgetModelState {
+    active:boolean;
+    corpusIdent:Kontext.FullCorpusIdent;
+    data:Node;
+    nodeActive:{[key:string]:boolean};
 }
 
 /**
  *
  */
-export class TreeWidgetModel extends StatefulModel {
-
-    static DispatchToken:string;
+export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
+    implements IUnregistrable {
 
     protected pluginApi:IPluginApi;
 
-    private data:Node;
-
-    private idMap:Immutable.Map<string, Node>;
-
-    private widgetId:number;
-
-    private corpusClickHandler:Kontext.CorplistItemClick;
-
-    private corpusIdent:Kontext.FullCorpusIdent;
-
-    private queryModel:PluginInterfaces.Corparch.ICorpSelection;
+    private corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick;
 
     constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
-                queryModel:PluginInterfaces.Corparch.ICorpSelection, corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
-        super(pluginApi.dispatcher());
+                corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick) {
+        super(
+            pluginApi.dispatcher(),
+            {
+                active: false,
+                corpusIdent,
+                data: null,
+                nodeActive: {}
+            }
+        );
         this.pluginApi = pluginApi;
-        this.corpusIdent = corpusIdent;
-        this.queryModel = queryModel;
         this.corpusClickHandler = corpusClickHandler;
-        this.idMap = Immutable.Map<string, Node>();
-        this.dispatcherRegister((action:Action) => {
-                switch (action.name) {
-                    case 'TREE_CORPARCH_SET_NODE_STATUS':
-                        let item = this.idMap.get(action.payload['nodeId']);
-                        item.active = !item.active;
-                        this.emitChange();
-                    break;
-                    case 'TREE_CORPARCH_GET_DATA':
-                        this.loadData().subscribe(
-                            (_) => this.emitChange(),
-                            (err) => {
-                                this.pluginApi.showMessage('error', err);
-                            }
-                        );
-                    break;
-                    case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
-                        this.corpusClickHandler(
-                            [action.payload['ident']],
-                            this.queryModel.getCurrentSubcorpus()
-                        );
-                    break;
-                }
+
+        this.addActionHandler<Actions.SetNodeStatus>(
+            ActionName.SetNodeStatus,
+            (state, action) => {
+                state.nodeActive[action.payload.nodeId] = !state.nodeActive[action.payload.nodeId];
+            }
+        );
+
+        this.addActionHandler<Actions.Deactivate>(
+            ActionName.Deactivate,
+            (state, action) => {state.active = false;},
+        );
+
+        this.addActionHandler<Actions.GetData>(
+            ActionName.GetData,
+            (state, action) => {},
+            (state, action, dispatch) => this.loadData(state, dispatch)
+        );
+
+        this.addActionHandler<Actions.GetDataDone>(
+            ActionName.GetDataDone,
+            (state, action) => {
+                state.active = true;
+                state.data = action.payload.node;
+                state.nodeActive = action.payload.nodeActive;
+            }
+        );
+
+        this.addActionHandler<Actions.LeafNodeClicked>(
+            ActionName.LeafNodeClicked,
+            (state, action) => {
+                this.corpusClickHandler(
+                    [action.payload.ident],
+                    this.pluginApi.getCorpusIdent().usesubcorp
+                );
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
             }
         );
     }
 
-    private importTree(rootNode:TreeResponseNode, nodeId:string='a'):Node {
+    private importTree(
+        nodeActive:{[key:string]:boolean},
+        rootNode:Node, nodeId:string='a'
+    ):{node:Node, nodeActive:{[key:string]:boolean}} {
+
         const node = {
-            active: false,
             name: rootNode.name,
             ident: rootNode.ident,
-            corplist: Immutable.List<Node>()
+            corplist: []
         };
-        this.idMap = this.idMap.set(nodeId, node);
         if (rootNode.corplist) {
             node.ident = nodeId;
-            this.idMap = this.idMap.set(nodeId, node);
-            node.corplist = Immutable.List<Node>(
-                rootNode.corplist.map((node, i) => this.importTree(node, nodeId + '.' + String(i))));
+            node.corplist = List.map((node, i) =>
+                this.importTree(
+                    nodeActive,
+                    node,
+                    nodeId + '.' + String(i)
+                ).node,
+                rootNode.corplist
+            );
         }
-        return node;
+        nodeActive[node.ident] = false;
+        return {node, nodeActive};
+    }
+
+    getRegistrationId():string {
+        return 'tree-corparch-model';
     }
 
     dumpNode(rootNode:Node):void {
-        if (rootNode['corplist']) {
-            rootNode['corplist'].forEach((item) => this.dumpNode(item));
+        if (rootNode.corplist) {
+            rootNode.corplist.forEach((item) => this.dumpNode(item));
         }
     }
 
-    loadData():Observable<any> {
+    loadData(state:TreeWidgetModelState, dispatch:SEDispatcher) {
         return this.pluginApi.ajax$<any>(
-            'GET',
+            HTTP.Method.GET,
             this.pluginApi.createActionUrl('corpora/ajax_get_corptree_data'),
             {}
 
         ).pipe(
-            tap((data) => {
-                if (!data.containsErrors) {
-                    this.data = this.importTree(data);
+            map((data) => {
+                if (data.containsErrors) {
+                    throw throwError('Data contain error');
+
+                } else {
+                    return this.importTree({}, data);
                 }
             })
+        ).subscribe(
+            next => dispatch<Actions.GetDataDone>({
+                name: ActionName.GetDataDone,
+                payload: next
+            }),
+            err => this.pluginApi.showMessage('error', err)
         );
-    }
-
-    getData():Node {
-        return this.data;
-    }
-
-    getCurrentCorpusIdent():Kontext.FullCorpusIdent {
-        return this.corpusIdent;
     }
 }
 
@@ -159,17 +194,14 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
 
     private viewsLib:TreeCorparchViews;
 
-    private queryModel:PluginInterfaces.Corparch.ICorpSelection;
-
-    constructor(pluginApi:IPluginApi, queryModel:PluginInterfaces.Corparch.ICorpSelection) {
+    constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
-        this.queryModel = queryModel;
         this.treeModel = new TreeWidgetModel(
             pluginApi,
             pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            queryModel,
             (corpora:Array<string>, subcorpId:string) => {
-                window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpora[0]);
+                window.location.href = pluginApi.createActionUrl(
+                    'first_form?corpname=' + corpora[0]);
                 return null; // just to keep the type check cool
             }
         );
@@ -180,9 +212,6 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
         );
     }
 
-    setData(data:any):void {
-    }
-
     getForm():React.SFC<{}> {
         return this.viewsLib.FilterPageComponent;
     }
@@ -190,40 +219,6 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
     getList():React.ComponentClass {
         return this.viewsLib.CorptreePageComponent;
     }
-}
-
-
-class DummyQueryModel implements PluginInterfaces.Corparch.ICorpSelection {
-
-    getCurrentSubcorpus():string {
-        return null;
-    }
-
-    getCurrentSubcorpusOrigName():string {
-        return null;
-    }
-
-    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
-        return Immutable.List<Kontext.SubcorpListItem>();
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return Immutable.List<Kontext.AttrItem>();
-    }
-
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>();
-    }
-
-    getIsForeignSubcorpus():boolean {
-        return false;
-    }
-
-    addListener(fn:()=>void):Subscription {
-        return rxOf({}).subscribe(fn);
-    }
-
-    emitChange(eventType?:string, error?:Error):void {}
 }
 
 
@@ -246,11 +241,10 @@ class Plugin {
      * @param targetAction - ignored here
      * @param options A configuration of the widget
      */
-    createWidget(targetAction:string, queryModel:FirstQueryFormModel, options:Kontext.GeneralProps):React.ComponentClass {
+    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass {
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,
             this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-            queryModel,
             options.itemClickAction
         );
         return viewInit(
@@ -260,12 +254,16 @@ class Plugin {
         ).CorptreeWidget;
     }
 
-    disposeWidget():void {
+    unregister():void {
         this.treeModel.unregister();
     }
 
+    getRegistrationId():string {
+        return this.treeModel.getRegistrationId();
+    }
+
     initCorplistPageComponents():CorplistPage {
-        return new CorplistPage(this.pluginApi, new DummyQueryModel());
+        return new CorplistPage(this.pluginApi);
     }
 }
 

@@ -16,18 +16,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext, KeyCodes} from '../types/common';
-import {CoreViews} from '../types/coreViews';
+import { Keyboard, Client, List } from 'cnc-tskit';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {IActionDispatcher} from 'kombo';
-import {isTouchDevice} from '../multidict';
-import {MessageModel, MessageModelState} from '../models/common/layout';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+
+import { Kontext } from '../types/common';
+import { CoreViews } from '../types/coreViews';
+import { MessageModel, MessageModelState} from '../models/common/layout';
+import { Actions, ActionName } from '../models/common/actions';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
-    if (isTouchDevice()) {
+    if (Client.isMobileTouchDevice()) {
         return window.innerWidth;
 
     } else if (val === CoreViews.AutoWidth.NARROW) {
@@ -96,7 +97,7 @@ export function init(
         }
 
         _keyPressHandler(evt) {
-            if (evt.keyCode === KeyCodes.ESC && typeof this.props.onCloseKey === 'function') {
+            if (evt.keyCode === Keyboard.Code.ESC && typeof this.props.onCloseKey === 'function') {
                 this.props.onCloseKey();
             }
         }
@@ -222,7 +223,7 @@ export function init(
         }
 
         _handleKeyPress(evt:React.KeyboardEvent) {
-            if (evt.keyCode === KeyCodes.ESC) {
+            if (evt.keyCode === Keyboard.Code.ESC) {
                  this._closeClickHandler();
                  evt.stopPropagation();
             }
@@ -498,8 +499,8 @@ export function init(
 
         const handleCloseClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                name: 'MESSAGE_CLOSED',
+            dispatcher.dispatch<Actions.MessageClose>({
+                name: ActionName.MessageClose,
                 payload: {
                     messageId: props.messageId
                 }
@@ -547,55 +548,28 @@ export function init(
                 {props.children}
             </div>
         );
-    }
+    };
 
     // ------------------------------ <Messages /> -----------------------------
 
-    class Messages extends React.Component<CoreViews.Messages.Props, MessageModelState> {
+    const Messages:React.SFC<CoreViews.Messages.Props & MessageModelState> = (props) => (
 
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._changeListener = this._changeListener.bind(this);
-            this.state = messageModel.getState();
-        }
-
-        _changeListener(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = messageModel.addListener(this._changeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            if (this.state.messages.size > 0) {
-                return (
-                    <div className="messages">
-                        {this.state.messages.map((item, i) => (
-                            <Message key={`msg:${i}`} {...item} />
-                        ))}
-                    </div>
-                );
-
-            } else {
-                return null;
-            }
-        }
-    }
+        List.empty(props.messages) ?
+            null :
+            <div className="messages">
+                {props.messages.map((item, i) => (
+                    <Message key={`msg:${i}`} {...item} />
+                ))}
+            </div>
+    );
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
     const CorpnameInfoTrigger:React.SFC<CoreViews.CorpnameInfoTrigger.Props> = (props) => {
 
         const handleCorpnameClick = () => {
-            dispatcher.dispatch({
-                name: 'OVERVIEW_CORPUS_INFO_REQUIRED',
+            dispatcher.dispatch<Actions.OverviewCorpusInfoRequired>({
+                name: ActionName.OverviewCorpusInfoRequired,
                 payload: {
                     corpusId: props.corpname
                 }
@@ -603,8 +577,8 @@ export function init(
         };
 
         const handleSubcnameClick = () => {
-            dispatcher.dispatch({
-                name: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
+            dispatcher.dispatch<Actions.OverviewShowSubcorpusInfo>({
+                name: ActionName.OverviewShowSubcorpusInfo,
                 payload: {
                     corpusId: props.corpname,
                     subcorpusId: props.usesubcorp
@@ -727,7 +701,7 @@ export function init(
         </span>;
     };
 
-    // ------------------------------------------------------------------------------------
+    // ----------------------- <TabButton /> ------------------------------------------------------
 
     /**
      * This button is used along with [ul.tabs li] as a tab-like sub-forms and control
@@ -744,8 +718,10 @@ export function init(
             </span>;
     };
 
+    // ----------------- <TabView /> ---------------------------------------------
+
     const TabView:CoreViews.TabView.Component = (props) => {
-        if (props.items.size === 1) {
+        if (props.items.length === 1) {
             return <div>{props.children[0]}</div>
         } else {
             const [activeIndex, setActiveIndex] = React.useState(props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);
@@ -790,7 +766,7 @@ export function init(
         CloseableFrame: CloseableFrame,
         InlineHelp: InlineHelp,
         Abbreviation: Abbreviation,
-        Messages: Messages,
+        Messages: BoundWithProps<CoreViews.Message.Props, MessageModelState>(Messages, messageModel),
         CorpnameInfoTrigger: CorpnameInfoTrigger,
         ImgWithHighlight: ImgWithHighlight,
         ImgWithMouseover: ImgWithMouseover,

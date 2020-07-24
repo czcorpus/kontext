@@ -19,35 +19,23 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import { LineSelectionModel } from '../../models/concordance/lineSelection';
-import { Subscription } from 'rxjs';
-
-
-export interface LineBinarySelectionMenuProps {
-
-}
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Kontext } from '../../types/common';
+import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
+import { ActionName, Actions } from '../../models/concordance/actions';
+import { ActionName as UserActionName, Actions as UserActions } from '../../models/user/actions';
+import { LineSelectionModes, DrawLineSelectionChart } from '../../models/concordance/common';
 
 
 export interface LockedLineGroupsMenuProps {
+    corpusId:string;
     canSendEmail:boolean;
-    mode:string; // TODO enum
-    chartCallback:(v:boolean)=>void;
+    mode:LineSelectionModes;
+    onChartFrameReady:DrawLineSelectionChart;
 }
-
-
-interface LockedLineGroupsMenuState {
-    emailDialogCredentials:Kontext.UserCredentials;
-    renameLabelDialog:boolean;
-    email:string;
-    waiting:boolean;
-    lastCheckpointUrl:string;
-}
-
 
 export interface LineSelectionViews {
-    LineBinarySelectionMenu:React.ComponentClass<LineBinarySelectionMenuProps>;
+    UnsavedLineSelectionMenu:React.SFC<{mode:LineSelectionModes; isBusy:boolean}>;
     LockedLineGroupsMenu:React.ComponentClass<LockedLineGroupsMenuProps>;
 }
 
@@ -92,101 +80,67 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ----------------------------- <LineBinarySelectionMenu /> --------------------------
+    // ----------------------------- <UnsavedLineSelectionMenu /> --------------------------
 
-    class LineBinarySelectionMenu extends React.Component<{
-        mode:string;
-    },
-    {
-        mode:string;
-        waiting:boolean;
-    }> {
+    const UnsavedLineSelectionMenu:React.SFC<{mode:LineSelectionModes; isBusy:boolean}> = (props) => {
 
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._changeHandler = this._changeHandler.bind(this);
-            this._actionChangeHandler = this._actionChangeHandler.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                mode: lineSelectionModel.getMode(),
-                waiting: lineSelectionModel.isBusy()
-            };
-        }
-
-        _changeHandler() {
-            if (this.props.mode === 'simple') { // prevent unmounted component update
-                this.setState(this._fetchModelState());
+        const actionChangeHandler = (evt:React.ChangeEvent<{value:string}>) => {
+            switch (evt.target.value) {
+                case 'clear':
+                    dispatcher.dispatch<Actions.LineSelectionReset>({
+                        name: ActionName.LineSelectionReset
+                    });
+                break;
+                case 'remove':
+                    dispatcher.dispatch<Actions.RemoveSelectedLines>({
+                        name: ActionName.RemoveSelectedLines
+                    });
+                break;
+                case 'remove_inverted':
+                    dispatcher.dispatch<Actions.RemoveNonSelectedLines>({
+                        name: ActionName.RemoveNonSelectedLines
+                    });
+                break;
+                case 'apply':
+                    dispatcher.dispatch<Actions.MarkLines>({
+                        name: ActionName.MarkLines
+                    });
+                break;
             }
+        };
+
+        let switchComponent = null;
+        if (props.mode === 'simple') {
+            switchComponent = <SimpleSelectionModeSwitch initialAction="-"
+                                switchHandler={actionChangeHandler} />;
+
+        } else if (props.mode === 'groups') {
+            switchComponent = <GroupsSelectionModelSwitch initialAction="-"
+                                switchHandler={actionChangeHandler} />;
         }
 
-        _actionChangeHandler(evt:React.ChangeEvent<{value:string}>) {
-            const actionMap = {
-                clear: 'LINE_SELECTION_RESET',
-                remove: 'LINE_SELECTION_REMOVE_LINES',
-                remove_inverted: 'LINE_SELECTION_REMOVE_OTHER_LINES',
-                apply: 'LINE_SELECTION_MARK_LINES'
-            };
-            const eventId = actionMap[evt.target.value] || null;
+        let heading;
+        if (props.mode === 'simple') {
+            heading = he.translate('linesel__unsaved_line_selection_heading');
 
-            if (eventId) {
-                dispatcher.dispatch({
-                    name: eventId,
-                    payload: {}
-                });
-            }
+        } else if (props.mode === 'groups') {
+            heading = he.translate('linesel__unsaved_line_groups_heading');
         }
 
-        componentDidMount() {
-            this.modelSubscription = lineSelectionModel.addListener(this._changeHandler);
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_STATUS_REQUEST',
-                payload: {}
-            });
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            let switchComponent = null;
-            if (this.state.mode === 'simple') {
-                switchComponent = <SimpleSelectionModeSwitch initialAction="-"
-                                    switchHandler={this._actionChangeHandler} />;
-
-            } else if (this.state.mode === 'groups') {
-                switchComponent = <GroupsSelectionModelSwitch initialAction="-"
-                                    switchHandler={this._actionChangeHandler} />;
-            }
-
-            let heading;
-            if (this.state.mode === 'simple') {
-                heading = he.translate('linesel__unsaved_line_selection_heading');
-
-            } else if (this.state.mode === 'groups') {
-                heading = he.translate('linesel__unsaved_line_groups_heading');
-            }
-
-            return (
-                <div id="selection-actions">
-                    <h3>{heading}</h3>
-                    {he.translate('global__actions')}:{'\u00A0'}
-                    {switchComponent}
-                    {this.state.waiting ?
-                        <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={he.translate('global__loading')} />
-                        : null}
-                    {this.state.mode === 'groups' ?
-                        <p style={{marginTop: '1em'}}>({he.translate('linesel__no_ops_after_groups_save_info')}.)</p> : null}
-                </div>
-            );
-        }
-    }
+        return (
+            <div id="selection-actions">
+                <h3>{heading}</h3>
+                {he.translate('global__actions')}:{'\u00A0'}
+                {switchComponent}
+                {props.isBusy ?
+                    <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                            title={he.translate('global__loading')} />
+                    : null}
+                {props.mode === 'groups' ?
+                    <p style={{marginTop: '1em'}}>({he.translate('linesel__no_ops_after_groups_save_info')}.)</p> : null}
+            </div>
+        );
+    };
 
     // --------------------------- <EmailDialog /> ----------------------------
 
@@ -240,8 +194,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         _handleConfirmClick() {
             const newState = he.cloneState(this.state);
             this.setState(newState);
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_GROUP_RENAME',
+            dispatcher.dispatch<Actions.RenameSelectionGroup>({
+                name: ActionName.RenameSelectionGroup,
                 payload: {
                     srcGroupNum: Number(this.state.srcGroupNum),
                     dstGroupNum: this.state.dstGroupNum ? Number(this.state.dstGroupNum) : -1
@@ -351,137 +305,116 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ----------------------------- <LockedLineGroupsChart /> -----------------------------
+
+    const LockedLineGroupsChart:React.SFC<{
+        corpusId:string;
+        onReady:DrawLineSelectionChart;
+
+    }> = (props) => {
+
+        const ref = React.useRef(null);
+        React.useEffect(
+            () => {
+                if (ref.current) {
+                    const width = ref.current.getBoundingClientRect().width;
+                    const height = ref.current.getBoundingClientRect().height;
+                    props.onReady(ref.current, props.corpusId, [width, height]);
+                }
+            },
+            []
+        );
+
+        return (
+            <fieldset className="chart-area" ref={ref}>
+                {ref.current ?
+                    null :
+                    <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                        title={he.translate('global__loading')} />
+                }
+            </fieldset>
+        );
+    };
+
 
     // ----------------------------- <LockedLineGroupsMenu /> ------------------------------
 
-    class LockedLineGroupsMenu extends React.Component<LockedLineGroupsMenuProps, LockedLineGroupsMenuState> {
-
-        private modelSubscription:Subscription;
+    class LockedLineGroupsMenu extends React.Component<LockedLineGroupsMenuProps & LineSelectionModelState> {
 
         constructor(props) {
             super(props);
-            this._changeHandler = this._changeHandler.bind(this);
             this._actionSwitchHandler = this._actionSwitchHandler.bind(this);
             this._handleEmailDialogButton = this._handleEmailDialogButton.bind(this);
             this._emailChangeHandler = this._emailChangeHandler.bind(this);
-            this._handleRenameCancel = this._handleRenameCancel.bind(this);
             this._handleDialogShowClick = this._handleDialogShowClick.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            const userCreds = lineSelectionModel.getEmailDialogCredentials();
-            return {
-                emailDialogCredentials: userCreds,
-                renameLabelDialog: false,
-                email: userCreds ? userCreds.email : '',
-                waiting: lineSelectionModel.isBusy(),
-                lastCheckpointUrl: lineSelectionModel.getLastCheckpointUrl()
-            };
-        }
-
-        _changeHandler() {
-            if (this.props.mode === 'groups') { // prevent unmounted component update
-                this.setState(this._fetchModelState());
-            }
         }
 
         _actionSwitchHandler(evt) {
             switch (evt.target.value) {
                 case 'edit-groups':
-                    const newState1 = he.cloneState(this.state);
-                    newState1.waiting = true;
-                    this.setState(newState1);
-                    dispatcher.dispatch({
-                        name: 'LINE_SELECTION_REENABLE_EDIT',
-                        payload: {}
+                    dispatcher.dispatch<Actions.UnlockLineSelection>({
+                        name: ActionName.UnlockLineSelection
                     });
                     break;
                 case 'sort-groups':
-                    dispatcher.dispatch({
-                        name: 'LINE_SELECTION_SORT_LINES',
-                        payload: {}
+                    dispatcher.dispatch<Actions.SortLineSelection>({
+                        name: ActionName.SortLineSelection
                     });
                     break;
                 case 'clear-groups':
-                    dispatcher.dispatch({
-                        name: 'LINE_SELECTION_RESET_ON_SERVER',
-                        payload: {}
+                    dispatcher.dispatch<Actions.LineSelectionResetOnServer>({
+                        name: ActionName.LineSelectionResetOnServer
                     });
                     break;
                 case 'remove-other-lines':
-                    dispatcher.dispatch({
-                        name: 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
-                        payload: {}
+                    dispatcher.dispatch<Actions.RemoveLinesNotInGroups>({
+                        name: ActionName.RemoveLinesNotInGroups
                     });
                     break;
                 case 'rename-group-label':
-                    const newState2 = he.cloneState(this.state);
-                    newState2.renameLabelDialog = true;
-                    this.setState(newState2);
+                    dispatcher.dispatch<Actions.ToggleLineGroupRenameForm>({
+                        name: ActionName.ToggleLineGroupRenameForm
+                    });
                     break;
             }
         }
 
         _handleEmailDialogButton(evt:React.FormEvent<{value:string}>) {
             if (evt.currentTarget.value === 'cancel') {
-                dispatcher.dispatch({
-                    name: 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
+                dispatcher.dispatch<Actions.ClearUserCredentials>({
+                    name: ActionName.ClearUserCredentials,
                     payload: {}
                 });
 
             } else if (evt.currentTarget.value === 'send') {
-                dispatcher.dispatch({
-                    name: 'LINE_SELECTION_SEND_URL_TO_EMAIL',
+                dispatcher.dispatch<Actions.SendLineSelectionToEmail>({
+                    name: ActionName.SendLineSelectionToEmail,
                     payload: {
-                        email: this.state.email
+                        email: this.props.emailDialogCredentials.email
                     }
                 })
             }
         }
 
         _emailChangeHandler(evt:React.ChangeEvent<{value:string}>) {
-            const newState = he.cloneState(this.state);
-            newState.email = evt.target.value;
-            this.setState(newState);
+            dispatcher.dispatch<Actions.ChangeEmail>({
+                name: ActionName.ChangeEmail,
+                payload: {
+                    email: evt.target.value
+                }
+            });
         }
 
         _handleDialogShowClick(evt:React.MouseEvent<{}>) {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_LOAD_USER_CREDENTIALS',
-                payload: {}
+            dispatcher.dispatch<UserActions.UserInfoRequested>({
+                name: UserActionName.UserInfoRequested
             });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = lineSelectionModel.addListener(this._changeHandler);
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_STATUS_REQUEST',
-                payload: {
-                    email: this.state.email
-                }
-            });
-            if (typeof this.props.chartCallback === 'function') {
-                this.props.chartCallback(false);
-            }
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        componentDidUpdate(prevProps, prevState) {
-            // we must inform non-react chart building function to redraw d3 charts
-            if (typeof this.props.chartCallback === 'function'
-                    && prevState.lastCheckpointUrl !== this.state.lastCheckpointUrl) {
-                this.props.chartCallback(false); // = false => do not use prev data
-            }
         }
 
         _handleRenameCancel() {
-            const newState = he.cloneState(this.state);
-            newState.renameLabelDialog = false;
-            this.setState(newState);
+            dispatcher.dispatch<Actions.ToggleLineGroupRenameForm>({
+                name: ActionName.ToggleLineGroupRenameForm
+            });
         }
 
         render() {
@@ -489,18 +422,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <div id="selection-actions">
                     <h3>{he.translate('linesel__saved_line_groups_heading')}</h3>
 
-                    {this.state.renameLabelDialog ?
+                    {this.props.renameLabelDialogVisible ?
                         <RenameLabelPanel handleCancel={this._handleRenameCancel} /> :
-                        <ActionSwitch waiting={this.state.waiting} changeHandler={this._actionSwitchHandler} />}
+                        <ActionSwitch waiting={this.props.isBusy} changeHandler={this._actionSwitchHandler} />}
 
-                    <fieldset className="chart-area">
-                        <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={he.translate('global__loading')} />
-                    </fieldset>
+                    <LockedLineGroupsChart onReady={this.props.onChartFrameReady} corpusId={this.props.corpusId} />
 
                     <SelectionLinkAndTools
-                            lastCheckpointUrl={this.state.lastCheckpointUrl}
-                            emailDialogCredentials={this.state.emailDialogCredentials}
+                            lastCheckpointUrl={this.props.lastCheckpointUrl}
+                            emailDialogCredentials={this.props.emailDialogCredentials}
                             canSendEmail={this.props.canSendEmail}
                             handleEmailDialogButton={this._handleEmailDialogButton}
                             handleDialogShowClick={this._handleDialogShowClick}
@@ -510,8 +440,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
+    const BoundLockedLineGroupsMenu = BoundWithProps<LockedLineGroupsMenuProps, LineSelectionModelState>(LockedLineGroupsMenu, lineSelectionModel);
+
     return {
-        LineBinarySelectionMenu: LineBinarySelectionMenu,
-        LockedLineGroupsMenu: LockedLineGroupsMenu
+        UnsavedLineSelectionMenu: UnsavedLineSelectionMenu,
+        LockedLineGroupsMenu: BoundLockedLineGroupsMenu
     };
 }

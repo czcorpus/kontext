@@ -19,12 +19,15 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
-import { ConcLineModel } from '../../models/concordance/lines';
-import {TextChunk} from '../../types/concordance';
-import {LineSelValue} from '../../models/concordance/lineSelection';
-import {init as initMediaViews} from './media';
+import { IActionDispatcher } from 'kombo';
+
+import { Kontext } from '../../types/common';
+import { ConcordanceModel } from '../../models/concordance/main';
+import { TextChunk } from '../../types/concordance';
+import { ConcLinesStorage } from '../../models/concordance/selectionStorage';
+import { init as initMediaViews } from './media';
+import { Actions, ActionName } from '../../models/concordance/actions'
+import { LineSelectionModes } from '../../models/concordance/common';
 
 
 export interface LineExtrasViews {
@@ -37,17 +40,18 @@ export interface LineExtrasViews {
 
     TdLineSelection:React.SFC<{
         lockedGroupId:number;
-        mode:string; // TODO enum
-        lineNumber:number;
+        groupId:number;
+        groupColor:string;
+        groupTextColor:string;
+        mode:LineSelectionModes;
         tokenNumber:number;
         kwicLength:number;
-        selectionValue:LineSelValue;
-        catTextColor:string;
-        catBgColor:string;
+        isEditLocked:boolean;
     }>;
 
     SyntaxTreeButton:React.SFC<{
-        onSyntaxViewClick:()=>void;
+        tokenNumber:number;
+        kwicLength:number;
     }>;
 
     RefInfo:React.SFC<{
@@ -61,7 +65,7 @@ export interface LineExtrasViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcordanceModel) {
 
     const mediaViews = initMediaViews(dispatcher, he, lineModel);
     const layoutViews = he.getLayoutViews();
@@ -76,8 +80,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
+            dispatcher.dispatch<Actions.PlayAudioSegment>({
+                name: ActionName.PlayAudioSegment,
                 payload: {
                     chunksIds: props.chunks.map(v => v.id),
                 }
@@ -120,52 +124,49 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ------------------------- <LineSelCheckbox /> ---------------------------
 
     const LineSelCheckbox:React.SFC<{
-        lineNumber:number;
         tokenNumber:number;
         kwicLength:number;
-        selectionValue:LineSelValue;
+        groupId:number|undefined;
 
     }> = (props) => {
 
         const checkboxChangeHandler = (event) => {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_SELECT_LINE',
+            dispatcher.dispatch<Actions.SelectLines>({
+                name: ActionName.SelectLine,
                 payload: {
-                    value: event.currentTarget.checked ? 1 : null,
-                    lineNumber: props.lineNumber,
+                    value: event.currentTarget.checked ?
+                        ConcLinesStorage.DEFAULT_GROUP_ID : undefined,
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength
                 }
             });
         };
 
-        return <input type="checkbox" checked={props.selectionValue ? true : false}
+        return <input type="checkbox" checked={props.groupId !== undefined}
                         onChange={checkboxChangeHandler} />;
     };
 
     // ------------------------- <LineSelInput /> ---------------------------
 
     const LineSelInput:React.SFC<{
-        lineNumber:number;
         tokenNumber:number;
         kwicLength:number;
-        selectionValue:LineSelValue;
+        groupId:number;
 
     }> = (props) => {
 
         const textChangeHandler = (event) => {
-            dispatcher.dispatch({
-                name: 'LINE_SELECTION_SELECT_LINE',
+            dispatcher.dispatch<Actions.SelectLines>({
+                name: ActionName.SelectLine,
                 payload: {
-                    value: event.currentTarget.value ? Number(event.currentTarget.value) : -1,
-                    lineNumber: props.lineNumber,
+                    value: event.currentTarget.value ? parseInt(event.currentTarget.value) : undefined,
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength
                 }
             });
         };
         return <input type="text" inputMode="numeric" style={{width: '1.4em'}}
-                        value={props.selectionValue ? props.selectionValue[1] : ''} onChange={textChangeHandler} />;
+                        value={props.groupId !== undefined ? props.groupId : ''} onChange={textChangeHandler} />;
     };
 
     // ------------------------- <TdLineSelection /> ---------------------------
@@ -173,28 +174,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TdLineSelection:LineExtrasViews['TdLineSelection'] = (props) => {
 
         const renderInput = () => {
-            if (props.lockedGroupId) {
-                const groupLabel = props.lockedGroupId > -1 ? `#${props.lockedGroupId}` : '';
-                return <span className="group-id">{groupLabel}</span>;
+            if (props.isEditLocked) {
+                if (props.lockedGroupId) {
+                    const groupLabel = props.lockedGroupId >= 0 ? `#${props.lockedGroupId}` : '';
+                    return <span className="group-id">{groupLabel}</span>;
+
+                } else {
+                    return null;
+                }
 
             } else if (props.mode === 'simple') {
                 return <LineSelCheckbox {...props} />;
 
             } else if (props.mode === 'groups') {
                 return <LineSelInput {...props} />;
-
-            } else {
-                return null;
             }
+            return null;
         };
+        const css = {
+            color: props.groupTextColor,
+            backgroundColor: props.groupColor
+        }
 
-        const css = {};
-        if (props.catTextColor) {
-            css['color'] = props.catTextColor
-        }
-        if (props.catBgColor) {
-            css['backgroundColor'] = props.catBgColor;
-        }
         return (
             <td className="manual-selection" style={css}>
                 {renderInput()}
@@ -206,8 +207,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ------------------------- <SyntaxTreeButton /> ---------------------
 
     const SyntaxTreeButton:LineExtrasViews['SyntaxTreeButton'] = (props) => {
+
+        const handleSyntaxBoxClick = () => {
+            dispatcher.dispatch<Actions.ShowSyntaxView>({
+                name: ActionName.ShowSyntaxView,
+                payload: {
+                    tokenNumber: props.tokenNumber,
+                    kwicLength: props.kwicLength,
+                    targetHTMLElementID: 'syntax-view-pane'
+                }
+            });
+        };
+
         return (
-            <a onClick={props.onSyntaxViewClick} title={he.translate('concview__click_to_see_the_tree')}>
+            <a onClick={handleSyntaxBoxClick} title={he.translate('concview__click_to_see_the_tree')}>
                 <img src={he.createStaticUrl('img/syntax-tree-icon.svg')} style={{width: '1em'}}
                         alt="syntax-tree-icon" />
             </a>

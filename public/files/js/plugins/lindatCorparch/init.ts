@@ -83,8 +83,7 @@ export class Plugin {
     }
 
 
-    createWidget(targetAction:string, corpSel:PluginInterfaces.Corparch.ICorpSelection,
-            options:Kontext.GeneralProps):React.ComponentClass<{}> {
+    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}> {
 
         this.treeModel = new TreeWidgetModel(
             this.pluginApi,
@@ -101,8 +100,12 @@ export class Plugin {
         return viewsLib.CorptreeWidget;
     }
 
-    disposeWidget():void {
+    unregister():void {
         this.treeModel.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.treeModel.getRegistrationId();
     }
 
     initCorplistPageComponents():PluginInterfaces.Corparch.ICorplistPage {

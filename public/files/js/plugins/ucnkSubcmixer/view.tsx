@@ -19,11 +19,15 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import { Kontext } from '../../types/common';
-import { SubcMixerModel, SubcMixerExpression, CalculationResults, SubcMixerModelState } from './model';
-import { init as subcorpViewsInit } from '../../views/subcorp/forms';
+import { List, Dict } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
+
+import { Kontext } from '../../types/common';
+import { SubcMixerModel, SubcMixerModelState } from './model';
+import { init as subcorpViewsInit } from '../../views/subcorp/forms';
+import { CalculationResults, SubcMixerExpression } from './common';
+import { Actions, ActionName } from './actions';
+import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
 
 
 export interface WidgetProps {
@@ -71,8 +75,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleRatioValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_SET_RATIO',
+            dispatcher.dispatch<Actions.SetRatio>({
+                name: ActionName.SetRatio,
                 payload: {
                     attrName: props.attrName,
                     attrValue: props.attrValue,
@@ -135,7 +139,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const ValuesTable:React.SFC<{
         currentResult:CalculationResults;
         hasResults:boolean;
-        items:Immutable.List<SubcMixerExpression>;
+        items:Array<SubcMixerExpression>;
         ratioLimit:number;
 
     }> = (props) => {
@@ -158,7 +162,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 attrValue={item.attrValue}
                                 baseRatio={item.baseRatio}
                                 ratio={item.ratio}
-                                result={props.currentResult ? props.currentResult['attrs'].get(i) : null}
+                                result={props.currentResult ? props.currentResult.attrs[i] : null}
                                 ratioLimit={props.ratioLimit} />
                     ))}
                 </tbody>
@@ -174,9 +178,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleUpdateParamsButton = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_CLEAR_RESULT',
-                payload: {}
+            dispatcher.dispatch<Actions.ClearResult>({
+                name: ActionName.ClearResult
             });
         };
 
@@ -202,15 +205,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleCreateSubcorpClick = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
-                payload: {}
+            dispatcher.dispatch<Actions.SubmitCreateSubcorpus>({
+                name: ActionName.SubmitCreateSubcorpus
             });
         };
 
         const handleSubcnameInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_SUBCNAME',
+            dispatcher.dispatch<SubcActions.FormSetSubcName>({
+                name: SubcActionName.FormSetSubcName,
                 payload: {
                     value: evt.target.value
                 }
@@ -309,16 +311,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         numOfErrors:number;
         numConditions:number;
         currentSubcname:Kontext.FormValue<string>;
-        usedAttributes:Immutable.Set<string>;
+        usedAttributes:{[key:string]:true};
         isPublic:boolean;
         description:Kontext.FormValue<string>;
 
     }> = (props) => {
 
         const handleCalculateCategoriesClick = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_SUBMIT_TASK',
-                payload: {}
+            dispatcher.dispatch<Actions.SubmitTask>({
+                name: ActionName.SubmitTask
             });
         };
 
@@ -339,12 +340,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             } else {
                 return (
                     <div>
-                        {props.usedAttributes.size > 1 ?
+                        {Dict.size(props.usedAttributes) > 1 ?
                             (<p className="attr-warning">
                                 <img className="warning" src={he.createStaticUrl('img/warning-icon.svg')}
                                         alt={he.translate('global__warning_icon')} />
                                 {he.translate('ucnk_subc__multiple_attrs_mixing_warning{attrs}',
-                                    {attrs: props.usedAttributes.toArray().join(', ')})}
+                                    {attrs: Dict.keys(props.usedAttributes).join(', ')})}
                             </p>)
                             : null}
                         <button className="default-button" type="button"
@@ -366,12 +367,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------ <SubcMixer /> -------------------------------------
 
     const SubcMixer:React.SFC<{
-        selectedValues:Immutable.List<SubcMixerExpression>;
+        selectedValues:Array<SubcMixerExpression>;
         currentResult:CalculationResults;
         numOfErrors:number;
         currentSubcname:Kontext.FormValue<string>;
-        usedAttributes:Immutable.Set<string>;
-        alignedCorpora:Immutable.List<string>;
+        usedAttributes:{[key:string]:true};
+        alignedCorpora:Array<string>;
         ratioLimit:number;
         closeClickHandler:()=>void;
         isBusy:boolean;
@@ -398,7 +399,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         customClass="subcmixer-widget"
                         label={he.translate('ucnk_subcm__widget_header')}>
                     <div>
-                        {props.alignedCorpora.size > 0 ? renderAlignedCorpInfo() : null}
+                        {List.empty(props.alignedCorpora) ? null : renderAlignedCorpInfo()}
                         <ValuesTable items={props.selectedValues}
                                 currentResult={props.currentResult}
                                 hasResults={hasResults}
@@ -407,7 +408,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 hasResults={!!props.currentResult}
                                 totalSize={props.currentResult ? props.currentResult['total'] : null}
                                 numOfErrors={props.numOfErrors}
-                                numConditions={props.selectedValues.size}
+                                numConditions={props.selectedValues.length}
                                 currentSubcname={props.currentSubcname}
                                 usedAttributes={props.usedAttributes}
                                 isPublic={props.isPublic}
@@ -423,15 +424,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const Widget:React.SFC<WidgetProps & SubcMixerModelState> = (props) => {
 
         const handleCloseWidget = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_HIDE_WIDGET',
-                payload: {}
+            dispatcher.dispatch<Actions.HideWidget>({
+                name: ActionName.HideWidget
             });
         };
 
         const handleActivationButton = () => {
-            dispatcher.dispatch({
-                name: 'UCNK_SUBCMIXER_SHOW_WIDGET'
+            dispatcher.dispatch<Actions.ShowWidget>({
+                name: ActionName.ShowWidget
             });
         }
 
@@ -462,13 +462,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             selectedValues={props.shares}
                             currentResult={props.currentResult}
                             numOfErrors={props.numOfErrors}
-                            currentSubcname={props.currentSubcname}
-                            usedAttributes={props.liveattrsSelections.keySeq().toSet()}
+                            currentSubcname={props.subcname}
+                            usedAttributes={Dict.map(v => true, props.liveattrsSelections)}
                             alignedCorpora={props.alignedCorpora}
                             ratioLimit={props.ratioLimit}
                             isBusy={props.isBusy}
                             isPublic={props.subcIsPublic}
-                            description={props.subcDescription} />
+                            description={props.description} />
                     : null}
             </div>
         );

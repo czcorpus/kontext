@@ -21,14 +21,14 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
-import {IActionDispatcher} from 'kombo';
-import { WordlistSaveModel } from '../../models/wordlist/save';
+import {IActionDispatcher, Bound} from 'kombo';
+import { WordlistSaveModel, WordlistSaveModelState } from '../../models/wordlist/save';
 import {CommonViews} from '../common';
-import { Subscription } from 'rxjs';
+import { Actions, ActionName } from '../../models/wordlist/actions';
 
 
 export interface WordlistSaveViews {
-    WordlistSaveForm:React.ComponentClass<{}>;
+    WordlistSaveForm:React.ComponentClass<{}, WordlistSaveModelState>;
 }
 
 
@@ -37,17 +37,6 @@ export interface WordlistSaveFormViewsArgs {
     utils:Kontext.ComponentHelpers;
     commonViews:CommonViews;
     saveModel:WordlistSaveModel;
-}
-
-export interface WordlistSaveFormProps {
-
-}
-
-export interface WordlistSaveFormState {
-    saveFormat:string;
-    toLine:Kontext.FormValue<string>;
-    includeHeading:boolean;
-    includeColHeaders:boolean;
 }
 
 
@@ -63,13 +52,13 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleCheckboxChange = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS',
+            dispatcher.dispatch<Actions.WordlistSaveSetIncludeColHeaders>({
+                name: ActionName.WordlistSaveSetIncludeColHeaders,
                 payload: {
                     value: !props.value
                 }
             });
-        }
+        };
 
         return (
             <tr className="separator">
@@ -95,8 +84,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleCheckboxChange = () => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_SET_INCLUDE_HEADING',
+            dispatcher.dispatch<Actions.WordlistSaveSetIncludeHeading>({
+                name: ActionName.WordlistSaveSetIncludeHeading,
                 payload: {
                     value: !props.value
                 }
@@ -142,8 +131,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_FORM_SET_TO_LINE',
+            dispatcher.dispatch<Actions.WordlistSaveFormSetMaxLine>({
+                name: ActionName.WordlistSaveFormSetMaxLine,
                 payload: {
                     value: evt.target.value
                 }
@@ -170,11 +159,11 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
     }> = (props) => {
 
-        const handleSaveFormatSelect = (evt:React.ChangeEvent<{}>) => {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_FORM_SET_FORMAT',
+        const handleSaveFormatSelect = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch<Actions.WordlistSaveFormSetFormat>({
+                name: ActionName.WordlistSaveFormSetFormat,
                 payload: {
-                    value: evt.target['value'] // TODO
+                    value: evt.target.value as SaveData.Format
                 }
             });
         };
@@ -194,81 +183,48 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
     // --------------------------- <SaveWlForm /> -------------------------------
 
-    class WordlistSaveForm extends React.Component<WordlistSaveFormProps, WordlistSaveFormState> {
+    const WordlistSaveForm:React.SFC<WordlistSaveModelState> = (props) => {
 
-        private modelSubscription:Subscription;
+        const handleCloseClick = () => {
+            dispatcher.dispatch<Actions.WordlistSaveFormHide>({
+                name: ActionName.WordlistSaveFormHide
+            });
+        };
 
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this.__handleModelChange = this.__handleModelChange.bind(this);
-            this._handleCloseClick = this._handleCloseClick.bind(this);
-            this._handleSubmitClick = this._handleSubmitClick.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                saveFormat: saveModel.getSaveFormat(),
-                toLine: saveModel.getToLine(),
-                includeHeading: saveModel.getIncludeHeading(),
-                includeColHeaders: saveModel.getIncludeColHeaders()
-            };
-        }
-
-        __handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        _handleCloseClick() {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_FORM_HIDE',
-                payload: {}
+        const handleSubmitClick = () => {
+            dispatcher.dispatch<Actions.WordlistSaveFormSubmit>({
+                name: ActionName.WordlistSaveFormSubmit
             });
         }
 
-        _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'WORDLIST_SAVE_FORM_SUBMIT',
-                payload: {}
-            });
-        }
+        return props.formIsActive ? (
+            <layoutViews.ModalOverlay onCloseKey={handleCloseClick}>
+                <layoutViews.CloseableFrame onCloseClick={handleCloseClick}
+                        label={utils.translate('wordlist__save_form_heading')}>
+                    <form>
+                        <table className="form">
+                            <tbody>
+                                <TRSaveFormatSelector value={props.saveFormat} />
+                                <TRGeneralHeadingSelector includeHeading={props.includeHeading}
+                                        includeColHeaders={props.includeColHeaders}
+                                        saveFormat={props.saveFormat} />
+                                <TRToLineInput value={props.toLine} />
+                            </tbody>
+                        </table>
+                        <div className="buttons">
+                            <button type="button" className="default-button" onClick={handleSubmitClick}>
+                                {utils.translate('wordlist__save_wl_header')}
+                            </button>
+                        </div>
+                    </form>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        ) : null;
+    };
 
-        componentDidMount() {
-            this.modelSubscription = saveModel.addListener(this.__handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                    <layoutViews.CloseableFrame onCloseClick={this._handleCloseClick}
-                            label={utils.translate('wordlist__save_form_heading')}>
-                        <form>
-                            <table className="form">
-                                <tbody>
-                                    <TRSaveFormatSelector value={this.state.saveFormat} />
-                                    <TRGeneralHeadingSelector includeHeading={this.state.includeHeading}
-                                            includeColHeaders={this.state.includeColHeaders}
-                                            saveFormat={this.state.saveFormat} />
-                                    <TRToLineInput value={this.state.toLine} />
-                                </tbody>
-                            </table>
-                            <div className="buttons">
-                                <button type="button" className="default-button" onClick={this._handleSubmitClick}>
-                                    {utils.translate('wordlist__save_wl_header')}
-                                </button>
-                            </div>
-                        </form>
-                    </layoutViews.CloseableFrame>
-                </layoutViews.ModalOverlay>
-            );
-        }
-    }
+    const BoundWordlistSaveForm = Bound(WordlistSaveForm, saveModel);
 
     return {
-        WordlistSaveForm: WordlistSaveForm
+        WordlistSaveForm: BoundWordlistSaveForm
     };
 }

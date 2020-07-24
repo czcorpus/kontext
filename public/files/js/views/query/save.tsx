@@ -19,10 +19,13 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
-import {Kontext, KeyCodes} from '../../types/common';
-import{QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
-import { Subscription } from 'rxjs';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
+import {Kontext} from '../../types/common';
+import {Keyboard} from 'cnc-tskit';
+import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
+import { Actions, ActionName } from '../../models/query/actions';
+import { Actions as MainMenuActions,
+    ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
 
 
 export interface QuerySaveAsFormProps {
@@ -49,8 +52,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch({
-                name: 'QUERY_SAVE_AS_FORM_SET_NAME',
+            dispatcher.dispatch<Actions.SaveAsFormSetName>({
+                name: ActionName.SaveAsFormSetName,
                 payload: {
                     value: evt.target.value
                 }
@@ -101,27 +104,23 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------ <QuerySaveAsForm /> -------------------------------
 
-    class QuerySaveAsForm extends React.Component<QuerySaveAsFormProps, QuerySaveAsFormModelState> {
+    class QuerySaveAsForm extends React.PureComponent<QuerySaveAsFormProps & QuerySaveAsFormModelState> {
 
-        private modelSubscription:Subscription;
 
         constructor(props) {
             super(props);
             this._handleCloseEvent = this._handleCloseEvent.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleKeyDown = this._handleKeyDown.bind(this);
-            this.state = saveAsFormModel.getState();
         }
 
         private _handleCloseEvent() {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                payload: {}
+            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
+                name: MainMenuActionName.ClearActiveItem
             });
         }
 
         private _handleKeyDown(evt:React.KeyboardEvent<{}>):void {
-            if (evt.keyCode === KeyCodes.ENTER) {
+            if (evt.keyCode === Keyboard.Code.ENTER) {
                 this.submit();
                 evt.preventDefault();
                 evt.stopPropagation();
@@ -129,22 +128,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private submit() {
-            dispatcher.dispatch({
-                name: 'QUERY_SAVE_AS_FORM_SUBMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.SaveAsFormSubmit>({
+                name: ActionName.SaveAsFormSubmit
             });
-        }
-
-        private _handleModelChange(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = saveAsFormModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -156,16 +142,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <form>
                             <p className="hint">
                                 <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
-                                {this.state.concExplicitPersistenceUI ?
+                                {this.props.concExplicitPersistenceUI ?
                                     he.translate('query__save_as_box_hint_explicit') :
                                     he.translate('query__save_as_box_hint')
                                 }
                             </p>
                             <p>
-                                <QueryNameInput value={this.state.name} onKeyDown={this._handleKeyDown} />
+                                <QueryNameInput value={this.props.name} onKeyDown={this._handleKeyDown} />
                             </p>
                             <p>
-                                <SubmitButton isWaiting={this.state.isBusy} onKeyDown={this._handleKeyDown}
+                                <SubmitButton isWaiting={this.props.isBusy} onKeyDown={this._handleKeyDown}
                                         onClick={(evt)=>this.submit()} />
                             </p>
                         </form>
@@ -176,7 +162,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        QuerySaveAsForm: QuerySaveAsForm
+        QuerySaveAsForm: BoundWithProps(QuerySaveAsForm, saveAsFormModel)
     };
 
 }

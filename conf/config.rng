@@ -91,6 +91,18 @@
                                 </oneOrMore>
                             </choice>
                         </element>
+                        <optional>
+                            <element name="css_mobile">
+                                <choice>
+                                    <text />
+                                    <oneOrMore>
+                                        <element name="item">
+                                            <text />
+                                        </element>
+                                    </oneOrMore>
+                                </choice>
+                            </element>
+                        </optional>
                         <element name="logo">
                             <a:documentation>Path to a logo</a:documentation>
                             <text />

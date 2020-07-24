@@ -19,25 +19,19 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext, KeyCodes} from '../../types/common';
-import { QueryStorageModel, InputBoxHistoryItem } from './models';
-import { SetQueryInputAction } from '../../models/query/common';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Keyboard, List, pipe } from 'cnc-tskit';
+
+import { Kontext } from '../../types/common';
+import { QueryStorageModel, QueryStorageModelState, InputBoxHistoryItem } from './models';
+import { Actions as QueryActions, ActionName as QueryActionName, QueryFormType } from '../../models/query/actions';
+import { Actions, ActionName } from './actions';
 
 
 export interface QueryStorageProps {
+    formType:QueryFormType;
     sourceId:string;
-    actionPrefix:string;
     onCloseTrigger:()=>void;
-}
-
-
-interface QueryStorageState {
-    data:Immutable.List<InputBoxHistoryItem>;
-    isBusy:boolean;
-    currentItem:number;
 }
 
 
@@ -50,49 +44,56 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     const layoutViews = he.getLayoutViews();
 
-    class QueryStorage extends React.Component<QueryStorageProps, QueryStorageState> {
-
-        private modelSubscription:Subscription;
+    class QueryStorage extends React.Component<QueryStorageProps & QueryStorageModelState> {
 
         constructor(props) {
             super(props);
-            this.state = {
-                data: queryStorageModel.getFlatData(),
-                isBusy: queryStorageModel.getIsBusy(),
-                currentItem: 0
-            };
             this._keyPressHandler = this._keyPressHandler.bind(this);
             this._handleClickSelection = this._handleClickSelection.bind(this);
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleBlurEvent = this._handleBlurEvent.bind(this);
             this._handleFocusEvent = this._handleFocusEvent.bind(this);
         }
 
-        _keyPressHandler(evt) {
+        getFlatData():Array<InputBoxHistoryItem> {
+            return List.flatMap(
+                v => [{query: v.query, query_type: v.query_type, created: v.created}]
+                    .concat(
+                        pipe(
+                            v.aligned,
+                            List.filter(v2 => !!v2.query),
+                            List.map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created}))
+                        )
+                ),
+                this.props.data
+            );
+        }
+
+        _keyPressHandler(data, evt) {
             const inc = Number({
-                [KeyCodes.UP_ARROW]: this.state.data.size - 1,
-                [KeyCodes.DOWN_ARROW]: 1
+                [Keyboard.Code.UP_ARROW]: data.length - 1,
+                [Keyboard.Code.DOWN_ARROW]: 1
             }[evt.keyCode]);
-            const modulo = this.state.data.size > 0 ? this.state.data.size : 1;
+            const modulo = data.length > 0 ? data.length : 1;
             if (!isNaN(inc)) {
-                this.setState({
-                    data: queryStorageModel.getFlatData(),
-                    isBusy: queryStorageModel.getIsBusy(),
-                    currentItem: (this.state.currentItem + inc) % modulo
+                dispatcher.dispatch<Actions.SelectItem>({
+                    name: ActionName.SelectItem,
+                    payload: {value: (this.props.currentItem + inc) % modulo}
                 });
 
-            } else if (evt.keyCode === KeyCodes.ENTER) {
-                const historyItem = this.state.data.get(this.state.currentItem);
-                dispatcher.dispatch({
-                    name: 'QUERY_INPUT_SELECT_TYPE',
+            } else if (evt.keyCode === Keyboard.Code.ENTER) {
+                const historyItem = data[this.props.currentItem];
+                dispatcher.dispatch<QueryActions.QueryInputSelectType>({
+                    name: QueryActionName.QueryInputSelectType,
                     payload: {
                         sourceId: this.props.sourceId, // either corpname or filterId
-                        queryType: historyItem.query_type
+                        queryType: historyItem.query_type,
+                        formType: this.props.formType
                     }
                 });
-                dispatcher.dispatch<SetQueryInputAction>({
-                    name: 'QUERY_INPUT_SET_QUERY',
+                dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
+                    name: QueryActionName.QueryInputSetQuery,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         query: historyItem.query,
                         rawAnchorIdx: null,
@@ -109,18 +110,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             evt.stopPropagation();
         }
 
-        _handleClickSelection(itemNum) {
-            const historyItem = this.state.data.get(itemNum);
-            dispatcher.dispatch({
-                name: this.props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
+        _handleClickSelection(itemNum, data) {
+            const historyItem = data[itemNum];
+            dispatcher.dispatch<QueryActions.QueryInputSelectType>({
+                name: QueryActionName.QueryInputSelectType,
                 payload: {
                     sourceId: this.props.sourceId,
-                    queryType: historyItem.query_type
+                    queryType: historyItem.query_type,
+                    formType: this.props.formType
                 }
             });
-            dispatcher.dispatch<SetQueryInputAction>({
-                name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+            dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
+                name: QueryActionName.QueryInputSetQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: historyItem.query,
                     rawAnchorIdx: null,
@@ -131,26 +134,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             this.props.onCloseTrigger();
         }
 
-        componentDidMount() {
-            this.modelSubscription = queryStorageModel.addListener(this._handleModelChange);
-            dispatcher.dispatch({
-                name: 'QUERY_STORAGE_LOAD_HISTORY',
-                payload: {}
-            });
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        _handleModelChange() {
-            this.setState({
-                data: queryStorageModel.getFlatData(),
-                isBusy: queryStorageModel.getIsBusy(),
-                currentItem: this.state.currentItem
-            });
-        }
-
         _handleBlurEvent(evt) {
             this.props.onCloseTrigger();
         }
@@ -158,16 +141,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         _handleFocusEvent(evt) {
         }
 
-        _renderContents() {
-            if (this.state.isBusy) {
+        _renderContents(data:Array<InputBoxHistoryItem>) {
+            if (this.props.isBusy) {
                 return <div style={{padding: '0.4em'}}><layoutViews.AjaxLoaderBarImage /></div>;
 
             } else {
-                return this.state.data.map((item, i) => {
+                return List.map((item, i) => {
                     return (
                         <li key={i} title={he.formatDate(new Date(item.created * 1000), 1)}
-                                className={i === this.state.currentItem ? 'selected' : null}
-                                onClick={this._handleClickSelection.bind(this, i)}>
+                                className={i === this.props.currentItem ? 'selected' : null}
+                                onClick={this._handleClickSelection.bind(this, i, data)}>
                             <span className="wrapper">
                                 <em>
                                     {item.query}
@@ -179,26 +162,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             </span>
                         </li>
                     );
-                });
+                }, data);
             }
         }
 
         render() {
+            const data = this.getFlatData();
             return (
                 <ol className="rows"
-                        onKeyDown={this._keyPressHandler}
+                        onKeyDown={evt => this._keyPressHandler(data, evt)}
                         tabIndex={0}
                         ref={item => item ? item.focus() : null}
                         onBlur={this._handleBlurEvent}
                         onFocus={this._handleFocusEvent}>
-                    {this._renderContents()}
+                    {this._renderContents(data)}
                 </ol>
             );
         }
     }
 
     return {
-        QueryStorage: QueryStorage
+        QueryStorage: BoundWithProps(QueryStorage, queryStorageModel)
     };
 
 }

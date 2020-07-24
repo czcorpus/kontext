@@ -17,25 +17,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import * as Immutable from 'immutable';
+
 import * as React from 'react';
-import {Kontext, TextTypes} from '../types/common';
-import {PluginInterfaces} from '../types/plugins';
-import {PageModel} from '../app/page';
-import {init as subcorpViewsInit} from '../views/subcorp/forms';
-import {SubcorpFormModel} from '../models/subcorp/form';
-import {SubcorpWithinFormModel} from '../models/subcorp/withinForm';
-import {TextTypesModel, SelectedTextTypes} from '../models/textTypes/main';
-import {init as ttViewsInit, TextTypesPanelProps} from '../views/textTypes';
-import {NonQueryCorpusSelectionModel} from '../models/corpsel';
-import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import corplistComponent from 'plugins/corparch/init';
-import liveAttributes from 'plugins/liveAttributes/init';
-import subcMixer from 'plugins/subcmixer/init';
+
+import { Kontext } from '../types/common';
+import { PluginInterfaces } from '../types/plugins';
+import { PageModel } from '../app/page';
+import { init as subcorpViewsInit } from '../views/subcorp/forms';
+import { SubcorpFormModel } from '../models/subcorp/form';
+import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
+import { TextTypesModel } from '../models/textTypes/main';
+import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
+import { NonQueryCorpusSelectionModel } from '../models/corpsel';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
 import { InputMode } from '../models/subcorp/common';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
-import { tap } from 'rxjs/operators';
+import corplistComponent from 'plugins/corparch/init';
+import liveAttributes from 'plugins/liveAttributes/init';
+import subcMixer from 'plugins/subcmixer/init';
+import { SelectedTextTypes } from '../models/textTypes/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -44,9 +46,8 @@ require('styles/subcorpForm.less');
 
 interface TTProps {
     alignedCorpora:Array<string>;
-    attributes:Immutable.List<TextTypes.AttributeSelection>;
-    liveAttrsCustomTT:React.ComponentClass<{}>|null;
-    liveAttrsView:React.ComponentClass<{}>;
+    LiveAttrsCustomTT:React.ComponentClass|React.SFC|null;
+    LiveAttrsView:React.ComponentClass|React.SFC;
     manualAlignCorporaMode:boolean;
 }
 
@@ -75,45 +76,29 @@ export class SubcorpForm {
 
     private textTypesModel:TextTypesModel;
 
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
+    private subcorpSel:NonQueryCorpusSelectionModel;
+
+    private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
+
+    private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
 
     constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;
         this.corpusIdent = corpusIdent;
     }
 
-    getCurrentSubcorpus():string {
-        return this.subcorpFormModel.getSubcname().value;
-    }
-
-    getCurrentSubcorpusOrigName():string {
-        return this.subcorpFormModel.getSubcname().value;
-    }
-
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>([this.corpusIdent.id]);
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return Immutable.List<Kontext.AttrItem>();
-    }
-
-    getAvailableSubcorpora():Immutable.List<Kontext.SubcorpListItem> {
-        return Immutable.List<{n:string; v:string; pub:string}>();
-    }
-
-    initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:TTProps):void {
+    private initSubcorpForm(ttComponent:React.ComponentClass<TextTypesPanelProps>, ttProps:TTProps):void {
         this.layoutModel.renderReactComponent(
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
             {
-                ttComponent: ttComponent,
-                ttProps: ttProps
+                ttComponent,
+                ttProps
             }
         );
     }
 
-    createTextTypesComponents(selectedTextTypes:SelectedTextTypes):TTInitData {
+    private createTextTypesComponents(selectedTextTypes:SelectedTextTypes):TTInitData {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
@@ -127,14 +112,16 @@ export class SubcorpForm {
             this.textTypesModel
         );
 
-        const liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin = liveAttributes(
+        this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
-            this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
+            this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             true, // manual aligned corp. selection mode
             {
                 bibAttr: textTypesData['bib_attr'],
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
+                    'availableAlignedCorpora'
+                ),
                 refineEnabled: true,
                 manualAlignCorporaMode: true
             }
@@ -143,43 +130,33 @@ export class SubcorpForm {
         const subcmixerPlg = subcMixer(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
-            {
-                getIsPublic: () => this.subcorpFormModel.getIsPublic(),
-                getDescription: () => this.subcorpFormModel.getDescription(),
-                getSubcName: () => this.subcorpFormModel.getSubcname(),
-                validateForm: () => this.subcorpFormModel.validateForm(false),
-                addListener: (fn:Kontext.ModelListener) => this.subcorpFormModel.addListener(fn)
-            },
             this.layoutModel.getConf<string>('CorpusIdAttr')
         );
 
-        let subcMixerComponent:React.ComponentClass;
-        if (this.layoutModel.pluginIsActive(PluginName.SUBCMIXER)) {
-            if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
+        let subcMixerComponent:PluginInterfaces.SubcMixer.View;
+        if (this.layoutModel.pluginTypeIsActive(PluginName.SUBCMIXER) &&
+                    this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
                 subcMixerComponent = subcmixerPlg.getWidgetView();
-
-            } else {
-                throw new Error('Subcmixer plug-in requires live_attributes plug-in to be operational');
-            }
 
         } else {
             subcMixerComponent = null;
         }
 
-        let liveAttrsViews;
-        if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
-            liveAttrsViews = liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel);
+        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
+        if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
+            liveAttrsViews = this.liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel);
             this.textTypesModel.enableAutoCompleteSupport();
 
         } else {
-            liveAttrsViews = {};
+            liveAttrsViews = {
+                LiveAttrsCustomTT: null,
+                LiveAttrsView: null
+            };
         }
         return {
             component: ttViewComponents.TextTypesPanel,
             props: {
-                liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
-                liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
-                attributes: this.textTypesModel.getAttributes(),
+                ...liveAttrsViews,
                 alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
                 manualAlignCorporaMode: true
             },
@@ -190,8 +167,7 @@ export class SubcorpForm {
     private initCorpusInfo():void {
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.subcorpSel
+            this.layoutModel.getComponentHelpers()
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
@@ -199,12 +175,15 @@ export class SubcorpForm {
             {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp
             }
         );
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             const ttComponent = this.createTextTypesComponents(
                 this.layoutModel.getConf<SelectedTextTypes>('SelectedTextTypes')
             );
@@ -233,29 +212,45 @@ export class SubcorpForm {
                 this.subcorpFormModel
             );
 
-            const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
-                this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
-                this.subcorpSel,
-                {
-                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                        return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
-                            tap(
-                                () => {
-                                    // all the components must be deleted to prevent memory leaks
-                                    // and unwanted action handlers from previous instance
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('subcorp-form-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('general-overview-mount'));
-                                    this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
-                                    this.init();
-                                }
-                            )
-                        );
-                    }
-                }
+            this.corparchPlugin = corplistComponent(this.layoutModel.pluginApi());
+
+            this.layoutModel.registerCorpusSwitchAwareModels(
+                () => {
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('subcorp-form-mount')
+                    );
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('view-options-mount')
+                    );
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('general-overview-mount')
+                    );
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('query-overview-mount')
+                    );
+                    this.init();
+                },
+                this.corparchPlugin,
+                this.textTypesModel,
+                this.liveAttrsPlugin
             );
 
             this.initCorpusInfo();
+
+            const corplistWidget = this.corparchPlugin.createWidget(
+                this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
+                {
+                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                        this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                            name: GlobalActionName.SwitchCorpus,
+                            payload: {
+                                corpora: corpora,
+                                subcorpus: subcorpId
+                            }
+                        });
+                    }
+                }
+            );
 
             this.viewComponents = subcorpViewsInit({
                 dispatcher: this.layoutModel.dispatcher,

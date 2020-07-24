@@ -21,14 +21,14 @@
 import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {QueryFormModel, AppendQueryInputAction} from '../../models/query/common';
+import {QueryFormModel, QueryFormModelState} from '../../models/query/common';
 import { VirtualKeyboardModel, VirtualKeyboardState } from '../../models/query/virtualKeyboard';
-import { ActionName, Actions } from '../../models/query/actions';
+import { ActionName, Actions, QueryFormType } from '../../models/query/actions';
 import { List } from 'cnc-tskit';
 
 
 export interface VirtualKeyboardProps {
-    actionPrefix:string;
+    formType:QueryFormType;
     sourceId:string;
     inputLanguage:string;
 }
@@ -41,7 +41,7 @@ export interface VirtualKeyboardViews {
 export interface VirtualKeyboardModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    queryModel:QueryFormModel;
+    queryModel:QueryFormModel<QueryFormModelState>;
     virtualKeyboardModel:VirtualKeyboardModel;
 }
 
@@ -278,9 +278,10 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
         }
 
         _handleClick(v) {
-            dispatcher.dispatch<AppendQueryInputAction>({
-                name: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
+            dispatcher.dispatch<Actions.QueryInputAppendQuery>({
+                name: ActionName.QueryInputAppendQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: v,
                     prependSpace: false,
@@ -307,9 +308,10 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
         }
 
         _handleBackspace() {
-            dispatcher.dispatch({
-                name: this.props.actionPrefix + 'QUERY_INPUT_REMOVE_LAST_CHAR',
+            dispatcher.dispatch<Actions.QueryInputRemoveLastChar>({
+                name: ActionName.QueryInputRemoveLastChar,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId
                 }
             });

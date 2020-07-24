@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel} from '../app/page';
-import {SubcorpListModel, SortKey, SubcListFilter} from '../models/subcorp/list';
-import {init as listViewInit} from '../views/subcorp/list';
+import { Kontext } from '../types/common';
+import { AjaxResponse } from '../types/ajaxResponses';
+import { PageModel } from '../app/page';
+import { SubcorpListModel, SortKey, SubcListFilter } from '../models/subcorp/list';
+import { init as listViewInit } from '../views/subcorp/list';
 import { KontextPage } from '../app/main';
 
 declare var require:any;
@@ -58,7 +58,7 @@ class SubcorpListPage {
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             this.subcorpListModel = new SubcorpListModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,

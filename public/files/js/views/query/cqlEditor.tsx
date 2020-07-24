@@ -18,19 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf, Subscription } from 'rxjs';
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard } from 'cnc-tskit';
 
 import { CQLEditorModel, CQLEditorModelState } from '../../models/query/cqleditor/model';
-import { SetQueryInputAction, MoveCursorInputAction } from '../../models/query/common';
+import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
+import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 
 
 export interface CQLEditorProps {
-    actionPrefix:string;
+    formType:QueryFormType;
     sourceId:string;
     takeFocus:boolean;
     hasHistoryWidget:boolean;
@@ -41,8 +41,8 @@ export interface CQLEditorProps {
 }
 
 export interface CQLEditorFallbackProps {
+    formType:QueryFormType;
     sourceId:string;
-    actionPrefix:string;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
     inputRef:React.RefObject<HTMLTextAreaElement>;
@@ -57,35 +57,28 @@ export interface CQLEditorViews {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            queryModel:QueryFormModel, editorModel:CQLEditorModel) {
+            queryModel:QueryFormModel<QueryFormModelState>, editorModel:CQLEditorModel) {
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
 
-    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps, {
-        query:string;
-        downArrowTriggersHistory:boolean;
-    }> {
-
-        private modelSubscription:Subscription;
+    class CQLEditorFallback extends React.PureComponent<CQLEditorFallbackProps &
+            QueryFormModelState> {
 
         constructor(props) {
             super(props);
             this.handleKeyDown = this.handleKeyDown.bind(this);
             this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
-            this.handleModelChange = this.handleModelChange.bind(this);
             this.handleInputChange = this.handleInputChange.bind(this);
-            this.state = {
-                query: queryModel.getQuery(this.props.sourceId),
-                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId)
-            };
         }
 
         private inputKeyUpHandler(evt) {
-            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME || evt.keyCode === Keyboard.Code.END) {
-                dispatcher.dispatch<MoveCursorInputAction>({
-                    name: 'QUERY_INPUT_MOVE_CURSOR',
+            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
+                    evt.keyCode === Keyboard.Code.END) {
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: this.props.inputRef.current.selectionStart,
                         rawFocusIdx: this.props.inputRef.current.selectionEnd
@@ -97,7 +90,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         private handleKeyDown(evt) {
             if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
-                    this.state.downArrowTriggersHistory &&
+                    this.props.downArrowTriggersHistory &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
@@ -107,9 +100,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
-            dispatcher.dispatch<SetQueryInputAction>({
-                name: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
+            dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                name: ActionName.QueryInputSetQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: evt.target.value,
                     rawAnchorIdx: this.props.inputRef.current.selectionStart,
@@ -119,25 +113,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
-        private handleModelChange() {
-            this.setState({
-                query: queryModel.getQuery(this.props.sourceId),
-                downArrowTriggersHistory: queryModel.getDownArrowTriggersHistory(this.props.sourceId)
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = queryModel.addListener(this.handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
                                 ref={this.props.inputRef}
-                                value={this.state.query}
+                                value={this.props.queries[this.props.sourceId]}
                                 onChange={this.handleInputChange}
                                 onKeyDown={this.handleKeyDown}
                                 onKeyUp={this.inputKeyUpHandler}
@@ -221,9 +200,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
             const query = src.map(v => v[0]).join('');
 
-            dispatcher.dispatch<SetQueryInputAction>({
-                name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+            dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                name: ActionName.QueryInputSetQuery,
                 payload: {
+                    formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: query,
                     rawAnchorIdx: rawAnchorIdx,
@@ -252,38 +232,40 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         const leftIdx = Number(a.getAttribute('data-leftIdx'));
                         const rightIdx = Number(a.getAttribute('data-rightIdx'));
 
-                        dispatcher.dispatch(rxOf(
-                            {
-                                name: 'TAGHELPER_PRESET_PATTERN',
-                                payload: {
-                                    sourceId: this.props.sourceId,
-                                    pattern: this.props.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
-                                }
-                            },
-                            {
-                                name: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-                                payload: {
-                                    sourceId: this.props.sourceId,
-                                    value: 'tag',
-                                    widgetArgs: {
-                                        leftIdx: leftIdx,
-                                        rightIdx: rightIdx
-                                    }
+                        dispatcher.dispatch<Actions.QueryTaghelperPresetPattern>({
+                            name: ActionName.QueryTaghelperPresetPattern,
+                            payload: {
+                                sourceId: this.props.sourceId,
+                                pattern: this.props.rawCode[this.props.sourceId].substring(
+                                    leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
+                            }
+                        });
+                        dispatcher.dispatch<Actions.SetActiveInputWidget>({
+                            name: ActionName.SetActiveInputWidget,
+                            payload: {
+                                formType: this.props.formType,
+                                sourceId: this.props.sourceId,
+                                value: 'tag',
+                                widgetArgs: {
+                                    leftIdx: leftIdx,
+                                    rightIdx: rightIdx
                                 }
                             }
-                        ));
+                        });
                     break;
                 }
             }
         }
 
         private inputKeyUpHandler(evt:React.KeyboardEvent) {
-            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME || evt.keyCode === Keyboard.Code.END) {
+            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
+                    evt.keyCode === Keyboard.Code.END) {
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
-                dispatcher.dispatch<MoveCursorInputAction>({
-                    name: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: anchorIdx,
                         rawFocusIdx: focusIdx
@@ -295,7 +277,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         private inputKeyDownHandler(evt:React.KeyboardEvent) {
             if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
-                    this.props.downArrowTriggersHistory.get(this.props.sourceId) &&
+                    this.props.downArrowTriggersHistory[this.props.sourceId] &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
@@ -315,39 +297,48 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
                             rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1);
 
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                        name: ActionName.QueryInputSetQuery,
                         payload: {
+                            formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawAnchorIdx - 1 : rawAnchorIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawFocusIdx - 1 : rawFocusIdx,
                             insertRange: null
                         }
                     });
 
                 } else if (rawAnchorIdx < rawFocusIdx) {
                     const query = rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx);
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                        name: ActionName.QueryInputSetQuery,
                         payload: {
+                            formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawAnchorIdx : rawAnchorIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawAnchorIdx : rawAnchorIdx,
                             insertRange: null
                         }
                     });
 
                 } else {
                     const query = rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx);
-                    dispatcher.dispatch<SetQueryInputAction>({
-                        name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                        name: ActionName.QueryInputSetQuery,
                         payload: {
+                            formType: this.props.formType,
                             sourceId: this.props.sourceId,
                             query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawFocusIdx : rawFocusIdx,
+                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
+                                rawFocusIdx : rawFocusIdx,
                             insertRange: null
                         }
                     });
@@ -358,16 +349,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 const src = this.extractText(this.props.inputRef.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
                 const query = src.map(v => v[0]).join('');
-                dispatcher.dispatch<SetQueryInputAction>({
-                    name: `${this.props.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                    name: ActionName.QueryInputSetQuery,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
-                        // We have to add a single whitespace here because otherwise FF cannot handle cursor
-                        // position properly (normally it inserts its custom br type=_moz element which is
-                        // even worse to handle). This is not ideal but by far the most cheap solution.
+                        // We have to add a single whitespace here because otherwise FF cannot
+                        // handle cursor position properly (normally it inserts its custom br
+                        // type=_moz element which is even worse to handle). This is not ideal but
+                        //  by far the most cheap solution.
                         query: rawFocusIdx === query.length ? '\n ' : '\n',
-                        rawAnchorIdx: rawFocusIdx === query.length ? rawAnchorIdx + 2 : rawAnchorIdx + 1,
-                        rawFocusIdx: rawFocusIdx === query.length ? rawFocusIdx + 2 : rawFocusIdx + 1,
+                        rawAnchorIdx: rawFocusIdx === query.length ?
+                            rawAnchorIdx + 2 : rawAnchorIdx + 1,
+                        rawFocusIdx: rawFocusIdx === query.length ?
+                            rawFocusIdx + 2 : rawFocusIdx + 1,
                         insertRange: [rawAnchorIdx, rawFocusIdx]
                     }
                 });
@@ -377,9 +372,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 const src = this.extractText(this.props.inputRef.current);
                 const [anchorIdx, focusIdx] = this.getRawSelection(src);
                 const query = src.map(v => v[0]).join('');
-                dispatcher.dispatch<MoveCursorInputAction>({
-                    name: `${this.props.actionPrefix}QUERY_INPUT_MOVE_CURSOR`,
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
                     payload: {
+                        formType: this.props.formType,
                         sourceId: this.props.sourceId,
                         rawAnchorIdx: anchorIdx === focusIdx ? query.length : anchorIdx,
                         rawFocusIdx: query.length
@@ -392,8 +388,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         componentDidUpdate(prevProps, prevState) {
             if (this.props.rawAnchorIdx !== null && this.props.rawFocusIdx !== null) {
                 this.reapplySelection(
-                    this.props.rawAnchorIdx.get(this.props.sourceId),
-                    this.props.rawFocusIdx.get(this.props.sourceId)
+                    this.props.rawAnchorIdx[this.props.sourceId],
+                    this.props.rawFocusIdx[this.props.sourceId]
                 );
             }
         }
@@ -407,8 +403,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 this.props.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
 
-            dispatcher.dispatch({
-                name: 'CQL_EDITOR_INITIALIZE'
+            dispatcher.dispatch<Actions.CQLEditorInitialize>({
+                name: ActionName.CQLEditorInitialize
             });
         }
 
@@ -427,14 +423,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onClick={this.handleEditorClick}
                                 className="cql-input"
                                 ref={this.props.inputRef}
-                                dangerouslySetInnerHTML={{__html: this.props.richCode.get(this.props.sourceId) || ''}}
+                                dangerouslySetInnerHTML={
+                                    {__html: this.props.richCode[this.props.sourceId] || ''}}
                                 onKeyDown={this.inputKeyDownHandler}
                                 onKeyUp={this.inputKeyUpHandler} />
                     <div className="cql-editor-messages">
                         {
                             this.props.cqlEditorMessage ?
-                            <div className="cql-editor-message"
-                                    dangerouslySetInnerHTML={{__html: this.props.message.get(this.props.sourceId)}} /> : null
+                                <div className="cql-editor-message"
+                                    dangerouslySetInnerHTML={
+                                        {__html: this.props.message[this.props.sourceId]}} /> :
+                                null
                         }
                     </div>
                 </div>
@@ -444,10 +443,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const BoundEditor = BoundWithProps<CQLEditorProps, CQLEditorModelState>(CQLEditor, editorModel);
 
+    const BoundFallbackEditor = BoundWithProps<CQLEditorFallbackProps,
+            QueryFormModelState>(CQLEditorFallback, queryModel);
 
     return {
         CQLEditor: BoundEditor,
-        CQLEditorFallback: CQLEditorFallback
+        CQLEditorFallback: BoundFallbackEditor
     };
 
 

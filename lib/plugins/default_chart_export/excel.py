@@ -44,7 +44,7 @@ class ExcelExport(AbstractChartExport):
         pie.title = title
         ws.add_chart(pie, 'A{0}'.format(len(data) + 3))
 
-        output = io.StringIO()
+        output = io.BytesIO()
         wb.save(filename=output)
         output.flush()
         return output.getvalue()

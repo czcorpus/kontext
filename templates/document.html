@@ -73,7 +73,7 @@ if (((/*@cc_on!@*/false) || !!document['documentMode']) &&
 <script type="text/javascript">
 var __conf = {};
 __conf.page = {};
-__conf.activePlugins = {{ active_plugins|to_json }};  {# here we mean 'active on client side' #}
+__conf.activePlugins = {{ active_plugins|to_json }};
 __conf.messageAutoHideInterval = {{ message_auto_hide_interval|default(5000, true) }};
 __conf.rootURL = {{ root_url|to_json }};
 __conf.rootPath = {{ root_url|to_json }};

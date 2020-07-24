@@ -21,56 +21,75 @@
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
 import { Action } from 'kombo';
-import { Observable, of as rxOf, zip } from 'rxjs';
-import { expand, mergeMap, takeWhile, delay, concatMap, take } from 'rxjs/operators';
-import { KontextPage } from '../app/main';
+import { of as rxOf, zip } from 'rxjs';
+import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
+import { List, tuple, Dict, pipe, HTTP } from 'cnc-tskit';
 
-import { Kontext, TextTypes, ViewOptions } from '../types/common';
+import { KontextPage } from '../app/main';
+import { Kontext, ViewOptions } from '../types/common';
 import { AjaxResponse } from '../types/ajaxResponses';
 import { PageModel, DownloadType } from '../app/page';
 import { PluginInterfaces } from '../types/plugins';
 import { parseUrlArgs } from '../app/navigation';
 import { MultiDict } from '../multidict';
-import * as conclines from '../conclines';
-import { init as concViewsInit, ViewPageModels, MainViews as ConcViews } from '../views/concordance/main';
-import { LineSelectionModel } from '../models/concordance/lineSelection';
-import { ConcDetailModel, RefsDetailModel } from '../models/concordance/detail';
-import { ConcLineModel, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewModel } from '../models/concordance/lines';
-import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs } from '../models/query/first';
+import { init as concViewsInit, ViewPageModels, MainViews as ConcViews }
+    from '../views/concordance/main';
+import { LineSelectionModel, LineSelectionModelState } from '../models/concordance/lineSelection';
+import { ConcDetailModel } from '../models/concordance/detail';
+import { ConcordanceModel } from '../models/concordance/main';
+import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs }
+    from '../models/query/first';
 import { UsageTipsModel } from '../models/usageTips';
 import { CQLEditorModel } from '../models/query/cqleditor/model';
 import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay';
+import { ActionName as QueryActionName } from '../models/query/actions';
 import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter';
 import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../models/query/sample';
-import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs } from '../models/query/switchmc';
+import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs }
+    from '../models/query/switchmc';
 import { QuerySaveAsFormModel } from '../models/query/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { WithinBuilderModel } from '../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
 import { QueryContextModel } from '../models/query/context';
-import { ConcSortModel, MultiLevelConcSortModel, SortFormProperties, fetchSortFormArgs, importMultiLevelArg } from '../models/query/sort';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
-import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
+import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
+    from '../models/freqs/freqForms';
 import { FirstHitsModel } from '../models/query/firstHits';
-import { Freq2DFormModel, CTFormInputs, CTFormProperties } from '../models/freqs/ctFreqForm';
+import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { ConcSaveModel } from '../models/concordance/save';
 import { ConcDashboard } from '../models/concordance/dashboard';
 import { TextTypesDistModel, TTCrit } from '../models/concordance/ttDistModel';
+import { DummySyntaxViewModel } from '../models/concordance/syntax';
 import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first';
 import { init as filterFormInit, FilterFormViews } from '../views/query/filter';
-import { init as queryOverviewInit, OverviewViews as QueryOverviewViews } from '../views/query/overview';
+import { init as queryOverviewInit, OverviewViews as QueryOverviewViews }
+    from '../views/query/overview';
 import { init as sortFormInit, SortViews } from '../views/query/sort';
 import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActions';
 import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
 import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData }
+    from '../models/concordance/common';
+import { RefsDetailModel } from '../models/concordance/refsDetail';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import { List } from 'cnc-tskit';
+import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
+import { Actions, ActionName } from '../models/concordance/actions';
+import { QueryType } from '../models/query/common';
+import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
+import { ActionName as MMActionName } from '../models/mainMenu/actions';
+import { ConcSortModel } from '../models/query/sort/single';
+import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
+    from '../models/query/sort/common';
+import { MultiLevelConcSortModel } from '../models/query/sort/multi';
+import { PluginName } from '../app/plugin';
+
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -95,7 +114,7 @@ export class QueryModels {
 }
 
 interface RenderLinesDeps {
-    ttModel:TextTypes.ITextTypesModel;
+    ttModel:TextTypesModel;
     lvprops:ViewConfiguration;
     qs:PluginInterfaces.QueryStorage.IPlugin;
     tagh:PluginInterfaces.TagHelper.IPlugin;
@@ -122,7 +141,7 @@ export class ViewPage {
 
     private analysisViews:AnalysisFrameViews;
 
-    private lineGroupsChart:LineSelGroupsRatiosChart;
+    private lineGroupsChart:LineSelGroupsRatiosChart; // TODO
 
     private queryFormViews:QueryMainViews;
 
@@ -157,84 +176,49 @@ export class ViewPage {
         this.layoutModel = layoutModel;
         this.queryModels = new QueryModels();
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
-        this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
         this.lineGroupsChart = new LineSelGroupsRatiosChart(
             this.layoutModel,
             this.layoutModel.getConf<Array<string>>('ChartExportFormats')
         );
     }
 
-    private translate(s:string, values?:any):string {
-        return this.layoutModel.translate(s, values);
-    }
-
     private deserializeHashAction(v:string):Action {
-        const tmp = (v || '').substr(1).split('/');
-        const args = new MultiDict(parseUrlArgs(tmp[1] || ''));
-        return this.createFormAction(tmp[0], args);
+        const [action, rawArgs] = (v || '').substr(1).split('/');
+        const args = new MultiDict(parseUrlArgs(rawArgs || ''));
+        return this.createFormAction(action, args);
     }
 
     private createFormAction(actionName:string, args:Kontext.IMultiDict):Action {
         switch (actionName) {
             case 'filter':
                 return {
-                    name: 'MAIN_MENU_SHOW_FILTER',
+                    name: MMActionName.ShowFilter,
                     payload: args.toDict()
                 };
             case 'sort':
             case 'sortx':
                 return {
-                    name: 'MAIN_MENU_SHOW_SORT',
+                    name: MMActionName.ShowSort,
                     payload: args.toDict()
                 };
             case 'sample':
                 return {
-                    name: 'MAIN_MENU_SHOW_SAMPLE',
+                    name: MMActionName.ShowSample,
                     payload: args.toDict()
                 };
             case 'shuffle':
                 return {
-                    name: 'MAIN_MENU_APPLY_SHUFFLE',
+                    name: MMActionName.ApplyShuffle,
                     payload: args.toDict()
                 };
             case 'edit_op':
                 return {
-                    name: 'EDIT_QUERY_OPERATION',
-                    payload: {operationIdx: Number(args['operationIdx'])}
+                    name: QueryActionName.EditQueryOperation,
+                    payload: {operationIdx: Number(args.head('operationIdx'))}
                 };
             default:
                 return null;
         }
-    }
-
-    /**
-     *
-     * @param rootElm
-     * @param usePrevData
-     */
-    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
-        this.lineGroupsChart.showGroupsStats(
-            rootElm,
-            usePrevData,
-            this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
-            [200, 200]
-        );
-    }
-
-    private handleBeforeUnload(event:any):void {
-        if (this.viewModels.lineSelectionModel.size() > 0) {
-            event.returnValue = this.translate('global__are_you_sure_to_leave');
-            return event.returnValue;
-        }
-        return undefined; // !! any other value will cause the dialog window to be shown
-    }
-
-    /**
-     * User must be notified in case he wants to leave the page but at the same time he
-     * has selected some concordance lines without using them in a filter.
-     */
-    private onBeforeUnloadAsk():void {
-        window.addEventListener('beforeunload', this.handleBeforeUnload);
     }
 
     /**
@@ -248,8 +232,8 @@ export class ViewPage {
                     this.layoutModel.dispatcher.dispatch(event.state['modalAction']);
 
                 } else if (event.state['pagination']) {
-                    this.layoutModel.dispatcher.dispatch({
-                        name: 'CONCORDANCE_REVISIT_PAGE',
+                    this.layoutModel.dispatcher.dispatch<Actions.RevisitPage>({
+                        name: ActionName.RevisitPage,
                         payload: {
                             action: 'customPage',
                             pageNum: event.state['pageNum']
@@ -260,42 +244,32 @@ export class ViewPage {
         });
     }
 
-    renderLines(renderDeps:RenderLinesDeps, kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew):Observable<RenderLinesDeps> {
-        return new Observable(observer => {
-            renderDeps.lvprops.onReady = () => {
-                observer.next(renderDeps);
-                observer.complete();
-            };
-            try {
-                this.layoutModel.renderReactComponent(
-                    this.concViews.ConcordanceDashboard,
-                    window.document.getElementById('conc-dashboard-mount'),
-                    {
-                        concViewProps: renderDeps.lvprops,
-                        kwicConnectView: kwicConnectView
-                    }
-                );
-
-            } catch (e) {
-                console.error(e.stack);
-                observer.error(e);
+    renderLines(
+        renderDeps:RenderLinesDeps,
+        kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew
+    ):void {
+        this.layoutModel.renderReactComponent(
+            this.concViews.ConcordanceDashboard,
+            window.document.getElementById('conc-dashboard-mount'),
+            {
+                concViewProps: renderDeps.lvprops,
+                kwicConnectView
             }
-        });
+        );
     }
 
     reloadHits():void {
         const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
         const applyData = (data:AjaxResponse.ConcStatus) => {
-            this.layoutModel.dispatcher.dispatch({
-                name: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+            this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationUpdated>({
+                name: ActionName.AsyncCalculationUpdated,
                 payload: {
                     finished: !!data.finished,
                     concsize: data.concsize,
                     relconcsize: data.relconcsize,
                     arf: data.arf,
                     fullsize: data.fullsize,
-                    availPages: Math.ceil(data.concsize / linesPerPage),
-                    error: null
+                    availPages: Math.ceil(data.concsize / linesPerPage)
                 }
             });
         };
@@ -315,8 +289,8 @@ export class ViewPage {
 
             ws.onclose = (x) => {
                 if (x.code > 1000) {
-                    this.layoutModel.dispatcher.dispatch({
-                        name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                    this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
+                        name: ActionName.AsyncCalculationFailed,
                         payload: {}
                     });
                     this.layoutModel.showMessage('error', x.reason);
@@ -333,7 +307,7 @@ export class ViewPage {
                 concatMap(
                     (interval) => zip(
                         this.layoutModel.ajax$<AjaxResponse.ConcStatus>(
-                            'GET',
+                            HTTP.Method.GET,
                             this.layoutModel.createActionUrl('get_cached_conc_sizes'),
                             this.layoutModel.getConcArgs()
                         ),
@@ -341,7 +315,8 @@ export class ViewPage {
                     )
                 ),
                 takeWhile(
-                    ([response, interval]) => interval < ViewPage.CHECK_CONC_MAX_WAIT && !response.finished,
+                    ([response, interval]) => interval < ViewPage.CHECK_CONC_MAX_WAIT &&
+                        !response.finished,
                     true // true => emit also the last item (which already breaks the predicate)
                 ),
             ).subscribe(
@@ -349,8 +324,8 @@ export class ViewPage {
                     applyData(response);
                 },
                 (err) => {
-                    this.layoutModel.dispatcher.dispatch({
-                        name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
+                    this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
+                        name: ActionName.AsyncCalculationFailed,
                         payload: {}
                     });
                     this.layoutModel.showMessage('error', err);
@@ -379,17 +354,14 @@ export class ViewPage {
             case 'sortx':
             case 'shuffle':
             case 'reduce': {
-                const state = this.queryModels.queryReplayModel.getState(); // TODO antipattern
-                const numOps = state.currEncodedOperations.length > 0 ?
-                                    state.currEncodedOperations[state.currEncodedOperations.length - 1].size : 0;
                 this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),
                     {
                         modalAction: {
-                            name: 'EDIT_QUERY_OPERATION',
+                            name: QueryActionName.EditLastQueryOperation,
                             payload: {
-                                operationIdx: numOps - 1
+                                sourceId: this.layoutModel.getConcArgs()['q']
                             }
                         }
                     },
@@ -429,7 +401,9 @@ export class ViewPage {
      *
      */
     private initQueryForm():void {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
 
         this.queryModels.queryHintModel = new UsageTipsModel(
@@ -438,8 +412,10 @@ export class ViewPage {
         );
         this.queryModels.withinBuilderModel = new WithinBuilderModel(this.layoutModel.dispatcher,
                 this.layoutModel);
-        this.queryModels.virtualKeyboardModel = new VirtualKeyboardModel(this.layoutModel.dispatcher,
-                this.layoutModel);
+        this.queryModels.virtualKeyboardModel = new VirtualKeyboardModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel
+        );
         this.queryModels.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
         this.queryModels.saveAsFormModel = new QuerySaveAsFormModel(
             this.layoutModel.dispatcher,
@@ -451,7 +427,9 @@ export class ViewPage {
 
         const queryFormProps:QueryFormProperties = {
             corpora: this.getActiveCorpora(),
-            availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
+            availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
+                'availableAlignedCorpora'
+            ),
             currQueryTypes: queryFormArgs.curr_query_types,
             currQueries: queryFormArgs.curr_queries,
             currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
@@ -477,7 +455,8 @@ export class ViewPage {
             textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
             selectedTextTypes: queryFormArgs.selected_text_types,
             useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr')
+            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel(
@@ -487,9 +466,6 @@ export class ViewPage {
             this.queryModels.queryContextModel,
             queryFormProps
         );
-        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
-            this.queryModels.queryModel.onSettingsChange(model);
-        });
 
         this.queryModels.cqlEditorModel = new CQLEditorModel({
             dispatcher: this.layoutModel.dispatcher,
@@ -516,14 +492,24 @@ export class ViewPage {
     }
 
     private initFilterForm(firstHitsModel:FirstHitsModel):void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
+        const fetchArgs = <T extends AjaxResponse.FilterFormArgs[
+                keyof AjaxResponse.FilterFormArgs]>
+                (key:(item:AjaxResponse.FilterFormArgs)=>T) =>
+            fetchFilterFormArgs(concFormsArgs, this.concFormsInitialArgs.filter, key);
+
         const filterFormProps:FilterFormProperties = {
-            filters: Object.keys(concFormsArgs)
-                        .filter(k => concFormsArgs[k].form_type === 'filter'),
-            maincorps: fetchArgs<string>(item => item.maincorp),
+            filters: pipe(
+                concFormsArgs,
+                Dict.values(),
+                List.filter(v => v.form_type === Kontext.ConcFormTypes.FILTER),
+                List.map(v => v.op_key)
+            ),
+            maincorps: fetchArgs(item => item.maincorp),
             currPnFilterValues: fetchArgs<string>(item => item.pnfilter),
-            currQueryTypes: fetchArgs<string>(item => item.query_type),
+            currQueryTypes: fetchArgs<QueryType>(item => item.query_type),
             currQueries: fetchArgs<string>(item => item.query),
             currQmcaseValues: fetchArgs<boolean>(item => item.qmcase),
             currDefaultAttrValues: fetchArgs<string>(item => item.default_attr_value),
@@ -542,36 +528,22 @@ export class ViewPage {
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),
             tagsetDoc: fetchArgs<string>(item => item.tagset_doc),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-            inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getCorpusIdent().id],
+            inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>(
+                'InputLanguages'
+            )[this.layoutModel.getCorpusIdent().id],
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
             useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr')
-        }
+            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
+        };
 
         this.queryModels.filterModel = new FilterFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.queryModels.textTypesModel,
             this.queryModels.queryContextModel,
-            filterFormProps
-        );
-
-        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
-            this.queryModels.filterModel.emitChange();
-            this.layoutModel.dispatchSideEffect(
-                model.getUseCQLEditor() ? 'CQL_EDITOR_ENABLE' : 'CQL_EDITOR_DISABLE',
-                {}
-            );
-        });
-
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_FILTER',
-            (args:{}) => {
-                if (args['within'] === 1) {
-                    this.layoutModel.replaceConcArg('maincorp', [args['maincorp']]);
-                }
-                return this.queryModels.filterModel.syncFrom(rxOf({...this.concFormsInitialArgs.filter, ...args}));
-            }
+            filterFormProps,
+            this.concFormsInitialArgs.filter
         );
 
         this.filterFormViews = filterFormInit(
@@ -587,51 +559,52 @@ export class ViewPage {
     }
 
     private initSortForm():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>fetchSortFormArgs(concFormsArgs, key);
-        const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
+        const fetchArgs = <T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
+            key:(item:AjaxResponse.SortFormArgs)=>T
+        ):Array<[string, T]> => List.map(
+            ([k, v]) => tuple(k, v[0]),
+            fetchSortFormArgs(concFormsArgs, this.concFormsInitialArgs.sort, key)
+        );
 
+        const fetchMLArgs = <T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
+            key:(item:AjaxResponse.SortFormArgs)=>Array<T>
+        ):Array<[string, Array<T>]> => fetchSortFormArgs(
+            concFormsArgs, this.concFormsInitialArgs.sort, key);
+
+        const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         const sortModelProps:SortFormProperties = {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            sattr: fetchArgs<string>(item => item.sattr),
-            sbward: fetchArgs<string>(item => item.sbward),
-            sicase: fetchArgs<string>(item => item.sicase),
-            skey: fetchArgs<string>(item => item.skey),
-            spos: fetchArgs<string>(item => item.spos),
-            sortlevel : fetchArgs<number>(item => item.sortlevel),
-            defaultFormAction : fetchSortFormArgs<string>(concFormsArgs, item => item.form_action),
-            mlxattr : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxattr', item, (n)=>availAttrs[0].n)),
-            mlxicase : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxicase', item)),
-            mlxbward : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxbward', item)),
-            mlxctx : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxctx', item)),
-            mlxpos : fetchArgs<Array<number>>(item => importMultiLevelArg<number>('mlxpos', item)),
+            sattr: fetchArgs(item => item.sattr),
+            sbward: fetchArgs(item => item.sbward),
+            sicase: fetchArgs(item => item.sicase),
+            skey: fetchArgs(item => item.skey),
+            spos: fetchArgs(item => item.spos),
+            sortlevel : fetchArgs(item => item.sortlevel),
+            defaultFormAction : fetchArgs(item => item.form_action),
+            mlxattr : fetchMLArgs(item => importMultiLevelArg(
+                'mlxattr', item, ()=>availAttrs[0].n)),
+            mlxicase : fetchMLArgs(item => importMultiLevelArg('mlxicase', item)),
+            mlxbward : fetchMLArgs(item => importMultiLevelArg('mlxbward', item)),
+            mlxctx : fetchMLArgs(item => importMultiLevelArg('mlxctx', item)),
+            mlxpos : fetchMLArgs(item => importMultiLevelArg('mlxpos', item))
         };
 
         this.queryModels.sortModel = new ConcSortModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sortModelProps
+            sortModelProps,
+            this.concFormsInitialArgs.sort
         );
         this.queryModels.multiLevelConcSortModel = new MultiLevelConcSortModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sortModelProps
+            sortModelProps,
+            this.concFormsInitialArgs.sort
         );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_SORT',
-            (args:Kontext.GeneralProps) => this.queryModels.sortModel.syncFrom(
-                rxOf({...this.concFormsInitialArgs.sort, ...args})
-
-            ).pipe(
-                mergeMap(
-                    () => this.queryModels.multiLevelConcSortModel.syncFrom(
-                        rxOf({...this.concFormsInitialArgs.sort, ...args})
-                    )
-                )
-            )
-        );
-
         this.sortFormViews = sortFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
@@ -641,8 +614,11 @@ export class ViewPage {
     }
 
     private initSampleForm(switchMcModel:SwitchMainCorpModel):void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArg = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>fetchSampleFormArgs(concFormsArgs, key);
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
+        const fetchArg = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>
+            fetchSampleFormArgs(concFormsArgs, key);
 
         const sampleModelProps:SampleFormProperties = {
             rlines: fetchArg<string>(item => item.rlines)
@@ -651,13 +627,8 @@ export class ViewPage {
         this.queryModels.sampleModel = new ConcSampleModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            sampleModelProps
-        );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_SAMPLE',
-            (args:Kontext.GeneralProps) => this.queryModels.sampleModel.syncFrom(
-                rxOf({...this.concFormsInitialArgs.sample, ...args})
-            )
+            sampleModelProps,
+            this.concFormsInitialArgs.sample
         );
         this.miscQueryOpsViews = sampleFormInit(
             this.layoutModel.dispatcher,
@@ -668,8 +639,10 @@ export class ViewPage {
     }
 
     private initSwitchMainCorpForm():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArg = <T>(key:(item:AjaxResponse.SwitchMainCorpArgs)=>T):Array<[string, T]>=>fetchSwitchMainCorpFormArgs(concFormsArgs, key);
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs');
+        const fetchArg = <T>(key:(item:AjaxResponse.SwitchMainCorpArgs)=>T):Array<[string, T]>=>
+            fetchSwitchMainCorpFormArgs(concFormsArgs, key);
 
         const switchMainCorpProps:SwitchMainCorpFormProperties = {
             maincorp: fetchArg<string>(item => item.maincorp)
@@ -678,29 +651,16 @@ export class ViewPage {
         this.queryModels.switchMcModel = new SwitchMainCorpModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            switchMainCorpProps
-        );
-
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_SWITCHMC',
-            (args:Kontext.GeneralProps) => {
-                return this.queryModels.switchMcModel.syncFrom(
-                    rxOf({...this.concFormsInitialArgs.switchmc, ...args})
-                )
-            }
+            switchMainCorpProps,
+            this.concFormsInitialArgs.switchmc
         );
     }
 
     private initFirsthitsForm():void {
         this.queryModels.firstHitsModel = new FirstHitsModel(
             this.layoutModel.dispatcher,
-            this.layoutModel
-        );
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
-            (args:Kontext.GeneralProps) => this.queryModels.firstHitsModel.syncFrom(
-                rxOf({...this.concFormsInitialArgs.firsthits, ...args})
-            )
+            this.layoutModel,
+            this.concFormsInitialArgs.firsthits
         );
     }
 
@@ -709,10 +669,10 @@ export class ViewPage {
      */
     initQueryOverviewArea(taghelperPlugin:PluginInterfaces.TagHelper.IPlugin,
                     queryStoragePlugin:PluginInterfaces.QueryStorage.IPlugin):void {
-        this.queryModels.queryReplayModel = new QueryReplayModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            {
+        this.queryModels.queryReplayModel = new QueryReplayModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            replayModelDeps: {
                 queryModel: this.queryModels.queryModel,
                 filterModel: this.queryModels.filterModel,
                 sortModel: this.queryModels.sortModel,
@@ -720,11 +680,13 @@ export class ViewPage {
                 sampleModel: this.queryModels.sampleModel,
                 textTypesModel: this.queryModels.textTypesModel,
                 switchMcModel: this.queryModels.switchMcModel,
-                firstHitsModel: this.queryModels.firstHitsModel
+                firstHitsModel: this.queryModels.firstHitsModel,
+                queryContextModel: this.queryModels.queryContextModel
             },
-            this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
-            this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
-        );
+            currentOperations: this.layoutModel.getConf<Array<Kontext.QueryOperation>>(
+                'queryOverview') || [],
+            concArgsCache: this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
+        });
 
         this.queryOverviewViews = queryOverviewInit({
             dispatcher: this.layoutModel.dispatcher,
@@ -741,9 +703,7 @@ export class ViewPage {
             },
             queryReplayModel: this.queryModels.queryReplayModel,
             mainMenuModel: this.layoutModel.getModels().mainMenuModel,
-            querySaveAsModel: this.queryModels.saveAsFormModel,
-            corparchModel: this.queryModels.queryModel
-
+            querySaveAsModel: this.queryModels.saveAsFormModel
         });
 
         this.layoutModel.renderReactComponent(
@@ -760,11 +720,12 @@ export class ViewPage {
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
-                                this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                                this.layoutModel.getNestedConf<
+                                    Array<PluginInterfaces.TagHelper.TagsetInfo>>(
+                                        'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    actionPrefix: '',
                     corpname: this.layoutModel.getCorpusIdent().id
                 },
                 filterFormProps: {
@@ -772,18 +733,20 @@ export class ViewPage {
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
-                                this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                                this.layoutModel.getNestedConf<
+                                Array<PluginInterfaces.TagHelper.TagsetInfo>>(
+                                    'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    actionPrefix: 'FILTER_',
                     filterId: '__new__'
                 },
                 filterSubHitsFormProps: {
                     formType: Kontext.ConcFormTypes.SUBHITS,
                     submitFn:() => {
                         const args = this.layoutModel.getConcArgs();
-                        window.location.href = this.layoutModel.createActionUrl('filter_subhits', args.items());
+                        window.location.href = this.layoutModel.createActionUrl(
+                            'filter_subhits', args.items());
                     },
                     opKey: undefined
                 },
@@ -798,10 +761,13 @@ export class ViewPage {
                 shuffleFormProps: {
                     formType: Kontext.ConcFormTypes.SHUFFLE,
                     lastOpSize: 0,
-                    shuffleMinResultWarning: this.layoutModel.getConf<number>('ShuffleMinResultWarning'),
+                    shuffleMinResultWarning: this.layoutModel.getConf<number>(
+                        'ShuffleMinResultWarning'
+                    ),
                     shuffleSubmitFn: () => {
                         const args = this.layoutModel.getConcArgs();
-                        window.location.href = this.layoutModel.createActionUrl('shuffle', args.items());
+                        window.location.href = this.layoutModel.createActionUrl(
+                            'shuffle', args.items());
                     }
                 },
                 switchMcFormProps: {
@@ -812,7 +778,7 @@ export class ViewPage {
         );
     }
 
-    initAnalysisViews(ttModel:TextTypes.ITextTypesModel):void {
+    initAnalysisViews(ttModel:TextTypesModel):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         // ------------------ coll ------------
         const collFormInputs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
@@ -850,7 +816,7 @@ export class ViewPage {
             mlxattr: List.repeat(() => attrs[0].n, initFreqLevel),
             mlxicase: List.repeat(() => false, initFreqLevel),
             mlxctx: List.repeat(() => '0>0', initFreqLevel),  // = "Node'"
-            alignType: List.repeat(() => 'left', initFreqLevel),
+            alignType: List.repeat(() => AlignTypes.LEFT, initFreqLevel),
         }
         this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,
@@ -874,14 +840,15 @@ export class ViewPage {
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
-            ctminfreq_type: ctFormInputs.ctminfreq_type
+            ctminfreq_type: ctFormInputs.ctminfreq_type,
+            usesAdHocSubcorpus: ttModel.usesAdHocSubcorpus(),
+            selectedTextTypes: ttModel.exportSelections(false)
         };
 
         this.ctFreqFormModel = new Freq2DFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps,
-            ttModel
+            ctFormProps
         );
 
         this.freqFormViews = freqFormInit(
@@ -907,27 +874,6 @@ export class ViewPage {
         );
     }
 
-    private updateMainMenu():void {
-        const updateMenu = (numLinesInGroups) => {
-            if (numLinesInGroups > 0) {
-                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-filter');
-                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'sorting');
-                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'shuffle');
-                this.layoutModel.getModels().mainMenuModel.disableMenuItem('menu-concordance', 'sample');
-
-            } else {
-                if (!this.layoutModel.getConf<boolean>('anonymousUser')) {
-                    this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-filter');
-                }
-                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'sorting');
-                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'shuffle');
-                this.layoutModel.getModels().mainMenuModel.enableMenuItem('menu-concordance', 'sample');
-            }
-        };
-        updateMenu(this.layoutModel.getConf<number>('NumLinesInGroups'));
-        this.layoutModel.addConfChangeHandler<number>('NumLinesInGroups', updateMenu);
-    }
-
     private initKeyShortcuts():void {
         const actionMap = this.layoutModel.getModels().mainMenuModel.exportKeyShortcutActions();
         actionMap.register(
@@ -950,24 +896,15 @@ export class ViewPage {
         });
     }
 
-    private initUndoFunction():void {
-        this.layoutModel.getModels().mainMenuModel.addItemActionPrerequisite(
-            'MAIN_MENU_UNDO_LAST_QUERY_OP',
-            (args:Kontext.GeneralProps) => new Observable((observer) => {
-                    window.history.back();
-                    observer.next();
-                    observer.complete();
-            })
-        );
-    }
-
-    private initTextTypesModel():TextTypes.ITextTypesModel {
+    private initTextTypesModel():TextTypesModel {
         this.queryModels.textTypesModel = new TextTypesModel(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
             this.layoutModel.getConf<any>('textTypesData')
         );
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
         // the pop-up query form does not display text-types form (yet the values are still
@@ -977,7 +914,7 @@ export class ViewPage {
     }
 
     private initTokenConnect():PluginInterfaces.TokenConnect.IPlugin {
-        if (this.layoutModel.pluginIsActive('token_connect')) {
+        if (this.layoutModel.pluginTypeIsActive(PluginName.TOKEN_CONNECT)) {
             return tokenConnectInit(
                 this.layoutModel.pluginApi(),
                 this.layoutModel.getConf<Array<string>>('alignedCorpora')
@@ -988,7 +925,8 @@ export class ViewPage {
         }
     }
 
-    private initModels(ttModel:TextTypes.ITextTypesModel, syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
+    private initModels(ttModel:TextTypesModel,
+                syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
                 tokenConnect:PluginInterfaces.TokenConnect.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
@@ -1004,13 +942,15 @@ export class ViewPage {
             baseViewAttr: this.layoutModel.getConcArgs().head('base_viewattr'),
             activePosAttrs: this.layoutModel.getConcArgs().head('attrs').split(','),
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
-            ViewMode: this.layoutModel.getConf<string>('ViewMode'),
+            ViewMode: this.layoutModel.getConf<'kwic'|'sen'|'align'>('ViewMode'),
             AttrAllpos: this.layoutModel.getConf<ViewOptions.PosAttrViewScope>('AttrAllpos'),
             AttrViewMode: this.layoutModel.getConf<ViewOptions.PosAttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
-            CorporaColumns: this.layoutModel.getConf<Array<Kontext.AttrItem>>('CorporaColumns').map(v =>
-                        ({n: v.n, label: v.label, visible: true})),
+            CorporaColumns: List.map(
+                v => ({n: v.n, label: v.label, visible: true}),
+                this.layoutModel.getConf<Array<Kontext.AttrItem>>('CorporaColumns')
+            ),
             SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
             baseCorpname: this.layoutModel.getCorpusIdent().id,
@@ -1025,67 +965,66 @@ export class ViewPage {
             canSendEmail: this.layoutModel.getConf<boolean>('canSendMail'),
             ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
-            SpeakerColors: this.lineGroupsChart.extendBaseColorPalette(1),
             SpeechSegment: this.layoutModel.getConf<[string, string]>('SpeechSegment'),
             SpeechOverlapAttr: this.layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
             SpeechOverlapVal: this.layoutModel.getConf<string>('SpeechOverlapVal'),
             SpeechAttrs: this.layoutModel.getConf<Array<string>>('SpeechAttrs'),
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
-            catColors: this.lineGroupsChart.extendBaseColorPalette(),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
-            supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
-            anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>('anonymousUserConcLoginPrompt'),
-            onSyntaxPaneReady: (tokenNumber, kwicLength) => {
-                syntaxViewer.render(
-                    document.getElementById('syntax-view-pane'),
-                    tokenNumber,
-                    kwicLength
-                );
-            },
-            onSyntaxPaneClose: () => {
-                syntaxViewer.close();
-            },
-            onReady: ()=>undefined
+            supportsSyntaxView: this.layoutModel.pluginTypeIsActive(
+                PluginName.SYNTAX_VIEWER),
+            supportsTokenConnect: tokenConnect ? tokenConnect.providesAnyTokenInfo() : false,
+            anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
+                'anonymousUserConcLoginPrompt'
+            ),
+            onLineSelChartFrameReady:(
+                    rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
+                this.lineGroupsChart.showGroupsStats(rootElm, corpusId, size);
+            }
         };
 
         this.viewModels = new ViewPageModels();
         this.viewModels.userInfoModel = this.layoutModel.getModels().userInfoModel;
         this.viewModels.mainMenuModel = this.layoutModel.getModels().mainMenuModel;
-        this.viewModels.lineViewModel = new ConcLineModel(
-                this.layoutModel,
-                this.layoutModel.dispatcher,
-                new ConcSaveModel({
-                    dispatcher: this.layoutModel.dispatcher,
-                    layoutModel: this.layoutModel,
-                    concSize: this.layoutModel.getConf<number>('ConcSize'),
-                    saveLinkFn: this.setDownloadLink.bind(this),
-                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
-                }),
-                syntaxViewer,
-                ttModel,
-                lineViewProps,
-                this.layoutModel.getConf<Array<ServerLineData>>('Lines')
-        );
+
         this.viewModels.usageTipsModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
             s => this.layoutModel.translate(s)
         );
-        this.viewModels.lineSelectionModel = new LineSelectionModel(
-                this.layoutModel,
-                this.layoutModel.dispatcher,
-                this.viewModels.lineViewModel,
-                this.layoutModel.getModels().userInfoModel,
-                conclines.openStorage(()=>{}),
-                () => {
-                    window.removeEventListener('beforeunload', this.handleBeforeUnload);
-                }
+
+        const lineSelStorage:ConcLinesStorage<LineSelectionModelState> = openStorage(
+            this.layoutModel.dispatcher,
+            (err:Error)=>{}
         );
-        this.viewModels.lineSelectionModel.registerQuery(this.layoutModel.getConf<Array<string>>('compiledQuery'));
+
+        this.viewModels.lineViewModel = new ConcordanceModel(
+            this.layoutModel,
+            this.layoutModel.dispatcher,
+            new ConcSaveModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                concSize: this.layoutModel.getConf<number>('ConcSize'),
+                saveLinkFn: this.setDownloadLink.bind(this),
+                quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
+            }),
+            syntaxViewer,
+            ttModel,
+            lineViewProps,
+            this.layoutModel.getConf<Array<ServerLineData>>('Lines')
+        );
+
+        this.viewModels.syntaxViewModel = syntaxViewer;
+
+        this.viewModels.lineSelectionModel = new LineSelectionModel({
+            layoutModel: this.layoutModel,
+            dispatcher: this.layoutModel.dispatcher,
+            clStorage: lineSelStorage
+        });
+
         this.viewModels.concDetailModel = new ConcDetailModel(
             this.layoutModel,
             this.layoutModel.dispatcher,
-            this.viewModels.lineViewModel,
             lineViewProps.StructCtx,
             {
                 speakerIdAttr: lineViewProps.SpeakerIdAttr,
@@ -1094,24 +1033,23 @@ export class ViewPage {
                 speechOverlapAttr: lineViewProps.SpeechOverlapAttr,
                 speechOverlapVal: lineViewProps.SpeechOverlapVal
             },
-            lineViewProps.SpeakerColors,
             lineViewProps.WideCtxGlobals,
             tokenConnect
         );
         this.viewModels.refsDetailModel = new RefsDetailModel(
             this.layoutModel,
-            this.layoutModel.dispatcher,
-            this.viewModels.lineViewModel
+            this.layoutModel.dispatcher
         );
 
         const showFreqInfo = this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&
-                this.layoutModel.getConf<Array<string>>('ConcDashboardModules').indexOf('freqs') > -1;
+                this.layoutModel.getConf<Array<string>>(
+                    'ConcDashboardModules').indexOf('freqs') > -1;
         this.viewModels.dashboardModel = new ConcDashboard(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
-                showFreqInfo: showFreqInfo,
-                hasKwicConnect: this.layoutModel.pluginIsActive('kwic_connect')
+                showFreqInfo,
+                hasKwicConnect: this.layoutModel.pluginTypeIsActive(PluginName.KWIC_CONNECT)
             }
         );
         if (showFreqInfo) {
@@ -1132,30 +1070,41 @@ export class ViewPage {
     }
 
     init():void {
-        this.layoutModel.init(() => {
-            this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(
-                (optsModel) => {
-                    this.viewModels.lineViewModel.updateOnGlobalViewOptsChange(optsModel);
-                }
-            );
+        const numLinesInGroups = this.layoutModel.getConf<number>('NumLinesInGroups');
+        const disabledMenuItems = numLinesInGroups > 0 ?
+            [
+                tuple('menu-filter', null),
+                tuple('menu-concordance', 'sorting'),
+                tuple('menu-concordance', 'shuffle'),
+                tuple('menu-concordance', 'sample')
+            ] :
+            [
+                tuple('menu-concordance', 'sorting'),
+                tuple('menu-concordance', 'shuffle'),
+                tuple('menu-concordance', 'sample')
+            ];
+
+        this.layoutModel.init(true, disabledMenuItems, () => {
             const ttModel = this.initTextTypesModel();
-            let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin = syntaxViewerInit(this.layoutModel.pluginApi());
+            let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin =
+                syntaxViewerInit(this.layoutModel.pluginApi());
             if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
-                syntaxViewerModel = new DummySyntaxViewModel(this.layoutModel.dispatcher);
+                syntaxViewerModel = new DummySyntaxViewModel(
+                    this.layoutModel.dispatcher,
+                    {
+                        isBusy: false,
+                        kwicLength: 0,
+                        tokenNumber: -1,
+                        targetHTMLElementID: null
+                    }
+                );
             }
             const lineViewProps = this.initModels(
                 ttModel,
                 syntaxViewerModel,
                 this.initTokenConnect()
             );
-            // we must handle non-React widgets:
-            lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
-                this.showGroupsStats(
-                    <HTMLElement>document.querySelector('#selection-actions .chart-area'),
-                    usePrevData
-                );
-            };
-            this.initUndoFunction();
+
             this.concViews = concViewsInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
@@ -1166,10 +1115,10 @@ export class ViewPage {
                 this.layoutModel.pluginApi(),
                 0,
                 this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
-                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords')
+                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
+                []
             );
             this.setupHistoryOnPopState();
-            this.onBeforeUnloadAsk();
             this.initQueryForm();
             this.initFirsthitsForm();
             this.initFilterForm(this.queryModels.firstHitsModel);
@@ -1178,30 +1127,30 @@ export class ViewPage {
             this.initSampleForm(this.queryModels.switchMcModel);
             this.initQueryOverviewArea(tagHelperPlg, queryStoragePlg);
             this.initAnalysisViews(ttModel);
-            this.updateMainMenu();
             this.initKeyShortcuts();
             this.updateHistory();
             if (this.layoutModel.getConf<boolean>('Unfinished')) {
                 this.reloadHits();
             }
+
+            this.layoutModel.registerPageLeaveVoters(
+                this.viewModels.lineSelectionModel
+            );
+
             this.renderLines(
                 {
-                    ttModel: ttModel,
+                    ttModel,
                     lvprops: lineViewProps,
                     qs: queryStoragePlg,
                     tagh: tagHelperPlg
                 },
-                this.layoutModel.pluginIsActive('kwic_connect') ?
+                this.layoutModel.pluginTypeIsActive(PluginName.KWIC_CONNECT) ?
                     kwicConnectInit(
                         this.layoutModel.pluginApi(),
                         this.viewModels.lineViewModel,
                         this.layoutModel.getConf<Array<string>>('alignedCorpora')
                     ).getView() :
                     null
-
-            ).subscribe(
-                () => undefined,
-                (err) => this.layoutModel.showMessage('error', err)
             );
         });
     }
@@ -1209,4 +1158,4 @@ export class ViewPage {
 
 export function init(conf):void {
     new ViewPage(new KontextPage(conf)).init();
-};
+}

@@ -19,8 +19,7 @@
  */
 
 import * as React from 'react';
-import { Subscription } from 'rxjs';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { init as saveViewInit } from './save';
@@ -31,11 +30,14 @@ import { QueryReplayModelState, QueryReplayModel } from '../../models/query/repl
 import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../models/query/replay/indirect';
 import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../models/query/save';
 import { Actions, ActionName } from '../../models/query/actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
 import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from './miscActions';
 import { QueryFormLiteProps, QueryFormProps } from './first';
 import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
-import { PluginInterfaces } from '../../types/plugins';
 import { SortFormProps } from './sort';
+import { MainMenuModelState } from '../../models/mainMenu';
+import { PluginInterfaces } from '../../types/plugins';
 
 /*
 Important note regarding variable naming conventions:
@@ -66,9 +68,8 @@ export interface OverviewModuleArgs {
         SwitchMainCorpForm:React.ComponentClass<SwitchMainCorpFormProps>;
     };
     queryReplayModel:QueryReplayModel|IndirectQueryReplayModel;
-    mainMenuModel:Kontext.IMainMenuModel;
+    mainMenuModel:IModel<MainMenuModelState>;
     querySaveAsModel:QuerySaveAsFormModel;
-    corparchModel:PluginInterfaces.Corparch.ICorpSelection;
 }
 
 
@@ -85,11 +86,6 @@ export interface QueryToolbarProps {
     filterSubHitsFormProps:SubHitsFormProps;
     filterFirstDocHitsFormProps:FirstHitsFormProps;
     sortFormProps:SortFormProps;
-}
-
-
-interface QueryToolbarState {
-    activeItem:{actionName:string};
 }
 
 
@@ -119,11 +115,11 @@ type AnyEditorProps = QueryFormLiteProps | FilterFormProps | SubHitsFormProps | 
 
 
 export function init({dispatcher, he, viewDeps, queryReplayModel,
-                      mainMenuModel, querySaveAsModel, corparchModel}:OverviewModuleArgs):OverviewViews {
+                      mainMenuModel, querySaveAsModel}:OverviewModuleArgs):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
     const saveViews = saveViewInit(dispatcher, he, querySaveAsModel);
-    const basicOverviewViews = basicOverviewInit(dispatcher, he, corparchModel);
+    const basicOverviewViews = basicOverviewInit(dispatcher, he);
 
 
     const formTypeToTitle = (opFormType:string) => {
@@ -215,7 +211,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     // ------------------------ <QueryEditor /> --------------------------------
 
     const QueryEditor:React.SFC<{
-        isLoading:boolean;
+        corpname:string;
         opKey:string;
         operationId:string;
         editIsLocked:boolean;
@@ -227,6 +223,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         resultSize:number;
         modeRunFullQuery:boolean;
         numOps:number;
+        isLoading:boolean;
         closeClickHandler:()=>void;
 
     }> = (props) => {
@@ -254,7 +251,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             }
             switch (props.editorProps.formType) {
                 case Kontext.ConcFormTypes.QUERY:
-                    return <viewDeps.QueryFormView {...props.editorProps} operationIdx={props.operationIdx} />;
+                    return <viewDeps.QueryFormView {...props.editorProps} operationIdx={props.operationIdx}
+                                corpname={props.corpname} />;
 
                 case Kontext.ConcFormTypes.FILTER:
                     return <viewDeps.FilterFormView {...props.editorProps}
@@ -273,23 +271,27 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             shuffleMinResultWarning={props.shuffleMinResultWarning}
                             lastOpSize={props.resultSize}
                             operationIdx={props.operationIdx}
+                            formType={Kontext.ConcFormTypes.SHUFFLE}
                             shuffleSubmitFn={()=>undefined} />;
 
                 case Kontext.ConcFormTypes.SWITCHMC:
                     return <viewDeps.SwitchMainCorpForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
-                                opKey={props.opKey} />;
+                                opKey={props.opKey}
+                                formType={Kontext.ConcFormTypes.SWITCHMC} />;
 
                 case Kontext.ConcFormTypes.SUBHITS:
                     return <viewDeps.SubHitsForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
                                 opKey={props.opKey}
+                                formType={Kontext.ConcFormTypes.SUBHITS}
                                 submitFn={()=>undefined} />;
 
                 case Kontext.ConcFormTypes.FIRSTHITS:
                     return <viewDeps.FirstHitsForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
-                                opKey={props.opKey} />;
+                                opKey={props.opKey}
+                                formType={Kontext.ConcFormTypes.FIRSTHITS} />;
 
                 default:
                     return <div><strong>[??] Unknown component</strong></div>;
@@ -318,6 +320,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     const QueryOpInfo:React.SFC<{
         idx:number;
+        corpname:string;
         item:ExtendedQueryOperation;
         editorProps:AnyEditorProps;
         hasOpenEditor:boolean;
@@ -363,6 +366,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     : null}
                 {props.hasOpenEditor ?
                     <QueryEditor
+                        corpname={props.corpname}
                         editorProps={props.editorProps}
                         closeClickHandler={props.closeEditorHandler}
                         operationIdx={props.idx}
@@ -493,22 +497,23 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     foreignSubcorp={props.foreignSubcorp} />
                             : null}
                     {List.map(
-                        (item, i) => {
-                        return <QueryOpInfo
-                                    key={`op_${i}`}
-                                    idx={i}
-                                    editOpKey={props.replayOperations[i]}
-                                    item={item}
-                                    clickHandler={handleEditClick(i, item.opid)}
-                                    hasOpenEditor={props.editedOperationIdx === i && !props.branchReplayIsRunning}
-                                    editorProps={props.editedOperationIdx === i ? getEditorProps(i, item.opid) : null}
-                                    closeEditorHandler={handleEditorClose}
-                                    isLoading={props.branchReplayIsRunning}
-                                    modeRunFullQuery={props.stopAfterOpIdx === null}
-                                    numOps={props.currEncodedOperations.length}
-                                    shuffleMinResultWarning={props.shuffleFormProps.shuffleMinResultWarning}
-                                    editIsLocked={props.editIsLocked} />;
-                        },
+                        (item, i) => (
+                            <QueryOpInfo
+                                corpname={props.corpname}
+                                key={`op_${i}`}
+                                idx={i}
+                                editOpKey={props.replayOperations[i]}
+                                item={item}
+                                clickHandler={handleEditClick(i, item.opid)}
+                                hasOpenEditor={props.editedOperationIdx === i && !props.branchReplayIsRunning}
+                                editorProps={props.editedOperationIdx === i ? getEditorProps(i, item.opid) : null}
+                                closeEditorHandler={handleEditorClose}
+                                isLoading={props.branchReplayIsRunning}
+                                modeRunFullQuery={props.stopAfterOpIdx === null}
+                                numOps={props.currEncodedOperations.length}
+                                shuffleMinResultWarning={props.shuffleFormProps.shuffleMinResultWarning}
+                                editIsLocked={props.editIsLocked} />
+                        ),
                         props.currEncodedOperations
                     )}
                 </ul>
@@ -533,8 +538,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const handleEditClickFn = (opIdx) => {
             return () => {
-                dispatcher.dispatch({
-                    name: 'REDIRECT_TO_EDIT_QUERY_OPERATION',
+                dispatcher.dispatch<Actions.RedirectToEditQueryOperation>({
+                    name: ActionName.RedirectToEditQueryOperation,
                     payload: {
                         operationIdx: opIdx
                     }
@@ -552,22 +557,23 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     origSubcorpName={props.origSubcorpName}
                                     foreignSubcorp={props.foreignSubcorp} />
                             : null}
-                    {props.ops.map((item, i) => {
-                        return <QueryOpInfo
-                                    key={`op_${i}`}
-                                    idx={i}
-                                    item={item}
-                                    clickHandler={handleEditClickFn(i)}
-                                    hasOpenEditor={false}
-                                    editOpKey={null}
-                                    editorProps={null}
-                                    closeEditorHandler={()=>undefined}
-                                    isLoading={false}
-                                    modeRunFullQuery={false}
-                                    numOps={props.ops.length}
-                                    shuffleMinResultWarning={null}
-                                    editIsLocked={true} />;
-                    })}
+                    {props.ops.map((item, i) => (
+                        <QueryOpInfo
+                            key={`op_${i}`}
+                            corpname={props.corpname}
+                            idx={i}
+                            item={item}
+                            clickHandler={handleEditClickFn(i)}
+                            hasOpenEditor={false}
+                            editOpKey={null}
+                            editorProps={null}
+                            closeEditorHandler={()=>undefined}
+                            isLoading={false}
+                            modeRunFullQuery={false}
+                            numOps={props.ops.length}
+                            shuffleMinResultWarning={null}
+                            editIsLocked={true} />
+                    ))}
             </ul>
         );
     }
@@ -591,32 +597,31 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     const AppendOperationOverlay:React.SFC<AppendOperationOverlayProps & {currEncodedOperations:Array<ExtendedQueryOperation>}
     > = (props) => {
         const handleCloseClick = () => {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                payload: {}
+            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
+                name: MainMenuActionName.ClearActiveItem
             });
         };
 
         const createActionBasedForm = () => {
             switch (props.menuActiveItem.actionName) {
-                case 'MAIN_MENU_SHOW_FILTER':
+                case MainMenuActionName.ShowFilter:
                     return <viewDeps.FilterFormView {...props.filterFormProps} filterId="__new__" />;
-                case 'MAIN_MENU_SHOW_SORT':
+                case MainMenuActionName.ShowSort:
                     return <viewDeps.SortFormView sortId="__new__" formType={Kontext.ConcFormTypes.SORT} />;
-                case 'MAIN_MENU_SHOW_SAMPLE':
+                case MainMenuActionName.ShowSample:
                     return <viewDeps.SampleForm sampleId="__new__" formType={Kontext.ConcFormTypes.SAMPLE} />;
-                case 'MAIN_MENU_APPLY_SHUFFLE':
+                case MainMenuActionName.ApplyShuffle:
                     return <viewDeps.ShuffleForm {...props.shuffleFormProps}
                                 lastOpSize={props.currEncodedOperations.length > 0 ?
                                     props.currEncodedOperations[props.currEncodedOperations.length - 1].size : 0}
                                 formType={Kontext.ConcFormTypes.SHUFFLE} />;
-                case 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE':
+                case MainMenuActionName.FilterApplySubhitsRemove:
                     return <viewDeps.SubHitsForm {...props.filterSubHitsFormProps}
                                     opKey="__new__" />;
-                case 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES':
+                case MainMenuActionName.FilterApplyFirstOccurrences:
                     return <viewDeps.FirstHitsForm {...props.filterFirstDocHitsFormProps}
                                     opKey="__new__" />;
-                case 'MAIN_MENU_SHOW_SWITCHMC':
+                case MainMenuActionName.ShowSwitchMc:
                     return <viewDeps.SwitchMainCorpForm {...props.switchMcFormProps}
                                             formType={Kontext.ConcFormTypes.SWITCHMC} />;
                 default:
@@ -626,13 +631,13 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const createTitle = () => {
             const m = {
-                MAIN_MENU_SHOW_FILTER: Kontext.ConcFormTypes.FILTER,
-                MAIN_MENU_SHOW_SORT: Kontext.ConcFormTypes.SORT,
-                MAIN_MENU_SHOW_SAMPLE: Kontext.ConcFormTypes.SAMPLE,
-                MAIN_MENU_APPLY_SHUFFLE: Kontext.ConcFormTypes.SHUFFLE,
-                MAIN_MENU_SHOW_SWITCHMC: Kontext.ConcFormTypes.SWITCHMC,
-                MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE: Kontext.ConcFormTypes.SUBHITS,
-                MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES: Kontext.ConcFormTypes.FIRSTHITS
+                [MainMenuActionName.ShowFilter]: Kontext.ConcFormTypes.FILTER,
+                [MainMenuActionName.ShowSort]: Kontext.ConcFormTypes.SORT,
+                [MainMenuActionName.ShowSample]: Kontext.ConcFormTypes.SAMPLE,
+                [MainMenuActionName.ApplyShuffle]: Kontext.ConcFormTypes.SHUFFLE,
+                [MainMenuActionName.ShowSwitchMc]: Kontext.ConcFormTypes.SWITCHMC,
+                [MainMenuActionName.FilterApplySubhitsRemove]: Kontext.ConcFormTypes.SUBHITS,
+                [MainMenuActionName.FilterApplyFirstOccurrences]: Kontext.ConcFormTypes.FIRSTHITS
             };
             const ident = formTypeToTitle(m[props.menuActiveItem.actionName]);
             return he.translate('query__add_an_operation_title_{opname}', {opname: ident});
@@ -650,61 +655,52 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         );
     };
 
-    const BoundAppendOperationOverlay = BoundWithProps<AppendOperationOverlayProps, QueryReplayModelState|IndirectQueryReplayModelState>(AppendOperationOverlay, queryReplayModel);
+    const BoundAppendOperationOverlay = BoundWithProps<
+        AppendOperationOverlayProps, QueryReplayModelState|IndirectQueryReplayModelState
+    >(AppendOperationOverlay, queryReplayModel);
 
     // ------------------------ <PersistentConcordanceForm /> --------------------------------
 
-    class PersistentConcordanceForm extends React.Component<{}, QuerySaveAsFormModelState> {
-
-        private modelSubscription:Subscription;
+    class PersistentConcordanceForm extends React.PureComponent<QuerySaveAsFormModelState> {
 
         constructor(props) {
             super(props);
-            this.state = querySaveAsModel.getState();
             this.handleCloseEvent = this.handleCloseEvent.bind(this);
-            this.handleModelChange = this.handleModelChange.bind(this);
             this.handleSubmit = this.handleSubmit.bind(this);
         }
 
         private handleCloseEvent() {
-            dispatcher.dispatch({
-                name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                payload: {}
+            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
+                name: MainMenuActionName.ClearActiveItem
             });
         }
 
         private handleSubmit() {
-            dispatcher.dispatch({
-                name: 'QUERY_MAKE_CONCORDANCE_PERMANENT',
-                payload: {revoke: false}
+            dispatcher.dispatch<ConcActions.MakeConcPermanent>({
+                name: ConcActionName.MakeConcPermanent,
+                payload: {
+                    revoke: false
+                }
             });
         }
 
         private handleRevokeSubmit() {
-            dispatcher.dispatch({
-                name: 'QUERY_MAKE_CONCORDANCE_PERMANENT',
-                payload: {revoke: true}
+            dispatcher.dispatch<ConcActions.MakeConcPermanent>({
+                name: ConcActionName.MakeConcPermanent,
+                payload: {
+                    revoke: true
+                }
             });
-        }
-
-        private handleModelChange(state) {
-            this.setState(state);
         }
 
         private createPermanentUrl() {
-            return he.createActionLink('view', [['q', '~' + this.state.queryId]]);
+            return he.createActionLink('view', [['q', '~' + this.props.queryId]]);
         }
 
         componentDidMount() {
-            this.modelSubscription = querySaveAsModel.addListener(this.handleModelChange);
-            dispatcher.dispatch({
-                name: 'QUERY_GET_CONC_ARCHIVED_STATUS',
-                payload: {}
+            dispatcher.dispatch<ConcActions.GetConcArchiveStatus>({
+                name: ConcActionName.GetConcArchiveStatus
             });
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -713,26 +709,26 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     <layoutViews.CloseableFrame onCloseClick={this.handleCloseEvent}
                                 customClass="PersistentConcordanceForm"
                                 label={he.translate('concview__make_conc_link_permanent_hd')}>
-                        {this.state.isBusy ?
+                        {this.props.isBusy ?
                             <layoutViews.AjaxLoaderImage /> :
                             <form>
                                 <p className="hint">
                                     <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
-                                    {this.state.concIsArchived ?
+                                    {this.props.concIsArchived ?
                                         he.translate('concview__permanent_link_is_archived') + ':' :
-                                        he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.state.concTTLDays})
+                                        he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.props.concTTLDays})
                                     }
                                 </p>
                                 <div>
                                     <input type="text" readOnly={true}
-                                            disabled={!this.state.concIsArchived}
+                                            disabled={!this.props.concIsArchived}
                                             value={this.createPermanentUrl()}
-                                            className={this.state.concIsArchived ? 'archived' : ''}
-                                            onClick={e => this.state.concIsArchived ?
+                                            className={this.props.concIsArchived ? 'archived' : ''}
+                                            onClick={e => this.props.concIsArchived ?
                                                             (e.target as HTMLInputElement).select() : null} />
                                 </div>
                                 <p>
-                                    {this.state.concIsArchived ?
+                                    {this.props.concIsArchived ?
                                         <button type="button" className="danger-button"
                                                 onClick={this.handleRevokeSubmit}>
                                             {he.translate('concview__make_conc_link_permanent_revoke_archived')}
@@ -751,48 +747,27 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
     }
 
+    const BoundPersistentConcordanceForm = Bound<QuerySaveAsFormModelState>(
+        PersistentConcordanceForm, querySaveAsModel);
+
 
     // ------------------------ <QueryToolbar /> --------------------------------
 
-    class QueryToolbar extends React.Component<QueryToolbarProps, QueryToolbarState>  {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._mainMenuModelChangeListener = this._mainMenuModelChangeListener.bind(this);
-            this.state = this._fetchModelState();
-        }
-
-        _fetchModelState() {
-            return {
-                activeItem: mainMenuModel.getActiveItem()
-            };
-        }
-
-        _mainMenuModelChangeListener() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = mainMenuModel.addListener(this._mainMenuModelChangeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
+    class QueryToolbar extends React.PureComponent<QueryToolbarProps & MainMenuModelState>  {
 
         _renderOperationForm() {
             const actions = [
-                'MAIN_MENU_SHOW_SORT',
-                'MAIN_MENU_APPLY_SHUFFLE',
-                'MAIN_MENU_SHOW_SAMPLE',
-                'MAIN_MENU_SHOW_FILTER',
-                'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE',
-                'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
+                MainMenuActionName.ShowSort,
+                MainMenuActionName.ApplyShuffle,
+                MainMenuActionName.ShowSample,
+                MainMenuActionName.ShowFilter,
+                MainMenuActionName.FilterApplySubhitsRemove,
+                MainMenuActionName.FilterApplyFirstOccurrences
             ];
-            if (this.state.activeItem !== null && actions.indexOf(this.state.activeItem.actionName) > -1) {
-                return <BoundAppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem} />;
+            if (this.props.activeItem !== null &&
+                    List.findIndex(v => v === this.props.activeItem.actionName, actions) > -1) {
+                return <BoundAppendOperationOverlay {...this.props}
+                            menuActiveItem={this.props.activeItem} />;
 
             } else {
                 return null;
@@ -800,12 +775,12 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         _renderSaveForm() {
-            if (this.state.activeItem) {
-                switch (this.state.activeItem.actionName) {
-                    case 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM':
+            if (this.props.activeItem) {
+                switch (this.props.activeItem.actionName) {
+                    case MainMenuActionName.ShowSaveQueryAsForm:
                         return <saveViews.QuerySaveAsForm />;
-                    case 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT':
-                        return <PersistentConcordanceForm />;
+                    case MainMenuActionName.MakeConcLinkPersistent:
+                        return <BoundPersistentConcordanceForm />;
                 }
             }
             return null;
@@ -822,27 +797,31 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
     }
 
+    const BoundQueryToolbar = BoundWithProps<
+        QueryToolbarProps, MainMenuModelState
+    >(QueryToolbar, mainMenuModel);
 
     // ------------------------ <NonViewPageQueryToolbar /> --------------------------------
 
-    const NonViewPageQueryToolbar:React.SFC<NonViewPageQueryToolbarProps & QueryReplayModelState> = (props) => {
+    const NonViewPageQueryToolbar:React.SFC<NonViewPageQueryToolbarProps & QueryReplayModelState> =
+    (props) => (
+        <div>
+            <RedirectingQueryOverview {...props} ops={props.currEncodedOperations} />
+            {props.overviewVisible ?
+                <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview}
+                    onEditClick={()=>undefined} /> :
+                null
+            }
+        </div>
+    );
 
-        return (
-            <div>
-                <RedirectingQueryOverview {...props} ops={props.currEncodedOperations} />
-                {props.currentQueryOverview !== null ?
-                    <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview}
-                            onEditClick={()=>undefined} /> :
-                null}
-            </div>
-        );
-    };
-
-    const BoundNonViewPageQueryToolbar = BoundWithProps<NonViewPageQueryToolbarProps, QueryReplayModelState|IndirectQueryReplayModelState>(NonViewPageQueryToolbar, queryReplayModel);
+    const BoundNonViewPageQueryToolbar = BoundWithProps<
+            NonViewPageQueryToolbarProps, QueryReplayModelState|IndirectQueryReplayModelState
+    >(NonViewPageQueryToolbar, queryReplayModel);
 
 
     return {
-        QueryToolbar: QueryToolbar,
+        QueryToolbar: BoundQueryToolbar,
         NonViewPageQueryToolbar: BoundNonViewPageQueryToolbar
     };
 }

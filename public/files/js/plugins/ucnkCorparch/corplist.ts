@@ -16,18 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {StatefulModel} from '../../models/base';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import * as corplistDefault from '../defaultCorparch/corplist';
 import { Kontext } from '../../types/common';
-import { Action, IFullActionControl } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { CorplistItem } from '../defaultCorparch/common';
+import { Actions, ActionName} from './actions';
+import { HTTP } from 'cnc-tskit';
 
 
 export interface CorplistTableModelState extends corplistDefault.CorplistTableModelState {
-    rows:Immutable.List<CorplistItem>;
+    rows:Array<CorplistItem>;
 }
 
 /**
@@ -40,47 +40,75 @@ export class CorplistTableModel extends corplistDefault.CorplistTableModel {
     /**
      *
      */
-    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, initialData:corplistDefault.CorplistServerData, preselectedKeywords:Array<string>) {
+    constructor(
+        dispatcher:IFullActionControl,
+        pluginApi:IPluginApi,
+        initialData:corplistDefault.CorplistServerData,
+        preselectedKeywords:Array<string>
+    ) {
         super(dispatcher, pluginApi, initialData, preselectedKeywords);
     }
 }
 
-export class CorpusAccessRequestModel extends StatefulModel {
+export class CorpusAccessRequestModel extends StatelessModel<{isBusy:boolean;}> {
 
     private pluginApi:IPluginApi;
 
-    static DispatchToken:string;
-
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
-        super(dispatcher);
+        super(dispatcher, {isBusy: false});
         this.pluginApi = pluginApi;
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'CORPUS_ACCESS_REQ_SUBMITTED':
-                    this.askForAccess(action.payload['corpusId'], action.payload['corpusName'], action.payload['customMessage']).subscribe(
-                        null,
-                        (error) => {
-                            this.pluginApi.showMessage('error', error);
-                        },
-                        () => {
-                            this.pluginApi.showMessage('info',
-                                this.pluginApi.translate('ucnkCorparch__your_message_sent'));
-                                this.emitChange();
-                        },
-                    );
-                break;
+
+        this.addActionHandler<Actions.CorpusAccessReqSubmitted>(
+            ActionName.CorpusAccessReqSubmitted,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.askForAccess(
+                    action.payload.corpusId,
+                    action.payload.corpusName,
+                    action.payload.customMessage
+
+                ).subscribe(
+                    null,
+                    (error) => {
+                        this.pluginApi.showMessage('error', error);
+                        dispatch<Actions.CorpusAccessReqSubmittedDone>({
+                            name: ActionName.CorpusAccessReqSubmittedDone
+                        });
+                    },
+                    () => {
+                        this.pluginApi.showMessage('info',
+                            this.pluginApi.translate('ucnkCorparch__your_message_sent')
+                        );
+                        dispatch<Actions.CorpusAccessReqSubmittedDone>({
+                            name: ActionName.CorpusAccessReqSubmittedDone
+                        });
+                    },
+                );
             }
-        });
+        );
+
+        this.addActionHandler<Actions.CorpusAccessReqSubmittedDone>(
+            ActionName.CorpusAccessReqSubmittedDone,
+            (state, action) => {
+                state.isBusy = false;
+            }
+        );
     }
 
-    private askForAccess(corpusId:string, corpusName:string, customMessage:string):Observable<Kontext.AjaxResponse> {
+    private askForAccess(
+        corpusId:string,
+        corpusName:string,
+        customMessage:string
+    ):Observable<Kontext.AjaxResponse> {
         return this.pluginApi.ajax$<Kontext.AjaxResponse>(
-            'POST',
+            HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/ask_corpus_access'),
             {
-                corpusId: corpusId,
-                corpusName: corpusName,
-                customMessage: customMessage
+                corpusId,
+                corpusName,
+                customMessage
             }
         );
     }
@@ -99,9 +127,16 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
 
     protected corplistTableModel:CorplistTableModel;
 
-    constructor(pluginApi:IPluginApi, initialData:corplistDefault.CorplistServerData, viewsInit:((...args:any[])=>any)) {
+    constructor(
+        pluginApi:IPluginApi,
+        initialData:corplistDefault.CorplistServerData,
+        viewsInit:((...args:any[])=>any)
+    ) {
         this.pluginApi = pluginApi;
-        this.corpusAccessRequestModel = new CorpusAccessRequestModel(pluginApi.dispatcher(), pluginApi);
+        this.corpusAccessRequestModel = new CorpusAccessRequestModel(
+            pluginApi.dispatcher(),
+            pluginApi
+        );
         this.corplistTableModel = new CorplistTableModel(
             pluginApi.dispatcher(),
             pluginApi,

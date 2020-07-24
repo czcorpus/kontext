@@ -20,27 +20,18 @@
 
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions, ActionName } from './actions';
+import { QueryContextArgs } from './common';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 
 
 export interface QueryContextModelState {
     formData:QueryContextArgs;
 }
 
-export type ExportedArgs = {[p in keyof QueryContextArgs]?:QueryContextArgs[p]};
 
-interface QueryContextArgs {
-    fc_lemword_window_type:string;
-    fc_lemword_wsize:string;
-    fc_lemword:string;
-    fc_lemword_type:string;
-    fc_pos_window_type:string;
-    fc_pos_wsize:string;
-    fc_pos:string[];
-    fc_pos_type:string;
-}
-
-
-export class QueryContextModel extends StatelessModel<QueryContextModelState> {
+export class QueryContextModel extends StatelessModel<QueryContextModelState>
+    implements IUnregistrable {
 
     constructor(dispatcher:IFullActionControl) {
         super(dispatcher, {
@@ -62,23 +53,39 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState> {
                 state.formData[action.payload.name] = action.payload.value;
             }
         );
+
+        this.addActionHandler<Actions.QuerySubmit>(
+            ActionName.QuerySubmit,
+            null,
+            (state, action, dispatch) => {
+                dispatch<Actions.QueryContextFormPrepareArgsDone>({
+                    name: ActionName.QueryContextFormPrepareArgsDone,
+                    payload: {
+                        data: state.formData
+                    }
+                });
+            }
+        ).sideEffectAlsoOn(
+            ActionName.QueryInputMakeCorpusPrimary,
+            ActionName.BranchQuery
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
     }
 
-    getContextArgs():ExportedArgs {
-        const data = this.getState().formData;
-        const ans:ExportedArgs = {};
-        if (data.fc_lemword) {
-            ans.fc_lemword = data.fc_lemword;
-            ans.fc_lemword_type = data.fc_lemword_type;
-            ans.fc_lemword_window_type = data.fc_lemword_window_type;
-            ans.fc_lemword_wsize = data.fc_lemword_wsize;
-        }
-        if (data.fc_pos) {
-            ans.fc_pos = data.fc_pos;
-            ans.fc_pos_type = data.fc_pos_type;
-            ans.fc_pos_window_type = data.fc_pos_window_type;
-            ans.fc_pos_wsize = ans.fc_pos_wsize;
-        }
-        return ans;
+    getRegistrationId():string {
+        return 'query-context-model';
     }
 }

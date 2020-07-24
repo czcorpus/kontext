@@ -17,10 +17,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import * as Immutable from 'immutable';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as viewInit} from './view';
-import { SubcMixerModel, SubcMixerExpression } from './model';
+
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { init as viewInit } from './view';
+import { SubcMixerModel } from './model';
 import { Kontext } from '../../types/common';
 
 declare var require:any;
@@ -38,7 +38,7 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
         this.model = model;
     }
 
-    getWidgetView():React.ComponentClass {
+    getWidgetView():PluginInterfaces.SubcMixer.View {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
@@ -49,7 +49,7 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
 }
 
 
-const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, subcorpFormModel, corpusIdAttr) => {
+const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, corpusIdAttr) => {
 
     const WARNING_SIZE_ERROR_RATIO = 0.01;
 
@@ -57,20 +57,21 @@ const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, su
         pluginApi.dispatcher(),
         pluginApi,
         {
-            ttAttributes: textTypesModel.getAttributes(),
+            ttAttributes: [],
             ttInitialAvailableValues: textTypesModel.getInitialAvailableValues(),
-            currentSubcname: Kontext.newFormValue('', true),
-            shares: Immutable.List<SubcMixerExpression>(),
-            alignedCorpora: Immutable.List<string>(),
+            subcname: Kontext.newFormValue('', true),
+            description: Kontext.newFormValue('', false),
+            otherValidationError: null,
+            subcIsPublic: false,
+            shares: [],
+            alignedCorpora: [],
             corpusIdAttr: corpusIdAttr,
             currentResult: null,
             ratioLimit: WARNING_SIZE_ERROR_RATIO,
             isBusy: false,
             isVisible: false,
             numOfErrors: 0,
-            subcIsPublic: false,
-            subcDescription: Kontext.newFormValue('', false),
-            liveattrsSelections:Immutable.Map<string, Immutable.List<string>>()
+            liveattrsSelections: {}
         }
     );
     return new SubcmixerPlugin(pluginApi, model);

@@ -18,99 +18,137 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {StatefulModel} from '../base';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {PageModel} from '../../app/page';
-import { Action, IFullActionControl } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+
+import { PageModel } from '../../app/page';
+import { Actions, ActionName } from './actions';
+import { HTTP, List, Dict, pipe, tuple } from 'cnc-tskit';
+import { WithinBuilderData } from './common';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+
+
+export interface WithinBuilderModelState {
+    data:Array<[string, string]>;
+    query:string;
+    currAttrIdx:number;
+    isBusy:boolean;
+}
 
 /**
  *
  */
-export class WithinBuilderModel extends StatefulModel {
+export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState>
+        implements IUnregistrable {
 
-    private pageModel:PageModel;
-
-    private data:Immutable.List<[string, string]>;
-
-    private query:string;
-
-    private currAttrIdx:number;
+    private readonly pageModel:PageModel;
 
     constructor(dispatcher:IFullActionControl, pageModel:PageModel) {
-        super(dispatcher);
-        this.pageModel = pageModel;
-        this.data = Immutable.List<[string, string]>();
-        this.query = '';
-        this.currAttrIdx = 0;
-        const self = this;
-
-        this.dispatcherRegister(function (action:Action) {
-            switch (action.name) {
-                case 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA':
-                    self.loadAttrs().subscribe(
-                        () => {
-                            self.emitChange();
-                        },
-                        (err) => {
-                            console.error(err);
-                            self.pageModel.showMessage('error', err);
-                        }
-                    );
-                break;
-                case 'QUERY_INPUT_SET_WITHIN_VALUE':
-                    self.query = action.payload['value'];
-                    self.emitChange();
-                break;
-                case 'QUERY_INPUT_SET_WITHIN_ATTR':
-                    self.currAttrIdx = action.payload['idx'];
-                    self.emitChange();
-                break;
-            }
-        });
-    }
-
-    private loadAttrs():Observable<any> {
-        return this.pageModel.ajax$<AjaxResponse.WithinBuilderData>(
-            'GET',
-            this.pageModel.createActionUrl('corpora/ajax_get_structattrs_details'),
+        super(
+            dispatcher,
             {
-                corpname: this.pageModel.getCorpusIdent().id
-            },
-            {contentType : 'application/x-www-form-urlencoded'}
+                data: [],
+                query: '',
+                currAttrIdx: 0,
+                isBusy: false
+            }
+        );
+        this.pageModel = pageModel;
 
-        ).pipe(
-            tap((data) => {
-                this.data = this.data.clear();
-                for (let attr in data.structattrs) {
-                    if (data.structattrs.hasOwnProperty(attr)) {
-                        data.structattrs[attr].forEach(item => {
-                            this.data = this.data.push([attr, item]);
+        this.addActionHandler<Actions.LoadWithinBuilderDataDone>(
+            ActionName.LoadWithinBuilderDataDone,
+            (state, action) => {
+                state.data = pipe(
+                    action.payload.data.structattrs,
+                    Dict.toEntries(),
+                    List.flatMap(([k, v]) => List.map(v2 => tuple(k, v2), v))
+                );
+                state.isBusy = false;
+            }
+        );
+
+        this.addActionHandler<Actions.LoadWithinBuilderData>(
+            ActionName.LoadWithinBuilderData,
+            (state, action) => {
+                state.isBusy = true;
+                state.data = [];
+                state.currAttrIdx = 0;
+            },
+            (state, action, dispatch) => {
+                this.loadAttrs().subscribe(
+                    (data) => {
+                        dispatch<Actions.LoadWithinBuilderDataDone>({
+                            name: ActionName.LoadWithinBuilderDataDone,
+                            payload: {
+                                data: data
+                            }
+                        });
+                    },
+                    (err) => {
+                        this.pageModel.showMessage('error', err);
+                        dispatch<Actions.LoadWithinBuilderDataDone>({
+                            name: ActionName.LoadWithinBuilderDataDone,
+                            error: err
                         });
                     }
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.SetWithinValue>(
+            ActionName.SetWithinValue,
+            (state, action) => {
+                state.query = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.SetWithinAttr>(
+            ActionName.SetWithinAttr,
+            (state, action) => {
+                if (action.payload.idx < state.data.length) {
+                    state.currAttrIdx = action.payload.idx;
                 }
-                this.currAttrIdx = 0;
-            })
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
         );
     }
 
-    getData():Immutable.List<[string, string]> {
-        return this.data;
+    getRegistrationId():string {
+        return 'within-builder-model';
     }
 
-    getQuery():string {
-        return this.query;
+    private loadAttrs():Observable<WithinBuilderData> {
+        return this.pageModel.ajax$<WithinBuilderData>(
+            HTTP.Method.GET,
+            this.pageModel.createActionUrl('corpora/ajax_get_structattrs_details'),
+            {
+                corpname: this.pageModel.getCorpusIdent().id
+            }
+
+        );
     }
 
-    getCurrAttrIdx():number {
-        return this.currAttrIdx;
-    }
-
-    exportQuery():string {
-        return this.data.size > 0 ?
-            `within <${this.data.get(this.currAttrIdx).join(' ')}="${this.query}" />`
+    static exportQuery(state:WithinBuilderModelState):string {
+        return state.data.length > 0 ?
+            `within <${state.data[state.currAttrIdx].join(' ')}="${state.query}" />`
             : '';
+    }
+
+    static ithValue(state:WithinBuilderModelState, i:number):string {
+        return state.data[i] ? state.data[i].join('.') : '?.?';
     }
 }

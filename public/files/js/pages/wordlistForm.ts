@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import {PageModel} from '../app/page';
-import {PluginInterfaces} from '../types/plugins';
-import * as Immutable from 'immutable';
-import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
-import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
-import {WordlistFormModel, WlnumsTypes, WlTypes} from '../models/wordlist/form';
-import {NonQueryCorpusSelectionModel} from '../models/corpsel';
-import createCorparch from 'plugins/corparch/init';
+import { Kontext } from '../types/common';
+import { PageModel } from '../app/page';
+import { PluginInterfaces } from '../types/plugins';
+import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
+import { WordlistFormModel } from '../models/wordlist/form';
+import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
-import { tap } from 'rxjs/operators';
+import { WlnumsTypes, WlTypes } from '../models/wordlist/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
+import createCorparch from 'plugins/corparch/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -47,41 +47,34 @@ class WordlistFormPage {
 
     private wordlistFormModel:WordlistFormModel;
 
-    private subcorpList:Immutable.List<Kontext.SubcorpListItem>;
+    private subcorpSel:NonQueryCorpusSelectionModel;
 
-    private subcorpSel:PluginInterfaces.Corparch.ICorpSelection;
+    private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
 
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-        this.subcorpList = Immutable.List<Kontext.SubcorpListItem>(
-                this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'));
     }
 
-    private initCorparchPlugin():PluginInterfaces.Corparch.WidgetView {
-        return createCorparch(this.layoutModel.pluginApi()).createWidget(
+    private initCorparchWidget(plg:PluginInterfaces.Corparch.IPlugin):PluginInterfaces.Corparch.WidgetView {
+        return plg.createWidget(
             'wordlist_form',
-            this.subcorpSel,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                    return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
-                        tap(
-                            () => {
-                                // all the components must be deleted to prevent memory leaks
-                                // and unwanted action handlers from previous instance
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('wordlist-form-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
-                                this.init();
-                            }
-                        )
-                    );
+                    this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                        name: GlobalActionName.SwitchCorpus,
+                        payload: {
+                            corpora: corpora,
+                            subcorpus: subcorpId
+                        }
+                    });
                 }
             }
         );
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             this.corpusIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
             this.subcorpSel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,
@@ -90,7 +83,9 @@ class WordlistFormPage {
                 origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
                 corpora: [this.layoutModel.getCorpusIdent().id],
-                availSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList')
+                availSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>(
+                    'SubcorpList'
+                )
             });
             this.wordlistFormModel = new WordlistFormModel(
                 this.layoutModel.dispatcher,
@@ -112,19 +107,17 @@ class WordlistFormPage {
                     wltype: WlTypes.SIMPLE
                 }
             );
-            this.layoutModel.registerSwitchCorpAwareObject(this.wordlistFormModel);
-            const corparchWidget = this.initCorparchPlugin();
+            this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
             this.views = wordlistFormInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
-                CorparchWidget: corparchWidget,
+                CorparchWidget: this.initCorparchWidget(this.corparchPlugin),
                 wordlistFormModel: this.wordlistFormModel
             });
 
             const queryOverviewViews = basicOverviewViewsInit(
                 this.layoutModel.dispatcher,
-                this.layoutModel.getComponentHelpers(),
-                this.subcorpSel
+                this.layoutModel.getComponentHelpers()
             );
             this.layoutModel.renderReactComponent(
                 queryOverviewViews.EmptyQueryOverviewBar,
@@ -132,6 +125,9 @@ class WordlistFormPage {
                 {
                     corpname: this.layoutModel.getCorpusIdent().id,
                     humanCorpname: this.layoutModel.getCorpusIdent().name,
+                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                    origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                    foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp
                 }
             );
 
@@ -140,7 +136,17 @@ class WordlistFormPage {
                 document.getElementById('wordlist-form-mount'),
                 {}
             );
-            this.layoutModel.restoreModelsDataAfterSwitch();
+            this.layoutModel.registerCorpusSwitchAwareModels(
+                () => {
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('wordlist-form-mount'));
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('query-overview-mount'));
+                    this.init();
+                },
+                this.wordlistFormModel,
+                this.corparchPlugin
+            );
         });
     }
 }

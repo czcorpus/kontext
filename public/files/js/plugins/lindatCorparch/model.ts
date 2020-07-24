@@ -20,13 +20,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import { StatefulModel } from '../../models/base';
+import { Kontext } from '../../types/common';
 import { IPluginApi } from '../../types/plugins';
-import * as Immutable from 'immutable';
-import { Action } from 'kombo';
+import { Action, StatefulModel } from 'kombo';
 import { forkJoin, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
+import { AjaxConcResponse } from '../../models/concordance/common';
+import { List, HTTP } from 'cnc-tskit';
+import { IUnregistrable } from '../../models/common/common';
 
 export enum ParallelType {
     DEFAULT = 'default',
@@ -62,25 +63,28 @@ interface CorplistWrapper {
 }
 
 /**
- * A TS type guard to distinguish between root corplist response (which is kind of a root node of the tree),
+ * A TS type guard to distinguish between root corplist response
+ * (which is kind of a root node of the tree),
  * actual tree nodes and ad-hoc corplist wrapper.
  */
-function isCorplistNodeServer(n:CorplistNodeServer|CorplistNodeServerResponse|CorplistWrapper):n is CorplistNodeServer {
+function isCorplistNodeServer(n:CorplistNodeServer|CorplistNodeServerResponse|CorplistWrapper
+        ):n is CorplistNodeServer {
     return (<CorplistNodeServerResponse>n).messages === undefined;
 }
 
 /**
  * A server response containing corplist data
  */
-export interface CorplistNodeServerResponse extends Kontext.AjaxConcResponse {
+export interface CorplistNodeServerResponse extends AjaxConcResponse {
     corplist:Array<CorplistNodeServer>;
-    sort_corplist:Array<CorplistNodeServer>; // TODO this can be generated on client (=> 50% less data via network)
+    // TODO this can be generated on client (=> 50% less data via network)
+    sort_corplist:Array<CorplistNodeServer>;
 }
 
 /**
  * A response containing list of permitted corpora
  */
-interface PermittedCorporaResponse extends Kontext.AjaxConcResponse {
+interface PermittedCorporaResponse extends AjaxConcResponse {
     permitted_corpora:{[corpusId:string]:string}; // corpus ID => corpus variant
 }
 
@@ -98,14 +102,14 @@ export interface Node {
     name:string;
     size: number,
     description:string;
-    access:Immutable.List<NodeAccess>; // TODO why array?
+    access:Array<NodeAccess>; // TODO why array?
     active:boolean;
     repo:string;
     pmltq:string;
     level:string; // TODO where is this actually generated?
-    language?:Immutable.List<string>;
-    features:Immutable.List<string>;
-    corplist:Immutable.List<Node>;
+    language?:Array<string>;
+    features:Array<string>;
+    corplist:Array<Node>;
     permitted:boolean;
     tokenConnect:Array<string>;
 }
@@ -113,13 +117,13 @@ export interface Node {
 /**
  *
  */
-export class TreeWidgetModel extends StatefulModel {
+export class TreeWidgetModel extends StatefulModel<{}> implements IUnregistrable {
 
-    protected pluginApi:IPluginApi;
+    protected readonly pluginApi:IPluginApi;
 
     private data:Node;
 
-    private sortedCorplist?:Immutable.List<Node>;
+    private sortedCorplist?:Array<Node>;
 
     private widgetId:number;
 
@@ -129,12 +133,12 @@ export class TreeWidgetModel extends StatefulModel {
 
     constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
                 corpusClickHandler:(ident: string) => void) {
-        super(pluginApi.dispatcher());
+        super(pluginApi.dispatcher(), {});
         this.pluginApi = pluginApi;
         this.corpusIdent = corpusIdent;
         this.corpusClickHandler = corpusClickHandler;
         this.data = {
-            access: Immutable.List<NodeAccess>([NodeAccess.ANONYMOUS]),
+            access: [NodeAccess.ANONYMOUS],
             active: true,
             name: '',
             description: '',
@@ -142,45 +146,47 @@ export class TreeWidgetModel extends StatefulModel {
             repo: null,
             pmltq: null,
             level: null,
-            features: Immutable.List<string>(),
-            corplist: Immutable.List<Node>(),
+            features: [],
+            corplist: [],
             permitted: true,
             tokenConnect: [],
         };
-        this.sortedCorplist = Immutable.List<Node>();
+        this.sortedCorplist = [];
 
-        this.dispatcherRegister(
-            (action:Action) => {
-                switch (action.name) {
-                    case 'TREE_CORPARCH_SET_NODE_STATUS':
-                        this.toggleNodeActiveStatus(action.payload['nodeId']);
-                        this.emitChange();
-                        break;
-                    case 'TREE_CORPARCH_EXPAND_ALL':
-                        this.toggleAllNodesActiveStatus(true);
-                        this.emitChange();
-                        break;
-                    case 'TREE_CORPARCH_COLLAPSE_ALL':
-                        this.toggleAllNodesActiveStatus(false);
-                        this.emitChange();
-                        break;
-                    case 'TREE_CORPARCH_GET_DATA':
-                        this.loadData().subscribe(
-                            (d) => this.emitChange(),
-                            (err) => {
-                                this.pluginApi.showMessage('error', err);
-                                this.emitChange();
-                            }
-                        );
-                        break;
-                    case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
-                        this.corpusClickHandler(action.payload['ident']);
-                        break;
-                    case 'TREE_CORPARCH_SEARCH':
-                        break;
-                }
+        this.onAction((action:Action) => {
+            switch (action.name) {
+                case 'TREE_CORPARCH_SET_NODE_STATUS':
+                    this.toggleNodeActiveStatus(action.payload['nodeId']);
+                    this.emitChange();
+                    break;
+                case 'TREE_CORPARCH_EXPAND_ALL':
+                    this.toggleAllNodesActiveStatus(true);
+                    this.emitChange();
+                    break;
+                case 'TREE_CORPARCH_COLLAPSE_ALL':
+                    this.toggleAllNodesActiveStatus(false);
+                    this.emitChange();
+                    break;
+                case 'TREE_CORPARCH_GET_DATA':
+                    this.loadData().subscribe(
+                        (d) => this.emitChange(),
+                        (err) => {
+                            this.pluginApi.showMessage('error', err);
+                            this.emitChange();
+                        }
+                    );
+                    break;
+                case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
+                    this.corpusClickHandler(action.payload['ident']);
+                    break;
+                case 'TREE_CORPARCH_SEARCH':
+                    break;
             }
-        );
+        });
+    }
+
+    getRegistrationId():string {
+        return 'lindat-corparch-widget-1';
     }
 
     private toggleAllNodesActiveStatus(status:boolean):void {
@@ -192,8 +198,8 @@ export class TreeWidgetModel extends StatefulModel {
                     node.active = status;
                 });
             }
-            for (let i = 0; i < curr.corplist.size; i +=1) {
-                srchRecursive(nodePath.concat(curr.corplist.get(i)), status);
+            for (let i = 0; i < curr.corplist.length; i +=1) {
+                srchRecursive(List.concat([curr.corplist[i]], nodePath), status);
             }
         }
 
@@ -237,8 +243,8 @@ export class TreeWidgetModel extends StatefulModel {
         mutationFn(last);
         for (let i = nodePath.length - 2; i >= 0; i -= 1) {
             const curr = this.copyNode(nodePath[i]);
-            const srchIdx = curr.corplist.findIndex(v => v.ident === last.ident);
-            curr.corplist = curr.corplist.set(srchIdx, last);
+            const srchIdx = List.findIndex(v => v.ident === last.ident, curr.corplist);
+            curr.corplist[srchIdx] = last;
             last = curr;
         }
         return last;
@@ -251,8 +257,8 @@ export class TreeWidgetModel extends StatefulModel {
             if (curr.ident === ident) {
                 return nodePath;
             }
-            for (let i = 0; i < curr.corplist.size; i +=1) {
-                const srch = srchRecursive(nodePath.concat(curr.corplist.get(i)), ident);
+            for (let i = 0; i < curr.corplist.length; i +=1) {
+                const srch = srchRecursive(List.concat([curr.corplist[i]], nodePath), ident);
                 if (srch !== null) {
                     return srch;
                 }
@@ -267,8 +273,10 @@ export class TreeWidgetModel extends StatefulModel {
         return null;
     }
 
-    private importTree(serverNode:CorplistNodeServer|CorplistNodeServerResponse, nodeId:string='a',
-                        ):Node {
+    private importTree(
+        serverNode:CorplistNodeServer|CorplistNodeServerResponse,
+        nodeId:string='a'
+    ):Node {
         let node:Node;
         if (isCorplistNodeServer(serverNode)) {
             node = {
@@ -280,9 +288,9 @@ export class TreeWidgetModel extends StatefulModel {
                 repo: serverNode.repo,
                 pmltq: serverNode.pmltq,
                 level: nodeId.split('.').length <= 2 ? 'outer' : 'inner',
-                language: Immutable.List<string>((serverNode.language || '').split(',')),
-                access: Immutable.List<NodeAccess>((serverNode.access || ['anonymous']).map(x => x as NodeAccess)),
-                features: Immutable.List<string>((serverNode.features || '').split(',')),
+                language: (serverNode.language || '').split(','),
+                access: (serverNode.access || ['anonymous']).map(x => x as NodeAccess),
+                features: (serverNode.features || '').split(','),
                 corplist: null,
                 permitted: serverNode.permitted,
                 tokenConnect: serverNode.tokenConnect,
@@ -290,17 +298,19 @@ export class TreeWidgetModel extends StatefulModel {
 
         } else {
             node = this.data;
-            this.sortedCorplist = serverNode.sort_corplist ? Immutable.List<Node>(
-                        serverNode.sort_corplist.map(c => this.importTree(c))) : undefined
+            this.sortedCorplist = serverNode.sort_corplist ?
+                List.map(c => this.importTree(c), serverNode.sort_corplist) :
+                undefined
         }
         if (serverNode.corplist) {
             node.ident = nodeId;
-            node.corplist = Immutable.List(
-                serverNode.corplist.map((node, i) => this.importTree(node, `${nodeId}.${i}`))
-            );
+            node.corplist = List.map((node, i) =>
+                this.importTree(node, `${nodeId}.${i}`),
+                serverNode.corplist
+            )
 
         } else {
-            node.corplist = Immutable.List();
+            node.corplist = [];
         }
         return node;
     }
@@ -334,7 +344,10 @@ export class TreeWidgetModel extends StatefulModel {
         for (let i = 0; i < indent; i += 1) {
             indentSpc.push(' ');
         }
-        console.log(`${indentSpc.join('')}node[${rootNode.ident}]: active: ${rootNode.active}, name: ${rootNode.name}`);
+        console.log(
+            `${indentSpc.join('')}node[${rootNode.ident}]: ` +
+            `active: ${rootNode.active}, name: ${rootNode.name}`
+        );
         rootNode.corplist.forEach(v => this.dumpNode(v, indent + 4));
     }
 
@@ -344,12 +357,12 @@ export class TreeWidgetModel extends StatefulModel {
     loadData():Observable<boolean> {
         return forkJoin(
             this.pluginApi.ajax$<CorplistNodeServerResponse>(
-                'GET',
+                HTTP.Method.GET,
                 this.pluginApi.createActionUrl('corpora/ajax_get_corptree_data'),
                 {}
             ),
             this.pluginApi.ajax$<PermittedCorporaResponse>(
-                'GET',
+                HTTP.Method.GET,
                 this.pluginApi.createActionUrl('corpora/ajax_get_permitted_corpora'),
                 {}
             )
@@ -373,7 +386,7 @@ export class TreeWidgetModel extends StatefulModel {
         return this.data;
     }
 
-    getSortedData():Immutable.List<Node> {
+    getSortedData():Array<Node> {
         return this.sortedCorplist;
     }
 

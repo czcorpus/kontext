@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-
-
 export interface ConcToken {
     className:string;
     text:Array<string>; // array => multiple words per 'pseudo-position'
@@ -51,31 +48,21 @@ export abstract class LangSection {
         this.ref = ref;
     }
 
-    abstract getAllChunks():Immutable.List<TextChunk>;
+    abstract getAllChunks():Array<TextChunk>;
 
     abstract findChunk(chunkId:string):TextChunk;
 }
 
-export class Line {
-    lineGroup:number;
+export interface Line {
+    lineGroup:number|undefined;
     lineNumber:number;
     kwicLength:number;
     hasFocus:boolean;
-    languages:Immutable.List<LangSection>;
-
-    clone():Line {
-        const copy = new Line();
-        copy.lineGroup = this.lineGroup;
-        copy.lineNumber = this.lineNumber;
-        copy.kwicLength = this.kwicLength;
-        copy.hasFocus = this.hasFocus;
-        copy.languages = this.languages;
-        return copy;
-    }
+    languages:Array<LangSection>;
 }
 
+
 export interface IConcLinesProvider {
-    getLines():Immutable.List<Line>;
     isUnfinishedCalculation():boolean;
     getRecommOverviewMinFreq():number;
 }

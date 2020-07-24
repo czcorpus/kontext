@@ -18,9 +18,10 @@
 
 import * as React from 'react';
 import {Kontext} from '../../types/common';
-import {TreeWidgetModel, Node} from './init';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import {TreeWidgetModel, Node, TreeWidgetModelState} from './init';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { ActionName, Actions } from './actions';
+import { List } from 'cnc-tskit';
 
 export interface CorptreeWidgetProps {
 
@@ -33,8 +34,8 @@ export interface CorptreePageComponentProps {
 
 
 export interface Views {
-    CorptreeWidget:React.ComponentClass<CorptreeWidgetProps>;
-    CorptreePageComponent:React.ComponentClass<CorptreePageComponentProps>;
+    CorptreeWidget:React.ComponentClass<CorptreeWidgetProps, TreeWidgetModelState>;
+    CorptreePageComponent:React.ComponentClass<CorptreePageComponentProps, TreeWidgetModelState>;
     FilterPageComponent:React.SFC<{}>;
 }
 
@@ -47,14 +48,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const TreeNode:React.SFC<{
         name:string;
         ident:string;
-        active:boolean;
-        corplist:Node;
+        nodeActive:{[key:string]:boolean};
+        corplist:Array<Node>;
 
     }> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch({
-                name: 'TREE_CORPARCH_SET_NODE_STATUS',
+            dispatcher.dispatch<Actions.SetNodeStatus>({
+                name: ActionName.SetNodeStatus,
                 payload: {
                     nodeId: props.ident
                 }
@@ -62,7 +63,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const getStateImagePath = () => {
-            return he.createStaticUrl(props.active ? 'img/collapse.svg' : 'img/expand.svg');
+            return he.createStaticUrl(props.nodeActive[props.ident] ? 'img/collapse.svg' : 'img/expand.svg');
         };
 
         return (
@@ -71,8 +72,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <img className="state-flag" src={getStateImagePath()} />
                     {props.name}
                 </a>
-                {props.active ?
-                    <ItemList name={props.name} corplist={props.corplist} />
+                {props.nodeActive[props.ident] ?
+                    <ItemList name={props.name} corplist={props.corplist} nodeActive={props.nodeActive}/>
                     : null }
             </li>
         );
@@ -80,11 +81,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <TreeLeaf /> -------------------------------
 
-    const TreeLeaf = (props) => {
+    const TreeLeaf:React.SFC<{
+        ident:string;
+        name:string;
+
+    }> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch({
-                name: 'TREE_CORPARCH_LEAF_NODE_CLICKED',
+            dispatcher.dispatch<Actions.LeafNodeClicked>({
+                name: ActionName.LeafNodeClicked,
                 payload: {
                     ident: props.ident
                 }
@@ -102,18 +107,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <ItemList /> -------------------------------
 
-    const ItemList = (props) => {
+    const ItemList:React.SFC<{
+        htmlClass?:string;
+        name?:string;
+        corplist:Array<Node>;
+        nodeActive:{[key:string]:boolean};
+
+    }> = (props) => {
 
         const renderChildren = () => {
-            return props.corplist.map((item, i) => {
-                if (item['corplist'].size > 0) {
-                    return <TreeNode key={i} name={item['name']} ident={item['ident']}
-                                        corplist={item['corplist']} active={item['active']} />;
+            return List.map((item, i) => {
+                if (item.corplist.length > 0) {
+                    return <TreeNode key={i} name={item.name} ident={item.ident}
+                                        corplist={item.corplist} nodeActive={props.nodeActive}
+                            />;
 
                 } else {
-                    return <TreeLeaf key={i} name={item['name']} ident={item['ident']} />;
+                    return <TreeLeaf key={i} name={item.name} ident={item.ident} />;
                 }
-            });
+            }, props.corplist);
         };
 
         return (
@@ -125,66 +137,31 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <CorptreeWidget /> -------------------------------
 
-    class CorptreeWidget extends React.Component<CorptreeWidget, {
-        active:boolean;
-        data:Node;
-        currentCorpusIdent:Kontext.FullCorpusIdent;
-    }> {
-
-        private modelSubscription:Subscription;
+    class CorptreeWidget extends React.PureComponent<CorptreeWidgetProps & TreeWidgetModelState> {
 
         constructor(props) {
             super(props);
             this._buttonClickHandler = this._buttonClickHandler.bind(this);
-            this._changeListener = this._changeListener.bind(this);
-            this.state = {
-                active: false,
-                data: treeModel.getData(),
-                currentCorpusIdent: treeModel.getCurrentCorpusIdent()
-            };
         }
 
         _buttonClickHandler() {
-            if (!this.state.active) {
-                dispatcher.dispatch({
-                    name: 'TREE_CORPARCH_GET_DATA',
-                    payload: {}
-                });
+            if (!this.props.active) {
+                dispatcher.dispatch<Actions.GetData>({name: ActionName.GetData});
 
             } else {
-                this.setState({
-                    active: !this.state.active,
-                    data: this.state.data,
-                    currentCorpusIdent: treeModel.getCurrentCorpusIdent()
-                });
+                dispatcher.dispatch<Actions.Deactivate>({name: ActionName.Deactivate});
             }
-        }
-
-        _changeListener() {
-            this.setState({
-                active: true,
-                data: treeModel.getData(),
-                currentCorpusIdent: treeModel.getCurrentCorpusIdent()
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = treeModel.addListener(this._changeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
             return (
                 <div className="corp-tree-widget">
                     <button className="switch util-button" type="button" onClick={this._buttonClickHandler}
-                            title={this.state.currentCorpusIdent.name}>
-                        {this.state.currentCorpusIdent.id}
+                            title={this.props.corpusIdent.name}>
+                        {this.props.corpusIdent.id}
                     </button>
-                    {this.state.active ? <ItemList htmlClass="corp-tree"
-                        corplist={this.state.data['corplist']} /> : null}
+                    {this.props.active ? <ItemList htmlClass="corp-tree"
+                        corplist={this.props.data.corplist} nodeActive={this.props.nodeActive} /> : null}
                 </div>
             );
         }
@@ -192,59 +169,31 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------- <CorptreePageComponent /> -----------------
 
-    class CorptreePageComponent extends React.Component<CorptreePageComponentProps, {
-        data:Node;
-        currentCorpusIdent:Kontext.FullCorpusIdent;
-
-    }> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this._changeListener = this._changeListener.bind(this);
-            this.state = {
-                data: null,
-                currentCorpusIdent: treeModel.getCurrentCorpusIdent()
-            };
-        }
-
-        _changeListener() {
-            this.setState({
-                data: treeModel.getData(),
-                currentCorpusIdent: treeModel.getCurrentCorpusIdent()
-            });
-        }
+    class CorptreePageComponent extends React.Component<CorptreePageComponentProps & TreeWidgetModelState> {
 
         componentDidMount() {
-            this.modelSubscription = treeModel.addListener(this._changeListener);
-            dispatcher.dispatch({
-                name: 'TREE_CORPARCH_GET_DATA',
-                payload: {}
-            });
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
+            dispatcher.dispatch<Actions.GetData>({name: ActionName.GetData});
         }
 
         render() {
             return (
                 <div className="corp-tree-component">
                     <ItemList htmlClass="corp-tree"
-                            corplist={this.state.data ? this.state.data['corplist'] : []} />
+                            corplist={this.props.data ? this.props.data.corplist : []}
+                            nodeActive={this.props.nodeActive}
+                    />
                 </div>
             );
         }
     }
 
-    const FilterPageComponent = (props) => {
+    const FilterPageComponent:React.SFC<{}> = (props) => {
         return <span />;
     }
 
     return {
-        CorptreeWidget: CorptreeWidget,
-        CorptreePageComponent: CorptreePageComponent,
+        CorptreeWidget: BoundWithProps<CorptreeWidgetProps, TreeWidgetModelState>(CorptreeWidget, treeModel),
+        CorptreePageComponent: BoundWithProps<CorptreeWidgetProps, TreeWidgetModelState>(CorptreePageComponent, treeModel),
         FilterPageComponent: FilterPageComponent
     };
 }

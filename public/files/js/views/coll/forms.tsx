@@ -19,20 +19,17 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
-import {CollFormModel, CollFormModelState} from '../../models/coll/collForm';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, Bound, ActionDispatcher } from 'kombo';
 
+import { Kontext } from '../../types/common';
+import { CollFormModel, CollFormModelState } from '../../models/coll/collForm';
+import { Dict, List } from 'cnc-tskit';
+import { Actions, ActionName } from '../../models/coll/actions';
 
-export interface CollFormProps {
-
-}
 
 
 export interface FormsViews {
-    CollForm:React.ComponentClass<CollFormProps>;
+    CollForm:React.ComponentClass<{}>;
 }
 
 
@@ -44,13 +41,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     const AttrSelection:React.SFC<{
         cattr:string;
-        attrList:Immutable.List<Kontext.AttrItem>;
+        attrList:Array<Kontext.AttrItem>;
 
     }> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CATTR',
+            dispatcher.dispatch<Actions.FormSetCattr>({
+                name: ActionName.FormSetCattr,
                 payload: {
                     value: evt.target.value
                 }
@@ -75,8 +72,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleFromValChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CFROMW',
+            dispatcher.dispatch<Actions.FormSetCfromw>({
+                name: ActionName.FormSetCfromw,
                 payload: {
                     value: evt.target.value
                 }
@@ -84,8 +81,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleToValChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CTOW',
+            dispatcher.dispatch<Actions.FormSetCtow>({
+                name: ActionName.FormSetCtow,
                 payload: {
                     value: evt.target.value
                 }
@@ -115,8 +112,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CMINFREQ',
+            dispatcher.dispatch<Actions.FormSetCminFreq>({
+                name: ActionName.FormSetCminFreq,
                 payload: {
                     value: evt.target.value
                 }
@@ -139,8 +136,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CMINBGR',
+            dispatcher.dispatch<Actions.FormSetCminbgr>({
+                name: ActionName.FormSetCminbgr,
                 payload: {
                     value: evt.target.value
                 }
@@ -179,15 +176,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // -------------------- <CollMetricsSelection /> --------------------------------------------
 
     const CollMetricsSelection:React.SFC<{
-        availCbgrfns:Immutable.OrderedMap<string, string>;
-        cbgrfns:Immutable.Set<string>;
+        availCbgrfns:Array<[string, string]>;
+        cbgrfns:{[key:string]:true};
         csortfn:string;
 
     }> = (props) => {
 
-        const handleDisplayCheckboxClick = (value) => (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CBGRFNS',
+        const handleDisplayCheckboxClick = (value:string) => (evt) => {
+            dispatcher.dispatch<Actions.FormSetCbgrfns>({
+                name: ActionName.FormSetCbgrfns,
                 payload: {
                     value: value
                 }
@@ -195,9 +192,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             evt.stopPropagation();
         };
 
-        const handleCheckboxClick = (value) => (evt) => {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SET_CSORTFN',
+        const handleCheckboxClick = (value:string) => (evt) => {
+            dispatcher.dispatch<Actions.FormSetCsortfn>({
+                name: ActionName.FormSetCsortfn,
                 payload: {
                     value: value
                 }
@@ -219,25 +216,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     </tr>
                 </thead>
                 <tbody>
-                    {props.availCbgrfns.map((item, k) => {
-                        return (
-                            <tr key={`v_${k}`} className={props.cbgrfns.includes(k) ? 'selected' : null}>
-                                <CollMetricsTermTh value={item} code={k} />
-                                <td className="display-chk"
-                                        onClick={handleDisplayCheckboxClick(k)}>
-                                    <input type="checkbox" value={k}
-                                            checked={props.cbgrfns.includes(k)}
-                                            readOnly={true} />
-                                </td>
-                                <td className={props.csortfn === k ? 'unique-sel is-selected' : 'unique-sel'}
-                                        onClick={handleCheckboxClick(k)}>
-                                    <input type="radio" value={k}
-                                            checked={props.csortfn === k}
-                                            readOnly={true} />
-                                </td>
-                            </tr>
-                        );
-                    }).toList()}
+                    {List.map(
+                        ([fn, label], k) => {
+                            return (
+                                <tr key={`v_${k}:${fn}`} className={Dict.hasKey(fn, props.cbgrfns) ? 'selected' : null}>
+                                    <CollMetricsTermTh value={label} code={fn} />
+                                    <td className="display-chk"
+                                            onClick={handleDisplayCheckboxClick(fn)}>
+                                        <input type="checkbox" value={fn}
+                                                checked={Dict.hasKey(fn, props.cbgrfns)}
+                                                readOnly={true} />
+                                    </td>
+                                    <td className={props.csortfn === fn ? 'unique-sel is-selected' : 'unique-sel'}
+                                            onClick={handleCheckboxClick(fn)}>
+                                        <input type="radio" value={fn}
+                                                checked={props.csortfn === fn}
+                                                readOnly={true} />
+                                    </td>
+                                </tr>
+                            );
+                        },
+                        props.availCbgrfns
+                    )}
                 </tbody>
             </table>
         );
@@ -245,34 +245,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // -------------------- <CollocationsForm /> --------------------------------------------
 
-    class CollForm extends React.Component<CollFormProps, CollFormModelState> {
+    class CollForm extends React.PureComponent<CollFormModelState> {
 
         constructor(props) {
             super(props);
-            this._modelChangeListener = this._modelChangeListener.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this.state = collFormModel.getState();
-        }
-
-        private modelSubscription:Subscription;
-
-        _modelChangeListener(state:CollFormModelState) {
-            this.setState(state);
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'COLL_FORM_SUBMIT',
-                payload: {}
+            dispatcher.dispatch<Actions.FormSubmit>({
+                name: ActionName.FormSubmit
             });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = collFormModel.addListener(this._modelChangeListener);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
@@ -283,27 +266,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             <tr>
                                 <th>{he.translate('coll__attribute_label')}:</th>
                                 <td>
-                                    <AttrSelection attrList={this.state.attrList} cattr={this.state.cattr} />
+                                    <AttrSelection attrList={this.props.attrList} cattr={this.props.cattr} />
                                 </td>
                             </tr>
                             <tr>
                                 <th>{he.translate('coll__coll_window_span')}:</th>
                                 <td>
                                     <WindowSpanInput
-                                            cfromw={this.state.cfromw}
-                                            ctow={this.state.ctow} />
+                                            cfromw={this.props.cfromw}
+                                            ctow={this.props.ctow} />
                                 </td>
                             </tr>
                             <tr>
                                 <th>{he.translate('coll__min_coll_freq_in_corpus')}:</th>
                                 <td>
-                                    <MinCollFreqCorpInput cminfreq={this.state.cminfreq} />
+                                    <MinCollFreqCorpInput cminfreq={this.props.cminfreq} />
                                 </td>
                             </tr>
                             <tr>
                                 <th>{he.translate('coll__min_coll_freq_in_span')}:</th>
                                 <td>
-                                    <MinCollFreqSpanInput cminbgr={this.state.cminbgr} />
+                                    <MinCollFreqSpanInput cminbgr={this.props.cminbgr} />
                                 </td>
                             </tr>
                             <tr>
@@ -312,9 +295,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             </tr>
                             <tr>
                                 <td colSpan={2}>
-                                    <CollMetricsSelection cbgrfns={this.state.cbgrfns}
-                                                availCbgrfns={this.state.availCbgrfns}
-                                                csortfn={this.state.csortfn} />
+                                    <CollMetricsSelection cbgrfns={this.props.cbgrfns}
+                                                availCbgrfns={this.props.availCbgrfns}
+                                                csortfn={this.props.csortfn} />
                                 </td>
                             </tr>
                         </tbody>
@@ -331,7 +314,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }
 
     return {
-        CollForm: CollForm
+        CollForm: Bound(CollForm, collFormModel)
     };
 
 }

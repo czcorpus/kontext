@@ -18,39 +18,59 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import { Action, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { PageModel } from '../../app/page';
+import { FirstHitsServerArgs } from './common';
+import { MultiDict } from '../../multidict';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions, ActionName } from './actions';
 
-export class FirstHitsModel extends StatefulModel {
 
-    private layoutModel:PageModel;
+export interface FirstHitsModelState {
+    docStructValues:{[key:string]:string};
+}
 
-    private docStructValues:Immutable.Map<string, string>;
+
+export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
+
+    private readonly layoutModel:PageModel;
+
+    private readonly syncInitialArgs:AjaxResponse.FirstHitsFormArgs;
 
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
-        super(dispatcher);
-        this.layoutModel = layoutModel;
-        this.docStructValues = Immutable.Map<string, string>();
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'FILTER_FIRST_HITS_SUBMIT':
-                    this.submitForm(action.payload['opKey']);
-                    // app leaves here
-                break;
+    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, syncInitialArgs:AjaxResponse.FirstHitsFormArgs) {
+        super(
+            dispatcher,
+            {
+                docStructValues: {}
             }
-        });
+        );
+        this.layoutModel = layoutModel;
+        this.syncInitialArgs = syncInitialArgs;
+
+        this.addActionHandler<MainMenuActions.FilterApplyFirstOccurrences>(
+            MainMenuActionName.FilterApplyFirstOccurrences,
+            action => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.FilterFirstHitsSubmit>(
+            ActionName.FilterFirstHitsSubmit,
+            action => {
+                this.submitForm(action.payload.opKey);
+            }
+        );
     }
 
     getSubmitUrl(opKey:string):string {
-        const args = this.layoutModel.getConcArgs();
-        args.set('fh_struct', this.docStructValues.get(opKey));
+        const args = this.layoutModel.getConcArgs() as MultiDict<FirstHitsServerArgs>;
+        args.set('fh_struct', this.state.docStructValues[opKey]);
         return this.layoutModel.createActionUrl('filter_firsthits', args);
     }
 
@@ -63,7 +83,9 @@ export class FirstHitsModel extends StatefulModel {
             tap(
                 (data) => {
                     if (data.form_type === 'firsthits') {
-                        this.docStructValues = this.docStructValues.set(data.op_key, data.doc_struct);
+                        this.changeState(state => {
+                            state.docStructValues[data.op_key] = data.doc_struct;
+                        });
                     }
                 }
             ),
@@ -82,9 +104,4 @@ export class FirstHitsModel extends StatefulModel {
             )
         );
     }
-
-    getDocStructValues():Immutable.Map<string, string> {
-        return this.docStructValues;
-    }
-
 }

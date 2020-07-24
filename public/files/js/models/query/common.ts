@@ -18,15 +18,76 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {Kontext, ViewOptions} from '../../types/common';
-import {StatefulModel} from '../base';
-import {PageModel} from '../../app/page';
-import {TextTypesModel} from '../textTypes/main';
-import {QueryContextModel} from './context';
-import {parse as parseQuery, ITracer} from 'cqlParser/parser';
-import { Action, IFullActionControl } from 'kombo';
+import { Dict } from 'cnc-tskit';
+import { IFullActionControl, StatefulModel } from 'kombo';
 
+import { Kontext } from '../../types/common';
+import { PageModel } from '../../app/page';
+import { TextTypesModel } from '../textTypes/main';
+import { QueryContextModel } from './context';
+import { parse as parseQuery, ITracer } from 'cqlParser/parser';
+import { ConcServerArgs } from '../concordance/common';
+import { QueryFormType, Actions, ActionName } from './actions';
+
+
+export type QueryType = 'iquery'|'phrase'|'lemma'|'word'|'cql';
+
+export interface QueryContextArgs {
+    fc_lemword_window_type:string;
+    fc_lemword_wsize:string;
+    fc_lemword:string;
+    fc_lemword_type:string;
+    fc_pos_window_type:string;
+    fc_pos_wsize:string;
+    fc_pos:string[];
+    fc_pos_type:string;
+}
+
+export type AnyQuery = {
+    iquery?:string;
+    phrase?:string;
+    lemma?:string;
+    word?:string;
+    cql?:string
+}
+
+export interface ConcQueryArgs extends ConcServerArgs, AnyQuery {
+    shuffle:0|1;
+    [sca:string]:string|number;
+}
+
+
+export interface ConcSortServerArgs extends ConcServerArgs {
+    sattr:string;
+    skey:string;
+    sbward:string;
+    sicase:string;
+    spos:string;
+    sortlevel:string;
+    [other:string]:string|number;
+}
+
+export interface SampleServerArgs extends ConcServerArgs {
+    rlines:number;
+}
+
+export interface SwitchMainCorpServerArgs extends ConcServerArgs {
+    maincorp:string;
+}
+
+export interface FirstHitsServerArgs extends ConcServerArgs {
+    fh_struct:string;
+}
+
+export interface FilterServerArgs extends ConcServerArgs {
+    pnfilter:string;
+    filfl:string;
+    filfpos:string;
+    filtpos:string;
+    inclkwic:'1'|'0';
+    queryselector:string; // TODO more specific type here
+    within:'1'|'0';
+}
 
 export interface GeneralQueryFormProperties {
     forcedAttr:string;
@@ -43,89 +104,79 @@ export const appendQuery = (origQuery:string, query:string, prependSpace:boolean
     return origQuery + (origQuery && prependSpace ? ' ' : '') + query;
 };
 
-/**
- *
- */
-export class WidgetsMap {
+export interface WithinBuilderData extends Kontext.AjaxResponse {
+    structattrs:{[attr:string]:Array<string>};
+}
 
-    private data:Immutable.Map<string, Immutable.List<string>>;
 
-    constructor(data:Immutable.List<[string, Immutable.List<string>]>) {
-        this.data = Immutable.Map<string, Immutable.List<string>>(data);
-    }
+export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number,
+            focusIdx:number):boolean {
+    if (anchorIdx === focusIdx) {
+        return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
 
-    get(key:string):Immutable.List<string> {
-        if (this.data.has(key)) {
-            return this.data.get(key);
-        }
-        return Immutable.List<string>();
+    } else {
+        return false;
     }
 }
 
-export interface SetQueryInputAction extends Action<{
-    sourceId:string;
-    query:string;
-    insertRange:[number, number]|null;
-    rawAnchorIdx:number|null;
-    rawFocusIdx:number|null;
-}> {};
 
-export interface MoveCursorInputAction extends Action<{
-    sourceId:string;
-    rawAnchorIdx:number|null;
-    rawFocusIdx:number|null;
-}> {};
+export interface QueryFormModelState {
 
-export interface AppendQueryInputAction extends Action<{
-    sourceId:string;
-    query:string;
-    prependSpace?:boolean;
-    closeWhenDone?:boolean;
-    triggeredKey?:[number, number]; // from virtual keyboard
-}> {};
+    formType:QueryFormType;
 
+    forcedAttr:string;
+
+    attrList:Array<Kontext.AttrItem>;
+
+    structAttrList:Array<Kontext.AttrItem>;
+
+    lemmaWindowSizes:Array<number>;
+
+    posWindowSizes:Array<number>;
+
+    wPoSList:Array<{v:string; n:string}>;
+
+    currentAction:string;
+
+    queries:{[key:string]:string}; // corpname|filter_id -> query
+
+    tagBuilderSupport:{[key:string]:boolean};
+
+    useCQLEditor:boolean;
+
+    tagAttr:string;
+
+    widgetArgs:Kontext.GeneralProps;
+
+    supportedWidgets:{[key:string]:Array<string>};
+
+    isAnonymousUser:boolean;
+
+    activeWidgets:{[key:string]:string|null};
+
+    downArrowTriggersHistory:{[key:string]:boolean};
+
+    contextFormVisible:boolean;
+
+    textTypesFormVisible:boolean;
+
+    historyVisible:boolean;
+}
 
 /**
  *
  */
-export abstract class QueryFormModel extends StatefulModel {
+export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T> {
 
-    protected pageModel:PageModel;
+    protected readonly pageModel:PageModel;
 
-    protected forcedAttr:string;
+    protected readonly queryContextModel:QueryContextModel;
 
-    protected attrList:Immutable.List<Kontext.AttrItem>;
+    protected readonly textTypesModel:TextTypesModel;
 
-    protected structAttrList:Immutable.List<Kontext.AttrItem>;
+    protected readonly queryTracer:ITracer;
 
-    protected lemmaWindowSizes:Immutable.List<number>;
-
-    protected posWindowSizes:Immutable.List<number>;
-
-    protected wPoSList:Immutable.List<{v:string; n:string}>;
-
-    protected currentAction:string;
-
-    protected queries:Immutable.Map<string, string>; // corpname|filter_id -> query
-
-    // ----- other models
-
-    protected textTypesModel:TextTypesModel;
-
-    protected queryContextModel:QueryContextModel;
-
-    protected queryTracer:ITracer;
-
-    // ----
-
-    protected useCQLEditor:boolean;
-
-    private tagAttr:string;
-
-    private widgetArgs:Kontext.GeneralProps;
-
-    protected supportedWidgets:WidgetsMap;
-
+    protected readonly ident:string;
 
     // -------
 
@@ -135,103 +186,60 @@ export abstract class QueryFormModel extends StatefulModel {
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
-            payload:GeneralQueryFormProperties) {
-        super(dispatcher);
+            ident:string,
+            initState:T) {
+        super(
+            dispatcher,
+            initState
+        );
         this.pageModel = pageModel;
         this.textTypesModel = textTypesModel;
         this.queryContextModel = queryContextModel;
-        this.forcedAttr = payload.forcedAttr;
-        this.attrList = Immutable.List<Kontext.AttrItem>(payload.attrList);
-        this.structAttrList = Immutable.List<Kontext.AttrItem>(payload.structAttrList);
-        this.lemmaWindowSizes = Immutable.List<number>(payload.lemmaWindowSizes);
-        this.posWindowSizes = Immutable.List<number>(payload.posWindowSizes);
-        this.wPoSList = Immutable.List<{v:string; n:string}>(payload.wPoSList);
-        this.tagAttr = payload.tagAttr;
         this.queryTracer = {trace:(_)=>undefined};
-        this.useCQLEditor = payload.useCQLEditor;
-        this.queries = Immutable.Map<string, string>();
+        this.ident = ident;
 
-        this.dispatcherRegister(action => {
-            switch (action.name) {
-                case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
-                    this.setActiveWidget(action.payload['sourceId'], action.payload['value']);
-                    this.widgetArgs = action.payload['widgetArgs'] || {};
-                    this.emitChange();
-                break;
+        this.addActionSubtypeHandler<Actions.ToggleQueryHistoryWidget>(
+            ActionName.ToggleQueryHistoryWidget,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.historyVisible = !state.historyVisible;
+                });
             }
-        });
+        );
+
+        this.addActionSubtypeHandler<Actions.SetActiveInputWidget>(
+            ActionName.SetActiveInputWidget,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.activeWidgets[action.payload.sourceId] = action.payload.value;
+                    state.widgetArgs = action.payload.widgetArgs || {};
+                });
+            }
+        );
     }
 
-    /**
-     * Returns a currently active widget identifier
-     * (one of 'tag', 'keyboard', 'within', 'history')
-     */
-    abstract getActiveWidget(sourceId:string):string;
-
-    /**
-     * Sets a currently active widget.
-     */
-    abstract setActiveWidget(sourceId:string, ident:string):void;
-
-
-    abstract getQueries():Immutable.Map<string, string>;
-
-    abstract getQuery(sourceId:string):string;
-
-    abstract getQueryTypes():Immutable.Map<string, string>;
-
-    abstract getDownArrowTriggersHistory(sourceId:string):boolean;
-
-    /// ---------
-
-    getSupportedWidgets():WidgetsMap {
-        return this.supportedWidgets;
-    }
-
-    getWidgetArgs():Kontext.GeneralProps {
-        return this.widgetArgs;
-    }
-
-    getForcedAttr():string {
-        return this.forcedAttr;
-    }
-
-    getAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.attrList;
-    }
-
-    getStructAttrList():Immutable.List<Kontext.AttrItem> {
-        return this.structAttrList;
-    }
-
-    getLemmaWindowSizes():Immutable.List<number> {
-        return this.lemmaWindowSizes;
-    }
-
-    getPosWindowSizes():Immutable.List<number> {
-        return this.posWindowSizes;
-    }
-
-    getwPoSList():Immutable.List<{v:string; n:string}> {
-        return this.wPoSList;
-    }
-
-    protected validateQuery(query:string, queryType:string):boolean {
+    protected validateQuery(query:string, queryType:QueryType):boolean {
         const parseFn = ((query:string) => {
             switch (queryType) {
                 case 'iquery':
                     return () => {
-                        if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
+                        if (!!(/^"[^\"]+"$/.exec(query) ||
+                                /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
                             throw new Error();
                         }
                     }
                 case 'phrase':
-                    return parseQuery.bind(null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
                 case 'lemma':
                 case 'word':
-                    return parseQuery.bind(null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
                 case 'cql':
-                    return parseQuery.bind(null, query + ';', {tracer: this.queryTracer});
+                    return parseQuery.bind(
+                        null, query + ';', {tracer: this.queryTracer});
                 default:
                     return () => {};
             }
@@ -249,38 +257,20 @@ export abstract class QueryFormModel extends StatefulModel {
         return mismatch;
     }
 
-    protected shouldDownArrowTriggerHistory(query:string, anchorIdx:number, focusIdx:number):boolean {
-        if (anchorIdx === focusIdx) {
-            return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
-
-        } else {
-            return false;
-        }
-    }
-
-    protected addQueryInfix(sourceId:string, query:string, insertRange:[number, number]):void {
-        this.queries = this.queries.set(
-            sourceId,
-            this.queries.get(sourceId).substring(0, insertRange[0]) + query +
-                this.queries.get(sourceId).substr(insertRange[1])
-        );
-    }
-
-    onSettingsChange(optsModel:ViewOptions.IGeneralViewOptionsModel):void {
-        this.useCQLEditor = optsModel.getUseCQLEditor();
-        this.emitChange();
-    }
-
-    getTagAttr():string {
-        return this.tagAttr;
-    }
-
-    getUseCQLEditor():boolean {
-        return this.useCQLEditor;
+    protected addQueryInfix(state:QueryFormModelState, sourceId:string, query:string,
+            insertRange:[number, number]):void {
+        state.queries[sourceId] = state.queries[sourceId].substring(0, insertRange[0]) + query +
+                state.queries[sourceId].substr(insertRange[1]);
     }
 
     getQueryUnicodeNFC(queryId:string):string {
          // TODO ES2015 stuff here
-        return this.queries.has(queryId) ? this.queries.get(queryId)['normalize']() : undefined;
+        return Dict.hasKey(queryId, this.state.queries) ?
+            this.state.queries[queryId]['normalize']() :
+            undefined;
+    }
+
+    getRegistrationId():string {
+        return this.ident;
     }
 }

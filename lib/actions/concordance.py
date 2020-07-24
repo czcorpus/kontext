@@ -1686,7 +1686,7 @@ class Actions(Querying):
         ans = defaultdict(lambda: 0)
         for item in self._lines_groups:
             ans[item[2]] += 1
-        return ans
+        return dict(groups=ans)
 
     @exposed(return_type='json', http_method='POST', mutates_conc=True)
     def ajax_rename_line_group(self, request):
@@ -1699,19 +1699,18 @@ class Actions(Querying):
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(access_level=1, return_type='plain')
+    @exposed(access_level=1, return_type='plain', http_method='POST')
     def export_line_groups_chart(self, request):
         with plugins.runtime.CHART_EXPORT as ce:
             format = request.args.get('cformat')
             filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
             self._headers['Content-Type'] = ce.get_content_type(format)
             self._headers['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
-            data = sorted(list(json.loads(request.args.get('data', '{}')
-                                          ).items()), key=lambda x: int(x[0]))
+            data = sorted(json.loads(request.form.get('data', '{}')), key=lambda x: int(x[0]))
             total = sum(x[1] for x in data)
             data = [('#{0} ({1}%)'.format(x[0], round(x[1] / float(total) * 100, 1)), x[1])
                     for x in data]
-            return ce.export_pie_chart(data=data, title=request.args.get('title', '??'), format=format)
+            return ce.export_pie_chart(data=data, title=request.form.get('title', '??'), format=format)
 
     @exposed(return_type='json', http_method='POST')
     def ajax_get_within_max_hits(self, request):

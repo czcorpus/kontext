@@ -17,14 +17,14 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
-import {IActionDispatcher} from 'kombo';
-import {Subscription} from 'rxjs';
+import {IActionDispatcher, Bound, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
-import { SubcorpFormModel } from '../../models/subcorp/form';
+import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/form';
 import {SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine} from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';
+import { ActionName, Actions } from '../../models/subcorp/actions';
+import { List } from 'cnc-tskit';
 
 export interface FormsModuleArgs {
     dispatcher:IActionDispatcher;
@@ -59,8 +59,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const changeHandler = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE',
+            dispatcher.dispatch<Actions.FormWithinLineSetType>({
+                name: ActionName.FormWithinLineSetType,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: ({'within': false, '!within': true})[evt.target.value]
@@ -146,8 +146,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const removeHandler = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_REMOVED',
+            dispatcher.dispatch<Actions.FormWithinLineRemoved>({
+                name: ActionName.FormWithinLineRemoved,
                 payload: {rowIdx: props.rowIdx}
             });
         };
@@ -157,8 +157,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         const handleStructChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT',
+            dispatcher.dispatch<Actions.FormWithinLineSetStruct>({
+                name: ActionName.FormWithinLineSetStruct,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: evt.target.value
@@ -167,8 +167,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         const handleCqlChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_SET_CQL',
+            dispatcher.dispatch<Actions.FormWithinLineSetCQL>({
+                name: ActionName.FormWithinLineSetCQL,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: evt.target.value
@@ -211,12 +211,12 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     const WithinBuilder:React.SFC<{
         structsAndAttrs:Kontext.StructsAndAttrs;
-        lines:Immutable.List<WithinLine>;
+        lines:Array<WithinLine>;
     }> = (props) => {
 
         const addLineHandler = () => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_WITHIN_LINE_ADDED',
+            dispatcher.dispatch<Actions.FormWithinLineAdded>({
+                name: ActionName.FormWithinLineAdded,
                 payload: {
                     negated: false,
                     structureName: Object.keys(props.structsAndAttrs).sort()[0],
@@ -228,13 +228,14 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         return (
             <table>
                 <tbody>
-                    {props.lines.map((line, i) =>
+                    {List.map((line, i) =>
                         <React.Fragment key ={'wl' + line.rowIdx}>
                             <ExpressionDescLine viewIdx={i} />
                             <StructLine rowIdx={line.rowIdx}
                                 lineData={line} structsAndAttrs={props.structsAndAttrs} />
-                        </React.Fragment>)
-                    }
+                        </React.Fragment>,
+                        props.lines
+                    )}
                     <tr key="button-row" className="last-line">
                         <td>
                             <a className="add-within"
@@ -254,41 +255,24 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <TRWithinBuilderWrapper /> ----------------------------
 
-    class TRWithinBuilderWrapper extends React.Component<
-        {}, SubcorpWithinFormModelState> {
-
-        private modelSubscription:Subscription;
+    class TRWithinBuilderWrapper extends React.PureComponent<SubcorpWithinFormModelState> {
 
         constructor(props) {
             super(props);
-            this.state = subcorpWithinFormModel.getState();
             this._handleHelpClick = this._handleHelpClick.bind(this);
             this._handleHelpCloseClick = this._handleHelpCloseClick.bind(this);
-            this._modelChangeHandler = this._modelChangeHandler.bind(this);
-        }
-
-        _modelChangeHandler(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = subcorpWithinFormModel.addListener(this._modelChangeHandler);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         _handleHelpClick() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT',
+            dispatcher.dispatch<Actions.FormShowRawWithinHint>({
+                name: ActionName.FormShowRawWithinHint,
                 payload: {}
             });
         }
 
         _handleHelpCloseClick() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT',
+            dispatcher.dispatch<Actions.FormHideRawWithinHint>({
+                name: ActionName.FormHideRawWithinHint,
                 payload: {}
             });
         }
@@ -302,19 +286,21 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                 onClick={this._handleHelpClick}>
                             <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
                         </a>:
-                        {this.state.helpHintVisible ?
-                            <StructsHint structsAndAttrs={this.state.structsAndAttrs}
+                        {this.props.helpHintVisible ?
+                            <StructsHint structsAndAttrs={this.props.structsAndAttrs}
                                     onCloseClick={this._handleHelpCloseClick} /> :
                             null
                         }
                     </th>
                     <td className="container">
-                        <WithinBuilder lines={this.state.lines} structsAndAttrs={this.state.structsAndAttrs} />
+                        <WithinBuilder lines={this.props.lines} structsAndAttrs={this.props.structsAndAttrs} />
                     </td>
                 </tr>
             );
         }
     }
+
+    const BoundTRWithinBuilderWrapper = Bound(TRWithinBuilderWrapper, subcorpWithinFormModel);
 
     /**
      *
@@ -324,11 +310,9 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_SUBCNAME',
-                payload: {
-                    value: evt.target.value
-                }
+            dispatcher.dispatch<Actions.FormSetSubcName>({
+                name: ActionName.FormSetSubcName,
+                payload: {value: evt.target.value}
             });
         };
 
@@ -345,8 +329,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleCheckbox = (evt) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
+            dispatcher.dispatch<Actions.FormSetSubcAsPublic>({
+                name: ActionName.FormSetSubcAsPublic,
                 payload: {
                     value: !props.value
                 }
@@ -365,8 +349,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleChange = (evt:React.ChangeEvent<HTMLTextAreaElement>) => {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_DESCRIPTION',
+            dispatcher.dispatch<Actions.FormSetDescription>({
+                name: ActionName.FormSetDescription,
                 payload: {
                     value: evt.target.value
                 }
@@ -444,42 +428,17 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     /**
      *
      */
-    class SubcorpForm extends React.Component<SubcorpFormProps, {
-        subcname:Kontext.FormValue<string>;
-        isPublic:boolean;
-        inputMode:string;
-        description:Kontext.FormValue<string>;
-        isBusy:boolean;
-
-    }> {
-
-        private modelSubscription:Subscription;
+    class SubcorpForm extends React.Component<SubcorpFormProps & SubcorpFormModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
             this._handleInputModeChange = this._handleInputModeChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
         }
 
-        _fetchModelState() {
-            return {
-                subcname: subcorpFormModel.getSubcname(),
-                inputMode: subcorpFormModel.getInputMode(),
-                isPublic: subcorpFormModel.getIsPublic(),
-                description: subcorpFormModel.getDescription(),
-                isBusy: subcorpFormModel.getIsBusy()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
         _handleInputModeChange(v) {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SET_INPUT_MODE',
+            dispatcher.dispatch<Actions.FormSetInputMode>({
+                name: ActionName.FormSetInputMode,
                 payload: {
                     value: v
                 }
@@ -487,24 +446,16 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch({
-                name: 'SUBCORP_FORM_SUBMIT',
+            dispatcher.dispatch<Actions.FormSubmit>({
+                name: ActionName.FormSubmit,
                 payload: {}
             });
         }
 
-        componentDidMount() {
-            this.modelSubscription = subcorpFormModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _renderTextTypeSelection() {
-            switch (this.state.inputMode) {
+            switch (this.props.inputMode) {
                 case 'raw':
-                    return <TRWithinBuilderWrapper  />;
+                    return <BoundTRWithinBuilderWrapper  />;
                 case 'gui':
                     return (
                         <tr>
@@ -537,7 +488,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                     {he.translate('global__new_subcorpus_name_lab')}:
                                 </th>
                                 <td style={{width: '80%'}}>
-                                    <SubcNameInput value={this.state.subcname} />
+                                    <SubcNameInput value={this.props.subcname} />
                                 </td>
                             </tr>
                             <tr>
@@ -549,14 +500,14 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                     </layoutViews.InlineHelp>
                                 </th>
                                 <td>
-                                    <SubcNamePublicCheckbox value={this.state.isPublic} />
+                                    <SubcNamePublicCheckbox value={this.props.isPublic} />
                                 </td>
                             </tr>
-                            {this.state.isPublic ?
+                            {this.props.isPublic ?
                                 (<tr>
                                     <th>{he.translate('subcform__public_description')}:</th>
                                     <td>
-                                        <SubcDescription value={this.state.description} />
+                                        <SubcDescription value={this.props.description} />
                                     </td>
                                 </tr>) : null
                             }
@@ -564,7 +515,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                 <th>
                                     {he.translate('subcform__specify_subc_using')}:
                                 </th>
-                                <TDInputModeSelection inputMode={this.state.inputMode}
+                                <TDInputModeSelection inputMode={this.props.inputMode}
                                         onModeChange={this._handleInputModeChange} />
                             </tr>
                             {this._renderTextTypeSelection()}
@@ -574,7 +525,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                             </tr>
                         </tbody>
                     </table>
-                    {this.state.isBusy ?
+                    {this.props.isBusy ?
                         <layoutViews.AjaxLoaderBarImage /> :
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>
@@ -587,7 +538,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }
 
     return {
-        SubcorpForm: SubcorpForm,
+        SubcorpForm: BoundWithProps(SubcorpForm, subcorpFormModel),
         SubcNamePublicCheckbox: SubcNamePublicCheckbox,
         SubcDescription: SubcDescription
     };

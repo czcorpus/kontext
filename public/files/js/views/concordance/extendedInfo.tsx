@@ -19,14 +19,17 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {init as ttOverviewInit} from './ttOverview';
+import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
+
+import { Kontext} from '../../types/common';
+import { init as ttOverviewInit } from './ttOverview';
 import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
-import {ConcDashboard, ConcDashboardState} from '../../models/concordance/dashboard';
-import {UsageTipsModel, UsageTipsState, UsageTipCategory} from '../../models/usageTips';
+import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
+import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
 import { PluginInterfaces } from '../../types/plugins';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { Actions, ActionName } from '../../models/concordance/actions';
+import { Actions as HintActions, ActionName as HintActionName }
+        from '../../models/usageTips/actions';
 
 
 export interface ConcExtendedInfoProps {
@@ -35,7 +38,7 @@ export interface ConcExtendedInfoProps {
 
 
 export interface ExtendedInfoViews {
-    ConcExtendedInfo: React.ComponentClass<ConcExtendedInfoProps>;
+    ConcExtendedInfo: React.ComponentClass<ConcExtendedInfoProps, ConcDashboardState>;
 }
 
 export interface ExtendedInfoViewsInitArgs {
@@ -59,12 +62,16 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch({
-                name: props.minimized ?
-                    'DASHBOARD_MAXIMIZE_EXTENDED_INFO' :
-                    'DASHBOARD_MINIMIZE_EXTENDED_INFO',
-                payload: {}
-            });
+            if (props.minimized) {
+                dispatcher.dispatch<Actions.DashboardMaximizeExtInfo>({
+                    name: ActionName.DashboardMaximizeExtInfo
+                });
+
+            } else {
+                dispatcher.dispatch<Actions.DashboardMinimizeExtInfo>({
+                    name: ActionName.DashboardMinimizeExtInfo
+                });
+            }
         };
 
         if (props.minimized) {
@@ -85,39 +92,22 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
     // ---------------------- <UsageTips /> ----------------------------------------
 
-    class UsageTips extends React.PureComponent<{}, UsageTipsState> {
-
-        private modelSubscription:Subscription;
+    class UsageTips extends React.PureComponent<UsageTipsState> {
 
         constructor(props) {
             super(props);
-            this.state = usageTipsModel.getState();
-            this.handleModelChange = this.handleModelChange.bind(this);
             this.handleNextClick = this.handleNextClick.bind(this);
         }
 
-        private handleModelChange(state) {
-            this.setState(state);
-        }
-
-        componentDidMount() {
-            this.modelSubscription = usageTipsModel.addListener(this.handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         handleNextClick(e:React.MouseEvent<HTMLAnchorElement>) {
-            dispatcher.dispatch({
-                name: 'NEXT_CONC_HINT',
-                payload: {}
+            dispatcher.dispatch<HintActions.NextConcHint>({
+                name: HintActionName.NextConcHint
             });
         }
 
         render() {
             return <div className="UsageTips">
-                {this.state.currentHints.get(UsageTipCategory.CONCORDANCE)}
+                {this.props.currentHints[UsageTipCategory.CONCORDANCE]}
                 {'\u00a0'}<span className="next-hint">
                 <a onClick={this.handleNextClick} title={he.translate('global__next_tip')}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
@@ -127,20 +117,14 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         };
     }
 
+    const BoundUsageTips = Bound(UsageTips, usageTipsModel);
+
     // ---------------------- <ConcExtendedInfo /> ----------------------------------------
 
-    class ConcExtendedInfo extends React.Component<ConcExtendedInfoProps, ConcDashboardState> {
-
-        private modelSubscription:Subscription;
+    class ConcExtendedInfo extends React.PureComponent<ConcExtendedInfoProps & ConcDashboardState> {
 
         constructor(props) {
             super(props);
-            this.state = dashboardModel.getState();
-            this.handleStoreChange = this.handleStoreChange.bind(this);
-        }
-
-        private handleStoreChange(state) {
-            this.setState(state);
         }
 
         private hasKwicConnectView() {
@@ -148,28 +132,23 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         }
 
         componentDidMount() {
-            this.modelSubscription = dashboardModel.addListener(this.handleStoreChange);
-            if (!this.state.expanded) { // we are doing a pre-load here
-                dispatcher.dispatch({
-                    name: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
+            if (!this.props.expanded) { // we are doing a pre-load here
+                dispatcher.dispatch<Actions.LoadTTDictOverview>({
+                    name: ActionName.LoadTTDictOverview,
                     payload: {}
                 });
             }
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
         }
 
         render() {
             return (
                 <div className="ConcExtendedInfo">
                     <header>
-                        <MinimizeIcon minimized={!this.state.expanded} />
+                        <MinimizeIcon minimized={!this.props.expanded} />
                     </header>
-                    {this.state.expanded ?
+                    {this.props.expanded ?
                         <div className="contents">
-                            {this.state.showFreqInfo ?
+                            {this.props.showFreqInfo ?
                                 <div className="box">
                                     <ttDistViews.TextTypesDist />
                                 </div> :
@@ -186,7 +165,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
                                             className="lightbulb" />
                                 </h3>
                                 <hr />
-                                <UsageTips />
+                                <BoundUsageTips />
                             </div>
                         </div> :
                         <div></div>
@@ -198,7 +177,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
 
     return {
-        ConcExtendedInfo: ConcExtendedInfo
+        ConcExtendedInfo: BoundWithProps<ConcExtendedInfoProps, ConcDashboardState>(ConcExtendedInfo, dashboardModel)
     }
 
 }

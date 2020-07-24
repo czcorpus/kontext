@@ -61,9 +61,8 @@ class Plugin extends DCPlugin {
      * @param queryModel
      * @param options
      */
-    createWidget(targetAction:string, queryModel:PluginInterfaces.Corparch.ICorpSelection,
-                options:Kontext.GeneralProps):React.ComponentClass {
-        return super.createWidget(targetAction, queryModel, options);
+    createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass {
+        return super.createWidget(targetAction, options);
     }
 }
 

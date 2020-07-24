@@ -25,6 +25,7 @@ import { CommonViews } from '../views/common';
 import { CoreViews } from '../types/coreViews';
 import { Observable } from 'rxjs';
 import { PageModel } from './page';
+import { ConcServerArgs } from '../models/concordance/common';
 
 
 export enum PluginName {
@@ -32,12 +33,14 @@ export enum PluginName {
     SETTINGS_STORAGE = 'settings_storage',
     TAGHELPER = 'taghelper',
     TOKEN_CONNECT = 'token_connect',
+    KWIC_CONNECT = 'kwic_connect',
     APP_BAR = 'app_bar',
     FOOTER_BAR = 'footer_bar',
     CORPARCH = 'corparch',
     LIVE_ATTRIBUTES = 'live_attributes',
     SUBCMIXER = 'subcmixer',
-    SYNTAX_VIEWER = 'syntax_viewer'
+    SYNTAX_VIEWER = 'syntax_viewer',
+    ISSUE_REPORTING = 'issue_reporting'
 }
 
  /**
@@ -66,7 +69,7 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.createStaticUrl(path);
     }
 
-    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict) {
+    createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string {
         return this.pageModel.createActionUrl(path, args);
     }
 
@@ -123,20 +126,16 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.commonViews;
     }
 
-    pluginIsActive(name:string):boolean {
-        return this.pageModel.pluginIsActive(name);
+    pluginTypeIsActive(name:PluginName):boolean {
+        return this.pageModel.pluginTypeIsActive(name);
     }
 
-    getConcArgs():MultiDict {
+    getConcArgs():MultiDict<ConcServerArgs> {
         return this.pageModel.getConcArgs();
     }
 
     getCorpusIdent():Kontext.FullCorpusIdent {
         return this.pageModel.getCorpusIdent();
-    }
-
-    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
-        return this.pageModel.registerSwitchCorpAwareObject(obj);
     }
 
     resetMenuActiveItemAndNotify():void {

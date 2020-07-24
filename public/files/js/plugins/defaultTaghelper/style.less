@@ -233,11 +233,28 @@ ul.defaultTaghelper_PositionList {
 }
 
 .CategoryDetail {
+
+    margin-right: 2em;
+
     label {
-        padding-left: 1em;
+        padding-left: 0.3em;
     }
 
     input:disabled+label {
+        color: #ccc;
+    }
+
+    ul li {
+
+        input[type="checkbox"], label {
+            display: inline-block;
+            vertical-align: middle;
+        }
+    }
+}
+
+.CategorySelect {
+    select:disabled+label {
         color: #ccc;
     }
 }

@@ -18,18 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {Kontext} from '../../types/common';
-import {AjaxResponse} from '../../types/ajaxResponses';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
-import {TextTypesModel} from '../textTypes/main';
-import {QueryContextModel} from './context';
-import {validateNumber, setFormItemInvalid} from '../../models/base';
-import {GeneralQueryFormProperties, QueryFormModel, appendQuery, WidgetsMap} from './common';
-import { Action, IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
+import { IFullActionControl } from 'kombo';
+import { Observable, of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { tuple, pipe, Dict, List } from 'cnc-tskit';
+
+import { Kontext } from '../../types/common';
+import { AjaxResponse } from '../../types/ajaxResponses';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { TextTypesModel } from '../textTypes/main';
+import { QueryContextModel } from './context';
+import { validateNumber, setFormItemInvalid } from '../../models/base';
+import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
+    shouldDownArrowTriggerHistory, FilterServerArgs, QueryType, AnyQuery } from './common';
+import { ActionName, Actions } from './actions';
+import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 
 
 /**
@@ -40,8 +44,9 @@ import { tap } from 'rxjs/operators';
 export interface FilterFormProperties extends GeneralQueryFormProperties {
     filters:Array<string>;
     maincorps:Array<[string, string]>;
-    currQueryTypes:Array<[string, string]>;
-    currQueries:Array<[string, string]>;  // current queries values (e.g. when restoring a form state)
+    currQueryTypes:Array<[string, QueryType]>;
+    // current queries values (e.g. when restoring a form state)
+    currQueries:Array<[string, string]>;
     currDefaultAttrValues:Array<[string, string]>;
     tagBuilderSupport:Array<[string, boolean]>;
     currLposValues:Array<[string, string]>;
@@ -56,20 +61,105 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     opLocks:Array<[string, boolean]>;
     hasLemma:Array<[string, boolean]>;
     tagsetDoc:Array<[string, string]>;
+    isAnonymousUser:boolean;
 }
 
 /**
- *import {GeneralViewOptionsModel} from '../options/general';
+ * import {GeneralViewOptionsModel} from '../options/general';
  */
-export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
-        key:(item:AjaxResponse.FilterFormArgs)=>T):Array<[string, T]> {
-    const ans = [];
-    for (let formId in args) {
-        if (args.hasOwnProperty(formId) && args[formId].form_type === 'filter') {
-            ans.push([formId, key(<AjaxResponse.FilterFormArgs>args[formId])]);
+export function fetchFilterFormArgs<T extends AjaxResponse.FilterFormArgs[keyof AjaxResponse.FilterFormArgs]>(
+    args:{[ident:string]:AjaxResponse.ConcFormArgs},
+    initialArgs:AjaxResponse.FilterFormArgs,
+    key:(item:AjaxResponse.FilterFormArgs)=>T
+
+):Array<[string, T]> {
+    return pipe(
+        args,
+        Dict.toEntries(),
+        List.filter(([, v]) => v.form_type === Kontext.ConcFormTypes.FILTER),
+        List.map(([formId, args]) => tuple(formId, key(<AjaxResponse.FilterFormArgs>args))),
+        List.concat([tuple('__new__', key(initialArgs))])
+    );
+}
+
+
+function determineSupportedWidgets(queries:{[key:string]:string},
+        queryTypes:{[key:string]:QueryType},
+        tagBuilderSupport:{[key:string]:boolean}):{[key:string]:Array<string>} {
+    const getWidgets = (filterId:string):Array<string> => {
+        switch (queryTypes[filterId]) {
+            case 'iquery':
+            case 'lemma':
+            case 'phrase':
+            case 'word':
+                return ['keyboard', 'history'];
+            case 'cql':
+                const ans = ['keyboard', 'history'];
+                if (tagBuilderSupport[filterId]) {
+                    ans.push('tag');
+                }
+                return ans;
         }
     }
-    return ans;
+
+    return pipe(
+        queries,
+        Dict.keys(),
+        List.map(filterId => tuple(filterId, getWidgets(filterId))),
+        Dict.fromEntries()
+    );
+}
+
+
+export interface FilterFormModelState extends QueryFormModelState {
+
+    maincorps:{[key:string]:string};
+
+    queryTypes:{[key:string]:QueryType};
+
+    lposValues:{[key:string]:string};
+
+    matchCaseValues:{[key:string]:boolean};
+
+    defaultAttrValues:{[key:string]:string};
+
+    pnFilterValues:{[key:string]:string};
+
+    /**
+     * Highlighted token FIRST/LAST. Specifies which token is highlighted.
+     * This applies in case multiple matching tokens are found.
+     */
+    filflValues:{[key:string]:string};
+
+    /**
+     * Left range
+     */
+    filfposValues:{[key:string]:Kontext.FormValue<string>};
+
+    /**
+     * Right range
+     */
+    filtposValues:{[key:string]:Kontext.FormValue<string>};
+
+    /**
+     * Include kwic checkbox
+     */
+    inclkwicValues:{[key:string]:boolean};
+
+    withinArgs:{[key:string]:number};
+
+    hasLemma:{[key:string]:boolean};
+
+    tagsetDocs:{[key:string]:string};
+
+    /**
+     * If true for a certain key then the operation cannot be edited.
+     * (this applies e.g. for filters generated by manual line
+     * selection).
+     */
+    opLocks:{[key:string]:boolean};
+
+    inputLanguage:string;
 }
 
 /**
@@ -78,256 +168,346 @@ export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
  * plug-in to store it). Please note that it does not know the order of filters
  * in pipeline (it is up to QueryReplay store to handle this).
  */
-export class FilterFormModel extends QueryFormModel {
+export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
-    private maincorps:Immutable.Map<string, string>;
-
-    private downArrowTriggersHistory:Immutable.Map<string, boolean>;
-
-    private queryTypes:Immutable.Map<string, string>;
-
-    private lposValues:Immutable.Map<string, string>;
-
-    private matchCaseValues:Immutable.Map<string, boolean>;
-
-    private defaultAttrValues:Immutable.Map<string, string>;
-
-    private pnFilterValues:Immutable.Map<string, string>;
-
-    /**
-     * Highlighted token FIRST/LAST. Specifies which token is highlighted.
-     * This applies in case multiple matching tokens are found.
-     */
-    private filflValues:Immutable.Map<string, string>;
-
-    /**
-     * Left range
-     */
-    private filfposValues:Immutable.Map<string, Kontext.FormValue<string>>;
-
-    /**
-     * Right range
-     */
-    private filtposValues:Immutable.Map<string, Kontext.FormValue<string>>;
-
-    /**
-     * Include kwic checkbox
-     */
-    private inclkwicValues:Immutable.Map<string, boolean>;
-
-    private tagBuilderSupport:Immutable.Map<string, boolean>;
-
-    private activeWidgets:Immutable.Map<string, string>;
-
-    private withinArgs:Immutable.Map<string, number>;
-
-    private hasLemma:Immutable.Map<string, boolean>;
-
-    private tagsetDocs:Immutable.Map<string, string>;
-
-    /**
-     * If true for a certain key then the operation cannot be edited.
-     * (this applies e.g. for filters generated by manual line
-     * selection).
-     */
-    private opLocks:Immutable.Map<string, boolean>;
-
-    private inputLanguage:string;
-
+    private readonly syncInitialArgs:AjaxResponse.FilterFormArgs;
 
     constructor(
             dispatcher:IFullActionControl,
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
-            props:FilterFormProperties) {
-        super(dispatcher, pageModel, textTypesModel, queryContextModel, props);
+            props:FilterFormProperties,
+            syncInitialArgs:AjaxResponse.FilterFormArgs) {
+        const queries = pipe(
+            [...props.currQueries, ...[tuple('__new__', '')]],
+            Dict.fromEntries()
+        );
+        const queryTypes = pipe(
+            [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'iquery')]],
+            Dict.fromEntries()
+        );
 
-        this.maincorps = Immutable.Map<string, string>(props.maincorps);
-        if (!this.queries.has('__new__')) {
-            this.queries = this.queries.set('__new__', '');
-        }
-        this.downArrowTriggersHistory = Immutable.Map<string, boolean>(this.queries.map((_, sourceId) => [sourceId, false]));
-        this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes);
-        if (!this.queryTypes.has('__new__')) {
-            this.queryTypes = this.queries.set('__new__', 'iquery');
-        }
-        this.lposValues = Immutable.Map<string, string>(props.currLposValues);
-        this.matchCaseValues = Immutable.Map<string, boolean>(props.currQmcaseValues);
-        this.defaultAttrValues = Immutable.Map<string, string>(props.currDefaultAttrValues);
-        this.pnFilterValues = Immutable.Map<string, string>(props.currPnFilterValues);
-        this.filflValues = Immutable.Map<string, string>(props.currFilflVlaues);
-        this.filfposValues = Immutable.Map<string, Kontext.FormValue<string>>(props.currFilfposValues);
-        this.filtposValues = Immutable.Map<string, Kontext.FormValue<string>>(props.currFiltposValues);
-        this.inclkwicValues = Immutable.Map<string, boolean>(props.currInclkwicValues);
-        this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
-        this.opLocks = Immutable.Map<string, boolean>(props.opLocks);
-        this.activeWidgets = Immutable.Map<string, string>(props.filters.map(item => null));
-        this.withinArgs = Immutable.Map<string, number>(props.withinArgValues);
-        this.hasLemma = Immutable.Map<string, boolean>(props.hasLemma);
-        this.tagsetDocs = Immutable.Map<string, string>(props.tagsetDoc);
-        this.inputLanguage = props.inputLanguage;
-        this.currentAction = 'filter_form';
-        this.supportedWidgets = this.determineSupportedWidgets();
-
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'CQL_EDITOR_DISABLE':
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_INPUT_SELECT_TYPE':
-                    this.queryTypes = this.queryTypes.set(action.payload['sourceId'], action.payload['queryType']);
-                    this.supportedWidgets = this.determineSupportedWidgets();
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_INPUT_SET_QUERY':
-                    if (action.payload['insertRange']) {
-                        this.addQueryInfix(action.payload['sourceId'], action.payload['query'], action.payload['insertRange']);
-
-                    } else {
-                        this.queries = this.queries.set(action.payload['sourceId'], action.payload['query']);
-                    }
-                    this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        action.payload['sourceId'],
-                        this.shouldDownArrowTriggerHistory(
-                            action.payload['query'],
-                            action.payload['rawAnchorIdx'],
-                            action.payload['rawFocusIdx']
-                        )
-                    );
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_INPUT_MOVE_CURSOR':
-                    this.downArrowTriggersHistory = this.downArrowTriggersHistory.set(
-                        action.payload['sourceId'],
-                        this.shouldDownArrowTriggerHistory(
-                            this.queries.get(action.payload['sourceId']),
-                            action.payload['anchorIdx'],
-                            action.payload['focusIdx']
-                        )
-                    );
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_INPUT_APPEND_QUERY':
-                    this.queries = this.queries.set(
-                        action.payload['sourceId'],
-                        appendQuery(
-                            this.queries.get(action.payload['sourceId']),
-                            action.payload['query'],
-                            !!action.payload['prependSpace']
-                        )
-                    );
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_INPUT_SET_LPOS':
-                    this.lposValues = this.lposValues.set(action.payload['sourceId'], action.payload['lpos']);
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_INPUT_SET_MATCH_CASE':
-                    this.matchCaseValues = this.matchCaseValues.set(action.payload['sourceId'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_INPUT_SET_DEFAULT_ATTR':
-                    this.defaultAttrValues = this.defaultAttrValues.set(action.payload['sourceId'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_SET_POS_NEG':
-                    this.pnFilterValues = this.pnFilterValues.set(action.payload['filterId'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_SET_FILFL':
-                    this.filflValues = this.filflValues.set(action.payload['filterId'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_SET_RANGE':
-                    this.setFilPosValue(
-                        action.payload['filterId'],
-                        action.payload['value'],
-                        action.payload['rangeId']
-                    );
-                    this.emitChange();
-                break;
-                case'FILTER_QUERY_SET_INCL_KWIC':
-                    this.inclkwicValues = this.inclkwicValues.set(action.payload['filterId'], action.payload['value']);
-                    this.emitChange();
-                break;
-                case 'FILTER_QUERY_APPLY_FILTER':
-                    const err = this.validateForm(action.payload['filterId']);
-                    if (!err) {
-                        this.submitQuery(action.payload['filterId']);
-                        this.emitChange();
-
-                    } else {
-                        this.pageModel.showMessage('error', err);
-                        this.emitChange();
-                    }
-                break;
-            }
+        const tagBuilderSupport = props.tagBuilderSupport;
+        super(dispatcher, pageModel, textTypesModel, queryContextModel, 'filter-form-model', {
+            formType: Kontext.ConcFormTypes.FILTER,
+            forcedAttr: '', // TODO
+            attrList: [], // TODO
+            structAttrList: [], // TODO
+            lemmaWindowSizes: [], // TODO
+            posWindowSizes: [], // TODO
+            wPoSList: [], // TODO
+            currentAction: 'filter_form',
+            queries: queries, // corpname|filter_id -> query
+            useCQLEditor: props.useCQLEditor,
+            tagAttr: props.tagAttr,
+            widgetArgs: {}, // TODO
+            maincorps: Dict.fromEntries(props.maincorps),
+            downArrowTriggersHistory: pipe(
+                queries,
+                Dict.map(v => false),
+            ),
+            queryTypes,
+            lposValues: pipe(
+                props.currLposValues,
+                Dict.fromEntries()
+            ),
+            matchCaseValues: pipe(
+                props.currQmcaseValues,
+                Dict.fromEntries()
+            ),
+            defaultAttrValues: pipe(
+                props.currDefaultAttrValues,
+                Dict.fromEntries()
+            ),
+            pnFilterValues: pipe(
+                props.currPnFilterValues,
+                Dict.fromEntries()
+            ),
+            filflValues:pipe(
+                props.currFilflVlaues,
+                Dict.fromEntries()
+            ),
+            filfposValues: pipe(
+                props.currFilfposValues,
+                List.map(([fid, v]) => tuple(fid, Kontext.newFormValue(v, true))),
+                Dict.fromEntries()
+            ),
+            filtposValues: pipe(
+                props.currFiltposValues,
+                List.map(([fid, v]) => tuple(fid, Kontext.newFormValue(v, true))),
+                Dict.fromEntries()
+            ),
+            inclkwicValues: pipe(
+                props.currInclkwicValues,
+                Dict.fromEntries()
+            ),
+            tagBuilderSupport: pipe(
+                tagBuilderSupport,
+                Dict.fromEntries()
+            ),
+            opLocks: pipe(
+                props.opLocks,
+                Dict.fromEntries()
+            ),
+            activeWidgets: pipe(
+                props.filters,
+                List.map(item => tuple(item, null)),
+                Dict.fromEntries()
+            ),
+            withinArgs: pipe(
+                props.withinArgValues,
+                Dict.fromEntries()
+            ),
+            hasLemma: pipe(
+                props.hasLemma,
+                Dict.fromEntries()
+            ),
+            tagsetDocs: pipe(
+                props.tagsetDoc,
+                Dict.fromEntries()
+            ),
+            inputLanguage: props.inputLanguage,
+            isAnonymousUser: props.isAnonymousUser,
+            supportedWidgets: determineSupportedWidgets(
+                queries,
+                queryTypes,
+                Dict.fromEntries(tagBuilderSupport)
+            ),
+            contextFormVisible: false,
+            textTypesFormVisible: false,
+            historyVisible: false
         });
+        this.syncInitialArgs = syncInitialArgs;
+
+        this.addActionHandler<MainMenuActions.ShowFilter>(
+            MainMenuActionName.ShowFilter,
+            action => {
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+            }
+        );
+
+        this.addActionHandler<Actions.CQLEditorDisable>(
+            ActionName.CQLEditorDisable,
+            action => {
+                this.emitChange(); // TODO do we need this?
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSelectType>(
+            ActionName.QueryInputSelectType,
+            action => action.payload.formType === 'filter',
+            action => {
+                this.changeState(state => {
+                    state.queryTypes[action.payload.sourceId] = action.payload.queryType;
+                    state.supportedWidgets = determineSupportedWidgets(
+                        state.queries,
+                        state.queryTypes,
+                        state.tagBuilderSupport
+                    );
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSetQuery>(
+            ActionName.QueryInputSetQuery,
+            action => action.payload.formType === 'filter',
+            action => {
+                this.changeState(state => {
+                    if (action.payload.insertRange) {
+                        this.addQueryInfix(
+                            state,
+                            action.payload.sourceId,
+                            action.payload.query,
+                            action.payload.insertRange
+                        );
+
+                    } else {
+                        state.queries[action.payload.sourceId] = action.payload.query;
+                    }
+                    state.downArrowTriggersHistory[action.payload.sourceId] =
+                        shouldDownArrowTriggerHistory(
+                            action.payload.query,
+                            action.payload.rawAnchorIdx,
+                            action.payload.rawFocusIdx
+                        );
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputMoveCursor>(
+            ActionName.QueryInputMoveCursor,
+            action => action.payload.formType === 'filter',
+            action => {
+                this.changeState(state => {
+                    state.downArrowTriggersHistory[action.payload.sourceId] =
+                        shouldDownArrowTriggerHistory(
+                            state.queries[action.payload.sourceId],
+                            action.payload.rawAnchorIdx,
+                            action.payload.rawFocusIdx
+                        );
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputAppendQuery>(
+            ActionName.QueryInputAppendQuery,
+            action => action.payload.formType === 'filter',
+            action => {
+                this.changeState(state => {
+                    state.queries[action.payload.sourceId] = appendQuery(
+                        state.queries[action.payload.sourceId],
+                        action.payload.query,
+                        action.payload.prependSpace
+                    );
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSetLpos>(
+            ActionName.QueryInputSetLpos,
+            action => action.payload.formType === 'filter',
+            action => {
+                this.changeState(state => {
+                    state.lposValues[action.payload.sourceId] = action.payload.lpos;
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSetMatchCase>(
+            ActionName.QueryInputSetMatchCase,
+            action => action.payload.formType === 'filter',
+            action => {
+                this.changeState(state => {
+                    state.matchCaseValues[action.payload.sourceId] = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
+            ActionName.QueryInputSetDefaultAttr,
+            action => action.payload.formType === 'filter',
+            action => {
+                this.changeState(state => {
+                    state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.FilterInputSetPCQPosNeg>(
+            ActionName.FilterInputSetPCQPosNeg,
+            action => {
+                this.changeState(state => {
+                    state.pnFilterValues[action.payload.filterId] = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.FilterInputSetFilfl>(
+            ActionName.FilterInputSetFilfl,
+            action => {
+                this.changeState(state => {
+                    state.filflValues[action.payload.filterId] = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.FilterInputSetRange>(
+            ActionName.FilterInputSetRange,
+            action => {
+                this.changeState(state => {
+                    this.setFilPosValue(
+                        state,
+                        action.payload.filterId,
+                        action.payload.value,
+                        action.payload.rangeId
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.FilterInputSetInclKwic>(
+            ActionName.FilterInputSetInclKwic,
+            action => {
+                this.changeState(state => {
+                    this.state.inclkwicValues[action.payload.filterId] = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.ApplyFilter>(
+            ActionName.ApplyFilter,
+            action => {
+                let err:Error;
+                this.changeState(state => {
+                    err = this.validateForm(state, action.payload.filterId);
+                });
+                if (!err) {
+                    this.submitQuery(action.payload.filterId);
+
+                } else {
+                    this.pageModel.showMessage('error', err);
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextToggleForm>(
+            ActionName.QueryContextToggleForm,
+            action => {
+                this.changeState(state => {
+                    state.contextFormVisible = !state.contextFormVisible;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.QueryTextTypesToggleForm>(
+            ActionName.QueryTextTypesToggleForm,
+            action => {
+                this.changeState(state => {
+                    state.textTypesFormVisible = !state.textTypesFormVisible;
+                });
+            }
+        );
     }
 
-    private validateForm(filterId:string):Error|null {
-        if (validateNumber(this.filfposValues.get(filterId).value)) {
-            this.filfposValues = this.filfposValues.set(filterId,
-                        setFormItemInvalid(this.filfposValues.get(filterId), false));
+    private validateForm(state:FilterFormModelState, filterId:string):Error|null {
+        if (validateNumber(state.filfposValues[filterId].value)) {
+            state.filfposValues[filterId] = setFormItemInvalid(
+                state.filfposValues[filterId], false);
 
         } else {
-            this.filfposValues = this.filfposValues.set(filterId,
-                setFormItemInvalid(this.filfposValues.get(filterId), true));
+            state.filfposValues[filterId] = setFormItemInvalid(
+                state.filfposValues[filterId], true);
             return new Error(this.pageModel.translate('global__invalid_number_format'));
         }
 
-        if (validateNumber(this.filtposValues.get(filterId).value)) {
-            this.filtposValues = this.filtposValues.set(filterId,
-                        setFormItemInvalid(this.filtposValues.get(filterId), false));
+        if (validateNumber(state.filtposValues[filterId].value)) {
+            state.filtposValues[filterId] = setFormItemInvalid(
+                state.filtposValues[filterId], false);
 
         } else {
-            this.filtposValues = this.filtposValues.set(filterId,
-                setFormItemInvalid(this.filtposValues.get(filterId), true));
+            state.filtposValues[filterId] = setFormItemInvalid(
+                state.filtposValues[filterId], true);
             return new Error(this.pageModel.translate('global__invalid_number_format'));
         }
     }
 
-    private setFilPosValue(filterId:string, value:string, rangeId:string):void {
+    private setFilPosValue(state:FilterFormModelState, filterId:string, value:string,
+            rangeId:string):void {
         if (rangeId === 'filfpos') {
-            this.filfposValues = this.filfposValues.set(filterId, {
-                value: value,
+            state.filfposValues[filterId] = {
+                value,
                 isInvalid: false,
                 isRequired: true
-            });
+            };
 
         } else if (rangeId === 'filtpos') {
-            this.filtposValues = this.filtposValues.set(filterId, {
-                value: value,
+            state.filtposValues[filterId] = {
+                value,
                 isInvalid: false,
                 isRequired: true
-            });
+            };
         }
-    }
-
-    externalQueryChange(sourceId:string, query:string):void {
-        this.queries = this.queries.set(sourceId, query);
-        this.emitChange();
-    }
-
-    getActiveWidget(sourceId:string):string {
-        return this.activeWidgets.get(sourceId);
-    }
-
-    setActiveWidget(sourceId:string, ident:string):void {
-        this.activeWidgets = this.activeWidgets.set(sourceId, ident);
-    }
-
-    getSubmitUrl(filterId:string):string {
-        return this.pageModel.createActionUrl('filter', this.createSubmitArgs(filterId).items());
-    }
-
-    getCurrentSubcorpus():string {
-        return undefined;
-    }
-
-    getAvailableSubcorpora():Immutable.List<{v:string; n:string}> {
-        return Immutable.List<{v:string; n:string}>();
     }
 
     /**
@@ -340,66 +520,86 @@ export class FilterFormModel extends QueryFormModel {
                 (data) => {
                     const filterId = data.op_key;
                     if (data.form_type === 'filter') {
-                        this.queries = this.queries.set(filterId, data.query);
-                        this.queryTypes = this.queryTypes.set(filterId, data.query_type);
-                        this.maincorps = this.queryTypes.set(filterId, data.maincorp);
-                        this.pnFilterValues = this.pnFilterValues.set(filterId, data.pnfilter);
-                        this.filflValues = this.filflValues.set(filterId, data.filfl);
-                        this.filfposValues = this.filfposValues.set(filterId, {
-                            value: data.filfpos, isInvalid: false, isRequired: true});
-                        this.filtposValues = this.filtposValues.set(filterId, {
-                            value: data.filtpos, isInvalid: false, isRequired: true});
-                        this.inclkwicValues = this.inclkwicValues.set(filterId, data.inclkwic);
-                        this.matchCaseValues = this.matchCaseValues.set(filterId, data.qmcase);
-                        this.defaultAttrValues = this.defaultAttrValues.set(filterId, data.default_attr_value);
-                        this.tagBuilderSupport = this.tagBuilderSupport.set(filterId, data.tag_builder_support);
-                        this.withinArgs = this.withinArgs.set(filterId, data.within);
-                        this.lposValues = this.lposValues.set(filterId, data.lpos);
-                        this.hasLemma = this.hasLemma.set(filterId, data.has_lemma);
-                        this.tagsetDocs = this.tagsetDocs.set(filterId, data.tagset_doc);
-                        this.opLocks = this.opLocks.set(filterId, false);
+                        this.changeState(state => {
+                            state.queries[filterId] = data.query;
+                            state.queryTypes[filterId] = data.query_type;
+                            state.maincorps[filterId] = data.maincorp;
+                            state.pnFilterValues[filterId] = data.pnfilter;
+                            state.filflValues[filterId] = data.filfl;
+                            state.filfposValues[filterId] = {
+                                value: data.filfpos,
+                                isInvalid: false,
+                                isRequired: true
+                            };
+                            state.filtposValues[filterId] = {
+                                value: data.filtpos,
+                                isInvalid: false,
+                                isRequired: true
+                            };
+                            state.inclkwicValues[filterId] = data.inclkwic;
+                            state.matchCaseValues[filterId] = data.qmcase;
+                            state.defaultAttrValues[filterId] = data.default_attr_value;
+                            state.tagBuilderSupport[filterId] = data.tag_builder_support;
+                            state.withinArgs[filterId] = data.within;
+                            state.lposValues[filterId] = data.lpos;
+                            state.hasLemma[filterId] = data.has_lemma;
+                            state.tagsetDocs[filterId] = data.tagset_doc;
+                            state.opLocks[filterId] = false;
+                        });
 
-                    } else if (data.form_type === 'locked' || data.form_type == 'lgroup') {
-                        this.opLocks = this.opLocks.set(filterId, true);
+                    } else if (data.form_type === Kontext.ConcFormTypes.LOCKED ||
+                            data.form_type === Kontext.ConcFormTypes.LGROUP) {
+                        this.changeState(state => {
+                            state.opLocks[filterId] = true;
+                        });
 
                     } else {
-                        throw new Error('Cannot sync filter model - invalid form data type: ' + data.form_type);
+                        throw new Error(
+                            'Cannot sync filter model - invalid form data type: ' + data.form_type);
                     }
                 }
             )
         );
     }
 
-    private createSubmitArgs(filterId:string):MultiDict {
-        const args = this.pageModel.getConcArgs();
-        args.set('pnfilter', this.pnFilterValues.get(filterId));
-        args.set('filfl', this.filflValues.get(filterId));
-        args.set('filfpos', this.filfposValues.get(filterId).value);
-        args.set('filtpos', this.filtposValues.get(filterId).value);
-        args.set('inclkwic', this.inclkwicValues.get(filterId) ? '1' : '0');
-        args.set('queryselector', `${this.queryTypes.get(filterId)}row`);
-        if (this.withinArgs.get(filterId)) {
+    private createSubmitArgs(filterId:string):MultiDict<FilterServerArgs> {
+        const args = this.pageModel.getConcArgs() as MultiDict<FilterServerArgs & AnyQuery>;
+        args.set('pnfilter', this.state.pnFilterValues[filterId]);
+        args.set('filfl', this.state.filflValues[filterId]);
+        args.set('filfpos', this.state.filfposValues[filterId].value);
+        args.set('filtpos', this.state.filtposValues[filterId].value);
+        args.set('inclkwic', this.state.inclkwicValues[filterId] ? '1' : '0');
+        args.set('queryselector', `${this.state.queryTypes[filterId]}row`);
+        if (this.state.withinArgs[filterId]) {
             args.set('within', '1');
 
         } else {
             args.remove('within');
         }
-        args.set(this.queryTypes.get(filterId), this.getQueryUnicodeNFC(filterId));
+        args.set(this.state.queryTypes[filterId], this.getQueryUnicodeNFC(filterId));
         return args;
     }
 
+    getSubmitUrl(filterId:string):string {
+        return this.pageModel.createActionUrl('filter', this.createSubmitArgs(filterId));
+    }
+
     private testQueryNonEmpty(filterId:string):boolean {
-        if (this.queries.get(filterId).length > 0) {
+        if (this.state.queries[filterId].length > 0) {
             return true;
 
         } else {
-            this.pageModel.showMessage('error', this.pageModel.translate('query__query_must_be_entered'));
+            this.pageModel.showMessage('error',
+                this.pageModel.translate('query__query_must_be_entered'));
             return false;
         }
     }
 
     private testQueryTypeMismatch(filterId):boolean {
-        const error = this.validateQuery(this.queries.get(filterId), this.queryTypes.get(filterId));
+        const error = this.validateQuery(
+            this.state.queries[filterId],
+            this.state.queryTypes[filterId]
+        );
         return !error || window.confirm(this.pageModel.translate('global__query_type_mismatch'));
     }
 
@@ -408,107 +608,5 @@ export class FilterFormModel extends QueryFormModel {
             const args = this.createSubmitArgs(filterId);
             window.location.href = this.pageModel.createActionUrl('filter', args.items());
         }
-    }
-
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>([this.maincorps]);
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return Immutable.List<Kontext.AttrItem>();
-    }
-
-    getQueryTypes():Immutable.Map<string, string> {
-        return this.queryTypes;
-    }
-
-    getLposValues():Immutable.Map<string, string> {
-        return this.lposValues;
-    }
-
-    getMatchCaseValues():Immutable.Map<string, boolean> {
-        return this.matchCaseValues;
-    }
-
-    getDefaultAttrValues():Immutable.Map<string, string> {
-        return this.defaultAttrValues;
-    }
-
-    getInputLanguage():string {
-        return this.inputLanguage;
-    }
-
-    getQuery(filterId:string):string {
-        return this.queries.get(filterId);
-    }
-
-    getQueries():Immutable.Map<string, string> {
-        return this.queries;
-    }
-
-    getPnFilterValues():Immutable.Map<string, string> {
-        return this.pnFilterValues;
-    }
-
-    getFilfposValues():Immutable.Map<string, Kontext.FormValue<string>> {
-        return this.filfposValues;
-    }
-
-    getFiltposValues():Immutable.Map<string, Kontext.FormValue<string>> {
-        return this.filtposValues;
-    }
-
-    getFilflValues():Immutable.Map<string, string> {
-        return this.filflValues;
-    }
-
-    getInclKwicValues():Immutable.Map<string, boolean> {
-        return this.inclkwicValues;
-    }
-
-    getOpLocks():Immutable.Map<string, boolean> {
-        return this.opLocks;
-    }
-
-    getWithinArgs():Immutable.Map<string, number> {
-        return this.withinArgs;
-    }
-
-    private determineSupportedWidgets():WidgetsMap {
-        const getWidgets = (filterId:string):Array<string> => {
-            switch (this.queryTypes.get(filterId)) {
-                case 'iquery':
-                case 'lemma':
-                case 'phrase':
-                case 'word':
-                case 'char':
-                    return ['keyboard', 'history'];
-                case 'cql':
-                    const ans = ['keyboard', 'history'];
-                    if (this.tagBuilderSupport.get(filterId)) {
-                        ans.push('tag');
-                    }
-                    return ans;
-            }
-        }
-
-        return new WidgetsMap(
-            this.queries.keySeq()
-            .map<[string, Immutable.List<string>]>(filterId =>
-                [filterId, Immutable.List<string>(getWidgets(filterId))])
-            .toList()
-        );
-    }
-
-    getHasLemmaAttr():Immutable.Map<string, boolean> {
-        return this.hasLemma;
-    }
-
-    getTagsetDocUrls():Immutable.Map<string, string> {
-        return this.tagsetDocs;
-    }
-
-    getDownArrowTriggersHistory(sourceId:string):boolean {
-        return this.downArrowTriggersHistory.get(sourceId);
     }
 }

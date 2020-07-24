@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
+import { Kontext } from '../types/common';
 import { KontextPage } from '../app/main';
 
 declare var require:any;
@@ -27,7 +27,7 @@ require('styles/login.less');
 
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new KontextPage(conf);
-    layoutModel.init(() => {
+    layoutModel.init(true, [], () => {
         document.getElementById('try-login').addEventListener('click', () => {
             layoutModel.dispatcher.dispatch({
                 name: 'USER_SHOW_LOGIN_DIALOG',

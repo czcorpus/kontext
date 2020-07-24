@@ -19,7 +19,6 @@
  */
 
 import * as React from 'react';
-import * as Immutable from 'immutable';
 
 
 export namespace CoreViews {
@@ -211,7 +210,7 @@ export namespace CoreViews {
 
         export interface Props {}
 
-        export type Component = React.ComponentClass<Props>;
+        export type Component = React.ComponentClass<{}>;
     }
 
     // -------------------------------
@@ -336,7 +335,7 @@ export namespace CoreViews {
     export namespace TabView {
 
         export interface Props {
-            items:Immutable.List<{id:string, label:string}>;
+            items:Array<{id:string, label:string}>;
             defaultId?:string;
             className?:string;
             callback?:(id:string) => void;

@@ -19,10 +19,13 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher} from 'kombo';
-import {Kontext, KeyCodes} from '../../types/common';
-import {ConcLineModel} from '../../models/concordance/lines';
+import { IActionDispatcher } from 'kombo';
+import { Keyboard } from 'cnc-tskit';
 import { Subscription } from 'rxjs';
+
+import {ConcordanceModel} from '../../models/concordance/main';
+import {Actions, ActionName} from '../../models/concordance/actions'
+import { Kontext } from '../../types/common';
 
 
 export interface PaginatorProps {
@@ -47,7 +50,7 @@ export interface PaginatorViews {
 
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcLineModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcordanceModel) {
 
     const layoutViews = he.getLayoutViews();
 
@@ -65,8 +68,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             if (typeof props.clickHandler === 'function') {
                 props.clickHandler();
             }
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_CHANGE_PAGE',
+            dispatcher.dispatch<Actions.ChangePage>({
+                name: ActionName.ChangePage,
                 payload: {
                     action: 'customPage',
                     pageNum: Number(event.currentTarget.value)
@@ -102,10 +105,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             if (typeof props.clickHandler === 'function') {
                 props.clickHandler(evt);
             }
-            dispatcher.dispatch({
-                name: 'CONCORDANCE_CHANGE_PAGE',
+            dispatcher.dispatch<Actions.ChangePage>({
+                name: ActionName.ChangePage,
                 payload: {
-                    action: props.action
+                    action: props.action,
+                    pageNum: null
                 }
             });
         };
@@ -248,6 +252,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         _modelChangeListener() {
             const state = this._importPaginationInfo();
             state.loader = false;
+            window.scrollTo(0, 0);
             this.setState(state);
         }
 
@@ -264,13 +269,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _inputKeyDownHandler(evt:React.KeyboardEvent<{}>) {
-            if (evt.keyCode === KeyCodes.ENTER) {
-               this._navigActionHandler();
-                dispatcher.dispatch({
-                    name: 'CONCORDANCE_CHANGE_PAGE',
+            if (evt.keyCode === Keyboard.Code.ENTER) {
+                this._navigActionHandler();
+                dispatcher.dispatch<Actions.ChangePage>({
+                    name: ActionName.ChangePage,
                     payload: {
                         action: 'customPage',
-                        pageNum: this.state.currentPageInput
+                        pageNum: Number(this.state.currentPageInput)
                     }
                 });
                 evt.preventDefault();

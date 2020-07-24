@@ -18,31 +18,32 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Immutable from 'immutable';
-import {Kontext} from '../types/common';
-import {AjaxResponse} from '../types/ajaxResponses';
-import {PageModel} from '../app/page';
-import {ConcLinesStorage, openStorage} from '../conclines';
-import {TextTypesModel} from '../models/textTypes/main';
-import {FirstQueryFormModel} from '../models/query/first';
-import {CQLEditorModel} from '../models/query/cqleditor/model';
-import {WithinBuilderModel} from '../models/query/withinBuilder';
-import {VirtualKeyboardModel} from '../models/query/virtualKeyboard';
-import {QueryContextModel} from '../models/query/context';
-import {UsageTipsModel} from '../models/usageTips';
-import {init as queryFormInit, QueryFormProps} from '../views/query/first';
-import {init as corpnameLinkInit} from '../views/overview';
-import {init as basicOverviewViewsInit} from '../views/query/basicOverview';
+import { IFullActionControl, StatelessModel } from 'kombo';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
+
+import { Kontext } from '../types/common';
+import { AjaxResponse } from '../types/ajaxResponses';
+import { PageModel } from '../app/page';
+import { TextTypesModel } from '../models/textTypes/main';
+import { FirstQueryFormModel } from '../models/query/first';
+import { CQLEditorModel } from '../models/query/cqleditor/model';
+import { WithinBuilderModel } from '../models/query/withinBuilder';
+import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
+import { QueryContextModel } from '../models/query/context';
+import { UsageTipsModel } from '../models/usageTips';
+import { init as queryFormInit, QueryFormProps } from '../views/query/first';
+import { init as corpnameLinkInit } from '../views/overview';
+import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
+import { PluginInterfaces } from '../types/plugins';
+import { PluginName } from '../app/plugin';
+import { KontextPage } from '../app/main';
+import { ConcLinesStorage, StorageUsingState, openStorage } from '../models/concordance/selectionStorage';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../models/query/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import { StatefulModel } from '../models/base';
-import { Action, IFullActionControl } from 'kombo';
-import { PluginInterfaces } from '../types/plugins';
-import { PluginName } from '../app/plugin';
-import { KontextPage } from '../app/main';
-import { tap, share } from 'rxjs/operators';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -53,27 +54,37 @@ require('styles/firstForm.less');
  * ConfigWrapper ensures that actions we need to be bound
  * to the global app config trigger proper updates in the config.
  */
-class ConfigWrapper extends StatefulModel {
+class ConfigWrapper extends StatelessModel<{}> {
 
     private layoutModel:PageModel;
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
-        super(dispatcher);
+        super(dispatcher, {});
         this.layoutModel = layoutModel;
-        this.dispatcherRegister((action:Action) => {
-            switch (action.name) {
-                case 'QUERY_INPUT_ADD_ALIGNED_CORPUS': {
-                    const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.concat([action.payload['corpname']]));
-                }
-                break;
-                case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS': {
-                    const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                    this.layoutModel.setConf<Array<string>>('alignedCorpora', ac.filter(v => v !== action.payload['corpname']));
-                }
-                break;
+
+        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActionName.QueryInputAddAlignedCorpus,
+            null,
+            (state, action, dispatch) => {
+                const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
+                this.layoutModel.setConf<Array<string>>(
+                    'alignedCorpora',
+                    ac.concat([action.payload.corpname])
+                );
             }
-        });
+        );
+
+        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActionName.QueryInputRemoveAlignedCorpus,
+            null,
+            (state, action, dispatch) => {
+                const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
+                this.layoutModel.setConf<Array<string>>(
+                    'alignedCorpora',
+                    ac.filter(v => v !== action.payload.corpname)
+                );
+            }
+        );
     }
 }
 
@@ -90,6 +101,8 @@ export class FirstFormPage {
 
     private textTypesModel:TextTypesModel;
 
+    private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
+
     private queryHintModel:UsageTipsModel;
 
     private withinBuilderModel:WithinBuilderModel;
@@ -99,7 +112,7 @@ export class FirstFormPage {
     private queryContextModel:QueryContextModel;
 
 
-    constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
+    constructor(layoutModel:PageModel, clStorage:ConcLinesStorage<StorageUsingState>) {
         this.layoutModel = layoutModel;
     }
 
@@ -111,60 +124,31 @@ export class FirstFormPage {
         return this.layoutModel.translate(msg, values);
     }
 
-    getCorpora():Immutable.List<string> {
-        return this.queryModel.getCorpora();
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
-        return this.queryModel.getAvailableAlignedCorpora();
-    }
-
-    getCurrentSubcorpus():string {
-        return this.queryModel.getCurrentSubcorpus();
-    }
-
-    getAvailableSubcorpora():Immutable.List<{v:string; n:string}> {
-        return this.queryModel.getAvailableSubcorpora();
-    }
-
-
-    private initCorplistComponent():React.ComponentClass {
+    private initCorplistComponent():[React.ComponentClass, PluginInterfaces.Corparch.IPlugin] {
         const plg = corplistComponent(this.layoutModel.pluginApi());
-        return plg.createWidget(
-            'first_form',
-            this.queryModel,
-            {
-                itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                    return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
-                        tap(
-                            () => {
-                                // all the models must be unregistered and components must
-                                // be unmounted to prevent memory leaks and unwanted action handlers
-                                // from previous instance
-                                plg.disposeWidget();
-                                this.queryModel.unregister();
-                                this.cqlEditorModel.unregister();
-                                this.queryHintModel.unregister();
-                                this.textTypesModel.unregister();
-                                this.queryContextModel.unregister();
-                                this.withinBuilderModel.unregister();
-                                this.virtualKeyboardModel.unregister();
-                                this.layoutModel.unregisterAllModels();
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('query-form-mount'));
-                                this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
-                                this.init();
+        return tuple(
+            plg.createWidget(
+                'first_form',
+                {
+                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                        this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                            name: GlobalActionName.SwitchCorpus,
+                            payload: {
+                                corpora: corpora,
+                                subcorpus: subcorpId
                             }
-                        ),
-                        share()
-                    );
+                        });
+                    }
                 }
-            }
+            ),
+            plg
         );
     }
 
     createTTViews():QueryFormProps {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
@@ -178,42 +162,48 @@ export class FirstFormPage {
             queryFormArgs.bib_mapping
         );
 
-        const liveAttrsPlugin = liveAttributes(
+        this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
-            this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
+            this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             false,
             {
                 bibAttr: textTypesData['bib_attr'],
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
-                refineEnabled: this.layoutModel.getConf<Array<string>>('alignedCorpora').length > 0 ||
-                                    Object.keys(queryFormArgs.selected_text_types).length > 0,
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
+                    'availableAlignedCorpora'
+                ),
+                refineEnabled: this.layoutModel.getConf<Array<string>>(
+                    'alignedCorpora').length > 0 ||
+                    Dict.keys(queryFormArgs.selected_text_types).length > 0,
                 manualAlignCorporaMode: false
             }
         );
 
-        let liveAttrsViews;
-        if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
+        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
+        if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
             this.textTypesModel.enableAutoCompleteSupport();
-            liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesModel); // TODO 'this' reference = antipattern
+            // TODO 'this' reference = antipattern
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
 
         } else {
-            liveAttrsViews = {};
+            liveAttrsViews = {
+                LiveAttrsCustomTT: null,
+                LiveAttrsView: null
+            };
         }
         return {
-            formType:Kontext.ConcFormTypes.QUERY,
-            liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
-            liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
-            attributes: this.textTypesModel.getAttributes(),
-            tagHelperViews: Immutable.Map<string, PluginInterfaces.TagHelper.View>(),
+            ...liveAttrsViews,
+            formType: Kontext.ConcFormTypes.QUERY,
+            tagHelperViews: {},
             queryStorageView: null,
-            allowCorpusSelection: null,
-            actionPrefix: null
+            allowCorpusSelection: null
         };
     }
 
     private initQueryModel():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            'ConcFormsArgs'
+        );
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
         this.queryModel = new FirstQueryFormModel(
             this.layoutModel.dispatcher,
@@ -223,7 +213,9 @@ export class FirstFormPage {
             {
                 corpora: [this.layoutModel.getCorpusIdent().id].concat(
                     this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
-                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
+                    'availableAlignedCorpora'
+                ),
                 currQueryTypes: queryFormArgs.curr_query_types,
                 currQueries: queryFormArgs.curr_queries,
                 currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
@@ -231,7 +223,9 @@ export class FirstFormPage {
                 currLposValues: queryFormArgs.curr_lpos_values,
                 currQmcaseValues: queryFormArgs.curr_qmcase_values,
                 currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-                subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList'),
+                subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>(
+                    'SubcorpList'
+                ),
                 currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
                 origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
@@ -243,22 +237,18 @@ export class FirstFormPage {
                 lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
+                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>(
+                    'InputLanguages'
+                ),
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
                 tagsetDocs: queryFormArgs.tagset_docs,
                 useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
-                tagAttr: this.layoutModel.getConf<string>('tagAttr')
+                tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+                isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
             }
         );
-        this.layoutModel.getModels().generalViewOptionsModel.addOnSubmitResponseHandler(model => {
-            this.queryModel.onSettingsChange(model);
-            this.layoutModel.dispatchSideEffect(
-                model.getUseCQLEditor() ? 'CQL_EDITOR_ENABLE' : 'CQL_EDITOR_DISABLE',
-                {}
-            );
-        });
 
         this.cqlEditorModel = new CQLEditorModel({
             dispatcher: this.layoutModel.dispatcher,
@@ -266,7 +256,8 @@ export class FirstFormPage {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             structList: this.layoutModel.getConf<Array<string>>('StructList'),
-            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryModel.getTagAttr() : null,
+            tagAttr: this.layoutModel.pluginTypeIsActive(PluginName.TAGHELPER) ?
+                this.layoutModel.getConf<string>('tagAttr') : null,
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             currQueries: queryFormArgs.curr_queries
         });
@@ -300,8 +291,7 @@ export class FirstFormPage {
         );
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.queryModel
+            this.layoutModel.getComponentHelpers()
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
@@ -309,12 +299,15 @@ export class FirstFormPage {
             {
                 corpname: this.layoutModel.getCorpusIdent().id,
                 humanCorpname: this.layoutModel.getCorpusIdent().name,
+                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp
             }
         );
     }
 
     init():void {
-        this.layoutModel.init(() => {
+        this.layoutModel.init(true, [], () => {
             this.queryHintModel = new UsageTipsModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel.translate.bind(this.layoutModel)
@@ -333,37 +326,67 @@ export class FirstFormPage {
 
             const ttAns = this.createTTViews();
 
-            const qsPlugin = queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
+            const qsPlugin = queryStoragePlugin(
+                this.layoutModel.pluginApi(),
+                0,
+                pageSize,
+                pageSize,
+                []
+            );
             ttAns.queryStorageView = qsPlugin.getWidgetView();
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,
-                ...this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora').map(v => v.n)
+                ...List.map(
+                    v => v.n,
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora')
+                )
             ];
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
-            ttAns.tagHelperViews = Immutable.Map(
-                (this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagBuilderCorpora : [])
-                .map(corpus => [
+            ttAns.tagHelperViews = pipe(
+                this.layoutModel.isNotEmptyPlugin(tagHelperPlg) ? tagBuilderCorpora : [],
+                List.map(corpus => tuple(
                         corpus,
                         tagHelperPlg.getWidgetView(
                             corpus,
-                            this.layoutModel.getNestedConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets')
+                            this.layoutModel.getNestedConf<
+                            Array<PluginInterfaces.TagHelper.TagsetInfo>>(
+                                'pluginData', 'taghelper', 'corp_tagsets')
                         )
-                ])
+                )),
+                Dict.fromEntries()
             );
 
             ttAns.allowCorpusSelection = true;
-            ttAns.actionPrefix = '';
 
             this.initQueryModel();
-            const corparchWidget = this.initCorplistComponent();
+            const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
             this.attachQueryForm(ttAns, corparchWidget);
-            this.layoutModel.registerSwitchCorpAwareObject(this.cqlEditorModel);
-            this.layoutModel.registerSwitchCorpAwareObject(this.queryModel);
             this.initCorpnameLink();
-            new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
-
-            this.layoutModel.restoreModelsDataAfterSwitch();
+            const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
+            // all the models must be unregistered and components must
+            // be unmounted to prevent memory leaks and unwanted action handlers
+            // from previous instance
+            this.layoutModel.registerCorpusSwitchAwareModels(
+                () => {
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('view-options-mount'));
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('query-form-mount'));
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('query-overview-mount'));
+                    this.init();
+                },
+                this.queryModel,
+                this.cqlEditorModel,
+                corparchPlg,
+                this.queryHintModel,
+                this.textTypesModel,
+                this.queryContextModel,
+                this.withinBuilderModel,
+                this.virtualKeyboardModel,
+                this.liveAttrsPlugin
+            );
         });
     }
 }
@@ -371,10 +394,12 @@ export class FirstFormPage {
 
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new KontextPage(conf);
-    const clStorage:ConcLinesStorage = openStorage((err) => {
-        layoutModel.showMessage('error', err);
-    });
-    clStorage.clear();
+    const clStorage:ConcLinesStorage<StorageUsingState> = openStorage(
+        layoutModel.dispatcher,
+        (err:Error) => {
+            layoutModel.showMessage('error', err);
+        }
+    );
     const pageModel = new FirstFormPage(layoutModel, clStorage);
     pageModel.init();
 }

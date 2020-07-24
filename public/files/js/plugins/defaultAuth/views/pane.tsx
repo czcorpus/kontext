@@ -19,20 +19,16 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../../types/common';
-import {MultiDict} from '../../../multidict';
-import {UserStatusModel} from '../init';
-import { IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+
+import { Kontext } from '../../../types/common';
+import { MultiDict } from '../../../multidict';
+import { UserStatusModel, UsersStatusModelState } from '../init';
+import { Actions as UserActions, ActionName as UserActionName } from '../../../models/user/actions';
 
 
 export interface UserPaneViews {
     UserPane:React.ComponentClass;
-}
-
-export interface UserPaneState {
-    loginFormVisible:boolean;
-    returnUrl:string;
 }
 
 /**
@@ -124,34 +120,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <UserPane /> ---------------------------------
 
-    class UserPane extends React.Component<{isAnonymous:string; fullname:string}, UserPaneState> {
+    interface UserPaneProps {
+        isAnonymous:string;
+        fullname:string
+    }
 
-        private modelSubscription:Subscription;
+    class UserPane extends React.PureComponent<UserPaneProps & UsersStatusModelState> {
 
         constructor(props) {
             super(props);
-            this.state = this.fetchModelState();
             this.handleLoginClick = this.handleLoginClick.bind(this);
             this.handleLogoutClick = this.handleLogoutClick.bind(this);
             this.handleProfileTrigger = this.handleProfileTrigger.bind(this);
             this.handleFormClose = this.handleFormClose.bind(this);
-            this.handleModelChange = this.handleModelChange.bind(this);
-        }
-
-        private fetchModelState():UserPaneState {
-            return {
-                loginFormVisible: userModel.getLoginFormVisible(),
-                returnUrl: userModel.getReturnUrl()
-            };
-        }
-
-        private handleModelChange():void {
-            this.setState(this.fetchModelState());
         }
 
         private handleLoginClick():void {
-            dispatcher.dispatch({
-                name: 'USER_SHOW_LOGIN_DIALOG',
+            dispatcher.dispatch<UserActions.UserShowLoginDialog>({
+                name: UserActionName.UserShowLoginDialog,
                 payload: {
                     returnUrl: window.location.href
                 }
@@ -159,16 +145,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleFormClose():void {
-            dispatcher.dispatch({
-                name: 'USER_HIDE_LOGIN_DIALOG',
-                payload: {}
+            dispatcher.dispatch<UserActions.UserHideLoginDialog>({
+                name: UserActionName.UserHideLoginDialog
             });
         }
 
         private handleLogoutClick():void {
-            dispatcher.dispatch({
-                name: 'USER_LOGOUTX',
-                payload: {}
+            dispatcher.dispatch<UserActions.UserLogoutx>({
+                name: UserActionName.UserLogoutx
             });
         }
 
@@ -176,15 +160,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             window.location.href = he.createActionLink('user/profile');
         }
 
-        componentDidMount():void {
-            this.modelSubscription = userModel.addListener(this.handleModelChange);
-        }
-
-        componentWillUnmount():void {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render():React.ReactElement<{}> {
+        render() {
             return (
                 <div className="UserPane">
                     <span className="user">
@@ -199,9 +175,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             null
                         }
                     </span>
-                    {this.state.loginFormVisible ?
+                    {this.props.loginFormVisible ?
                             <LoginForm onCloseClick={this.handleFormClose}
-                                returnUrl={this.state.returnUrl} /> :
+                                returnUrl={this.props.returnUrl} /> :
                         null
                     }
                 </div>
@@ -210,7 +186,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        UserPane: UserPane
+        UserPane: BoundWithProps<UserPaneProps, UsersStatusModelState>(UserPane, userModel)
     };
 
 }

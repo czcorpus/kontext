@@ -18,17 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../../types/common';
-import { PageModel } from '../../../app/page';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
-import { ActionName, Actions } from '../actions';
-import { QueryOverviewResponseRow } from './common';
 import { map } from 'rxjs/operators';
 
+import { Kontext } from '../../../types/common';
+import { PageModel } from '../../../app/page';
+import { ActionName, Actions } from '../actions';
+import { ActionName as MMActionName, Actions as MMActions } from '../../mainMenu/actions';
+import { QueryOverviewResponseRow } from './common';
+import { AjaxConcResponse } from '../../concordance/common';
 
-interface QueryOverviewResponse extends Kontext.AjaxConcResponse {
+
+interface QueryOverviewResponse extends AjaxConcResponse {
     Desc:Array<QueryOverviewResponseRow>;
 }
 
@@ -62,23 +65,23 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
             }
         );
 
-        this.addActionHandler<Actions.MainMenuOverviewShowQueryInfoDone>(
-            ActionName.MainMenuOverviewShowQueryInfoDone,
+        this.addActionHandler<MMActions.OverviewShowQueryInfoDone>(
+            MMActionName.OverviewShowQueryInfoDone,
             (state, action) => {
                 state.currentQueryOverview = action.payload.Desc
             }
         )
 
-        this.addActionHandler<Actions.MainMenuOverviewShowQueryInfo>(
-            ActionName.MainMenuOverviewShowQueryInfo,
+        this.addActionHandler<MMActions.OverviewShowQueryInfo>(
+            MMActionName.OverviewShowQueryInfo,
             (state, action) => {
 
             },
             (state, action, dispatch) => {
                 this.loadQueryOverview().subscribe(
                     (data) => {
-                        dispatch<Actions.MainMenuOverviewShowQueryInfoDone>({
-                            name: ActionName.MainMenuOverviewShowQueryInfoDone,
+                        dispatch<MMActions.OverviewShowQueryInfoDone>({
+                            name: MMActionName.OverviewShowQueryInfoDone,
                             payload: {
                                 Desc: data
                             }
@@ -94,7 +97,7 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
 
     private loadQueryOverview():Observable<Array<Kontext.QueryOperation>> {
         return this.pageModel.ajax$<QueryOverviewResponse>(
-            'GET',
+            HTTP.Method.GET,
             this.pageModel.createActionUrl('concdesc_json'),
             this.pageModel.getConcArgs(),
             {}
