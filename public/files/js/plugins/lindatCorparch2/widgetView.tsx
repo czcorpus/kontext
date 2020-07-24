@@ -19,26 +19,28 @@
 import * as React from 'react';
 import { Keyboard, List } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
-import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
+import { FavListItem, CorplistWidgetModelState, CorplistWidgetModel } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch';
 
 
 export interface WidgetViewModuleArgs {
     dispatcher:IActionDispatcher;
     util:Kontext.ComponentHelpers;
     widgetModel:CorplistWidgetModel;
+    corpusSwitchModel:CorpusSwitchModel;
 }
 
-export interface WidgetViews {
-
-}
-
-
-export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React.ComponentClass<{}> {
+export function init({
+    dispatcher,
+    util,
+    widgetModel,
+    corpusSwitchModel}:WidgetViewModuleArgs
+):React.ComponentClass<{}> {
 
     const layoutViews = util.getLayoutViews();
 
@@ -542,13 +544,13 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
 
     // ----------------------------- <CorpusButton /> --------------------------
 
-    const CorpusButton:React.SFC<{
-        isWaitingToSwitch:boolean;
+    interface CorpusButtonProps {
         corpusIdent:Kontext.FullCorpusIdent;
         isWidgetVisible:boolean;
         onClick:()=>void;
+    }
 
-    }> = (props) => {
+    const CorpusButton:React.SFC<CorpusSwitchModelState & CorpusButtonProps> = (props) => {
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
             if (evt.keyCode === Keyboard.Code.ENTER || evt.keyCode === Keyboard.Code.ESC) {
@@ -560,13 +562,17 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
 
         return (
             <button type="button"
-                    className={`util-button${props.isWaitingToSwitch ? ' waiting': ''}`}
+                    className={`util-button${props.isBusy ? ' waiting': ''}`}
                     onClick={props.onClick} onKeyDown={handleKeyDown}>
-                {props.isWaitingToSwitch ? <layoutViews.AjaxLoaderBarImage htmlClass="loader" /> : null }
+                {props.isBusy ? <layoutViews.AjaxLoaderBarImage htmlClass="loader" /> : null }
                 <span className="corpus-name" title={props.corpusIdent.name}>{props.corpusIdent.id}</span>
             </button>
         );
     };
+
+    // ----------------------------- <BoundCorpusButton /> --------------------------
+
+    const BoundCorpusButton = BoundWithProps<CorpusButtonProps, CorpusSwitchModelState>(CorpusButton, corpusSwitchModel);
 
     // ------------------------------- <SubcorpSelection /> -----------------------------
 
@@ -714,9 +720,10 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
             return (
                 <div className="CorplistWidget">
                     <div>
-                        <CorpusButton isWaitingToSwitch={this.props.isBusy}
-                                corpusIdent={this.props.corpusIdent} onClick={this._handleWidgetButtonClick}
-                                isWidgetVisible={this.props.isVisible} />
+                        <BoundCorpusButton
+                            corpusIdent={this.props.corpusIdent}
+                            onClick={this._handleWidgetButtonClick}
+                            isWidgetVisible={this.props.isVisible} />
                         {this.props.isVisible ? this._renderWidget() : null}
                         {this.props.availableSubcorpora.length > 0 ?
                             (<span>
@@ -738,6 +745,6 @@ export function init({dispatcher, util, widgetModel}:WidgetViewModuleArgs):React
     }
 
 
-    return CorplistWidget;
+    return Bound(CorplistWidget, widgetModel);
 
 }

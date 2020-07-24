@@ -21,6 +21,8 @@
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions, ActionName } from './actions';
 import { QueryContextArgs } from './common';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 
 
 export interface QueryContextModelState {
@@ -28,7 +30,8 @@ export interface QueryContextModelState {
 }
 
 
-export class QueryContextModel extends StatelessModel<QueryContextModelState> {
+export class QueryContextModel extends StatelessModel<QueryContextModelState>
+    implements IUnregistrable {
 
     constructor(dispatcher:IFullActionControl) {
         super(dispatcher, {
@@ -66,5 +69,23 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState> {
             ActionName.QueryInputMakeCorpusPrimary,
             ActionName.BranchQuery
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'query-context-model';
     }
 }

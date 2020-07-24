@@ -20,7 +20,7 @@
 
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { map, filter } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 
 import { TextTypes, Kontext } from '../../types/common';
@@ -30,6 +30,8 @@ import { Actions, ActionName } from './actions';
 import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { IUnregistrable } from '../../models/common/common';
 
 
 interface ServerRefineResponse extends Kontext.AjaxResponse {
@@ -91,7 +93,7 @@ export interface LiveAttrsModelState {
  * attr2: v2#3 [OK]
  * attr3: v3#1 v3#2 [WRONG]
  */
-export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
+export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implements IUnregistrable {
 
     private readonly pluginApi:IPluginApi;
 
@@ -330,7 +332,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
             }
         );
 
-
         this.addActionHandler<TTActions.AttributeTextInputAutocompleteRequestDone>(
             TTActionName.AttributeTextInputAutocompleteRequestDone,
             (state, action) => {
@@ -339,6 +340,24 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> {
                 }
             }
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'ucnk-live-attributes-plugin';
     }
 
     private updateAlignedItem(

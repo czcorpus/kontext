@@ -17,13 +17,16 @@
  */
 
 import { throwError } from 'rxjs';
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as viewInit, Views as TreeCorparchViews} from './view';
+import { Kontext } from '../../types/common';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { init as viewInit, Views as TreeCorparchViews } from './view';
 import { StatelessModel, SEDispatcher } from 'kombo';
 import { map } from 'rxjs/operators';
 import { ActionName, Actions } from './actions';
 import { List, HTTP } from 'cnc-tskit';
+import { IUnregistrable } from '../../models/common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName }
+    from '../../models/common/actions';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -49,7 +52,8 @@ export interface TreeWidgetModelState {
 /**
  *
  */
-export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
+export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
+    implements IUnregistrable {
 
     protected pluginApi:IPluginApi;
 
@@ -105,6 +109,20 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
                 );
             }
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
     }
 
     private importTree(
@@ -130,6 +148,10 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState> {
         }
         nodeActive[node.ident] = false;
         return {node, nodeActive};
+    }
+
+    getRegistrationId():string {
+        return 'tree-corparch-model';
     }
 
     dumpNode(rootNode:Node):void {
@@ -232,8 +254,12 @@ class Plugin {
         ).CorptreeWidget;
     }
 
-    disposeWidget():void {
+    unregister():void {
         this.treeModel.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.treeModel.getRegistrationId();
     }
 
     initCorplistPageComponents():CorplistPage {

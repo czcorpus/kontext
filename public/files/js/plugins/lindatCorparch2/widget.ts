@@ -32,7 +32,7 @@ import { Actions as QueryActions, ActionName as QueryActionName
     } from '../../models/query/actions';
 import { Actions as CommonActions, ActionName as CommonActionName
     } from '../../models/common/actions';
-import { ICorpusSwitchSerializable } from '../../models/common/corpusSwitch';
+import { IUnregistrable } from '../../models/common/common';
 
 /**
  *
@@ -163,8 +163,7 @@ export interface CorplistWidgetModelArgs {
  *
  */
 export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
-        implements ICorpusSwitchSerializable<CorplistWidgetModelState,
-        CorplistWidgetModelCorpusSwitchPreserve> {
+        implements IUnregistrable {
 
     private pluginApi:IPluginApi;
 
@@ -659,7 +658,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     serialize(state:CorplistWidgetModelState):CorplistWidgetModelCorpusSwitchPreserve {
         return {
-            dataFav: {...state.dataFav}
+            dataFav: [...state.dataFav]
         };
     }
 

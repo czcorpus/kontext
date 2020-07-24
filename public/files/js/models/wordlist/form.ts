@@ -33,7 +33,7 @@ import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '..
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { FileTarget, WlnumsTypes, WlTypes } from './common';
-import { ICorpusSwitchSerializable } from '../common/corpusSwitch';
+import { IUnregistrable } from '../common/common';
 
 
 /**
@@ -111,8 +111,7 @@ export interface WordlistModelInitialArgs {
 /**
  *
  */
-export class WordlistFormModel extends StatelessModel<WordlistFormState> implements ICorpusSwitchSerializable<WordlistFormState,
-            WordlistFormCorpSwitchPreserve>  {
+export class WordlistFormModel extends StatelessModel<WordlistFormState> implements IUnregistrable {
 
     private layoutModel:PageModel;
 
@@ -487,7 +486,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         return 'WordlistFormModel';
     }
 
-    serialize(state:WordlistFormState):WordlistFormCorpSwitchPreserve {
+    private serialize(state:WordlistFormState):WordlistFormCorpSwitchPreserve {
         return {
             wlpat: state.wlpat,
             blacklist: state.blacklist,
@@ -498,7 +497,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         };
     }
 
-    deserialize(
+    private deserialize(
         state:WordlistFormState,
         data:WordlistFormCorpSwitchPreserve,
         corpora:Array<[string, string]>

@@ -30,13 +30,12 @@ import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeA
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
 import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
-import { Actions as LAActions, ActionName as LAActionName } from '../ucnkLiveAttributes/actions';
 import { AnyTTSelection } from '../../models/textTypes/common';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
+import { BaseSubcorFormState } from '../../models/subcorp/common';
 
 
-export interface SubcMixerModelState {
-    currentSubcname:Kontext.FormValue<string>;
+export interface SubcMixerModelState extends BaseSubcorFormState {
     shares:Array<SubcMixerExpression>;
     currentResult:CalculationResults|null;
     corpusIdAttr:string;
@@ -45,7 +44,6 @@ export interface SubcMixerModelState {
     isBusy:boolean;
     isVisible:boolean;
     subcIsPublic:boolean;
-    subcDescription:Kontext.FormValue<string>;
     numOfErrors:number;
     ttAttributes:Array<AnyTTSelection>; // basically a copy of text type model attributes
     ttInitialAvailableValues:Array<AnyTTSelection>;
@@ -92,8 +90,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         this.addActionHandler<SubcActions.FormSetSubcName>(
             SubcActionName.FormSetSubcName,
             (state, action) => {
-                state.currentSubcname = Kontext.updateFormValue(
-                    state.currentSubcname,
+                state.subcname = Kontext.updateFormValue(
+                    state.subcname,
                     {
                         value: action.payload.value
                     }
@@ -111,8 +109,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         this.addActionHandler<SubcActions.FormSetDescription>(
             SubcActionName.FormSetDescription,
             (state, action) => {
-                state.subcDescription = Kontext.updateFormValue(
-                    state.subcDescription,
+                state.description = Kontext.updateFormValue(
+                    state.description,
                     {
                         value: action.payload.value
                     }
@@ -252,6 +250,12 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             ActionName.SubmitCreateSubcorpus,
             (state, action) => {
                 state.isBusy = true;
+                validateSubcProps(
+                    state,
+                    true,
+                    state.ttAttributes.some(item => TTSelOps.hasUserChanges(item)),
+                    this.pluginApi
+                );
             },
             (state, action, dispatch) => {
                 this.submitCreateSubcorpus(state).subscribe(
@@ -339,22 +343,11 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     }
 
     private submitCreateSubcorpus(state:SubcMixerModelState):Observable<Kontext.AjaxResponse & {status: boolean}> {
-        const err = validateSubcProps(
-            state.currentSubcname,
-            state.subcDescription,
-            true,
-            state.ttAttributes.some(item => TTSelOps.hasUserChanges(item)),
-            this.pluginApi
-        );
-
-        if (err) {
-            return rxThrowError(err);
-        }
         const args = {};
         args['corpname'] = this.pluginApi.getCorpusIdent().id;
-        args['subcname'] = state.currentSubcname.value;
+        args['subcname'] = state.subcname.value;
         args['publish'] = state.subcIsPublic ? '1' : '0';
-        args['description'] = state.subcDescription.value;
+        args['description'] = state.description.value;
         args['idAttr'] = state.corpusIdAttr;
         args['ids'] = state.currentResult.ids.join(',');
         args['structs'] = state.currentResult.structs.join(',');

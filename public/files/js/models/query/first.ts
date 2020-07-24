@@ -36,7 +36,7 @@ import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModel
 import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
-import { ICorpusSwitchSerializable } from '../common/corpusSwitch';
+import { IUnregistrable } from '../common/common';
 
 
 export interface QueryFormUserEntries {
@@ -214,8 +214,7 @@ export interface FirstQueryFormModelSwitchPreserve {
  *
  */
 export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState>
-        implements ICorpusSwitchSerializable<FirstQueryFormModelState,
-            FirstQueryFormModelSwitchPreserve> {
+        implements IUnregistrable {
 
     constructor(
             dispatcher:IFullActionControl,
@@ -628,7 +627,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return 'FirstQueryFormModelState';
     }
 
-    serialize(state:FirstQueryFormModelState):FirstQueryFormModelSwitchPreserve {
+    private serialize(state:FirstQueryFormModelState):FirstQueryFormModelSwitchPreserve {
         return {
             queryTypes: {...state.queryTypes},
             lposValues: {...state.lposValues},
@@ -638,7 +637,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         };
     }
 
-    deserialize(
+    private deserialize(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
         corpora:Array<[string, string]>

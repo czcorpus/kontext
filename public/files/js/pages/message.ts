@@ -23,6 +23,7 @@ import { PageModel } from '../app/page';
 import { init as messageViewsInit, MessageViewProps } from '../views/message';
 import { KontextPage } from '../app/main';
 import issueReportingPlugin from 'plugins/issueReporting/init';
+import { PluginName } from '../app/plugin';
 
 
 declare var require:any;
@@ -42,7 +43,7 @@ class MessagePage {
 
     init():void {
         this.layoutModel.init(false, [], () => {
-            const plugin = this.layoutModel.pluginIsActive('issue_reporting') ?
+            const plugin = this.layoutModel.pluginTypeIsActive(PluginName.ISSUE_REPORTING) ?
                     issueReportingPlugin(this.layoutModel.pluginApi()) : null;
 
             const views = messageViewsInit(

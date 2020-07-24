@@ -28,9 +28,10 @@ import * as common from './common';
 import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions, ActionName } from './actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName }
+    from '../../models/common/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { ICorpusSwitchSerializable } from '../../models/common/corpusSwitch';
+import { IUnregistrable } from '../../models/common/common';
 
 /**
  *
@@ -151,7 +152,7 @@ export interface CorplistWidgetModelCorpusSwitchPreserve {
  *
  */
 export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState>
-        implements ICorpusSwitchSerializable<CorplistWidgetModelState, CorplistWidgetModelCorpusSwitchPreserve> {
+        implements IUnregistrable {
 
     private pluginApi:IPluginApi;
 
@@ -670,7 +671,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
 
     serialize(state:CorplistWidgetModelState):CorplistWidgetModelCorpusSwitchPreserve {
         return {
-            dataFav: {...state.dataFav}
+            dataFav: [...state.dataFav]
         };
     }
 

@@ -26,9 +26,10 @@ import { pipe, List, HTTP } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
-import { CorpusSwitchModel, ICorpusSwitchSerializable } from '../../models/common/corpusSwitch';
+import { CorpusSwitchModel } from '../../models/common/corpusSwitch';
 import { createHistory } from './history';
 import { PageLeaveVoting, IPageLeaveVoter } from '../../models/common/pageLeave';
+import { IUnregistrable } from '../../models/common/common';
 
 
 /**
@@ -90,7 +91,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
 
     private history:Kontext.IHistory;
 
-    private readonly corpusSwitchModel:CorpusSwitchModel;
+    public readonly corpusSwitchModel:CorpusSwitchModel;
 
     private readonly pageLeaveVoting:PageLeaveVoting;
 
@@ -374,7 +375,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
 
     registerCorpusSwitchAwareModels(
         onDone:()=>void,
-        ...models:Array<ICorpusSwitchSerializable<{}, {}>>
+        ...models:Array<IUnregistrable>
     ):void {
         this.corpusSwitchModel.registerModels(onDone, ...models);
     }

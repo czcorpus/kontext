@@ -22,18 +22,14 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import { tuple, List, pipe, Dict } from 'cnc-tskit';
 
 import { Actions, ActionName } from './actions';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 
 
 
 export enum UsageTipCategory {
     QUERY = 'query',
     CONCORDANCE = 'conc'
-}
-
-
-interface UsageTip {
-    messageId:string;
-    category:UsageTipCategory;
 }
 
 
@@ -58,7 +54,7 @@ export interface UsageTipsState {
 /**
  *
  */
-export class UsageTipsModel extends StatelessModel<UsageTipsState> {
+export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IUnregistrable {
 
     private translatorFn:(s:string)=>string;
 
@@ -103,6 +99,24 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> {
                 this.setNextHint(state, UsageTipCategory.CONCORDANCE);
             }
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'usage-tips-model';
     }
 
     private setNextHint(state:UsageTipsState, category:UsageTipCategory):void {

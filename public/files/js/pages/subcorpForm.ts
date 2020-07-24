@@ -37,6 +37,7 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import { SelectedTextTypes } from '../models/textTypes/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -45,8 +46,8 @@ require('styles/subcorpForm.less');
 
 interface TTProps {
     alignedCorpora:Array<string>;
-    liveAttrsCustomTT:React.ComponentClass<{}>|null;
-    liveAttrsView:React.ComponentClass<{}>;
+    LiveAttrsCustomTT:React.ComponentClass|React.SFC|null;
+    LiveAttrsView:React.ComponentClass|React.SFC;
     manualAlignCorporaMode:boolean;
 }
 
@@ -76,6 +77,10 @@ export class SubcorpForm {
     private textTypesModel:TextTypesModel;
 
     private subcorpSel:NonQueryCorpusSelectionModel;
+
+    private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
+
+    private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
 
     constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;
@@ -107,10 +112,10 @@ export class SubcorpForm {
             this.textTypesModel
         );
 
-        const liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin = liveAttributes(
+        this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.textTypesModel,
-            this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES),
+            this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             true, // manual aligned corp. selection mode
             {
                 bibAttr: textTypesData['bib_attr'],
@@ -128,31 +133,30 @@ export class SubcorpForm {
             this.layoutModel.getConf<string>('CorpusIdAttr')
         );
 
-        let subcMixerComponent:React.ComponentClass;
-        if (this.layoutModel.pluginIsActive(PluginName.SUBCMIXER) &&
-                    liveAttrsPlugin &&
-                    this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
+        let subcMixerComponent:PluginInterfaces.SubcMixer.View;
+        if (this.layoutModel.pluginTypeIsActive(PluginName.SUBCMIXER) &&
+                    this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
                 subcMixerComponent = subcmixerPlg.getWidgetView();
 
         } else {
             subcMixerComponent = null;
         }
 
-        let liveAttrsViews;
-        if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
-            liveAttrsViews = liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel);
+        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
+        if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
+            liveAttrsViews = this.liveAttrsPlugin.getViews(subcMixerComponent, this.textTypesModel);
             this.textTypesModel.enableAutoCompleteSupport();
 
         } else {
-            liveAttrsViews = {};
+            liveAttrsViews = {
+                LiveAttrsCustomTT: null,
+                LiveAttrsView: null
+            };
         }
         return {
             component: ttViewComponents.TextTypesPanel,
             props: {
-                liveAttrsView: 'LiveAttrsView' in liveAttrsViews ?
-                    liveAttrsViews['LiveAttrsView'] : null,
-                liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ?
-                    liveAttrsViews['LiveAttrsCustomTT'] : null,
+                ...liveAttrsViews,
                 alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
                 manualAlignCorporaMode: true
             },
@@ -208,38 +212,45 @@ export class SubcorpForm {
                 this.subcorpFormModel
             );
 
-            const corplistWidget = corplistComponent(this.layoutModel.pluginApi()).createWidget(
-                this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
-                {
-                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                        /* TODO !!!!!!
-                        return this.layoutModel.switchCorpus(corpora, subcorpId).pipe(
-                            tap(
-                                () => {
-                                    // all the components must be deleted to prevent memory leaks
-                                    // and unwanted action handlers from previous instance
-                                    this.layoutModel.unmountReactComponent(
-                                        window.document.getElementById('subcorp-form-mount')
-                                    );
-                                    this.layoutModel.unmountReactComponent(
-                                        window.document.getElementById('view-options-mount')
-                                    );
-                                    this.layoutModel.unmountReactComponent(
-                                        window.document.getElementById('general-overview-mount')
-                                    );
-                                    this.layoutModel.unmountReactComponent(
-                                        window.document.getElementById('query-overview-mount')
-                                    );
-                                    this.init();
-                                }
-                            )
-                        );
-                        */
-                    }
-                }
+            this.corparchPlugin = corplistComponent(this.layoutModel.pluginApi());
+
+            this.layoutModel.registerCorpusSwitchAwareModels(
+                () => {
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('subcorp-form-mount')
+                    );
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('view-options-mount')
+                    );
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('general-overview-mount')
+                    );
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('query-overview-mount')
+                    );
+                    this.init();
+                },
+                this.corparchPlugin,
+                this.textTypesModel,
+                this.liveAttrsPlugin
             );
 
             this.initCorpusInfo();
+
+            const corplistWidget = this.corparchPlugin.createWidget(
+                this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
+                {
+                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                        this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                            name: GlobalActionName.SwitchCorpus,
+                            payload: {
+                                corpora: corpora,
+                                subcorpus: subcorpId
+                            }
+                        });
+                    }
+                }
+            );
 
             this.viewComponents = subcorpViewsInit({
                 dispatcher: this.layoutModel.dispatcher,

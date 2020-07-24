@@ -23,6 +23,12 @@ declare var require:any;
 require('./style.less'); // webpack
 
 export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {
+
+    unregister():void {}
+
+    getRegistrationId():string {
+        return 'lindat-app-bar-1';
+    }
 }
 
 const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {

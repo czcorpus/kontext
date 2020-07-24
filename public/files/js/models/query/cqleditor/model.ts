@@ -26,10 +26,11 @@ import { PageModel } from '../../../app/page';
 import { AttrHelper } from './attrs';
 import { highlightSyntax } from './parser';
 import { Actions, ActionName } from '../actions';
-import { Actions as GeneralViewOptionsActions, ActionName as GeneralViewOptionsActionName } from '../../options/actions';
+import { Actions as GeneralViewOptionsActions, ActionName as GeneralViewOptionsActionName }
+    from '../../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../common/actions';
 import { AjaxResponse } from '../../../types/ajaxResponses';
-import { ICorpusSwitchSerializable } from '../../common/corpusSwitch';
+import { IUnregistrable } from '../../common/common';
 
 /**
  *
@@ -88,8 +89,7 @@ export interface CQLEditorModelCorpusSwitchPreserve {
 /**
  *
  */
-export class CQLEditorModel extends StatelessModel<CQLEditorModelState>
-    implements ICorpusSwitchSerializable<CQLEditorModelState, CQLEditorModelCorpusSwitchPreserve> {
+export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implements IUnregistrable {
 
     private pageModel:PageModel;
 

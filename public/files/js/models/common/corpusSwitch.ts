@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatefulModel, IFullActionControl, IModel } from 'kombo';
-import { List, Dict, HTTP } from 'cnc-tskit';
+import { StatefulModel, IFullActionControl } from 'kombo';
+import { List, Dict, HTTP, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { Actions, ActionName } from './actions';
@@ -28,24 +28,21 @@ import { forkJoin } from 'rxjs';
 import { scan, tap } from 'rxjs/operators';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
-import { IStaticallyIdentifiable } from './common';
+import { IUnregistrable } from './common';
 
 
-export interface ICorpusSwitchSerializable<T, U> extends IModel<T>, IStaticallyIdentifiable {
+interface UnregistrationGroup {
+    models:Array<IUnregistrable>;
+    onDone:()=>void;
+}
 
-    serialize(state:T):U;
-
-    /**
-     *
-     * @param state
-     * @param data
-     * @param corpora  list of pairs - [prev corpus, actual corpus]
-     */
-    deserialize(state:T, data:U, corpora:Array<[string, string]>):void;
+export interface CorpusSwitchModelState {
+    prevCorpora:Array<string>;
+    isBusy:boolean;
 }
 
 
-export class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, prevCorpora:Array<string>}> {
+export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
 
     private readonly appNavig:Kontext.IURLHandler & Kontext.IAjaxHandler;
 
@@ -55,13 +52,18 @@ export class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, p
 
     private readonly _dispatcher:IFullActionControl;
 
-    private onDone:()=>void;
+    private readonly registrations:Array<UnregistrationGroup>;
 
-    constructor(appNavig:Kontext.IURLHandler & Kontext.IAjaxHandler, dispatcher:IFullActionControl, conf:Kontext.IConfHandler, history:Kontext.IHistory) {
+    constructor(
+        appNavig:Kontext.IURLHandler & Kontext.IAjaxHandler,
+        dispatcher:IFullActionControl,
+        conf:Kontext.IConfHandler,
+        history:Kontext.IHistory
+    ) {
         super(
             dispatcher,
             {
-                data: {},
+                isBusy: false,
                 prevCorpora: List.concat(
                     conf.getConf<Array<string>>('alignedCorpora'),
                     [conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
@@ -72,7 +74,7 @@ export class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, p
         this._dispatcher = dispatcher;
         this.conf = conf;
         this.history = history;
-        this.onDone = () => undefined;
+        this.registrations = [];
 
         this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
             QueryActionName.QueryInputAddAlignedCorpus,
@@ -107,13 +109,25 @@ export class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, p
         this.addActionHandler<Actions.SwitchCorpus>(
             ActionName.SwitchCorpus,
             action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
                 forkJoin(
-                    this.suspend(Dict.map(v => false, this.state.data), (wAction, syncData) => {
-                        if (wAction.name === ActionName.SwitchCorpusReady) {
-                            syncData[(wAction as Actions.SwitchCorpusReady<{}>).payload.modelId] = true;
-                            return Dict.hasValue(false, syncData) ? {...syncData} : null;
+                    this.suspendWithTimeout(
+                        5000,
+                        pipe(
+                            this.allRegisteredIds(),
+                            List.map(v => tuple(v, false)),
+                            Dict.fromEntries()
+                        ),
+                        (wAction, syncData) => {
+                            if (wAction.name === ActionName.SwitchCorpusReady) {
+                                syncData[(wAction as Actions.SwitchCorpusReady<{}>).payload.modelId] = true;
+                                return Dict.hasValue(false, syncData) ? {...syncData} : null;
+                            }
+                            return syncData;
                         }
-                    }).pipe(
+                    ).pipe(
                         scan(
                             (acc, action:Actions.SwitchCorpusReady<{}>) => {
                                 acc[action.payload.modelId] = action.payload.data;
@@ -131,6 +145,7 @@ export class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, p
                             align: List.tail(action.payload.corpora)
                         }
                     )
+
                 ).pipe(
                     tap(
                         ([,data]) => {
@@ -169,10 +184,20 @@ export class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, p
 
                 ).subscribe(
                     ([storedStates,]) => {
-                        this.onDone();
+                        List.forEach(
+                            group => {
+                                List.forEach(
+                                    item => item.unregister(),
+                                    group.models
+                                );
+                                group.onDone();
+                            },
+                            this.registrations.splice(0)
+                        );
                         const prevCorpora = this.state.prevCorpora;
                         this.changeState(state => {
                             state.prevCorpora = action.payload.corpora;
+                            state.isBusy = false;
                         });
                         this._dispatcher.dispatch<Actions.CorpusSwitchModelRestore>({
                             name: ActionName.CorpusSwitchModelRestore,
@@ -187,15 +212,18 @@ export class CorpusSwitchModel extends StatefulModel<{data:{[key:string]:any}, p
         );
     }
 
-    registerModels(onDone:()=>void, ...models:Array<ICorpusSwitchSerializable<{}, {}>>):void {
-        this.onDone = onDone;
-        this.changeState(state => {
-            List.forEach(
-                model => {
-                    state.data[model.getRegistrationId()] = null;
-                },
-                models
-            )
+    private allRegisteredIds():Array<string> {
+        return pipe(
+            this.registrations,
+            List.flatMap(group => group.models),
+            List.map(model => model.getRegistrationId())
+        );
+    }
+
+    registerModels(onDone:()=>void, ...models:Array<IUnregistrable>):void {
+        this.registrations.push({
+            onDone: onDone,
+            models: models
         });
     }
 }

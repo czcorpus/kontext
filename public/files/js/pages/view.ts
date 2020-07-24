@@ -88,6 +88,7 @@ import { ConcSortModel } from '../models/query/sort/single';
 import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
     from '../models/query/sort/common';
 import { MultiLevelConcSortModel } from '../models/query/sort/multi';
+import { PluginName } from '../app/plugin';
 
 
 declare var require:any;
@@ -913,7 +914,7 @@ export class ViewPage {
     }
 
     private initTokenConnect():PluginInterfaces.TokenConnect.IPlugin {
-        if (this.layoutModel.pluginIsActive('token_connect')) {
+        if (this.layoutModel.pluginTypeIsActive(PluginName.TOKEN_CONNECT)) {
             return tokenConnectInit(
                 this.layoutModel.pluginApi(),
                 this.layoutModel.getConf<Array<string>>('alignedCorpora')
@@ -971,7 +972,8 @@ export class ViewPage {
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
-            supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
+            supportsSyntaxView: this.layoutModel.pluginTypeIsActive(
+                PluginName.SYNTAX_VIEWER),
             supportsTokenConnect: tokenConnect ? tokenConnect.providesAnyTokenInfo() : false,
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
@@ -1047,7 +1049,7 @@ export class ViewPage {
             this.layoutModel,
             {
                 showFreqInfo,
-                hasKwicConnect: this.layoutModel.pluginIsActive('kwic_connect')
+                hasKwicConnect: this.layoutModel.pluginTypeIsActive(PluginName.KWIC_CONNECT)
             }
         );
         if (showFreqInfo) {
@@ -1142,7 +1144,7 @@ export class ViewPage {
                     qs: queryStoragePlg,
                     tagh: tagHelperPlg
                 },
-                this.layoutModel.pluginIsActive('kwic_connect') ?
+                this.layoutModel.pluginTypeIsActive(PluginName.KWIC_CONNECT) ?
                     kwicConnectInit(
                         this.layoutModel.pluginApi(),
                         this.viewModels.lineViewModel,

@@ -58,7 +58,10 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
     }> = (props) => {
 
         const createLink = () => {
-            return he.createActionLink(props.data.action, props.concArgs);
+            return he.createActionLink(
+                props.data.action,
+                List.concat(props.data.args, props.concArgs)
+            )
         };
 
         return (

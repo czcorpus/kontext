@@ -19,5 +19,12 @@
  */
 
 export interface IStaticallyIdentifiable {
+
     getRegistrationId():string;
+}
+
+
+export interface IUnregistrable extends IStaticallyIdentifiable {
+
+    unregister():void;
 }

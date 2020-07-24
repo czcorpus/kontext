@@ -18,22 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {CorplistWidgetModel} from './widget';
-import {CorplistPage, CorplistServerData} from './corplist';
-import {init as viewInit} from './corplistView';
-import {init as widgetInit} from './widgetView';
-import {init as overviewViewInit} from '../../views/overview';
-import {CorplistTableModel} from './corplist';
+import { Kontext} from '../../types/common';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { CorplistWidgetModel } from './widget';
+import { CorplistPage, CorplistServerData } from './corplist';
+import { init as viewInit } from './corplistView';
+import { init as widgetInit } from './widgetView';
+import { init as overviewViewInit } from '../../views/overview';
+import { CorplistTableModel } from './corplist';
 import * as common from './common';
-import {SearchEngine} from './search';
+import { SearchEngine } from './search';
+import { IUnregistrable } from '../../models/common/common';
 
 declare var require:any;
 require('./style.less'); // webpack
 
 
-export class Plugin {
+export class Plugin implements IUnregistrable {
 
     protected pluginApi:IPluginApi;
 
@@ -78,12 +79,17 @@ export class Plugin {
         return widgetInit({
             dispatcher: this.pluginApi.dispatcher(),
             util: this.pluginApi.getComponentHelpers(),
-            widgetModel: this.model
+            widgetModel: this.model,
+            corpusSwitchModel: this.pluginApi.getModels().corpusSwitchModel
         });
     }
 
-    disposeWidget():void {
+    unregister():void {
         this.model.unregister();
+    }
+
+    getRegistrationId():string {
+        return this.model.getRegistrationId();
     }
 
     /**
