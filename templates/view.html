@@ -18,7 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #}
 {% extends "document.html" %}
-{% block title %}{{ page_title|shorten(80, True) }} ({{ "Concordance"|_ }}){% endblock %}
+{% block title %}{{ page_title|default('', true)|shorten(80, True) }} ({{ "Concordance"|_ }}){% endblock %}
 
 {% block headers %}
 
