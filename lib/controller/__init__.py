@@ -53,7 +53,8 @@ import strings
 import plugins
 import settings
 from translation import ugettext as translate
-from argmapping import Parameter, GlobalArgs, Args
+import attr
+from argmapping import Persistence, Args
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                      CorpusForbiddenException, ImmediateRedirectException)
 
@@ -235,10 +236,6 @@ class Controller(object):
         self.args: Args = Args()
         self._uses_valid_sid: bool = True
         self._plugin_api: Optional[PluginApi] = None  # must be implemented in a descendant
-
-        # initialize all the Parameter attributes
-        for k, value in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
-            setattr(self.args, k, value.unwrap())
 
     def init_session(self) -> None:
         """
@@ -545,11 +542,7 @@ class Controller(object):
         """
         Creates a shallow copy of self.args.
         """
-        na = {}
-        for a in dir(self.args):
-            if not a.startswith('_') and not callable(getattr(self.args, a)):
-                na[a] = getattr(self.args, a)
-        return na
+        return attr.asdict(self.args)  # TODO perhaps a better method name
 
     def _get_method_metadata(self, method_name: str, attr_name: Optional[str] = None) -> Union[Any, Dict[str, Any]]:
         """
@@ -641,20 +634,19 @@ class Controller(object):
         return self.environ.get('REQUEST_METHOD', '')
 
     @staticmethod
-    def _get_attrs_by_persistence(persistence_types: int) -> Tuple[str, ...]:
+    def _get_attrs_by_persistence(persistence_types: Persistence) -> Tuple[str, ...]:
         """
         Returns list of object's attributes which (along with their values) will be preserved.
         A persistent parameter is the one which meets the following properties:
         1. is of the Parameter type
         2. has a matching persistence flag
         """
-        def is_valid_parameter(m):
-            return isinstance(m, Parameter) and m.meets_persistence(persistence_types)
+        def is_valid_parameter(attr):
+            return attr.metadata['persistent'] is persistence_types
 
-        attrs = inspect.getmembers(GlobalArgs, predicate=is_valid_parameter)
-        return tuple(x[0] for x in attrs)
+        return tuple(attr.name for attr in attr.fields(Args) if is_valid_parameter(attr))
 
-    def _get_items_by_persistence(self, persistence_types: int) -> Dict[str, Parameter]:
+    def _get_items_by_persistence(self, persistence_types: Persistence) -> Dict[str, any]:
         """
         Similar to the _get_persistent_attrs() but returns also values.
 
@@ -974,7 +966,7 @@ class Controller(object):
         elif isinstance(result, dict):
             self.add_globals(result, methodname, action_metadata)
             template_object = self._template_env.get_template(template)
-            for k in self.args.__dict__:
+            for k in attr.asdict(self.args):
                 if k not in result:
                     result[k] = getattr(self.args, k)
             return template_object.render(result)

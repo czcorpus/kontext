@@ -49,6 +49,7 @@ from main_menu import MenuGenerator, MainMenu
 from controller.querying import Querying
 import templating
 import mailing
+import attr
 
 
 class ConcError(UserActionException):
@@ -216,7 +217,7 @@ class Actions(Querying):
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
 
-                kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
+                kwic_args = KwicPageArgs(attr.asdict(self.args), base_attr=Kontext.BASE_ATTR)
                 kwic_args.speech_attr = self._get_speech_segment()
                 kwic_args.labelmap = {}
                 kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
@@ -1458,7 +1459,7 @@ class Actions(Querying):
                 'numbering': numbering
             }
 
-            kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
+            kwic_args = KwicPageArgs(attr.asdict(self.args), base_attr=Kontext.BASE_ATTR)
             kwic_args.speech_attr = self._get_speech_segment()
             kwic_args.fromp = 1
             kwic_args.pagesize = to_line - (from_line - 1)

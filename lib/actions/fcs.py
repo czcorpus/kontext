@@ -132,9 +132,7 @@ class Actions(Kontext):
             raise Exception(10, repr(e), 'Query syntax error')
 
         kwic = kwiclib.Kwic(corp, corpname, conc)
-        args = Args()
-        args.structs = ''
-        kwic_args = kwiclib.KwicPageArgs(args, base_attr=Kontext.BASE_ATTR)
+        kwic_args = kwiclib.KwicPageArgs({'structs': ''}, base_attr=Kontext.BASE_ATTR)
         kwic_args.fromp = fromp
         kwic_args.pagesize = max_rec
         kwic_args.leftctx = '-{0}'.format(settings.get_int('fcs', 'kwic_context', 5))
