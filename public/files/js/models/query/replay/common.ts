@@ -26,7 +26,6 @@ import { List } from 'cnc-tskit';
 export interface QueryOverviewResponseRow {
     op:string;
     opid:string;
-    churl:string;
     tourl:string;
     nicearg:string;
     size:number;
@@ -102,7 +101,6 @@ export function importEncodedOperations(currentOperations:Array<Kontext.QueryOpe
             nicearg: item.nicearg,
             tourl: item.tourl,
             arg: item.arg,
-            churl: item.churl,
             size: item.size,
             formType: mapOpIdToFormType(item.opid)
         }),

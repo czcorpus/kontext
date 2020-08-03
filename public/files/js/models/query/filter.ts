@@ -519,7 +519,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             tap(
                 (data) => {
                     const filterId = data.op_key;
-                    if (data.form_type === 'filter') {
+                    if (data.form_type === Kontext.ConcFormTypes.FILTER) {
                         this.changeState(state => {
                             state.queries[filterId] = data.query;
                             state.queryTypes[filterId] = data.query_type;

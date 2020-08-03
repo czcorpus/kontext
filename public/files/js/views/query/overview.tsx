@@ -216,7 +216,6 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         operationId:string;
         editIsLocked:boolean;
         operationIdx:number;
-        opEncodedArgs:string;
         editorProps:AnyEditorProps;
         operationFormType:string;
         shuffleMinResultWarning:number;
@@ -227,6 +226,15 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         closeClickHandler:()=>void;
 
     }> = (props) => {
+
+        const handleTrimClick = () => {
+            dispatcher.dispatch<Actions.TrimQuery>({
+                name: ActionName.TrimQuery,
+                payload: {
+                    operationIdx: props.operationIdx
+                }
+            });
+        };
 
         const renderEditorComponent = () => {
             if (props.isLoading) {
@@ -242,7 +250,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             {he.translate('query__replay_op_cannot_be_edited_msg')}.
                         </p>
                         <div style={{textAlign: 'center', marginTop: '2em'}}>
-                            <a className="default-button" href={he.createActionLink(`view?${props.opEncodedArgs}`)}>
+                            <a className="default-button" onClick={handleTrimClick}>
                                 {he.translate('query__replay_view_the_result')}
                             </a>
                         </div>
@@ -373,7 +381,6 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         operationId={props.item.opid}
                         operationFormType={props.item.formType}
                         opKey={props.editOpKey}
-                        opEncodedArgs={props.item.tourl}
                         isLoading={props.isLoading}
                         modeRunFullQuery={props.modeRunFullQuery}
                         numOps={props.numOps}

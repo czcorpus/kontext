@@ -1441,7 +1441,6 @@ class Kontext(Controller):
                 opid=opid,
                 arg=a,
                 nicearg=nicearg(a),
-                churl=self.urlencode(u1),
                 tourl=self.urlencode(u2),
                 size=s))
         return {'Desc': out_list}

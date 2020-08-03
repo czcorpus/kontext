@@ -32,10 +32,10 @@ export enum ActionName {
     EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
     BranchQuery = 'BRANCH_QUERY',
     BranchQueryDone = 'BRANCH_QUERY_DONE',
+    TrimQuery = 'TRIM_QUERY',
     QuerySetStopAfterIdx = 'QUERY_SET_STOP_AFTER_IDX',
     RedirectToEditQueryOperation = 'REDIRECT_TO_EDIT_QUERY_OPERATION',
     QueryOverviewEditorClose = 'QUERY_OVERVIEW_EDITOR_CLOSE',
-    LockQueryPipeline = 'LOCK_QUERY_PIPELINE',
     QueryInputUnhitVirtualKeyboardKey = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_KEY',
     QueryInputHitVirtualKeyboardKey = 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY',
     QueryInputSetVirtualKeyboardLayout = 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT',
@@ -157,6 +157,15 @@ export namespace Actions {
         name:ActionName.BranchQueryDone
     }
 
+    export interface TrimQuery extends Action<{
+        /*
+         * an index of the last operation of the cut query chain
+         */
+        operationIdx:number;
+    }> {
+        name:ActionName.TrimQuery;
+    }
+
     export interface QuerySetStopAfterIdx extends Action<{
         value:number;
     }> {
@@ -172,11 +181,6 @@ export namespace Actions {
     export interface QueryOverviewEditorClose extends Action<{
     }> {
         name:ActionName.QueryOverviewEditorClose;
-    }
-
-    export interface LockQueryPipeline extends Action<{
-    }> {
-        name:ActionName.LockQueryPipeline;
     }
 
     export interface QueryInputUnhitVirtualKeyboardKey extends Action<{

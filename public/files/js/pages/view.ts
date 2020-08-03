@@ -680,8 +680,7 @@ export class ViewPage {
                 sampleModel: this.queryModels.sampleModel,
                 textTypesModel: this.queryModels.textTypesModel,
                 switchMcModel: this.queryModels.switchMcModel,
-                firstHitsModel: this.queryModels.firstHitsModel,
-                queryContextModel: this.queryModels.queryContextModel
+                firstHitsModel: this.queryModels.firstHitsModel
             },
             currentOperations: this.layoutModel.getConf<Array<Kontext.QueryOperation>>(
                 'queryOverview') || [],
