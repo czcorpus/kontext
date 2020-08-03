@@ -110,7 +110,6 @@ export enum ActionName {
     StorageEditorClickSave = 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
     StorageClearEditingQueryID = 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
     StorageOpenQueryForm = 'QUERY_STORAGE_OPEN_QUERY_FORM',
-    StorageLoadHistory = 'QUERY_STORAGE_LOAD_HISTORY',
     StorageLoadMore = 'QUERY_STORAGE_LOAD_MORE',
     QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN',
 }
@@ -658,11 +657,6 @@ export namespace Actions {
         idx:number;
     }> {
         name:ActionName.StorageOpenQueryForm;
-    }
-
-    export interface StorageLoadHistory extends Action<{
-    }> {
-        name:ActionName.StorageLoadHistory;
     }
 
     export interface StorageLoadMore extends Action<{

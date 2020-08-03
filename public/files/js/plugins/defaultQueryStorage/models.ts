@@ -148,10 +148,12 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
             }
         );
 
-        this.addActionHandler<QueryActions.StorageLoadHistory>(
-            QueryActionName.StorageLoadHistory,
+        this.addActionHandler<QueryActions.ToggleQueryHistoryWidget>(
+            QueryActionName.ToggleQueryHistoryWidget,
             action => {
-                this.changeState(state => {state.isBusy = true});
+                this.changeState(state => {
+                    state.isBusy = true
+                });
                 this.performLoadAction();
             }
         );
@@ -265,10 +267,14 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
     private performLoadAction():void {
         this.loadData().subscribe(
             () => {
-                this.changeState(state => {state.isBusy = false})
+                this.changeState(state => {
+                    state.isBusy = false
+                });
             },
             (err) => {
-                this.changeState(state => {state.isBusy = false})
+                this.changeState(state => {
+                    state.isBusy = false
+                });
                 this.pluginApi.showMessage('error', err);
             }
         );
