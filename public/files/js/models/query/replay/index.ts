@@ -34,9 +34,9 @@ import { TextTypesModel } from '../../textTypes/main';
 import { FirstHitsModel } from '../../query/firstHits';
 import { QueryInfoModel } from './info';
 import { Actions, ActionName } from '../actions';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../../concordance/actions';
 import { ExtendedQueryOperation, importEncodedOperations, QueryPipelineResponse } from './common';
 import { AjaxConcResponse } from '../../concordance/common';
-import { QueryContextModel } from '../context';
 import { QueryContextArgs } from '../common';
 import { ConcSortModel } from '../sort/single';
 import { MultiLevelConcSortModel } from '../sort/multi';
@@ -68,7 +68,6 @@ export type LocalQueryFormData = {[ident:string]:AjaxResponse.ConcFormArgs};
  */
 export interface ReplayModelDeps {
     queryModel:FirstQueryFormModel;
-    queryContextModel:QueryContextModel;
     filterModel:FilterFormModel;
     sortModel:ConcSortModel;
     mlConcSortModel:MultiLevelConcSortModel;
@@ -103,7 +102,7 @@ export interface QueryReplayModelState {
      * Specifies an operation idx after which the query replay
      * stops. If null then whole pipeline is replayed.
      */
-    stopAfterOpIdx:number;
+    stopAfterOpIdx:number|null;
 
     editIsLocked:boolean;
 
@@ -148,8 +147,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
     private readonly filterModel:FilterFormModel;
 
-    private readonly queryContextModel:QueryContextModel;
-
     private readonly sortModel:ConcSortModel;
 
     private readonly mlConcSortModel:MultiLevelConcSortModel;
@@ -181,7 +178,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
         this.queryModel = replayModelDeps.queryModel;
-        this.queryContextModel = replayModelDeps.queryContextModel;
         this.filterModel = replayModelDeps.filterModel;
         this.sortModel = replayModelDeps.sortModel;
         this.mlConcSortModel = replayModelDeps.mlConcSortModel;
@@ -190,10 +186,17 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.textTypesModel = replayModelDeps.textTypesModel;
         this.firstHitsModel = replayModelDeps.firstHitsModel;
 
-        this.addActionHandler<Actions.LockQueryPipeline>(
-            ActionName.LockQueryPipeline,
+        this.addActionHandler<ConcActions.MarkLinesDone>(
+            ConcActionName.MarkLinesDone,
             (state, action) => {
                 state.editIsLocked = true;
+            }
+        );
+
+        this.addActionHandler<ConcActions.LineSelectionResetOnServerDone>(
+            ConcActionName.LineSelectionResetOnServerDone,
+            (state, action) => {
+                state.editIsLocked = false;
             }
         );
 
@@ -308,6 +311,53 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.branchReplayIsRunning = false;
                 state.replayOperations = action.payload.replayOperations;
                 state.concArgsCache = action.payload.concArgsCache;
+            }
+        );
+
+        this.addActionHandler<Actions.TrimQuery>(
+            ActionName.TrimQuery,
+            (state, action) => {
+                state.branchReplayIsRunning = true;
+            },
+            (state, action, dispatch) => {
+                const args = this.pageModel.getConcArgs();
+                return this.pageModel.ajax$<QueryPipelineResponse>(
+                    HTTP.Method.GET,
+                    this.pageModel.createActionUrl('load_query_pipeline'),
+                    args
+
+                ).pipe(
+                    tap(
+                        data => {
+                            if (state.stopAfterOpIdx === null) {
+                                this.pageModel.showMessage(
+                                    'info',
+                                    this.pageModel.translate('query__chain_no_op_msg')
+                                );
+
+                            } else {
+                                window.location.href = this.pageModel.createActionUrl(
+                                    'view',
+                                    [['q', '~' + data.ops[action.payload.operationIdx].id]]
+                                );
+                            }
+                        }
+                    )
+
+                ).subscribe(
+                    data => {
+                        dispatch<Actions.QueryOverviewEditorClose>({
+                            name: ActionName.QueryOverviewEditorClose
+                        });
+                    },
+                    err => {
+                        this.pageModel.showMessage('error', err);
+                        dispatch<Actions.QueryOverviewEditorClose>({
+                            name: ActionName.QueryOverviewEditorClose,
+                            error: err
+                        });
+                    }
+                );
             }
         );
 
@@ -578,7 +628,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 )
             );
 
-        } else if (formType === 'locked') { // locked op uses compiled query (i.e. no form data)
+        } else if (formType === Kontext.ConcFormTypes.LOCKED) {
             return new Observable<string>((observer) => {
                     const args = this.pageModel.getConcArgs();
                     args.add(
@@ -752,20 +802,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 )
             )
         );
-        /* TODO !!!!!!!!!!!!!!
-        tap(
-            (data) => {
-                this.synchronize(
-                    'EDIT_QUERY_OPERATION',
-                    {
-                        sourceId: data.op_key,
-                        query: data.query,
-                        queryType: data.query_type
-                    }
-                );
-            }
-        )
-        */
     }
 
     private syncSortForm(state:QueryReplayModelState,

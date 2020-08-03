@@ -201,12 +201,12 @@ class Querying(Kontext):
                 data = cp.open(last_id)  # type: ignore
                 if data is not None:
                     ans.append(build_conc_form_args(
-                        data.get('corpora', []), data['lastop_form'], data['id']))
+                        data.get('corpora', []), data.get('lastop_form', {}), data['id']))
                 limit = 100
                 while data is not None and data.get('prev_id') and limit > 0:
                     data = cp.open(data['prev_id'])  # type: ignore
                     ans.insert(0, build_conc_form_args(
-                        data.get('corpora', []), data['lastop_form'], data['id']))
+                        data.get('corpora', []), data.get('lastop_form', {}), data['id']))
                     limit -= 1
                     if limit == 0:
                         logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(

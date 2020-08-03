@@ -366,6 +366,7 @@
         "query__tip_04": "Na hodnotu tagu lze kliknout s přidržením CTRL pro vyvolání interaktivního nástroje",
         "query__tip_05": "U zarovnaných korpusů je rychlejší hledat jen v textech společných pro všechny prohledávané jazyky. Najít tyto texty lze pomocí funkce 'omezit hledání - zúžit výběr'",
         "query__contains_selected_text_types": "Některé typy textu jsou vybrány",
+        "query__chain_no_op_msg": "Žádná změna v parametrech konkordance - zobrazuji původní výsledek",
         "qhistory__attached_text_types": "Typy textů",
         "qhistory__curr_corp_only_label": "obsahuje aktuálně používaný korpus",
         "qhistory__query_type_sel": "obsahuje typ dotazu",
