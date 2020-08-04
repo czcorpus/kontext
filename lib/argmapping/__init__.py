@@ -10,16 +10,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import TypeVar, Generic, Union, cast, List, Optional
+from typing import Union, List, Optional
+from enum import Enum
+import attr
 
-ValueType = TypeVar('ValueType')
 
-
-class Parameter(Generic[ValueType]):
-    """
-    Defines an argument of an argument-mapping template (see below).
-    """
-
+class Persistence(Enum):
     # not stored at all
     NON_PERSISTENT = 0b0000
 
@@ -29,59 +25,6 @@ class Parameter(Generic[ValueType]):
     # stored in user's session (and not elsewhere), used to optionally set suitable initial values
     # (action method must have 'apply_semi_persist_args' annotation set to True)
     SEMI_PERSISTENT = 0b0010
-
-    def __init__(self, value: ValueType, persistent: int = NON_PERSISTENT) -> None:
-        """
-        arguments:
-        value -- wrapped value (default value and type of the value;
-                 accepts primitive types, empty dict, empty list, tuple)
-        persistent -- an integer value composed of binary flags defining the persistence level of the property
-        """
-        self.value: ValueType = value
-        self.persistent: int = persistent
-
-    def unwrap(self) -> ValueType:
-        if isinstance(self.value, list):
-            return cast(ValueType, self.value.copy())
-        elif self.value == {}:
-            return cast(ValueType, {})
-        elif isinstance(self.value, dict):
-            raise TypeError(f'Cannot define static property as a non-empty dictionary: {self.value}')
-        else:
-            return self.value
-
-    def update_attr(self, obj: object, k: str, v: Union[str, int, float]) -> None:
-        """
-        Update obj's 'k' attribute using scalar value
-        'v'. This means different things based
-        on whether obj.[k] is array or not.
-
-        Rules:
-        1. empty string and None reset current obj.[k]
-        2. non empty value is appended to array type and
-           replaces current value of scalar type
-
-        arguments:
-        obj -- argument mapping object
-        k -- a string key
-        v -- a simple type value (string, int, float)
-        """
-        if v == '' or v is None:
-            if self.is_array():
-                setattr(obj, k, [])
-            else:
-                setattr(obj, k, None)
-        else:
-            if self.is_array():
-                setattr(obj, k, getattr(obj, k, []) + [v])
-            else:
-                setattr(obj, k, v)
-
-    def is_array(self) -> bool:
-        return isinstance(self.value, (tuple, list))
-
-    def meets_persistence(self, p_level: int) -> bool:
-        return self.persistent & p_level == p_level
 
 
 # This attribute set covers all the arguments representing a concordance.
@@ -116,191 +59,217 @@ WidectxArgsMapping = (
     'hitlen'
 )
 
+def update_attr(obj: object, k: str, v: Union[str, int, float]) -> None:
+        """
+        Update obj's 'k' attribute using scalar value
+        'v'. This means different things based
+        on whether obj.[k] is array or not.
 
-class GlobalArgs(object):
+        Rules:
+        1. empty string and None reset current obj.[k]
+        2. non empty value is appended to array type and
+           replaces current value of scalar type
+
+        arguments:
+        obj -- argument mapping object
+        k -- a string key
+        v -- a simple type value (string, int, float)
+        """
+        if v == '' or v is None:
+            if attr.fields_dict(Args)[k].type in [list, tuple]:
+                setattr(obj, k, [])
+            else:
+                setattr(obj, k, None)
+        else:
+            if attr.fields_dict(Args)[k].type in [list, tuple]:
+                setattr(obj, k, getattr(obj, k, []) + [v])
+            else:
+                setattr(obj, k, v)
+
+
+def def_attr(value, persistent: Persistence = Persistence.NON_PERSISTENT):
+    return attr.ib(default=value, metadata={'persistent': persistent})
+
+
+@attr.s(kw_only=True, auto_attribs=True)
+class Args(object):
     """
     This class serves as a template for argument handling and
     is not intended to be instantiated.
     """
     # specifies response output format (used in case default one is not applicable)
-    format = Parameter('')
+    format: str = def_attr('')
 
-    fc_lemword_window_type = Parameter[str]('both')
-    fc_lemword_type = Parameter[str]('all')
-    fc_lemword_wsize = Parameter[int](5)
-    fc_lemword = Parameter[str]('')
-    fc_pos_window_type = Parameter[str]('both')
-    fc_pos_type = Parameter[str]('all')
-    fc_pos_wsize = Parameter[int](5)
-    fc_pos = Parameter[List]([])
-    ml = Parameter[int](0)
-    concarf = Parameter[str]('')
-    concsize = Parameter[str]('')
-    Lines = Parameter[List]([])
-    fromp = Parameter[int](1)
-    numofpages = Parameter[int](0)
-    pnfilter = Parameter[str]('p')
-    filfl = Parameter[str]('f')
-    filfpos = Parameter[str]('-5', persistent=Parameter.SEMI_PERSISTENT)
-    filtpos = Parameter[str]('5', persistent=Parameter.SEMI_PERSISTENT)
+    fc_lemword_window_type: str = def_attr('both')
+    fc_lemword_type: str = def_attr('all')
+    fc_lemword_wsize: int = def_attr(5)
+    fc_lemword: str = def_attr('')
+    fc_pos_window_type: str = def_attr('both')
+    fc_pos_type: str = def_attr('all')
+    fc_pos_wsize: int = def_attr(5)
+    fc_pos: List = def_attr([])
+    ml: int = def_attr(0)
+    concarf: str = def_attr('')
+    concsize: str = def_attr('')
+    Lines: List = def_attr([])
+    fromp: int = def_attr(1)
+    numofpages: int = def_attr(0)
+    pnfilter: str = def_attr('p')
+    filfl: str = def_attr('f')
+    filfpos: str = def_attr('-5', persistent=Persistence.SEMI_PERSISTENT)
+    filtpos: str = def_attr('5', persistent=Persistence.SEMI_PERSISTENT)
 
     # concordance sorting
-    sattr = Parameter[str]('')
-    sicase = Parameter[str]('')
-    sbward = Parameter[str]('')
-    spos = Parameter[int](3)
-    skey = Parameter[str]('rc')
-    sortlevel = Parameter[int](1)
-    ml1attr = Parameter[str]('')
-    ml2attr = Parameter[str]('')
-    ml3attr = Parameter[str]('')
-    ml4attr = Parameter[str]('')
-    ml1icase = Parameter[str]('')
-    ml2icase = Parameter[str]('')
-    ml3icase = Parameter[str]('')
-    ml4icase = Parameter[str]('')
-    ml1bward = Parameter[str]('')
-    ml2bward = Parameter[str]('')
-    ml3bward = Parameter[str]('')
-    ml4bward = Parameter[str]('')
-    ml1pos = Parameter[int](1)
-    ml2pos = Parameter[int](1)
-    ml3pos = Parameter[int](1)
-    ml4pos = Parameter[int](1)
-    ml1ctx = Parameter[str]('0~0>0')
-    ml2ctx = Parameter[str]('0~0>0')
-    ml3ctx = Parameter[str]('0~0>0')
-    ml4ctx = Parameter[str]('0~0>0')
+    sattr: str = def_attr('')
+    sicase: str = def_attr('')
+    sbward: str = def_attr('')
+    spos: int = def_attr(5)
+    skey: str = def_attr('rc')
+    sortlevel: int = def_attr(1)
+    ml1attr: str = def_attr('')
+    ml2attr: str = def_attr('')
+    ml3attr: str = def_attr('')
+    ml4attr: str = def_attr('')
+    ml1icase: str = def_attr('')
+    ml2icase: str = def_attr('')
+    ml3icase: str = def_attr('')
+    ml4icase: str = def_attr('')
+    ml1bward: str = def_attr('')
+    ml2bward: str = def_attr('')
+    ml3bward: str = def_attr('')
+    ml4bward: str = def_attr('')
+    ml1pos: int = def_attr(1)
+    ml2pos: int = def_attr(1)
+    ml3pos: int = def_attr(1)
+    ml4pos: int = def_attr(1)
+    ml1ctx: str = def_attr('0~0>0')
+    ml2ctx: str = def_attr('0~0>0')
+    ml3ctx: str = def_attr('0~0>0')
+    ml4ctx: str = def_attr('0~0>0')
 
-    freq_sort = Parameter[str]('')
-    heading = Parameter[int](0)
-    saveformat = Parameter[str]('text')
-    wlattr = Parameter[str]('')
-    wlpat = Parameter[str]('')
-    wlpage = Parameter[int](1)
-    wlcache = Parameter[str]('')
-    blcache = Parameter[str]('')
-    simple_n = Parameter[int](1)
-    usearf = Parameter[int](0)
-    collpage = Parameter[int](1)
-    fpage = Parameter[int](1)
-    fmaxitems = Parameter[int](50)
-    ftt_include_empty = Parameter[str]('')
-    subcsize = Parameter[int](0)
-    ref_usesubcorp = Parameter[str]('')
-    wlsort = Parameter[str]('')
-    keywords = Parameter[str]('')
-    Keywords = Parameter[List[str]]([])
-    Items = Parameter[List[str]]([])  # TODO check and remove
-    selected = Parameter[str]('')
-    pages = Parameter[int](0)
-    leftctx = Parameter[str]('')
-    rightctx = Parameter[str]('')
-    numbering = Parameter[int](0)
-    align_kwic = Parameter[int](0)
-    stored = Parameter[str]('')
-    line_numbers = Parameter[int](0, persistent=Parameter.PERSISTENT)
+    freq_sort: str = def_attr('')
+    heading: int = def_attr(0)
+    saveformat: str = def_attr('text')
+    wlattr: str = def_attr('')
+    wlpat: str = def_attr('')
+    wlpage: int = def_attr(1)
+    wlcache: str = def_attr('')
+    blcache: str = def_attr('')
+    simple_n: int = def_attr(1)
+    usearf: int = def_attr(0)
+    collpage: int = def_attr(1)
+    fpage: int = def_attr(1)
+    fmaxitems: int = def_attr(50)
+    ftt_include_empty: str = def_attr('')
+    subcsize: int = def_attr(0)
+    ref_usesubcorp: str = def_attr('')
+    wlsort: str = def_attr('')
+    keywords: str = def_attr('')
+    Keywords: List[str] = def_attr([])
+    Items: List[str] = def_attr([])  # TODO check and remove
+    selected: str = def_attr('')
+    pages: int = def_attr(0)
+    leftctx: str = def_attr('')
+    rightctx: str = def_attr('')
+    numbering: int = def_attr(0)
+    align_kwic: int = def_attr(0)
+    stored: str = def_attr('')
+    line_numbers: int = def_attr(0, persistent=Persistence.PERSISTENT)
     # end
 
     # must be an empty string and not None
-    corpname = Parameter[str]('', persistent=Parameter.SEMI_PERSISTENT)
-    usesubcorp = Parameter[str]('')
-    subcname = Parameter[str]('')
-    subcpath = Parameter[List[str]]([])
-    iquery = Parameter[str]('')
-    queryselector = Parameter[str]('', persistent=Parameter.SEMI_PERSISTENT)
-    lemma = Parameter[str]('')
-    lpos = Parameter[str]('')
-    phrase = Parameter[str]('')
-    char = Parameter[str]('')
-    word = Parameter[str]('')
-    wpos = Parameter[str]('')
-    cql = Parameter[str]('')
-    tag = Parameter[str]('')
-    default_attr = Parameter[Optional[str]](None)
-    save = Parameter[int](1)
-    asnc = Parameter[int](1)
-    qmcase = Parameter[int](0)
-    include_empty = Parameter[int](0)
-    rlines = Parameter[str]('250')
-    attrs = Parameter[str]('word', persistent=Parameter.PERSISTENT)
-    ctxattrs = Parameter[str]('word', persistent=Parameter.PERSISTENT)
-    attr_allpos = Parameter[str]('kw')
-    base_viewattr = Parameter[str]('word', persistent=Parameter.PERSISTENT)
-    attr_vmode = Parameter[str]('mouseover', persistent=Parameter.PERSISTENT)
-    allpos = Parameter[str]('kw')
-    structs = Parameter[str]('', persistent=Parameter.PERSISTENT)
-    q = Parameter[List[str]]([])
-    pagesize = Parameter[int](40, persistent=Parameter.PERSISTENT)
-    wlpagesize = Parameter[int](25, persistent=Parameter.PERSISTENT)
-    citemsperpage = Parameter[int](50, persistent=Parameter.PERSISTENT)
-    multiple_copy = Parameter[int](0, persistent=Parameter.PERSISTENT)  # TODO do we need this?
-    wlsendmail = Parameter[str]('')
-    cup_hl = Parameter[str]('q', persistent=Parameter.PERSISTENT)
-    structattrs = Parameter[List[str]]([], persistent=Parameter.PERSISTENT)
-    cql_editor = Parameter[int](1, persistent=Parameter.PERSISTENT)
+    corpname: str = def_attr('', persistent=Persistence.SEMI_PERSISTENT)
+    usesubcorp: str = def_attr('')
+    subcname: str = def_attr('')
+    subcpath: List[str] = def_attr([])
+    iquery: str = def_attr('')
+    queryselector: str = def_attr('', persistent=Persistence.SEMI_PERSISTENT)
+    lemma: str = def_attr('')
+    lpos: str = def_attr('')
+    phrase: str = def_attr('')
+    char: str = def_attr('')
+    word: str = def_attr('')
+    wpos: str = def_attr('')
+    cql: str = def_attr('')
+    tag: str = def_attr('')
+    default_attr: Optional[str] = def_attr(None)
+    save: int = def_attr(1)
+    asnc: int = def_attr(1)
+    qmcase: int = def_attr(0)
+    include_empty: int = def_attr(0)
+    rlines: str = def_attr('250')
+    attrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
+    ctxattrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
+    attr_allpos: str = def_attr('kw')
+    base_viewattr: str = def_attr('word', persistent=Persistence.PERSISTENT)
+    attr_vmode: str = def_attr('mouseover', persistent=Persistence.PERSISTENT)
+    allpos: str = def_attr('kw')
+    structs: str = def_attr('', persistent=Persistence.PERSISTENT)
+    q:List[str] = def_attr([])
+    pagesize: int = def_attr(40, persistent=Persistence.PERSISTENT)
+    wlpagesize: int = def_attr(25, persistent=Persistence.PERSISTENT)
+    citemsperpage: int = def_attr(50, persistent=Persistence.PERSISTENT)
+    multiple_copy: int = def_attr(0, persistent=Persistence.PERSISTENT)  # TODO do we need this?
+    wlsendmail: str = def_attr('')
+    cup_hl: str = def_attr('q', persistent=Persistence.PERSISTENT)
+    structattrs: List[str] = def_attr([], persistent=Persistence.PERSISTENT)
+    cql_editor: int = def_attr(1, persistent=Persistence.PERSISTENT)
 
-    flimit = Parameter[int](1)
-    freqlevel = Parameter[int](1)
-    hidenone = Parameter[int](1)
-    fttattr = Parameter[List[str]]([])
+    flimit: int = def_attr(1)
+    freqlevel: int = def_attr(1)
+    hidenone: int = def_attr(1)
+    fttattr: List[str] = def_attr([])
 
-    kwicleftctx = Parameter[str]('-10', persistent=Parameter.PERSISTENT)
-    kwicrightctx = Parameter[str]('10', persistent=Parameter.PERSISTENT)
-    senleftctx_tpl = Parameter[str]('-1:%s')
-    senrightctx_tpl = Parameter[str]('1:%s')
-    viewmode = Parameter[str]('kwic')
-    align = Parameter[List[str]]([], persistent=Parameter.SEMI_PERSISTENT)
-    maincorp = Parameter[str]('')  # used only in case of parallel corpora - specifies primary corp.
-    refs = Parameter[Optional[str]](None)  # None means "not initialized" while '' means "user wants no refs"
-    hitlen = Parameter[int](1)
+    kwicleftctx: str = def_attr('-10', persistent=Persistence.PERSISTENT)
+    kwicrightctx: str = def_attr('10', persistent=Persistence.PERSISTENT)
+    senleftctx_tpl: str = def_attr('-1:%s')
+    senrightctx_tpl: str = def_attr('1:%s')
+    viewmode: str = def_attr('kwic')
+    align: List[str] = def_attr([], persistent=Persistence.SEMI_PERSISTENT)
+    maincorp: str = def_attr('')  # used only in case of parallel corpora - specifies primary corp.
+    # None means "not initialized" while '' means "user wants no refs"
+    refs: Optional[str] = def_attr(None)
+    hitlen: int = def_attr(1)
 
-    shuffle = Parameter[int](0, persistent=Parameter.PERSISTENT)
+    shuffle: int = def_attr(0, persistent=Persistence.PERSISTENT)
 
-    subcnorm = Parameter[str]('tokens')
+    subcnorm: str = def_attr('tokens')
 
     # Collocations
 
-    cattr = Parameter[str]('word')
-    csortfn = Parameter[str]('d')
-    cbgrfns = Parameter[List[str]](['m', 't', 'd'])
-    cfromw = Parameter[int](-5)
-    ctow = Parameter[int](5)
-    cminfreq = Parameter[int](3)
-    cminbgr = Parameter[int](3)
+    cattr: str = def_attr('word')
+    csortfn: str = def_attr('d')
+    cbgrfns: List[str] = def_attr(['m', 't', 'd'])
+    cfromw: int = def_attr(-5)
+    ctow: int = def_attr(5)
+    cminfreq: int = def_attr(3)
+    cminbgr: int = def_attr(3)
 
     # Contingency table
 
-    ctminfreq = Parameter[int](80)   # 80th percentile (see ctminfreq_type)
-    ctminfreq_type = Parameter[str]('pabs')  # percentile as a default filter mode
-    ctattr1 = Parameter[str]('word')
-    ctattr2 = Parameter[str]('word')
-    ctfcrit1 = Parameter[str]('0<0')
-    ctfcrit2 = Parameter[str]('0<0')
+    ctminfreq: int = def_attr(80)   # 80th percentile (see ctminfreq_type)
+    ctminfreq_type: str = def_attr('pabs')  # percentile as a default filter mode
+    ctattr1: str = def_attr('word')
+    ctattr2: str = def_attr('word')
+    ctfcrit1: str = def_attr('0<0')
+    ctfcrit2: str = def_attr('0<0')
 
     # word list
 
-    wlminfreq = Parameter[int](5)
-    wlicase = Parameter[int](0)
-    wlwords = Parameter[str]('')
-    blacklist = Parameter[str]('')
+    wlminfreq: int = def_attr(5)
+    wlicase: int = def_attr(0)
+    wlwords: str = def_attr('')
+    blacklist: str = def_attr('')
 
-    include_nonwords = Parameter[int](0)
-    wltype = Parameter[str]('simple')
-    wlnums = Parameter[str]('frq')
+    include_nonwords: int = def_attr(0)
+    wltype: str = def_attr('simple')
+    wlnums: str = def_attr('frq')
 
-    wlposattr1 = Parameter[str]('')
-    wlposattr2 = Parameter[str]('')
-    wlposattr3 = Parameter[str]('')
+    wlposattr1: str = def_attr('')
+    wlposattr2: str = def_attr('')
+    wlposattr3: str = def_attr('')
 
-    maxsavelines = Parameter[int](1000)
-    fcrit = Parameter[List[str]]([])
+    maxsavelines: int = def_attr(1000)
+    fcrit: List[str] = def_attr([])
 
-    sort_linegroups = Parameter[int](0)
-
-
-class Args(object):
-    """
-    URL/form parameters are mapped here
-    """
-    pass
+    sort_linegroups: int = def_attr(0)

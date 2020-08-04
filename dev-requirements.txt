@@ -4,3 +4,4 @@ lxml >= 3.4
 Markdown >= 2.5
 openpyxl >= 2.1
 redis >= 2.10
+attrs >= 19.3.0

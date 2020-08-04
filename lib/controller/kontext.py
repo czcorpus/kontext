@@ -44,7 +44,8 @@ from l10n import corpus_get_conf
 from translation import ugettext as translate
 import scheduled
 import fallback_corpus
-from argmapping import ConcArgsMapping, Parameter, GlobalArgs
+from argmapping import ConcArgsMapping, Persistence, Args, update_attr
+import attr
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from .plg import PluginApi
 from templating import DummyGlobals
@@ -238,7 +239,7 @@ class Kontext(Controller):
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
-    PARAM_TYPES = dict(inspect.getmembers(GlobalArgs, predicate=lambda x: isinstance(x, Parameter)))
+    PARAM_TYPES = attr.fields_dict(Args)
 
     def __init__(self, request: Request, ui_lang: str) -> None:
         super().__init__(request=request, ui_lang=ui_lang)
@@ -695,16 +696,16 @@ class Kontext(Controller):
                 key = str(k)
                 val = req_args.getvalue(k)
                 if key in self.PARAM_TYPES:
-                    if not self.PARAM_TYPES[key].is_array() and type(val) is list:
-                        # If a parameter (see static Parameter instances) is defined as a scalar
+                    if not self.PARAM_TYPES[key].type in [list, tuple] and isinstance(val, list):
+                        # If a parameter is defined as a scalar
                         # but the web framework returns a list (e.g. an HTML form contains a key
                         # with multiple occurrences) then a possible conflict emerges. Although
                         # this should not happen, original Bonito2 code contains such
                         # inconsistencies. In such cases we use only last value as we expect that
                         # the last value overwrites previous ones with the same key.
                         val = val[-1]
-                    elif self.PARAM_TYPES[key].is_array() and not type(val) is list:
-                        # A Parameter object is expected to be a list but
+                    elif self.PARAM_TYPES[key].type in [list, tuple] and not isinstance(val, list):
+                        # A parameter object is expected to be a list but
                         # web framework returns a scalar value
                         val = [val]
                 named_args[key] = val
@@ -764,17 +765,17 @@ class Kontext(Controller):
         """
         for k, v in self._session.get('semi_persistent_attrs', []):
             if k not in form_proxy:
-                self.PARAM_TYPES[k].update_attr(self.args, k, v)
+                update_attr(self.args, k, v)
 
     def _store_semi_persistent_attrs(self, attr_list: Tuple[str, ...]):
         """
-        Store all the semi-persistent (Parameter.SEMI_PERSISTENT) args listed in attr_list.
+        Store all the semi-persistent (Persistence.SEMI_PERSISTENT) args listed in attr_list.
 
         arguments:
             explicit_list -- a list of attributes to store (the ones
-                             without Parameter.SEMI_PERSISTENT flag will be ignored)
+                             without Persistence.SEMI_PERSISTENT flag will be ignored)
         """
-        semi_persist_attrs = self._get_items_by_persistence(Parameter.SEMI_PERSISTENT)
+        semi_persist_attrs = self._get_items_by_persistence(Persistence.SEMI_PERSISTENT)
         tmp: MultiDict[str, Any] = MultiDict(self._session.get('semi_persistent_attrs', {}))
         for attr_name in attr_list:
             if attr_name in semi_persist_attrs:
@@ -879,7 +880,7 @@ class Kontext(Controller):
             self._update_output_with_conc_params(next_query_key, result)
 
         # log user request
-        log_data = self._create_action_log(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
+        log_data = self._create_action_log(self._get_items_by_persistence(Persistence.PERSISTENT), '%s' % methodname,
                                            err_desc=encode_err(err_desc), proc_time=self._proc_time)
         if not settings.get_bool('logging', 'skip_user_actions', False):
             logging.getLogger('QUERY').info(json.dumps(log_data))
@@ -1089,7 +1090,7 @@ class Kontext(Controller):
             force_values = {}
 
         def is_valid(name, value):
-            return isinstance(getattr(GlobalArgs, name, None), Parameter) and value != ''
+            return name in self.PARAM_TYPES and value != ''
 
         def get_val(k):
             return force_values[k] if k in force_values else getattr(self.args, k, None)
