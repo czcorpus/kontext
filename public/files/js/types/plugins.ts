@@ -398,7 +398,7 @@ export namespace PluginInterfaces {
         export type WidgetWiew = React.ComponentClass<{}>|React.SFC<{}>;
 
         export interface IPlugin {
-            getView():WidgetWiew;
+            getWidgetView():WidgetWiew;
         }
 
         export enum Actions {

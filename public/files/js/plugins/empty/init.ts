@@ -19,9 +19,10 @@
  */
 
 import { IUnregistrable } from '../../models/common/common';
-import { IPluginApi } from '../../types/plugins';
+import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { IFullActionControl } from 'kombo';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Observable, empty } from 'rxjs';
 
 
 export class FakePluginViews {
@@ -65,6 +66,10 @@ export class EmptyPlugin implements IUnregistrable {
         };
     }
 
+    getWidgetView():React.SFC|React.ComponentClass|null {
+        return null;
+    }
+
     create() {
         return null;
     }
@@ -74,6 +79,22 @@ export class EmptyPlugin implements IUnregistrable {
     getRegistrationId():string {
         return 'empty-plugin';
     }
+
+    // token connect
+
+    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<PluginInterfaces.TokenConnect.TCData> {
+        return empty();
+    }
+
+    selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
+        return null;
+    }
+
+    providesAnyTokenInfo():boolean {
+        return false;
+    }
+
+    // ------
 }
 
 

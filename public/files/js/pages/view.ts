@@ -1148,7 +1148,7 @@ export class ViewPage {
                         this.layoutModel.pluginApi(),
                         this.viewModels.lineViewModel,
                         this.layoutModel.getConf<Array<string>>('alignedCorpora')
-                    ).getView() :
+                    ).getWidgetView() :
                     null
             );
         });
