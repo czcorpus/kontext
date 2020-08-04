@@ -27,7 +27,6 @@ import { IConcLinesProvider } from '../types/concordance';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
-import { BaseSubcorFormState } from '../models/subcorp/common';
 
 /**
  * An interface used by KonText plug-ins to access

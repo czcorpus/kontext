@@ -23,6 +23,13 @@ import { IPluginApi } from '../../types/plugins';
 import { IFullActionControl } from 'kombo';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 
+
+export class FakePluginViews {
+    LiveAttrsView:null;
+    LiveAttrsCustomTT:null;
+    [k:string]:React.SFC|React.ComponentClass|null;
+}
+
 /**
  * This type is used by KonText build scripts whenever
  * an optional plugin is set to none (i.e. a tag without children
@@ -51,8 +58,11 @@ export class EmptyPlugin implements IUnregistrable {
         });
     }
 
-    getViews() {
-        return {};
+    getViews():FakePluginViews {
+        return {
+            LiveAttrsView: null,
+            LiveAttrsCustomTT: null
+        };
     }
 
     create() {
