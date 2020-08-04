@@ -27,6 +27,7 @@ import * as toolbar from 'plugins/applicationBar/toolbar';
 import { PageModel } from '../../app/page';
 import { ActionName, Actions } from './actions';
 import { IUnregistrable } from '../../models/common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 
 
 export class AppBarModel extends StatelessModel<{}> implements IUnregistrable {
@@ -50,6 +51,20 @@ export class AppBarModel extends StatelessModel<{}> implements IUnregistrable {
                         this.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar')
                     );
                 }
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
             }
         );
     }
