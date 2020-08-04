@@ -82,6 +82,9 @@ export class Plugin {
         this.pluginApi = pluginApi;
     }
 
+    isActive():boolean {
+        return true;
+    }
 
     createWidget(targetAction:string, options:Kontext.GeneralProps):React.ComponentClass<{}> {
 

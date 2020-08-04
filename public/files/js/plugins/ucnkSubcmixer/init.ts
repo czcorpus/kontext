@@ -38,6 +38,10 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
         this.model = model;
     }
 
+    isActive():boolean {
+        return true;
+    }
+
     getWidgetView():PluginInterfaces.SubcMixer.View {
         return viewInit(
             this.pluginApi.dispatcher(),

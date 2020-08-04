@@ -18,9 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as viewInit} from './view';
+import { PluginInterfaces } from '../../types/plugins';
+import { init as viewInit } from './view';
 
 
 export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPlugin {
@@ -29,6 +28,10 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPl
 
     constructor(view:React.SFC<{}>) {
         this.view = view;
+    }
+
+    isActive():boolean {
+        return true;
     }
 
     getWidgetView():React.SFC<{}> {

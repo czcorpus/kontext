@@ -24,6 +24,10 @@ require('./style.less'); // webpack
 
 export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {
 
+    isActive():boolean {
+        return true;
+    }
+
     unregister():void {}
 
     getRegistrationId():string {

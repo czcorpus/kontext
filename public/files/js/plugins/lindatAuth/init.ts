@@ -23,6 +23,10 @@ import {PluginInterfaces} from '../../types/plugins';
 
 class Plugin implements PluginInterfaces.Auth.IPlugin {
 
+    isActive():boolean {
+        return true;
+    }
+
     getUserPaneView():React.ComponentClass {
         return null;
     }

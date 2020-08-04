@@ -92,6 +92,11 @@
         return ans;
     }
 
+    function findMatchingEmptyPlugin(canonicalName, pluginsPath) {
+        const custom = path.resolve(pluginsPath, 'empty', canonicalName);
+        return fs.existsSync(custom) ? custom : path.resolve(pluginsPath, 'empty');
+    }
+
     module.exports.loadKontextConf = function (confPath) {
         const data = fs.readFileSync(confPath, {encoding: 'utf8'});
         return new DOMParser().parseFromString(data);
@@ -195,7 +200,7 @@
                 moduleMap['plugins/' + item.canonicalName] = path.resolve(pluginsPath, item.jsModule);
 
             } else {
-                moduleMap['plugins/' + item.canonicalName] = path.resolve(pluginsPath, 'empty');
+                moduleMap['plugins/' + item.canonicalName] = findMatchingEmptyPlugin(item.canonicalName, pluginsPath);
             }
         });
         return moduleMap;

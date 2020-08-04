@@ -711,14 +711,9 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
 
     private loadTokenConnect(corpusId:string, tokenNum:number, numTokens:number,
             lineIdx:number):Observable<boolean> {
-        return (() => {
-            if (this.tokenConnectPlg) {
-                return this.tokenConnectPlg.fetchTokenConnect(corpusId, tokenNum, numTokens);
-
-            } else {
-                return rxOf<PluginInterfaces.TokenConnect.TCData>(null);
-            }
-        })().pipe(
+        return this.tokenConnectPlg.fetchTokenConnect(
+            corpusId, tokenNum, numTokens
+        ).pipe(
             tap(
                 (data) => {
                     if (data) {
@@ -832,7 +827,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     }
 
     supportsTokenConnect():boolean {
-        return this.tokenConnectPlg  ? this.tokenConnectPlg.providesAnyTokenInfo() : false;
+        return this.tokenConnectPlg.isActive() && this.tokenConnectPlg.providesAnyTokenInfo();
     }
 
     static supportsSpeechView(state:ConcDetailModelState):boolean {

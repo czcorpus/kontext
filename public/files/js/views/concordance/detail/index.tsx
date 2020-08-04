@@ -458,8 +458,9 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
                         <ConcDetailMenu supportsSpeechView={ConcDetailModel.supportsSpeechView(this.props)} mode={this.props.mode}
                                 tcData={kwicViewRenders} />
                         {this._renderContents()}
-                        {this.props.concDetail.length > 0 && (this.props.tokenConnectData || this.props.tokenConnectIsBusy) ?
-                        <hr /> : null}
+                        {this.props.concDetail.length > 0 && concDetailModel.supportsTokenConnect() ?
+                            <hr /> : null
+                        }
                         {concDetailModel.supportsTokenConnect() || this.props.tokenConnectIsBusy ?
                             <TokenExternalInfo tokenConnectData={this.props.tokenConnectData}
                                 tokenConnectIsBusy={this.props.tokenConnectIsBusy} /> : null}

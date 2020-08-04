@@ -36,6 +36,10 @@ export class QueryStoragePlugin implements PluginInterfaces.QueryStorage.IPlugin
         this.model = model;
     }
 
+    isActive():boolean {
+        return true;
+    }
+
     getWidgetView():PluginInterfaces.QueryStorage.WidgetView {
         return viewsInit(
             this.pluginApi.dispatcher(),

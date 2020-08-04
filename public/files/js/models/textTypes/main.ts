@@ -407,8 +407,13 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ActionName.FilterWholeSelection,
             action => {
                 this.changeState(state => {
-                    this.snapshotState(state);
-                    this.filterWholeSelection(state, action.payload.filterData);
+                    if (action.error) {
+                        this.reset(state);
+
+                    } else {
+                        this.snapshotState(state);
+                        this.filterWholeSelection(state, action.payload.filterData);
+                    }
                 });
             }
         );

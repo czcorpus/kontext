@@ -43,6 +43,10 @@ export class Plugin implements PluginInterfaces.Corparch.IPlugin {
         this.pluginApi = pluginApi;
     }
 
+    isActive():boolean {
+        return true;
+    }
+
     /**
      * Creates a corplist widget which is a box containing two tabs
      *  1) user's favorite items

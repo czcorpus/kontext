@@ -67,6 +67,10 @@ export class AppBarPlugin implements PluginInterfaces.ApplicationBar.IPlugin {
         this.model = model;
     }
 
+    isActive():boolean {
+        return true;
+    }
+
     unregister():void {
         this.model.unregister();
     }

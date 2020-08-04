@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as initView, Views as DefaultTokenConnectRenderers} from './view';
-import {MultiDict} from '../../multidict';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { init as initView, Views as DefaultTokenConnectRenderers } from './view';
+import { MultiDict } from '../../multidict';
 import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -56,6 +56,10 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
             v => ({ident: v.ident, isKwicView: v.is_kwic_view}),
             conf.providers
         );
+    }
+
+    isActive():boolean {
+        return true;
     }
 
     fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<PluginInterfaces.TokenConnect.TCData> {

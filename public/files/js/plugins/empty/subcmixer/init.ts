@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2020 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2020 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,20 +18,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces } from '../../types/plugins';
+import { PluginInterfaces } from '../../../types/plugins';
 
-declare var require:any;
-require('./style.less'); // webpack
 
-export class FooterPlugin {
+class EmptySubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
 
     isActive():boolean {
-        return true;
+        return false;
     }
+
+    getWidgetView():PluginInterfaces.SubcMixer.View {
+        return null;
+    }
+
 }
 
-const create:PluginInterfaces.FooterBar.Factory = (pluginApi) => {
-    return new FooterPlugin();
+
+const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, corpusIdAttr) => {
+    return new EmptySubcmixerPlugin();
 }
 
 export default create;

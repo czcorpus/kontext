@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext} from '../../types/common';
+import { Kontext } from '../../types/common';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { CorplistWidgetModel } from './widget';
 import { CorplistPage, CorplistServerData } from './corplist';
@@ -42,6 +42,10 @@ export class Plugin implements IUnregistrable {
 
     constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
+    }
+
+    isActive():boolean {
+        return true;
     }
 
     /**
