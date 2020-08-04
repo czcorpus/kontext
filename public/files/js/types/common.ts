@@ -342,7 +342,7 @@ export namespace Kontext {
 
     export interface IURLHandler {
         createStaticUrl(path:string):string;
-        createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string;
+        createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string;
         encodeURLParameters<T>(params:IMultiDict<T>):string
     }
 
