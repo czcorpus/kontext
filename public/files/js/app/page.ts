@@ -453,7 +453,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string {
+    createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string {
         return this.appNavig.createActionUrl(path, args);
     }
 

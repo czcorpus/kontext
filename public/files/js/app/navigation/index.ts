@@ -165,7 +165,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl<T>(path:string, args?:Array<[string, T]>|Kontext.IMultiDict<T>):string {
+    createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string {
         if (typeof path !== 'string') {
             throw new Error(`Cannot create action url. Invalid path: ${path}`);
         }
