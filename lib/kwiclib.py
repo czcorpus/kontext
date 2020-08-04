@@ -184,8 +184,8 @@ class KwicPageArgs(object):
     # determine whether the non-word attributes should be rendered directly or as a meta-data
     attr_vmode = 'mouseover'
 
-    def __init__(self, argmapping, base_attr):
-        for k, v in list(argmapping.__dict__.items()):
+    def __init__(self, argmapping: Dict[str, Any], base_attr: str):
+        for k, v in argmapping.items():
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
         self.base_attr = base_attr
