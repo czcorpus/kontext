@@ -114,7 +114,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                 });
                 forkJoin(
                     this.suspendWithTimeout(
-                        20000,
+                        5000,
                         pipe(
                             this.allRegisteredIds(),
                             List.map(v => tuple(v, false)),

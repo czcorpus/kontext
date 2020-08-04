@@ -18,11 +18,46 @@
 
 import { PluginInterfaces } from '../../types/plugins';
 import { init as localeInit } from './locale';
+import { StatelessModel, IFullActionControl } from 'kombo';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 
 declare var require:any;
 require('./style.less'); // webpack
 
+
+class LindatAppBarModel extends StatelessModel<{}> {
+
+    constructor(dispatcher:IFullActionControl) {
+        super(dispatcher, {});
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'lindat-app-bar-1';
+    }
+}
+
+
 export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {
+
+    private readonly model:LindatAppBarModel;
+
+    constructor(dispatcher:IFullActionControl) {
+        this.model = new LindatAppBarModel(dispatcher);
+    }
 
     isActive():boolean {
         return true;
@@ -31,13 +66,13 @@ export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {
     unregister():void {}
 
     getRegistrationId():string {
-        return 'lindat-app-bar-1';
+        return this.model.getRegistrationId();
     }
 }
 
 const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {
     localeInit();
-    return new LindatAppBar();
+    return new LindatAppBar(pluginApi.dispatcher());
 };
 
 export default create;
