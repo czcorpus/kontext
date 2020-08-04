@@ -337,37 +337,6 @@ class Controller(object):
             :6]) if deployment_id else ''
         result['current_action'] = '/'.join([x for x in self.get_current_action() if x])
 
-    def _get_template_class(self, name: str) -> Any:
-        """
-        Imports a python module corresponding to the passed template name and
-        returns a class representing respective HTML template.
-        A template name may contain also a relative path to the self._template_dir
-        in which case the search for the respective module will be performed there.
-
-        arguments:
-        name -- name of the template/class
-
-        returns:
-        an object representing the class
-        """
-        name_split = name.rsplit('/', 1)
-        if len(name_split) == 2:
-            template_dir = os.path.join(self._template_dir, name_split[0])
-            name = name_split[1]
-        else:
-            template_dir = self._template_dir
-            name = name_split[0]
-
-        srch_dirs = [self._template_dir, template_dir]
-        try:
-            tpl_file, pathname, description = imp.find_module(name, srch_dirs)
-        except ImportError as ex:
-            logging.getLogger(__name__).error(
-                'Failed to import template {0} in {1}'.format(name, ', '.join(srch_dirs)))
-            raise ex
-        module = imp.load_module(name, tpl_file, pathname, description)
-        return getattr(module, name)
-
     def get_current_url(self) -> str:
         """
         Returns an URL representing current application state
