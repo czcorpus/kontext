@@ -30,11 +30,9 @@ import os
 from xml.sax.saxutils import escape
 from types import MethodType
 from inspect import isclass
-import imp
 from urllib.parse import unquote, quote
 import json
 import logging
-import inspect
 import time
 import re
 from functools import partial
@@ -312,20 +310,6 @@ class Controller(object):
         text -- text of the message
         """
         self._system_messages.append((msg_type, text))
-
-    def _is_template(self, template: str) -> bool:
-        """
-        Tests whether the provided template name corresponds
-        to a respective python module (= compiled template).
-
-        arguments:
-        template -- template name (e.g. document, first_form,...)
-        """
-        try:
-            imp.find_module(template, [self._template_dir])
-            return True
-        except ImportError:
-            return False
 
     def _export_status(self) -> str:
         """
@@ -641,10 +625,10 @@ class Controller(object):
         1. is of the Parameter type
         2. has a matching persistence flag
         """
-        def is_valid_parameter(attr):
-            return attr.metadata['persistent'] is persistence_types
+        def is_valid_parameter(att):
+            return att.metadata['persistent'] is persistence_types
 
-        return tuple(attr.name for attr in attr.fields(Args) if is_valid_parameter(attr))
+        return tuple(att.name for att in attr.fields(Args) if is_valid_parameter(att))
 
     def _get_items_by_persistence(self, persistence_types: Persistence) -> Dict[str, any]:
         """
