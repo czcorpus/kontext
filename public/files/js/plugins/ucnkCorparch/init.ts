@@ -18,19 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {CorplistPage} from './corplist';
-import {IPluginApi, PluginInterfaces} from '../../types/plugins';
-import {init as viewInit} from './view';
-import {init as overviewViewInit} from '../../views/overview';
-import {CorplistTableModel} from './corplist';
-import {Plugin as DCPlugin} from '../defaultCorparch/init';
+import { Kontext } from '../../types/common';
+import { CorplistPage } from './corplist';
+import { IPluginApi, PluginInterfaces } from '../../types/plugins';
+import { init as viewInit } from './view';
+import { init as overviewViewInit } from '../../views/overview';
+import { CorplistTableModel } from './corplist';
+import { Plugin as DCPlugin } from '../defaultCorparch/init';
 import { CorplistServerData } from '../defaultCorparch/corplist';
 
 class Plugin extends DCPlugin {
 
     constructor(pluginApi:IPluginApi) {
         super(pluginApi);
+    }
+
+    isActive():boolean {
+        return true;
     }
 
     /**

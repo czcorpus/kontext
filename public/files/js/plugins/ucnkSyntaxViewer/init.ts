@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel, IModel } from 'kombo';
 import { HTTP } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
@@ -78,6 +78,10 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         );
     }
 
+    isActive():boolean {
+        return true;
+    }
+
     private renderTree(target:HTMLElement):void {
         const treexFrame = window.document.createElement('div');
         treexFrame.style.width = '90%';
@@ -118,6 +122,10 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
 
     close():void {
         window.removeEventListener('resize', this.onPageResize);
+    }
+
+    getModel():IModel<PluginInterfaces.SyntaxViewer.BaseState> {
+        return this;
     }
 
     onPageResize = () => {

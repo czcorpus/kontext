@@ -16,14 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {PluginInterfaces} from '../../types/plugins';
+import { PluginInterfaces } from '../../types/plugins';
 
 declare var require:any;
 require('./style.less'); // webpack
 
 export class FooterPlugin {
 
-    constructor() {
+    isActive():boolean {
+        return true;
     }
 
     init():void {

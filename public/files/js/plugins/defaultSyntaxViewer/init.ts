@@ -21,7 +21,7 @@
 /// <reference path="./js-treex-view.d.ts" />
 
 import { empty as rxEmpty } from 'rxjs';
-import { StatefulModel } from 'kombo';
+import { StatefulModel, IModel } from 'kombo';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 
@@ -78,8 +78,16 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         );
     }
 
+    isActive():boolean {
+        return true;
+    }
+
     close():void {
         window.removeEventListener('resize', this.onPageResize);
+    }
+
+    getModel():IModel<PluginInterfaces.SyntaxViewer.BaseState> {
+        return this;
     }
 
     onPageResize = () => {

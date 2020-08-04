@@ -179,17 +179,10 @@ export class FirstFormPage {
             }
         );
 
-        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
+        const liveAttrsViews:PluginInterfaces.LiveAttributes.Views = this.liveAttrsPlugin.getViews(
+            null, this.textTypesModel);
         if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
             this.textTypesModel.enableAutoCompleteSupport();
-            // TODO 'this' reference = antipattern
-            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
-
-        } else {
-            liveAttrsViews = {
-                LiveAttrsCustomTT: null,
-                LiveAttrsView: null
-            };
         }
         return {
             ...liveAttrsViews,

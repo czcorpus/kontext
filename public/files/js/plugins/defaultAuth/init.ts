@@ -132,6 +132,10 @@ export class AuthPlugin implements PluginInterfaces.Auth.IPlugin {
     getSignUpView():React.ComponentClass {
         return this.userSignUpViews.SignUpForm;
     }
+
+    isActive():boolean {
+        return true;
+    }
 }
 
 

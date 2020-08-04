@@ -27,7 +27,6 @@ import { IConcLinesProvider } from '../types/concordance';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
-import { BaseSubcorFormState } from '../models/subcorp/common';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -58,6 +57,11 @@ export interface IPluginApi extends ITranslator {
 }
 
 
+export interface BasePlugin {
+    isActive():boolean;
+}
+
+
 /**
  * PluginInterfaces contains individual interfaces KonText expect
  * from plug-ins to be implemented.
@@ -69,7 +73,7 @@ export namespace PluginInterfaces {
 
     export namespace Auth {
 
-        export interface IPlugin {
+        export interface IPlugin extends BasePlugin {
             getUserPaneView():React.ComponentClass;
             getProfileView():React.ComponentClass;
             getSignUpView():React.ComponentClass|null;
@@ -85,7 +89,7 @@ export namespace PluginInterfaces {
 
     export namespace ApplicationBar {
 
-        export interface IPlugin extends IUnregistrable {
+        export interface IPlugin extends IUnregistrable, BasePlugin {
         }
 
         export interface Factory {
@@ -98,7 +102,7 @@ export namespace PluginInterfaces {
 
     export namespace FooterBar {
 
-        export interface IPlugin {
+        export interface IPlugin extends BasePlugin {
         }
 
         export interface Factory {
@@ -116,7 +120,7 @@ export namespace PluginInterfaces {
             isActive:Boolean;
         }
 
-        export interface IPlugin {
+        export interface IPlugin extends BasePlugin {
             getWidgetView():View;
         }
 
@@ -137,10 +141,11 @@ export namespace PluginInterfaces {
 
     export namespace SyntaxViewer {
 
-        export interface IPlugin extends IModel<BaseState> {
+        export interface IPlugin extends BasePlugin {
             close():void;
             onPageResize():void;
             registerOnError(fn:(e:Error)=>void):void;
+            getModel():IModel<BaseState>;
         }
 
         export interface Factory {
@@ -209,7 +214,7 @@ export namespace PluginInterfaces {
 
         export type View = React.ComponentClass<ViewProps>|React.SFC<ViewProps>;
 
-        export interface IPlugin {
+        export interface IPlugin extends BasePlugin {
             getWidgetView(corpname:string,
                 tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;
         }
@@ -245,7 +250,7 @@ export namespace PluginInterfaces {
 
         export type WidgetView = React.ComponentClass<WidgetProps>;
 
-        export interface IPlugin {
+        export interface IPlugin extends BasePlugin {
 
             getWidgetView():WidgetView;
 
@@ -293,7 +298,7 @@ export namespace PluginInterfaces {
             getList():React.ComponentClass|React.SFC<{}>;
         }
 
-        export interface IPlugin extends IUnregistrable {
+        export interface IPlugin extends IUnregistrable, BasePlugin {
 
             /**
              * Create a corpus selection widget used on the query page
@@ -323,7 +328,7 @@ export namespace PluginInterfaces {
             LiveAttrsCustomTT:CustomAttribute;
         }
 
-        export interface IPlugin extends IUnregistrable {
+        export interface IPlugin extends IUnregistrable, BasePlugin {
 
             getViews(subcMixerView:SubcMixer.View, textTypesModel:IModel<{}>):Views;
 
@@ -380,7 +385,7 @@ export namespace PluginInterfaces {
 
     export namespace IssueReporting {
 
-        export interface IPlugin {
+        export interface IPlugin extends BasePlugin {
 
             getWidgetView():React.ComponentClass|React.SFC<{}>;
         }
@@ -398,8 +403,8 @@ export namespace PluginInterfaces {
 
         export type WidgetWiew = React.ComponentClass<{}>|React.SFC<{}>;
 
-        export interface IPlugin {
-            getView():WidgetWiew;
+        export interface IPlugin extends BasePlugin {
+            getWidgetView():WidgetWiew;
         }
 
         export enum Actions {
@@ -448,7 +453,7 @@ export namespace PluginInterfaces {
             renders:Array<DataAndRenderer>;
         }
 
-        export interface IPlugin {
+        export interface IPlugin extends BasePlugin {
 
             fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<TCData>;
 

@@ -50,6 +50,10 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         this.pluginApi = pluginApi;
     }
 
+    isActive():boolean {
+        return true;
+    }
+
     private addPosTagsetBuilder(
             deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]>,
             tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatefulModel, Action } from 'kombo';
+import { StatefulModel, Action, IModel } from 'kombo';
 import { PluginInterfaces } from '../../types/plugins';
 
 /**
@@ -40,4 +40,8 @@ export class DummySyntaxViewModel extends StatefulModel<PluginInterfaces.SyntaxV
     onAction(action:Action) {}
 
     registerOnError(fn:(e:Error)=>void):void {}
+
+    getModel():IModel<PluginInterfaces.SyntaxViewer.BaseState> {
+        return this;
+    }
 }

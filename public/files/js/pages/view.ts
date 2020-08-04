@@ -913,15 +913,10 @@ export class ViewPage {
     }
 
     private initTokenConnect():PluginInterfaces.TokenConnect.IPlugin {
-        if (this.layoutModel.pluginTypeIsActive(PluginName.TOKEN_CONNECT)) {
-            return tokenConnectInit(
-                this.layoutModel.pluginApi(),
-                this.layoutModel.getConf<Array<string>>('alignedCorpora')
-            );
-
-        } else {
-            return null;
-        }
+        return tokenConnectInit(
+            this.layoutModel.pluginApi(),
+            this.layoutModel.getConf<Array<string>>('alignedCorpora')
+        );
     }
 
     private initModels(ttModel:TextTypesModel,
@@ -973,7 +968,7 @@ export class ViewPage {
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginTypeIsActive(
                 PluginName.SYNTAX_VIEWER),
-            supportsTokenConnect: tokenConnect ? tokenConnect.providesAnyTokenInfo() : false,
+            supportsTokenConnect: tokenConnect.providesAnyTokenInfo(),
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
             ),
@@ -1013,7 +1008,7 @@ export class ViewPage {
             this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
 
-        this.viewModels.syntaxViewModel = syntaxViewer;
+        this.viewModels.syntaxViewModel = syntaxViewer.getModel();
 
         this.viewModels.lineSelectionModel = new LineSelectionModel({
             layoutModel: this.layoutModel,
@@ -1148,7 +1143,7 @@ export class ViewPage {
                         this.layoutModel.pluginApi(),
                         this.viewModels.lineViewModel,
                         this.layoutModel.getConf<Array<string>>('alignedCorpora')
-                    ).getView() :
+                    ).getWidgetView() :
                     null
             );
         });

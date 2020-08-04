@@ -19,9 +19,11 @@
  */
 
 import { IUnregistrable } from '../../models/common/common';
-import { IPluginApi } from '../../types/plugins';
+import { IPluginApi, BasePlugin } from '../../types/plugins';
 import { IFullActionControl } from 'kombo';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Observable } from 'rxjs';
+
 
 /**
  * This type is used by KonText build scripts whenever
@@ -35,7 +37,9 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../
  *
  * See also PageModel.isNotEmptyPlugin()
  */
-export class EmptyPlugin implements IUnregistrable {
+export class EmptyPlugin implements IUnregistrable, BasePlugin {
+
+    private readonly noChanges:Observable<{}>;
 
     constructor(dispatcher:IFullActionControl) {
         dispatcher.registerActionListener((action, dispatch) => {
@@ -49,10 +53,16 @@ export class EmptyPlugin implements IUnregistrable {
                 });
             }
         });
+
+        this.noChanges = new Observable<{}>();
     }
 
-    getViews() {
-        return {};
+    isActive():boolean {
+        return true;
+    }
+
+    getWidgetView():React.SFC|React.ComponentClass|null {
+        return null;
     }
 
     create() {

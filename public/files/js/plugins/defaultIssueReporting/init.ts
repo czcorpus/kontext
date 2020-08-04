@@ -105,6 +105,10 @@ export class IssueReportingModel extends StatelessModel<IssueReportingModelState
         };
     }
 
+    isActive():boolean {
+        return true;
+    }
+
 }
 
 
@@ -117,6 +121,10 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPl
     constructor(model:IssueReportingModel, view:React.ComponentClass) {
         this.model = model;
         this.view = view;
+    }
+
+    isActive():boolean {
+        return true;
     }
 
     getWidgetView():React.ComponentClass {

@@ -149,17 +149,19 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             TTActionName.FilterWholeSelection,
             (state, action) => {
                 state.isBusy = false;
-                state.alignedCorpora = pipe(
-                    state.alignedCorpora,
-                    List.map((value) => ({
-                        ...value,
-                        locked: value.selected ? true : false
-                    })),
-                    List.filter(item=>item.locked)
-                );
-                this.updateSelectionSteps(state, action.payload.selectedTypes, action.payload.poscount);
-                if (action.payload.bibAttrValsAreListed) {
-                    this.attachBibData(state, action.payload.filterData);
+                if (!action.error) {
+                    state.alignedCorpora = pipe(
+                        state.alignedCorpora,
+                        List.map((value) => ({
+                            ...value,
+                            locked: value.selected ? true : false
+                        })),
+                        List.filter(item=>item.locked)
+                    );
+                    this.updateSelectionSteps(state, action.payload.selectedTypes, action.payload.poscount);
+                    if (action.payload.bibAttrValsAreListed) {
+                        this.attachBibData(state, action.payload.filterData);
+                    }
                 }
             }
         );

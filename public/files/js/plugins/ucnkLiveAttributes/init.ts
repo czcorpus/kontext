@@ -44,6 +44,10 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
         this.isEnabled = isEnabled;
     }
 
+    isActive():boolean {
+        return true;
+    }
+
     getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):PluginInterfaces.LiveAttributes.Views {
         const views = viewInit({
             dispatcher: this.pluginApi.dispatcher(),

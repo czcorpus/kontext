@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2020 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2020 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,20 +18,31 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces } from '../../types/plugins';
+import { PluginInterfaces } from '../../../types/plugins';
+import { of as rxOf, Observable } from 'rxjs';
 
-declare var require:any;
-require('./style.less'); // webpack
-
-export class FooterPlugin {
+export class EmptyTokenConnectPlugin implements PluginInterfaces.TokenConnect.IPlugin {
 
     isActive():boolean {
-        return true;
+        return false;
+    }
+
+    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<PluginInterfaces.TokenConnect.TCData> {
+        return rxOf(null);
+    }
+
+    selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
+        return null;
+    }
+
+    providesAnyTokenInfo():boolean {
+        return false;
     }
 }
 
-const create:PluginInterfaces.FooterBar.Factory = (pluginApi) => {
-    return new FooterPlugin();
-}
+
+const create:PluginInterfaces.TokenConnect.Factory = (pluginApi) => {
+    return new EmptyTokenConnectPlugin();
+};
 
 export default create;
