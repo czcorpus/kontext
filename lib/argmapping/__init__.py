@@ -59,32 +59,33 @@ WidectxArgsMapping = (
     'hitlen'
 )
 
+
 def update_attr(obj: object, k: str, v: Union[str, int, float]) -> None:
-        """
-        Update obj's 'k' attribute using scalar value
-        'v'. This means different things based
-        on whether obj.[k] is array or not.
+    """
+    Update obj's 'k' attribute using scalar value
+    'v'. This means different things based
+    on whether obj.[k] is array or not.
 
-        Rules:
-        1. empty string and None reset current obj.[k]
-        2. non empty value is appended to array type and
-           replaces current value of scalar type
+    Rules:
+    1. empty string and None reset current obj.[k]
+    2. non empty value is appended to array type and
+       replaces current value of scalar type
 
-        arguments:
-        obj -- argument mapping object
-        k -- a string key
-        v -- a simple type value (string, int, float)
-        """
-        if v == '' or v is None:
-            if attr.fields_dict(Args)[k].type in [list, tuple]:
-                setattr(obj, k, [])
-            else:
-                setattr(obj, k, None)
+    arguments:
+    obj -- argument mapping object
+    k -- a string key
+    v -- a simple type value (string, int, float)
+    """
+    if v == '' or v is None:
+        if attr.fields_dict(Args)[k].type in [list, tuple]:
+            setattr(obj, k, [])
         else:
-            if attr.fields_dict(Args)[k].type in [list, tuple]:
-                setattr(obj, k, getattr(obj, k, []) + [v])
-            else:
-                setattr(obj, k, v)
+            setattr(obj, k, None)
+    else:
+        if attr.fields_dict(Args)[k].type in [list, tuple]:
+            setattr(obj, k, getattr(obj, k, []) + [v])
+        else:
+            setattr(obj, k, v)
 
 
 def def_attr(value, persistent: Persistence = Persistence.NON_PERSISTENT):
@@ -205,7 +206,7 @@ class Args(object):
     attr_vmode: str = def_attr('mouseover', persistent=Persistence.PERSISTENT)
     allpos: str = def_attr('kw')
     structs: str = def_attr('', persistent=Persistence.PERSISTENT)
-    q:List[str] = def_attr([])
+    q: List[str] = def_attr([])
     pagesize: int = def_attr(40, persistent=Persistence.PERSISTENT)
     wlpagesize: int = def_attr(25, persistent=Persistence.PERSISTENT)
     citemsperpage: int = def_attr(50, persistent=Persistence.PERSISTENT)
