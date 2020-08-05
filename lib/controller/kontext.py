@@ -239,8 +239,6 @@ class Kontext(Controller):
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
-    PARAM_TYPES = attr.fields_dict(Args)
-
     def __init__(self, request: Request, ui_lang: str) -> None:
         super().__init__(request=request, ui_lang=ui_lang)
         # Note: always use _corp() method to access current corpus even from inside the class
@@ -494,7 +492,7 @@ class Kontext(Controller):
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._prev_q_data is not None:
-                    form.add_forced_arg('q', self._prev_q_data['q'][:] + url_q[1:])
+                    form.add_forced_arg('q', *(self._prev_q_data['q'][:] + url_q[1:]))
                     corpora = self._prev_q_data.get('corpora', [])
                     if len(corpora) > 0:
                         orig_corpora = form.add_forced_arg('corpname', corpora[0])
@@ -676,7 +674,7 @@ class Kontext(Controller):
         if getattr(self.args, 'attr_vmode') in ('mouseover', 'mixed') and getattr(self.args, 'attr_allpos') == 'kw':
             setattr(self.args, 'attr_allpos', 'all')
 
-    def _map_args_to_attrs(self, req_args, named_args):
+    def _map_args_to_attrs(self, req_args: RequestArgsProxy, named_args):
         """
         arguments:
         req_args -- a RequestArgsProxy instance
@@ -691,24 +689,18 @@ class Kontext(Controller):
         if 'json' in req_args:
             json_data = json.loads(req_args.getvalue('json'))
             named_args.update(json_data)
-        for k in list(req_args.keys()):
-            if len(req_args.getlist(k)) > 0:
+        for k in req_args.keys():
+            values = req_args.getlist(k)
+            if len(values) > 0:
                 key = str(k)
-                val = req_args.getvalue(k)
-                if key in self.PARAM_TYPES:
-                    if not self.PARAM_TYPES[key].type in [list, tuple] and isinstance(val, list):
-                        # If a parameter is defined as a scalar
-                        # but the web framework returns a list (e.g. an HTML form contains a key
-                        # with multiple occurrences) then a possible conflict emerges. Although
-                        # this should not happen, original Bonito2 code contains such
-                        # inconsistencies. In such cases we use only last value as we expect that
-                        # the last value overwrites previous ones with the same key.
-                        val = val[-1]
-                    elif self.PARAM_TYPES[key].type in [list, tuple] and not isinstance(val, list):
-                        # A parameter object is expected to be a list but
-                        # web framework returns a scalar value
-                        val = [val]
-                named_args[key] = val
+                if hasattr(self.args, key):
+                    if isinstance(getattr(self.args, key), (list, tuple)):
+                        named_args[key] = values
+                    else:
+                        # when mapping to a scalar arg we always take the last
+                        # value item but in such case, the length of values should
+                        # be always 1
+                        named_args[key] = values[-1]
         na = named_args.copy()
 
         convert_types(na, self.clone_args())
@@ -1090,7 +1082,7 @@ class Kontext(Controller):
             force_values = {}
 
         def is_valid(name, value):
-            return name in self.PARAM_TYPES and value != ''
+            return hasattr(self.args, name) and value != ''
 
         def get_val(k):
             return force_values[k] if k in force_values else getattr(self.args, k, None)
