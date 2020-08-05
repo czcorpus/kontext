@@ -27,13 +27,10 @@ class Options(Kontext):
     def get_mapping_url_prefix(self):
         return '/options/'
 
-    def _set_new_viewopts(self, newctxsize='', ctxunit='', line_numbers=0, cql_editor=0):
+    def _set_new_viewopts(self, newctxsize=0, ctxunit='', line_numbers=0, cql_editor=0):
         if ctxunit == '@pos':
             ctxunit = ''
         if "%s%s" % (newctxsize, ctxunit) != self.args.kwicrightctx:
-            if not newctxsize.isdigit():
-                raise Exception(
-                    translate('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.args.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.args.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
         self.args.line_numbers = line_numbers
@@ -143,7 +140,7 @@ class Options(Kontext):
         )
 
     @exposed(access_level=0, return_type='json', http_method='POST', func_arg_mapped=True, skip_corpus_init=True)
-    def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0, cql_editor=0):
+    def viewoptsx(self, newctxsize=0, ctxunit='', line_numbers=0, cql_editor=0):
         self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers,
                                cql_editor=cql_editor)
         self._save_options(self.GENERAL_OPTIONS)

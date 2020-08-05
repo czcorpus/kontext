@@ -10,9 +10,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict, Any
 from enum import Enum
 import attr
+
+from controller.req_args import RequestArgsProxy
 
 
 class Persistence(Enum):
@@ -58,34 +60,6 @@ WidectxArgsMapping = (
     'refs',
     'hitlen'
 )
-
-
-def update_attr(obj: object, k: str, v: Union[str, int, float]) -> None:
-    """
-    Update obj's 'k' attribute using scalar value
-    'v'. This means different things based
-    on whether obj.[k] is array or not.
-
-    Rules:
-    1. empty string and None reset current obj.[k]
-    2. non empty value is appended to array type and
-       replaces current value of scalar type
-
-    arguments:
-    obj -- argument mapping object
-    k -- a string key
-    v -- a simple type value (string, int, float)
-    """
-    if v == '' or v is None:
-        if attr.fields_dict(Args)[k].type in [list, tuple]:
-            setattr(obj, k, [])
-        else:
-            setattr(obj, k, None)
-    else:
-        if attr.fields_dict(Args)[k].type in [list, tuple]:
-            setattr(obj, k, getattr(obj, k, []) + [v])
-        else:
-            setattr(obj, k, v)
 
 
 def def_attr(value, persistent: Persistence = Persistence.NON_PERSISTENT):
@@ -274,3 +248,65 @@ class Args(object):
     fcrit: List[str] = def_attr([])
 
     sort_linegroups: int = def_attr(0)
+
+    def _fix_interdependent_attrs(self):
+        """
+        Some self.args values may not play well together with some default
+        values of dependent attributes. This method should ensure that all
+        the values are consistent.
+        """
+        if self.attr_vmode in ('mouseover', 'mixed') and self.attr_allpos == 'kw':
+            self.attr_allpos = 'all'
+
+    def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]], corp_selector: bool = False):
+        """
+        Set existing attrs of self to the values provided by args. Multi-value keys are supported
+        in a limited way - only list of strings can be set.
+
+        arguments:
+        req_args -- a RequestArgsProxy instance or a general dict containing parameters
+        """
+        in_args = args if isinstance(args, RequestArgsProxy) else RequestArgsProxy(args, {})
+        for full_k in in_args.keys():
+            values = in_args.getlist(full_k)
+            if len(values) > 0:
+                key = full_k.split(':')[-1] if corp_selector else full_k
+                if hasattr(self, key):
+                    if isinstance(getattr(self, key), (list, tuple)):
+                        setattr(self, key, values)
+                    elif isinstance(getattr(self, key), int):
+                        setattr(self, key, int(values[-1]))
+                    else:
+                        # when mapping to a scalar arg we always take the last
+                        # value item but in such case, the length of values should
+                        # be always 1
+                        setattr(self, key, values[-1])
+        self._fix_interdependent_attrs()
+
+
+def update_attr(obj: Args, k: str, v: Union[str, int, float]) -> None:
+    """
+    Update obj's 'k' attribute using scalar value
+    'v'. This means different things based
+    on whether obj.[k] is array or not.
+
+    Rules:
+    1. empty string and None reset current obj.[k]
+    2. non empty value is appended to array type and
+       replaces current value of scalar type
+
+    arguments:
+    obj -- argument mapping object
+    k -- a string key
+    v -- a simple type value (string, int, float)
+    """
+    if v == '' or v is None:
+        if isinstance(getattr(obj, k), (list, tuple)):
+            setattr(obj, k, [])
+        else:
+            setattr(obj, k, None)
+    else:
+        if isinstance(getattr(obj, k), (list, tuple)):
+            setattr(obj, k, getattr(obj, k, []) + [v])
+        else:
+            setattr(obj, k, v)
