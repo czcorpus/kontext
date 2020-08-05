@@ -543,7 +543,7 @@ class Actions(Querying):
                 else:
                     raise ConcError(translate('No query entered.'))
         if qtype:
-            return queries[qtype] % self.clone_args()
+            return queries[qtype] % attr.asdict(self.args)
         thecorp = cname and self.cm.get_Corpus(cname) or self.corp
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         wposlist = dict(self.cm.corpconf_pairs(thecorp, 'WPOSLIST'))
@@ -894,7 +894,8 @@ class Actions(Querying):
     @exposed(access_level=0, template='view.html', page_model='view', mutates_conc=True)
     def filter_subhits(self, _):
         if len(self._lines_groups) > 0:
-            raise UserActionException('Cannot apply the function once a group of lines has been saved')
+            raise UserActionException(
+                'Cannot apply the function once a group of lines has been saved')
         self.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
         self.args.q.append('D')
         return self.view()
@@ -903,7 +904,8 @@ class Actions(Querying):
              mutates_conc=True)
     def filter_firsthits(self, request):
         if len(self._lines_groups) > 0:
-            raise UserActionException('Cannot apply the function once a group of lines has been saved')
+            raise UserActionException(
+                'Cannot apply the function once a group of lines has been saved')
         elif len(self.args.align) > 0:
             raise UserActionException('The function is not supported for aligned corpora')
         self.add_conc_form_args(FirstHitsFilterFormArgs(

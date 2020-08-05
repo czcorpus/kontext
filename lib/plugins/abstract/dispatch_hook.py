@@ -26,7 +26,7 @@ class AbstractDispatchHook(abc.ABC):
         A function run right after Controller.pre_dispatch and before
         any Kontext.pre_dispatch.
 
-        Both named_args and action_metadata are mutable which provides
+        action_metadata are mutable which provides
         a way how to affect action processing (the action itself will
         be always the original one as the 'path' cannot be changed).
 

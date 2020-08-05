@@ -13,26 +13,25 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Optional, TypeVar, Dict, List, Iterator, Callable, Tuple, Union, Iterable, cast
+from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, cast
 from main_menu import AbstractMenuItem
 from argmapping.query import ConcFormArgs
 from manatee import Corpus
 from werkzeug import Request
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
-from . import Controller
+import attr
 
 import json
-from functools import partial
 import logging
 import inspect
 import os.path
 import time
-from collections import defaultdict
 
+from . import Controller
 import corplib
 import conclib
-from . import convert_types, exposed
+from . import _convert_func_mapping_types, exposed
 from .errors import (UserActionException, ForbiddenException,
                      AlignedCorpusForbiddenException, NotFoundException)
 import plugins
@@ -45,10 +44,10 @@ from translation import ugettext as translate
 import scheduled
 import fallback_corpus
 from argmapping import ConcArgsMapping, Persistence, Args, update_attr
-import attr
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from .plg import PluginApi
 from templating import DummyGlobals
+from .req_args import RequestArgsProxy
 
 JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 T = TypeVar('T')
@@ -88,78 +87,6 @@ class LinesGroups(object):
         ans = LinesGroups(data_dict.get('data', []))
         ans.sorted = data_dict.get('sorted', False)
         return ans
-
-
-class RequestArgsProxy(object):
-    """
-    A wrapper class allowing an access to both
-    Werkzeug's request.form and request.args (MultiDict objects).
-    It is also possible to force arguments manually in which
-    case anything with the same key from 'form' or 'args' is
-    suppressed. This is used when unpacking arguments from
-    a query hash code.
-
-    The class is used in 'pre dispatch' phase and it is not
-    expected to be used within individual action methods
-    where 'request' object is available and also 'self.args'
-    mapping.
-    """
-
-    def __init__(self, form: werkzeug.datastructures.MultiDict, args: werkzeug.datastructures.MultiDict):
-        self._form = form
-        self._args = args
-        self._forced = defaultdict(lambda: [])
-
-    def __iter__(self):
-        return list(self.keys()).__iter__()
-
-    def __contains__(self, item):
-        return item in self._forced or item in self._form or item in self._args
-
-    def keys(self):
-        return list(set(list(self._forced.keys()) + list(self._form.keys()) + list(self._args.keys())))
-
-    def getlist(self, k: str) -> List[str]:
-        """
-        Returns a list of values matching passed argument
-        name. List is returned even if there is a single
-        value avalilable.
-
-        URL arguments have higher priority over POST ones.
-        """
-        tmp = self._forced[k]
-        if len(tmp) > 0:
-            return tmp
-        tmp = self._form.getlist(k)
-        if len(tmp) > 0:
-            return tmp
-        tmp = self._args.getlist(k)
-        return tmp
-
-    def getvalue(self, k):
-        """
-        Returns either a single value or a list of values
-        depending on HTTP request arguments.
-
-        URL arguments have higher priority over POST ones.
-        """
-        tmp = self.getlist(k)
-        if len(tmp) == 0:
-            return None
-        elif len(tmp) == 1:
-            return tmp[0]
-        else:
-            return tmp
-
-    def add_forced_arg(self, k, *v: List[str]) -> List[str]:
-        """
-        add key-value parameter overriding any previous or
-        future changes applied from URL/Form data. The method
-        returns previous values stored under the key k.
-        """
-        curr = self.getlist(k)[:]
-        self._forced[k] = self._forced[k] + list(v)
-        return curr
 
 
 class AsyncTaskStatus(object):
@@ -398,7 +325,7 @@ class Kontext(Controller):
         options -- a dictionary containing user settings
         actions -- a custom action to be applied to options (default is None)
         """
-        convert_types(options, self.clone_args(), selector=1)
+        self.args.map_args_to_attrs(options, True)
         if callable(actions):
             actions(options)
         self._setup_user_paths()
@@ -419,8 +346,7 @@ class Kontext(Controller):
             if len(tokens) == 2:
                 if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                     ans[tokens[1]] = v
-        convert_types(options, self.clone_args(), selector=1)
-        self.args.__dict__.update(ans)
+        self.args.map_args_to_attrs(options, True)
 
     @staticmethod
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
@@ -665,48 +591,6 @@ class Kontext(Controller):
                     action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
 
-    def _fix_interdependent_attrs(self):
-        """
-        Some self.args values may not play well together with some default
-        values of dependent attributes. This method should ensure that all
-        the values are consistent.
-        """
-        if getattr(self.args, 'attr_vmode') in ('mouseover', 'mixed') and getattr(self.args, 'attr_allpos') == 'kw':
-            setattr(self.args, 'attr_allpos', 'all')
-
-    def _map_args_to_attrs(self, req_args: RequestArgsProxy, named_args):
-        """
-        arguments:
-        req_args -- a RequestArgsProxy instance
-        named_args -- already processed named arguments
-
-        Maps URL and form arguments to self.args.__dict__.
-        Multi-value arguments are not supported. In case you want to
-        access a value list (e.g. stuff like foo=a&foo=b&foo=c)
-        please use request.args.getlist/request.form.getlist methods.
-        """
-
-        if 'json' in req_args:
-            json_data = json.loads(req_args.getvalue('json'))
-            named_args.update(json_data)
-        for k in req_args.keys():
-            values = req_args.getlist(k)
-            if len(values) > 0:
-                key = str(k)
-                if hasattr(self.args, key):
-                    if isinstance(getattr(self.args, key), (list, tuple)):
-                        named_args[key] = values
-                    else:
-                        # when mapping to a scalar arg we always take the last
-                        # value item but in such case, the length of values should
-                        # be always 1
-                        named_args[key] = values[-1]
-        na = named_args.copy()
-
-        convert_types(na, self.clone_args())
-        self.args.__dict__.update(na)
-        self._fix_interdependent_attrs()
-
     def _check_corpus_access(self, action_name, form, action_metadata):
         """
         Args:
@@ -779,13 +663,13 @@ class Kontext(Controller):
         # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
         self._session['semi_persistent_attrs'] = list(tmp.items(multi=True))
 
-    def pre_dispatch(self, action_name, named_args, action_metadata=None):
+    def pre_dispatch(self, action_name, action_metadata=None) -> RequestArgsProxy:
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
         options, validating corpus access rights, scheduled actions.
         """
-        super(Kontext, self).pre_dispatch(action_name, named_args, action_metadata)
+        req_args = super().pre_dispatch(action_name, action_metadata)
 
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.pre_dispatch(self._plugin_api, action_name, action_metadata, self._request)
@@ -801,10 +685,8 @@ class Kontext(Controller):
         if not action_metadata['skip_corpus_init']:
             self.add_validator(validate_corpus)
 
-        form = RequestArgsProxy(self._request.form, self._request.args)
-
         if action_metadata['apply_semi_persist_args']:
-            self._apply_semi_persistent_args(form)
+            self._apply_semi_persistent_args(req_args)
 
         options = {}
         corp_options = {}
@@ -816,16 +698,17 @@ class Kontext(Controller):
 
         self.cm = corplib.CorpusManager(self.subcpath)
 
-        self._restore_prev_conc_params(form)
+        self._restore_prev_conc_params(req_args)
         # corpus access check and modify path in case user cannot access currently requested corp.
-        corpname, corpus_variant = self._check_corpus_access(action_name, form, action_metadata)
+        corpname, corpus_variant = self._check_corpus_access(action_name, req_args, action_metadata)
 
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
         if len(corpname) > 0:
             self._apply_corpus_user_settings(corp_options, corpname)
+
         # now we apply args from URL (highest priority)
-        self._map_args_to_attrs(form, named_args)
+        self.args.map_args_to_attrs(req_args)
         # always prefer corpname returned by _check_corpus_access()
         setattr(self.args, 'corpname', corpname)
         self._corpus_variant = corpus_variant
@@ -849,7 +732,7 @@ class Kontext(Controller):
         for p in plugins.runtime:
             if callable(getattr(p.instance, 'setup', None)):
                 p.instance.setup(self)
-        return named_args
+        return req_args
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
         """

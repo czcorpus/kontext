@@ -40,6 +40,7 @@ import types
 import hashlib
 import uuid
 import jinja2
+import attr
 
 import werkzeug.urls
 import werkzeug.http
@@ -51,7 +52,7 @@ import strings
 import plugins
 import settings
 from translation import ugettext as translate
-import attr
+from .req_args import RequestArgsProxy
 from argmapping import Persistence, Args
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                      CorpusForbiddenException, ImmediateRedirectException)
@@ -122,40 +123,38 @@ def _function_defaults(fun):
     return dict(list(zip(default_varnames[fun.__code__.co_argcount - len(default_vals):], default_vals)))
 
 
-def convert_types(args: Dict[str, Any], defaults: Dict[str, Any], del_nondef: int = 0, selector: int = 0) -> Dict[str, Any]:
+def _convert_func_mapping_types(args: Dict[str, Any], defaults: Dict[str, Any], del_nondef: bool = False, selector: int = 0) -> Dict[str, Any]:
     """
     Converts string values as received from GET/POST data into types
     defined by actions' parameters (type is inferred from function's default
     argument values).
-
-    The function returns the same object as passed via 'args'
     """
-    # TODO - there is a potential conflict between global Parameter types and function defaults
-    # TODO better typing
     corr_func: Dict[Any, Callable[[Any], Any]] = {type(0): int, type(0.0): float, tuple: lambda x: [x]}
-    for full_k, value in list(args.items()):
+    ans = {}
+    ans.update(defaults)
+    for full_k, value in args.items():
         if selector:
             k = full_k.split(':')[-1]  # filter out selector
         else:
             k = full_k
-        if k.startswith('_') or type(defaults.get(k, None)) is MethodType:
-            del args[full_k]
-        elif k in list(defaults.keys()):
-            default_type = type(defaults[k])
+
+        if k.startswith('_') or type(ans.get(k, None)) is MethodType:
+            continue
+        if k in list(ans.keys()):
+            default_type = type(ans[k])
             if default_type is not tuple and type(value) is tuple:
-                args[k] = value = value[-1]
+                ans[k] = value[-1]
             elif default_type is tuple and type(value) is list:
-                value = tuple(value)
-            if type(value) is not default_type:
+                ans[k] = tuple(value)
+            elif type(value) is not default_type:
                 try:
-                    args[full_k] = corr_func.get(default_type, lambda x: x)(value)
+                    ans[k] = corr_func.get(default_type, lambda x: x)(value)
                 except ValueError as e:
                     raise werkzeug.exceptions.BadRequest(
                         description='Failed to process parameter "{0}": {1}'.format(full_k, e))
-        else:
-            if del_nondef:
-                del args[full_k]
-    return args
+        elif not del_nondef:
+            ans[k] = value
+    return ans
 
 
 def val_to_js(obj):
@@ -471,7 +470,7 @@ class Controller(object):
                 raise err
 
     @staticmethod
-    def _invoke_func_arg_mapped_action(action, named_args):
+    def _invoke_func_arg_mapped_action(action, form: RequestArgsProxy):
         """
         Calls an action method (= method with the @exposed annotation) in the
         "bonito" way (i.e. with automatic mapping between request args to target
@@ -483,19 +482,11 @@ class Controller(object):
         action -- name of the action
         named_args -- a dictionary of named args and their defined default values
         """
-        na = named_args.copy()
         if hasattr(action, 'accept_kwargs') and getattr(action, 'accept_kwargs') is True:
-            del_nondef = 0
+            del_nondef = False
         else:
-            del_nondef = 1
-        convert_types(na, _function_defaults(action), del_nondef=del_nondef)
-        return action(**na)
-
-    def clone_args(self) -> Dict[str, Any]:
-        """
-        Creates a shallow copy of self.args.
-        """
-        return attr.asdict(self.args)  # TODO perhaps a better method name
+            del_nondef = True
+        return action(**_convert_func_mapping_types(form.as_dict(), _function_defaults(action), del_nondef=del_nondef))
 
     def _get_method_metadata(self, method_name: str, attr_name: Optional[str] = None) -> Union[Any, Dict[str, Any]]:
         """
@@ -630,7 +621,7 @@ class Controller(object):
                                 'Plugins cannot overwrite existing action methods (%s.%s)' % (
                                     self.__class__.__name__, action.__name__))
 
-    def pre_dispatch(self, action_name: str, args: Dict[str, Any], action_metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def pre_dispatch(self, action_name: str, action_metadata: Optional[Dict[str, Any]] = None) -> RequestArgsProxy:
         """
         Allows specific operations to be performed before the action itself is processed.
         """
@@ -645,7 +636,7 @@ class Controller(object):
                 raise UserActionException(
                     'Unknown output format: {0}'.format(self._request.args['format']))
         self.add_validator(partial(self._validate_http_method, action_metadata))
-        return args
+        return RequestArgsProxy(self._request.form, self._request.args)
 
     def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str], result: Optional[Dict[str, Any]], err_desc: Tuple[Optional[Exception], Optional[str]]) -> None:
         """
@@ -710,40 +701,34 @@ class Controller(object):
                 translate('Failed to evaluate the query. Please check the syntax and used attributes.'))
         return err
 
-    def _run_message_action(self, named_args: Dict[str, Any], action_metadata: Dict[str, Any], message_type: str, message: str) -> Tuple[str, Dict[str, Any]]:
+    def _run_message_action(self, req_args: RequestArgsProxy, action_metadata: Dict[str, Any], message_type: str, message: str) -> Tuple[str, Dict[str, Any]]:
         """
         Run a special action displaying a message (typically an error one) to properly
         finish a broken regular action which raised an Exception.
         """
         self.add_system_message(message_type, message)
         if action_metadata['return_type'] == 'json':
-            tpl_path, method_ans = self.process_action('message_json', named_args)
+            tpl_path, method_ans = self.process_action('message_json', req_args)
             action_metadata.update(self._get_method_metadata('message_json'))
         elif action_metadata['return_type'] == 'xml':
-            tpl_path, method_ans = self.process_action('message_xml', named_args)
+            tpl_path, method_ans = self.process_action('message_xml', req_args)
             action_metadata.update(self._get_method_metadata('message_xml'))
         else:
-            tpl_path, method_ans = self.process_action('message', named_args)
+            tpl_path, method_ans = self.process_action('message', req_args)
             action_metadata.update(self._get_method_metadata('message'))
         return tpl_path, method_ans
 
-    def _create_user_action_err_result(self, ex: Exception, return_type: str) -> Dict[str, Any]:
+    def _create_err_action_args(self, ex: Exception, return_type: str) -> RequestArgsProxy:
         """
         arguments:
         ex -- a risen exception
         return_type --
         """
-        e2 = self._normalize_error(ex)
-        if settings.is_debug_mode() or isinstance(e2, UserActionException):
-            user_msg = fetch_exception_msg(e2)
-        else:
-            user_msg = translate('Failed to process your request. '
-                                 'Please try again later or contact system support.')
+        ans = RequestArgsProxy(self._request.form, self._request.args)
         if return_type == 'json':
-            return dict(error_code=getattr(ex, 'error_code', None),
-                        error_args=getattr(ex, 'error_args', {}))
-        else:
-            return dict()
+            ans.add_forced_arg('error_code', getattr(ex, 'error_code', None))
+            ans.add_forced_arg('error_args', getattr(ex, 'error_args', {}))
+        return ans
 
     @staticmethod
     def _is_allowed_explicit_out_format(f: str) -> bool:
@@ -763,7 +748,6 @@ class Controller(object):
         self._proc_time = time.time()
         path = path if path is not None else self._import_req_path()
         methodname = path[0]
-        named_args: Dict[str, Any] = {}
         headers: List[Tuple[str, str]] = []
         err: Tuple[Optional[Exception], Optional[str]] = (None, None)
         action_metadata: Dict[str, Any] = self._get_method_metadata(methodname)
@@ -777,9 +761,9 @@ class Controller(object):
         try:
             self.init_session()
             if self.is_action(methodname, action_metadata):
-                named_args = self.pre_dispatch(methodname, named_args, action_metadata)
+                req_args = self.pre_dispatch(methodname, action_metadata)
                 self._pre_action_validate()
-                tmpl, result = self.process_action(methodname, named_args)
+                tmpl, result = self.process_action(methodname, req_args)
             else:
                 orig_method = methodname
                 methodname = 'message'
@@ -787,8 +771,9 @@ class Controller(object):
         except CorpusForbiddenException as ex:
             err = (ex, None)
             self._status = ex.code
+            msg_args = self._create_err_action_args(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
-                named_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
+                msg_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
         except ImmediateRedirectException as ex:
             err = (ex, None)
             tmpl, result = None, None
@@ -796,13 +781,14 @@ class Controller(object):
         except UserActionException as ex:
             err = (ex, None)
             self._status = ex.code
-            msg_args = self._create_user_action_err_result(ex, action_metadata['return_type'])
+            msg_args = self._create_err_action_args(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
                 msg_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
         except werkzeug.exceptions.BadRequest as ex:
             err = (ex, None)
             self._status = ex.code
-            tmpl, result = self._run_message_action(named_args, action_metadata,
+            msg_args = self._create_err_action_args(ex, action_metadata['return_type'])
+            tmpl, result = self._run_message_action(msg_args, action_metadata,
                                                     'error', '{0}: {1}'.format(ex.name, ex.description))
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
@@ -817,7 +803,8 @@ class Controller(object):
             else:
                 message = translate(
                     'Failed to process your request. Please try again later or contact system support.')
-            tmpl, result = self._run_message_action(named_args, action_metadata, 'error', message)
+            msg_args = self._create_err_action_args(ex, action_metadata['return_type'])
+            tmpl, result = self._run_message_action(msg_args, action_metadata, 'error', message)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
         self.post_dispatch(methodname, action_metadata, tmpl, result, err)
@@ -831,7 +818,7 @@ class Controller(object):
             ans_body = ''
         return self._export_status(), headers, self._uses_valid_sid, ans_body
 
-    def process_action(self, methodname: str, named_args: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+    def process_action(self, methodname: str, req_args: RequestArgsProxy) -> Tuple[str, Dict[str, Any]]:
         """
         This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
@@ -841,7 +828,7 @@ class Controller(object):
 
         arguments:
             methodname -- a string name of a processed method
-            named_args -- named args for the method (func_arg_mapped actions)
+            req_args --
 
         returns: tuple of 3 elements
           0 = template name
@@ -854,7 +841,7 @@ class Controller(object):
             # new-style actions use werkzeug.wrappers.Request
             method_ans = method(self._request)
         else:
-            method_ans = self._invoke_func_arg_mapped_action(method, named_args)
+            method_ans = self._invoke_func_arg_mapped_action(method, req_args)
         tpl_path = action_metadata['template']
         if not tpl_path:
             tpl_path = os.path.join(self.get_mapping_url_prefix()[
