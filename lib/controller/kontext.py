@@ -31,7 +31,7 @@ import time
 from . import Controller
 import corplib
 import conclib
-from . import _convert_func_mapping_types, exposed
+from . import exposed
 from .errors import (UserActionException, ForbiddenException,
                      AlignedCorpusForbiddenException, NotFoundException)
 import plugins
