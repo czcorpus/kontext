@@ -554,24 +554,8 @@ export namespace ViewOptions {
         selected: boolean;
     }
 
-    export enum PosAttrViewScope {
-        ALL = 'all',
-        KWIC = 'kw'
-    }
-
-    export enum PosAttrViewMode {
-        MIXED = 'mixed',
-        VISIBLE = 'visible',
-        MULTILINE = 'multiline',
-        MOUSEOVER = 'mouseover'
-    }
-
     /**
-     * This type represents values combined
-     * from PosAttrViewScope and PosAttrViewMode
-     * so we can easily manage them internally.
-     * From historical/NoSkE-compatibility reasons
-     * we still keep the redundant separate values too.
+     * Modes of how positional attributes are shown
      */
     export enum AttrViewMode {
         VISIBLE_ALL = 'visible-all',
@@ -585,8 +569,7 @@ export namespace ViewOptions {
     export interface PageData {
         AttrList:Array<AttrDesc>;
         FixedAttr:string;
-        AttrAllpos:ViewOptions.PosAttrViewScope;
-        AttrVmode:ViewOptions.PosAttrViewMode;
+        AttrVmode:ViewOptions.AttrViewMode;
         CurrentAttrs:Array<string>;
         AvailStructs:Array<{sel:string; label:string; n:string}>;
         StructAttrs:{[attr:string]:Array<string>};
@@ -602,8 +585,7 @@ export namespace ViewOptions {
         Availrefs:Array<{n:string; sel:string; label:string}>;
         curr_structattrs:Array<string>;
         fixed_attr:string;
-        attr_allpos:PosAttrViewScope;
-        attr_vmode:PosAttrViewMode;
+        attr_vmode:AttrViewMode;
         base_viewattr:string;
         use_conc_toolbar:boolean;
         structattrs:{[attr:string]:Array<string>};

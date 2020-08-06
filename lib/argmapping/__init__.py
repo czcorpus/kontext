@@ -12,6 +12,7 @@
 
 from typing import Union, List, Optional, Dict, Any
 from enum import Enum
+import logging
 import attr
 
 from controller.req_args import RequestArgsProxy
@@ -43,7 +44,6 @@ ConcArgsMapping = (
     'align',
     'attrs',
     'attr_vmode',
-    'attr_allpos',
     'base_viewattr',  # attribute used in a text flow
     'ctxattrs',
     'structs',
@@ -54,7 +54,6 @@ ConcArgsMapping = (
 # Arguments needed to open a correct detailed KWIC context
 WidectxArgsMapping = (
     'attrs',
-    'attr_allpos',
     'ctxattrs',
     'structs',
     'refs',
@@ -175,10 +174,8 @@ class Args(object):
     rlines: str = def_attr('250')
     attrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
     ctxattrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
-    attr_allpos: str = def_attr('kw')
     base_viewattr: str = def_attr('word', persistent=Persistence.PERSISTENT)
-    attr_vmode: str = def_attr('mouseover', persistent=Persistence.PERSISTENT)
-    allpos: str = def_attr('kw')
+    attr_vmode: str = def_attr('visible-kwic', persistent=Persistence.PERSISTENT)
     structs: str = def_attr('', persistent=Persistence.PERSISTENT)
     q: List[str] = def_attr([])
     pagesize: int = def_attr(40, persistent=Persistence.PERSISTENT)
@@ -249,16 +246,22 @@ class Args(object):
 
     sort_linegroups: int = def_attr(0)
 
-    def _fix_interdependent_attrs(self):
-        """
-        Some self.args values may not play well together with some default
-        values of dependent attributes. This method should ensure that all
-        the values are consistent.
-        """
-        if self.attr_vmode in ('mouseover', 'mixed') and self.attr_allpos == 'kw':
-            self.attr_allpos = 'all'
+    def _upgrade_legacy_value(self, key: str, value: Union[str, int], src_data: RequestArgsProxy) -> Union[str, int]:
+        if key == 'attr_vmode' and 'attr_allpos' in src_data:
+            v2 = src_data.getvalue('attr_allpos')
+            logging.getLogger(__name__).warning(f'Upgrading legacy attr_vmode conf: {value} + {v2}')
+            if value == 'mixed' and v2 == 'all':
+                return 'visible-kwic'
+            if value == 'multiline' and v2 == 'all':
+                return 'visible-multiline'
+            if value == 'visible' and v2 == 'all':
+                return 'visible-all'
+            if value == 'mouseover' and v2 == 'all':
+                return 'mouseover'
+            return 'visible-kwic'
+        return value
 
-    def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]], corp_selector: bool = False):
+    def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]]):
         """
         Set existing attrs of self to the values provided by args. Multi-value keys are supported
         in a limited way - only list of strings can be set.
@@ -267,21 +270,19 @@ class Args(object):
         req_args -- a RequestArgsProxy instance or a general dict containing parameters
         """
         in_args = args if isinstance(args, RequestArgsProxy) else RequestArgsProxy(args, {})
-        for full_k in in_args.keys():
-            values = in_args.getlist(full_k)
+        for key in in_args.keys():
+            values = in_args.getlist(key)
             if len(values) > 0:
-                key = full_k.split(':')[-1] if corp_selector else full_k
                 if hasattr(self, key):
                     if isinstance(getattr(self, key), (list, tuple)):
                         setattr(self, key, values)
                     elif isinstance(getattr(self, key), int):
-                        setattr(self, key, int(values[-1]))
+                        setattr(self, key, int(self._upgrade_legacy_value(key, values[-1], in_args)))
                     else:
                         # when mapping to a scalar arg we always take the last
                         # value item but in such case, the length of values should
                         # be always 1
-                        setattr(self, key, values[-1])
-        self._fix_interdependent_attrs()
+                        setattr(self, key, self._upgrade_legacy_value(key, values[-1], in_args))
 
 
 def update_attr(obj: Args, k: str, v: Union[str, int, float]) -> None:

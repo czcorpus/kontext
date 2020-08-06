@@ -735,7 +735,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                             groupTextColor={fgColor}
                             cols={this.props.corporaColumns}
                             viewMode={this.props.viewMode}
-                            attrViewMode={ConcordanceModel.getViewAttrsVmode(this.props)}
+                            attrViewMode={this.props.attrViewMode}
                             baseCorpname={this.props.baseCorpname}
                             mainCorp={this.props.maincorp}
                             corpsWithKwic={this.props.kwicCorps}

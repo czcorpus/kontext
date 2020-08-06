@@ -188,8 +188,7 @@ export namespace Actions {
     export interface SaveSettingsDone extends Action<{
         baseViewAttr:string;
         widectxGlobals:Array<[string, string]>;
-        attrAllpos:ViewOptions.PosAttrViewScope;
-        attrVmode:ViewOptions.PosAttrViewMode;
+        attrVmode:ViewOptions.AttrViewMode;
     }> {
         name:ActionName.SaveSettingsDone;
     }

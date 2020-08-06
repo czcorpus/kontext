@@ -29,41 +29,6 @@ import { MultiDict } from '../../multidict';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
-/**
- * Transform server-side two-value-encoded view mode into
- * client-side format represented by a single value
- */
-export const transformVmode = (
-    vmode:ViewOptions.PosAttrViewMode,
-    attrAllPos:ViewOptions.PosAttrViewScope
-):ViewOptions.AttrViewMode => {
-    if (vmode === ViewOptions.PosAttrViewMode.MULTILINE &&
-            attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
-        return ViewOptions.AttrViewMode.VISIBLE_MULTILINE;
-
-    } else if (vmode === ViewOptions.PosAttrViewMode.VISIBLE &&
-            attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
-        return ViewOptions.AttrViewMode.VISIBLE_ALL;
-
-    } else if (vmode === ViewOptions.PosAttrViewMode.MIXED &&
-            attrAllPos === ViewOptions.PosAttrViewScope.ALL ||
-            vmode === ViewOptions.PosAttrViewMode.VISIBLE &&
-            attrAllPos === ViewOptions.PosAttrViewScope.KWIC /* legacy compatibility variant */) {
-        return ViewOptions.AttrViewMode.VISIBLE_KWIC;
-
-    } else if (vmode === ViewOptions.PosAttrViewMode.MOUSEOVER &&
-            attrAllPos === ViewOptions.PosAttrViewScope.ALL) {
-        return ViewOptions.AttrViewMode.MOUSEOVER;
-
-    } else {
-        console.warn(
-            'Fixing incorrect internal attribute viewing mode configuration: ' +
-            `[${vmode}, ${attrAllPos}].`
-        );
-        return ViewOptions.AttrViewMode.VISIBLE_KWIC;
-    }
-}
-
 
 export interface CorpusViewOptionsModelState {
 
@@ -78,9 +43,7 @@ export interface CorpusViewOptionsModelState {
     refAttrs:{[key:string]:Array<ViewOptions.RefAttrDesc>};
     selectAllRef:boolean;
     hasLoadedData:boolean;
-    attrVmode:ViewOptions.PosAttrViewMode;
-    extendedVmode:ViewOptions.AttrViewMode;
-    attrAllpos:ViewOptions.PosAttrViewScope;
+    attrVmode:ViewOptions.AttrViewMode;
     isBusy:boolean;
     userIsAnonymous:boolean;
     corpusIdent:Kontext.FullCorpusIdent;
@@ -117,10 +80,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 refAttrs: {},
                 selectAllRef: false,
                 hasLoadedData: false,
-                attrVmode: ViewOptions.PosAttrViewMode.MIXED,
-                attrAllpos: ViewOptions.PosAttrViewScope.ALL,
-                extendedVmode: transformVmode(
-                    ViewOptions.PosAttrViewMode.MIXED, ViewOptions.PosAttrViewScope.ALL),
+                attrVmode: ViewOptions.AttrViewMode.VISIBLE_ALL,
                 isBusy: false,
                 userIsAnonymous,
                 corpusIdent,
@@ -159,7 +119,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                                         StructAttrs: data.structattrs,
                                         CurrStructAttrs: data.curr_structattrs,
                                         AvailRefs: data.Availrefs,
-                                        AttrAllpos: data.attr_allpos,
                                         AttrVmode: data.attr_vmode,
                                         ShowConcToolbar: data.use_conc_toolbar,
                                         BaseViewAttr: data.base_viewattr
@@ -202,7 +161,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         this.addActionHandler<Actions.UpdateAttrVisibility>(
             ActionName.UpdateAttrVisibility,
             (state, action) => {
-                this.setAttrVisibilityMode(state, action.payload.value);
+                state.attrVmode = action.payload.value;
             }
         );
 
@@ -311,37 +270,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         );
     }
 
-    private setAttrVisibilityMode(
-        state:CorpusViewOptionsModelState,
-        value:ViewOptions.AttrViewMode
-    ):void {
-        switch (value) {
-            case ViewOptions.AttrViewMode.VISIBLE_MULTILINE:
-                state.attrVmode = ViewOptions.PosAttrViewMode.MULTILINE;
-                state.attrAllpos = ViewOptions.PosAttrViewScope.ALL;
-                state.extendedVmode = value;
-            break;
-            case ViewOptions.AttrViewMode.VISIBLE_ALL:
-                state.attrVmode = ViewOptions.PosAttrViewMode.VISIBLE;
-                state.attrAllpos = ViewOptions.PosAttrViewScope.ALL;
-                state.extendedVmode = value;
-            break;
-            case ViewOptions.AttrViewMode.VISIBLE_KWIC:
-                state.attrVmode = ViewOptions.PosAttrViewMode.MIXED;
-                state.attrAllpos = ViewOptions.PosAttrViewScope.KWIC;
-                state.extendedVmode = value;
-            break;
-            case ViewOptions.AttrViewMode.MOUSEOVER:
-                state.attrVmode = ViewOptions.PosAttrViewMode.MOUSEOVER;
-                state.attrAllpos = ViewOptions.PosAttrViewScope.ALL;
-                state.extendedVmode = value;
-            break;
-            default:
-                throw new Error(`Unknown view mode: ${value}`);
-        }
-    }
-
-
     private serialize(state:CorpusViewOptionsModelState):any {
 
         // we have to make sure 'word' is always the first - otherwise
@@ -383,7 +311,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 List.reduce((acc, val) => [...acc, ...val.filter(item => item.selected)], []),
                 List.map(item => item.n)
             ),
-            setattr_allpos: state.attrAllpos,
             setattr_vmode: state.attrVmode,
             base_viewattr: state.baseViewAttr
         };
@@ -404,13 +331,13 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         ).pipe(
             tap(
                 () => {
-                    if (state.attrAllpos === 'all') {
-                        this.layoutModel.replaceConcArg(
-                            'ctxattrs', [formArgs['setattrs'].join(',')]);
-
-                    } else if (state.attrAllpos === 'kw') {
+                    if (state.attrVmode === ViewOptions.AttrViewMode.VISIBLE_KWIC) {
                         this.layoutModel.replaceConcArg('ctxattrs',
                                 [this.layoutModel.getConf<string>('baseAttr')]);
+
+                    } else {
+                        this.layoutModel.replaceConcArg(
+                            'ctxattrs', [formArgs['setattrs'].join(',')]);
                     }
                     this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
                     this.layoutModel.replaceConcArg('attr_allpos', [formArgs['setattr_allpos']])
@@ -428,7 +355,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     payload: {
                         widectxGlobals: data.widectx_globals,
                         baseViewAttr: state.baseViewAttr,
-                        attrAllPos: state.attrAllpos,
                         attrVmode: state.attrVmode
                     }
                 });
@@ -774,9 +700,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.selectAllRef = state.refList.every(item => item.selectAllAttrs);
         state.fixedAttr = data.FixedAttr;
         state.attrVmode = data.AttrVmode;
-        state.extendedVmode = transformVmode(state.attrVmode, state.attrAllpos);
-        state.attrAllpos = state.attrVmode !== 'mouseover' ?
-            data.AttrAllpos : ViewOptions.PosAttrViewScope.ALL;
         state.hasLoadedData = true;
         state.showConcToolbar = data.ShowConcToolbar;
         state.baseViewAttr = data.BaseViewAttr;

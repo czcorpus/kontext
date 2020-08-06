@@ -32,7 +32,6 @@ import { KWICSection } from './line';
 import { Line, TextChunk, IConcLinesProvider } from '../../types/concordance';
 import { AudioPlayer, AudioPlayerStatus} from './media';
 import { ConcSaveModel } from './save';
-import { transformVmode } from '../options/structsAttrs';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
 import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
@@ -122,9 +121,7 @@ export interface ConcordanceModelState {
 
     viewMode:string;
 
-    attrAllpos:ViewOptions.PosAttrViewScope;
-
-    attrViewMode:ViewOptions.PosAttrViewMode;
+    attrViewMode:ViewOptions.AttrViewMode;
 
     showLineNumbers:boolean;
 
@@ -226,7 +223,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             dispatcher,
             {
                 viewMode: lineViewProps.ViewMode,
-                attrAllpos: lineViewProps.AttrAllpos,
                 attrViewMode: lineViewProps.AttrViewMode,
                 showLineNumbers: lineViewProps.ShowLineNumbers,
                 kwicCorps: lineViewProps.KWICCorps,
@@ -503,7 +499,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 if (!action.error) {
                     this.changeState(state => {
                         state.baseViewAttr = action.payload.baseViewAttr;
-                        state.attrAllpos = action.payload.attrAllpos;
                         state.attrViewMode = action.payload.attrVmode;
                     });
                     this.reloadPage().subscribe(
@@ -750,10 +745,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     getViewAttrs():Array<string> {
         return this.layoutModel.getConcArgs().head('attrs').split(',');
-    }
-
-    static getViewAttrsVmode(state:ConcordanceModelState):ViewOptions.AttrViewMode {
-        return transformVmode(state.attrViewMode, state.attrAllpos);
     }
 
     getNumItemsInLockedGroups():number {

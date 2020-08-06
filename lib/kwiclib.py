@@ -126,7 +126,7 @@ class KwicLinesArgs(object):
     labelmap: Dict[str, str] = {}
     righttoleft = False
     alignlist = ()
-    attr_vmode = 'mouseover'
+    attr_vmode = 'visible-kwic'
     base_attr = 'word'
 
     def copy(self, **kw):
@@ -182,14 +182,14 @@ class KwicPageArgs(object):
     hidenone = 0
 
     # determine whether the non-word attributes should be rendered directly or as a meta-data
-    attr_vmode = 'mouseover'
+    attr_vmode = 'visible-kwic'
 
     def __init__(self, argmapping: Dict[str, Any], base_attr: str):
         for k, v in argmapping.items():
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
         self.base_attr = base_attr
-        if self.attr_vmode in ('mouseover', 'mixed', 'multiline'):
+        if self.attr_vmode in ('visible-all', 'visible-multiline', 'mouseover'):
             self.ctxattrs = self.attrs
 
     def _import_val(self, k, v):
