@@ -38,14 +38,12 @@ class Options(Kontext):
 
     def _set_new_viewattrs(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
                            setstructattrs=()):
+        if self.BASE_ATTR not in setattrs:
+            setattrs = (self.BASE_ATTR, ) + tuple(setattrs)
         self.args.attrs = ','.join(setattrs)
         self.args.structs = ','.join(setstructs)
         self.args.refs = ','.join(setrefs)
         self.args.attr_vmode = setattr_vmode
-        if setattr_vmode in ('visible-all', 'visible-multiline', 'mouseover', 'visible-kwic'):
-            self.args.ctxattrs = self.args.attrs
-        else:
-            self.args.ctxattrs = self.args.base_viewattr
         self.args.structattrs = setstructattrs
 
     @exposed(access_level=0, vars=('concsize', ), return_type='json')
@@ -112,8 +110,8 @@ class Options(Kontext):
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 setstructattrs=setstructattrs)
-        self._save_options(['attrs', 'attr_vmode', 'ctxattrs', 'structs',
-                            'refs', 'structattrs', 'base_viewattr'], self.args.corpname)
+        self._save_options(['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr'],
+                           self.args.corpname)
         if self.args.format == 'json':
             return dict(widectx_globals=self._get_mapped_attrs(
                 WidectxArgsMapping, dict(structs=self._get_struct_opts())))

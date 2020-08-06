@@ -581,6 +581,17 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             }
         );
 
+        this.addActionHandler<Actions.ShowTokenDetail>(
+            ActionName.ShowTokenDetail,
+            action => {
+                this.changeState(state => {
+                    state.kwicDetailVisible = true;
+                    state.refDetailVisible = false;
+                    this.setLineFocus(state, action.payload.lineIdx, true);
+                });
+            }
+        );
+
         this.addActionHandler<Actions.ResetDetail>(
             ActionName.ResetDetail,
             action => {
