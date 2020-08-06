@@ -20,8 +20,9 @@
 
 /// <reference path="../../vendor.d.ts/d3.d.ts" />
 
-import {Kontext} from '../../types/common';
+import { Kontext } from '../../types/common';
 import * as d3 from 'vendor/d3';
+import { List } from 'cnc-tskit';
 
 
 export type ReferencedValues = Array<[number,string]>;
@@ -49,6 +50,7 @@ export namespace SourceData {
         order:number;
         depth:number;
         data:{[attr:string]:DetailValue};
+        multival_flag:'start'|'end'|null;
         hidden?:boolean;
     }
 
@@ -146,6 +148,7 @@ interface Token {
     id:string;
     value:string;
     isKwic:boolean;
+    multivalFlag:'start'|'end'|null;
 }
 
 
@@ -264,23 +267,26 @@ class TreeGenerator {
     generate(data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement):void {
         const nodes = data[0].zones[zone].trees[tree].nodes;
         const nodeMap = this.generateNodeMap(nodes, tree);
-        const tokens:Sentence = this.importSentence(data[0]).filter(t => !nodeMap[t.id].hidden);
-
-
+        const tokens:Sentence = List.filter(
+            t => !nodeMap[t.id].hidden,
+            this.importSentence(data[0], nodes)
+        );
         this.calcViewSize(tokens, nodeMap);
         this.generateNodeCoords(tokens, nodeMap);
         const edges = this.generateEdges(nodeMap);
         this.d3Draw(tokens, nodeMap, edges, target);
     }
 
-    private importSentence(data:SourceData.Data):Sentence {
-        return data.desc.map((item, i) => {
-            return {
-                id: item[1],
-                value: item[0],
-                isKwic: data.kwicPosition.indexOf(i - 1) > -1 // testing (i - 1) because data.desc[0] == '#' character
-            }
-        });
+    private importSentence(data:SourceData.Data, nodes:Array<SourceData.Node>):Sentence {
+        return List.map(
+            ([value, id], i) => ({
+                id,
+                value,
+                isKwic: data.kwicPosition.indexOf(i - 1) > -1, // testing (i - 1) because data.desc[0] == '#' character
+                multivalFlag: nodes[i].multival_flag
+            }),
+            data.desc
+        );
     }
 
     /**
@@ -422,6 +428,8 @@ class TreeGenerator {
             .append('span')
             .classed('token', true)
             .classed('kwic', d => d.isKwic)
+            .classed('multival-start', d => d.multivalFlag === 'start')
+            .classed('multival-end', d => d.multivalFlag === 'end')
             .text(d => d.value)
             .on('mouseover', (datum, i, values) => {
                 d3.select(values[i])
@@ -447,17 +455,18 @@ class TreeGenerator {
             .attr('x', (d, i) => this.params.paddingLeft + this.params.cmlWordSteps[i])
             .attr('y', d => this.params.paddingTop + nodeMap[d.id].depth * this.params.depthStep)
             .attr('transform', (d, i) => `translate(-10, 0)`)
-            .attr('width', TreeGenerator.NODE_DIV_WIDTH)
-            .attr('height', TreeGenerator.NODE_DIV_HEIGHT);
+            .attr('width', (d, i) => TreeGenerator.NODE_DIV_WIDTH + (1.1 * d['value'].length ))
+            .attr('height', TreeGenerator.NODE_DIV_HEIGHT + 5);
 
         const body = foreignObj
             .append("xhtml:body")
             .style('margin', 0)
             .style('padding', 0)
-            .style('background', 'none');
+            .style('background', 'none')
+            .style('display', 'flex')
 
         const generateNodeHtml = (t:Token, labels:Array<Label>) => {
-            return [t.value].concat(labels.slice(1).map(v => this.generateLabelSpan(v))).join('<br />');
+            return labels.map(v => this.generateLabelSpan(v)).join('<br />');
         };
 
         const div = body

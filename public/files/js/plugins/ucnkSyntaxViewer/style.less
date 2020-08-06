@@ -8,7 +8,7 @@
 
 .syntax-tree {
 
-    box-sizing: border-box;;
+    box-sizing: border-box;
 
     .token-node {
         font-size: 8pt;
@@ -34,6 +34,7 @@
     .sentence {
         padding: 0.6em;
         line-height: 1.4em;
+        display: flex;
 
         span {
             padding: 0.1em 0.1em;
@@ -41,6 +42,18 @@
 
         span.focused {
             background-color: RGBA(0, 158, 224, 0.4);
+        }
+
+        span.multival-start {
+            padding-right: 0;
+        }
+
+        span.multival-start:after {
+            content: "\21A6";
+        }
+
+        span.multival-end {
+            padding-left: 0;
         }
 
         span.kwic {
