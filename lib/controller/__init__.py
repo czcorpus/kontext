@@ -28,8 +28,6 @@ if TYPE_CHECKING:
 
 import os
 from xml.sax.saxutils import escape
-from types import MethodType
-from inspect import isclass
 from urllib.parse import unquote, quote
 import json
 import logging
@@ -54,6 +52,7 @@ import settings
 from translation import ugettext as translate
 from .req_args import RequestArgsProxy
 from argmapping import Persistence, Args
+from argmapping.func import convert_func_mapping_types
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                      CorpusForbiddenException, ImmediateRedirectException)
 
@@ -102,59 +101,6 @@ def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple =
         func.__dict__['__exposed__'] = True
         return func
     return wrapper
-
-
-def _function_defaults(fun):
-    """
-    Returns a dictionary containing default argument names and
-    their respective values. This is used when invoking func_arg_mapped
-    action method for URL -> func mapping.
-
-    arguments:
-    fun -- an action method with some default arguments
-    """
-    if isclass(fun):
-        fun = fun.__init__
-    try:
-        default_vals = fun.__defaults__ or ()
-    except AttributeError:
-        return {}
-    default_varnames = fun.__code__.co_varnames
-    return dict(list(zip(default_varnames[fun.__code__.co_argcount - len(default_vals):], default_vals)))
-
-
-def _convert_func_mapping_types(args: Dict[str, Any], defaults: Dict[str, Any], del_nondef: bool = False, selector: int = 0) -> Dict[str, Any]:
-    """
-    Converts string values as received from GET/POST data into types
-    defined by actions' parameters (type is inferred from function's default
-    argument values).
-    """
-    corr_func: Dict[Any, Callable[[Any], Any]] = {type(0): int, type(0.0): float, tuple: lambda x: [x]}
-    ans = {}
-    ans.update(defaults)
-    for full_k, value in args.items():
-        if selector:
-            k = full_k.split(':')[-1]  # filter out selector
-        else:
-            k = full_k
-
-        if k.startswith('_') or type(ans.get(k, None)) is MethodType:
-            continue
-        if k in list(ans.keys()):
-            default_type = type(ans[k])
-            if default_type is not tuple and type(value) is tuple:
-                ans[k] = value[-1]
-            elif default_type is tuple and type(value) is list:
-                ans[k] = tuple(value)
-            elif type(value) is not default_type:
-                try:
-                    ans[k] = corr_func.get(default_type, lambda x: x)(value)
-                except ValueError as e:
-                    raise werkzeug.exceptions.BadRequest(
-                        description='Failed to process parameter "{0}": {1}'.format(full_k, e))
-        elif not del_nondef:
-            ans[k] = value
-    return ans
 
 
 def val_to_js(obj):
@@ -470,7 +416,7 @@ class Controller(object):
                 raise err
 
     @staticmethod
-    def _invoke_func_arg_mapped_action(action, form: RequestArgsProxy):
+    def _invoke_func_arg_mapped_action(action: Callable, form: RequestArgsProxy):
         """
         Calls an action method (= method with the @exposed annotation) in the
         "bonito" way (i.e. with automatic mapping between request args to target
@@ -486,7 +432,7 @@ class Controller(object):
             del_nondef = False
         else:
             del_nondef = True
-        return action(**_convert_func_mapping_types(form.as_dict(), _function_defaults(action), del_nondef=del_nondef))
+        return action(**convert_func_mapping_types(form.as_dict(), action, del_nondef=del_nondef))
 
     def _get_method_metadata(self, method_name: str, attr_name: Optional[str] = None) -> Union[Any, Dict[str, Any]]:
         """

@@ -42,10 +42,10 @@ class Options(Kontext):
         self.args.structs = ','.join(setstructs)
         self.args.refs = ','.join(setrefs)
         self.args.attr_vmode = setattr_vmode
-        if setattr_vmode == 'visible-kwic':
+        if setattr_vmode in ('visible-all', 'visible-multiline', 'mouseover', 'visible-kwic'):
             self.args.ctxattrs = self.args.attrs
         else:
-            self.args.ctxattrs = 'word'  # TODO dynamic attr name
+            self.args.ctxattrs = self.args.base_viewattr
         self.args.structattrs = setstructattrs
 
     @exposed(access_level=0, vars=('concsize', ), return_type='json')
