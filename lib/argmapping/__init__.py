@@ -45,7 +45,6 @@ ConcArgsMapping = (
     'attrs',
     'attr_vmode',
     'base_viewattr',  # attribute used in a text flow
-    'ctxattrs',
     'structs',
     'refs'
 )
@@ -54,7 +53,6 @@ ConcArgsMapping = (
 # Arguments needed to open a correct detailed KWIC context
 WidectxArgsMapping = (
     'attrs',
-    'ctxattrs',
     'structs',
     'refs',
     'hitlen'
@@ -173,7 +171,6 @@ class Args(object):
     include_empty: int = def_attr(0)
     rlines: str = def_attr('250')
     attrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
-    ctxattrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
     base_viewattr: str = def_attr('word', persistent=Persistence.PERSISTENT)
     attr_vmode: str = def_attr('visible-kwic', persistent=Persistence.PERSISTENT)
     structs: str = def_attr('', persistent=Persistence.PERSISTENT)
@@ -247,18 +244,25 @@ class Args(object):
     sort_linegroups: int = def_attr(0)
 
     def _upgrade_legacy_value(self, key: str, value: Union[str, int], src_data: RequestArgsProxy) -> Union[str, int]:
-        if key == 'attr_vmode' and 'attr_allpos' in src_data:
-            v2 = src_data.getvalue('attr_allpos')
-            logging.getLogger(__name__).warning(f'Upgrading legacy attr_vmode conf: {value} + {v2}')
-            if value == 'mixed' and v2 == 'all':
+        """
+        note: this will be removed in v1.0.0
+        """
+        if key == 'attr_vmode':
+            if 'attr_allpos' in src_data:
+                v2 = src_data.getvalue('attr_allpos')
+                logging.getLogger(__name__).warning(f'Upgrading legacy attr_vmode conf: {value} + {v2}')
+                if value == 'mixed' and v2 == 'all':
+                    return 'visible-kwic'
+                if value == 'multiline' and v2 == 'all':
+                    return 'visible-multiline'
+                if value == 'visible' and v2 == 'all':
+                    return 'visible-all'
+                if value == 'mouseover' and v2 == 'all':
+                    return 'mouseover'
                 return 'visible-kwic'
-            if value == 'multiline' and v2 == 'all':
-                return 'visible-multiline'
-            if value == 'visible' and v2 == 'all':
-                return 'visible-all'
-            if value == 'mouseover' and v2 == 'all':
-                return 'mouseover'
-            return 'visible-kwic'
+            if value not in ('visible-all', 'visible-kwic', 'visible-multiline', 'mouseover'):
+                logging.getLogger(__name__).warning(f'Invalid attr_vmode {value} - auto-corrected to "visible-kwic".')
+                return 'visible-kwic'
         return value
 
     def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]]):

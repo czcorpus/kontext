@@ -1584,7 +1584,6 @@ class Actions(Querying):
             'q': '~%s' % query_id,
             'viewmode': self.args.viewmode,
             'attrs': self.args.attrs,
-            'ctxattrs': self.args.ctxattrs,
             'structs': self.args.structs,
             'refs': self.args.refs,
             'attr_vmode': self.args.attr_vmode
