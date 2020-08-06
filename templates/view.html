@@ -45,7 +45,6 @@ __conf.WideCtxGlobals = {{ widectx_globals|to_json }};
 __conf.CorporaColumns = {{ CorporaColumns|to_json }};
 __conf.KWICCorps = {{ KWICCorps|to_json }};
 __conf.ViewMode = {{ viewmode|default(none, true)|to_json }};
-__conf.AttrAllpos = {{ attr_allpos|default(none, true)|to_json }};
 __conf.AttrViewMode = {{ attr_vmode|default(none, true)|to_json }};
 __conf.ShowLineNumbers = {% if line_numbers %}true{% else %}false{% endif %};
 __conf.Pagination = {{ pagination|to_json }};

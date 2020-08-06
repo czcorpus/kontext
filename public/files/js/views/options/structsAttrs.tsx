@@ -27,7 +27,6 @@ import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/options/actions';
 import { Actions as OptionsActions, ActionName as OptionsActionName } from '../../models/options/actions';
 import { List, HTTP } from 'cnc-tskit';
-import { Options } from 'webpack';
 
 export interface StructsAttrsModuleArgs {
     dispatcher:IActionDispatcher;
@@ -550,7 +549,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     refAttrs={props.refAttrs}
                     hasSelectAllRefs={props.selectAllRef}
                     hasLoadedData={props.hasLoadedData}
-                    attrsVmode={props.extendedVmode}
+                    attrsVmode={props.attrVmode}
                     showConcToolbar={props.showConcToolbar}
                     isWaiting={props.isBusy}
                     userIsAnonymous={props.userIsAnonymous}

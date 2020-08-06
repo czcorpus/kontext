@@ -36,17 +36,16 @@ class Options(Kontext):
         self.args.line_numbers = line_numbers
         self.args.cql_editor = cql_editor
 
-    def _set_new_viewattrs(self, setattrs=(), setattr_allpos='', setattr_vmode='', setstructs=(), setrefs=(),
+    def _set_new_viewattrs(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
                            setstructattrs=()):
         self.args.attrs = ','.join(setattrs)
         self.args.structs = ','.join(setstructs)
         self.args.refs = ','.join(setrefs)
-        self.args.attr_allpos = setattr_allpos
         self.args.attr_vmode = setattr_vmode
-        if setattr_allpos == 'all':
+        if setattr_vmode == 'visible-kwic':
             self.args.ctxattrs = self.args.attrs
         else:
-            self.args.ctxattrs = 'word'
+            self.args.ctxattrs = 'word'  # TODO dynamic attr name
         self.args.structattrs = setstructattrs
 
     @exposed(access_level=0, vars=('concsize', ), return_type='json')
@@ -65,7 +64,6 @@ class Options(Kontext):
                            for n in corp.get_conf('ATTRLIST').split(',')
                            if n]
         out['fixed_attr'] = 'word'
-        out['attr_allpos'] = self.args.attr_allpos
         out['attr_vmode'] = self.args.attr_vmode
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = set(self.args.structs.split(',')).union(
@@ -107,15 +105,14 @@ class Options(Kontext):
         return out
 
     @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=True, http_method='POST')
-    def viewattrsx(self, setattrs=(), setattr_allpos='', setattr_vmode='', setstructs=(), setrefs=(),
+    def viewattrsx(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
                    setstructattrs=()):
         self._set_new_viewattrs(setattrs=setattrs,
-                                setattr_allpos=setattr_allpos,
                                 setattr_vmode=setattr_vmode,
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 setstructattrs=setstructattrs)
-        self._save_options(['attrs', 'attr_vmode', 'attr_allpos', 'ctxattrs', 'structs',
+        self._save_options(['attrs', 'attr_vmode', 'ctxattrs', 'structs',
                             'refs', 'structattrs', 'base_viewattr'], self.args.corpname)
         if self.args.format == 'json':
             return dict(widectx_globals=self._get_mapped_attrs(

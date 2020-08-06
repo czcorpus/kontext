@@ -613,7 +613,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
                                 numLinesInLockedGroups={this.props.numItemsInLockedGroups}
-                                viewMode={ConcordanceModel.getViewAttrsVmode(this.props)}
+                                viewMode={this.props.attrViewMode}
                                 onChartFrameReady={this.props.onLineSelChartFrameReady} />
                         {this.props.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}

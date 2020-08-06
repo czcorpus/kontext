@@ -937,8 +937,7 @@ export class ViewPage {
             activePosAttrs: this.layoutModel.getConcArgs().head('attrs').split(','),
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<'kwic'|'sen'|'align'>('ViewMode'),
-            AttrAllpos: this.layoutModel.getConf<ViewOptions.PosAttrViewScope>('AttrAllpos'),
-            AttrViewMode: this.layoutModel.getConf<ViewOptions.PosAttrViewMode>('AttrViewMode'),
+            AttrViewMode: this.layoutModel.getConf<ViewOptions.AttrViewMode>('AttrViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
             CorporaColumns: List.map(

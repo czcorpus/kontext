@@ -156,8 +156,7 @@ export interface ConcServerArgs {
     format:'plain'|'json'|'template'|'xml';
     pagesize:number;
     attrs:string;
-    attr_vmode:ViewOptions.PosAttrViewMode;
-    attr_allpos:ViewOptions.PosAttrViewScope;
+    attr_vmode:ViewOptions.AttrViewMode;
     base_viewattr:string;
     ctxattrs:string; // comma-separated values
     structs:string; // comma-separated values
@@ -298,14 +297,9 @@ export interface ViewConfiguration {
     ViewMode:'kwic'|'sen'|'align';
 
     /**
-     * Where we should display additional positional attributes
+     * How we should display positional attributes
      */
-    AttrAllpos:ViewOptions.PosAttrViewScope;
-
-    /**
-     * How we should display additional positional attributes
-     */
-    AttrViewMode:ViewOptions.PosAttrViewMode;
+    AttrViewMode:ViewOptions.AttrViewMode;
 
     ShowLineNumbers:boolean;
 

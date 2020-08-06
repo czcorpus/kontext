@@ -1273,7 +1273,6 @@ class Actions(Querying):
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
         if self.args.csortfn == '':
             self.args.csortfn = 't'
-        logging.getLogger(__name__).debug('self.args.csortfn: {0}'.format(self.args.csortfn))
 
         calc_args = coll_calc.CollCalcArgs()
         calc_args.corpus_encoding = self.corp.get_conf('ENCODING')
@@ -1585,11 +1584,10 @@ class Actions(Querying):
             'q': '~%s' % query_id,
             'viewmode': self.args.viewmode,
             'attrs': self.args.attrs,
-            'attr_allpos': self.args.attr_allpos,
             'ctxattrs': self.args.ctxattrs,
             'structs': self.args.structs,
             'refs': self.args.refs,
-            'viewmode': self.args.viewmode
+            'attr_vmode': self.args.attr_vmode
         }
         if self.args.usesubcorp:
             params['usesubcorp'] = self.args.usesubcorp

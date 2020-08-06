@@ -325,7 +325,7 @@ class Kontext(Controller):
         options -- a dictionary containing user settings
         actions -- a custom action to be applied to options (default is None)
         """
-        self.args.map_args_to_attrs(options, True)
+        self.args.map_args_to_attrs(options)
         if callable(actions):
             actions(options)
         self._setup_user_paths()
@@ -346,7 +346,7 @@ class Kontext(Controller):
             if len(tokens) == 2:
                 if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                     ans[tokens[1]] = v
-        self.args.map_args_to_attrs(options, True)
+        self.args.map_args_to_attrs(ans)
 
     @staticmethod
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
@@ -364,30 +364,31 @@ class Kontext(Controller):
         if optlist is None:
             optlist = []
         if selector:
-            tosave = [(selector + ':' + opt, self.args.__dict__[opt])
-                      for opt in optlist if opt in self.args.__dict__]
+            tosave = [(selector + ':' + att.name, getattr(self.args, att.name))
+                      for att in attr.fields(Args) if att.name in optlist]
         else:
-            tosave = [(opt, self.args.__dict__[opt]) for opt in optlist
-                      if opt in self.args.__dict__]
+            tosave = [(att.name, getattr(self.args, att.name))
+                      for att in attr.fields(Args) if att.name in optlist]
 
         def normalize_opts(opts):
             if opts is None:
                 opts = {}
+            ans = {}
             excluded_attrs = self._get_save_excluded_attributes()
-            for k in list(opts.keys()):
-                if k in excluded_attrs:
-                    del(opts[k])
-            opts.update(tosave)
-            return opts
+            for k in opts.keys():
+                corp = k.split(':')[0] if ':' in k else None
+                if k not in excluded_attrs and selector != corp:
+                    ans[k] = opts[k]
+            ans.update(tosave)
+            return ans
 
         # data must be loaded (again) because in-memory settings are
         # in general a subset of the ones stored in db (and we want
         # to store (again) even values not used in this particular request)
         with plugins.runtime.SETTINGS_STORAGE as settings_storage:
             if self._user_has_persistent_settings():
-                options = normalize_opts(getattr(settings_storage, 'load')
-                                         (self.session_get('user', 'id')))
-                getattr(settings_storage, 'save')(self.session_get('user', 'id'), options)
+                options = normalize_opts(settings_storage.load(self.session_get('user', 'id')))
+                settings_storage.save(self.session_get('user', 'id'), options)
             else:
                 options = normalize_opts(self.session_get('settings'))
                 self._session['settings'] = options
