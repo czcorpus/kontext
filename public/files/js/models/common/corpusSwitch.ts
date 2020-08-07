@@ -24,6 +24,7 @@ import { List, Dict, HTTP, pipe, tuple } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { forkJoin } from 'rxjs';
 import { scan, tap } from 'rxjs/operators';
 import { AjaxResponse } from '../../types/ajaxResponses';
@@ -205,6 +206,22 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                                 data: storedStates,
                                 corpora: List.zip(action.payload.corpora, prevCorpora)
                             }
+                        });
+                    },
+                    err => {
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
+                        this._dispatcher.dispatch<GlobalActions.MessageAdd>({
+                            name: GlobalActionName.MessageAdd,
+                            payload: {
+                                messageType: 'error',
+                                message: err
+                            }
+                        });
+                        this._dispatcher.dispatch<Actions.CorpusSwitchModelRestore>({
+                            name: ActionName.CorpusSwitchModelRestore,
+                            error: err
                         });
                     }
                 )

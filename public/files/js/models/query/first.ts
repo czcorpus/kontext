@@ -541,14 +541,16 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
             action => {
-                this.changeState(state => {
-                    this.deserialize(
-                        state,
-                        action.payload.data[this.getRegistrationId()] as
-                            FirstQueryFormModelSwitchPreserve,
-                        action.payload.corpora,
-                    );
-                });
+                if (!action.error) {
+                    this.changeState(state => {
+                        this.deserialize(
+                            state,
+                            action.payload.data[this.getRegistrationId()] as
+                                FirstQueryFormModelSwitchPreserve,
+                            action.payload.corpora,
+                        );
+                    });
+                }
             }
         );
 
