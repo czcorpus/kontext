@@ -144,7 +144,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
 
     render(state:SyntaxTreeViewerState):void {
 
-        this.pluginApi.ajax$(
+        this.pluginApi.ajax$<Array<SourceData.Data>>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
@@ -154,7 +154,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
             }
 
         ).subscribe(
-            (data:any) => {
+            (data) => {
                 this.changeState(state => {
                     state.data = data;
                     state.isBusy = false;

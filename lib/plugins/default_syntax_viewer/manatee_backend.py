@@ -55,6 +55,7 @@ An expected configuration:
 
 import json
 import manatee
+from typing import Dict, Any, List, Optional
 
 from plugins.abstract.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
 
@@ -158,9 +159,9 @@ class TreeConf(object):
         Returns all the attributes. This is used to fetch all the required values
         from Manatee.
         """
-        ans = set([self.parent_attr]).union(self.node_attrs).union(self.detail_attrs)
-        ans = ans - set([self.word_attr])
-        return (self.word_attr, ) + tuple(ans)   # word attr must be first
+        ans = {self.parent_attr}.union(self.node_attrs).union(self.detail_attrs)
+        ans = ans - {'word'}
+        return ('word', ) + tuple(ans)   # word attr must be first
 
     def __repr__(self):
         return str(self._data)
@@ -208,36 +209,8 @@ class ManateeBackendConf(object):
         """
         return self._data[corpus_id].get('emptyValuePlaceholders', [])
 
-
-class TreeNodeEncoder(json.JSONEncoder):
-    """
-    Provides a custom encoding of tree data into the format
-    understood by the "JS Treex View" (https://github.com/ufal/js-treex-view)
-    library.
-    """
-
-    def default(self, obj):
-        if isinstance(obj, TreeNode):
-            data = {}
-            data.update([('id',  obj.id)])
-            data.update(obj.data)
-            ans = dict(
-                parent=obj.parent.id if obj.parent else None,
-                hint=None,
-                labels=obj.node_labels,
-                firstson=obj.children[0].id if len(obj.children) > 0 else None,
-                id=obj.id,
-                rbrother=obj.rbrother.id if obj.rbrother else None,
-                lbrother=obj.lbrother.id if obj.lbrother else None,
-                depth=obj.depth,
-                data=data,
-                order=obj.idx)
-            if obj.hidden:
-                ans['hidden'] = True
-            return ans
-        else:
-            return obj
-
+    def get_multival_lemmata_separator(self, corpus_id) -> str:
+        return self._data[corpus_id].get('multiValueLemmata', {}).get('valueSeparator', None)
 
 class TreeNode(object):
     """
@@ -256,13 +229,15 @@ class TreeNode(object):
         depth (int): depth of the node
     """
 
-    def __init__(self, idx, data, node_labels, word, parent, hidden):
+    def __init__(self, idx: int, data: Dict[str, Any], node_labels: List[str], word: str, parent: int, hidden: bool,
+                 multival_flag: Optional[str]):
         """
         Args:
-            idx (int): node order in the list (zero based)
-            data (Dict[str, Any]): a dict containing detailed information about the node
-            node_labels (list of str): a list of labels for the nodes
+            idx: node order in the list (zero based)
+            data: a dict containing detailed information about the node
+            node_labels: a list of labels for the nodes
             word (str): a "word" value of the node (i.e. the actual word the node represents)
+            sentence_word: a word used to construct a flat sentence
             parent (int): parent node
             hidden: if True then client should not render the node (this applies mainly for root)
         """
@@ -277,9 +252,10 @@ class TreeNode(object):
         self.node_labels = node_labels
         self.word = word
         self.hidden = hidden
+        self.multival_flag = multival_flag
 
     def __repr__(self):
-        return 'Node[%d] (parent: %s, children: %s)' % (self.idx, self.parent, [c.idx for c in self.children])
+        return f'Node[{self.idx}] (word: {self.word}, parent: {self.parent}, children: {[c.idx for c in self.children]})'
 
 
 class TreexTemplate(object):
@@ -358,7 +334,6 @@ class TreeBuilder(object):
 
         Returns (tuple(list_of_nodes, TreeNodeEncoder))
         """
-
         def export_labels(item):
             values = [v[1] for v in self._dict_portion(item, tree_conf.node_attrs)]
             return [k % (v if v is not None else '') for k, v in zip(tree_conf.label_templates, values)]
@@ -368,8 +343,10 @@ class TreeBuilder(object):
                           node_labels=export_labels(d),
                           parent=d[tree_conf.parent_attr],
                           word=d[tree_conf.word_attr],
+                          multival_flag=d.get('multival_flag'),
                           hidden=d.get('hidden', False))
                  for i, d in enumerate(data)]
+
         for n in nodes:
             if n.parent is not None:
                 nodes[n.parent].children.append(n)
@@ -384,7 +361,7 @@ class ManateeBackend(SearchBackend):
     understood by UFAL's js-treex-view library (see https://github.com/ufal/js-treex-view)
     """
 
-    def __init__(self, conf):
+    def __init__(self, conf: ManateeBackendConf):
         """
         Args:
         conf (dict): configuration dictionary as obtained by reading
@@ -415,7 +392,8 @@ class ManateeBackend(SearchBackend):
                                '-1:%s' % sentence_struct,
                                '1:%s' % sentence_struct,
                                ','.join(tree_attrs),
-                               ','.join(tree_attrs), '', '')
+                               ','.join(tree_attrs),
+                               '', '')
         if kl.nextline():
             left_tk = kl.get_left()
             kwic_tk = kl.get_kwic()
@@ -423,7 +401,7 @@ class ManateeBackend(SearchBackend):
                         kwic_pos=(len(left_tk) // 4, len(kwic_tk) // 4))
 
     @staticmethod
-    def _parse_raw_sent(in_data, tree_attrs, empty_val_placeholders):
+    def _parse_raw_sent(in_data, tree_attrs, empty_val_placeholders, multival_separ=None):
         """
         Args:
             in_data (list of str): a string-encoded sentence and required attribute metadata (see _load_raw_sent())
@@ -437,20 +415,46 @@ class ManateeBackend(SearchBackend):
         def import_raw_val(v):
             return None if v in empty_val_placeholders or v == '' else v
 
+        def expand_multivals(values):
+            if multival_separ:
+                expanded = []
+                for v in values:
+                    expanded.append(v.split(multival_separ) if v is not None else [None])
+                ans = []
+                for i in range(0, max(len(x) for x in expanded)):
+                    row = []
+                    for v in expanded:
+                        if len(v) > i:
+                            row.append(v[i])
+                        else:
+                            row.append(v[0])
+                    ans.append(row)
+                return ans
+            return [values]
+
         data = []
         for i in range(0, len(in_data), 4):
-            parsed = [import_raw_val(x) for x in in_data[i + 2].split('/')]
-            if len(parsed) > len(tree_attrs):
-                item = dict(list(zip(tree_attrs, len(tree_attrs) * [None])))
-                item['word'] = in_data[i]
-                # In case of a parsing error we wrap a partial result into
-                # an error and try later to fetch essential data only (= parent
-                # and other references to other values).
-                data.append(BackendDataParseException(result=item))
-            else:
-                item = dict(list(zip(tree_attrs, parsed)))
-                item['word'] = in_data[i]
-                data.append(item)
+            parsed_m = expand_multivals([import_raw_val(x) for x in in_data[i + 2].split('/')])
+            for i, parsed in enumerate(parsed_m):
+                if len(parsed) > len(tree_attrs):
+                    item = dict(list(zip(tree_attrs, len(tree_attrs) * [None])))
+                    item['word'] = in_data[i]
+                    item['multival_flag'] = None
+                    # In case of a parsing error we wrap a partial result into
+                    # an error and try later to fetch essential data only (= parent
+                    # and other references to other values).
+                    data.append(BackendDataParseException(result=item))
+                else:
+                    item = dict(list(zip(tree_attrs, parsed)))
+                    item['word'] = in_data[i]
+                    if len(parsed_m) > 1:
+                        if i == 0:
+                            item['multival_flag'] = 'start'
+                        elif i == len(parsed_m) - 1:
+                            item['multival_flag'] = 'end'
+                        else:
+                            item['multival_flag'] = None
+                    data.append(item)
         return data
 
     def _get_ord_reference(self, curr_idx, data, parent_attr, parent_type):
@@ -570,7 +574,8 @@ class ManateeBackend(SearchBackend):
             raw_data = self._load_raw_sent(corpus=corpus, corpus_id=corpus_id, token_id=token_id, kwic_len=kwic_len,
                                            tree_attrs=conf.all_attrs)
             parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
-                                               self._conf.get_empty_value_placeholders(corpus_id))
+                                               self._conf.get_empty_value_placeholders(corpus_id),
+                                               multival_separ=None)
             if conf.root_node:
                 parsed_data = [conf.root_node] + parsed_data
             self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs, conf.parent_type)
@@ -578,3 +583,34 @@ class ManateeBackend(SearchBackend):
             tree_list.append(tb.process(conf, parsed_data))
         template = TreexTemplate(tree_id_list, tree_list, tree_configs)
         return template.export(), TreeNodeEncoder
+
+
+class TreeNodeEncoder(json.JSONEncoder):
+    """
+    Provides a custom encoding of tree data into the format
+    understood by the "JS Treex View" (https://github.com/ufal/js-treex-view)
+    library.
+    """
+
+    def default(self, obj: TreeNode):
+        if isinstance(obj, TreeNode):
+            data = {}
+            data.update([('id',  obj.id)])
+            data.update(obj.data)
+            ans = dict(
+                parent=obj.parent.id if obj.parent else None,
+                hint=None,
+                labels=obj.node_labels,
+                firstson=obj.children[0].id if len(obj.children) > 0 else None,
+                id=obj.id,
+                rbrother=obj.rbrother.id if obj.rbrother else None,
+                lbrother=obj.lbrother.id if obj.lbrother else None,
+                depth=obj.depth,
+                data=data,
+                order=obj.idx,
+                multival_flag=obj.multival_flag)
+            if obj.hidden:
+                ans['hidden'] = True
+            return ans
+        else:
+            return obj

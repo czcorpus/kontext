@@ -72,18 +72,19 @@ class UcnkManateeBackend(mbk.ManateeBackend):
         conf = tree_configs[tree_id]
         raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, conf.all_attrs)
         parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
-                                           self._conf.get_empty_value_placeholders(corpus_id))
+                                           self._conf.get_empty_value_placeholders(corpus_id),
+                                           multival_separ=self._conf.get_multival_lemmata_separator(corpus_id))
         fallback_parse = None
-        for i in range(len(parsed_data)):
-            if self.is_error_node(parsed_data[i]):
-                replac = dict(list(parsed_data[i].result.items()))
+        for i, parsed_item in enumerate(parsed_data):
+            if self.is_error_node(parsed_item):
+                replac = dict(list(parsed_item.result.items()))
                 if fallback_parse is None:
                     fallback_parse = self._fetch_fallback_info(corpus, corpus_id, token_id, kwic_len, conf.parent_attr,
                                                                conf.attr_refs)
                 if self.is_error_node(fallback_parse[i]):
                     # even fallback is broken - nothing we can do
                     raise BackendDataParseException('Failed to parse sentence')
-                for k, v in list(parsed_data[i].result.items()):
+                for k, v in list(parsed_item.result.items()):
                     if k == conf.parent_attr or k in conf.attr_refs:
                         replac[k] = fallback_parse[i][k]
                     elif v is None:
