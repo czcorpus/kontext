@@ -212,6 +212,7 @@ class ManateeBackendConf(object):
     def get_multival_lemmata_separator(self, corpus_id) -> str:
         return self._data[corpus_id].get('multiValueLemmata', {}).get('valueSeparator', None)
 
+
 class TreeNode(object):
     """
     Defines a syntax tree node.
@@ -227,6 +228,7 @@ class TreeNode(object):
         rbrother (TreeNode): nodes right neighbour
         lbrother (TreeNode): nodes left neighbour
         depth (int): depth of the node
+        multival_flag: specifies start|end in case there are split words (different tokenization for syntax)
     """
 
     def __init__(self, idx: int, data: Dict[str, Any], node_labels: List[str], word: str, parent: int, hidden: bool,
@@ -435,7 +437,7 @@ class ManateeBackend(SearchBackend):
         data = []
         for i in range(0, len(in_data), 4):
             parsed_m = expand_multivals([import_raw_val(x) for x in in_data[i + 2].split('/')])
-            for i, parsed in enumerate(parsed_m):
+            for j, parsed in enumerate(parsed_m):
                 if len(parsed) > len(tree_attrs):
                     item = dict(list(zip(tree_attrs, len(tree_attrs) * [None])))
                     item['word'] = in_data[i]
@@ -448,9 +450,9 @@ class ManateeBackend(SearchBackend):
                     item = dict(list(zip(tree_attrs, parsed)))
                     item['word'] = in_data[i]
                     if len(parsed_m) > 1:
-                        if i == 0:
+                        if j == 0:
                             item['multival_flag'] = 'start'
-                        elif i == len(parsed_m) - 1:
+                        elif j == len(parsed_m) - 1:
                             item['multival_flag'] = 'end'
                         else:
                             item['multival_flag'] = None
