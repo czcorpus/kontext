@@ -21,6 +21,7 @@
 import { Observable, Subscription, timer as rxTimer, of as rxOf, empty as rxEmpty } from 'rxjs';
 import { take, concatMap } from 'rxjs/operators';
 import { Ident, List, pipe, HTTP } from 'cnc-tskit';
+import { AjaxError } from 'rxjs/ajax';
 import { StatelessModel, StatefulModel, IActionDispatcher, IFullActionControl } from 'kombo';
 
 import { Kontext } from '../../types/common';
@@ -30,7 +31,9 @@ import { Actions, ActionName } from './actions';
 
 export interface MessageModelState {
     messages:Array<Kontext.UserNotification>;
+    isDebug:boolean;
 }
+
 
 /**
  *
@@ -51,7 +54,8 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         super(
             dispatcher,
             {
-                messages: []
+                messages: [],
+                isDebug: pluginApi.getConf<boolean>('isDebug')
             }
         );
         this.pluginApi = pluginApi;
@@ -63,7 +67,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
                 this.addMessage(
                     state,
                     action.payload.messageType,
-                    action.payload.messageText
+                    action.payload.message
                 );
             },
             (state, action, dispatch) => {
@@ -110,6 +114,67 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         );
     }
 
+    private importMessage(
+        state:MessageModelState,
+        msgType:Kontext.UserMessageTypes,
+        message:any
+    ):string {
+        const fetchJsonError = (message:XMLHttpRequest) => {
+            const respObj = message.response || {};
+            if (respObj['error_code']) {
+                return this.pluginApi.translate(respObj['error_code'], respObj['error_args'] || {});
+
+            } else if (respObj['messages']) {
+                return respObj['messages'].join(', ');
+
+            } else {
+                return `${message.status}: ${message.statusText}`;
+            }
+        };
+
+        let outMsg:string;
+        if (msgType === 'error') {
+            if (state.isDebug) {
+                console.error(message);
+            }
+
+            if (message instanceof XMLHttpRequest) {
+                switch (message.responseType) {
+                    case 'json': {
+                        outMsg = fetchJsonError(message);
+                    }
+                    break;
+                    case 'text':
+                    case '':
+                        outMsg = `${message.status}: ${message.statusText} (${(
+                            message.responseText).substr(0, 100)}...)`;
+                    break;
+                    default:
+                        outMsg = `${message.status}: ${message.statusText}`
+                    break;
+                }
+
+            } else if (message instanceof AjaxError) {
+                if (message.response && Array.isArray(message.response['messages'])) {
+                    outMsg = message.response['messages'][0][1];
+
+                } else {
+                    outMsg = message.message;
+                }
+
+            } else if (message instanceof Error) {
+                outMsg = message.message || this.pluginApi.translate('global__unknown_error');
+
+            } else {
+                outMsg = `${message}`;
+            }
+
+        } else {
+            outMsg = `${message}`;
+        }
+        return outMsg;
+    }
+
     private calcMessageTTL(messageType:Kontext.UserMessageTypes):number {
         const baseInterval = this.pluginApi.getConf<number>('messageAutoHideInterval');
         switch (messageType) {
@@ -127,11 +192,11 @@ export class MessageModel extends StatelessModel<MessageModelState> {
     private addMessage(
         state:MessageModelState,
         messageType:Kontext.UserMessageTypes,
-        messageText:string
+        message:any
     ):void {
         state.messages.push({
             messageType,
-            messageText,
+            messageText: this.importMessage(state, messageType, message),
             messageId: Ident.puid(),
             ttl: this.calcMessageTTL(messageType),
             timeFadeout: MessageModel.TIME_FADEOUT

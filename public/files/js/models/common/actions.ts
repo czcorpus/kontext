@@ -46,7 +46,7 @@ export namespace Actions {
 
     export interface MessageAdd extends Action<{
         messageType:Kontext.UserMessageTypes;
-        messageText:string;
+        message:any; // any is here intentionally - we just try to convert anything to a message
     }> {
         name:ActionName.MessageAdd;
     }

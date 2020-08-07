@@ -607,13 +607,15 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
-                const storedData = action.payload.data[this.getRegistrationId()];
-                if (storedData) {
-                    state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
-                    state.currFavitemId = findCurrFavitemId(
-                        state.dataFav,
-                        this.getFullCorpusSelection(state)
-                    );
+                if (!action.error) {
+                    const storedData = action.payload.data[this.getRegistrationId()];
+                    if (storedData) {
+                        state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
+                        state.currFavitemId = findCurrFavitemId(
+                            state.dataFav,
+                            this.getFullCorpusSelection(state)
+                        );
+                    }
                 }
             }
         );

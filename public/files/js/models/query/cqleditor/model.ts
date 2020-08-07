@@ -298,11 +298,13 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
-                this.deserialize(
-                    state,
-                    action.payload.data[this.getRegistrationId()] as CQLEditorModelCorpusSwitchPreserve,
-                    action.payload.corpora
-                );
+                if (!action.error) {
+                    this.deserialize(
+                        state,
+                        action.payload.data[this.getRegistrationId()] as CQLEditorModelCorpusSwitchPreserve,
+                        action.payload.corpora
+                    );
+                }
             }
         );
     }

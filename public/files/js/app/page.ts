@@ -22,7 +22,6 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { AjaxError } from 'rxjs/ajax';
 import { List, HTTP } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
@@ -308,12 +307,12 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     dispatchServerMessages() {
         List.forEach(
-            ([messageType, messageText]) => {
+            ([messageType, message]) => {
                 this.dispatcher.dispatch<Actions.MessageAdd>({
                     name: ActionName.MessageAdd,
                     payload: {
                         messageType,
-                        messageText
+                        message
                     }
                 });
             },
@@ -347,65 +346,11 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      *                  be used.
      */
     showMessage(msgType:'info'|'warning'|'plain'|'error', message:any):void {
-
-        const fetchJsonError = (message:XMLHttpRequest) => {
-            const respObj = message.response || {};
-            if (respObj['error_code']) {
-                return this.translate(respObj['error_code'], respObj['error_args'] || {});
-
-            } else if (respObj['messages']) {
-                return respObj['messages'].join(', ');
-
-            } else {
-                return `${message.status}: ${message.statusText}`;
-            }
-        };
-
-        let outMsg;
-        if (msgType === 'error') {
-            if (this.getConf<boolean>('isDebug')) {
-                console.error(message);
-            }
-
-            if (message instanceof XMLHttpRequest) {
-                switch (message.responseType) {
-                    case 'json': {
-                        outMsg = fetchJsonError(message);
-                    }
-                    break;
-                    case 'text':
-                    case '':
-                        outMsg = `${message.status}: ${message.statusText} (${(
-                            message.responseText).substr(0, 100)}...)`;
-                    break;
-                    default:
-                        outMsg = `${message.status}: ${message.statusText}`
-                    break;
-                }
-
-            } else if (message instanceof AjaxError) {
-                if (message.response && Array.isArray(message.response['messages'])) {
-                    outMsg = message.response['messages'][0][1];
-
-                } else {
-                    outMsg = message.message;
-                }
-
-            } else if (message instanceof Error) {
-                outMsg = message.message || this.translate('global__unknown_error');
-
-            } else {
-                outMsg = `${message}`;
-            }
-
-        } else {
-            outMsg = `${message}`;
-        }
         this.dispatcher.dispatch<Actions.MessageAdd>({
             name: ActionName.MessageAdd,
             payload: {
                 messageType: msgType,
-                messageText: outMsg
+                message: message
             }
         });
     }

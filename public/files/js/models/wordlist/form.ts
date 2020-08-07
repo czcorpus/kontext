@@ -425,12 +425,14 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
             (state, action)  => {
-                this.deserialize(
-                    state,
-                    action.payload.data[this.getRegistrationId()] as
-                        WordlistFormCorpSwitchPreserve,
-                    action.payload.corpora,
-                );
+                if (!action.error) {
+                    this.deserialize(
+                        state,
+                        action.payload.data[this.getRegistrationId()] as
+                            WordlistFormCorpSwitchPreserve,
+                        action.payload.corpora,
+                    );
+                }
             }
         );
 
