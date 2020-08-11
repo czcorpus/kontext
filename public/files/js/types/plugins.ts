@@ -467,4 +467,35 @@ export namespace PluginInterfaces {
         }
     }
 
+
+    // ------------------------------------------------------------------------
+    // ------------------------- [query_suggest] plug-in -----------------------
+
+    export namespace QuerySuggest {
+
+        export interface IPlugin extends BasePlugin {
+            selectRenderer(typeId:string):React.ComponentClass<{}>|React.SFC<{}>;
+        }
+
+        export enum Actions {
+            FetchInfo = 'QUERY_SUGGEST_RESPONSE_DONE'
+        }
+
+        export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
+            React.SFC<Kontext.GeneralProps>;
+
+        export interface DataAndRenderer {
+            renderer:Renderer;
+            contents:Kontext.GeneralProps;
+            found:boolean;
+            heading:string;
+        }
+
+        export interface SuggestionAnswer {
+            answers:Array<DataAndRenderer>;
+        }
+
+        export type Factory = (pluginApi:IPluginApi)=>IPlugin;
+    }
+
 }

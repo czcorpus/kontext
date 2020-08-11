@@ -42,6 +42,7 @@ from .abstract.issue_reporting import AbstractIssueReporting
 from .abstract.dispatch_hook import AbstractDispatchHook
 from .abstract.token_connect import AbstractTokenConnect
 from .abstract.kwic_connect import AbstractKwicConnect
+from .abstract.query_suggest import AbstractQuerySuggest
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .abstract.auth import AbstractAuth
@@ -159,6 +160,7 @@ class _Names(object):
     TOKEN_CONNECT: _ID[AbstractTokenConnect] = _ID('token_connect', optional=True)
     KWIC_CONNECT: _ID[AbstractKwicConnect] = _ID('kwic_connect', optional=True)
     DISPATCH_HOOK: _ID[AbstractDispatchHook] = _ID('dispatch_hook', optional=True)
+    QUERY_SUGGEST: _ID[AbstractQuerySuggest] = _ID('query_suggest', optional=True)
 
     def __iter__(self) -> Iterator[_ID]:
         return iter([self.DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH, self.CONC_PERSISTENCE,
@@ -166,7 +168,7 @@ class _Names(object):
                      self.GETLANG, self.CORPARCH, self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR,
                      self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER,
                      self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
-                     self.DISPATCH_HOOK])
+                     self.DISPATCH_HOOK, self.QUERY_SUGGEST])
 
 
 runtime: _Names = _Names()

@@ -40,7 +40,8 @@ export enum PluginName {
     LIVE_ATTRIBUTES = 'live_attributes',
     SUBCMIXER = 'subcmixer',
     SYNTAX_VIEWER = 'syntax_viewer',
-    ISSUE_REPORTING = 'issue_reporting'
+    ISSUE_REPORTING = 'issue_reporting',
+    QUERY_SUGGEST = 'query_suggest'
 }
 
  /**
