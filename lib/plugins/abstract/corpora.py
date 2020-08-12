@@ -156,6 +156,12 @@ class TagsetInfo(DictLike):
         return dict(ident=self.tagset_name, type=self.tagset_type, posAttr=self.pos_attr, featAttr=self.feat_attr)
 
 
+class QuerySuggest(DictLike):
+
+    def __init__(self) -> None:
+        self.providers: List[Any] = []
+
+
 class CorpusInfo(DictLike):
     """
     Genereal corpus information and metadata.
@@ -197,6 +203,7 @@ class CorpusInfo(DictLike):
         self.kwic_connect: KwicConnect = KwicConnect()
         self.manatee: ManateeCorpusInfo = ManateeCorpusInfo()
         self.default_view_opts: Dict[str, Any] = {}
+        self.query_suggest: QuerySuggest = QuerySuggest()
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':
