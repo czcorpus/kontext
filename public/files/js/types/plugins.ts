@@ -19,7 +19,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
+import { IEventEmitter, ITranslator, IFullActionControl, IModel, Action } from 'kombo';
 
 import { Kontext, TextTypes } from '../types/common';
 import { CoreViews } from './coreViews';
@@ -27,6 +27,7 @@ import { IConcLinesProvider } from '../types/concordance';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
+import { QueryType } from '../models/query/common';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -477,17 +478,36 @@ export namespace PluginInterfaces {
             selectRenderer(typeId:string):React.ComponentClass<{}>|React.SFC<{}>;
         }
 
-        export enum Actions {
-            FetchInfo = 'QUERY_SUGGEST_RESPONSE_DONE'
+        export enum ActionName {
+            AskSuggestions = 'QUERY_SUGGEST_ASK_SUGGESTIONS',
+            SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED'
+        }
+
+        export namespace Actions {
+
+            export interface AskSuggestions extends Action<{
+                value:string;
+                queryType:QueryType;
+                corpora:Array<string>;
+                subcorpus:string|undefined;
+            }> {
+                name: ActionName.AskSuggestions
+            }
+
+            export interface SuggestionsReceived extends Action<{
+                answers:Array<DataAndRenderer>;
+            }> {
+                name: ActionName.SuggestionsReceived
+            }
+
         }
 
         export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
             React.SFC<Kontext.GeneralProps>;
 
         export interface DataAndRenderer {
-            renderer:Renderer;
-            contents:Kontext.GeneralProps;
-            found:boolean;
+            rendererId:string;
+            contents:Array<{}>;
             heading:string;
         }
 

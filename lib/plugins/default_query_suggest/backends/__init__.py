@@ -19,13 +19,23 @@ import urllib
 from typing import List
 
 
+class ManateeBackend(AbstractBackend):
+
+    def __init__(self, conf, ident):
+        super().__init__(ident)
+
+    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, query: str, p_attr: str, struct: str,
+                        s_attr: str):
+        return '["foo", "bar", "baz"]'
+
+
 class HTTPBackend(AbstractBackend):
     """
     TODO
     """
 
     def __init__(self, conf, ident):
-        super(HTTPBackend, self).__init__(ident)
+        super().__init__(ident)
         self._conf = conf
 
     @staticmethod

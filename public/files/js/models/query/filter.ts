@@ -31,7 +31,7 @@ import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
-    shouldDownArrowTriggerHistory, FilterServerArgs, QueryType, AnyQuery } from './common';
+    FilterServerArgs, QueryType, AnyQuery } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 
@@ -114,8 +114,6 @@ function determineSupportedWidgets(queries:{[key:string]:string},
 export interface FilterFormModelState extends QueryFormModelState {
 
     maincorps:{[key:string]:string};
-
-    queryTypes:{[key:string]:QueryType};
 
     lposValues:{[key:string]:string};
 
@@ -305,47 +303,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                         state.queryTypes,
                         state.tagBuilderSupport
                     );
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputSetQuery>(
-            ActionName.QueryInputSetQuery,
-            action => action.payload.formType === 'filter',
-            action => {
-                this.changeState(state => {
-                    if (action.payload.insertRange) {
-                        this.addQueryInfix(
-                            state,
-                            action.payload.sourceId,
-                            action.payload.query,
-                            action.payload.insertRange
-                        );
-
-                    } else {
-                        state.queries[action.payload.sourceId] = action.payload.query;
-                    }
-                    state.downArrowTriggersHistory[action.payload.sourceId] =
-                        shouldDownArrowTriggerHistory(
-                            action.payload.query,
-                            action.payload.rawAnchorIdx,
-                            action.payload.rawFocusIdx
-                        );
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputMoveCursor>(
-            ActionName.QueryInputMoveCursor,
-            action => action.payload.formType === 'filter',
-            action => {
-                this.changeState(state => {
-                    state.downArrowTriggersHistory[action.payload.sourceId] =
-                        shouldDownArrowTriggerHistory(
-                            state.queries[action.payload.sourceId],
-                            action.payload.rawAnchorIdx,
-                            action.payload.rawFocusIdx
-                        );
                 });
             }
         );

@@ -25,7 +25,7 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP } from 'cnc-tskit';
-import { map, tap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 
 export enum KnownRenderers {
@@ -36,8 +36,7 @@ export enum KnownRenderers {
 export interface HTTPResponse extends Kontext.AjaxResponse {
     items:Array<{
         renderer:string;
-        contents:Array<[string, string]>;
-        found:boolean;
+        contents:Array<{}>;
         heading:string;
     }>;
 }
@@ -60,6 +59,38 @@ export class Model extends StatelessModel<ModelState> {
         this.pluginApi = pluginApi;
 
         // TODO add action handler to reflect subcorpus change
+
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
+            PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.fetchSuggestion(state).subscribe(
+                    data => {
+                        dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                            name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                            payload: {
+                                answers: data.answers
+                            }
+                        });
+                    },
+                    err => {
+                        dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                            name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                            error: err
+                        });
+                    }
+                )
+            }
+        );
+
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
+            PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+            (state, action) => {
+                state.isBusy = false;
+            }
+        );
     }
 
 
@@ -75,14 +106,16 @@ export class Model extends StatelessModel<ModelState> {
             args
 
         ).pipe(
-            tap(
-                data => {
-                    console.log('response: ', data);
-                }
-            ),
             map(
-                (data) => ({
-                    answers: []
+                data => ({
+                    answers: List.map(
+                        item => ({
+                            rendererId: item.renderer,
+                            contents: item.contents,
+                            heading: item.heading
+                        }),
+                        data.items
+                    )
                 })
             )
         );

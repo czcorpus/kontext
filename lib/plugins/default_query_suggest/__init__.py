@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any
+from typing import Any, List
 import importlib
 import logging
 import json
@@ -28,7 +28,10 @@ from actions import concordance
 def fetch_query_suggestions(self, request):
     """
     """
-    return dict(items=[])
+    with plugins.runtime.QUERY_SUGGEST as plg:
+        ans = plg.find_suggestions(request.args.get('ui_lang'), request.args.getlist('corpora'),
+                                   request.args.get('subcorpus'), request.args.get('query'), None, None, None)
+    return dict(items=ans)
 
 
 class DefaultQuerySuggest(AbstractQuerySuggest):
@@ -37,6 +40,15 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
         self._providers = providers
         self._corparch = corparch
         logging.getLogger(__name__).debug('Query suggest init, providers: {}'.format(self._providers))
+
+    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, query: str, p_attr: str, struct: str,
+                         s_attr: str):
+        ans = []
+        for ident, provider in self._providers.items():
+            backend, frontend = provider
+            resp = backend.find_suggestion(ui_lang, corpora, subcorpus, query, p_attr, struct, s_attr)
+            ans.append(frontend.export_data(ui_lang, resp).to_dict())
+        return ans
 
     def export(self, plugin_api):
         corpus_info = self._corparch.get_corpus_info(
@@ -54,7 +66,7 @@ def find_implementation(path: str) -> Any:
     defined in a respective JSON configuration file.
 
     arguments:
-    path -- a full identifier of a class, e.g. plugins.default_token_connect.backends.Foo
+    path -- a full identifier of a class, e.g. plugins.default_query_suggest.backends.Foo
 
     returns:
     a class matching the path
@@ -98,5 +110,5 @@ def create_instance(settings, corparch):
     settings -- the settings.py module
     db -- a 'db' plugin implementation
     """
-    providers = setup_providers(settings.get('plugins', 'token_connect'))
+    providers = setup_providers(settings.get('plugins', 'query_suggest'))
     return DefaultQuerySuggest(providers, corparch)
