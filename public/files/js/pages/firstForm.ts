@@ -44,6 +44,8 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
+import querySuggestPlugin from 'plugins/querySuggest/init';
+
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -327,6 +329,10 @@ export class FirstFormPage {
                 []
             );
             ttAns.queryStorageView = qsPlugin.getWidgetView();
+
+            const qsuggPlugin = querySuggestPlugin(
+                this.layoutModel.pluginApi()
+            );
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,

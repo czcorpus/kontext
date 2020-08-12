@@ -167,8 +167,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     pcqPosNegValues:{[key:string]:'pos'|'neg'};
 
-    queryTypes:{[key:string]:QueryType};
-
     tagBuilderSupport:{[key:string]:boolean};
 
     inputLanguages:{[key:string]:string};
@@ -368,47 +366,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             foreignSubcorp: state.isForeignSubcorpus
                         }
                     );
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputMoveCursor>(
-            ActionName.QueryInputMoveCursor,
-            action => action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    state.downArrowTriggersHistory[action.payload.sourceId] =
-                        shouldDownArrowTriggerHistory(
-                            state.queries[action.payload.sourceId],
-                            action.payload.rawAnchorIdx,
-                            action.payload.rawFocusIdx
-                        )
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputSetQuery>(
-            ActionName.QueryInputSetQuery,
-            action => action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    if (action.payload.insertRange) {
-                        this.addQueryInfix(
-                            state,
-                            action.payload.sourceId,
-                            action.payload.query,
-                            action.payload.insertRange
-                        );
-
-                    } else {
-                        state.queries[action.payload.sourceId] = action.payload.query;
-                    }
-                    state.downArrowTriggersHistory[action.payload.sourceId] =
-                        shouldDownArrowTriggerHistory(
-                            action.payload.query,
-                            action.payload.rawAnchorIdx,
-                            action.payload.rawFocusIdx
-                        );
                 });
             }
         );
