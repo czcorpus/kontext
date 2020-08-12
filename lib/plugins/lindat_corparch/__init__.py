@@ -183,6 +183,7 @@ class CorptreeParser(object):
             elm.attrib['repo']) if 'repo' in elm.attrib else None
         ans.token_connect.providers, ans.kwic_connect.providers = CorptreeParser.parse_tckc_providers(
             elm)
+        ans.query_suggest = CorptreeParser.parse_qs_providers(elm)
         return ans
 
     @staticmethod
@@ -197,6 +198,15 @@ class CorptreeParser(object):
         if kwic_connect_elm is not None:
             kc_providers = [p.text for p in kwic_connect_elm.findall('provider')]
         return tc_providers, kc_providers
+
+    @staticmethod
+    def parse_qs_providers(node):
+        qs_providers = []
+
+        query_suggest_elm = node.find('query_suggest')
+        if query_suggest_elm is not None:
+            qs_providers = [p.text for p in query_suggest_elm.findall('provider')]
+        return qs_providers
 
     def parse_node(self, elm):
         data = {}
