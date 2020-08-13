@@ -37,6 +37,7 @@ import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 export interface QueryFormUserEntries {
@@ -226,6 +227,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             List.map(item => tuple(item, props.currQueryTypes[item] || 'iquery')),
             Dict.fromEntries()
         );
+        const querySuggestions = pipe(
+            props.corpora,
+            List.map(corp => tuple(corp,
+                [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer>)),
+            Dict.fromEntries()
+        );
         const tagBuilderSupport = props.tagBuilderSupport;
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'first-query-model', {
             formType: Kontext.ConcFormTypes.QUERY,
@@ -276,6 +283,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 Dict.fromEntries()
             ),
             queryTypes,
+            querySuggestions,
             pcqPosNegValues: pipe(
                 props.corpora,
                 List.map(item => tuple(item, props.currPcqPosNegValues[item] || 'pos')),

@@ -22,8 +22,9 @@
 import { List } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { init as initView, Views as DefaultRenderers } from './view';
-import { KnownRenderers, Model } from './model';
+import { init as initView, SuggestionsViews, KnownRenderers } from './view';
+import { Model } from './model';
+import { QueryType } from '../../models/query/common';
 
 
 declare var require:any;
@@ -37,13 +38,18 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
     protected readonly pluginApi:IPluginApi;
 
-    protected readonly views:DefaultRenderers;
+    protected readonly views:SuggestionsViews;
 
     protected readonly providers:Array<string>;
 
     protected readonly model:Model;
 
-    constructor(pluginApi:IPluginApi, views:DefaultRenderers, model:Model, providers:Array<string>) {
+    constructor(
+        pluginApi:IPluginApi,
+        views:SuggestionsViews,
+        model:Model,
+        providers:Array<string>
+    ) {
         this.pluginApi = pluginApi;
         this.views = views;
         this.model = model;
@@ -55,14 +61,20 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         return true;
     }
 
-    selectRenderer(typeId:string):React.ComponentClass<{}>|React.SFC<{}> {
-        switch (typeId) {
+    supportsQueryType(qtype:QueryType):boolean {
+        return true; // TODO (load data from server)
+    }
+
+    createComponent(rendererId:string):React.ComponentClass|React.SFC {
+        // TODO type cast data using type guards from the code above (also
+        // labeled as TODO)
+        switch (rendererId) {
             case KnownRenderers.ERROR:
-                return this.views.ErrorRenderer;
+                return this.views.error
             case KnownRenderers.BASIC:
-                return this.views.BasicRenderer;
+                return this.views.basic
             default:
-                return this.views.UnsupportedRenderer;
+                return this.views.unsupported;
         }
     }
 
@@ -79,7 +91,8 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
             ),
             subcorpus: pluginApi.getCorpusIdent().usesubcorp,
             isBusy: false,
-            answers: {}
+            answers: {},
+            currQueryHash: ''
         },
         pluginApi
     );

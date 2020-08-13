@@ -141,11 +141,13 @@ export interface QueryFormModelState {
 
     currentAction:string;
 
-    queries:{[key:string]:string}; // corpname|filter_id -> query
+    queries:{[sourceId:string]:string}; // corpname|filter_id -> query
 
-    queryTypes:{[key:string]:QueryType};
+    queryTypes:{[sourceId:string]:QueryType};
 
-    tagBuilderSupport:{[key:string]:boolean};
+    querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
+
+    tagBuilderSupport:{[sourceId:string]:boolean};
 
     useCQLEditor:boolean;
 
@@ -153,19 +155,20 @@ export interface QueryFormModelState {
 
     widgetArgs:Kontext.GeneralProps;
 
-    supportedWidgets:{[key:string]:Array<string>};
+    supportedWidgets:{[sourceId:string]:Array<string>};
 
     isAnonymousUser:boolean;
 
-    activeWidgets:{[key:string]:string|null};
+    activeWidgets:{[sourceId:string]:string|null};
 
-    downArrowTriggersHistory:{[key:string]:boolean};
+    downArrowTriggersHistory:{[sourceId:string]:boolean};
 
     contextFormVisible:boolean;
 
     textTypesFormVisible:boolean;
 
     historyVisible:boolean;
+
 }
 
 /**
@@ -292,6 +295,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             action => {
+                // TODO fill in suggestions
                 console.log('we have suggestions: ', action.payload);
             }
         );

@@ -911,6 +911,18 @@ export function init({
                                         formType={this.props.formType}/>
                                 : null
                             }
+                            {/* if there are suggestions for this.props.sourceId (= curr corpus input) then show the suggest. widget */}
+
+                            {/* TODO
+                            either
+                            a)
+                            this.props.querySuggestions[this.props.sourceId].map(v => querySuggPlg.createComponent(v.rendererId)}
+                            const MyComponent = createComponent....
+                            return (of map fn) <MyComponent data={typeGuard(v.contents)} />
+                            or b)
+                            createComponent ===> createElement(v.rendererId, v.contents)
+                            (using React.createElement<T>(reactClass, props))
+                            */}
                             <div className="query-hints">
                                 <BoundQueryHints  />
                             </div>

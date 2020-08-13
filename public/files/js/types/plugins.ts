@@ -38,7 +38,8 @@ export interface IPluginApi extends ITranslator {
     getConf<T>(key:string):T;
     getNestedConf<T>(...keys:Array<string>):T;
     createStaticUrl(path:string):string;
-    createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string;
+    createActionUrl<T>(
+        path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string;
     ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
     userIsAnonymous():boolean;
@@ -118,7 +119,7 @@ export namespace PluginInterfaces {
     export namespace SubcMixer {
 
         export interface Props {
-            isActive:Boolean;
+            isActive:boolean;
         }
 
         export interface IPlugin extends BasePlugin {
@@ -475,7 +476,9 @@ export namespace PluginInterfaces {
     export namespace QuerySuggest {
 
         export interface IPlugin extends BasePlugin {
-            selectRenderer(typeId:string):React.ComponentClass<{}>|React.SFC<{}>;
+            createComponent(rendererId:string):React.ComponentClass|React.SFC;
+            supportsQueryType(qtype:QueryType):boolean;
+
         }
 
         export enum ActionName {
@@ -486,6 +489,7 @@ export namespace PluginInterfaces {
         export namespace Actions {
 
             export interface AskSuggestions extends Action<{
+                // TODO sourceId:string;
                 value:string;
                 queryType:QueryType;
                 corpora:Array<string>;
@@ -495,7 +499,9 @@ export namespace PluginInterfaces {
             }
 
             export interface SuggestionsReceived extends Action<{
-                answers:Array<DataAndRenderer>;
+                // TODO sourceId:string; (sourceId = e.g. a corpus id, or a filter op. id)
+                results:Array<DataAndRenderer>;
+                value:string;
             }> {
                 name: ActionName.SuggestionsReceived
             }
@@ -507,12 +513,12 @@ export namespace PluginInterfaces {
 
         export interface DataAndRenderer {
             rendererId:string;
-            contents:Array<{}>;
+            contents:unknown;
             heading:string;
         }
 
         export interface SuggestionAnswer {
-            answers:Array<DataAndRenderer>;
+            results:Array<DataAndRenderer>;
         }
 
         export type Factory = (pluginApi:IPluginApi)=>IPlugin;
