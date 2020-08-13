@@ -21,7 +21,9 @@
 
 import * as React from 'react';
 import { Kontext } from '../../types/common';
-import { IActionDispatcher } from 'kombo';
+import { IActionDispatcher, Bound } from 'kombo';
+import { List } from 'cnc-tskit';
+import { Model, ModelState } from './model';
 
 
 export interface Views {
@@ -31,10 +33,11 @@ export interface Views {
             error:string;
         }
     }>;
+    BasicRenderer:React.ComponentClass<{}>;
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) {
+export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers) {
 
 
 
@@ -68,9 +71,23 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         </div>
     };
 
+    // -------------- <BasicRenderer /> ------------------------------
+
+    const BasicRenderer:React.SFC<ModelState> = (props) => {
+        return <div className="BasicRenderer">
+            <ul>
+                {List.map(
+                    item => <li>{item}</li>,
+                    props.answers['basic'].answers // TODO just a test
+                )}
+            </ul>
+        </div>
+    };
+
     return {
         UnsupportedRenderer: UnsupportedRenderer,
-        ErrorRenderer: ErrorRenderer
+        ErrorRenderer: ErrorRenderer,
+        BasicRenderer: Bound(BasicRenderer, model)
     };
 
 }
