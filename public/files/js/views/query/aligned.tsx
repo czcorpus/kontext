@@ -166,7 +166,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 queryStorageView={this.props.queryStorageView}
                                 useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this.props.onEnterKey}
-                                tagHelperView={this.props.tagHelperView} />
+                                tagHelperView={this.props.tagHelperView}
+                                qsuggPlugin={null} />
                         </tbody>
                     </table>
                 </div>

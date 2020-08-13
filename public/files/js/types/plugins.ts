@@ -476,7 +476,7 @@ export namespace PluginInterfaces {
     export namespace QuerySuggest {
 
         export interface IPlugin extends BasePlugin {
-            createComponent(rendererId:string):React.ComponentClass|React.SFC;
+            createComponent(rendererId:string):React.ComponentClass<{data:unknown}>|React.SFC<{data:unknown}>;
             supportsQueryType(qtype:QueryType):boolean;
 
         }
@@ -489,19 +489,19 @@ export namespace PluginInterfaces {
         export namespace Actions {
 
             export interface AskSuggestions extends Action<{
-                // TODO sourceId:string;
                 value:string;
                 queryType:QueryType;
                 corpora:Array<string>;
                 subcorpus:string|undefined;
+                sourceId:string;
             }> {
                 name: ActionName.AskSuggestions
             }
 
             export interface SuggestionsReceived extends Action<{
-                // TODO sourceId:string; (sourceId = e.g. a corpus id, or a filter op. id)
                 results:Array<DataAndRenderer>;
                 value:string;
+                sourceId:string;  // (sourceId = e.g. a corpus id, or a filter op. id)
             }> {
                 name: ActionName.SuggestionsReceived
             }

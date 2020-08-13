@@ -83,7 +83,8 @@ export function init(
         withinBuilderModel:WithinBuilderModel,
         virtualKeyboardModel:VirtualKeyboardModel,
         firstHitsModel:FirstHitsModel,
-        cqlEditorModel:CQLEditorModel):FilterFormViews {
+        cqlEditorModel:CQLEditorModel,
+        qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin):FilterFormViews {
 
     const inputViews = inputInit({
         dispatcher: dispatcher,
@@ -226,7 +227,8 @@ export function init(
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguage}
                                 useCQLEditor={this.props.useCQLEditor}
-                                onEnterKey={this._handleSubmit} />
+                                onEnterKey={this._handleSubmit}
+                                qsuggPlugin={qsuggPlugin} />
                         </tbody>
                     </table>
                     <div className="buttons">
@@ -323,7 +325,8 @@ export function init(
                                 inputLanguage={this.props.inputLanguage}
                                 useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this._handleSubmit}
-                                takeFocus={false} />
+                                takeFocus={false}
+                                qsuggPlugin={qsuggPlugin} />
                         </tbody>
                     </table>
                     <div className="buttons">

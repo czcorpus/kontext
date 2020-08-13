@@ -72,6 +72,7 @@ export interface TRQueryInputFieldProps {
     tagsetDocUrl:string;
     onEnterKey:()=>void;
     takeFocus?:boolean;
+    qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
 
@@ -923,6 +924,13 @@ export function init({
                             createComponent ===> createElement(v.rendererId, v.contents)
                             (using React.createElement<T>(reactClass, props))
                             */}
+                            {!this.props.historyVisible && this.props.querySuggestions[this.props.sourceId] && this.props.querySuggestions[this.props.sourceId].length ? 
+                                this.props.querySuggestions[this.props.sourceId].map((v, i) => {
+                                    const QuerySuggestions = this.props.qsuggPlugin.createComponent(v.rendererId);
+                                    return <QuerySuggestions key={i} data={v.contents as unknown} />
+                                }) :
+                                null
+                            }
                             <div className="query-hints">
                                 <BoundQueryHints  />
                             </div>

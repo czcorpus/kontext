@@ -487,7 +487,8 @@ export class ViewPage {
             withinBuilderModel: this.queryModels.withinBuilderModel,
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             queryContextModel: this.queryModels.queryContextModel,
-            cqlEditorModel: this.queryModels.cqlEditorModel
+            cqlEditorModel: this.queryModels.cqlEditorModel,
+            qsuggPlugin: null
         });
     }
 
@@ -554,7 +555,8 @@ export class ViewPage {
             this.queryModels.withinBuilderModel,
             this.queryModels.virtualKeyboardModel,
             firstHitsModel,
-            this.queryModels.cqlEditorModel
+            this.queryModels.cqlEditorModel,
+            null
         );
     }
 

@@ -276,7 +276,8 @@ export class FirstFormPage {
             withinBuilderModel: this.withinBuilderModel,
             virtualKeyboardModel: this.virtualKeyboardModel,
             queryContextModel: this.queryContextModel,
-            cqlEditorModel: this.cqlEditorModel
+            cqlEditorModel: this.cqlEditorModel,
+            qsuggPlugin
         });
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,

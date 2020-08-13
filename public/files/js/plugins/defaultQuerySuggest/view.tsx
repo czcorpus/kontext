@@ -39,7 +39,7 @@ function isBasicRendererProps(v:any):v is BasicRendererProps {
 }
 */
 
-export type SuggestionsViews = {[key in KnownRenderers]:React.SFC|React.ComponentClass};
+export type SuggestionsViews = {[key in KnownRenderers]:React.SFC<{data:unknown}>|React.ComponentClass<{data:unknown}>};
 
 
 export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers):SuggestionsViews {
@@ -55,14 +55,14 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
     }
     */
 
-    const UnsupportedRenderer:React.SFC<{}> = (props) => {
+    const UnsupportedRenderer:React.SFC<{data:unknown}> = (props) => {
         return <div>Unsupported renderer (TODO)</div>
     }
 
     // ------------- <ErrorRenderer /> -------------------------------
 
     const ErrorRenderer:React.SFC<{data:Error|string}> = (props) => {
-        return <div className="ErrorRenderer">
+        return <div className="ErrorRenderer suggestions-box">
             <p>
                 <img className="error-icon"
                         src={he.createStaticUrl('img/error-icon.svg')}
@@ -80,10 +80,10 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
     // --------------QueryFormModelState <BasicRenderer /> ------------------------------
 
     const BasicRenderer:React.SFC<{data:Array<string>}> = (props) => {
-        return <div className="BasicRenderer">
+        return <div className="BasicRenderer suggestions-box">
             <ul>
                 {List.map(
-                    item => <li>{item}</li>,
+                    (item, index) => <li key={index}>{item}</li>,
                     props.data
                 )}
             </ul>
