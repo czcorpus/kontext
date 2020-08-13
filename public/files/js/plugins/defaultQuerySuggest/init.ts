@@ -43,23 +43,12 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
     protected readonly model:Model;
 
-    constructor(pluginApi:IPluginApi, views:DefaultRenderers, providers:Array<string>) {
+    constructor(pluginApi:IPluginApi, views:DefaultRenderers, model:Model, providers:Array<string>) {
         this.pluginApi = pluginApi;
         this.views = views;
+        this.model = model;
         this.providers = providers;
-        this.model = new Model(
-            pluginApi.dispatcher(),
-            {
-                corpora: List.concat(
-                    pluginApi.getConf('alignedCorpora'),
-                    [pluginApi.getCorpusIdent().id]
-                ),
-                subcorpus: pluginApi.getCorpusIdent().usesubcorp,
-                isBusy: false,
-                answers: {}
-            },
-            pluginApi
-        );
+
     }
 
     isActive():boolean {
@@ -70,6 +59,8 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         switch (typeId) {
             case KnownRenderers.ERROR:
                 return this.views.ErrorRenderer;
+            case KnownRenderers.BASIC:
+                return this.views.BasicRenderer;
             default:
                 return this.views.UnsupportedRenderer;
         }
@@ -79,9 +70,23 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
 
 const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
+    const model = new Model(
+        pluginApi.dispatcher(),
+        {
+            corpora: List.concat(
+                pluginApi.getConf('alignedCorpora'),
+                [pluginApi.getCorpusIdent().id]
+            ),
+            subcorpus: pluginApi.getCorpusIdent().usesubcorp,
+            isBusy: false,
+            answers: {}
+        },
+        pluginApi
+    );
     return new DefaultQuerySuggest(
         pluginApi,
-        initView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
+        initView(pluginApi.dispatcher(), model, pluginApi.getComponentHelpers()),
+        model,
         pluginApi.getNestedConf<Array<string>>('pluginData', 'query_suggest')
     );
 };

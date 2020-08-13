@@ -29,7 +29,8 @@ import { map } from 'rxjs/operators';
 
 
 export enum KnownRenderers {
-    MESSAGE = 'custom-message',
+    MESSAGE = 'custom-message', // TODO do we need this?
+    BASIC = 'basic',
     ERROR = 'error'
 }
 
