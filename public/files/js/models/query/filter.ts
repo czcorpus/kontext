@@ -34,6 +34,7 @@ import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, append
     FilterServerArgs, QueryType, AnyQuery } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 /**
@@ -67,7 +68,8 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
 /**
  * import {GeneralViewOptionsModel} from '../options/general';
  */
-export function fetchFilterFormArgs<T extends AjaxResponse.FilterFormArgs[keyof AjaxResponse.FilterFormArgs]>(
+export function fetchFilterFormArgs<T extends
+        AjaxResponse.FilterFormArgs[keyof AjaxResponse.FilterFormArgs]>(
     args:{[ident:string]:AjaxResponse.ConcFormArgs},
     initialArgs:AjaxResponse.FilterFormArgs,
     key:(item:AjaxResponse.FilterFormArgs)=>T
@@ -185,6 +187,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'iquery')]],
             Dict.fromEntries()
         );
+        const querySuggestions = pipe(
+            [...props.currQueries, ...[tuple<string, Array<unknown>>('__new__', [])]],
+            List.map(([k,]) => tuple(
+                k, [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer>)),
+            Dict.fromEntries()
+        );
 
         const tagBuilderSupport = props.tagBuilderSupport;
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'filter-form-model', {
@@ -196,7 +204,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             posWindowSizes: [], // TODO
             wPoSList: [], // TODO
             currentAction: 'filter_form',
-            queries: queries, // corpname|filter_id -> query
+            queries, // corpname|filter_id -> query
             useCQLEditor: props.useCQLEditor,
             tagAttr: props.tagAttr,
             widgetArgs: {}, // TODO
@@ -206,6 +214,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 Dict.map(v => false),
             ),
             queryTypes,
+            querySuggestions,
             lposValues: pipe(
                 props.currLposValues,
                 Dict.fromEntries()

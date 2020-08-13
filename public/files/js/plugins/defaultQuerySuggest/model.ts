@@ -28,12 +28,6 @@ import { List, HTTP } from 'cnc-tskit';
 import { map } from 'rxjs/operators';
 
 
-export enum KnownRenderers {
-    MESSAGE = 'custom-message', // TODO do we need this?
-    BASIC = 'basic',
-    ERROR = 'error'
-}
-
 export interface HTTPResponse extends Kontext.AjaxResponse {
     items:Array<{
         renderer:string;
@@ -47,7 +41,11 @@ export interface ModelState {
     isBusy:boolean;
     corpora:Array<string>;
     subcorpus:string;
+
+    // TODO - remove the property as it should be part of QueryFormModelState
+    // also, no caching will be used there
     answers:{[hash:string]:PluginInterfaces.QuerySuggest.SuggestionAnswer};
+    currQueryHash:string;
 }
 
 
@@ -72,7 +70,8 @@ export class Model extends StatelessModel<ModelState> {
                         dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                             name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                             payload: {
-                                answers: data.answers
+                                results: data.results,
+                                value: action.payload.value
                             }
                         });
                     },
@@ -90,6 +89,9 @@ export class Model extends StatelessModel<ModelState> {
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             (state, action) => {
                 state.isBusy = false;
+                state.answers[action.payload.value] = {
+                    results: action.payload.results
+                };
             }
         );
     }
@@ -109,7 +111,7 @@ export class Model extends StatelessModel<ModelState> {
         ).pipe(
             map(
                 data => ({
-                    answers: List.map(
+                    results: List.map(
                         item => ({
                             rendererId: item.renderer,
                             contents: item.contents,

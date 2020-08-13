@@ -22,40 +22,46 @@
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { IActionDispatcher, Bound } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, Dict } from 'cnc-tskit';
 import { Model, ModelState } from './model';
 
 
-export interface Views {
-    UnsupportedRenderer:React.SFC<{data: any}>;
-    ErrorRenderer:React.SFC<{
-        data:{
-            error:string;
-        }
-    }>;
-    BasicRenderer:React.ComponentClass<{}>;
+
+export enum KnownRenderers {
+    BASIC = 'basic',
+    ERROR = 'error',
+    UNSUPPORTED = 'unsupported'
 }
+// TODO write type guards for individual suggestion types
+/*
+function isBasicRendererProps(v:any):v is BasicRendererProps {
+
+}
+*/
+
+export type SuggestionsViews = {[key in KnownRenderers]:React.SFC|React.ComponentClass};
 
 
-export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers) {
+export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers):SuggestionsViews {
 
+    /*
+    TODO
+    interface UnsupportedRendererProps {
 
+    }
 
-    // ------------- <UnsupportedRenderer /> -------------------------------
+    interface BasicRendererProps {
 
-    const UnsupportedRenderer:Views['UnsupportedRenderer'] = (props) => {
-        return (
-            <div className="UnsupportedRenderer">
-                <p className="note"><strong>{he.translate('defaultTD__unsupported_renderer')}</strong></p>
-                <p className="data-label">{he.translate('defaultTD__original_data')}:</p>
-                <pre>{JSON.stringify(props.data)}</pre>
-            </div>
-        );
-    };
+    }
+    */
+
+    const UnsupportedRenderer:React.SFC<{}> = (props) => {
+        return <div>Unsupported renderer (TODO)</div>
+    }
 
     // ------------- <ErrorRenderer /> -------------------------------
 
-    const ErrorRenderer:Views['ErrorRenderer'] = (props) => {
+    const ErrorRenderer:React.SFC<{data:Error|string}> = (props) => {
         return <div className="ErrorRenderer">
             <p>
                 <img className="error-icon"
@@ -66,28 +72,28 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
             </p>
             <p className="gear">
                 <img src={he.createStaticUrl('img/gear.svg')} alt={he.translate('defaultTD__plug_in_error_symbol_alt')}
-                        style={{width: '3em'}} title={props.data.error} />
+                        style={{width: '3em'}} title={`${props.data}`} />
             </p>
         </div>
     };
 
-    // -------------- <BasicRenderer /> ------------------------------
+    // --------------QueryFormModelState <BasicRenderer /> ------------------------------
 
-    const BasicRenderer:React.SFC<ModelState> = (props) => {
+    const BasicRenderer:React.SFC<{data:Array<string>}> = (props) => {
         return <div className="BasicRenderer">
             <ul>
                 {List.map(
                     item => <li>{item}</li>,
-                    props.answers['basic'].answers // TODO just a test
+                    props.data
                 )}
             </ul>
         </div>
     };
 
     return {
-        UnsupportedRenderer: UnsupportedRenderer,
-        ErrorRenderer: ErrorRenderer,
-        BasicRenderer: Bound(BasicRenderer, model)
-    };
+        [KnownRenderers.BASIC]: BasicRenderer,
+        [KnownRenderers.ERROR]: ErrorRenderer,
+        [KnownRenderers.UNSUPPORTED]: UnsupportedRenderer
+    }
 
 }

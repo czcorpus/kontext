@@ -136,7 +136,7 @@ export class FirstFormPage {
                         this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
                             name: GlobalActionName.SwitchCorpus,
                             payload: {
-                                corpora: corpora,
+                                corpora,
                                 subcorpus: subcorpId
                             }
                         });
@@ -259,6 +259,13 @@ export class FirstFormPage {
     }
 
     private attachQueryForm(properties:QueryFormProps, corparchWidget:React.ComponentClass):void {
+
+        const qsuggPlugin = querySuggestPlugin(
+            this.layoutModel.pluginApi()
+        );
+
+        // TODO qsuggPlugin should be a parameter in queryFormInit
+
         const queryFormComponents = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
@@ -329,10 +336,6 @@ export class FirstFormPage {
                 []
             );
             ttAns.queryStorageView = qsPlugin.getWidgetView();
-
-            const qsuggPlugin = querySuggestPlugin(
-                this.layoutModel.pluginApi()
-            );
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,
