@@ -34,6 +34,7 @@ import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
+import { typeGuard } from '../../plugins/defaultQuerySuggest/init';
 
 
 export interface InputModuleArgs {
@@ -912,24 +913,15 @@ export function init({
                                         formType={this.props.formType}/>
                                 : null
                             }
-                            {/* if there are suggestions for this.props.sourceId (= curr corpus input) then show the suggest. widget */}
-
-                            {/* TODO
-                            either
-                            a)
-                            this.props.querySuggestions[this.props.sourceId].map(v => querySuggPlg.createComponent(v.rendererId)}
-                            const MyComponent = createComponent....
-                            return (of map fn) <MyComponent data={typeGuard(v.contents)} />
-                            or b)
-                            createComponent ===> createElement(v.rendererId, v.contents)
-                            (using React.createElement<T>(reactClass, props))
-                            */}
-                            {!this.props.historyVisible && this.props.querySuggestions[this.props.sourceId] && this.props.querySuggestions[this.props.sourceId].length ? 
-                                this.props.querySuggestions[this.props.sourceId].map((v, i) => {
-                                    const QuerySuggestions = this.props.qsuggPlugin.createComponent(v.rendererId);
-                                    return <QuerySuggestions key={i} data={v.contents as unknown} />
-                                }) :
-                                null
+                            {
+                                !this.props.historyVisible &&
+                                this.props.querySuggestions[this.props.sourceId] &&
+                                this.props.querySuggestions[this.props.sourceId].length ? 
+                                    this.props.querySuggestions[this.props.sourceId].map((v, i) => {
+                                        const QuerySuggestions = this.props.qsuggPlugin.createComponent(v.rendererId);
+                                        return <QuerySuggestions key={i} data={typeGuard(v.contents)} />
+                                    }) :
+                                    null
                             }
                             <div className="query-hints">
                                 <BoundQueryHints  />

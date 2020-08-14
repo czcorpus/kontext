@@ -65,9 +65,11 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         return true; // TODO (load data from server)
     }
 
-    createComponent(rendererId:string):React.ComponentClass<{data:unknown}>|React.SFC<{data:unknown}> {
-        // TODO type cast data using type guards from the code above (also
-        // labeled as TODO)
+    createComponent(rendererId:string):React.ComponentClass<{
+        data:unknown|string|Error|Array<string>
+    }>|React.SFC<{
+        data:unknown|string|Error|Array<string>
+    }> {
         switch (rendererId) {
             case KnownRenderers.ERROR:
                 return this.views.error
@@ -78,6 +80,19 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         }
     }
 
+}
+
+
+export function typeGuard(data:unknown):unknown|Error|string|Array<string> {
+    if (typeof data === 'string') {
+        return data as string;
+    } else if (data instanceof Error) {
+        return data as Error;
+    } else if (data instanceof Array && List.every(v => typeof v === 'string', data)) {
+        return data as Array<string>;
+    } else {
+        return data;
+    }
 }
 
 

@@ -56,7 +56,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
     */
 
     const UnsupportedRenderer:React.SFC<{data:unknown}> = (props) => {
-        return <div>Unsupported renderer (TODO)</div>
+        return <div className="suggestion-box">Unsupported renderer (TODO)</div>
     }
 
     // ------------- <ErrorRenderer /> -------------------------------
