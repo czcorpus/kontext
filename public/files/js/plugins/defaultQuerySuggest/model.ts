@@ -71,7 +71,8 @@ export class Model extends StatelessModel<ModelState> {
                             name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                             payload: {
                                 results: data.results,
-                                value: action.payload.value
+                                value: action.payload.value,
+                                sourceId: action.payload.sourceId
                             }
                         });
                     },

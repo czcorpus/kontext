@@ -222,12 +222,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         ),
                         subcorpus: this.pageModel.getConf<string>('usesubcorp'),
                         value: this.state.queries[sourceId],
-                        queryType: this.state.queryTypes[sourceId]
+                        queryType: this.state.queryTypes[sourceId],
+                        sourceId: sourceId
                     }
                 });
             }
         );
-
 
         this.addActionSubtypeHandler<Actions.ToggleQueryHistoryWidget>(
             ActionName.ToggleQueryHistoryWidget,
@@ -295,8 +295,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             action => {
-                // TODO fill in suggestions
                 console.log('we have suggestions: ', action.payload);
+                this.changeState(state => {
+                    state.querySuggestions[action.payload.sourceId] = action.payload.results;
+                });
             }
         );
     }

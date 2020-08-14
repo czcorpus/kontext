@@ -65,7 +65,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         return true; // TODO (load data from server)
     }
 
-    createComponent(rendererId:string):React.ComponentClass|React.SFC {
+    createComponent(rendererId:string):React.ComponentClass<{data:unknown}>|React.SFC<{data:unknown}> {
         // TODO type cast data using type guards from the code above (also
         // labeled as TODO)
         switch (rendererId) {
