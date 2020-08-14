@@ -23,11 +23,10 @@ import json
 class ErrorFrontend(AbstractFrontend):
 
     def __init__(self, conf):
-        super().__init__(conf)
+        super().__init__(conf, 'error')
 
     def export_data(self, ui_lang, data):
         response = super().export_data(ui_lang, data)
-        response.renderer = 'error'
         response.contents = data
         return response
 
@@ -35,10 +34,9 @@ class ErrorFrontend(AbstractFrontend):
 class BasicFrontend(AbstractFrontend):
 
     def __init__(self, conf):
-        super().__init__(conf)
+        super().__init__(conf, 'basic')
 
     def export_data(self, ui_lang, data):
         response = super().export_data(ui_lang, data)
-        response.renderer = 'basic'
         response.contents = json.loads(data)
         return response

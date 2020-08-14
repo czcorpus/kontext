@@ -24,27 +24,42 @@ from typing import List, Dict, Any
 
 
 class AbstractQuerySuggest(abc.ABC):
+    """
+    AbstractQuerySuggest describes a general query suggestion which can be based on part of actual query ('value'),
+    currently written structure/structural attribute or a positional attribute. Also type of the query, involved can be
+    corpora and a subcorpus can used as a flag.
+    """
 
     @abc.abstractmethod
-    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, query: str, p_attr: str, struct: str,
-                         s_attr: str):
+    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
+                         p_attr: str, struct: str, s_attr: str):
+        """
+        note: the 'value' argument does not necessarily mean the whole query as e.g. in case of CQL query
+        the client may send just a parsed value of a structural attribute and we want to provide a suggestion
+        just for that.
+        """
         pass
 
 
 class AbstractBackend(abc.ABC):
+    """
+    AbstractBackends is responsible for fetching actual query suggestion data from
+    a suitable service/storage.
+    """
 
     def __init__(self, ident):
         self._ident = ident
 
     @abc.abstractmethod
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, query: str, p_attr: str, struct: str, s_attr: str):
+    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
+                        p_attr: str, struct: str, s_attr: str):
         pass
 
 
 class Response(object):
     """
     A response as returned by server-side frontend (where server-side
-    frontend receives data from backend).
+    frontend receives data from a respective backend).
     """
 
     def __init__(self, contents: str, renderer: str, heading: str) -> None:
@@ -59,13 +74,21 @@ class Response(object):
 
 
 class AbstractFrontend(abc.ABC):
+    """
+    AbstractFrontend describes properties and functions needed to
+    prepare data for the client-side. It typically exports received
+    data to a JSON-suitable format and it also stores a renderer ID
+    which allows client-side to decide which React component and
+    related code should be involved in data presentation.
+    """
 
-    def __init__(self, conf):
-        pass
+    def __init__(self, conf, renderer):
+        self.query_types = conf.get('queryTypes', [])
+        self.renderer = renderer
 
     @abc.abstractmethod
     def export_data(self, ui_lang, data: Response):
-        return Response(contents='', renderer='', heading='')
+        return Response(contents='', renderer=self.renderer, heading='')
 
 
 class BackendException(Exception):

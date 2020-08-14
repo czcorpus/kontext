@@ -12,11 +12,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from plugins.abstract.query_suggest import AbstractBackend, BackendException
-import http
+from plugins.abstract.query_suggest import AbstractBackend
 import logging
-import urllib
 from typing import List
+from plugins.common.http import HTTPClient
 
 
 class ManateeBackend(AbstractBackend):
@@ -24,8 +23,8 @@ class ManateeBackend(AbstractBackend):
     def __init__(self, conf, ident):
         super().__init__(ident)
 
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, query: str, p_attr: str, struct: str,
-                        s_attr: str):
+    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
+                        p_attr: str, struct: str, s_attr: str):
         return '["foo", "bar", "baz"]'
 
 
@@ -37,37 +36,7 @@ class HTTPBackend(AbstractBackend):
     def __init__(self, conf, ident):
         super().__init__(ident)
         self._conf = conf
-
-    @staticmethod
-    def _is_valid_response(response):
-        return response and (200 <= response.status < 300 or 400 <= response.status < 500)
-
-    @staticmethod
-    def _is_found(response):
-        return 200 <= response.status < 300
-
-    def create_connection(self):
-        if self._conf['ssl']:
-            return http.client.HTTPSConnection(
-                self._conf['server'], port=self._conf['port'], timeout=15)
-        else:
-            return http.client.HTTPConnection(
-                self._conf['server'], port=self._conf['port'], timeout=15)
-
-    def process_response(self, connection):
-        response = connection.getresponse()
-        if self._is_valid_response(response):
-            logging.getLogger(__name__).debug(
-                'HTTP Backend response status: {0}'.format(response.status))
-            return response.read().decode('utf-8'), self._is_found(response)
-        else:
-            raise Exception('Failed to load the data - error {0}'.format(response.status))
-
-    @staticmethod
-    def enc_val(s):
-        if type(s) is str:
-            return urllib.parse.quote(s.encode('utf-8'))
-        return urllib.parse.quote(s)
+        self._client = HTTPClient(server=conf['server'], port=conf['port'], ssl=conf['ssl'])
 
     def get_required_attrs(self):
         if 'posAttrs' in self._conf:
@@ -77,20 +46,9 @@ class HTTPBackend(AbstractBackend):
         else:
             return self._conf.get('attrs', [])
 
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, query: str, p_attr: str, struct: str,
-                        s_attr: str):
-        connection = self.create_connection()
-        try:
-            args = dict(
-                ui_lang=self.enc_val(ui_lang), corpora=[self.enc_val(c) for c in corpora])
-            logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
-
-            try:
-                query_string = self._conf['path'].format(**args)
-            except KeyError as ex:
-                raise BackendException('Failed to build query - value {0} not found'.format(ex))
-
-            connection.request('GET', query_string)
-            return self.process_response(connection)
-        finally:
-            connection.close()
+    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
+                        p_attr: str, struct: str, s_attr: str):
+        args = dict(
+            ui_lang=self.enc_val(ui_lang), corpora=[self.enc_val(c) for c in corpora])
+        logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
+        return self._client.request('GET', self._conf['path'], args)
