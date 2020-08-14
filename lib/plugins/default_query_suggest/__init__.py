@@ -25,12 +25,13 @@ from actions import concordance
 
 
 @exposed(return_type='json')
-def fetch_query_suggestions(self, request):
+def fetch_query_suggestions(_, request):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
-        ans = plg.find_suggestions(request.args.get('ui_lang'), request.args.getlist('corpora'),
-                                   request.args.get('subcorpus'), request.args.get('query'), None, None, None)
+        ans = plg.find_suggestions(ui_lang=request.args.get('ui_lang'), corpora=request.args.getlist('corpora'),
+                                   subcorpus=request.args.get('subcorpus'), value=request.args.get('value'),
+                                   query_type=request.args.get('query_type'), p_attr=None, struct=None, s_attr=None)
     return dict(items=ans)
 
 
@@ -39,21 +40,25 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
     def __init__(self, providers, corparch: plugins.abstract.corpora.AbstractCorporaArchive):
         self._providers = providers
         self._corparch = corparch
-        logging.getLogger(__name__).debug('Query suggest init, providers: {}'.format(self._providers))
 
-    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, query: str, p_attr: str, struct: str,
-                         s_attr: str):
+    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
+                         p_attr: str, struct: str, s_attr: str):
         ans = []
         for ident, provider in self._providers.items():
             backend, frontend = provider
-            resp = backend.find_suggestion(ui_lang, corpora, subcorpus, query, p_attr, struct, s_attr)
+            resp = backend.find_suggestion(ui_lang, corpora, subcorpus, value, query_type, p_attr, struct, s_attr)
             ans.append(frontend.export_data(ui_lang, resp).to_dict())
         return ans
 
     def export(self, plugin_api):
         corpus_info = self._corparch.get_corpus_info(
             plugin_api.user_lang, plugin_api.current_corpus.corpname)
-        return dict(providers=[])
+        query_types = {}
+        for ident, fb in self._providers.items():
+            _, frontend = fb
+            if ident in corpus_info.query_suggest.providers:
+                query_types[ident] = frontend.query_types
+        return dict(query_types=query_types)
 
     def export_actions(self):
         return {concordance.Actions: [fetch_query_suggestions]}

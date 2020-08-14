@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List } from 'cnc-tskit';
+import { List, pipe, Dict } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { init as initView, SuggestionsViews, KnownRenderers } from './view';
@@ -30,6 +30,7 @@ import { QueryType } from '../../models/query/common';
 declare var require:any;
 require('./style.less');
 
+type SupportedQueryTypes = {[frontendId:string]:Array<QueryType>};
 
 /**
  *
@@ -40,7 +41,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
     protected readonly views:SuggestionsViews;
 
-    protected readonly providers:Array<string>;
+    protected readonly providers:Array<{frontendId:string; queryTypes:Array<QueryType>}>;
 
     protected readonly model:Model;
 
@@ -48,13 +49,22 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         pluginApi:IPluginApi,
         views:SuggestionsViews,
         model:Model,
-        providers:Array<string>
+        suppQueryTypes:SupportedQueryTypes
     ) {
         this.pluginApi = pluginApi;
         this.views = views;
         this.model = model;
-        this.providers = providers;
-
+        this.providers = pipe(
+            suppQueryTypes,
+            Dict.toEntries(),
+            List.map(
+                ([frontendId, queryTypes]) => ({
+                    frontendId,
+                    queryTypes
+                })
+            )
+        );
+        console.log('supported query types: ', this.providers);
     }
 
     isActive():boolean {
@@ -62,7 +72,13 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
     }
 
     supportsQueryType(qtype:QueryType):boolean {
-        return true; // TODO (load data from server)
+        return List.some(
+            v => List.some(
+                qt => qt === qtype,
+                v.queryTypes
+            ),
+            this.providers
+        );
     }
 
     createComponent(rendererId:string):React.ComponentClass<{data:unknown}>|React.SFC<{data:unknown}> {
@@ -100,7 +116,7 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
         pluginApi,
         initView(pluginApi.dispatcher(), model, pluginApi.getComponentHelpers()),
         model,
-        pluginApi.getNestedConf<Array<string>>('pluginData', 'query_suggest')
+        pluginApi.getNestedConf<SupportedQueryTypes>('pluginData', 'query_suggest', 'query_types')
     );
 };
 
