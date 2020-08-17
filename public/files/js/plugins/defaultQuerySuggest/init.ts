@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe, Dict } from 'cnc-tskit';
+import { List, pipe, Dict, tuple } from 'cnc-tskit';
 import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
@@ -42,44 +42,22 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
     protected readonly views:SuggestionsViews;
 
-    protected readonly providers:Array<{frontendId:string; queryTypes:Array<QueryType>}>;
+    protected readonly
 
     protected readonly model:Model;
 
     constructor(
         pluginApi:IPluginApi,
         views:SuggestionsViews,
-        model:Model,
-        suppQueryTypes:SupportedQueryTypes
+        model:Model
     ) {
         this.pluginApi = pluginApi;
         this.views = views;
         this.model = model;
-        this.providers = pipe(
-            suppQueryTypes,
-            Dict.toEntries(),
-            List.map(
-                ([frontendId, queryTypes]) => ({
-                    frontendId,
-                    queryTypes
-                })
-            )
-        );
-        console.log('supported query types: ', this.providers);
     }
 
     isActive():boolean {
         return true;
-    }
-
-    supportsQueryType(qtype:QueryType):boolean {
-        return List.some(
-            v => List.some(
-                qt => qt === qtype,
-                v.queryTypes
-            ),
-            this.providers
-        );
     }
 
     createElement(rendererId:string, data:unknown):React.ReactElement {
@@ -111,27 +89,42 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 }
 
 
-const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
+const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi, currQueryTypes) => {
+    const corpora = List.concat(
+        pluginApi.getConf('alignedCorpora'),
+        [pluginApi.getCorpusIdent().id]
+    );
     const model = new Model(
         pluginApi.dispatcher(),
         {
-            corpora: List.concat(
-                pluginApi.getConf('alignedCorpora'),
-                [pluginApi.getCorpusIdent().id]
-            ),
+            corpora,
             subcorpus: pluginApi.getCorpusIdent().usesubcorp,
             uiLang: pluginApi.getConf<string>('uiLang'),
+            providers: pipe(
+                pluginApi.getNestedConf<SupportedQueryTypes>('pluginData', 'query_suggest', 'query_types'),
+                Dict.toEntries(),
+                List.map(
+                    ([frontendId, queryTypes]) => ({
+                        frontendId,
+                        queryTypes
+                    })
+                )
+            ),
             isBusy: false,
             answers: {},
-            currQueryHash: ''
+            currQueryHash: '',
+            queryTypes: pipe(
+                corpora,
+                List.map(item => tuple(item, currQueryTypes[item] || 'iquery')),
+                Dict.fromEntries()
+            )
         },
         pluginApi
     );
     return new DefaultQuerySuggest(
         pluginApi,
         initView(pluginApi.dispatcher(), model, pluginApi.getComponentHelpers()),
-        model,
-        pluginApi.getNestedConf<SupportedQueryTypes>('pluginData', 'query_suggest', 'query_types')
+        model
     );
 };
 

@@ -27,6 +27,7 @@ import { MultiDict } from '../../multidict';
 import { List, HTTP } from 'cnc-tskit';
 import { map } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {
@@ -43,6 +44,8 @@ export interface ModelState {
     corpora:Array<string>;
     subcorpus:string;
     uiLang:string;
+    providers:Array<{frontendId:string; queryTypes:Array<QueryType>}>;
+    queryTypes:{[hash:string]:QueryType};
 
     // TODO - remove the property as it should be part of QueryFormModelState
     // also, no caching will be used there
@@ -59,7 +62,19 @@ export class Model extends StatelessModel<ModelState> {
         super(dispatcher, state);
         this.pluginApi = pluginApi;
 
-        // TODO add action handler to reflect subcorpus change
+        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
+            QueryActionName.QueryInputSelectSubcorp,
+            (state, action) => {
+                state.subcorpus = action.payload.subcorp;
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputSelectType>(
+            QueryActionName.QueryInputSelectType,
+            (state, action) => {
+                state.queryTypes[action.payload.sourceId] = action.payload.queryType;
+            }
+        );
 
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
             PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
@@ -120,6 +135,7 @@ export class Model extends StatelessModel<ModelState> {
         const args = new MultiDict();
         args.set('ui_lang', state.uiLang);
         args.set('corpname', state.corpora[0]);
+        args.set('subcorpus', state.subcorpus);
         args.replace('align', List.slice(1, -1, state.corpora));
         args.set('value', value);
         args.set('query_type', queryType);
@@ -145,6 +161,16 @@ export class Model extends StatelessModel<ModelState> {
                     )
                 })
             )
+        );
+    }
+
+    static supportsQueryType(state:ModelState, qtype:QueryType):boolean {
+        return List.some(
+            v => List.some(
+                qt => qt === qtype,
+                v.queryTypes
+            ),
+            state.providers
         );
     }
 }
