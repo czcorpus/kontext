@@ -477,8 +477,6 @@ export namespace PluginInterfaces {
 
         export interface IPlugin extends BasePlugin {
             createElement(rendererId:string, data:unknown):React.ReactElement;
-            supportsQueryType(qtype:QueryType):boolean;
-
         }
 
         export enum ActionName {
@@ -524,7 +522,7 @@ export namespace PluginInterfaces {
             results:Array<DataAndRenderer>;
         }
 
-        export type Factory = (pluginApi:IPluginApi)=>IPlugin;
+        export type Factory = (pluginApi:IPluginApi, currQueryTypes:{[sourceId:string]:QueryType})=>IPlugin;
     }
 
 }

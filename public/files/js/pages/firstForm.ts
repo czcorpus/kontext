@@ -45,6 +45,7 @@ import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import querySuggestPlugin from 'plugins/querySuggest/init';
+import { QueryType } from '../models/query/common';
 
 
 declare var require:any;
@@ -195,7 +196,7 @@ export class FirstFormPage {
         };
     }
 
-    private initQueryModel():void {
+    private initQueryModel():AjaxResponse.QueryFormArgs {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
         );
@@ -256,12 +257,15 @@ export class FirstFormPage {
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             currQueries: queryFormArgs.curr_queries
         });
+
+        return queryFormArgs;
     }
 
-    private attachQueryForm(properties:QueryFormProps, corparchWidget:React.ComponentClass):void {
+    private attachQueryForm(properties:QueryFormProps, currQueryTypes:{[k:string]:QueryType}, corparchWidget:React.ComponentClass):void {
 
         const qsuggPlugin = querySuggestPlugin(
-            this.layoutModel.pluginApi()
+            this.layoutModel.pluginApi(),
+            currQueryTypes
         );
 
         // TODO qsuggPlugin should be a parameter in queryFormInit
@@ -362,9 +366,9 @@ export class FirstFormPage {
 
             ttAns.allowCorpusSelection = true;
 
-            this.initQueryModel();
+            const queryFormArgs = this.initQueryModel();
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
-            this.attachQueryForm(ttAns, corparchWidget);
+            this.attachQueryForm(ttAns, queryFormArgs.curr_query_types, corparchWidget);
             this.initCorpnameLink();
             const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
             // all the models must be unregistered and components must

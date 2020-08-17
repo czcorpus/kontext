@@ -233,6 +233,7 @@ export function init({
     // ------------------- <TRQueryTypeField /> -----------------------------
 
     const TRQueryTypeField:React.SFC<TRQueryTypeFieldProps> = (props) => {
+
         const handleSelection = (evt) => {
             dispatcher.dispatch<Actions.QueryInputSelectType>({
                 name: ActionName.QueryInputSelectType,
