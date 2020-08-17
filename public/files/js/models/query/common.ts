@@ -298,7 +298,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             action => {
-                console.log('we have suggestions: ', action.payload);
                 this.changeState(state => {
                     state.querySuggestions[action.payload.sourceId] = action.payload.results;
                 });

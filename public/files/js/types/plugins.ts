@@ -476,7 +476,7 @@ export namespace PluginInterfaces {
     export namespace QuerySuggest {
 
         export interface IPlugin extends BasePlugin {
-            createComponent(rendererId:string, data:unknown):[React.ComponentClass<{data:unknown}>|React.SFC<{data:unknown}>, unknown];
+            createElement(rendererId:string, data:unknown):React.ReactElement;
             supportsQueryType(qtype:QueryType):boolean;
 
         }
