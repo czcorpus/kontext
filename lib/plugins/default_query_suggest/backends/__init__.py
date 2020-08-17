@@ -25,7 +25,35 @@ class ManateeBackend(AbstractBackend):
 
     def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
                         p_attr: str, struct: str, s_attr: str):
-        return '["foo", "bar", "baz"]'
+        data = {
+            'a': 'akát',
+            'b': 'blýskavice',
+            'c': 'cílovníci',
+            'd': 'dálava',
+            'e': 'erb',
+            'f': 'Filipíny',
+            'g': 'Grónská zem',
+            'h': 'holubice',
+            'i': 'Ivan',
+            'j': 'jasmín bílý',
+            'k': 'kráková',
+            'l': 'lupíneček',
+            'm': 'mává',
+            'n': 'národ',
+            'o': 'ó náš pán',
+            'p': 'papírníci',
+            'q': 'kvílí orkán',
+            'r': 'rarášek',
+            's': 'sekera',
+            't': 'tón',
+            'u': 'uličník',
+            'v': 'vyvolený',
+            'w': 'Waltrův vůz',
+            'x': 'Xénokratés',
+            'y': 'ý se ztrácí',
+            'z': 'známá žena'
+        }
+        return [data.get(value[-1], '---'), 'a jiné']
 
 
 class HTTPBackend(AbstractBackend):

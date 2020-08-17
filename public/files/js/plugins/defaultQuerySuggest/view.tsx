@@ -62,7 +62,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
     // ------------- <ErrorRenderer /> -------------------------------
 
     const ErrorRenderer:React.SFC<{data:Error|string}> = (props) => {
-        return <div className="ErrorRenderer suggestions-box">
+        return <div className="ErrorRenderer">
             <p>
                 <img className="error-icon"
                         src={he.createStaticUrl('img/error-icon.svg')}
@@ -80,7 +80,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
     // --------------QueryFormModelState <BasicRenderer /> ------------------------------
 
     const BasicRenderer:React.SFC<{data:Array<string>}> = (props) => {
-        return <div className="BasicRenderer suggestions-box">
+        return <div className="BasicRenderer">
             <ul>
                 {List.map(
                     (item, index) => <li key={index}>{item}</li>,

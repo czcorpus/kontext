@@ -916,10 +916,17 @@ export function init({
                                 !this.props.historyVisible &&
                                 this.props.querySuggestions[this.props.sourceId] &&
                                 this.props.querySuggestions[this.props.sourceId].length ?
-                                    this.props.querySuggestions[this.props.sourceId].map((v, i) => {
-                                        const [QuerySuggestions, validatedData] = this.props.qsuggPlugin.createComponent(v.rendererId, v.contents);
-                                        return <QuerySuggestions key={i} data={validatedData} />
-                                    }) :
+                                    <div className="suggestions-box">
+                                        {List.map((v, i) => {
+                                            const [QuerySuggestions, validatedData] = this.props.qsuggPlugin.createComponent(v.rendererId, v.contents);
+                                            return <React.Fragment key={`${v.rendererId}${i}`}>
+                                                <h2>{v.heading}:</h2>
+                                                <QuerySuggestions data={validatedData} />
+                                            </React.Fragment>;
+                                        },
+                                        this.props.querySuggestions[this.props.sourceId]
+                                        )}
+                                    </div> :
                                     null
                             }
                             <div className="query-hints">

@@ -84,11 +84,12 @@ class AbstractFrontend(abc.ABC):
 
     def __init__(self, conf, renderer):
         self.query_types = conf.get('queryTypes', [])
+        self.headings = conf.get('heading', conf.get('ident'))
         self.renderer = renderer
 
     @abc.abstractmethod
     def export_data(self, ui_lang, data: Response):
-        return Response(contents='', renderer=self.renderer, heading='')
+        return Response(contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'))
 
 
 class BackendException(Exception):

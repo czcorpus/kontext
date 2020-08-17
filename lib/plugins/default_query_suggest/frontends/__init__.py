@@ -38,5 +38,6 @@ class BasicFrontend(AbstractFrontend):
 
     def export_data(self, ui_lang, data):
         response = super().export_data(ui_lang, data)
-        response.contents = json.loads(data)
+        response.contents = data
+        response.heading = self.headings.get(ui_lang, '--')
         return response
