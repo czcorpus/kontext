@@ -26,6 +26,7 @@ import { Observable } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP } from 'cnc-tskit';
 import { map } from 'rxjs/operators';
+import { QueryType } from '../../models/query/common';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {
@@ -41,6 +42,7 @@ export interface ModelState {
     isBusy:boolean;
     corpora:Array<string>;
     subcorpus:string;
+    uiLang:string;
 
     // TODO - remove the property as it should be part of QueryFormModelState
     // also, no caching will be used there
@@ -65,7 +67,14 @@ export class Model extends StatelessModel<ModelState> {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.fetchSuggestion(state).subscribe(
+                this.fetchSuggestion(
+                    state,
+                    action.payload.value,
+                    action.payload.queryType,
+                    action.payload.posAttr,
+                    action.payload.struct,
+                    action.payload.structAttr
+                ).subscribe(
                     data => {
                         dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                             name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
@@ -99,10 +108,24 @@ export class Model extends StatelessModel<ModelState> {
 
 
 
-    fetchSuggestion(state:ModelState):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
+    fetchSuggestion(
+        state:ModelState,
+        value:string,
+        queryType:QueryType,
+        posattr:string,
+        struct:string,
+        structAttr:string
+    ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
+
         const args = new MultiDict();
+        args.set('ui_lang', state.uiLang);
         args.set('corpname', state.corpora[0]);
         args.replace('align', List.slice(1, -1, state.corpora));
+        args.set('value', value);
+        args.set('query_type', queryType);
+        args.set('posattr', posattr);
+        args.set('struct', struct);
+        args.set('struct_attr', structAttr);
 
         return this.pluginApi.ajax$<HTTPResponse>(
             HTTP.Method.GET,

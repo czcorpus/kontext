@@ -223,6 +223,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         subcorpus: this.pageModel.getConf<string>('usesubcorp'),
                         value: this.state.queries[sourceId],
                         queryType: this.state.queryTypes[sourceId],
+                        posAttr: undefined,
+                        struct: undefined,
+                        structAttr: undefined,
                         sourceId: sourceId
                     }
                 });

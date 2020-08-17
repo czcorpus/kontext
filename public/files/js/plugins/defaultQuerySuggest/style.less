@@ -1,18 +1,47 @@
 @import "../../../css/shared/globals.less";
 
 .suggestions-box {
+
     min-width: 25em;
     max-width: 30em;
     position: absolute;
     border: 1px solid @color-light-frame;
     background-color: #FFFFFF;
     box-shadow: @portal-box-shadow;
-    padding: 0;
+    padding: 0.7em 0.3em;
+
+    h2 {
+        margin: 0;
+        font-size: 1.1em;
+        font-weight: normal;
+        color: @color-logo-pink;
+    }
 
     li {
         padding: 5px 8px;
         border-radius: @border-radius-default;
         color: #999999;
         overflow: hidden;
+    }
+
+    .ErrorRenderer {
+
+        img.error-icon {
+            display: inline-block;
+            vertical-align: middle;
+            width: 1.2em;
+            margin-right: 0.4em;
+        }
+
+        p.gear {
+            text-align: center;
+        }
+    }
+
+    .BasicRenderer {
+        ul {
+            margin: 0;
+            padding: 0;
+        }
     }
 }

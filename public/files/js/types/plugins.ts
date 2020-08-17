@@ -493,6 +493,9 @@ export namespace PluginInterfaces {
                 queryType:QueryType;
                 corpora:Array<string>;
                 subcorpus:string|undefined;
+                posAttr:string|undefined;
+                struct:string|undefined;
+                structAttr:string|undefined;
                 sourceId:string;
             }> {
                 name: ActionName.AskSuggestions

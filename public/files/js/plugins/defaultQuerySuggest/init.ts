@@ -123,6 +123,7 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
                 [pluginApi.getCorpusIdent().id]
             ),
             subcorpus: pluginApi.getCorpusIdent().usesubcorp,
+            uiLang: pluginApi.getConf<string>('uiLang'),
             isBusy: false,
             answers: {},
             currQueryHash: ''
