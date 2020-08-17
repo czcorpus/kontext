@@ -918,10 +918,9 @@ export function init({
                                 this.props.querySuggestions[this.props.sourceId].length ?
                                     <div className="suggestions-box">
                                         {List.map((v, i) => {
-                                            const [QuerySuggestions, validatedData] = this.props.qsuggPlugin.createComponent(v.rendererId, v.contents);
                                             return <React.Fragment key={`${v.rendererId}${i}`}>
                                                 <h2>{v.heading}:</h2>
-                                                <QuerySuggestions data={validatedData} />
+                                                {this.props.qsuggPlugin.createElement(v.rendererId, v.contents)}
                                             </React.Fragment>;
                                         },
                                         this.props.querySuggestions[this.props.sourceId]

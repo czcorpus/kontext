@@ -21,9 +21,9 @@
 
 import * as React from 'react';
 import { Kontext } from '../../types/common';
-import { IActionDispatcher, Bound } from 'kombo';
-import { List, Dict } from 'cnc-tskit';
-import { Model, ModelState } from './model';
+import { IActionDispatcher } from 'kombo';
+import { List } from 'cnc-tskit';
+import { Model } from './model';
 
 
 
@@ -32,36 +32,38 @@ export enum KnownRenderers {
     ERROR = 'error',
     UNSUPPORTED = 'unsupported'
 }
-// TODO write type guards for individual suggestion types
-/*
-function isBasicRendererProps(v:any):v is BasicRendererProps {
 
+
+export interface BasicRendererProps {
+    data:Array<string>;
 }
-*/
 
-export type SuggestionsViews = {[key in KnownRenderers]:React.SFC<{data:unknown}>|React.ComponentClass<{data:unknown}>};
+export interface ErrorRendererProps {
+    data:Error|string;
+}
+
+export interface UnsupportedRendererProps {
+    data:unknown;
+}
+
+
+export interface SuggestionsViews {
+    [KnownRenderers.BASIC]:React.SFC<BasicRendererProps>;
+    [KnownRenderers.ERROR]:React.SFC<ErrorRendererProps>;
+    [KnownRenderers.UNSUPPORTED]:React.SFC<UnsupportedRendererProps>;
+}
 
 
 export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers):SuggestionsViews {
 
-    /*
-    TODO
-    interface UnsupportedRendererProps {
 
-    }
-
-    interface BasicRendererProps {
-
-    }
-    */
-
-    const UnsupportedRenderer:React.SFC<{data:unknown}> = (props) => {
+    const UnsupportedRenderer:React.SFC<UnsupportedRendererProps> = (props) => {
         return <div className="suggestion-box">Unsupported renderer (TODO)</div>
     }
 
     // ------------- <ErrorRenderer /> -------------------------------
 
-    const ErrorRenderer:React.SFC<{data:Error|string}> = (props) => {
+    const ErrorRenderer:React.SFC<ErrorRendererProps> = (props) => {
         return <div className="ErrorRenderer">
             <p>
                 <img className="error-icon"
@@ -79,7 +81,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
 
     // --------------QueryFormModelState <BasicRenderer /> ------------------------------
 
-    const BasicRenderer:React.SFC<{data:Array<string>}> = (props) => {
+    const BasicRenderer:React.SFC<BasicRendererProps> = (props) => {
         return <div className="BasicRenderer">
             <ul>
                 {List.map(

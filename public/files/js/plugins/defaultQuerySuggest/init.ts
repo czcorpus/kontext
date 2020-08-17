@@ -20,6 +20,7 @@
  */
 
 import { List, pipe, Dict } from 'cnc-tskit';
+import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { init as initView, SuggestionsViews, KnownRenderers } from './view';
@@ -81,26 +82,22 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         );
     }
 
-    createComponent(rendererId:string, data:unknown):[
-        React.ComponentClass<{data:unknown|string|Error|Array<string>}>|
-        React.SFC<{data:unknown|string|Error|Array<string>}>,
-        unknown|string|Error|Array<string>
-    ] {
+    createElement(rendererId:string, data:unknown):React.ReactElement {
         switch (rendererId) {
             case KnownRenderers.ERROR:
                 if (this.errorTypeGuard(data)) {
-                    return [this.views.error, data];
+                    return createElement(this.views.error, {data});
                 }
             break;
             case KnownRenderers.BASIC:
                 if (this.basicTypeGuard(data)) {
-                    return [this.views.basic, data];
+                    return createElement(this.views.basic, {data});
                 }
             break;
             default:
-                return [this.views.unsupported, data];
+                return createElement(this.views.unsupported, {data});
         }
-        return [this.views.error, `Invalid data for the ${rendererId} frontend`];
+        return createElement(this.views.error, {data: `Invalid data for the ${rendererId} frontend`});
     }
 
     errorTypeGuard(data:unknown):data is Error {
