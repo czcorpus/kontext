@@ -75,7 +75,10 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
             default:
                 return createElement(this.views.unsupported, {data});
         }
-        return createElement(this.views.error, {data: `Invalid data for the ${rendererId} frontend`});
+        return createElement(
+            this.views.error,
+            {data: `Invalid data for the ${rendererId} frontend`}
+        );
     }
 
     errorTypeGuard(data:unknown):data is Error {
@@ -111,8 +114,7 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi, currQueryTypes)
                 )
             ),
             isBusy: false,
-            answers: {},
-            currQueryHash: '',
+            cache: [],
             queryTypes: pipe(
                 corpora,
                 List.map(item => tuple(item, currQueryTypes[item] || 'iquery')),

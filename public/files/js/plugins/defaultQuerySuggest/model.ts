@@ -22,9 +22,9 @@
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { Observable } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
-import { List, HTTP } from 'cnc-tskit';
+import { List, HTTP, tuple } from 'cnc-tskit';
 import { map } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
@@ -46,15 +46,13 @@ export interface ModelState {
     uiLang:string;
     providers:Array<{frontendId:string; queryTypes:Array<QueryType>}>;
     queryTypes:{[hash:string]:QueryType};
-
-    // TODO - remove the property as it should be part of QueryFormModelState
-    // also, no caching will be used there
-    answers:{[hash:string]:PluginInterfaces.QuerySuggest.SuggestionAnswer};
-    currQueryHash:string;
+    cache:Array<[string, PluginInterfaces.QuerySuggest.SuggestionAnswer]>;
 }
 
 
 export class Model extends StatelessModel<ModelState> {
+
+    private readonly CACHE_SIZE = 100;
 
     private readonly pluginApi:IPluginApi;
 
@@ -82,31 +80,48 @@ export class Model extends StatelessModel<ModelState> {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.fetchSuggestion(
-                    state,
-                    action.payload.value,
-                    action.payload.queryType,
-                    action.payload.posAttr,
-                    action.payload.struct,
-                    action.payload.structAttr
-                ).subscribe(
-                    data => {
-                        dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                            name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
-                            payload: {
-                                results: data.results,
-                                value: action.payload.value,
-                                sourceId: action.payload.sourceId
-                            }
-                        });
-                    },
-                    err => {
-                        dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                            name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
-                            error: err
-                        });
-                    }
-                )
+                const cacheId = List.findIndex(
+                    v => v[0] === `${action.payload.sourceId}-${action.payload.value}`,
+                    state.cache
+                );
+
+                if (cacheId > -1) {
+                    dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                        name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                        payload: {
+                            results: state.cache[cacheId][1].results,
+                            value: action.payload.value,
+                            sourceId: action.payload.sourceId
+                        }
+                    });
+
+                } else {
+                    this.fetchSuggestion(
+                        state,
+                        action.payload.value,
+                        action.payload.queryType,
+                        action.payload.posAttr,
+                        action.payload.struct,
+                        action.payload.structAttr
+                    ).subscribe(
+                        data => {
+                            dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                                name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                                payload: {
+                                    results: data.results,
+                                    value: action.payload.value,
+                                    sourceId: action.payload.sourceId
+                                }
+                            });
+                        },
+                        err => {
+                            dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                                name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                                error: err
+                            });
+                        }
+                    )
+                }
             }
         );
 
@@ -114,16 +129,28 @@ export class Model extends StatelessModel<ModelState> {
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             (state, action) => {
                 state.isBusy = false;
-                state.answers[action.payload.value] = {
-                    results: action.payload.results
-                };
+                if (action.error === undefined){
+                    const cacheId = List.findIndex(
+                        v => v[0] === `${action.payload.sourceId}-${action.payload.value}`,
+                        state.cache
+                    );
+
+                    if (cacheId === -1) {
+                        state.cache.push([
+                            `${action.payload.sourceId}-${action.payload.value}`,
+                            {results: action.payload.results}
+                        ]);
+                        if (state.cache.length > this.CACHE_SIZE) {
+                            state.cache = List.tail(state.cache);
+                        }
+                    }
+                }
             }
         );
     }
 
 
-
-    fetchSuggestion(
+    private fetchSuggestion(
         state:ModelState,
         value:string,
         queryType:QueryType,
@@ -131,7 +158,6 @@ export class Model extends StatelessModel<ModelState> {
         struct:string,
         structAttr:string
     ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
-
         const args = new MultiDict();
         args.set('ui_lang', state.uiLang);
         args.set('corpname', state.corpora[0]);
