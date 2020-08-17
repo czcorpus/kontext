@@ -81,17 +81,34 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         );
     }
 
-    createComponent(rendererId:string):React.ComponentClass<{data:unknown}>|React.SFC<{data:unknown}> {
-        // TODO type cast data using type guards from the code above (also
-        // labeled as TODO)
+    createComponent(rendererId:string, data:unknown):[
+        React.ComponentClass<{data:unknown|string|Error|Array<string>}>|
+        React.SFC<{data:unknown|string|Error|Array<string>}>,
+        unknown|string|Error|Array<string>
+    ] {
         switch (rendererId) {
             case KnownRenderers.ERROR:
-                return this.views.error
+                if (this.errorTypeGuard(data)) {
+                    return [this.views.error, data];
+                }
+            break;
             case KnownRenderers.BASIC:
-                return this.views.basic
+                if (this.basicTypeGuard(data)) {
+                    return [this.views.basic, data];
+                }
+            break;
             default:
-                return this.views.unsupported;
+                return [this.views.unsupported, data];
         }
+        return [this.views.error, `Invalid data for the ${rendererId} frontend`];
+    }
+
+    errorTypeGuard(data:unknown):data is Error {
+        return data instanceof Error || typeof data === 'string';
+    }
+
+    basicTypeGuard(data:unknown):data is Array<string> {
+        return data instanceof Array && List.every(v => typeof v === 'string', data);
     }
 
 }
