@@ -284,7 +284,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ),
             contextFormVisible: false,
             textTypesFormVisible: false,
-            historyVisible: false
+            historyVisible: false,
+            suggestionsVisible: false
         });
         this.syncInitialArgs = syncInitialArgs;
 

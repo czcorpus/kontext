@@ -311,7 +311,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             contextFormVisible: false,
             textTypesFormVisible: false,
-            historyVisible: false
+            historyVisible: false,
+            suggestionsVisible: false
         });
         this.setUserValues(this.state, props);
 
