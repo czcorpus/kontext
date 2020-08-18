@@ -21,10 +21,10 @@
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { Kontext } from '../../types/common';
-import { StatelessModel, IActionDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
-import { List, HTTP, tuple } from 'cnc-tskit';
+import { List, HTTP, Ident, Dict } from 'cnc-tskit';
 import { map } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
@@ -38,14 +38,12 @@ export interface HTTPResponse extends Kontext.AjaxResponse {
     }>;
 }
 
-
 export interface ModelState {
     isBusy:boolean;
-    corpora:Array<string>;
-    subcorpus:string;
     uiLang:string;
     providers:Array<{frontendId:string; queryTypes:Array<QueryType>}>;
-    queryTypes:{[hash:string]:QueryType};
+    suggestionArgs:{[sourceId:string]:PluginInterfaces.QuerySuggest.SuggestionArgs};
+    activeSourceId:string;
     cache:Array<[string, PluginInterfaces.QuerySuggest.SuggestionAnswer]>;
 }
 
@@ -63,14 +61,33 @@ export class Model extends StatelessModel<ModelState> {
         this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
             QueryActionName.QueryInputSelectSubcorp,
             (state, action) => {
-                state.subcorpus = action.payload.subcorp;
+                state.suggestionArgs = Dict.map(
+                    v => ({...v, subcorpus: action.payload.subcorp}),
+                    state.suggestionArgs
+                );
+            },
+            (state, action, dispatch) => {
+                if (state.activeSourceId) {
+                    this.loadSuggestions(
+                        state,
+                        state.suggestionArgs[state.activeSourceId],
+                        dispatch
+                    );
+                }
             }
         );
 
         this.addActionHandler<QueryActions.QueryInputSelectType>(
             QueryActionName.QueryInputSelectType,
             (state, action) => {
-                state.queryTypes[action.payload.sourceId] = action.payload.queryType;
+                const currArgs = state.suggestionArgs[action.payload.sourceId];
+                if (currArgs) {
+                    currArgs.queryType = action.payload.queryType;
+                }
+            },
+            (state, action, dispatch) => {
+                const currArgs = state.suggestionArgs[action.payload.sourceId];
+                this.loadSuggestions(state, currArgs, dispatch);
             }
         );
 
@@ -78,50 +95,11 @@ export class Model extends StatelessModel<ModelState> {
             PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
             (state, action) => {
                 state.isBusy = true;
+                state.suggestionArgs[action.payload.sourceId] = {...action.payload};
+                state.activeSourceId = action.payload.sourceId;
             },
             (state, action, dispatch) => {
-                const cacheId = List.findIndex(
-                    v => v[0] === `${action.payload.sourceId}-${action.payload.value}`,
-                    state.cache
-                );
-
-                if (cacheId > -1) {
-                    dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                        name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
-                        payload: {
-                            results: state.cache[cacheId][1].results,
-                            value: action.payload.value,
-                            sourceId: action.payload.sourceId
-                        }
-                    });
-
-                } else {
-                    this.fetchSuggestion(
-                        state,
-                        action.payload.value,
-                        action.payload.queryType,
-                        action.payload.posAttr,
-                        action.payload.struct,
-                        action.payload.structAttr
-                    ).subscribe(
-                        data => {
-                            dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                                name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
-                                payload: {
-                                    results: data.results,
-                                    value: action.payload.value,
-                                    sourceId: action.payload.sourceId
-                                }
-                            });
-                        },
-                        err => {
-                            dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                                name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
-                                error: err
-                            });
-                        }
-                    )
-                }
+                this.loadSuggestions(state, action.payload, dispatch);
             }
         );
 
@@ -129,45 +107,110 @@ export class Model extends StatelessModel<ModelState> {
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             (state, action) => {
                 state.isBusy = false;
-                if (action.error === undefined){
-                    const cacheId = List.findIndex(
-                        v => v[0] === `${action.payload.sourceId}-${action.payload.value}`,
+                if (!action.error) {
+                    const cacheIdx = List.findIndex(
+                        ([hash,]) => hash === this.createSuggestionHash(action.payload),
                         state.cache
                     );
 
-                    if (cacheId === -1) {
+                    if (cacheIdx === -1) {
                         state.cache.push([
-                            `${action.payload.sourceId}-${action.payload.value}`,
+                            this.createSuggestionHash(action.payload),
                             {results: action.payload.results}
                         ]);
                         if (state.cache.length > this.CACHE_SIZE) {
                             state.cache = List.tail(state.cache);
                         }
+
+                    } else {
+                        const item = state.cache.splice(cacheIdx, 1);
+                        state.cache.push(item[0]);
                     }
                 }
             }
         );
     }
 
+    private createSuggestionHash(args:PluginInterfaces.QuerySuggest.SuggestionArgs):string {
+        return Ident.hashCode(
+            args.corpora + args.posAttr + args.queryType + args.sourceId +
+            args.struct + args.structAttr + args.subcorpus + args.value + args.valueType);
+    }
 
-    private fetchSuggestion(
+    private loadSuggestions(
         state:ModelState,
-        value:string,
-        queryType:QueryType,
-        posattr:string,
-        struct:string,
-        structAttr:string
+        args:PluginInterfaces.QuerySuggest.SuggestionArgs,
+        dispatch:SEDispatcher
+
+    ):void {
+        if (Model.supportsQueryType(state, args.queryType)) {
+            this.fetchSuggestions(
+                state,
+                args
+
+            ).subscribe(
+                data => {
+                    dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                        name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                        payload: {
+                            results: data.results,
+                            ...args
+                        }
+                    });
+                },
+                err => {
+                    dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                        name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                        error: err
+                    });
+                }
+            );
+
+        } else {
+            dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                payload: {
+                    results: [],
+                    ...args
+                }
+            });
+        }
+    }
+
+
+    private fetchSuggestions(
+        state:ModelState,
+        suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs
+
     ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
-        const args = new MultiDict();
+        const cacheIdx = List.findIndex(
+            ([key,]) => key === this.createSuggestionHash(suggArgs),
+            state.cache
+        );
+        if (cacheIdx > -1) {
+            return rxOf(state.cache[cacheIdx][1]);
+        }
+
+        const args = new MultiDict<{
+            ui_lang:string;
+            corpname:string;
+            subcorpus:string;
+            align:string;
+            value:string;
+            query_type:string;
+            posattr:string;
+            struct:string;
+            struct_attr:string;
+        }>();
         args.set('ui_lang', state.uiLang);
-        args.set('corpname', state.corpora[0]);
-        args.set('subcorpus', state.subcorpus);
-        args.replace('align', List.slice(1, -1, state.corpora));
-        args.set('value', value);
-        args.set('query_type', queryType);
-        args.set('posattr', posattr);
-        args.set('struct', struct);
-        args.set('struct_attr', structAttr);
+        args.set('corpname', List.head(suggArgs.corpora));
+        args.set('subcorpus', suggArgs.subcorpus);
+        args.replace('align', List.tail(suggArgs.corpora));
+        args.set('value', suggArgs.value);
+        args.set('query_type', suggArgs.queryType);
+        args.set('posattr', suggArgs.posAttr);
+        args.set('struct', suggArgs.struct);
+        args.set('struct_attr', suggArgs.structAttr);
 
         return this.pluginApi.ajax$<HTTPResponse>(
             HTTP.Method.GET,

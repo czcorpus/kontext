@@ -484,26 +484,31 @@ export namespace PluginInterfaces {
             SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED'
         }
 
+        export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';
+
+        export interface SuggestionArgs {
+            sourceId:string;
+            value:string;
+            valueType:SuggestionValueType;
+            queryType:QueryType;
+            corpora:Array<string>;
+            subcorpus:string|undefined;
+            posAttr:string|undefined;
+            struct:string|undefined;
+            structAttr:string|undefined;
+        }
+
+        export interface SuggestionReturn extends SuggestionArgs {
+            results:Array<DataAndRenderer>;
+        }
+
         export namespace Actions {
 
-            export interface AskSuggestions extends Action<{
-                value:string;
-                queryType:QueryType;
-                corpora:Array<string>;
-                subcorpus:string|undefined;
-                posAttr:string|undefined;
-                struct:string|undefined;
-                structAttr:string|undefined;
-                sourceId:string;
-            }> {
+            export interface AskSuggestions extends Action<SuggestionArgs> {
                 name: ActionName.AskSuggestions
             }
 
-            export interface SuggestionsReceived extends Action<{
-                results:Array<DataAndRenderer>;
-                value:string;
-                sourceId:string;  // (sourceId = e.g. a corpus id, or a filter op. id)
-            }> {
+            export interface SuggestionsReceived extends Action<SuggestionReturn> {
                 name: ActionName.SuggestionsReceived
             }
 
@@ -522,7 +527,7 @@ export namespace PluginInterfaces {
             results:Array<DataAndRenderer>;
         }
 
-        export type Factory = (pluginApi:IPluginApi, currQueryTypes:{[sourceId:string]:QueryType})=>IPlugin;
+        export type Factory = (pluginApi:IPluginApi)=>IPlugin;
     }
 
 }
