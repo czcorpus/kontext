@@ -476,19 +476,52 @@ export function init({
         qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
         querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
         sourceId:string;
+        formType:QueryFormType;
 
     }> = (props) => {
-        return <div className="suggestions-box">
-            {List.map((v, i) =>
-                {
-                    return <React.Fragment key={`${v.rendererId}${i}`}>
-                        <h2>{v.heading}:</h2>
-                        {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
-                    </React.Fragment>;
-                },
-                props.querySuggestions[props.sourceId]
-            )}
-        </div>
+
+        const handleKeyDown = (evt:React.KeyboardEvent) => {
+            if (evt.keyCode === Keyboard.Code.ESC && !evt.altKey && !evt.ctrlKey) {
+                dispatcher.dispatch<Actions.HideQuerySuggestionWidget>({
+                    name: ActionName.HideQuerySuggestionWidget,
+                    payload: {
+                        formType: props.formType
+                    }
+                });
+            }
+        };
+
+        const handleBlur = () => {
+            dispatcher.dispatch<Actions.HideQuerySuggestionWidget>({
+                name: ActionName.HideQuerySuggestionWidget,
+                payload: {
+                    formType: props.formType
+                }
+            });
+        };
+
+        const ref = React.useRef<HTMLDivElement>();
+
+        React.useEffect(() => {
+            if (ref.current) {
+                ref.current.focus();
+            }
+        });
+
+        return (
+            <div className="suggestions-box" tabIndex={0} ref={ref} onKeyDown={handleKeyDown}
+                    onBlur={handleBlur}>
+                {List.map(
+                    (v, i) => (
+                        <React.Fragment key={`${v.rendererId}${i}`}>
+                            <h2>{v.heading}:</h2>
+                            {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
+                        </React.Fragment>
+                    ),
+                    props.querySuggestions[props.sourceId]
+                )}
+            </div>
+        );
     };
 
     // ------------------- <KeyboardWidget /> --------------------------------
@@ -941,7 +974,8 @@ export function init({
                                     <SuggestionsWidget
                                         qsuggPlugin={this.props.qsuggPlugin}
                                         querySuggestions={this.props.querySuggestions}
-                                        sourceId={this.props.sourceId} />
+                                        sourceId={this.props.sourceId}
+                                        formType={this.props.formType} />
                                     : null
                             }
                             <div className="query-hints">
