@@ -470,6 +470,27 @@ export function init({
         );
     };
 
+    // ------------------- <SuggestionsWidget /> -----------------------------
+
+    const SuggestionsWidget:React.SFC<{
+        qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+        querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
+        sourceId:string;
+
+    }> = (props) => {
+        return <div className="suggestions-box">
+            {List.map((v, i) =>
+                {
+                    return <React.Fragment key={`${v.rendererId}${i}`}>
+                        <h2>{v.heading}:</h2>
+                        {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
+                    </React.Fragment>;
+                },
+                props.querySuggestions[props.sourceId]
+            )}
+        </div>
+    };
+
     // ------------------- <KeyboardWidget /> --------------------------------
 
     const KeyboardWidget:React.SFC<{
@@ -914,20 +935,14 @@ export function init({
                                 : null
                             }
                             {
-                                !this.props.historyVisible &&
+                                !this.props.historyVisible && this.props.suggestionsVisible &&
                                 this.props.querySuggestions[this.props.sourceId] &&
                                 this.props.querySuggestions[this.props.sourceId].length ?
-                                    <div className="suggestions-box">
-                                        {List.map((v, i) => {
-                                            return <React.Fragment key={`${v.rendererId}${i}`}>
-                                                <h2>{v.heading}:</h2>
-                                                {this.props.qsuggPlugin.createElement(v.rendererId, v.contents)}
-                                            </React.Fragment>;
-                                        },
-                                        this.props.querySuggestions[this.props.sourceId]
-                                        )}
-                                    </div> :
-                                    null
+                                    <SuggestionsWidget
+                                        qsuggPlugin={this.props.qsuggPlugin}
+                                        querySuggestions={this.props.querySuggestions}
+                                        sourceId={this.props.sourceId} />
+                                    : null
                             }
                             <div className="query-hints">
                                 <BoundQueryHints  />

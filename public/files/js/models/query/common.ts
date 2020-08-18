@@ -171,6 +171,8 @@ export interface QueryFormModelState {
 
     historyVisible:boolean;
 
+    suggestionsVisible:boolean;
+
 }
 
 /**
@@ -229,7 +231,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         posAttr: undefined,
                         struct: undefined,
                         structAttr: undefined,
-                        sourceId: sourceId
+                        sourceId
                     }
                 });
             }
@@ -241,6 +243,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     state.historyVisible = !state.historyVisible;
+                    state.suggestionsVisible = false;
                 });
             }
         );
@@ -303,6 +306,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     state.querySuggestions[action.payload.sourceId] = action.payload.results;
+                    state.suggestionsVisible = state.historyVisible ? false : true;
                 });
             }
         );
