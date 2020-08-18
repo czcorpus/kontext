@@ -248,6 +248,16 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
+        this.addActionSubtypeHandler<Actions.HideQuerySuggestionWidget>(
+            ActionName.HideQuerySuggestionWidget,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.suggestionsVisible = false;
+                });
+            }
+        )
+
         this.addActionSubtypeHandler<Actions.SetActiveInputWidget>(
             ActionName.SetActiveInputWidget,
             action => action.payload.formType === this.state.formType,
@@ -307,7 +317,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     if (action.error === undefined) {
                         state.querySuggestions[action.payload.sourceId] = action.payload.results;
-                        state.suggestionsVisible = state.historyVisible ? false : true;
+                        state.suggestionsVisible = true;
+                        state.historyVisible = false;
 
                     } else {
                         state.querySuggestions = {};
