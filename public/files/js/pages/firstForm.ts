@@ -264,8 +264,6 @@ export class FirstFormPage {
             this.layoutModel.pluginApi()
         );
 
-        // TODO qsuggPlugin should be a parameter in queryFormInit
-
         const queryFormComponents = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),

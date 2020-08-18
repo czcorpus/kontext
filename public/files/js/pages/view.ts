@@ -74,11 +74,6 @@ import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
 import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
-import tagHelperPlugin from 'plugins/taghelper/init';
-import queryStoragePlugin from 'plugins/queryStorage/init';
-import syntaxViewerInit from 'plugins/syntaxViewer/init';
-import tokenConnectInit from 'plugins/tokenConnect/init';
-import kwicConnectInit from 'plugins/kwicConnect/init';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
 import { Actions, ActionName } from '../models/concordance/actions';
 import { QueryType } from '../models/query/common';
@@ -89,6 +84,12 @@ import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
     from '../models/query/sort/common';
 import { MultiLevelConcSortModel } from '../models/query/sort/multi';
 import { PluginName } from '../app/plugin';
+import tagHelperPlugin from 'plugins/taghelper/init';
+import queryStoragePlugin from 'plugins/queryStorage/init';
+import syntaxViewerInit from 'plugins/syntaxViewer/init';
+import tokenConnectInit from 'plugins/tokenConnect/init';
+import kwicConnectInit from 'plugins/kwicConnect/init';
+import querySuggestPlugin from 'plugins/querySuggest/init';
 
 
 declare var require:any;
@@ -400,7 +401,7 @@ export class ViewPage {
     /**
      *
      */
-    private initQueryForm():void {
+    private initQueryForm(querySuggest:PluginInterfaces.QuerySuggest.IPlugin):void {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
         );
@@ -488,11 +489,11 @@ export class ViewPage {
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             queryContextModel: this.queryModels.queryContextModel,
             cqlEditorModel: this.queryModels.cqlEditorModel,
-            qsuggPlugin: null
+            qsuggPlugin: querySuggest
         });
     }
 
-    private initFilterForm(firstHitsModel:FirstHitsModel):void {
+    private initFilterForm(querySuggest:PluginInterfaces.QuerySuggest.IPlugin, firstHitsModel:FirstHitsModel):void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
         );
@@ -547,17 +548,17 @@ export class ViewPage {
             this.concFormsInitialArgs.filter
         );
 
-        this.filterFormViews = filterFormInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.queryModels.filterModel,
-            this.queryModels.queryHintModel,
-            this.queryModels.withinBuilderModel,
-            this.queryModels.virtualKeyboardModel,
+        this.filterFormViews = filterFormInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            filterModel: this.queryModels.filterModel,
+            queryHintModel: this.queryModels.queryHintModel,
+            withinBuilderModel: this.queryModels.withinBuilderModel,
+            virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             firstHitsModel,
-            this.queryModels.cqlEditorModel,
-            null
-        );
+            cqlEditorModel: this.queryModels.cqlEditorModel,
+            querySuggest
+        });
     }
 
     private initSortForm():void {
@@ -1114,9 +1115,10 @@ export class ViewPage {
                 []
             );
             this.setupHistoryOnPopState();
-            this.initQueryForm();
+            const querySuggPlg = querySuggestPlugin(this.layoutModel.pluginApi());
+            this.initQueryForm(querySuggPlg);
             this.initFirsthitsForm();
-            this.initFilterForm(this.queryModels.firstHitsModel);
+            this.initFilterForm(querySuggPlg, this.queryModels.firstHitsModel);
             this.initSortForm();
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);
