@@ -315,9 +315,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             action => {
                 this.changeState(state => {
-                    state.querySuggestions[action.payload.sourceId] = action.payload.results;
-                    state.suggestionsVisible = true;
-                    state.historyVisible = false;
+                    if (action.error === undefined) {
+                        state.querySuggestions[action.payload.sourceId] = action.payload.results;
+                        state.suggestionsVisible = true;
+                        state.historyVisible = false;
+
+                    } else {
+                        state.querySuggestions = {};
+                        state.suggestionsVisible = false;
+                    }
                 });
             }
         );
