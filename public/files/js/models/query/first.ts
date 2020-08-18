@@ -152,8 +152,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     subcorpList:Array<Kontext.SubcorpListItem>;
 
-    currentSubcorp:string;
-
     origSubcorpName:string;
 
     isForeignSubcorpus:boolean;

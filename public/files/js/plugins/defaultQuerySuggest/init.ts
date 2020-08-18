@@ -92,7 +92,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 }
 
 
-const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi, currQueryTypes) => {
+const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
     const corpora = List.concat(
         pluginApi.getConf('alignedCorpora'),
         [pluginApi.getCorpusIdent().id]
@@ -100,8 +100,6 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi, currQueryTypes)
     const model = new Model(
         pluginApi.dispatcher(),
         {
-            corpora,
-            subcorpus: pluginApi.getCorpusIdent().usesubcorp,
             uiLang: pluginApi.getConf<string>('uiLang'),
             providers: pipe(
                 pluginApi.getNestedConf<SupportedQueryTypes>('pluginData', 'query_suggest', 'query_types'),
@@ -115,11 +113,8 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi, currQueryTypes)
             ),
             isBusy: false,
             cache: [],
-            queryTypes: pipe(
-                corpora,
-                List.map(item => tuple(item, currQueryTypes[item] || 'iquery')),
-                Dict.fromEntries()
-            )
+            suggestionArgs: {},
+            activeSourceId: null
         },
         pluginApi
     );

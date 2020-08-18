@@ -141,6 +141,8 @@ export interface QueryFormModelState {
 
     currentAction:string;
 
+    currentSubcorp:string;
+
     queries:{[sourceId:string]:string}; // corpname|filter_id -> query
 
     queryTypes:{[sourceId:string]:QueryType};
@@ -220,8 +222,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             this.pageModel.getConf<Array<string>>('alignedCorpora'),
                             [this.pageModel.getCorpusIdent().id]
                         ),
-                        subcorpus: this.pageModel.getConf<string>('usesubcorp'),
+                        subcorpus: this.state.currentSubcorp,
                         value: this.state.queries[sourceId],
+                        valueType: 'unspecified',
                         queryType: this.state.queryTypes[sourceId],
                         posAttr: undefined,
                         struct: undefined,

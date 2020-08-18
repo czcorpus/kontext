@@ -213,6 +213,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 queries,
                 Dict.map(v => false),
             ),
+            currentSubcorp: pageModel.getCorpusIdent().usesubcorp,
             queryTypes,
             querySuggestions,
             lposValues: pipe(
