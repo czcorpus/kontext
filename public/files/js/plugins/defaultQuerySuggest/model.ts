@@ -100,7 +100,6 @@ export class Model extends StatelessModel<ModelState> {
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
             PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
             (state, action) => {
-                console.log('action: ', action.name, action.payload);
                 state.isBusy = true;
                 state.suggestionArgs[action.payload.sourceId] = {...action.payload};
                 state.activeSourceId = action.payload.sourceId;

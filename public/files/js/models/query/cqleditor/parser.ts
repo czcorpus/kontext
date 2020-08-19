@@ -22,6 +22,7 @@ import {Kontext} from '../../../types/common';
 import {parse as parseQuery, SyntaxError} from 'cqlParser/parser';
 import {IAttrHelper, NullAttrHelper} from './attrs';
 import { QueryType } from '../common';
+import { tuple } from 'cnc-tskit';
 
 /**
  * CharsRule represents a pointer to the original
@@ -54,6 +55,14 @@ interface StyledChunk {
     to:number;
     value:string; // orig value
     htmlValue:string;
+}
+
+export interface ParsedAttr {
+    name:string;
+    value:string;
+    type:'posattr'|'struct'|'structattr';
+    rangeVal:[number, number];
+    rangeAll:[number, number];
 }
 
 /**
@@ -125,7 +134,7 @@ class RuleCharMap {
         }
     }
 
-    generate():string {
+    generate():[string, Array<ParsedAttr>] {
         const rulePointers:Array<CharsRule> = [];
         for (let k in this.data) {
             if (this.data.hasOwnProperty(k)) {
@@ -146,8 +155,8 @@ class RuleCharMap {
         // from 'inserts' is inserted before 0th item from 'result'
         // and n-th item from 'inserts' is inserted to the end
         const inserts = chunks.concat(null).map(_ => []);
-        const result = this.applyNonTerminals(chunks, inserts);
-        return result.join('');
+        const [codeTokens, parsedAttrs] = this.applyNonTerminals(chunks, inserts);
+        return tuple(codeTokens.join(''), parsedAttrs);
     }
 
     /**
@@ -204,7 +213,8 @@ class RuleCharMap {
         return `<a class="sh-value-clickable" data-type="${type}" ${argsStr} title="${title}">`;
     }
 
-    private applyNonTerminals(chunks:Array<StyledChunk>, inserts:Array<Array<string>>):Array<string> {
+    private applyNonTerminals(chunks:Array<StyledChunk>, inserts:Array<Array<string>>):[Array<string>, Array<ParsedAttr>] {
+        const parsedAttrs:Array<ParsedAttr> = [];
         const errors:Array<string> = [];
         this.nonTerminals.reverse().forEach(v => {
             switch (v.rule) {
@@ -221,20 +231,27 @@ class RuleCharMap {
                                 errors.push(`${this.he.translate('query__attr_does_not_exist')}: <strong>${posAttrName}</strong>`);
                             }
 
-                            if (this.attrHelper.isTagAttr(posAttrName)) {
-                                const tagKeyVal = this.findSubRuleSeqIn(['AttName', 'RegExp'], attVal.from, attVal.to);
-                                if (tagKeyVal.length > 0) {
-                                    const range = this.convertRange(tagKeyVal[1].from, tagKeyVal[1].to, chunks);
+                            const posAttrValueRule = this.findSubRuleSeqIn(['AttName', 'RegExp'], attVal.from, attVal.to);
+                            if (posAttrValueRule.length > 0) {
+                                if (this.attrHelper.isTagAttr(posAttrName)) {
+                                    const range = this.convertRange(posAttrValueRule[1].from, posAttrValueRule[1].to, chunks);
                                     inserts[range[0]].push(this.createClickableTag(
                                         'tag',
                                         {
-                                            leftIdx: tagKeyVal[1].from,
-                                            rightIdx: tagKeyVal[1].to
+                                            leftIdx: posAttrValueRule[1].from,
+                                            rightIdx: posAttrValueRule[1].to
                                         },
                                         this.he.translate('query__click_to_edit_tag')
                                     ));
                                     inserts[range[1]+1].push('</a>');
                                 }
+                                parsedAttrs.push({
+                                    name: posAttrName,
+                                    value: this.query.substring(posAttrValueRule[1].from, posAttrValueRule[1].to),
+                                    type: 'posattr',
+                                    rangeVal: tuple(posAttrValueRule[1].from, posAttrValueRule[1].to),
+                                    rangeAll: tuple(attVal.from, attVal.to)
+                                });
                             }
                         });
                     });
@@ -296,7 +313,7 @@ class RuleCharMap {
             ans.push(chunks[i].htmlValue);
         }
         inserts[inserts.length - 1].forEach(v => ans.push(v));
-        return ans;
+        return tuple(ans, parsedAttrs);
     }
 
     private emitTerminal(rule:string, startIdx:number, endIdx:number):string {
@@ -450,7 +467,7 @@ interface HSArgs {
 
 
 function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, parserRecoverIdx,
-            wrapLongQuery, onHintChange}:HSArgs):string {
+            wrapLongQuery, onHintChange}:HSArgs):[string, Array<ParsedAttr>] {
 
     const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, onHintChange);
     const stack = new ParserStack(rcMap);
@@ -499,16 +516,16 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
     }
 
     const lastPos = stack.getLastPos();
-    const ans = rcMap.generate();
+    const [ans, parsedAttrs] = rcMap.generate();
 
     if (query.length === 0) {
-        return '';
+        return tuple('', []);
 
     } else if (lastPos < query.length && applyRules.length > 1) {
         // try to apply a partial rule to the rest of the query
         const srch = /^([^\s]+|)(\s+)(.+)$/.exec(query.substr(lastPos));
         if (srch !== null) {
-            const partial = _highlightSyntax({
+            const [partial, parsedAttrs] = _highlightSyntax({
                 query: srch[3],
                 applyRules: srch[1].trim() !== '' ? applyRules.slice(1) : applyRules,
                 he: he,
@@ -519,10 +536,16 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
                 parserRecoverIdx: parserRecoverIdx + 1
             });
 
-            return ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError) + partial;
+            return tuple(
+                ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError) + partial,
+                parsedAttrs
+            );
         }
     }
-    return ans + (query.substr(lastPos).length > 0 ? wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError) : '');
+    return tuple(
+        ans + (query.substr(lastPos).length > 0 ? wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError) : ''),
+        parsedAttrs
+    );
 }
 
 function getApplyRules(queryType:string):Array<string> {
@@ -549,7 +572,7 @@ export function highlightSyntax(
         queryType:QueryType,
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
-        onHintChange:(message:string)=>void):string {
+        onHintChange:(message:string)=>void):[string, Array<ParsedAttr>] {
 
     return _highlightSyntax({
         query: query,
@@ -566,7 +589,7 @@ export function highlightSyntax(
 export function highlightSyntaxStatic(
         query:string,
         queryType:string,
-        he:Kontext.ComponentHelpers):string {
+        he:Kontext.ComponentHelpers):[string, Array<ParsedAttr>] {
     return _highlightSyntax({
         query: query,
         applyRules: getApplyRules(queryType),
