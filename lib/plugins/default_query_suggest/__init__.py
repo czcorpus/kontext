@@ -31,7 +31,9 @@ def fetch_query_suggestions(_, request):
     with plugins.runtime.QUERY_SUGGEST as plg:
         ans = plg.find_suggestions(ui_lang=request.args.get('ui_lang'), corpora=request.args.getlist('corpora'),
                                    subcorpus=request.args.get('subcorpus'), value=request.args.get('value'),
-                                   query_type=request.args.get('query_type'), p_attr=None, struct=None, s_attr=None)
+                                   value_type=request.args.get('value_type'), query_type=request.args.get('query_type'),
+                                   p_attr=request.args.get('p_attr'), struct=request.args.get('struct'),
+                                   s_attr=request.args.get('s_attr'))
     return dict(items=ans)
 
 
@@ -41,12 +43,14 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
         self._providers = providers
         self._corparch = corparch
 
-    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
-                         p_attr: str, struct: str, s_attr: str):
+    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
+                         query_type: str, p_attr: str, struct: str, s_attr: str):
         ans = []
         for ident, provider in self._providers.items():
             backend, frontend = provider
-            resp = backend.find_suggestion(ui_lang, corpora, subcorpus, value, query_type, p_attr, struct, s_attr)
+            resp = backend.find_suggestion(ui_lang=ui_lang, corpora=corpora, subcorpus=subcorpus, value=value,
+                                           value_type=value_type, query_type=query_type, p_attr=p_attr,
+                                           struct=struct, s_attr=s_attr)
             ans.append(frontend.export_data(ui_lang, resp).to_dict())
         return ans
 

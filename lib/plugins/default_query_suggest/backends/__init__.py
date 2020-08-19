@@ -23,8 +23,8 @@ class ManateeBackend(AbstractBackend):
     def __init__(self, conf, ident):
         super().__init__(ident)
 
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
-                        p_attr: str, struct: str, s_attr: str):
+    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
+                        query_type: str, p_attr: str, struct: str, s_attr: str):
         data = {
             'a': 'akát',
             'b': 'blýskavice',
@@ -74,8 +74,8 @@ class HTTPBackend(AbstractBackend):
         else:
             return self._conf.get('attrs', [])
 
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, query_type: str,
-                        p_attr: str, struct: str, s_attr: str):
+    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
+                        query_type: str, p_attr: str, struct: str, s_attr: str):
         args = dict(
             ui_lang=self.enc_val(ui_lang), corpora=[self.enc_val(c) for c in corpora])
         logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
