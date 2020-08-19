@@ -18,19 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, StatelessModel } from 'kombo';
+import { IActionDispatcher, StatefulModel, IFullActionControl } from 'kombo';
 import { List, Dict, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext, typedProps } from '../../../types/common';
 import { PageModel } from '../../../app/page';
 import { AttrHelper } from './attrs';
-import { highlightSyntax } from './parser';
+import { highlightSyntax, ParsedAttr } from './parser';
 import { Actions, ActionName } from '../actions';
 import { Actions as GeneralViewOptionsActions, ActionName as GeneralViewOptionsActionName }
     from '../../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../common/actions';
 import { AjaxResponse } from '../../../types/ajaxResponses';
 import { IUnregistrable } from '../../common/common';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import { PluginInterfaces } from '../../../types/plugins';
 
 /**
  *
@@ -40,6 +43,10 @@ export interface CQLEditorModelState {
     rawCode:{[key:string]:string};
 
     richCode:{[key:string]:string};
+
+    parsedAttrs:{[key:string]:Array<ParsedAttr>};
+
+    focusedAttr:{[key:string]:ParsedAttr|undefined};
 
     message:{[key:string]:string};
 
@@ -67,7 +74,7 @@ interface CQLEditorSetRawQueryProps {
 
 
 export interface CQLEditorModelInitArgs {
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
     pageModel:PageModel;
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
@@ -86,41 +93,63 @@ export interface CQLEditorModelCorpusSwitchPreserve {
 }
 
 
+function highlightAllQueries(
+    pageModel:PageModel,
+    attrHelper:AttrHelper,
+    queries:{[sourceId:string]:string}
+
+):Array<[string, string, Array<ParsedAttr>]> {
+    return pipe(
+        queries || {},
+        Dict.keys(),
+        List.map(sourceId => tuple(
+            sourceId,
+            ...(queries[sourceId] ?
+                highlightSyntax(
+                    queries[sourceId],
+                    'cql',
+                    pageModel.getComponentHelpers(),
+                    attrHelper,
+                    (_) => () => undefined
+                ) : tuple('', []))
+        )),
+    );
+}
+
+
 /**
  *
  */
-export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implements IUnregistrable {
+export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implements IUnregistrable {
 
-    private pageModel:PageModel;
+    private readonly pageModel:PageModel;
 
-    private attrHelper:AttrHelper;
+    private readonly attrHelper:AttrHelper;
 
-    private hintListener:(state:CQLEditorModelState, sourceId:string, msg:string)=>void;
+    private readonly hintListener:(state:CQLEditorModelState, sourceId:string, msg:string)=>void;
+
+    private readonly autoSuggestTrigger:Subject<string>; // stream of source IDs
 
 
     constructor({dispatcher, pageModel, attrList, structAttrList, structList, tagAttr,
                     isEnabled, currQueries}:CQLEditorModelInitArgs) {
         const attrHelper = new AttrHelper(attrList, structAttrList, structList, tagAttr);
+        const queryData = highlightAllQueries(pageModel, attrHelper, currQueries);
         super(
             dispatcher,
             {
                 rawCode: (currQueries || {}),
                 richCode: pipe(
-                    currQueries || {},
-                    Dict.keys(),
-                    List.map(sourceId => tuple(
-                        sourceId,
-                        currQueries[sourceId] ?
-                            highlightSyntax(
-                                currQueries[sourceId],
-                                'cql',
-                                pageModel.getComponentHelpers(),
-                                attrHelper,
-                                (_) => () => undefined
-                            ) : ''
-                    )),
+                    queryData,
+                    List.map(([ident, query]) => tuple(ident, query)),
                     Dict.fromEntries()
                 ),
+                parsedAttrs: pipe(
+                    queryData,
+                    List.map(([ident,,attrs]) => tuple(ident, attrs)),
+                    Dict.fromEntries()
+                ),
+                focusedAttr: {},
                 message: {},
                 rawAnchorIdx: {},
                 rawFocusIdx: {},
@@ -135,177 +164,240 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
         this.hintListener = (state, sourceId, msg) => {
             state.message[sourceId] = msg;
         };
+        this.autoSuggestTrigger = new Subject<string>();
+        this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
+            (sourceId) => {
+                const currAttr = this.state.focusedAttr[sourceId];
+                if (currAttr) {
+                    dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
+                        name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+                        payload: {
+                            corpora: List.concat(
+                                this.pageModel.getConf<Array<string>>('alignedCorpora'),
+                                [this.pageModel.getCorpusIdent().id]
+                            ),
+                            subcorpus: null, // TODO
+                            value: currAttr.value.replace(/^"(.+)"$/, '$1'),
+                            valueType: 'unspecified',
+                            queryType: 'cql',
+                            posAttr: currAttr.type === 'posattr' ? currAttr.name : null,
+                            struct: undefined, // TODO
+                            structAttr: undefined, // TODO
+                            sourceId
+                        }
+                    });
+                }
+            }
+        );
 
         this.addActionHandler<Actions.CQLEditorInitialize>(
             ActionName.CQLEditorInitialize,
-            null,
-            (state, action, dispatch) => {
-                dispatch<Actions.CQLEditorInitializeDone>({
+            action => {
+                dispatcher.dispatch<Actions.CQLEditorInitializeDone>({
                     name: ActionName.CQLEditorInitializeDone
-                })
+                });
             }
-        )
+        );
 
         this.addActionHandler<Actions.CQLEditorInitializeDone>(
             ActionName.CQLEditorInitializeDone,
-            (state, action) => {
-                state.isReady = true;
+            action => {
+                this.changeState(state => {
+                    state.isReady = true;
+                });
             }
         );
 
         this.addActionHandler<Actions.CQLEditorEnable>(
             ActionName.CQLEditorEnable,
-            (state, action) => {
-                state.isEnabled = true;
-                Dict.forEach(
-                    (query, sourceId) => {
-                        state.richCode[sourceId] = highlightSyntax(
-                            query,
-                            'cql',
-                            this.pageModel.getComponentHelpers(),
-                            this.attrHelper,
-                            (msg) => this.hintListener(state, sourceId, msg)
-                        );
-                    },
-                    state.rawCode
-                );
+            action => {
+                this.changeState(state => {
+                    state.isEnabled = true;
+                    Dict.forEach(
+                        (query, sourceId) => {
+                            [state.richCode[sourceId], state.parsedAttrs[sourceId]] = highlightSyntax(
+                                query,
+                                'cql',
+                                this.pageModel.getComponentHelpers(),
+                                this.attrHelper,
+                                (msg) => this.hintListener(state, sourceId, msg)
+                            );
+                        },
+                        state.rawCode
+                    );
+                });
             }
         );
 
         this.addActionHandler<Actions.CQLEditorDisable>(
             ActionName.CQLEditorDisable,
-            (state, action) => {
-                state.isEnabled = false;
+            action => {
+                this.changeState(state => {
+                    state.isEnabled = false;
+                });
             }
         );
 
         this.addActionHandler<GeneralViewOptionsActions.GeneralSetUseCQLEditor>(
             GeneralViewOptionsActionName.GeneralSetUseCQLEditor,
-            (state, action) => {
-                state.isEnabled = action.payload.value;
+            action => {
+                this.changeState(state => {
+                    state.isEnabled = action.payload.value;
+                });
             }
         );
 
         this.addActionHandler<Actions.QueryInputMoveCursor>(
             ActionName.QueryInputMoveCursor,
-            (state, action) => {
-                state.rawAnchorIdx[action.payload.sourceId] = action.payload.rawAnchorIdx;
-                state.rawFocusIdx[action.payload.sourceId] = action.payload.rawFocusIdx;
-                state.downArrowTriggersHistory[action.payload.sourceId] =
-                    this.shouldDownArrowTriggerHistory(
-                        state,
-                        action.payload.sourceId
-                    )
+            action => {
+                this.changeState(state => {
+                    state.rawAnchorIdx[action.payload.sourceId] = action.payload.rawAnchorIdx;
+                    state.rawFocusIdx[action.payload.sourceId] = action.payload.rawFocusIdx;
+                    state.downArrowTriggersHistory[action.payload.sourceId] =
+                        this.shouldDownArrowTriggerHistory(
+                            state,
+                            action.payload.sourceId
+                        )
+                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(state, action.payload.sourceId);
+                });
+                this.autoSuggestTrigger.next(action.payload.sourceId);
             }
         );
 
         this.addActionHandler<Actions.QueryInputSetQuery>(
             ActionName.QueryInputSetQuery,
-            (state, action) => {
-                const args = typedProps<CQLEditorSetRawQueryProps>(action.payload);
-                if (args.rawAnchorIdx !== undefined && args.rawFocusIdx !== undefined) {
-                    state.rawAnchorIdx[args.sourceId] = args.rawAnchorIdx || args.query.length;
-                    state.rawFocusIdx[args.sourceId] = args.rawFocusIdx || args.query.length;
-                }
-                this.setRawQuery(
-                    state,
-                    args.sourceId,
-                    args.query,
-                    args.insertRange
-                );
-                if (args.rawAnchorIdx === null && args.rawFocusIdx === null) {
-                    this.moveCursorToPos(
-                        state, args.sourceId, state.rawCode[args.sourceId].length
+            action => {
+                this.changeState(state => {
+                    const args = typedProps<CQLEditorSetRawQueryProps>(action.payload);
+                    if (args.rawAnchorIdx !== undefined && args.rawFocusIdx !== undefined) {
+                        state.rawAnchorIdx[args.sourceId] = args.rawAnchorIdx || args.query.length;
+                        state.rawFocusIdx[args.sourceId] = args.rawFocusIdx || args.query.length;
+                    }
+                    this.setRawQuery(
+                        state,
+                        args.sourceId,
+                        args.query,
+                        args.insertRange
                     );
-                }
+                    if (args.rawAnchorIdx === null && args.rawFocusIdx === null) {
+                        this.moveCursorToPos(
+                            state, args.sourceId, state.rawCode[args.sourceId].length
+                        );
+                    }
+                    state.focusedAttr[args.sourceId] = this.findFocusedAttr(state, action.payload.sourceId);
+                });
+                this.autoSuggestTrigger.next(action.payload.sourceId);
             }
         );
 
         this.addActionHandler<Actions.QueryInputAppendQuery>(
             ActionName.QueryInputAppendQuery,
-            (state, action) => {
-                this.setRawQuery(
-                    state,
-                    action.payload.sourceId,
-                    action.payload.query,
-                    tuple(
-                        this.getQueryLength(state, action.payload.sourceId),
-                        this.getQueryLength(state, action.payload.sourceId)
-                    )
-                );
-                this.moveCursorToEnd(state, action.payload.sourceId);
+            action => {
+                this.changeState(state => {
+                    this.setRawQuery(
+                        state,
+                        action.payload.sourceId,
+                        action.payload.query,
+                        tuple(
+                            this.getQueryLength(state, action.payload.sourceId),
+                            this.getQueryLength(state, action.payload.sourceId)
+                        )
+                    );
+                    this.moveCursorToEnd(state, action.payload.sourceId);
+                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(state, action.payload.sourceId);
+                });
+                this.autoSuggestTrigger.next(action.payload.sourceId);
             }
         );
 
         this.addActionHandler<Actions.QueryInputRemoveLastChar>(
             ActionName.QueryInputRemoveLastChar,
-            (state, action) => {
-                const queryLength = state.rawCode[action.payload.sourceId].length;
-                this.setRawQuery(
-                    state,
-                    action.payload.sourceId,
-                    '',
-                    tuple(queryLength - 1, queryLength)
-                );
-                this.moveCursorToEnd(state, action.payload.sourceId);
+            action => {
+                this.changeState(state => {
+                    const queryLength = state.rawCode[action.payload.sourceId].length;
+                    this.setRawQuery(
+                        state,
+                        action.payload.sourceId,
+                        '',
+                        tuple(queryLength - 1, queryLength)
+                    );
+                    this.moveCursorToEnd(state, action.payload.sourceId);
+                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(state, action.payload.sourceId);
+                });
+                this.autoSuggestTrigger.next(action.payload.sourceId);
             }
         );
 
         this.addActionHandler<Actions.EditQueryOperationDone>(
             ActionName.EditQueryOperationDone,
-            (state, action) => {
-                const data = action.payload.data;
-                if (AjaxResponse.isQueryFormArgs(data) && data.curr_query_types[action.payload.sourceId] === 'cql') {
-                    this.setRawQuery(
-                        state,
-                        action.payload.sourceId,
-                        data.curr_queries[action.payload.sourceId],
-                        null
-                    );
+            action => {
+                this.changeState(state => {
+                    const data = action.payload.data;
+                    if (AjaxResponse.isQueryFormArgs(data) && data.curr_query_types[action.payload.sourceId] === 'cql') {
+                        this.setRawQuery(
+                            state,
+                            action.payload.sourceId,
+                            data.curr_queries[action.payload.sourceId],
+                            null
+                        );
 
-                } else if (AjaxResponse.isFilterFormArgs(data) && data.query_type === 'cql') {
-                    const newState = this.copyState(state);
-                    this.setRawQuery(
-                        state,
-                        action.payload.sourceId,
-                        data.query,
-                        null
-                    );
-                }
+                    } else if (AjaxResponse.isFilterFormArgs(data) && data.query_type === 'cql') {
+                        this.setRawQuery(
+                            state,
+                            action.payload.sourceId,
+                            data.query,
+                            null
+                        );
+                    }
+                });
             }
         );
 
         this.addActionHandler<Actions.QueryOverviewEditorClose>(
             ActionName.QueryOverviewEditorClose,
-            (state, action) => {
-                state.isReady = false;
+            action => {
+                this.changeState(state => {
+                    state.isReady = false;
+                });
             }
         );
 
         this.addActionHandler<GlobalActions.SwitchCorpus>(
             GlobalActionName.SwitchCorpus,
-            (state, action) => {
-                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<CQLEditorModelCorpusSwitchPreserve>>({
-                    name: GlobalActionName.SwitchCorpusReady,
-                    payload: {
-                        modelId: this.getRegistrationId(),
-                        data: this.serialize(state)
-                    }
-                })
+            action => {
+                this.changeState(state => {
+                    dispatcher.dispatch<GlobalActions.SwitchCorpusReady<CQLEditorModelCorpusSwitchPreserve>>({
+                        name: GlobalActionName.SwitchCorpusReady,
+                        payload: {
+                            modelId: this.getRegistrationId(),
+                            data: this.serialize(state)
+                        }
+                    });
+                });
             }
         );
 
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
-            (state, action) => {
-                if (!action.error) {
-                    this.deserialize(
-                        state,
-                        action.payload.data[this.getRegistrationId()] as CQLEditorModelCorpusSwitchPreserve,
-                        action.payload.corpora
-                    );
-                }
+            action => {
+                this.changeState(state => {
+                    if (!action.error) {
+                        this.deserialize(
+                            state,
+                            action.payload.data[this.getRegistrationId()] as CQLEditorModelCorpusSwitchPreserve,
+                            action.payload.corpora
+                        );
+                    }
+                });
             }
+        );
+    }
+
+    private findFocusedAttr(state:CQLEditorModelState, sourceId:string):ParsedAttr|undefined {
+        const focus = state.rawFocusIdx[sourceId];
+        return List.find(
+            v => v.rangeAll[0] <= focus && focus <= v.rangeAll[1],
+            state.parsedAttrs[sourceId]
         );
     }
 
@@ -395,7 +487,7 @@ export class CQLEditorModel extends StatelessModel<CQLEditorModelState> implemen
         state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(state, sourceId);
 
         if (state.isEnabled) {
-            state.richCode[sourceId] = highlightSyntax(
+            [state.richCode[sourceId], state.parsedAttrs[sourceId]] = highlightSyntax(
                 state.rawCode[sourceId] ? state.rawCode[sourceId] : '',
                 'cql',
                 this.pageModel.getComponentHelpers(),

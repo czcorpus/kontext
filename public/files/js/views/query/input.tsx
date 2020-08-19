@@ -478,51 +478,19 @@ export function init({
         sourceId:string;
         formType:QueryFormType;
 
-    }> = (props) => {
-
-        const handleKeyDown = (evt:React.KeyboardEvent) => {
-            if (evt.keyCode === Keyboard.Code.ESC && !evt.altKey && !evt.ctrlKey) {
-                dispatcher.dispatch<Actions.HideQuerySuggestionWidget>({
-                    name: ActionName.HideQuerySuggestionWidget,
-                    payload: {
-                        formType: props.formType
-                    }
-                });
-            }
-        };
-
-        const handleBlur = () => {
-            dispatcher.dispatch<Actions.HideQuerySuggestionWidget>({
-                name: ActionName.HideQuerySuggestionWidget,
-                payload: {
-                    formType: props.formType
-                }
-            });
-        };
-
-        const ref = React.useRef<HTMLDivElement>();
-
-        React.useEffect(() => {
-            if (ref.current) {
-                ref.current.focus();
-            }
-        });
-
-        return (
-            <div className="suggestions-box" tabIndex={0} ref={ref} onKeyDown={handleKeyDown}
-                    onBlur={handleBlur}>
-                {List.map(
-                    (v, i) => (
-                        <React.Fragment key={`${v.rendererId}${i}`}>
-                            <h2>{v.heading}:</h2>
-                            {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
-                        </React.Fragment>
-                    ),
-                    props.querySuggestions[props.sourceId]
-                )}
-            </div>
-        );
-    };
+    }> = (props) => (
+        <div className="suggestions-box">
+            {List.map(
+                (v, i) => (
+                    <React.Fragment key={`${v.rendererId}${i}`}>
+                        <h2>{v.heading}:</h2>
+                        {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
+                    </React.Fragment>
+                ),
+                props.querySuggestions[props.sourceId]
+            )}
+        </div>
+    );
 
     // ------------------- <KeyboardWidget /> --------------------------------
 

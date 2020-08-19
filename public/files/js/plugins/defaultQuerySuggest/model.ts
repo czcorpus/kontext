@@ -83,11 +83,17 @@ export class Model extends StatelessModel<ModelState> {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {
                     currArgs.queryType = action.payload.queryType;
+                    if (action.payload.queryType === 'lemma') {
+                        currArgs.valueType = 'posattr';
+                        currArgs.posAttr = 'lemma';
+                    }
                 }
             },
             (state, action, dispatch) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
-                this.loadSuggestions(state, currArgs, dispatch);
+                if (currArgs) {
+                    this.loadSuggestions(state, currArgs, dispatch);
+                }
             }
         );
 
@@ -197,20 +203,22 @@ export class Model extends StatelessModel<ModelState> {
             subcorpus:string;
             align:string;
             value:string;
+            value_type:PluginInterfaces.QuerySuggest.SuggestionValueType;
             query_type:string;
-            posattr:string;
+            p_attr:string;
             struct:string;
-            struct_attr:string;
+            s_attr:string;
         }>();
         args.set('ui_lang', state.uiLang);
         args.set('corpname', List.head(suggArgs.corpora));
         args.set('subcorpus', suggArgs.subcorpus);
         args.replace('align', List.tail(suggArgs.corpora));
         args.set('value', suggArgs.value);
+        args.set('value_type', suggArgs.valueType);
         args.set('query_type', suggArgs.queryType);
-        args.set('posattr', suggArgs.posAttr);
+        args.set('p_attr', suggArgs.posAttr);
         args.set('struct', suggArgs.struct);
-        args.set('struct_attr', suggArgs.structAttr);
+        args.set('s_attr', suggArgs.structAttr);
 
         return this.pluginApi.ajax$<HTTPResponse>(
             HTTP.Method.GET,

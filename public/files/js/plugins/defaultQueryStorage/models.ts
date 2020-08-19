@@ -44,7 +44,7 @@ export interface InputBoxHistoryItem {
 const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) => {
     if (item.query_type === 'cql' || item.query_type === 'word' ||
             item.query_type === 'phrase' || item.query_type === 'lemma') {
-        item.query_sh = highlightSyntaxStatic(item.query, item.query_type, he);
+        [item.query_sh,] = highlightSyntaxStatic(item.query, item.query_type, he);
     }
     return item;
 };

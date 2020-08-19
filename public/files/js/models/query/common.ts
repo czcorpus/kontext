@@ -217,23 +217,25 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.autoSuggestTrigger = new Subject<string>();
         this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
             (sourceId) => {
-                dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
-                    name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
-                    payload: {
-                        corpora: List.concat(
-                            this.pageModel.getConf<Array<string>>('alignedCorpora'),
-                            [this.pageModel.getCorpusIdent().id]
-                        ),
-                        subcorpus: this.state.currentSubcorp,
-                        value: this.state.queries[sourceId],
-                        valueType: 'unspecified',
-                        queryType: this.state.queryTypes[sourceId],
-                        posAttr: undefined,
-                        struct: undefined,
-                        structAttr: undefined,
-                        sourceId
-                    }
-                });
+                if (this.state.queryTypes[sourceId] !== 'cql') {
+                    dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
+                        name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+                        payload: {
+                            corpora: List.concat(
+                                this.pageModel.getConf<Array<string>>('alignedCorpora'),
+                                [this.pageModel.getCorpusIdent().id]
+                            ),
+                            subcorpus: this.state.currentSubcorp,
+                            value: this.state.queries[sourceId],
+                            valueType: 'unspecified',
+                            queryType: this.state.queryTypes[sourceId],
+                            posAttr: this.state.queryTypes[sourceId] === 'lemma' ? 'lemma' : undefined,
+                            struct: undefined,
+                            structAttr: undefined,
+                            sourceId
+                        }
+                    });
+                }
             }
         );
 
