@@ -62,10 +62,22 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
             _, frontend = fb
             if ident in corpus_info.query_suggest.providers:
                 query_types[ident] = frontend.query_types
-        return dict(query_types=query_types)
+        query_suggest_conf = plugin_api.get_shared('query_suggest_conf')
+        return dict(query_types=query_types, **query_suggest_conf)
 
     def export_actions(self):
         return {concordance.Actions: [fetch_query_suggestions]}
+
+    def apply_conf(self, options, corp_options, plugin_api):
+        query_suggest_conf = {}
+
+        conf_key = f'{plugin_api.current_corpus.corpname}:query_hint_mode'
+        try:
+            query_suggest_conf['visibility_mode'] = corp_options[conf_key]
+        except:
+            query_suggest_conf['visibility_mode'] = 2  # default auto mode
+
+        plugin_api.set_shared('query_suggest_conf', query_suggest_conf)
 
 
 def find_implementation(path: str) -> Any:

@@ -578,6 +578,7 @@ export namespace ViewOptions {
         AvailRefs:Array<{n:string; sel:string; label:string}>;
         ShowConcToolbar:boolean;
         BaseViewAttr:string;
+        QueryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
     }
 
     export interface LoadOptionsResponse extends Kontext.AjaxResponse {
@@ -591,6 +592,7 @@ export namespace ViewOptions {
         use_conc_toolbar:boolean;
         structattrs:{[attr:string]:Array<string>};
         CurrentAttrs:Array<string>;
+        query_hint_mode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
     }
 
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {

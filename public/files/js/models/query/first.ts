@@ -317,7 +317,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 List.map(c => tuple(c, false)),
                 Dict.fromEntries()
             ),
-            suggestionsVisibility: PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
+            suggestionsVisibility: pageModel.getNestedConf('pluginData', 'query_suggest', 'visibility_mode')
         });
         this.setUserValues(this.state, props);
 

@@ -963,6 +963,7 @@ export function init({
                                         formType={this.props.formType}/>
                                 : null
                             }
+                            
                             {
                                 !this.props.historyVisible &&
                                 this.props.suggestionsVisible[this.props.sourceId] &&

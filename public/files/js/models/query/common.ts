@@ -298,7 +298,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             action.payload.rawFocusIdx
                         );
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                // request suggestions only if hints enabled
+                if (this.state.suggestionsVisibility) {
+                    this.autoSuggestTrigger.next(action.payload.sourceId);
+                }
             }
         );
 
@@ -323,8 +326,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     if (action.error === undefined) {
                         state.querySuggestions[action.payload.sourceId] = action.payload.results;
-                        state.suggestionsVisible[action.payload.sourceId] = true;
-                        state.historyVisible = false;
+                        if (
+                            state.suggestionsVisibility ===
+                            PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
+                        ) {
+                            state.suggestionsVisible[action.payload.sourceId] = true;
+                            state.historyVisible = false;
+                        }
 
                     } else {
                         state.querySuggestions = {};

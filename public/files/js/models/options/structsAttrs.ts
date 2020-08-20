@@ -127,7 +127,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                                         AvailRefs: data.Availrefs,
                                         AttrVmode: data.attr_vmode,
                                         ShowConcToolbar: data.use_conc_toolbar,
-                                        BaseViewAttr: data.base_viewattr
+                                        BaseViewAttr: data.base_viewattr,
+                                        QueryHintMode: data.query_hint_mode
                                     }
                                 }
                             });
@@ -326,7 +327,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             ),
             setattr_vmode: state.attrVmode,
             base_viewattr: state.baseViewAttr,
-            queryHintMode: state.queryHintMode
+            setquery_hint_mode: state.queryHintMode
         };
 
         return ans;
@@ -359,6 +360,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     this.layoutModel.replaceConcArg('base_viewattr', [formArgs['base_viewattr']]);
                     this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
                     this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
+                    this.layoutModel.replaceConcArg('query_hint_mode', [formArgs['setquery_hint_mode']]);
                     this.layoutModel.resetMenuActiveItemAndNotify();
                 }
             )
@@ -717,6 +719,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.hasLoadedData = true;
         state.showConcToolbar = data.ShowConcToolbar;
         state.baseViewAttr = data.BaseViewAttr;
+        state.queryHintMode = data.QueryHintMode;
     }
 
     private loadData():Observable<ViewOptions.LoadOptionsResponse> {

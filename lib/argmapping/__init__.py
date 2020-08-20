@@ -173,6 +173,7 @@ class Args(object):
     attrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
     base_viewattr: str = def_attr('word', persistent=Persistence.PERSISTENT)
     attr_vmode: str = def_attr('visible-kwic', persistent=Persistence.PERSISTENT)
+    query_hint_mode: int = def_attr(2, persistent=Persistence.PERSISTENT)
     structs: str = def_attr('', persistent=Persistence.PERSISTENT)
     q: List[str] = def_attr([])
     pagesize: int = def_attr(40, persistent=Persistence.PERSISTENT)
