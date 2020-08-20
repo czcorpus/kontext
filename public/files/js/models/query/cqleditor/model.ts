@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, StatefulModel, IFullActionControl } from 'kombo';
+import { StatefulModel, IFullActionControl } from 'kombo';
 import { List, Dict, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext, typedProps } from '../../../types/common';
@@ -154,7 +154,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                 rawAnchorIdx: {},
                 rawFocusIdx: {},
                 cqlEditorMessage: {},
-                isEnabled: isEnabled,
+                isEnabled,
                 isReady: false,
                 downArrowTriggersHistory: {}
             }
@@ -215,13 +215,14 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.isEnabled = true;
                     Dict.forEach(
                         (query, sourceId) => {
-                            [state.richCode[sourceId], state.parsedAttrs[sourceId]] = highlightSyntax(
-                                query,
-                                'cql',
-                                this.pageModel.getComponentHelpers(),
-                                this.attrHelper,
-                                (msg) => this.hintListener(state, sourceId, msg)
-                            );
+                            [state.richCode[sourceId], state.parsedAttrs[sourceId]] =
+                                highlightSyntax(
+                                    query,
+                                    'cql',
+                                    this.pageModel.getComponentHelpers(),
+                                    this.attrHelper,
+                                    (msg) => this.hintListener(state, sourceId, msg)
+                                );
                         },
                         state.rawCode
                     );
@@ -258,7 +259,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             state,
                             action.payload.sourceId
                         )
-                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(state, action.payload.sourceId);
+                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
+                        state, action.payload.sourceId);
                 });
                 this.autoSuggestTrigger.next(action.payload.sourceId);
             }
@@ -284,7 +286,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             state, args.sourceId, state.rawCode[args.sourceId].length
                         );
                     }
-                    state.focusedAttr[args.sourceId] = this.findFocusedAttr(state, action.payload.sourceId);
+                    state.focusedAttr[args.sourceId] = this.findFocusedAttr(
+                        state, action.payload.sourceId);
                 });
                 this.autoSuggestTrigger.next(action.payload.sourceId);
             }
@@ -304,7 +307,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                         )
                     );
                     this.moveCursorToEnd(state, action.payload.sourceId);
-                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(state, action.payload.sourceId);
+                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
+                        state, action.payload.sourceId);
                 });
                 this.autoSuggestTrigger.next(action.payload.sourceId);
             }
@@ -322,7 +326,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                         tuple(queryLength - 1, queryLength)
                     );
                     this.moveCursorToEnd(state, action.payload.sourceId);
-                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(state, action.payload.sourceId);
+                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
+                        state, action.payload.sourceId);
                 });
                 this.autoSuggestTrigger.next(action.payload.sourceId);
             }
@@ -333,7 +338,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
             action => {
                 this.changeState(state => {
                     const data = action.payload.data;
-                    if (AjaxResponse.isQueryFormArgs(data) && data.curr_query_types[action.payload.sourceId] === 'cql') {
+                    if (AjaxResponse.isQueryFormArgs(data) &&
+                            data.curr_query_types[action.payload.sourceId] === 'cql') {
                         this.setRawQuery(
                             state,
                             action.payload.sourceId,
@@ -366,7 +372,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
             GlobalActionName.SwitchCorpus,
             action => {
                 this.changeState(state => {
-                    dispatcher.dispatch<GlobalActions.SwitchCorpusReady<CQLEditorModelCorpusSwitchPreserve>>({
+                    dispatcher.dispatch<GlobalActions.SwitchCorpusReady<
+                            CQLEditorModelCorpusSwitchPreserve>>({
                         name: GlobalActionName.SwitchCorpusReady,
                         payload: {
                             modelId: this.getRegistrationId(),
@@ -384,7 +391,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     if (!action.error) {
                         this.deserialize(
                             state,
-                            action.payload.data[this.getRegistrationId()] as CQLEditorModelCorpusSwitchPreserve,
+                            action.payload.data[this.getRegistrationId()] as
+                                CQLEditorModelCorpusSwitchPreserve,
                             action.payload.corpora
                         );
                     }
@@ -395,9 +403,12 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
 
     private findFocusedAttr(state:CQLEditorModelState, sourceId:string):ParsedAttr|undefined {
         const focus = state.rawFocusIdx[sourceId];
+        const attrs = state.parsedAttrs[sourceId];
         return List.find(
-            v => v.rangeAll[0] <= focus && focus <= v.rangeAll[1],
-            state.parsedAttrs[sourceId]
+            (v, i) => v.rangeAll[0] <= focus && (
+                focus <= v.rangeAll[1] ||
+                focus > v.rangeAll[1] && i === 0),
+            attrs
         );
     }
 
@@ -415,7 +426,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         };
     }
 
-    deserialize(state:CQLEditorModelState, data:CQLEditorModelCorpusSwitchPreserve, corpora:Array<[string, string]>):void {
+    deserialize(
+        state:CQLEditorModelState,
+        data:CQLEditorModelCorpusSwitchPreserve,
+        corpora:Array<[string, string]>
+    ):void {
         if (data && state.isEnabled) {
             pipe(
                 corpora,
@@ -444,7 +459,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
     private moveCursorToPos(state:CQLEditorModelState, sourceId:string, posIdx:number):void {
         state.rawAnchorIdx[sourceId] = posIdx;
         state.rawFocusIdx[sourceId] = posIdx;
-        state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(state, sourceId);
+        state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(
+            state, sourceId);
     }
 
     private moveCursorToEnd(state:CQLEditorModelState, sourceId:string):void {
@@ -468,7 +484,13 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
      * @param range in case we want to insert a CQL snippet into an existing code;
      *              if undefined then whole query is replaced
      */
-    private setRawQuery(state:CQLEditorModelState, sourceId:string, query:string, insertRange:[number, number]|null):void {
+    private setRawQuery(
+        state:CQLEditorModelState,
+        sourceId:string,
+        query:string,
+        insertRange:[number, number]|null
+
+    ):void {
         let newQuery:string;
 
         if (!state.rawCode[sourceId]) {
@@ -484,7 +506,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
 
         state.rawCode[sourceId] = newQuery;
 
-        state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(state, sourceId);
+        state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(
+            state, sourceId);
 
         if (state.isEnabled) {
             [state.richCode[sourceId], state.parsedAttrs[sourceId]] = highlightSyntax(

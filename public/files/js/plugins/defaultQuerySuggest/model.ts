@@ -167,6 +167,18 @@ export class Model extends StatelessModel<ModelState> {
                 err => {
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                        payload: {
+                            sourceId: args.sourceId,
+                            value: args.value,
+                            valueType: args.valueType,
+                            queryType: args.queryType,
+                            corpora: args.corpora,
+                            subcorpus: args.subcorpus,
+                            posAttr: args.posAttr,
+                            struct: args.struct,
+                            structAttr: args.structAttr,
+                            results: []
+                        },
                         error: err
                     });
                 }

@@ -89,6 +89,14 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         return data instanceof Array && List.every(v => typeof v === 'string', data);
     }
 
+    isEmptyResponse<T>(v:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):boolean {
+        const data = v.contents;
+        if (this.basicTypeGuard(data)) {
+            return List.empty(data)
+        }
+        return !!data;
+    }
+
 }
 
 

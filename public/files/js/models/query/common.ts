@@ -171,7 +171,7 @@ export interface QueryFormModelState {
 
     historyVisible:boolean;
 
-    suggestionsVisible:boolean;
+    suggestionsVisible:{[sourceId:string]:boolean};
 
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 
@@ -248,17 +248,18 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     state.historyVisible = !state.historyVisible;
-                    state.suggestionsVisible = false;
+                    state.suggestionsVisible[action.payload.sourceId] = false;
                 });
             }
         );
 
-        this.addActionSubtypeHandler<Actions.HideQuerySuggestionWidget>(
-            ActionName.HideQuerySuggestionWidget,
+        this.addActionSubtypeHandler<Actions.ToggleQuerySuggestionWidget>(
+            ActionName.ToggleQuerySuggestionWidget,
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.suggestionsVisible = false;
+                    state.suggestionsVisible[action.payload.sourceId] =
+                        !state.suggestionsVisible[action.payload.sourceId];
                 });
             }
         )
@@ -322,12 +323,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     if (action.error === undefined) {
                         state.querySuggestions[action.payload.sourceId] = action.payload.results;
-                        state.suggestionsVisible = true;
+                        state.suggestionsVisible[action.payload.sourceId] = true;
                         state.historyVisible = false;
 
                     } else {
                         state.querySuggestions = {};
-                        state.suggestionsVisible = false;
+                        state.suggestionsVisible[action.payload.sourceId] = false;
                     }
                 });
             }

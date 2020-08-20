@@ -254,6 +254,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         });
                     break;
                 }
+
+            } else {
+                const src = this.extractText(this.props.inputRef.current);
+                const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
+                    payload: {
+                        formType: this.props.formType,
+                        sourceId: this.props.sourceId,
+                        rawAnchorIdx,
+                        rawFocusIdx
+                    }
+                });
             }
         }
 

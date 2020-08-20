@@ -367,6 +367,7 @@
         "query__tip_05": "In case of aligned corpora, it is faster to search only within texts included in all the searched languages. To find such texts, 'restrict search - refine selection' function can be used.",
         "query__contains_selected_text_types": "Niykere typy tekstu sōm zaznaczōne",
         "query__chain_no_op_msg": "No change in the concordance parameters - showing the original result",
+        "query__suggestions_available": "Query suggestions",
         "qhistory__attached_text_types": "Typy tekstu",
         "qhistory__curr_corp_only_label": "zawiyrŏ prawie używany korpus",
         "qhistory__query_type_sel": "zawiyrŏ typ zapytaniŏ",
