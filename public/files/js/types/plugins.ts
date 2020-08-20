@@ -486,6 +486,12 @@ export namespace PluginInterfaces {
 
         export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';
 
+        export enum SuggestionVisibility {
+            DISABLED = 0,
+            MANUAL = 1,
+            AUTO = 2
+        }
+
         export interface SuggestionArgs {
             sourceId:string;
             value:string;

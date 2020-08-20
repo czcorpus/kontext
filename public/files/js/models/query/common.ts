@@ -173,6 +173,8 @@ export interface QueryFormModelState {
 
     suggestionsVisible:boolean;
 
+    suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+
 }
 
 /**
@@ -229,7 +231,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             value: this.state.queries[sourceId],
                             valueType: 'unspecified',
                             queryType: this.state.queryTypes[sourceId],
-                            posAttr: this.state.queryTypes[sourceId] === 'lemma' ? 'lemma' : undefined,
+                            posAttr: this.state.queryTypes[sourceId] === 'lemma' ?
+                                'lemma' : undefined,
                             struct: undefined,
                             structAttr: undefined,
                             sourceId
