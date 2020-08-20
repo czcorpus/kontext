@@ -460,6 +460,7 @@
         "options__attributes_hd": "Positional attributes",
         "options__structures_hd": "Structures",
         "options__references_hd": "References",
+        "options__hints_hd": "Hints",
         "options__settings_apply_only_for_{corpname}": "Corpus-specific settings for {corpname}",
         "options__apply_btn": "Apply View Options",
         "options__attr_apply_header": "How to display secondary attributes?",

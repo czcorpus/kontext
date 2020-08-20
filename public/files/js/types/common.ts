@@ -28,6 +28,7 @@ import { AsyncTaskChecker } from '../models/asyncTask';
 import { GeneralViewOptionsModelState } from '../models/options/general';
 import { QueryType } from '../models/query/common';
 import { CorpusSwitchModel } from '../models/common/corpusSwitch';
+import { PluginInterfaces } from './plugins';
 
 /**
  *
