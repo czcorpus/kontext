@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
-import { Keyboard, List } from 'cnc-tskit';
+import { Keyboard, List, pipe } from 'cnc-tskit';
 
 import { init as keyboardInit } from './virtualKeyboard';
 import { init as cqlEditoInit } from './cqlEditor';
@@ -109,6 +109,7 @@ interface QueryToolboxProps {
     widgets:Array<string>;
     inputLanguage:string;
     tagHelperView:PluginInterfaces.TagHelper.View;
+    qsAvailable:boolean;
     toggleHistoryWidget:()=>void;
 }
 
@@ -480,14 +481,17 @@ export function init({
 
     }> = (props) => (
         <div className="suggestions-box">
-            {List.map(
-                (v, i) => (
-                    <React.Fragment key={`${v.rendererId}${i}`}>
-                        <h2>{v.heading}:</h2>
-                        {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
-                    </React.Fragment>
-                ),
-                props.querySuggestions[props.sourceId]
+            {pipe(
+                props.querySuggestions[props.sourceId],
+                List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
+                List.map(
+                    (v, i) => (
+                        <React.Fragment key={`${v.rendererId}${i}`}>
+                            <h2>{v.heading}:</h2>
+                            {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
+                        </React.Fragment>
+                    ),
+                )
             )}
         </div>
     );
@@ -533,6 +537,7 @@ export function init({
             this._handleWidgetTrigger = this._handleWidgetTrigger.bind(this);
             this._handleHistoryWidget = this._handleHistoryWidget.bind(this);
             this._handleCloseWidget = this._handleCloseWidget.bind(this);
+            this._handleQuerySuggestWidget = this._handleQuerySuggestWidget.bind(this);
         }
 
         _renderButtons() {
@@ -548,6 +553,9 @@ export function init({
             }
             if (this.props.widgets.indexOf('history') > -1) {
                 ans.push(<a onClick={this._handleHistoryWidget}>{he.translate('query__recent_queries_link')}</a>);
+            }
+            if (this.props.qsAvailable) {
+                ans.push(<a onClick={this._handleQuerySuggestWidget}>{he.translate('query__suggestions_available')}</a>)
             }
             return ans;
         }
@@ -584,6 +592,16 @@ export function init({
             });
         }
 
+        _handleQuerySuggestWidget() {
+            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
+                name: ActionName.ToggleQuerySuggestionWidget,
+                payload: {
+                    sourceId: this.props.sourceId,
+                    formType: this.props.formType
+                }
+            });
+        }
+
         _renderWidget() {
             switch (this.props.activeWidgets[this.props.sourceId]) {
                 case 'tag':
@@ -609,9 +627,10 @@ export function init({
                 <div className="query-toolbox">
                     {this._renderWidget()}
                     <ul>
-                        {this._renderButtons().map((item, i) => {
-                            return <li key={i}>{item}</li>
-                        })}
+                        {List.map(
+                            (item, i) => <li key={i}>{item}</li>,
+                            this._renderButtons()
+                        )}
                     </ul>
                 </div>
             );
@@ -806,7 +825,8 @@ export function init({
             dispatcher.dispatch<Actions.ToggleQueryHistoryWidget>({
                 name: ActionName.ToggleQueryHistoryWidget,
                 payload: {
-                    formType: this.props.formType
+                    formType: this.props.formType,
+                    sourceId: this.props.sourceId
                 }
             });
             if (!this.props.historyVisible && this._queryInputElement.current) {
@@ -832,6 +852,13 @@ export function init({
         }
 
         handleInputEscKeyDown():void {
+            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
+                name: ActionName.ToggleQuerySuggestionWidget,
+                payload: {
+                    formType: this.props.formType,
+                    sourceId: this.props.sourceId
+                }
+            });
         }
 
         _renderInput() {
@@ -925,7 +952,8 @@ export function init({
                                 tagHelperView={this.props.tagHelperView}
                                 sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}
-                                inputLanguage={this.props.inputLanguage} />
+                                inputLanguage={this.props.inputLanguage}
+                                qsAvailable={!List.empty(this.props.querySuggestions[this.props.sourceId])} />
                             {this._renderInput()}
                             {this.props.historyVisible ?
                                 <HistoryWidget
@@ -936,7 +964,8 @@ export function init({
                                 : null
                             }
                             {
-                                !this.props.historyVisible && this.props.suggestionsVisible &&
+                                !this.props.historyVisible &&
+                                this.props.suggestionsVisible[this.props.sourceId] &&
                                 this.props.querySuggestions[this.props.sourceId] &&
                                 this.props.querySuggestions[this.props.sourceId].length ?
                                     <SuggestionsWidget

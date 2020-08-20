@@ -444,7 +444,7 @@ export namespace PluginInterfaces {
 
         export interface DataAndRenderer {
             renderer:Renderer;
-            contents:Kontext.GeneralProps;
+            contents:Kontext.GeneralProps; // TODO use unknown and generics
             isKwicView:boolean;
             found:boolean;
             heading:string;
@@ -477,6 +477,7 @@ export namespace PluginInterfaces {
 
         export interface IPlugin extends BasePlugin {
             createElement(rendererId:string, data:unknown):React.ReactElement;
+            isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
         }
 
         export enum ActionName {
@@ -523,9 +524,9 @@ export namespace PluginInterfaces {
         export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
             React.SFC<Kontext.GeneralProps>;
 
-        export interface DataAndRenderer {
+        export interface DataAndRenderer<T=unknown> {
             rendererId:string;
-            contents:unknown;
+            contents:T;
             heading:string;
         }
 

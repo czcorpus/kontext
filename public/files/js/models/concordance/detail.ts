@@ -349,7 +349,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                             this.state.expandRightArgs.length > 1 ? 'reload' : null
                 ).subscribe(
                     () => {
-                        console.log('we have speech det: ', this.state.speechDetail)
                         this.changeState(state => {
                             state.isBusy = false;
                         });

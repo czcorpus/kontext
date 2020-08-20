@@ -72,7 +72,7 @@ export enum ActionName {
     ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
     ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
-    HideQuerySuggestionWidget = 'QUERY_INPUT_HIDE_QUERY_SUGGESTION_WIDGET',
+    ToggleQuerySuggestionWidget = 'QUERY_INPUT_HIDE_QUERY_SUGGESTION_WIDGET',
     SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
     SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
     SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT',
@@ -423,14 +423,16 @@ export namespace Actions {
 
     export interface ToggleQueryHistoryWidget extends Action<{
         formType:QueryFormType;
+        sourceId:string;
     }> {
         name:ActionName.ToggleQueryHistoryWidget;
     }
 
-    export interface HideQuerySuggestionWidget extends Action<{
+    export interface ToggleQuerySuggestionWidget extends Action<{
         formType:QueryFormType;
+        sourceId:string;
     }> {
-        name:ActionName.HideQuerySuggestionWidget;
+        name:ActionName.ToggleQuerySuggestionWidget;
     }
 
     export interface SampleFormSetRlines extends Action<{
