@@ -37,6 +37,7 @@ import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 export interface QueryFormUserEntries {
@@ -151,8 +152,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     subcorpList:Array<Kontext.SubcorpListItem>;
 
-    currentSubcorp:string;
-
     origSubcorpName:string;
 
     isForeignSubcorpus:boolean;
@@ -166,8 +165,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
     defaultAttrValues:{[key:string]:string};
 
     pcqPosNegValues:{[key:string]:'pos'|'neg'};
-
-    queryTypes:{[key:string]:QueryType};
 
     tagBuilderSupport:{[key:string]:boolean};
 
@@ -228,6 +225,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             List.map(item => tuple(item, props.currQueryTypes[item] || 'iquery')),
             Dict.fromEntries()
         );
+        const querySuggestions = pipe(
+            props.corpora,
+            List.map(corp => tuple(corp,
+                [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer>)),
+            Dict.fromEntries()
+        );
         const tagBuilderSupport = props.tagBuilderSupport;
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'first-query-model', {
             formType: Kontext.ConcFormTypes.QUERY,
@@ -278,6 +281,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 Dict.fromEntries()
             ),
             queryTypes,
+            querySuggestions,
             pcqPosNegValues: pipe(
                 props.corpora,
                 List.map(item => tuple(item, props.currPcqPosNegValues[item] || 'pos')),
@@ -307,7 +311,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             contextFormVisible: false,
             textTypesFormVisible: false,
-            historyVisible: false
+            historyVisible: false,
+            suggestionsVisible: false
         });
         this.setUserValues(this.state, props);
 
@@ -368,47 +373,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             foreignSubcorp: state.isForeignSubcorpus
                         }
                     );
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputMoveCursor>(
-            ActionName.QueryInputMoveCursor,
-            action => action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    state.downArrowTriggersHistory[action.payload.sourceId] =
-                        shouldDownArrowTriggerHistory(
-                            state.queries[action.payload.sourceId],
-                            action.payload.rawAnchorIdx,
-                            action.payload.rawFocusIdx
-                        )
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputSetQuery>(
-            ActionName.QueryInputSetQuery,
-            action => action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    if (action.payload.insertRange) {
-                        this.addQueryInfix(
-                            state,
-                            action.payload.sourceId,
-                            action.payload.query,
-                            action.payload.insertRange
-                        );
-
-                    } else {
-                        state.queries[action.payload.sourceId] = action.payload.query;
-                    }
-                    state.downArrowTriggersHistory[action.payload.sourceId] =
-                        shouldDownArrowTriggerHistory(
-                            action.payload.query,
-                            action.payload.rawAnchorIdx,
-                            action.payload.rawFocusIdx
-                        );
                 });
             }
         );

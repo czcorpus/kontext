@@ -1,0 +1,16 @@
+{
+    "en-US": {
+       "defaultTD__unsupported_renderer": "Required renderer module not found",
+       "defaultTD__original_data": "Data",
+       "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source",
+       "defaultTD__plug_in_error_symbol_alt": "Plug-in error"
+    },
+    "cs-CZ": {
+        "defaultTD__unsupported_renderer": "Požadovaný zobrazovací modul nebyl nalezen",
+        "defaultTD__original_data": "Data",
+        "defaultTD__failed_to_fetch_external_information": "Nepodařilo se načíst informaci ze zdroje třetí strany",
+        "defaultTD__plug_in_error_symbol_alt": "Chyba plug-inu"
+    },
+    "szl": {
+    }
+}

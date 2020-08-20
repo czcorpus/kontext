@@ -75,15 +75,29 @@ export interface FirstHitsFormProps {
 
 // ---------
 
-export function init(
-        dispatcher:IActionDispatcher,
-        he:Kontext.ComponentHelpers,
-        filterModel:FilterFormModel,
-        queryHintModel:UsageTipsModel,
-        withinBuilderModel:WithinBuilderModel,
-        virtualKeyboardModel:VirtualKeyboardModel,
-        firstHitsModel:FirstHitsModel,
-        cqlEditorModel:CQLEditorModel):FilterFormViews {
+interface ViewInitArgs {
+    dispatcher:IActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    filterModel:FilterFormModel;
+    queryHintModel:UsageTipsModel;
+    withinBuilderModel:WithinBuilderModel;
+    virtualKeyboardModel:VirtualKeyboardModel;
+    firstHitsModel:FirstHitsModel;
+    cqlEditorModel:CQLEditorModel;
+    querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
+}
+
+export function init({
+        dispatcher,
+        he,
+        filterModel,
+        queryHintModel,
+        withinBuilderModel,
+        virtualKeyboardModel,
+        firstHitsModel,
+        cqlEditorModel,
+        querySuggest
+}:ViewInitArgs):FilterFormViews {
 
     const inputViews = inputInit({
         dispatcher: dispatcher,
@@ -226,7 +240,8 @@ export function init(
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguage}
                                 useCQLEditor={this.props.useCQLEditor}
-                                onEnterKey={this._handleSubmit} />
+                                onEnterKey={this._handleSubmit}
+                                qsuggPlugin={querySuggest} />
                         </tbody>
                     </table>
                     <div className="buttons">
@@ -323,7 +338,8 @@ export function init(
                                 inputLanguage={this.props.inputLanguage}
                                 useCQLEditor={this.props.useCQLEditor}
                                 onEnterKey={this._handleSubmit}
-                                takeFocus={false} />
+                                takeFocus={false}
+                                qsuggPlugin={querySuggest} />
                         </tbody>
                     </table>
                     <div className="buttons">

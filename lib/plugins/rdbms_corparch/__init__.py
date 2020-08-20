@@ -28,7 +28,7 @@ from controller import exposed
 import actions.user
 import plugins
 from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
-                                      TokenConnect, KwicConnect, DictLike, TagsetInfo, CorpusInfo)
+                                      TokenConnect, KwicConnect, QuerySuggest, DictLike, TagsetInfo, CorpusInfo)
 import l10n
 from .backend import ManateeCorpora
 from .backend.sqlite import Backend
@@ -214,6 +214,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         self._tt_desc_i18n = defaultdict(lambda: {})
         self._tc_providers = {}
         self._kc_providers = {}
+        self._qs_providers = {}
         self._mc = ManateeCorpora()
 
     @property
@@ -351,10 +352,11 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         lang_key = self._get_iso639lang(lang)
         return self._keywords[lang_key]
 
-    def _get_tckc_providers(self, corpus_id):
+    def _get_tckcqs_providers(self, corpus_id):
         if corpus_id not in self._tc_providers and corpus_id not in self._kc_providers:
             self._tc_providers[corpus_id] = TokenConnect()
             self._kc_providers[corpus_id] = KwicConnect()
+            self._qs_providers[corpus_id] = QuerySuggest()
             data = self._backend.load_tckc_providers(corpus_id)
             for row in data:
                 if row['type'] == 'tc':
@@ -362,7 +364,9 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                         (row['provider'], row['is_kwic_view']))
                 elif row['type'] == 'kc':
                     self._kc_providers[corpus_id].providers.append(row['provider'])
-        return self._tc_providers[corpus_id], self._kc_providers[corpus_id]
+                elif row['type'] == 'qs':
+                    self._qs_providers[corpus_id].providers.append(row['provider'])
+        return self._tc_providers[corpus_id], self._kc_providers[corpus_id], self._qs_providers[corpus_id]
 
     def _fetch_corpus_info(self, corpus_id: str, user_lang: str):
         if corpus_id not in self._corpus_info_cache:
@@ -400,7 +404,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                     else:
                         ans = corp_info
                     ans.manatee = self._mc.get_info(corp_name)
-                    ans.token_connect, ans.kwic_connect = self._get_tckc_providers(corp_name)
+                    ans.token_connect, ans.kwic_connect, ans.query_suggest = self._get_tckcqs_providers(corp_name)
                     ans.metadata.interval_attrs = self._backend.load_interval_attrs(corp_name)
 
                     return ans

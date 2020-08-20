@@ -645,6 +645,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if kwic_connect_elm is not None:
             ans.kwic_connect.providers = [p.text for p in kwic_connect_elm.findall('provider')]
 
+        query_suggest_elm = node.find('query_suggest')
+        if query_suggest_elm is not None:
+            ans.query_suggest.providers = [p.text for p in query_suggest.findall('provider')]
+
         self.customize_corpus_info(ans, node)
         data.append(ans)
         return ans

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict } from 'cnc-tskit';
+import { Dict, List } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
 import { Kontext } from '../../types/common';
@@ -28,6 +28,9 @@ import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
 import { ConcServerArgs } from '../concordance/common';
 import { QueryFormType, Actions, ActionName } from './actions';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 export type QueryType = 'iquery'|'phrase'|'lemma'|'word'|'cql';
@@ -138,9 +141,15 @@ export interface QueryFormModelState {
 
     currentAction:string;
 
-    queries:{[key:string]:string}; // corpname|filter_id -> query
+    currentSubcorp:string;
 
-    tagBuilderSupport:{[key:string]:boolean};
+    queries:{[sourceId:string]:string}; // corpname|filter_id -> query
+
+    queryTypes:{[sourceId:string]:QueryType};
+
+    querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
+
+    tagBuilderSupport:{[sourceId:string]:boolean};
 
     useCQLEditor:boolean;
 
@@ -148,19 +157,22 @@ export interface QueryFormModelState {
 
     widgetArgs:Kontext.GeneralProps;
 
-    supportedWidgets:{[key:string]:Array<string>};
+    supportedWidgets:{[sourceId:string]:Array<string>};
 
     isAnonymousUser:boolean;
 
-    activeWidgets:{[key:string]:string|null};
+    activeWidgets:{[sourceId:string]:string|null};
 
-    downArrowTriggersHistory:{[key:string]:boolean};
+    downArrowTriggersHistory:{[sourceId:string]:boolean};
 
     contextFormVisible:boolean;
 
     textTypesFormVisible:boolean;
 
     historyVisible:boolean;
+
+    suggestionsVisible:boolean;
+
 }
 
 /**
@@ -177,6 +189,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     protected readonly queryTracer:ITracer;
 
     protected readonly ident:string;
+
+    protected readonly formType:QueryFormType;
+
+    protected readonly autoSuggestTrigger:Subject<string>; // stream of source IDs
 
     // -------
 
@@ -197,6 +213,31 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.queryContextModel = queryContextModel;
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
+        this.formType = initState.formType;
+        this.autoSuggestTrigger = new Subject<string>();
+        this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
+            (sourceId) => {
+                if (this.state.queryTypes[sourceId] !== 'cql') {
+                    dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
+                        name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+                        payload: {
+                            corpora: List.concat(
+                                this.pageModel.getConf<Array<string>>('alignedCorpora'),
+                                [this.pageModel.getCorpusIdent().id]
+                            ),
+                            subcorpus: this.state.currentSubcorp,
+                            value: this.state.queries[sourceId],
+                            valueType: 'unspecified',
+                            queryType: this.state.queryTypes[sourceId],
+                            posAttr: this.state.queryTypes[sourceId] === 'lemma' ? 'lemma' : undefined,
+                            struct: undefined,
+                            structAttr: undefined,
+                            sourceId
+                        }
+                    });
+                }
+            }
+        );
 
         this.addActionSubtypeHandler<Actions.ToggleQueryHistoryWidget>(
             ActionName.ToggleQueryHistoryWidget,
@@ -204,9 +245,20 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     state.historyVisible = !state.historyVisible;
+                    state.suggestionsVisible = false;
                 });
             }
         );
+
+        this.addActionSubtypeHandler<Actions.HideQuerySuggestionWidget>(
+            ActionName.HideQuerySuggestionWidget,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.suggestionsVisible = false;
+                });
+            }
+        )
 
         this.addActionSubtypeHandler<Actions.SetActiveInputWidget>(
             ActionName.SetActiveInputWidget,
@@ -215,6 +267,65 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     state.activeWidgets[action.payload.sourceId] = action.payload.value;
                     state.widgetArgs = action.payload.widgetArgs || {};
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSetQuery>(
+            ActionName.QueryInputSetQuery,
+            action => action.payload.formType === this.formType,
+            action => {
+                this.changeState(state => {
+                    if (action.payload.insertRange) {
+                        this.addQueryInfix(
+                            state,
+                            action.payload.sourceId,
+                            action.payload.query,
+                            action.payload.insertRange
+                        );
+
+                    } else {
+                        state.queries[action.payload.sourceId] = action.payload.query;
+                    }
+                    state.downArrowTriggersHistory[action.payload.sourceId] =
+                        shouldDownArrowTriggerHistory(
+                            action.payload.query,
+                            action.payload.rawAnchorIdx,
+                            action.payload.rawFocusIdx
+                        );
+                });
+                this.autoSuggestTrigger.next(action.payload.sourceId);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputMoveCursor>(
+            ActionName.QueryInputMoveCursor,
+            action => action.payload.formType === this.formType,
+            action => {
+                this.changeState(state => {
+                    state.downArrowTriggersHistory[action.payload.sourceId] =
+                        shouldDownArrowTriggerHistory(
+                            state.queries[action.payload.sourceId],
+                            action.payload.rawAnchorIdx,
+                            action.payload.rawFocusIdx
+                        )
+                });
+            }
+        );
+
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
+            PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+            action => {
+                this.changeState(state => {
+                    if (action.error === undefined) {
+                        state.querySuggestions[action.payload.sourceId] = action.payload.results;
+                        state.suggestionsVisible = true;
+                        state.historyVisible = false;
+
+                    } else {
+                        state.querySuggestions = {};
+                        state.suggestionsVisible = false;
+                    }
                 });
             }
         );

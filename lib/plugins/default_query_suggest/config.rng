@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+
+    <start>
+        <element name="query_suggest">
+            <element name="module">
+                <value>default_query_suggest</value>
+            </element>
+            <element name="js_module">
+                <value>defaultQuerySuggest</value>
+            </element>
+            <element name="providers_conf">
+                <a:documentation>
+                    Please see default_token_connect for the description
+                    as it uses the same format
+                </a:documentation>
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+        </element>
+    </start>
+</grammar>

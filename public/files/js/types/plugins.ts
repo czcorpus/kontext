@@ -19,7 +19,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { IEventEmitter, ITranslator, IFullActionControl, IModel } from 'kombo';
+import { IEventEmitter, ITranslator, IFullActionControl, IModel, Action } from 'kombo';
 
 import { Kontext, TextTypes } from '../types/common';
 import { CoreViews } from './coreViews';
@@ -27,6 +27,7 @@ import { IConcLinesProvider } from '../types/concordance';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
+import { QueryType } from '../models/query/common';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -37,7 +38,8 @@ export interface IPluginApi extends ITranslator {
     getConf<T>(key:string):T;
     getNestedConf<T>(...keys:Array<string>):T;
     createStaticUrl(path:string):string;
-    createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string;
+    createActionUrl<T>(
+        path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string;
     ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
     userIsAnonymous():boolean;
@@ -117,7 +119,7 @@ export namespace PluginInterfaces {
     export namespace SubcMixer {
 
         export interface Props {
-            isActive:Boolean;
+            isActive:boolean;
         }
 
         export interface IPlugin extends BasePlugin {
@@ -465,6 +467,67 @@ export namespace PluginInterfaces {
         export interface Factory {
             (pluginApi:IPluginApi, alignedCorpora:Array<string>):IPlugin;
         }
+    }
+
+
+    // ------------------------------------------------------------------------
+    // ------------------------- [query_suggest] plug-in -----------------------
+
+    export namespace QuerySuggest {
+
+        export interface IPlugin extends BasePlugin {
+            createElement(rendererId:string, data:unknown):React.ReactElement;
+        }
+
+        export enum ActionName {
+            AskSuggestions = 'QUERY_SUGGEST_ASK_SUGGESTIONS',
+            SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED'
+        }
+
+        export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';
+
+        export interface SuggestionArgs {
+            sourceId:string;
+            value:string;
+            valueType:SuggestionValueType;
+            queryType:QueryType;
+            corpora:Array<string>;
+            subcorpus:string|undefined;
+            posAttr:string|undefined;
+            struct:string|undefined;
+            structAttr:string|undefined;
+        }
+
+        export interface SuggestionReturn extends SuggestionArgs {
+            results:Array<DataAndRenderer>;
+        }
+
+        export namespace Actions {
+
+            export interface AskSuggestions extends Action<SuggestionArgs> {
+                name: ActionName.AskSuggestions
+            }
+
+            export interface SuggestionsReceived extends Action<SuggestionReturn> {
+                name: ActionName.SuggestionsReceived
+            }
+
+        }
+
+        export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
+            React.SFC<Kontext.GeneralProps>;
+
+        export interface DataAndRenderer {
+            rendererId:string;
+            contents:unknown;
+            heading:string;
+        }
+
+        export interface SuggestionAnswer {
+            results:Array<DataAndRenderer>;
+        }
+
+        export type Factory = (pluginApi:IPluginApi)=>IPlugin;
     }
 
 }

@@ -590,11 +590,15 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.token_connect.providers = [(p.text, import_bool(p.attrib.get('is_kwic_view', '0')))
                                            for p in token_connect_elm.findall('provider')]
 
+        query_suggest_elm = node.find('query_suggest')
+        if query_suggest_elm is not None:
+            ans.query_suggest.providers = [p.text for p in query_suggest_elm.findall('provider')]
+
         kwic_connect_elm = node.find('kwic_connect')
         if kwic_connect_elm is not None:
             ans.kwic_connect.providers = [p.text for p in kwic_connect_elm.findall('provider')]
 
-        ans.default_view_opts = {} # not supported in this version of the plug-in
+        ans.default_view_opts = {}  # not supported in this version of the plug-in
 
         self.customize_corpus_info(ans, node)
         data.append(ans)

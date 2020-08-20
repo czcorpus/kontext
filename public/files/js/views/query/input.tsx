@@ -72,6 +72,7 @@ export interface TRQueryInputFieldProps {
     tagsetDocUrl:string;
     onEnterKey:()=>void;
     takeFocus?:boolean;
+    qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
 
@@ -232,6 +233,7 @@ export function init({
     // ------------------- <TRQueryTypeField /> -----------------------------
 
     const TRQueryTypeField:React.SFC<TRQueryTypeFieldProps> = (props) => {
+
         const handleSelection = (evt) => {
             dispatcher.dispatch<Actions.QueryInputSelectType>({
                 name: ActionName.QueryInputSelectType,
@@ -467,6 +469,28 @@ export function init({
             </div>
         );
     };
+
+    // ------------------- <SuggestionsWidget /> -----------------------------
+
+    const SuggestionsWidget:React.SFC<{
+        qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+        querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
+        sourceId:string;
+        formType:QueryFormType;
+
+    }> = (props) => (
+        <div className="suggestions-box">
+            {List.map(
+                (v, i) => (
+                    <React.Fragment key={`${v.rendererId}${i}`}>
+                        <h2>{v.heading}:</h2>
+                        {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
+                    </React.Fragment>
+                ),
+                props.querySuggestions[props.sourceId]
+            )}
+        </div>
+    );
 
     // ------------------- <KeyboardWidget /> --------------------------------
 
@@ -910,6 +934,17 @@ export function init({
                                         onCloseTrigger={this._toggleHistoryWidget}
                                         formType={this.props.formType}/>
                                 : null
+                            }
+                            {
+                                !this.props.historyVisible && this.props.suggestionsVisible &&
+                                this.props.querySuggestions[this.props.sourceId] &&
+                                this.props.querySuggestions[this.props.sourceId].length ?
+                                    <SuggestionsWidget
+                                        qsuggPlugin={this.props.qsuggPlugin}
+                                        querySuggestions={this.props.querySuggestions}
+                                        sourceId={this.props.sourceId}
+                                        formType={this.props.formType} />
+                                    : null
                             }
                             <div className="query-hints">
                                 <BoundQueryHints  />

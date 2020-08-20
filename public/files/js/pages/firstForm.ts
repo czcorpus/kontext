@@ -44,6 +44,8 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
+import querySuggestPlugin from 'plugins/querySuggest/init';
+
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -134,7 +136,7 @@ export class FirstFormPage {
                         this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
                             name: GlobalActionName.SwitchCorpus,
                             payload: {
-                                corpora: corpora,
+                                corpora,
                                 subcorpus: subcorpId
                             }
                         });
@@ -257,6 +259,11 @@ export class FirstFormPage {
     }
 
     private attachQueryForm(properties:QueryFormProps, corparchWidget:React.ComponentClass):void {
+
+        const qsuggPlugin = querySuggestPlugin(
+            this.layoutModel.pluginApi()
+        );
+
         const queryFormComponents = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
@@ -267,7 +274,8 @@ export class FirstFormPage {
             withinBuilderModel: this.withinBuilderModel,
             virtualKeyboardModel: this.virtualKeyboardModel,
             queryContextModel: this.queryContextModel,
-            cqlEditorModel: this.cqlEditorModel
+            cqlEditorModel: this.cqlEditorModel,
+            qsuggPlugin
         });
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
