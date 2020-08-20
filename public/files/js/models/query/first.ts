@@ -312,7 +312,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             contextFormVisible: false,
             textTypesFormVisible: false,
             historyVisible: false,
-            suggestionsVisible: false
+            suggestionsVisible: false,
+            suggestionsVisibility: PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
         });
         this.setUserValues(this.state, props);
 

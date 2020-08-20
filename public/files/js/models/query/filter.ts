@@ -285,7 +285,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             contextFormVisible: false,
             textTypesFormVisible: false,
             historyVisible: false,
-            suggestionsVisible: false
+            suggestionsVisible: false,
+            suggestionsVisibility: PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
         });
         this.syncInitialArgs = syncInitialArgs;
 
