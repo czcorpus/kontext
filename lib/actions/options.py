@@ -36,16 +36,16 @@ class Options(Kontext):
         self.args.line_numbers = line_numbers
         self.args.cql_editor = cql_editor
 
-    def _set_new_viewattrs(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
-                           setstructattrs=(), setquery_hint_mode=2):
+    def _set_new_corp_options(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
+                              setstructattrs=(), setqs_visibility_mode=2):
         if self.BASE_ATTR not in setattrs:
             setattrs = (self.BASE_ATTR, ) + tuple(setattrs)
         self.args.attrs = ','.join(setattrs)
         self.args.structs = ','.join(setstructs)
         self.args.refs = ','.join(setrefs)
         self.args.attr_vmode = setattr_vmode
-        self.args.query_hint_mode = setquery_hint_mode
         self.args.structattrs = setstructattrs
+        self.args.qs_visibility_mode = setqs_visibility_mode
 
     @exposed(access_level=0, vars=('concsize', ), return_type='json')
     def viewattrs(self, _):
@@ -64,7 +64,6 @@ class Options(Kontext):
                            if n]
         out['fixed_attr'] = 'word'
         out['attr_vmode'] = self.args.attr_vmode
-        out['query_hint_mode'] = self.args.query_hint_mode
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = set(self.args.structs.split(',')).union(
             set([x.split('.')[0] for x in self.args.structattrs]))
@@ -76,6 +75,7 @@ class Options(Kontext):
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         reflist = self.args.refs.split(',') if self.args.refs else []
         structattrs = defaultdict(list)
+        out['qs_visibility_mode'] = self.args.qs_visibility_mode
 
         def ref_is_allowed(r):
             return r and r not in (
@@ -106,14 +106,15 @@ class Options(Kontext):
 
     @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=True, http_method='POST')
     def viewattrsx(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
-                   setstructattrs=(), setquery_hint_mode=2):
-        self._set_new_viewattrs(setattrs=setattrs,
-                                setattr_vmode=setattr_vmode,
-                                setstructs=setstructs,
-                                setrefs=setrefs,
-                                setstructattrs=setstructattrs,
-                                setquery_hint_mode=setquery_hint_mode)
-        self._save_options(['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr', 'query_hint_mode'],
+                   setstructattrs=(), setqs_visibility_mode=2):
+        self._set_new_corp_options(setattrs=setattrs,
+                                   setattr_vmode=setattr_vmode,
+                                   setstructs=setstructs,
+                                   setrefs=setrefs,
+                                   setstructattrs=setstructattrs,
+                                   setqs_visibility_mode=setqs_visibility_mode)
+        self._save_options(['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr',
+                            'qs_visibility_mode'],
                            self.args.corpname)
         if self.args.format == 'json':
             return dict(widectx_globals=self._get_mapped_attrs(

@@ -555,7 +555,15 @@ export function init({
                 ans.push(<a onClick={this._handleHistoryWidget}>{he.translate('query__recent_queries_link')}</a>);
             }
             if (this.props.qsAvailable) {
-                ans.push(<a onClick={this._handleQuerySuggestWidget}>{he.translate('query__suggestions_available')}</a>)
+                ans.push(
+                    <>
+                        <a onClick={this._handleQuerySuggestWidget}>{he.translate('query__suggestions_available')}</a>
+                        {this.props.suggestionsVisible[this.props.sourceId] ?
+                            null :
+                            <span className="notifications">{'\u25CF'}</span>
+                        }
+                    </>
+                );
             }
             return ans;
         }
@@ -953,11 +961,8 @@ export function init({
                                 sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}
                                 inputLanguage={this.props.inputLanguage}
-                                qsAvailable={
-                                    this.props.suggestionsVisibility ===
-                                    PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL &&
-                                    !List.empty(this.props.querySuggestions[this.props.sourceId])
-                                } />
+                                qsAvailable={!List.empty(
+                                    this.props.querySuggestions[this.props.sourceId])} />
                             {this._renderInput()}
                             {this.props.historyVisible ?
                                 <HistoryWidget
@@ -967,7 +972,7 @@ export function init({
                                         formType={this.props.formType}/>
                                 : null
                             }
-                            
+
                             {
                                 !this.props.historyVisible &&
                                 this.props.suggestionsVisible[this.props.sourceId] &&

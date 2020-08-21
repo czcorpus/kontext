@@ -497,6 +497,7 @@
         "options__select_all_in_all_structs": "Select all in all structures",
         "options__which_attrs_show_hd": "Attributes to display",
         "options__cannot_remove_attribute_set_as_main": "Cannot remove attribute currently set as the main one",
+        "options__currently_avail_qs_providers": "Services available for the current corpus",
         "subcform__create_subcorpus": "Create subcorpus",
         "subcform__mode_attr_list": "Attribute list",
         "subcform__mode_raw_within": "Custom 'within' condition",

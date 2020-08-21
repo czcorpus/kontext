@@ -31,6 +31,7 @@ import { QueryFormType, Actions, ActionName } from './actions';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
+import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
 
 
 export type QueryType = 'iquery'|'phrase'|'lemma'|'word'|'cql';
@@ -217,9 +218,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.ident = ident;
         this.formType = initState.formType;
         this.autoSuggestTrigger = new Subject<string>();
-        this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
+        this.autoSuggestTrigger.pipe(
+            debounceTime(500)
+        ).subscribe(
             (sourceId) => {
-                if (this.state.queryTypes[sourceId] !== 'cql') {
+                if (this.state.queryTypes[sourceId] !== 'cql'
+                        && this.state.suggestionsVisibility !==
+                            PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                         name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                         payload: {
@@ -298,10 +303,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             action.payload.rawFocusIdx
                         );
                 });
-                // request suggestions only if hints enabled
-                if (this.state.suggestionsVisibility) {
-                    this.autoSuggestTrigger.next(action.payload.sourceId);
-                }
+                this.autoSuggestTrigger.next(action.payload.sourceId);
             }
         );
 
@@ -337,6 +339,24 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     } else {
                         state.querySuggestions = {};
                         state.suggestionsVisible[action.payload.sourceId] = false;
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler<CorpOptActions.SaveSettingsDone>(
+            CorpOptActionName.SaveSettingsDone,
+            action => {
+                this.changeState(state => {
+                    state.suggestionsVisibility = action.payload.qsVisibilityMode;
+                    if (
+                        state.suggestionsVisibility !==
+                            PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
+                    ) {
+                        state.suggestionsVisible = Dict.map(
+                            v => false,
+                            state.suggestionsVisible
+                        );
                     }
                 });
             }

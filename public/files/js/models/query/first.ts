@@ -67,6 +67,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     hasLemma:{[corpname:string]:boolean};
     tagsetDocs:{[corpname:string]:string};
     isAnonymousUser:boolean;
+    suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
 
 export interface QueryInputSetQueryProps {
@@ -317,7 +318,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 List.map(c => tuple(c, false)),
                 Dict.fromEntries()
             ),
-            suggestionsVisibility: pageModel.getNestedConf('pluginData', 'query_suggest', 'visibility_mode')
+            suggestionsVisibility: props.suggestionsVisibility
         });
         this.setUserValues(this.state, props);
 

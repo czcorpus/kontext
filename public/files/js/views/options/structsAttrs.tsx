@@ -408,13 +408,14 @@ export function init({dispatcher, helpers, viewOptionsModel,
     // ---------------------------- <QueryHints /> ----------------------
 
     const Extensions:React.SFC<{
-        queryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility
+        queryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+        availProviders:Array<string>;
 
     }> = (props) => {
 
         const handleSelectChangeFn = (event:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch<Actions.ChangeQueryHintMode>({
-                name: ActionName.ChangeQueryHintMode,
+            dispatcher.dispatch<Actions.ChangeQuerySuggestionMode>({
+                name: ActionName.ChangeQuerySuggestionMode,
                 payload: {
                     value: parseInt(event.target.value) as PluginInterfaces.QuerySuggest.SuggestionVisibility
                 }
@@ -423,9 +424,21 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
         return (
             <section>
-                <div className="QueryHintModes">
+                <div className="Extensions">
                     <h2 className="label">{helpers.translate('options__query_suggestions_label')}</h2>
-                    <ul>
+                    <p>
+                        {helpers.translate('options__currently_avail_qs_providers')}:
+                    </p>
+                    {props.availProviders.length > 0 ?
+                        <ul>
+                            {List.map(
+                                (v, i) => <li key={`item:${i}`}>{'\u25CF'} <span>{v}</span></li>,
+                                props.availProviders
+                            )}
+                        </ul> :
+                        null
+                    }
+                    <ul className="switch">
                         <li>
                             <label>
                                 <input type="radio" name="queryHintMode"
@@ -519,6 +532,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         corpusUsesRTLText:boolean;
         queryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
         queryHintAvailable:boolean;
+        availQSProviders:Array<string>;
 
     }> = (props) => {
 
@@ -568,7 +582,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 refAttrs={props.refAttrs}
                                 hasSelectAll={props.hasSelectAllRefs} />
 
-                            <Extensions queryHintMode={props.queryHintMode} />
+                            <Extensions queryHintMode={props.queryHintMode}
+                                    availProviders={props.availQSProviders} />
                         </layoutViews.TabView>
 
                         {props.userIsAnonymous ?
@@ -616,8 +631,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     isWaiting={props.isBusy}
                     userIsAnonymous={props.userIsAnonymous}
                     corpusUsesRTLText={props.corpusUsesRTLText}
-                    queryHintMode={props.queryHintMode}
-                    queryHintAvailable={props.queryHintAvailable} />
+                    queryHintMode={props.qsVisibilityMode}
+                    queryHintAvailable={props.qsPluginAvaiable}
+                    availQSProviders={props.qsProviders} />
         </div>
     );
 

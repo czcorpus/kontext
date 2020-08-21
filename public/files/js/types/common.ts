@@ -592,7 +592,7 @@ export namespace ViewOptions {
         use_conc_toolbar:boolean;
         structattrs:{[attr:string]:Array<string>};
         CurrentAttrs:Array<string>;
-        query_hint_mode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+        qs_visibility_mode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
     }
 
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {

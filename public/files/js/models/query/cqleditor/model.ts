@@ -62,6 +62,7 @@ export interface CQLEditorModelState {
 
     isReady:boolean;
 
+    suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
 
 interface CQLEditorSetRawQueryProps {
@@ -82,6 +83,7 @@ export interface CQLEditorModelInitArgs {
     tagAttr:string;
     isEnabled:boolean;
     currQueries?:{[sourceId:string]:string};
+    suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
 
 export interface CQLEditorModelCorpusSwitchPreserve {
@@ -132,7 +134,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
 
 
     constructor({dispatcher, pageModel, attrList, structAttrList, structList, tagAttr,
-                    isEnabled, currQueries}:CQLEditorModelInitArgs) {
+                    isEnabled, currQueries, suggestionsVisibility}:CQLEditorModelInitArgs) {
         const attrHelper = new AttrHelper(attrList, structAttrList, structList, tagAttr);
         const queryData = highlightAllQueries(pageModel, attrHelper, currQueries);
         super(
@@ -156,7 +158,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                 cqlEditorMessage: {},
                 isEnabled,
                 isReady: false,
-                downArrowTriggersHistory: {}
+                downArrowTriggersHistory: {},
+                suggestionsVisibility
             }
         );
         this.attrHelper = attrHelper;
@@ -168,7 +171,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
             (sourceId) => {
                 const currAttr = this.state.focusedAttr[sourceId];
-                if (currAttr) {
+                if (currAttr && this.state.suggestionsVisibility !==
+                    PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                         name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                         payload: {
