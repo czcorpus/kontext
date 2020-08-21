@@ -953,7 +953,11 @@ export function init({
                                 sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}
                                 inputLanguage={this.props.inputLanguage}
-                                qsAvailable={!List.empty(this.props.querySuggestions[this.props.sourceId])} />
+                                qsAvailable={
+                                    this.props.suggestionsVisibility ===
+                                    PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL &&
+                                    !List.empty(this.props.querySuggestions[this.props.sourceId])
+                                } />
                             {this._renderInput()}
                             {this.props.historyVisible ?
                                 <HistoryWidget

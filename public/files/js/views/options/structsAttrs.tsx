@@ -431,7 +431,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                     checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
                                     value={PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
                                     onChange={handleSelectChangeFn} />
-                                <span>{PluginInterfaces.QuerySuggest.SuggestionVisibility[0]}</span>
+                                <span>{helpers.translate('options__query_suggestions_disabled')}</span>
                             </label>
                         </li>
                         <li>
@@ -440,7 +440,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                     checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
                                     value={PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
                                     onChange={handleSelectChangeFn} />
-                                <span>{PluginInterfaces.QuerySuggest.SuggestionVisibility[1]}</span>
+                                <span>{helpers.translate('options__query_suggestions_manual')}</span>
                             </label>
                         </li>
                         <li>
@@ -449,7 +449,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                     checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
                                     value={PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
                                     onChange={handleSelectChangeFn} />
-                                <span>{PluginInterfaces.QuerySuggest.SuggestionVisibility[2]}</span>
+                                <span>{helpers.translate('options__query_suggestions_auto')}</span>
                             </label>
                         </li>
                     </ul>
@@ -538,7 +538,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 ...(props.queryHintAvailable ?
                     [{
                         id: 'hints',
-                        label: helpers.translate('options__hints_hd'),
+                        label: helpers.translate('options__query_suggestions_hd'),
                     }] :
                     []
                 )
