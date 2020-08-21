@@ -63,6 +63,7 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     hasLemma:Array<[string, boolean]>;
     tagsetDoc:Array<[string, string]>;
     isAnonymousUser:boolean;
+    suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
 
 /**
@@ -291,7 +292,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 List.map(k => tuple(k, false)),
                 Dict.fromEntries()
             ),
-            suggestionsVisibility: pageModel.getNestedConf('pluginData', 'query_suggest', 'visibility_mode')
+            suggestionsVisibility: props.suggestionsVisibility
         });
         this.syncInitialArgs = syncInitialArgs;
 

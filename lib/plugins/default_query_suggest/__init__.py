@@ -14,7 +14,6 @@
 
 from typing import Any, List
 import importlib
-import logging
 import json
 
 from plugins.abstract.query_suggest import AbstractQuerySuggest
@@ -57,27 +56,20 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
     def export(self, plugin_api):
         corpus_info = self._corparch.get_corpus_info(
             plugin_api.user_lang, plugin_api.current_corpus.corpname)
-        query_types = {}
+        active_providers = []
         for ident, fb in self._providers.items():
             _, frontend = fb
             if ident in corpus_info.query_suggest.providers:
-                query_types[ident] = frontend.query_types
-        query_suggest_conf = plugin_api.get_shared('query_suggest_conf')
-        return dict(query_types=query_types, **query_suggest_conf)
+                active_providers.append({
+                    'ident': ident,
+                    'rendererId': frontend.renderer,
+                    'heading': frontend.headings.get(plugin_api.user_lang.replace('_', '-'), '--'),
+                    'queryTypes': frontend.query_types
+                })
+        return dict(providers=active_providers)
 
     def export_actions(self):
         return {concordance.Actions: [fetch_query_suggestions]}
-
-    def apply_conf(self, options, corp_options, plugin_api):
-        query_suggest_conf = {}
-
-        conf_key = f'{plugin_api.current_corpus.corpname}:query_hint_mode'
-        try:
-            query_suggest_conf['visibility_mode'] = corp_options[conf_key]
-        except:
-            query_suggest_conf['visibility_mode'] = 2  # default auto mode
-
-        plugin_api.set_shared('query_suggest_conf', query_suggest_conf)
 
 
 def find_implementation(path: str) -> Any:

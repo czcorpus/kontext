@@ -19,19 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe, Dict, tuple } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { init as initView, SuggestionsViews, KnownRenderers } from './view';
-import { Model } from './model';
-import { QueryType } from '../../models/query/common';
+import { Model, ProviderInfo } from './model';
 
 
 declare var require:any;
 require('./style.less');
-
-type SupportedQueryTypes = {[frontendId:string]:Array<QueryType>};
 
 /**
  *
@@ -46,14 +43,18 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
     protected readonly model:Model;
 
+    protected readonly providers:Array<ProviderInfo>;
+
     constructor(
         pluginApi:IPluginApi,
         views:SuggestionsViews,
-        model:Model
+        model:Model,
+        providers:Array<ProviderInfo>
     ) {
         this.pluginApi = pluginApi;
         this.views = views;
         this.model = model;
+        this.providers = providers;
     }
 
     isActive():boolean {
@@ -81,6 +82,13 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         );
     }
 
+    listCurrentProviders():Array<string> {
+        return List.map(
+            v => v.heading,
+            this.providers
+        );
+    }
+
     errorTypeGuard(data:unknown):data is Error {
         return data instanceof Error || typeof data === 'string';
     }
@@ -101,24 +109,22 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
 
 const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
-    const corpora = List.concat(
-        pluginApi.getConf('alignedCorpora'),
-        [pluginApi.getCorpusIdent().id]
+    const providers = pipe(
+        pluginApi.getNestedConf<Array<ProviderInfo>>('pluginData', 'query_suggest', 'providers'),
+        List.map(
+            item => ({
+                ident: item.ident,
+                frontendId: item.frontendId,
+                queryTypes: item.queryTypes,
+                heading: item.heading
+            })
+        )
     );
     const model = new Model(
         pluginApi.dispatcher(),
         {
             uiLang: pluginApi.getConf<string>('uiLang'),
-            providers: pipe(
-                pluginApi.getNestedConf<SupportedQueryTypes>('pluginData', 'query_suggest', 'query_types'),
-                Dict.toEntries(),
-                List.map(
-                    ([frontendId, queryTypes]) => ({
-                        frontendId,
-                        queryTypes
-                    })
-                )
-            ),
+            providers,
             isBusy: false,
             cache: [],
             suggestionArgs: {},
@@ -129,7 +135,8 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
     return new DefaultQuerySuggest(
         pluginApi,
         initView(pluginApi.dispatcher(), model, pluginApi.getComponentHelpers()),
-        model
+        model,
+        providers
     );
 };
 

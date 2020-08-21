@@ -173,7 +173,6 @@ class Args(object):
     attrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
     base_viewattr: str = def_attr('word', persistent=Persistence.PERSISTENT)
     attr_vmode: str = def_attr('visible-kwic', persistent=Persistence.PERSISTENT)
-    query_hint_mode: int = def_attr(2, persistent=Persistence.PERSISTENT)
     structs: str = def_attr('', persistent=Persistence.PERSISTENT)
     q: List[str] = def_attr([])
     pagesize: int = def_attr(40, persistent=Persistence.PERSISTENT)
@@ -183,7 +182,9 @@ class Args(object):
     wlsendmail: str = def_attr('')
     cup_hl: str = def_attr('q', persistent=Persistence.PERSISTENT)
     structattrs: List[str] = def_attr([], persistent=Persistence.PERSISTENT)
+
     cql_editor: int = def_attr(1, persistent=Persistence.PERSISTENT)
+    qs_visibility_mode: int = def_attr(2, persistent=Persistence.PERSISTENT)
 
     flimit: int = def_attr(1)
     freqlevel: int = def_attr(1)

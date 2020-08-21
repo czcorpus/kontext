@@ -478,6 +478,7 @@ export namespace PluginInterfaces {
         export interface IPlugin extends BasePlugin {
             createElement(rendererId:string, data:unknown):React.ReactElement;
             isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
+            listCurrentProviders():Array<string>;
         }
 
         export enum ActionName {

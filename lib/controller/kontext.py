@@ -348,11 +348,6 @@ class Kontext(Controller):
                     ans[tokens[1]] = v
         self.args.map_args_to_attrs(ans)
 
-    def _apply_conf_to_plugins(self, options, corp_options):
-        for item in plugins.runtime:
-            if hasattr(item.instance, 'apply_conf'):
-                item.instance.apply_conf(options, corp_options, self._plugin_api)
-
     @staticmethod
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
         return 'corpname', Kontext.SCHEDULED_ACTIONS_KEY
@@ -374,7 +369,7 @@ class Kontext(Controller):
         else:
             tosave = [(att.name, getattr(self.args, att.name))
                       for att in attr.fields(Args) if att.name in optlist]
-
+        logging.getLogger(__name__).debug('TOSAAVE: {}'.format(tosave))
         def normalize_opts(opts):
             if opts is None:
                 opts = {}
@@ -718,8 +713,6 @@ class Kontext(Controller):
         # always prefer corpname returned by _check_corpus_access()
         setattr(self.args, 'corpname', corpname)
         self._corpus_variant = corpus_variant
-
-        self._apply_conf_to_plugins(options, corp_options)
 
         # return url (for 3rd party pages etc.)
         args = {}

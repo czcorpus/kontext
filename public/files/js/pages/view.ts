@@ -89,7 +89,6 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import querySuggestPlugin from 'plugins/querySuggest/init';
 
 
 declare var require:any;
@@ -401,7 +400,7 @@ export class ViewPage {
     /**
      *
      */
-    private initQueryForm(querySuggest:PluginInterfaces.QuerySuggest.IPlugin):void {
+    private initQueryForm():void {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
         );
@@ -457,7 +456,9 @@ export class ViewPage {
             selectedTextTypes: queryFormArgs.selected_text_types,
             useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
+            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
+            suggestionsVisibility: this.layoutModel.getConf<
+                PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel(
@@ -475,7 +476,9 @@ export class ViewPage {
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             structList: this.layoutModel.getConf<Array<string>>('StructList'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-            isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor')
+            isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
+            suggestionsVisibility: this.layoutModel.getConf<
+                PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
         });
 
         this.queryFormViews = queryFormInit({
@@ -489,7 +492,7 @@ export class ViewPage {
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             queryContextModel: this.queryModels.queryContextModel,
             cqlEditorModel: this.queryModels.cqlEditorModel,
-            qsuggPlugin: querySuggest
+            qsuggPlugin: this.layoutModel.qsuggPlugin
         });
     }
 
@@ -536,7 +539,9 @@ export class ViewPage {
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
             useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
+            isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
+            suggestionsVisibility: this.layoutModel.getConf<
+                PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
         };
 
         this.queryModels.filterModel = new FilterFormModel(
@@ -1115,10 +1120,9 @@ export class ViewPage {
                 []
             );
             this.setupHistoryOnPopState();
-            const querySuggPlg = querySuggestPlugin(this.layoutModel.pluginApi());
-            this.initQueryForm(querySuggPlg);
+            this.initQueryForm();
             this.initFirsthitsForm();
-            this.initFilterForm(querySuggPlg, this.queryModels.firstHitsModel);
+            this.initFilterForm(this.layoutModel.qsuggPlugin, this.queryModels.firstHitsModel);
             this.initSortForm();
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);

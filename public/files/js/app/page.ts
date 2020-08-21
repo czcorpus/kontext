@@ -52,6 +52,7 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
+import querySuggestPlugin from 'plugins/querySuggest/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
@@ -116,6 +117,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     private readonly l10n:L10n;
 
     private asyncTaskChecker:AsyncTaskChecker;
+
+    qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 
     /**
      * This is intended for React components to make them able register key
@@ -668,11 +671,15 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.getConf<boolean>('popupServerMessages')
             );
             this.userInfoModel = new UserInfo(this.dispatcher, this);
+            this.qsuggPlugin = querySuggestPlugin(
+                this.pluginApi()
+            );
             this.corpViewOptionsModel = new CorpusViewOptionsModel(
                 this.dispatcher,
                 this,
                 this.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-                this.getConf<boolean>('anonymousUser')
+                this.getConf<boolean>('anonymousUser'),
+                this.qsuggPlugin.listCurrentProviders()
             );
 
             this.mainMenuModel = new MainMenuModel(

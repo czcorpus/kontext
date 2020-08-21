@@ -44,7 +44,6 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import querySuggestPlugin from 'plugins/querySuggest/init';
 
 
 declare var require:any;
@@ -241,7 +240,9 @@ export class FirstFormPage {
                 tagsetDocs: queryFormArgs.tagset_docs,
                 useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
                 tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-                isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser')
+                isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
+                suggestionsVisibility: this.layoutModel.getConf<
+                    PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
             }
         );
 
@@ -254,16 +255,13 @@ export class FirstFormPage {
             tagAttr: this.layoutModel.pluginTypeIsActive(PluginName.TAGHELPER) ?
                 this.layoutModel.getConf<string>('tagAttr') : null,
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            currQueries: queryFormArgs.curr_queries
+            currQueries: queryFormArgs.curr_queries,
+            suggestionsVisibility: this.layoutModel.getConf<
+                PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
         });
     }
 
     private attachQueryForm(properties:QueryFormProps, corparchWidget:React.ComponentClass):void {
-
-        const qsuggPlugin = querySuggestPlugin(
-            this.layoutModel.pluginApi()
-        );
-
         const queryFormComponents = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
@@ -275,7 +273,7 @@ export class FirstFormPage {
             virtualKeyboardModel: this.virtualKeyboardModel,
             queryContextModel: this.queryContextModel,
             cqlEditorModel: this.cqlEditorModel,
-            qsuggPlugin
+            qsuggPlugin: this.layoutModel.qsuggPlugin
         });
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,

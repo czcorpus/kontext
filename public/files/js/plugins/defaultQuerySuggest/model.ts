@@ -38,10 +38,17 @@ export interface HTTPResponse extends Kontext.AjaxResponse {
     }>;
 }
 
+export interface ProviderInfo {
+    ident:string;
+    frontendId:string;
+    queryTypes:Array<QueryType>;
+    heading:string;
+}
+
 export interface ModelState {
     isBusy:boolean;
     uiLang:string;
-    providers:Array<{frontendId:string; queryTypes:Array<QueryType>}>;
+    providers:Array<ProviderInfo>;
     suggestionArgs:{[sourceId:string]:PluginInterfaces.QuerySuggest.SuggestionArgs};
     activeSourceId:string;
     cache:Array<[string, PluginInterfaces.QuerySuggest.SuggestionAnswer]>;

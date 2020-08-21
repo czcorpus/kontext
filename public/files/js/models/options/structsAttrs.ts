@@ -52,8 +52,9 @@ export interface CorpusViewOptionsModelState {
     corpusUsesRTLText:boolean;
     baseViewAttr:string;
     basePosAttr:string;
-    queryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
-    queryHintAvailable:boolean;
+    qsVisibilityMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+    qsPluginAvaiable:boolean;
+    qsProviders:Array<string>;
 }
 
 /**
@@ -68,7 +69,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         dispatcher:IFullActionControl,
         layoutModel:PageModel,
         corpusIdent:Kontext.FullCorpusIdent,
-        userIsAnonymous:boolean
+        userIsAnonymous:boolean,
+        qsProviders:Array<string>
     ) {
         super(
             dispatcher,
@@ -92,8 +94,9 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 basePosAttr: layoutModel.getConf<string>('baseAttr'),
                 baseViewAttr: layoutModel.getConf<string>('baseViewAttr') ||
                     layoutModel.getConf<string>('baseAttr'),
-                queryHintMode: PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO,
-                queryHintAvailable: layoutModel.pluginTypeIsActive(PluginName.QUERY_SUGGEST)
+                qsVisibilityMode: PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO,
+                qsPluginAvaiable: layoutModel.pluginTypeIsActive(PluginName.QUERY_SUGGEST),
+                qsProviders
             }
         );
         this.layoutModel = layoutModel;
@@ -128,7 +131,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                                         AttrVmode: data.attr_vmode,
                                         ShowConcToolbar: data.use_conc_toolbar,
                                         BaseViewAttr: data.base_viewattr,
-                                        QueryHintMode: data.query_hint_mode
+                                        QueryHintMode: data.qs_visibility_mode
                                     }
                                 }
                             });
@@ -172,10 +175,10 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             }
         );
 
-        this.addActionHandler<Actions.ChangeQueryHintMode>(
-            ActionName.ChangeQueryHintMode,
+        this.addActionHandler<Actions.ChangeQuerySuggestionMode>(
+            ActionName.ChangeQuerySuggestionMode,
             (state, action) => {
-                state.queryHintMode = action.payload.value;
+                state.qsVisibilityMode = action.payload.value;
             }
         );
 
@@ -327,7 +330,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             ),
             setattr_vmode: state.attrVmode,
             base_viewattr: state.baseViewAttr,
-            setquery_hint_mode: state.queryHintMode
+            setqs_visibility_mode: state.qsVisibilityMode
         };
 
         return ans;
@@ -360,18 +363,19 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     this.layoutModel.replaceConcArg('base_viewattr', [formArgs['base_viewattr']]);
                     this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
                     this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
-                    this.layoutModel.replaceConcArg('query_hint_mode', [formArgs['setquery_hint_mode']]);
+                    this.layoutModel.setConf('QSVisibilityMode', [formArgs['setqs_visibility_mode']]);
                     this.layoutModel.resetMenuActiveItemAndNotify();
                 }
             )
         ).subscribe(
             (data) => {
-                dispatch({
+                dispatch<Actions.SaveSettingsDone>({
                     name: ActionName.SaveSettingsDone,
                     payload: {
                         widectxGlobals: data.widectx_globals,
                         baseViewAttr: state.baseViewAttr,
-                        attrVmode: state.attrVmode
+                        attrVmode: state.attrVmode,
+                        qsVisibilityMode: state.qsVisibilityMode
                     }
                 });
                 this.layoutModel.showMessage(
@@ -380,7 +384,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 );
             },
             (err) => {
-                dispatch({
+                dispatch<Actions.SaveSettingsDone>({
                     name: ActionName.SaveSettingsDone,
                     error: err
                 });
@@ -719,7 +723,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.hasLoadedData = true;
         state.showConcToolbar = data.ShowConcToolbar;
         state.baseViewAttr = data.BaseViewAttr;
-        state.queryHintMode = data.QueryHintMode;
+        state.qsVisibilityMode = data.QueryHintMode;
     }
 
     private loadData():Observable<ViewOptions.LoadOptionsResponse> {

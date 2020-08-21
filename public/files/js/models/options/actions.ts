@@ -50,7 +50,7 @@ export enum ActionName {
     SetBaseViewAttr = 'VIEW_OPTIONS_SET_BASE_VIEW_ATTR',
     SaveSettings = 'VIEW_OPTIONS_SAVE_SETTINGS',
     SaveSettingsDone = 'VIEW_OPTIONS_SAVE_SETTINGS_DONE',
-    ChangeQueryHintMode = 'VIEW_OPTIONS_CHANGE_QUERY_HINT_MODE'
+    ChangeQuerySuggestionMode = 'VIEW_OPTIONS_CHANGE_QUERY_SUGGESTION_MODE'
 }
 
 export namespace Actions {
@@ -191,14 +191,15 @@ export namespace Actions {
         baseViewAttr:string;
         widectxGlobals:Array<[string, string]>;
         attrVmode:ViewOptions.AttrViewMode;
+        qsVisibilityMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
     }> {
         name:ActionName.SaveSettingsDone;
     }
 
-    export interface ChangeQueryHintMode extends Action<{
+    export interface ChangeQuerySuggestionMode extends Action<{
         value:PluginInterfaces.QuerySuggest.SuggestionVisibility;
     }> {
-        name:ActionName.ChangeQueryHintMode;
+        name:ActionName.ChangeQuerySuggestionMode;
     }
 
 }
