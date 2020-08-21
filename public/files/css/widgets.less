@@ -1122,19 +1122,26 @@ table.MLSingleLevelFields {
 
     ul {
         list-style-type: none;
-        margin: 0;
+        margin: 0 0 0 1.5em;
         padding: 0;
 
         li {
 
             margin: 0;
-            padding: 0.2em 0;
+            padding: 0.25em 0;
 
             label {
+                display: flex;
+
                 input,
                 span {
-                    vertical-align: middle;
-                    display: inline-block;
+                    padding: 0;
+                    margin: 0;
+                    display: block;
+                }
+
+                input {
+                    margin-right: 0.3em;
                 }
             }
         }
