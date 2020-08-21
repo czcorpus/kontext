@@ -37,13 +37,14 @@ class Options(Kontext):
         self.args.cql_editor = cql_editor
 
     def _set_new_viewattrs(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
-                           setstructattrs=()):
+                           setstructattrs=(), setquery_hint_mode=2):
         if self.BASE_ATTR not in setattrs:
             setattrs = (self.BASE_ATTR, ) + tuple(setattrs)
         self.args.attrs = ','.join(setattrs)
         self.args.structs = ','.join(setstructs)
         self.args.refs = ','.join(setrefs)
         self.args.attr_vmode = setattr_vmode
+        self.args.query_hint_mode = setquery_hint_mode
         self.args.structattrs = setstructattrs
 
     @exposed(access_level=0, vars=('concsize', ), return_type='json')
@@ -63,6 +64,7 @@ class Options(Kontext):
                            if n]
         out['fixed_attr'] = 'word'
         out['attr_vmode'] = self.args.attr_vmode
+        out['query_hint_mode'] = self.args.query_hint_mode
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = set(self.args.structs.split(',')).union(
             set([x.split('.')[0] for x in self.args.structattrs]))
@@ -104,13 +106,14 @@ class Options(Kontext):
 
     @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=True, http_method='POST')
     def viewattrsx(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
-                   setstructattrs=()):
+                   setstructattrs=(), setquery_hint_mode=2):
         self._set_new_viewattrs(setattrs=setattrs,
                                 setattr_vmode=setattr_vmode,
                                 setstructs=setstructs,
                                 setrefs=setrefs,
-                                setstructattrs=setstructattrs)
-        self._save_options(['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr'],
+                                setstructattrs=setstructattrs,
+                                setquery_hint_mode=setquery_hint_mode)
+        self._save_options(['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr', 'query_hint_mode'],
                            self.args.corpname)
         if self.args.format == 'json':
             return dict(widectx_globals=self._get_mapped_attrs(

@@ -291,7 +291,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 List.map(k => tuple(k, false)),
                 Dict.fromEntries()
             ),
-            suggestionsVisibility: PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
+            suggestionsVisibility: pageModel.getNestedConf('pluginData', 'query_suggest', 'visibility_mode')
         });
         this.syncInitialArgs = syncInitialArgs;
 

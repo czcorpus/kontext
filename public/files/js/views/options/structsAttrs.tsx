@@ -27,6 +27,7 @@ import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/options/actions';
 import { Actions as OptionsActions, ActionName as OptionsActionName } from '../../models/options/actions';
 import { List, HTTP } from 'cnc-tskit';
+import { PluginInterfaces } from '../../types/plugins';
 
 export interface StructsAttrsModuleArgs {
     dispatcher:IActionDispatcher;
@@ -404,6 +405,58 @@ export function init({dispatcher, helpers, viewOptionsModel,
         );
     };
 
+    // ---------------------------- <QueryHints /> ----------------------
+
+    const QueryHints:React.SFC<{
+        queryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility
+
+    }> = (props) => {
+
+        const handleSelectChangeFn = (event:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch<Actions.ChangeQueryHintMode>({
+                name: ActionName.ChangeQueryHintMode,
+                payload: {
+                    value: parseInt(event.target.value) as PluginInterfaces.QuerySuggest.SuggestionVisibility
+                }
+            });
+        };
+
+        return (
+            <section>
+                <div className="QueryHintModes">
+                    <ul>
+                        <li>
+                            <label>
+                                <input type="radio" name="queryHintMode"
+                                    checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
+                                    value={PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
+                                    onChange={handleSelectChangeFn} />
+                                <span>{helpers.translate('options__query_suggestions_disabled')}</span>
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="queryHintMode"
+                                    checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
+                                    value={PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
+                                    onChange={handleSelectChangeFn} />
+                                <span>{helpers.translate('options__query_suggestions_manual')}</span>
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="queryHintMode"
+                                    checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
+                                    value={PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
+                                    onChange={handleSelectChangeFn} />
+                                <span>{helpers.translate('options__query_suggestions_auto')}</span>
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        );
+    };
 
     // ---------------------------- <SubmitButtons /> ----------------------
 
@@ -463,6 +516,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
         isWaiting:boolean;
         userIsAnonymous:boolean;
         corpusUsesRTLText:boolean;
+        queryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+        queryHintAvailable:boolean;
 
     }> = (props) => {
 
@@ -480,6 +535,13 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     id: 'references',
                     label: helpers.translate('options__references_hd'),
                 },
+                ...(props.queryHintAvailable ?
+                    [{
+                        id: 'hints',
+                        label: helpers.translate('options__query_suggestions_hd'),
+                    }] :
+                    []
+                )
             ])
 
             return (
@@ -507,6 +569,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 availRefs={props.availRefs}
                                 refAttrs={props.refAttrs}
                                 hasSelectAll={props.hasSelectAllRefs} />
+
+                            <QueryHints queryHintMode={props.queryHintMode} />
                         </layoutViews.TabView>
 
                         {props.userIsAnonymous ?
@@ -553,7 +617,9 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     showConcToolbar={props.showConcToolbar}
                     isWaiting={props.isBusy}
                     userIsAnonymous={props.userIsAnonymous}
-                    corpusUsesRTLText={props.corpusUsesRTLText} />
+                    corpusUsesRTLText={props.corpusUsesRTLText}
+                    queryHintMode={props.queryHintMode}
+                    queryHintAvailable={props.queryHintAvailable} />
         </div>
     );
 
