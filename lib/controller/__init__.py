@@ -148,7 +148,7 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
 
 
 def val_to_js(obj):
-    return re.sub(r'<(/)?(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\g<1>\g<2>>', json.dumps(obj),
+    return re.sub(r'<((?:/)?)(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\1\2>', json.dumps(obj), 
                   flags=re.IGNORECASE)
 
 
