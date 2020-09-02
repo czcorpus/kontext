@@ -131,7 +131,7 @@ class Result(APIConnection):
 
     def __init__(self, conf, data):
         """
-        {u'status': 0, u'updated': 0, u'created': 1533630693, , u'error': u'', u'fn': u'worker.conc_register'}
+        {u'status': 0, u'updated': 0, u'created': 1533630693, , u'error': u'', u'fn': u'conc_register'}
         """
         super(Result, self).__init__(conf)
         if data is None:
@@ -378,7 +378,7 @@ class KonserverApp(APIConnection):
 if __name__ == '__main__':  # here we operate in worker mode
     import imp
     logger = logging.getLogger('')
-    worker_path = os.path.join(os.path.dirname(__file__), '..', '..', 'worker.py')
+    worker_path = os.path.join(os.path.dirname(__file__), '..', '..', 'worker', 'celery.py')
     worker = imp.load_source('worker', worker_path)
     # ignoring type checker errors: Module has no attribute...
     setup_logger(
