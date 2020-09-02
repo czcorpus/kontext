@@ -71,17 +71,17 @@ class CustomTasks(object):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
-@app.task(bind=True)
+@app.task(bind=True, name='conc_register')
 def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
-    return general.conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit)
+    return general.conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, app)
 
 
-@app.task(bind=True)
+@app.task(bind=True, name='conc_calculate')
 def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     return general.conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize)
 
 
-@app.task(bind=True)
+@app.task(bind=True, name='conc_sync_calculate')
 def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
     return general.conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize)
 
@@ -101,12 +101,12 @@ class CollsTask(app.Task):
                 self.cache_data = None
 
 
-@app.task(base=CollsTask)
+@app.task(base=CollsTask, name='calculate_colls')
 def calculate_colls(coll_args):
     return general.calculate_colls(coll_args)
 
 
-@app.task()
+@app.task(name='clean_colls_cache')
 def clean_colls_cache():
     return general.clean_colls_cache()
 
@@ -126,17 +126,17 @@ class FreqsTask(app.Task):
                 self.cache_data = None
 
 
-@app.task(base=FreqsTask)
+@app.task(base=FreqsTask, name='calculate_freqs')
 def calculate_freqs(args):
     return general.calculate_freqs(args)
 
 
-@app.task()
+@app.task(name='calculate_freqs_ct')
 def calculate_freqs_ct(args):
     return general.calculate_freqs_ct(args)
 
 
-@app.task()
+@app.task(name='clean_freqs_cache')
 def clean_freqs_cache():
     return general.clean_freqs_cache()
 
@@ -144,17 +144,17 @@ def clean_freqs_cache():
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-@app.task()
+@app.task(name='compile_frq')
 def compile_frq(corp_id, subcorp_path, attr, logfile):
     return general.compile_frq(corp_id, subcorp_path, attr, logfile)
 
 
-@app.task()
+@app.task(name='compile_arf')
 def compile_arf(corp_id, subcorp_path, attr, logfile):
     return general.compile_arf(corp_id, subcorp_path, attr, logfile)
 
 
-@app.task()
+@app.task(name='compile_docf')
 def compile_docf(corp_id, subcorp_path, attr, logfile):
     return general.compile_docf(corp_id, subcorp_path, attr, logfile)
 
@@ -162,7 +162,7 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
 # ----------------------------- SUBCORPORA ------------------------------------
 
 
-@app.task()
+@app.task(name='create_subcorpus')
 def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
     return general.create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description)
 

@@ -45,8 +45,8 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
     """
     """
     app = bgcalc.calc_backend_client(settings)
-    ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
-                                                 subchash, q, samplesize, TASK_TIME_LIMIT),
+    ans = app.send_task('conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
+                                          subchash, q, samplesize, TASK_TIME_LIMIT),
                         time_limit=CONC_REGISTER_TASK_LIMIT)
     ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
@@ -72,7 +72,7 @@ def _get_bg_conc(corp: manatee.Corpus, user_id: int, q: Tuple[str, ...], subchas
                 del_silent(cachefile)
                 logging.getLogger(__name__).warning(f'Removed unbound conc. cache file {cachefile}')
         app = bgcalc.calc_backend_client(settings)
-        app.send_task('worker.conc_sync_calculate',
+        app.send_task('conc_sync_calculate',
                       (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize),
                       time_limit=TASK_TIME_LIMIT)
     # for smaller concordances/corpora there is a chance the data

@@ -178,7 +178,7 @@ def build_arf_db(corp, attrname):
     for m in ('frq', 'arf', 'docf'):
         logfilename_m = create_log_path(base_path, m)
         write_log_header(corp, logfilename_m)
-        res = app.send_task('worker.compile_{0}'.format(m),
+        res = app.send_task('compile_{0}'.format(m),
                             (corp.corpname, subc_path, attrname, logfilename_m),
                             time_limit=TASK_TIME_LIMIT)
         task_ids.append(res.id)
@@ -263,7 +263,7 @@ def calculate_freqs(args):
     if calc_result is None:
         args.cache_path = cache_path
         app = bgcalc.calc_backend_client(settings)
-        res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),),
+        res = app.send_task('calculate_freqs', args=(args.to_dict(),),
                             time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         calc_result = res.get()
@@ -415,7 +415,7 @@ def calculate_freqs_ct(args):
     """
     try:
         app = bgcalc.calc_backend_client(settings)
-        res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),),
+        res = app.send_task('calculate_freqs_ct', args=(args.to_dict(),),
                             time_limit=TASK_TIME_LIMIT)
         calc_result = res.get()
     except Exception as ex:

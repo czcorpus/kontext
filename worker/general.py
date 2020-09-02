@@ -141,7 +141,7 @@ def _compile_frq(corp, attr, logfile):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
-def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
+def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, app):
     """
     Register concordance calculation and initiate the calculation.
 
@@ -162,7 +162,7 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
     initial_args = reg_fn(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
-        app.send_task('worker.conc_calculate',
+        app.send_task('conc_calculate',
                       args=(initial_args, user_id, corpus_id,
                             subc_name, subchash, query, samplesize),
                       soft_time_limit=time_limit)
