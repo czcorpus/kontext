@@ -72,6 +72,9 @@ def _init_backend_app(conf, fn_prefix):
             kconf.RESULT_WAIT_MAX_TIME = conf.get_int(
                 'calc_backend', 'konserver_result_wait_max_time')
         return KonserverApp(conf=kconf, fn_prefix=fn_prefix)
+    elif app_type == 'rq':
+        from bgcalc.rq import RqClient
+        return RqClient()
     else:
         raise CalcBackendInitError(
             'Failed to init calc backend {0} (conf: {1})'.format(app_type, app_conf))
