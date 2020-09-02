@@ -33,17 +33,15 @@ import os
 import imp
 import sys
 import time
-import pickle
 
-CURR_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, '%s/lib' % CURR_PATH)
+APP_PATH = os.path.realpath('%s/..' % os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, '%s/../lib' % APP_PATH)
 import settings
 import initializer
-import plugins
 import translation
 from bgcalc.stderr2f import stderr_redirector
 
-settings.load(os.path.join(CURR_PATH, 'conf', 'config.xml'))
+settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 import manatee
@@ -67,11 +65,7 @@ translation.activate('en_US')  # background jobs do not need localization
 
 import conclib.calc
 import conclib.calc.base
-import bgcalc
 from bgcalc import (freq_calc, subc_calc, coll_calc)
-
-
-app = bgcalc.calc_backend_server(settings, 'worker')
 
 
 def load_script_module(name, path):
@@ -144,29 +138,9 @@ def _compile_frq(corp, attr, logfile):
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
-class CustomTasks(object):
-    """
-    Dynamically register tasks exposed by active plug-ins.
-
-    Once a plug-in defines a method 'export_tasks()' returning
-    a list of functions, this class generates a list of
-    tasks named [plugin_name].[function_name]. E.g. if
-    the 'db' plugin exports a list of functions containing
-    a single function 'vacuum()' then the class adds a new
-    task 'db.vacuum'.
-    """
-
-    def __init__(self):
-        for p in plugins.runtime:
-            if callable(getattr(p.instance, 'export_tasks', None)):
-                for tsk in p.instance.export_tasks():
-                    setattr(self, '%s_%s' % (p.name, tsk.__name__,),
-                            app.task(tsk, name='%s.%s' % (p.name, tsk.__name__,)))
-
-
 # ----------------------------- CONCORDANCE -----------------------------------
 
-@app.task(bind=True)
+
 def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
     """
     Register concordance calculation and initiate the calculation.
@@ -195,7 +169,6 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     return initial_args
 
 
-@app.task(bind=True)
 def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     """
     Perform actual concordance calculation.
@@ -216,7 +189,6 @@ def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash
     return task(initial_args, (subc_path, pub_path), corpus_name, subc_name, subchash, query, samplesize)
 
 
-@app.task(bind=True)
 def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
     subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
@@ -230,19 +202,7 @@ def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
 
-class CollsTask(app.Task):
 
-    cache_data = None
-    cache_path = None
-
-    def after_return(self, *args, **kw):
-        if self.cache_data:
-            with open(self.cache_path, 'wb') as f:
-                pickle.dump(self.cache_data, f)
-                self.cache_data = None
-
-
-@app.task(base=CollsTask)
 def calculate_colls(coll_args):
     """
     arguments:
@@ -259,7 +219,6 @@ def calculate_colls(coll_args):
     return ans
 
 
-@app.task()
 def clean_colls_cache():
     return coll_calc.clean_colls_cache()
 
@@ -267,19 +226,6 @@ def clean_colls_cache():
 # ----------------------------- FREQUENCY DISTRIBUTION ------------------------
 
 
-class FreqsTask(app.Task):
-
-    cache_data = None
-    cache_path = None
-
-    def after_return(self, *args, **kw):
-        if self.cache_data:
-            with open(self.cache_path, 'wb') as f:
-                pickle.dump(self.cache_data, f)
-                self.cache_data = None
-
-
-@app.task(base=FreqsTask)
 def calculate_freqs(args):
     args = freq_calc.FreqCalsArgs(**args)
     calculate_freqs.cache_path = args.cache_path
@@ -292,13 +238,11 @@ def calculate_freqs(args):
     return ans
 
 
-@app.task()
 def calculate_freqs_ct(args):
     args = freq_calc.CTFreqCalcArgs(**args)
     return freq_calc.CTCalculation(args).run()
 
 
-@app.task()
 def clean_freqs_cache():
     return freq_calc.clean_freqs_cache()
 
@@ -306,7 +250,6 @@ def clean_freqs_cache():
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-@app.task()
 def compile_frq(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
@@ -316,7 +259,6 @@ def compile_frq(corp_id, subcorp_path, attr, logfile):
     return _compile_frq(corp, attr, logfile)
 
 
-@app.task()
 def compile_arf(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
@@ -344,7 +286,6 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
-@app.task()
 def compile_docf(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
@@ -368,7 +309,7 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
 
 # ----------------------------- SUBCORPORA ------------------------------------
 
-@app.task()
+
 def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
     try:
         worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id,
@@ -383,4 +324,5 @@ def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------
 
-custom_tasks = CustomTasks()
+
+custom_tasks = None
