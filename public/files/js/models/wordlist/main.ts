@@ -152,7 +152,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                         args.set('usesubcorp', formArgs.head('usesubcorp'));
                         args.set('default_attr', formArgs.head('wlattr'));
                         args.set('qmcase', '1');
-                        args.set('queryselector', 'cqlrow');
+                        args.set('qtype', 'advanced');
                         args.set('cql', this.createPQuery(
                             action.payload.word, formArgs.head('wlattr')));
                         window.location.href = this.layoutModel.createActionUrl(

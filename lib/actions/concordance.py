@@ -361,8 +361,8 @@ class Actions(Querying):
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
             active_only=False), persist=False)
         cid = self.args.corpname
-        if self.args.queryselector:
-            q_type = self.args.queryselector[:-3]
+        if self.args.qtype:
+            q_type = self.args.qtype
             qf_args.curr_query_types[cid] = q_type
             try:  # chasing rare error here
                 qf_args.curr_queries[cid] = getattr(self.args, q_type)
@@ -517,120 +517,16 @@ class Actions(Querying):
         availstruct = self.corp.get_conf('STRUCTLIST').split(',')
         return 'err' in availstruct and 'corr' in availstruct
 
-    def _compile_basic_query(self, qtype=None, suff='', cname=''):
-        queryselector = getattr(self.args, 'queryselector' + suff)
-        iquery = getattr(self.args, 'iquery' + suff, '')
-        lemma = getattr(self.args, 'lemma' + suff, '')
-        lpos = getattr(self.args, 'lpos' + suff, '')
-        phrase = getattr(self.args, 'phrase' + suff, '')
-        qmcase = getattr(self.args, 'qmcase' + suff, '')
-        word = getattr(self.args, 'word' + suff, '')
-        wpos = getattr(self.args, 'wpos' + suff, '')
-        char = getattr(self.args, 'char' + suff, '')
-        cql = getattr(self.args, 'cql' + suff, '')
-
-        queries = dict(
-            cql='%(cql)s',
-            lemma='[lempos="%(lemma)s%(lpos)s"]',
-            wordform='[%(wordattr)s="%(word)s" & tag="%(wpos)s.*"]',
-            wordformonly='[%(wordattr)s="%(word)s"]')
-        for a in ('iquery', 'word', 'lemma', 'phrase', 'cql'):
-            if queryselector == a + 'row':
-                if getattr(self.args, a + suff, ''):
-                    setattr(self.args, a + suff, getattr(self.args, a + suff).strip())
-                elif suff:
-                    return ''
-                else:
-                    raise ConcError(translate('No query entered.'))
-        if qtype:
-            return queries[qtype] % attr.asdict(self.args)
-        thecorp = cname and self.cm.get_Corpus(cname) or self.corp
-        attrlist = thecorp.get_conf('ATTRLIST').split(',')
-        wposlist = dict(self.cm.corpconf_pairs(thecorp, 'WPOSLIST'))
-        lposlist = dict(self.cm.corpconf_pairs(thecorp, 'LPOSLIST'))
-
-        if queryselector == 'iqueryrow':
-            if 'lc' in attrlist:
-                if 'lemma_lc' in attrlist:
-                    qitem = '[lc="%(q)s"|lemma_lc="%(q)s"]'
-                elif 'lemma' in attrlist:
-                    qitem = '[lc="%(q)s"|lemma="(?i)%(q)s"]'
-                else:
-                    qitem = '[lc="%(q)s"]'
-            else:
-                if 'lemma' in attrlist:
-                    qitem = '[word="(?i)%(q)s"|lemma="(?i)%(q)s"]'
-                else:
-                    qitem = '[word="(?i)%(q)s"]'
-
-            if '--' not in iquery:
-                return ''.join([qitem % {'q': l10n.escape(q)}
-                                for q in iquery.split()])
-            else:
-                def split_tridash(word, qitem):
-                    if '--' not in word:
-                        return qitem % {'q': word}
-                    w1, w2 = word.split('--', 1)
-                    return "( %s | %s %s | %s )" % (qitem % {'q': w1 + w2},
-                                                    qitem % {'q': w1},
-                                                    qitem % {'q': w2},
-                                                    qitem % {'q': w1 + '-' + w2})
-
-                return ''.join([split_tridash(l10n.escape(q), qitem)
-                                for q in iquery.split()])
-
-        elif queryselector == 'lemmarow':
-            if not lpos:
-                return '[lemma="%s"]' % lemma
-            elif 'lempos' in attrlist:
-                try:
-                    if not lpos in list(lposlist.values()):
-                        lpos = lposlist[lpos]
-                except KeyError:
-                    raise ConcError(translate('Undefined lemma PoS') + ' "%s"' % lpos)
-                return '[lempos="%s%s"]' % (lemma, lpos)
-            else:  # XXX WTF?
-                try:
-                    if lpos in list(wposlist.values()):
-                        wpos = lpos
-                    else:
-                        wpos = wposlist[lpos]
-                except KeyError:
-                    raise ConcError(translate('Undefined word form PoS')
-                                    + ' "%s"' % lpos)
-                return '[lemma="%s" & tag="%s"]' % (lemma, wpos)
-        elif queryselector == 'phraserow':
-            if self.args.qmcase:
-                return ' '.join(['"%s"' % p for p in phrase.split()])
-            else:
-                return ' '.join(['"(?i)%s"' % p for p in phrase.split()])
-        elif queryselector == 'wordrow':
-            if qmcase:
-                wordattr = 'word="%s"' % word
-            else:
-                if 'lc' in attrlist:
-                    wordattr = 'lc="%s"' % word
-                else:
-                    wordattr = 'word="(?i)%s"' % word
-            if not wpos:
-                return '[%s]' % wordattr
-            try:
-                if not wpos in list(wposlist.values()):
-                    wpos = wposlist[wpos]
-            except KeyError:
-                raise ConcError(translate('Undefined word form PoS') + ' "%s"' % wpos)
-            return '[%s & tag="%s"]' % (wordattr, wpos)
-        elif queryselector == 'charrow':
-            if not char:
-                raise ConcError(translate('No char entered'))
-            return '[word=".*%s.*"]' % char
-        elif queryselector == 'tag':
-            return '[tag="%s"]' % self.args.tag
+    def _compile_basic_query(self, suff='', cname=''):
+        qtype = getattr(self.args, 'qtype' + suff)
+        query = getattr(self.args, 'query' + suff)
+        if qtype == 'simple':
+            return f'[word="(?i){query.strip()}"]'
         else:
-            return re.sub(r'[\n\r]+', ' ', cql).strip()
+            return re.sub(r'[\n\r]+', ' ', query).strip()
 
-    def _compile_query(self, qtype=None, cname=''):
-        return self._compile_basic_query(qtype, cname=cname)
+    def _compile_query(self, cname=''):
+        return self._compile_basic_query(cname=cname)
 
     def _set_first_query(self, fc_lemword_window_type='',
                          fc_lemword_wsize=0,
@@ -671,8 +567,7 @@ class Actions(Querying):
         else:
             lemmaattr = 'word'
         wposlist = dict(self.cm.corpconf_pairs(self.corp, 'WPOSLIST'))
-        if self.args.queryselector == 'phraserow':
-            self.args.default_attr = 'word'  # XXX to be removed with new first form
+
         if self.args.default_attr:
             qbase = 'a%s,' % self.args.default_attr
         else:

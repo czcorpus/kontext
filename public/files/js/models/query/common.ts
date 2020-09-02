@@ -34,7 +34,7 @@ import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
 
 
-export type QueryType = 'iquery'|'phrase'|'lemma'|'word'|'cql';
+export type QueryType = 'simple'|'advanced';
 
 export interface QueryContextArgs {
     fc_lemword_window_type:string;
@@ -47,15 +47,9 @@ export interface QueryContextArgs {
     fc_pos_type:string;
 }
 
-export type AnyQuery = {
-    iquery?:string;
-    phrase?:string;
-    lemma?:string;
-    word?:string;
-    cql?:string
-}
-
-export interface ConcQueryArgs extends ConcServerArgs, AnyQuery {
+export interface ConcQueryArgs extends ConcServerArgs {
+    qtype:QueryType;
+    query:string;
     shuffle:0|1;
     [sca:string]:string|number;
 }
@@ -89,7 +83,7 @@ export interface FilterServerArgs extends ConcServerArgs {
     filfpos:string;
     filtpos:string;
     inclkwic:'1'|'0';
-    queryselector:string; // TODO more specific type here
+    qtype:QueryType;
     within:'1'|'0';
 }
 
@@ -222,7 +216,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             debounceTime(500)
         ).subscribe(
             (sourceId) => {
-                if (this.state.queryTypes[sourceId] !== 'cql'
+                if (this.state.queryTypes[sourceId] !== 'advanced'
                         && this.state.suggestionsVisibility !==
                             PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
@@ -236,8 +230,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             value: this.state.queries[sourceId],
                             valueType: 'unspecified',
                             queryType: this.state.queryTypes[sourceId],
-                            posAttr: this.state.queryTypes[sourceId] === 'lemma' ?
-                                'lemma' : undefined,
+                            posAttr: null,
+                            // TODO posAttr: [default attribute] if 'simple' type
                             struct: undefined,
                             structAttr: undefined,
                             sourceId
@@ -366,21 +360,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     protected validateQuery(query:string, queryType:QueryType):boolean {
         const parseFn = ((query:string) => {
             switch (queryType) {
-                case 'iquery':
-                    return () => {
-                        if (!!(/^"[^\"]+"$/.exec(query) ||
-                                /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
-                            throw new Error();
-                        }
-                    }
-                case 'phrase':
-                    return parseQuery.bind(
-                        null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
-                case 'lemma':
-                case 'word':
-                    return parseQuery.bind(
-                        null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
-                case 'cql':
+                case 'advanced':
                     return parseQuery.bind(
                         null, query + ';', {tracer: this.queryTracer});
                 default:

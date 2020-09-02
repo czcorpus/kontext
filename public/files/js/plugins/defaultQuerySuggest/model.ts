@@ -90,10 +90,6 @@ export class Model extends StatelessModel<ModelState> {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {
                     currArgs.queryType = action.payload.queryType;
-                    if (action.payload.queryType === 'lemma') {
-                        currArgs.valueType = 'posattr';
-                        currArgs.posAttr = 'lemma';
-                    }
                 }
             },
             (state, action, dispatch) => {

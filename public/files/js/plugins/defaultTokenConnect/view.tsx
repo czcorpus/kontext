@@ -107,8 +107,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                 {props.data.map((value, i) => {
                     const args = new MultiDict();
                     args.set('corpname', props.corpname);
-                    args.set('queryselector', 'phraserow');
-                    args.set('phrase', value.word);
+                    args.set('qtype', 'simple');
+                    args.set('query', value.word);
 
                     return <React.Fragment key={value.word}>
                         <a className="keyword" href={he.createActionLink('first', args)}

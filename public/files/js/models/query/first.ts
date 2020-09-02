@@ -115,16 +115,16 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 };
 
 
-function determineSupportedWidgets(corpora:Array<string>, queryTypes:{[key:string]:string},
+function determineSupportedWidgets(corpora:Array<string>, queryTypes:{[key:string]:QueryType},
         tagBuilderSupport:{[key:string]:boolean},
         isAnonymousUser:boolean):{[key:string]:Array<string>} {
 
-    const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
+    const getCorpWidgets = (corpname:string, queryType:QueryType):Array<string> => {
         const ans = ['keyboard'];
         if (!isAnonymousUser) {
             ans.push('history');
         }
-        if (queryType === 'cql') {
+        if (queryType === 'advanced') {
             ans.push('within');
             if (tagBuilderSupport[corpname]) {
                 ans.push('tag');
@@ -223,7 +223,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         const corpora = props.corpora;
         const queryTypes = pipe(
             props.corpora,
-            List.map(item => tuple(item, props.currQueryTypes[item] || 'iquery')),
+            List.map(item => tuple(item, props.currQueryTypes[item] || 'simple')),
             Dict.fromEntries()
         );
         const querySuggestions = pipe(
@@ -335,13 +335,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     let qType = action.payload.queryType;
-                    if (!state.hasLemma[action.payload.sourceId] &&  qType === 'lemma') {
-                        qType = 'phrase';
-                        this.pageModel.showMessage(
-                            'warning',
-                            'Lemma attribute not available, using "phrase"'
-                        );
-                    }
                     state.queryTypes[action.payload.sourceId] = qType;
                     state.supportedWidgets = determineSupportedWidgets(
                         state.corpora,
@@ -665,7 +658,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
         state.queryTypes = pipe(
             state.corpora,
-            List.map(item => tuple(item, data.currQueryTypes[item] || 'iquery')),
+            List.map(item => tuple(item, data.currQueryTypes[item] || 'simple')),
             Dict.fromEntries()
         );
         state.pcqPosNegValues = pipe(
@@ -737,7 +730,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 state.matchCaseValues[corpname] = false;
             }
             if (!Dict.hasKey(corpname, state.queryTypes)) {
-                state.queryTypes[corpname] = 'iquery'; // TODO what about some session-stored stuff?
+                state.queryTypes[corpname] = 'simple'; // TODO what about some session-stored stuff?
             }
             if (!Dict.hasKey(corpname, state.pcqPosNegValues)) {
                 state.pcqPosNegValues[corpname] = 'pos';
@@ -795,25 +788,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
         this.state.corpora.forEach(corpname => {
             args.add(
-                createArgname('queryselector', corpname),
-                `${this.state.queryTypes[corpname]}row`
+                createArgname('qtype', corpname),
+                `${this.state.queryTypes[corpname]}`
             );
             // now we set the query; we have to remove possible new-line
             // characters as while the client's cql parser and CQL widget are ok with that
             // server is unable to parse this
-            args.add(createArgname(this.state.queryTypes[corpname], corpname),
+            args.add(createArgname('query', corpname),
                      this.getQueryUnicodeNFC(corpname));
 
-            if (this.state.lposValues[corpname]) {
-                switch (this.state.queryTypes[corpname]) {
-                    case 'lemma':
-                        args.add(createArgname('lpos', corpname), this.state.lposValues[corpname]);
-                    break;
-                    case 'word':
-                        args.add(createArgname('wpos', corpname), this.state.lposValues[corpname]);
-                    break;
-                }
-            }
             if (this.state.matchCaseValues[corpname]) {
                 args.add(
                     createArgname('qmcase', corpname),
