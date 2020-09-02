@@ -26,6 +26,7 @@ import { Subscription } from 'rxjs';
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/query/actions';
+import { QueryType } from '../../models/query/common';
 
 
 export interface RecentQueriesPageListProps {
@@ -54,13 +55,9 @@ export interface HistoryViews {
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             queryHistoryModel:PluginInterfaces.QueryStorage.IModel):HistoryViews {
 
-    const queryTypes = {
-        'iquery': he.translate('query__qt_basic'),
-        'lemma': he.translate('query__qt_lemma'),
-        'phrase': he.translate('query__qt_phrase'),
-        'word': he.translate('query__qt_word_form'),
-        'char': he.translate('query__qt_word_part'),
-        'cql': he.translate('query__qt_cql')
+    const queryTypes:{[k in QueryType]:string} = {
+        'simple': he.translate('query__qt_simple'),
+        'advanced': he.translate('query__qt_advanced')
     };
 
     // -------------------- <QueryTypeSelector /> ------------------------

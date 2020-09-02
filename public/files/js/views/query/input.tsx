@@ -79,7 +79,7 @@ export interface TRQueryInputFieldProps {
 export interface TRQueryTypeFieldProps {
     formType:QueryFormType;
     sourceId:string;
-    queryType:string; // TODO enum
+    queryType:QueryType;
     hasLemmaAttr:boolean;
 }
 
@@ -162,7 +162,7 @@ export function init({
     // ------------------- <QueryTypeHints /> -----------------------------
 
     class QueryTypeHints extends React.Component<{
-        queryType:string;
+        queryType:QueryType;
     },
     {
         visible:boolean;
@@ -180,18 +180,10 @@ export function init({
 
         _getHintText() {
             switch (this.props.queryType) {
-                case 'iquery':
-                    return [he.translate('query__qt_basic'), he.translate('query__type_hint_basic'), null];
-                case 'lemma':
-                    return [he.translate('query__qt_lemma'), he.translate('query__type_hint_lemma'), null];
-                case 'phrase':
-                    return [he.translate('query__qt_phrase'), he.translate('query__type_hint_phrase'), null];
-                case 'word':
-                    return [he.translate('query__qt_word_form'), he.translate('query__type_hint_word'), null];
-                case 'char':
-                    return [he.translate('query__qt_word_part'), he.translate('query__type_hint_char'), null];
-                case 'cql':
-                    return [he.translate('query__qt_cql'), he.translate('query__type_hint_cql'), he.getHelpLink('term_cql')];
+                case 'simple':
+                    return [he.translate('query__qt_simple'), he.translate('query__type_hint_simple'), null];
+                case 'advanced':
+                    return [he.translate('query__qt_advanced'), he.translate('query__type_hint_advanced'), he.getHelpLink('term_cql')];
                 default:
                     return ['', '', null];
             }
@@ -251,12 +243,8 @@ export function init({
                 <th>{he.translate('query__select_type')}:</th>
                 <td>
                     <select value={props.queryType} onChange={handleSelection}>
-                        <option value="iquery">{he.translate('query__qt_basic')}</option>
-                        {props.hasLemmaAttr ? <option value="lemma">{he.translate('query__qt_lemma')}</option> : null}
-                        <option value="phrase">{he.translate('query__qt_phrase')}</option>
-                        <option value="word">{he.translate('query__qt_word_form')}</option>
-                        <option value="char">{he.translate('query__qt_word_part')}</option>
-                        <option value="cql">{he.translate('query__qt_cql')}</option>
+                        <option value="simple">{he.translate('query__qt_simple')}</option>
+                        <option value="advanced">{he.translate('query__qt_advanced')}</option>
                     </select>
                     <QueryTypeHints queryType={props.queryType} />
                 </td>
@@ -871,10 +859,7 @@ export function init({
 
         _renderInput() {
             switch (this.props.queryType) {
-                case 'iquery':
-                case 'lemma':
-                case 'phrase':
-                case 'word':
+                case 'simple':
                     return <BoundSingleLineInput
                                 sourceId={this.props.sourceId}
                                 refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
@@ -882,7 +867,7 @@ export function init({
                                 historyIsVisible={this.props.historyVisible}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown} />;
-                case 'cql':
+                case 'advanced':
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
                                 formType={this.props.formType}
@@ -906,31 +891,17 @@ export function init({
 
         _renderInputOptions() {
             switch (this.props.queryType) {
-                case 'iquery':
-                    return null;
-                case 'lemma':
-                    return <LposSelector wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType}  />;
-                case 'phrase':
-                    return <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType} />;
-                case 'word':
-                    return (
-                        <span>
-                            <LposSelector wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType}  />
-                            {'\u00a0'}
-                            <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType} />
-                        </span>
-                    );
-                case 'cql':
+                case 'simple':
+                    return <>
+                                <LposSelector wPoSList={this.props.wPoSList}
+                                    lposValue={this.props.lposValue}
+                                    sourceId={this.props.sourceId}
+                                    formType={this.props.formType}  />
+                                <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
+                                    sourceId={this.props.sourceId}
+                                    formType={this.props.formType} />
+                    </>;
+                case 'advanced':
                     return (
                         <span className="default-attr-selection">
                             {he.translate('query__default_attr') + ':\u00a0'}

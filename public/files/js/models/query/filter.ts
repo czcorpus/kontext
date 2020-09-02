@@ -31,7 +31,7 @@ import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
-    FilterServerArgs, QueryType, AnyQuery } from './common';
+    FilterServerArgs, QueryType, ConcQueryArgs } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginInterfaces } from '../../types/plugins';
@@ -91,12 +91,9 @@ function determineSupportedWidgets(queries:{[key:string]:string},
         tagBuilderSupport:{[key:string]:boolean}):{[key:string]:Array<string>} {
     const getWidgets = (filterId:string):Array<string> => {
         switch (queryTypes[filterId]) {
-            case 'iquery':
-            case 'lemma':
-            case 'phrase':
-            case 'word':
+            case 'simple':
                 return ['keyboard', 'history'];
-            case 'cql':
+            case 'advanced':
                 const ans = ['keyboard', 'history'];
                 if (tagBuilderSupport[filterId]) {
                     ans.push('tag');
@@ -185,7 +182,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             Dict.fromEntries()
         );
         const queryTypes = pipe(
-            [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'iquery')]],
+            [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'simple')]],
             Dict.fromEntries()
         );
         const querySuggestions = pipe(
@@ -538,13 +535,13 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
     }
 
     private createSubmitArgs(filterId:string):MultiDict<FilterServerArgs> {
-        const args = this.pageModel.getConcArgs() as MultiDict<FilterServerArgs & AnyQuery>;
+        const args = this.pageModel.getConcArgs() as MultiDict<FilterServerArgs & ConcQueryArgs>;
         args.set('pnfilter', this.state.pnFilterValues[filterId]);
         args.set('filfl', this.state.filflValues[filterId]);
         args.set('filfpos', this.state.filfposValues[filterId].value);
         args.set('filtpos', this.state.filtposValues[filterId].value);
         args.set('inclkwic', this.state.inclkwicValues[filterId] ? '1' : '0');
-        args.set('queryselector', `${this.state.queryTypes[filterId]}row`);
+        args.set('qtype', this.state.queryTypes[filterId]);
         if (this.state.withinArgs[filterId]) {
             args.set('within', '1');
 

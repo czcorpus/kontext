@@ -924,11 +924,6 @@ class Kontext(Controller):
                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
         result['corp_uses_tag'] = 'tag' in corpus_get_conf(
             maincorp, 'ATTRLIST').split(',')  # legacy value
-        result['commonurl'] = self.urlencode([('corpname', getattr(self.args, 'corpname')),
-                                              ('lemma', getattr(self.args, 'lemma')),
-                                              ('lpos', getattr(self.args, 'lpos')),
-                                              ('usesubcorp', getattr(self.args, 'usesubcorp')),
-                                              ])
         result['interval_chars'] = (
             settings.get('corpora', 'left_interval_char', None),
             settings.get('corpora', 'interval_char', None),

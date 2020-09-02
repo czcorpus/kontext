@@ -548,14 +548,9 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
     );
 }
 
-function getApplyRules(queryType:string):Array<string> {
+function getApplyRules(queryType:QueryType):Array<string> {
     switch (queryType) {
-        case 'phrase':
-            return ['PhraseQuery'];
-        case 'word':
-        case 'lemma':
-            return ['RegExpRaw'];
-        case 'cql':
+        case 'advanced':
             return ['Query', 'WithinContainingPart', 'Sequence', 'RegExpRaw'];
         default:
             throw new Error(`No parsing rule for type ${queryType}`);
@@ -588,7 +583,7 @@ export function highlightSyntax(
 
 export function highlightSyntaxStatic(
         query:string,
-        queryType:string,
+        queryType:QueryType,
         he:Kontext.ComponentHelpers):[string, Array<ParsedAttr>] {
     return _highlightSyntax({
         query: query,
