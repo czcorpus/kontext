@@ -73,8 +73,13 @@ def _init_backend_app(conf, fn_prefix):
                 'calc_backend', 'konserver_result_wait_max_time')
         return KonserverApp(conf=kconf, fn_prefix=fn_prefix)
     elif app_type == 'rq':
-        from bgcalc.rq import RqClient
-        return RqClient()
+        from bgcalc.rq import RqClient, RqConfig
+        rqconf = RqConfig()
+        rqconf.HOST = conf.get('calc_backend', 'rq_redis_host')
+        rqconf.PORT = conf.get('calc_backend', 'rq_redis_port')
+        rqconf.DB = conf.get('calc_backend', 'rq_redis_db')
+        rqconf.SCHEDULER_CONF_PATH = conf.get('job_scheduler', 'conf', None)
+        return RqClient(rqconf, 'rqworker')
     else:
         raise CalcBackendInitError(
             'Failed to init calc backend {0} (conf: {1})'.format(app_type, app_conf))
