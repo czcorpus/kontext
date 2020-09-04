@@ -32,18 +32,27 @@ class RequestArgsProxy(object):
     mapping.
     """
 
-    def __init__(self, form: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]], args: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]]):
+    def __init__(self, form: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]],
+                 args: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]],
+                 json_data: Dict[str, Any]):
         self._form = form if isinstance(
             form, werkzeug.datastructures.MultiDict) else werkzeug.datastructures.MultiDict(form)
         self._args = args if isinstance(
             form, werkzeug.datastructures.MultiDict) else werkzeug.datastructures.MultiDict(args)
         self._forced = defaultdict(lambda: [])
+        self._json = json_data
 
     def __iter__(self):
         return list(self.keys()).__iter__()
 
     def __contains__(self, item):
         return item in self._forced or item in self._form or item in self._args
+
+    @property
+    def corpora(self) -> List[str]:
+        if self._json is not None and self._json.get('type') == 'concQueryArgs':
+            return [q['corpname'] for q in self._json['queries']]
+        return self.getlist('corpname')
 
     def keys(self):
         return list(set(list(self._forced.keys()) + list(self._form.keys()) + list(self._args.keys())))

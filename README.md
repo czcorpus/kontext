@@ -100,7 +100,7 @@ Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-
 
 ## Notable users
 
-* [Institute of the Czech National Corpus](https://kontext.korpus.cz/first_form)
+* [Institute of the Czech National Corpus](https://kontext.korpus.cz/query)
 * [LINDAT/CLARIAH-CZ](https://ufal.mff.cuni.cz/lindat-kontext)
 * [Clarin-PL](https://kontext.clarin-pl.eu/)
 * [Інститут української](https://mova.institute/kontext/first_form)

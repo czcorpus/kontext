@@ -164,22 +164,6 @@ class Querying(Kontext):
                 tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 tpl_out['input_languages'][al] = self.get_corpus_info(al)['collator_locale']
 
-    def export_aligned_form_params(self, aligned_corp: str, state_only: bool, name_filter: Callable[[str], bool] = lambda x: True) -> Dict[str, Any]:
-        """
-        Collects aligned corpora-related arguments with dynamic names
-        (i.e. the names with corpus name as a suffix)
-        """
-
-        args: Tuple[Tuple[str, Callable[[Any], Any]], ...] = (('include_empty', lambda x: int(x)), ('pcq_pos_neg', lambda x: x))
-        if not state_only:
-            args += (('queryselector', lambda x: x),)
-        ans: Dict[str, Any] = {}
-        for param_name, type_conv in args:
-            full_name = f'{param_name}_{aligned_corp}'
-            if full_name in self._request.args and name_filter(param_name):
-                ans[full_name] = type_conv(self._request.args[full_name])
-        return ans
-
     @exposed(return_type='json', http_method='GET')
     def ajax_fetch_conc_form_args(self, request: Request) -> Dict[str, Any]:
         try:

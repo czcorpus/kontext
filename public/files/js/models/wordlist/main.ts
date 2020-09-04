@@ -156,7 +156,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                         args.set('cql', this.createPQuery(
                             action.payload.word, formArgs.head('wlattr')));
                         window.location.href = this.layoutModel.createActionUrl(
-                            'first', args.items());
+                            'query_submit', args.items());
                     },
                     err => {
                         this.layoutModel.showMessage('error', err);

@@ -36,7 +36,7 @@ import { QueryInfoModel } from './info';
 import { Actions, ActionName } from '../actions';
 import { Actions as ConcActions, ActionName as ConcActionName } from '../../concordance/actions';
 import { ExtendedQueryOperation, importEncodedOperations, QueryPipelineResponse } from './common';
-import { AjaxConcResponse } from '../../concordance/common';
+import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
 import { QueryContextArgs } from '../common';
 import { ConcSortModel } from '../sort/single';
 import { MultiLevelConcSortModel } from '../sort/multi';
@@ -431,16 +431,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 ),
                 concatMap(
                     () => {
-                        const url = this.queryModel.getSubmitUrl(queryContext);
+                        // TODO xx
+                        const args = this.queryModel.createSubmitArgs(queryContext);
+                        const url = this.pageModel.createActionUrl('query_submit', [['format', 'json']]);
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<AjaxConcResponse>(
-                                HTTP.Method.GET,
+                            return this.pageModel.ajax$<ConcQueryResponse>(
+                                HTTP.Method.POST,
                                 url,
-                                {
-                                    format: 'json',
-                                    async: 0
-                                }
-                            );
+                                args
+                            )
 
                         } else {
                             return rxOf(null).pipe(

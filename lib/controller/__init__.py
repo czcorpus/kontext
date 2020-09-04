@@ -374,7 +374,7 @@ class Controller(object):
         (i.e. you can pass either pure ASCII values or UTF-8 ones).
 
         arguments:
-        action -- action identification (e.g. 'first_form', 'admin/users')
+        action -- action identification (e.g. 'query', 'admin/users')
         params -- a dict-like object containing parameter names and values
         """
         root = self.get_root_url()
@@ -583,7 +583,7 @@ class Controller(object):
                 raise UserActionException(
                     'Unknown output format: {0}'.format(self._request.args['format']))
         self.add_validator(partial(self._validate_http_method, action_metadata))
-        return RequestArgsProxy(self._request.form, self._request.args)
+        return RequestArgsProxy(self._request.form, self._request.args, self._request.json)
 
     def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str], result: Optional[Dict[str, Any]], err_desc: Tuple[Optional[Exception], Optional[str]]) -> None:
         """
@@ -671,7 +671,7 @@ class Controller(object):
         ex -- a risen exception
         return_type --
         """
-        ans = RequestArgsProxy(self._request.form, self._request.args)
+        ans = RequestArgsProxy(self._request.form, self._request.args, self._request.json)
         if return_type == 'json':
             ans.add_forced_arg('error_code', getattr(ex, 'error_code', None))
             ans.add_forced_arg('error_args', getattr(ex, 'error_args', {}))

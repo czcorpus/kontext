@@ -122,7 +122,7 @@ class LockedOpFormsArgs(ConcFormArgs):
 class QueryFormArgs(ConcFormArgs):
     """
     QueryFormArgs collects arguments required
-    to initialize the 'first_form' for one or more
+    to initialize the 'query' for one or more
     corpora.
 
     The class is only used to make collecting and
@@ -152,6 +152,17 @@ class QueryFormArgs(ConcFormArgs):
 
         for corp in corpora:
             self._add_corpus_metadata(corp)
+
+    def update_by_user_query(self, data, bib_mapping):
+        for query in data['queries']:
+            corp = query['corpname']
+            self.curr_query_types[corp] = query['qtype']
+            self.curr_queries[corp] = query['query']
+            self.curr_pcq_pos_neg_values[corp] = query['pcq_pos_neg']
+            self.curr_include_empty_values[corp] = query['include_empty']
+            self.curr_qmcase_values[corp] = query['qmcase']
+            self.curr_default_attr_values[corp] = query['default_attr']
+        self.bib_mapping = bib_mapping
 
     def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.TAGHELPER as th:

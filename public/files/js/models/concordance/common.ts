@@ -21,6 +21,7 @@
 import { Color, pipe, List } from 'cnc-tskit';
 import { ViewOptions, Kontext } from '../../types/common';
 import { SaveData } from '../../app/navigation';
+import { ConcQueryArgs } from '../query/common';
 
 /**
  * RefsColumn describes a meta-data information
@@ -151,9 +152,9 @@ export interface ServerPagination {
  */
 export interface ConcServerArgs {
     corpname:string;
-    usesubcorp:string;
+    maincorp?:string;
     viewmode:'kwic'|'sen'|'align';
-    format:'plain'|'json'|'template'|'xml';
+    format:Kontext.ResponseFormat;
     pagesize:number;
     attrs:string;
     attr_vmode:ViewOptions.AttrViewMode;
@@ -162,8 +163,6 @@ export interface ConcServerArgs {
     structs:string; // comma-separated values
     refs:string; //comma-separated values
     q:string;
-    maincorp?:string;
-    align?:string;
     fromp?:number;
 }
 
@@ -206,14 +205,21 @@ export interface IConcArgsHandler {
 }
 
 /**
- * AjaxConcResponse defines a server response when
- * providing a concordance.
+ * ConcQueryResponse defines a server response to the initial
+ * query request.
  */
-export interface AjaxConcResponse extends Kontext.AjaxResponse {
+export interface ConcQueryResponse extends Kontext.AjaxResponse {
     Q:Array<string>;
     conc_persistence_op_id:string;
     num_lines_in_groups:number;
     lines_groups_numbers:Array<number>;
+}
+
+/**
+ * AjaxConcResponse defines a server response when
+ * providing a concordance.
+ */
+export interface AjaxConcResponse extends ConcQueryResponse {
     Lines:Array<ServerLineData>;
     conc_use_safe_font:number; // TODO should be boolean
     concsize:number;

@@ -631,39 +631,6 @@ class Kontext(Controller):
                 variant = ''
             return corpname, variant
 
-    def _apply_semi_persistent_args(self, form_proxy):
-        """
-        Update self.args using semi persistent attributes. Only values
-        not present in provided form_proxy are updated.
-
-        arguments:
-        form_proxy -- a RequestArgsProxy instance
-
-        """
-        for k, v in self._session.get('semi_persistent_attrs', []):
-            if k not in form_proxy:
-                update_attr(self.args, k, v)
-
-    def _store_semi_persistent_attrs(self, attr_list: Tuple[str, ...]):
-        """
-        Store all the semi-persistent (Persistence.SEMI_PERSISTENT) args listed in attr_list.
-
-        arguments:
-            explicit_list -- a list of attributes to store (the ones
-                             without Persistence.SEMI_PERSISTENT flag will be ignored)
-        """
-        semi_persist_attrs = self._get_items_by_persistence(Persistence.SEMI_PERSISTENT)
-        tmp: MultiDict[str, Any] = MultiDict(self._session.get('semi_persistent_attrs', {}))
-        for attr_name in attr_list:
-            if attr_name in semi_persist_attrs:
-                v = getattr(self.args, attr_name)
-                if isinstance(v, (list, tuple)):
-                    tmp.setlist(attr_name, v)
-                else:
-                    tmp[attr_name] = v
-        # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
-        self._session['semi_persistent_attrs'] = list(tmp.items(multi=True))
-
     def pre_dispatch(self, action_name, action_metadata=None) -> RequestArgsProxy:
         """
         Runs before main action is processed. The action includes
@@ -685,9 +652,6 @@ class Kontext(Controller):
             return None
         if not action_metadata['skip_corpus_init']:
             self.add_validator(validate_corpus)
-
-        if action_metadata['apply_semi_persist_args']:
-            self._apply_semi_persistent_args(req_args)
 
         options = {}
         corp_options = {}
@@ -721,7 +685,7 @@ class Kontext(Controller):
         if self.get_http_method() == 'GET':
             self.return_url = self.updated_current_url(args)
         else:
-            self.return_url = '%sfirst_form?%s' % (self.get_root_url(),
+            self.return_url = '%squery?%s' % (self.get_root_url(),
                                                    '&'.join(['%s=%s' % (k, v)
                                                              for k, v in list(args.items())]))
         # by default, each action is public
@@ -775,7 +739,7 @@ class Kontext(Controller):
             self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
                                                        ).add_args(('saveformat', save_format)))
 
-    def _determine_curr_corpus(self, form, corp_list):
+    def _determine_curr_corpus(self, form: RequestArgsProxy, corp_list):
         """
         This method tries to determine which corpus is currently in use.
         If no answer is found or in case there is a conflict between selected
@@ -792,15 +756,9 @@ class Kontext(Controller):
         """
         cn = ''
         redirect = False
-
-        # 1st option: fetch required corpus name from html form or from URL params
-        if 'corpname' in form:
-            cn = form.getvalue('corpname')
-        # 2nd option: try currently initialized corpname (e.g. from restored semi-persistent args)
-        if not cn:
-            cn = getattr(self.args, 'corpname')
-        # 3rd option: try user's last
-        if not cn and not self.user_is_anonymous():
+        if len(form.corpora) > 0:
+            cn = form.corpora[0]
+        elif not self.user_is_anonymous():
             with plugins.runtime.QUERY_STORAGE as qs:
                 queries = qs.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
                 if len(queries) > 0:
@@ -1189,33 +1147,17 @@ class Kontext(Controller):
             revers = False
         return k, revers
 
-    def _get_checked_text_types(self, request):
-        """
-        Collects data required to restore checked/entered values in text types form.
-
-        arguments:
-        request -- Werkzeug request instance
-
-        returns:
-        2-tuple (dict structattr->[list of values], dict bib_id->bib_label)
-        """
-        ans = {}
+    def _get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
-        src_obj = request.args if self.get_http_method() == 'GET' else request.form
-        for p in list(src_obj.keys()):
-            if p.startswith('sca_'):
-                ans[p[4:]] = src_obj.getlist(p)
-
         if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, getattr(self.args, 'corpname')):
             corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
                 self.ui_lang, getattr(self.args, 'corpname'))
             id_attr = corpus_info.metadata.id_attr
-            if id_attr in ans:
-                bib_mapping = dict(plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(self._plugin_api,
-                                                                                            getattr(
-                                                                                                self.args, 'corpname'),
-                                                                                            ans[id_attr]))
-        return ans, bib_mapping
+            if id_attr in tt_data:
+                bib_mapping = dict(
+                    plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(
+                        self._plugin_api, getattr(self.args, 'corpname'), tt_data[id_attr]))
+        return bib_mapping
 
     def _export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
         """

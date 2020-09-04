@@ -46,7 +46,7 @@ def lindat_login(self, request):
             if request.args.get('redirectTo', None):
                 self.redirect(request.args.get('redirectTo'))
             else:
-                self.redirect(self.create_url('first_form', {}))
+                self.redirect(self.create_url('query', {}))
         else:
             self.disabled_menu_items = user.USER_ACTIONS_DISABLED_ITEMS
             self.add_system_message('error', _('Incorrect username or password'))
@@ -136,7 +136,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
         if self.is_anonymous(plugin_api.user_id):
             raise ImmediateRedirectException(
-                '{0}{1}first_form?corpname={2}'.format(self.get_login_url(), plugin_api.root_url, corpname))
+                '{0}{1}query?corpname={2}'.format(self.get_login_url(), plugin_api.root_url, corpname))
         else:
             super(FederatedAuthWithFailover, self).on_forbidden_corpus(
                 plugin_api, corpname, corp_variant)
@@ -146,7 +146,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         return False
 
     def logout_hook(self, plugin_api):
-        plugin_api.redirect('%sfirst_form' % (plugin_api.root_url,))
+        plugin_api.redirect('%squery' % (plugin_api.root_url,))
 
     def _new_user_id(self):
         return self._db.incr(FederatedAuthWithFailover.RESERVED_USER)

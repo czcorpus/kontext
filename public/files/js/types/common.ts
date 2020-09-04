@@ -48,6 +48,8 @@ export namespace Kontext {
 
     export type StructsAndAttrs = {[struct:string]:Array<string>};
 
+    export type ResponseFormat = 'plain'|'json'|'template'|'xml';
+
     export interface FormValue<T> {
 
         value:T;

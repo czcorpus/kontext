@@ -10,7 +10,7 @@ if [[ "x$REPO_NAME" == "x" ]]; then
 fi
 
 THISSCRIPT=`basename "$0"`
-minisep "$THISSCRIPT ($REPO_NAME)" 
+minisep "$THISSCRIPT ($REPO_NAME)"
 start=`date +%s`
 
 # =======
@@ -45,16 +45,16 @@ if [[ "x$BUILDBACKEND" == "xdocker" ]]; then
     URL="http://$DOCKERIP:${PORT}"
     echo "Waiting for $URL..."
     wget --retry-connrefused --tries=40 --wait=10 --level=1 --spider $URL/ || echo "WGET failed"
-    
+
     echo "===="
     echo curl -v $URL/
     curl -v $URL/
     echo "===="
-    echo curl -v $URL/first_form
-    curl -v $URL/first_form
+    echo curl -v $URL/query
+    curl -v $URL/query
     echo "===="
-    echo curl -v -s "$URL/first_form?corpname=ovm_cs_w"
-    curl -v -s "$URL/first_form?corpname=ovm_cs_w"
+    echo curl -v -s "$URL/query?corpname=ovm_cs_w"
+    curl -v -s "$URL/query?corpname=ovm_cs_w"
     echo "===="
 
     date

@@ -76,7 +76,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             );
             args.set('qtype', 'simple');
             args.set('query', word);
-            return he.createActionLink('first', args);
+            return he.createActionLink('query_submit', args);
         };
 
         return (
@@ -129,7 +129,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             args.set('qtype_' + props.data.contents.translat_corp, 'simple');
             args.set('simple_' + props.data.contents.translat_corp, word2);
             args.set('pcq_pos_neg_' + props.data.contents.translat_corp, 'pos');
-            return he.createActionLink('first', args);
+            return he.createActionLink('query_submit', args);
         };
 
         const renderWords = () => {

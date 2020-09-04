@@ -79,11 +79,11 @@ class Args(object):
     fc_pos_window_type: str = def_attr('both')
     fc_pos_type: str = def_attr('all')
     fc_pos_wsize: int = def_attr(5)
-    fc_pos: List = def_attr([])
+    fc_pos: List = def_attr(attr.Factory(list))
     ml: int = def_attr(0)
     concarf: str = def_attr('')
     concsize: str = def_attr('')
-    Lines: List = def_attr([])
+    Lines: List = def_attr(attr.Factory(list))
     fromp: int = def_attr(1)
     numofpages: int = def_attr(0)
     pnfilter: str = def_attr('p')
@@ -137,8 +137,8 @@ class Args(object):
     ref_usesubcorp: str = def_attr('')
     wlsort: str = def_attr('')
     keywords: str = def_attr('')
-    Keywords: List[str] = def_attr([])
-    Items: List[str] = def_attr([])  # TODO check and remove
+    Keywords: List[str] = def_attr(attr.Factory(list))
+    Items: List[str] = def_attr(attr.Factory(list))  # TODO check and remove
     selected: str = def_attr('')
     pages: int = def_attr(0)
     leftctx: str = def_attr('')
@@ -153,27 +153,22 @@ class Args(object):
     corpname: str = def_attr('', persistent=Persistence.SEMI_PERSISTENT)
     usesubcorp: str = def_attr('')
     subcname: str = def_attr('')
-    subcpath: List[str] = def_attr([])
-    query: List[str] = def_attr('', persistent=Persistence.SEMI_PERSISTENT)
-    qtype: List[str] = def_attr('', persistent=Persistence.SEMI_PERSISTENT)
-    default_attr: Optional[str] = def_attr(None)
+    subcpath: List[str] = def_attr(attr.Factory(list))
     save: int = def_attr(1)
     asnc: int = def_attr(1)
-    qmcase: int = def_attr(0)
-    include_empty: int = def_attr(0)
     rlines: str = def_attr('250')
     attrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
     base_viewattr: str = def_attr('word', persistent=Persistence.PERSISTENT)
     attr_vmode: str = def_attr('visible-kwic', persistent=Persistence.PERSISTENT)
     structs: str = def_attr('', persistent=Persistence.PERSISTENT)
-    q: List[str] = def_attr([])
+    q: List[str] = def_attr(attr.Factory(list))
     pagesize: int = def_attr(40, persistent=Persistence.PERSISTENT)
     wlpagesize: int = def_attr(25, persistent=Persistence.PERSISTENT)
     citemsperpage: int = def_attr(50, persistent=Persistence.PERSISTENT)
     multiple_copy: int = def_attr(0, persistent=Persistence.PERSISTENT)  # TODO do we need this?
     wlsendmail: str = def_attr('')
     cup_hl: str = def_attr('q', persistent=Persistence.PERSISTENT)
-    structattrs: List[str] = def_attr([], persistent=Persistence.PERSISTENT)
+    structattrs: List[str] = def_attr(attr.Factory(list), persistent=Persistence.PERSISTENT)
 
     cql_editor: int = def_attr(1, persistent=Persistence.PERSISTENT)
     qs_visibility_mode: int = def_attr(2, persistent=Persistence.PERSISTENT)
@@ -181,14 +176,14 @@ class Args(object):
     flimit: int = def_attr(1)
     freqlevel: int = def_attr(1)
     hidenone: int = def_attr(1)
-    fttattr: List[str] = def_attr([])
+    fttattr: List[str] = def_attr(attr.Factory(list))
 
     kwicleftctx: str = def_attr('-10', persistent=Persistence.PERSISTENT)
     kwicrightctx: str = def_attr('10', persistent=Persistence.PERSISTENT)
     senleftctx_tpl: str = def_attr('-1:%s')
     senrightctx_tpl: str = def_attr('1:%s')
     viewmode: str = def_attr('kwic')
-    align: List[str] = def_attr([], persistent=Persistence.SEMI_PERSISTENT)
+    align: List[str] = def_attr(attr.Factory(list), persistent=Persistence.SEMI_PERSISTENT)
     maincorp: str = def_attr('')  # used only in case of parallel corpora - specifies primary corp.
     # None means "not initialized" while '' means "user wants no refs"
     refs: Optional[str] = def_attr(None)
@@ -233,7 +228,7 @@ class Args(object):
     wlposattr3: str = def_attr('')
 
     maxsavelines: int = def_attr(1000)
-    fcrit: List[str] = def_attr([])
+    fcrit: List[str] = def_attr(attr.Factory(list))
 
     sort_linegroups: int = def_attr(0)
 
@@ -259,7 +254,7 @@ class Args(object):
                 return 'visible-kwic'
         return value
 
-    def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]]):
+    def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]], json_data: Dict[str, Any] = None):
         """
         Set existing attrs of self to the values provided by args. Multi-value keys are supported
         in a limited way - only list of strings can be set.
@@ -267,7 +262,7 @@ class Args(object):
         arguments:
         req_args -- a RequestArgsProxy instance or a general dict containing parameters
         """
-        in_args = args if isinstance(args, RequestArgsProxy) else RequestArgsProxy(args, {})
+        in_args = args if isinstance(args, RequestArgsProxy) else RequestArgsProxy(args, {}, {})
         for key in in_args.keys():
             values = in_args.getlist(key)
             if len(values) > 0:
