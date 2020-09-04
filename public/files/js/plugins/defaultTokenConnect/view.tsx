@@ -111,7 +111,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                     args.set('query', value.word);
 
                     return <React.Fragment key={value.word}>
-                        <a className="keyword" href={he.createActionLink('first', args)}
+                        <a className="keyword" href={he.createActionLink('query_submit', args)}
                                 target="_blank" title={he.translate('global__search_link')}>
                             {value.word}
                         </a>

@@ -31,6 +31,7 @@ import signal
 
 from werkzeug.http import parse_accept_header
 from werkzeug.wrappers import Request, Response
+from werkzeug.wrappers.json import JSONMixin
 
 sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # application libraries
 sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # compiled template modules
@@ -47,6 +48,10 @@ from initializer import setup_plugins
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
 logger = logging.getLogger('')  # root logger
+
+
+class JSONRequest(JSONMixin, Request):
+    pass
 
 
 class WsgiApp(object):
@@ -169,7 +174,7 @@ class MaintenanceWsgiApp(WsgiApp):
         from controller.maintenance import MaintenanceController
         ui_lang = self.get_lang(environ)
         translation.activate(ui_lang)
-        request = Request(environ)
+        request = JSONRequest(environ)
         app = MaintenanceController(request=request, ui_lang=ui_lang)
         status, headers, sid_is_valid, body = app.run()
         response = Response(response=body, status=status, headers=headers)
@@ -208,7 +213,7 @@ class KonTextWsgiApp(WsgiApp):
             environ['PATH_INFO'] = environ['PATH_INFO'][len(app_url_prefix):]
 
         sessions = plugins.runtime.SESSIONS.instance
-        request = Request(environ)
+        request = JSONRequest(environ)
         sid = request.cookies.get(sessions.get_cookie_name())
         if sid is None:
             request.session = sessions.new()
@@ -221,7 +226,7 @@ class KonTextWsgiApp(WsgiApp):
             if not url.endswith('/'):
                 url += '/'
             status = '303 See Other'
-            headers = [('Location', '%sfirst_form' % url)]
+            headers = [('Location', '%squery' % url)]
             body = ''
         # old-style (CGI version) URLs are redirected to new ones
         elif '/run.cgi/' in environ['REQUEST_URI']:

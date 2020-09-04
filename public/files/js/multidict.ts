@@ -64,6 +64,10 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
         return Object.keys(this.data).length;
     }
 
+    /**
+     * Return first item matching a provided key. In case the key is not
+     * found or the matching array is empty, undefined is returned.
+     */
     head<K extends keyof T>(key:K):string {
         return this.data[key] !== undefined ? this.data[key][0] : undefined;
     }

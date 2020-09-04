@@ -210,7 +210,7 @@ class AbstractMenuItem(object):
 class MenuItemInternal(AbstractMenuItem):
     """
     Internal menu item is identified also
-    by its action identifier (e.g. 'first_form',
+    by its action identifier (e.g. 'query',
     'corpora/corplist').
     """
 
@@ -314,7 +314,7 @@ class MenuGenerator(object):
         # -------------------------- menu-new-query -------------------------------------
 
         self.new_query = (
-            MenuItemInternal(MainMenu.NEW_QUERY('new-query'), te('Enter new query'), 'first_form')
+            MenuItemInternal(MainMenu.NEW_QUERY('new-query'), te('Enter new query'), 'query')
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('usesubcorp', self._args['usesubcorp']),
@@ -573,7 +573,7 @@ class MenuGenerator(object):
         items = [
             (MainMenu.NEW_QUERY.name, dict(
                 label=te('Query'),
-                fallback_action='first_form',
+                fallback_action='query',
                 items=exp(MainMenu.NEW_QUERY, self.new_query, self.recent_queries, self.word_list),
                 disabled=is_disabled(MainMenu.NEW_QUERY)
             )),

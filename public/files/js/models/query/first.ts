@@ -23,9 +23,9 @@
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { Dict, tuple, List, pipe } from 'cnc-tskit';
+import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
+import { Kontext, ViewOptions } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
@@ -38,6 +38,8 @@ import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../o
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
+import { Attributes } from 'react';
+import { AjaxConcResponse, ConcQueryResponse } from '../concordance/common';
 
 
 export interface QueryFormUserEntries {
@@ -475,10 +477,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         this.changeState(state => {
                             this.makeCorpusPrimary(state, action.payload.corpname);
                         });
+                        /*
+                        TODO XX
                         window.location.href = this.pageModel.createActionUrl(
                             this.state.currentAction,
                             this.createSubmitArgs(wAction.payload.data).items()
                         );
+                        */
                     }
                 );
             }
@@ -753,108 +758,71 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         List.removeValue(corpname, state.corpora);
     }
 
-    private createSubmitArgs(contextFormArgs:QueryContextArgs):MultiDict {
+    createSubmitArgs(contextFormArgs:QueryContextArgs):ConcQueryArgs {
         const primaryCorpus = this.state.corpora[0];
-        const args = this.pageModel.getConcArgs() as MultiDict<ConcQueryArgs>;
-        args.set('corpname', primaryCorpus);
-        args.set('usesubcorp', this.state.currentSubcorp);
+        const currArgs = this.pageModel.getConcArgs();
+        const args:ConcQueryArgs = {
+            type:'concQueryArgs',
+            maincorp: primaryCorpus,
+            usesubcorp: this.state.currentSubcorp || null,
+            viewmode: 'kwic',
+            pagesize: parseInt(currArgs.head('pagesize')),
+            attrs: currArgs.getList('attrs'),
+            attr_vmode: currArgs.head('attr_vmode') as ViewOptions.AttrViewMode,
+            base_viewattr: currArgs.head('base_viewattr'),
+            ctxattrs: currArgs.getList('ctxattrs'),
+            structs: currArgs.getList('structs'),
+            refs: currArgs.getList('refs'),
+            fromp: parseInt(currArgs.head('fromp') || '0'),
+            shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
+            queries: [],
+            text_types: this.textTypesModel.exportSelections(false),
+            context: contextFormArgs
+        };
 
         if (this.state.corpora.length > 1) {
-            args.set('maincorp', primaryCorpus);
-            args.replace('align', List.tail(this.state.corpora));
-            args.set('viewmode', 'align');
-
-        } else {
-            args.remove('maincorp');
-            args.remove('align');
-            args.set('viewmode', 'kwic');
+            args.maincorp = primaryCorpus;
+            args.viewmode = 'align';
         }
 
-        Dict.forEach(
-            (v, k) => {
-                if (Array.isArray(v)) {
-                    args.replace(k, v);
+        args.queries = List.map(
+            c => ({
+                corpname: c,
+                query: this.state.queries[c] ? this.state.queries[c].trim().normalize() : '',
+                qtype: this.state.queryTypes[c],
+                qmcase: this.state.matchCaseValues[c],
+                pcq_pos_neg: this.state.pcqPosNegValues[c],
+                include_empty: this.state.includeEmptyValues[c],
+                default_attr: this.state.defaultAttrValues[c]
+            }),
+            this.state.corpora
+        );
 
-                } else {
-                    args.set(k, v);
-                }
-            },
-            contextFormArgs
-        )
-
-        function createArgname(name, corpname) {
-            return corpname !== primaryCorpus ? name + '_' + corpname : name;
-        }
-
-        this.state.corpora.forEach(corpname => {
-            args.add(
-                createArgname('qtype', corpname),
-                `${this.state.queryTypes[corpname]}`
-            );
-            // now we set the query; we have to remove possible new-line
-            // characters as while the client's cql parser and CQL widget are ok with that
-            // server is unable to parse this
-            args.add(createArgname('query', corpname),
-                     this.getQueryUnicodeNFC(corpname));
-
-            if (this.state.matchCaseValues[corpname]) {
-                args.add(
-                    createArgname('qmcase', corpname),
-                    this.state.matchCaseValues[corpname] ? '1' : '0'
-                );
-            }
-            args.set(
-                createArgname('pcq_pos_neg', corpname),
-                this.state.pcqPosNegValues[corpname]
-            );
-            args.set(
-                createArgname('include_empty', corpname),
-                this.state.includeEmptyValues[corpname] ? '1' : '0'
-            );
-            args.set(
-                createArgname('default_attr', corpname),
-                this.state.defaultAttrValues[corpname]
-            );
-        });
-
-        // text types
-        const ttData = this.textTypesModel.exportSelections(false);
-        for (let k in ttData) {
-            if (ttData.hasOwnProperty(k)) {
-                args.replace('sca_' + k, ttData[k]);
-            }
-        }
-
-        // default shuffle
-        if (this.state.shuffleConcByDefault) {
-            args.set('shuffle', 1);
-
-        } else {
-            args.remove('shuffle');
-        }
-
-        // default shuffling
-        if (this.state.shuffleForbidden) {
-            args.set('shuffle', 0);
-        }
         return args;
     }
 
     submitQuery(contextFormArgs:QueryContextArgs):void {
-        const args = this.createSubmitArgs(contextFormArgs).items();
-        const url = this.pageModel.createActionUrl('first', args);
-        if (url.length < 2048) {
-            window.location.href = url;
+        this.pageModel.ajax$<ConcQueryResponse>(
+            HTTP.Method.POST,
+            this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
+            this.createSubmitArgs(contextFormArgs),
+            {
+                contentType: 'application/json'
+            }
 
-        } else {
-            this.pageModel.setLocationPost(this.pageModel.createActionUrl('first'), args);
-        }
+        ).subscribe(
+            (data) => {
+                window.location.href =
+                    this.pageModel.createActionUrl('view', [['q', '~' + data.conc_persistence_op_id]])
+            },
+            (err) => {
+                console.log('error: ', err);
+                this.pageModel.showMessage('error', err);
+            }
+        )
     }
 
-    getSubmitUrl(contextFormArgs:QueryContextArgs):string {
-        const args = this.createSubmitArgs(contextFormArgs).items();
-        return this.pageModel.createActionUrl('first', args);
-    }
+
 
     isPossibleQueryTypeMismatch(corpname:string):boolean {
         const query = this.state.queries[corpname];

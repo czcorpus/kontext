@@ -92,7 +92,7 @@ class ConfigWrapper extends StatelessModel<{}> {
 /**
  *
  */
-export class FirstFormPage {
+export class QueryPage {
 
     private layoutModel:PageModel;
 
@@ -399,6 +399,6 @@ export function init(conf:Kontext.Conf):void {
             layoutModel.showMessage('error', err);
         }
     );
-    const pageModel = new FirstFormPage(layoutModel, clStorage);
+    const pageModel = new QueryPage(layoutModel, clStorage);
     pageModel.init();
 }

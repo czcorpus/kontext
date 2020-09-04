@@ -20,7 +20,7 @@ import re
 import json
 from collections import defaultdict
 import time
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
@@ -117,9 +117,6 @@ class Actions(Querying):
         if corplib.is_subcorpus(self.corp):
             conc_args.set('usesubcorp', self.corp.subcname)
         args = {}
-        if self.args.align:
-            for aligned_lang in self.args.align:
-                args.update(self.export_aligned_form_params(aligned_lang, state_only=True))
         result['Globals'] = conc_args.update(args)
         result['query_overview'] = self.concdesc_json().get('Desc', [])
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
@@ -331,8 +328,13 @@ class Actions(Querying):
             ans = qs.delete(self.session_get('user', 'id'), request.form['query_id'])
         return dict(deleted=ans)
 
-    @exposed(apply_semi_persist_args=True)
+    @exposed()
     def first_form(self, request):
+        self.redirect(self.create_url('query', request.args), code=301)
+        return {}
+
+    @exposed(apply_semi_persist_args=True)
+    def query(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.VIEW('kwic-sentence'))
@@ -346,7 +348,7 @@ class Actions(Querying):
 
         if self.args.corpname in self.args.align:
             self.args.align = list(set(self.args.align).difference(set([self.args.corpname])))
-            self.redirect(self.create_url('first_form', [('corpname', self.args.corpname)] +
+            self.redirect(self.create_url('query', [('corpname', self.args.corpname)] +
                                           [('align', a) for a in self.args.align]))
 
         out['aligned_corpora'] = self.args.align
@@ -360,25 +362,10 @@ class Actions(Querying):
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
             active_only=False), persist=False)
+        # TODO xx reuse selections from last submit
         cid = self.args.corpname
-        if self.args.qtype:
-            q_type = self.args.qtype
-            qf_args.curr_query_types[cid] = q_type
-            try:  # chasing rare error here
-                qf_args.curr_queries[cid] = getattr(self.args, q_type)
-            except AttributeError:
-                qf_args.curr_queries[cid] = 'iquery'
-                logging.getLogger(__name__).warning(
-                    'Error in queryselector - empty value; user: {0}; args: {1}'.format(
-                        self.session_get('user', 'id'), self._session.get('semi_persistent_attrs', [])))
-            qf_args.curr_lpos_values[cid] = request.args.get('lpos')
-            qf_args.curr_qmcase_values[cid] = bool(int(request.args.get('qmcase', '0')))
-            qf_args.curr_pcq_pos_neg_values[cid] = request.args.get('pcq_pos_neg')
-            # the value of 'include_empty' does not matter form primary corp actually
-            qf_args.curr_include_empty_values[cid] = False
-            qf_args.curr_default_attr_values[cid] = request.args.get('default_attr')
-            qf_args.selected_text_types, qf_args.bib_mapping = self._get_checked_text_types(request)
 
+        # TODO xx remove this
         for item in self.args.align:
             q_type = request.args.get('queryselector_{0}'.format(item), '')[:-3]
             qf_args.curr_query_types[item] = q_type
@@ -392,7 +379,6 @@ class Actions(Querying):
             qf_args.curr_default_attr_values[item] = request.args.get(
                 'default_attr_{0}'.format(item))
 
-        self._store_semi_persistent_attrs(('align', 'corpname', 'queryselector'))
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)
@@ -517,25 +503,18 @@ class Actions(Querying):
         availstruct = self.corp.get_conf('STRUCTLIST').split(',')
         return 'err' in availstruct and 'corr' in availstruct
 
-    def _compile_basic_query(self, suff='', cname=''):
-        qtype = getattr(self.args, 'qtype' + suff)
-        query = getattr(self.args, 'query' + suff)
+    def _compile_basic_query(self, corpus: str, data: QueryFormArgs):
+        qtype = data.curr_query_types[corpus]
+        query = data.curr_queries[corpus]
         if qtype == 'simple':
-            return f'[word="(?i){query.strip()}"]'
+            return ' '.join([f'[word="(?i){part.strip()}"]' for part in query.split(' ')])
         else:
             return re.sub(r'[\n\r]+', ' ', query).strip()
 
-    def _compile_query(self, cname=''):
-        return self._compile_basic_query(cname=cname)
+    def _compile_query(self, corpus, data: QueryFormArgs):
+        return self._compile_basic_query(corpus, data)
 
-    def _set_first_query(self, fc_lemword_window_type='',
-                         fc_lemword_wsize=0,
-                         fc_lemword_type='',
-                         fc_lemword='',
-                         fc_pos_window_type='',
-                         fc_pos_wsize=0,
-                         fc_pos_type='',
-                         fc_pos=()):
+    def _set_first_query(self, corpora: List[str], data: QueryFormArgs):
         """
         first query screen
         """
@@ -568,8 +547,8 @@ class Actions(Querying):
             lemmaattr = 'word'
         wposlist = dict(self.cm.corpconf_pairs(self.corp, 'WPOSLIST'))
 
-        if self.args.default_attr:
-            qbase = 'a%s,' % self.args.default_attr
+        if data.curr_default_attr_values[corpora[0]]:
+            qbase = f'a{data.curr_default_attr_values[corpora[0]]},'
         else:
             qbase = 'q'
         texttypes = TextTypeCollector(self.corp, self.args).get_query()
@@ -579,98 +558,74 @@ class Actions(Querying):
             ttquery = ''
         par_query = ''
         nopq = []
-        for al_corpname in self.args.align:
-            pcq_args = self.export_aligned_form_params(al_corpname, state_only=False,
-                                                       name_filter=lambda v: v.startswith('pcq_pos_neg'))
-            wnot = '' if pcq_args.get('pcq_pos_neg_' + al_corpname) == 'pos' else '!'
-            pq = self._compile_basic_query(suff='_' + al_corpname,
-                                           cname=al_corpname)
+        for al_corpname in corpora[1:]:
+            wnot = '' if data.curr_pcq_pos_neg_values[al_corpname] == 'pos' else '!'
+            pq = self._compile_basic_query(corpus=al_corpname)
             if pq:
                 par_query += 'within%s %s:%s' % (wnot, al_corpname, pq)
             if not pq or wnot:
                 nopq.append(al_corpname)
         self.args.q = [
-            ' '.join(x for x in [qbase + self._compile_query(), ttquery, par_query] if x)]
-        if fc_lemword_window_type == 'left':
+            ' '.join(x for x in [qbase + self._compile_query(corpora[0], data), ttquery, par_query] if x)]
+        if self.args.fc_lemword_window_type == 'left':
             append_filter(lemmaattr,
-                          fc_lemword.split(),
-                          (-fc_lemword_wsize, -1, -1),
-                          fc_lemword_type)
-        elif fc_lemword_window_type == 'right':
+                          self.args.fc_lemword.split(),
+                          (-self.args.fc_lemword_wsize, -1, -1),
+                          self.args.fc_lemword_type)
+        elif self.args.fc_lemword_window_type == 'right':
             append_filter(lemmaattr,
-                          fc_lemword.split(),
-                          (1, fc_lemword_wsize, 1),
-                          fc_lemword_type)
-        elif fc_lemword_window_type == 'both':
+                          self.args.fc_lemword.split(),
+                          (1, self.args.fc_lemword_wsize, 1),
+                          self.args.fc_lemword_type)
+        elif self.args.fc_lemword_window_type == 'both':
             append_filter(lemmaattr,
-                          fc_lemword.split(),
-                          (-fc_lemword_wsize, fc_lemword_wsize, 1),
-                          fc_lemword_type)
-        if fc_pos_window_type == 'left':
+                          self.args.fc_lemword.split(),
+                          (-self.args.fc_lemword_wsize, self.args.fc_lemword_wsize, 1),
+                          self.args.fc_lemword_type)
+        if self.args.fc_pos_window_type == 'left':
             append_filter('tag',
-                          [wposlist.get(t, '') for t in fc_pos],
-                          (-fc_pos_wsize, -1, -1),
-                          fc_pos_type)
-        elif fc_pos_window_type == 'right':
+                          [wposlist.get(t, '') for t in self.args.fc_pos],
+                          (-self.args.fc_pos_wsize, -1, -1),
+                          self.args.fc_pos_type)
+        elif self.args.fc_pos_window_type == 'right':
             append_filter('tag',
-                          [wposlist.get(t, '') for t in fc_pos],
-                          (1, fc_pos_wsize, 1),
-                          fc_pos_type)
-        elif fc_pos_window_type == 'both':
+                          [wposlist.get(t, '') for t in self.args.fc_pos],
+                          (1, self.args.fc_pos_wsize, 1),
+                          self.args.fc_pos_type)
+        elif self.args.fc_pos_window_type == 'both':
             append_filter('tag',
-                          [wposlist.get(t, '') for t in fc_pos],
-                          (-fc_pos_wsize, fc_pos_wsize, 1),
-                          fc_pos_type)
+                          [wposlist.get(t, '') for t in self.args.fc_pos],
+                          (-self.args.fc_pos_wsize, self.args.fc_pos_wsize, 1),
+                          self.args.fc_pos_type)
         for al_corpname in self.args.align:
             if al_corpname in nopq and not int(getattr(self.args, 'include_empty_' + al_corpname, '0')):
                 self.args.q.append('X%s' % al_corpname)
 
-    @exposed(template='view.html', page_model='view', mutates_conc=True, http_method=('GET', 'POST'))
-    def first(self, request):
+    @exposed(mutates_conc=True, http_method=('POST',), return_type='json')
+    def query_submit(self, request):
         self._clear_prev_conc_params()
-        self._store_semi_persistent_attrs(('align', 'corpname', 'queryselector'))
-
         ans = {}
         # 1) store query forms arguments for later reuse on client-side
         corpora = self._select_current_aligned_corpora(active_only=True)
+        corpus_info = self.get_corpus_info(corpora[0])
         qinfo = QueryFormArgs(corpora=corpora, persist=True)
-        for i, corp in enumerate(corpora):
-            suffix = '_{0}'.format(corp) if i > 0 else ''
-            qtype = self.import_qs(getattr(self.args, 'queryselector' + suffix, None))
-            qinfo.curr_query_types[corp] = qtype
-            qinfo.curr_queries[corp] = getattr(
-                self.args, qtype + suffix, None) if qtype is not None else None
-            qinfo.curr_pcq_pos_neg_values[corp] = getattr(self.args, 'pcq_pos_neg' + suffix, None)
-            qinfo.curr_include_empty_values[corp] = bool(
-                int(getattr(self.args, 'include_empty' + suffix, '0')))
-            qinfo.curr_lpos_values[corp] = getattr(self.args, 'lpos' + suffix, None)
-            qinfo.curr_qmcase_values[corp] = bool(int(getattr(self.args, 'qmcase' + suffix, '0')))
-            qinfo.curr_default_attr_values[corp] = getattr(
-                self.args, 'default_attr' + suffix, 'word')
-            qinfo.selected_text_types, qinfo.bib_mapping = self._get_checked_text_types(
-                self._request)
+        qinfo.update_by_user_query(request.json, self._get_tt_bib_mapping(request.json['text_types']))
         self.add_conc_form_args(qinfo)
         # 2) process the query
         try:
-            self._set_first_query(self.args.fc_lemword_window_type,
-                                  self.args.fc_lemword_wsize,
-                                  self.args.fc_lemword_type,
-                                  self.args.fc_lemword,
-                                  self.args.fc_pos_window_type,
-                                  self.args.fc_pos_wsize,
-                                  self.args.fc_pos_type,
-                                  self.args.fc_pos)
+            self._set_first_query([q['corpname'] for q in request.json['queries']], qinfo)
             if self.args.shuffle == 1 and 'f' not in self.args.q:
                 self.args.shuffle = 0
                 self.args.q.append('f')
                 self.acknowledge_auto_generated_conc_op(
                     len(self.args.q) - 1, ShuffleFormArgs(persist=True))
-            ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
-            ans['TextTypeSel'] = get_tt(
-                self.corp, self._plugin_api).export_with_norms(ret_nums=False)
+
+            get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
+                     fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.asnc,
+                     save=self.args.save, samplesize=corpus_info.sample_size)
+            self._status = 201
         except ConcError as e:
             self.add_system_message('warning', str(e))
-        ans.update(self.view())
         return ans
 
     @exposed(template='view.html', page_model='view', mutates_conc=True)
@@ -731,7 +686,6 @@ class Actions(Querying):
         ff_args.default_attr = self.args.default_attr
         self.add_conc_form_args(ff_args)
 
-        self._store_semi_persistent_attrs(('queryselector', 'filfpos', 'filtpos'))
         if pnfilter not in ('p', 'n'):
             raise ConcError(translate('Select Positive or Negative filter type'))
         if not int(inclkwic):
@@ -739,7 +693,7 @@ class Actions(Querying):
         rank = dict(f=1, l=-1).get(filfl, 1)
         texttypes = TextTypeCollector(self.corp, self.args).get_query()
         try:
-            query = self._compile_query(cname=self.args.maincorp)
+            query = self._compile_query(data=ff_args, corpus=self.args.maincorp)
         except ConcError:
             if texttypes:
                 query = '[]'

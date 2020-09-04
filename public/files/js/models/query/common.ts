@@ -21,7 +21,7 @@
 import { Dict, List } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import { Kontext, ViewOptions } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
@@ -47,11 +47,31 @@ export interface QueryContextArgs {
     fc_pos_type:string;
 }
 
-export interface ConcQueryArgs extends ConcServerArgs {
-    qtype:QueryType;
-    query:string;
+export interface ConcQueryArgs {
+    queries:Array<{
+        corpname:string;
+        qtype:QueryType;
+        query:string;
+        qmcase:boolean;
+        pcq_pos_neg:string;
+        include_empty:boolean;
+        default_attr:string;
+    }>;
+    maincorp:string|null;
+    usesubcorp:string|null;
+    viewmode:'kwic'|'sen'|'align';
+    pagesize:number;
     shuffle:0|1;
-    [sca:string]:string|number;
+    attrs:Array<string>;
+    ctxattrs:Array<string>;
+    attr_vmode:ViewOptions.AttrViewMode;
+    base_viewattr:string;
+    structs:Array<string>;
+    refs:Array<string>;
+    fromp:number;
+    text_types:{[sca:string]:Array<string>|Array<number>};
+    context:QueryContextArgs;
+    type:'concQueryArgs';
 }
 
 
@@ -384,13 +404,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             insertRange:[number, number]):void {
         state.queries[sourceId] = state.queries[sourceId].substring(0, insertRange[0]) + query +
                 state.queries[sourceId].substr(insertRange[1]);
-    }
-
-    getQueryUnicodeNFC(queryId:string):string {
-         // TODO ES2015 stuff here
-        return Dict.hasKey(queryId, this.state.queries) ?
-            this.state.queries[queryId]['normalize']() :
-            undefined;
     }
 
     getRegistrationId():string {

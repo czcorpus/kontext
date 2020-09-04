@@ -548,7 +548,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         } else {
             args.remove('within');
         }
-        args.set(this.state.queryTypes[filterId], this.getQueryUnicodeNFC(filterId));
+        // TODO xx args.set(this.state.queryTypes[filterId], this.getQueryUnicodeNFC(filterId));
         return args;
     }
 
