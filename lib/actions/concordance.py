@@ -1825,3 +1825,19 @@ class Actions(Querying):
     def load_query_pipeline(self, _):
         pipeline = self.load_pipeline_ops(self._q_code)
         return dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
+
+    @exposed(http_method='GET', return_type='json')
+    def matching_structattr(self, request):
+        def is_invalid(v):
+            return re.search(r'[<>\]\[]', v) is not None
+
+        if (is_invalid(request.args.get('struct')) or is_invalid(request.args.get('attr')) or
+                is_invalid(request.args.get('attr_val')) or is_invalid(request.args.get('search_attr'))):
+            raise UserActionException('Invalid character in attribute/structure name/value')
+
+        ans = corplib.matching_structattr(
+            self.corp, request.args.get('struct'), request.args.get('attr'), request.args.get('attr_val'),
+            request.args.get('search_attr'))
+        if ans is None:
+            self._status = 404
+        return dict(result=ans)
