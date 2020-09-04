@@ -21,6 +21,7 @@
 from typing import List, Any, Optional, Tuple, Dict, Union, Set
 from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr, Structure
 from array import array
+import re
 
 import os
 import glob
@@ -811,3 +812,27 @@ def subc_keywords_onstr(sc: SubCorpus, scref: SubCorpus, attrname: str = 'word',
             items.append((score, rel, relref, i, iref, f[i], fref_iref, w))
     items.sort(reverse=True)
     return items[:wlmaxitems]
+
+
+def matching_structattr(corp: manatee.Corpus, struct: str, attr: str, val: str, search_attr: str) -> Union[str, None]:
+    """
+    Return a value of search_attr matching provided structural attribute
+    [struct].[attr] = [val]
+    """
+    try:
+        query = '<{struct} {attr}="{attr_val}">[]'.format(struct=struct, attr=attr, attr_val=val)
+        conc = manatee.Concordance(corp, query, 0, -1)
+        conc.sync()
+        kw = manatee.KWICLines(
+            corp, conc.RS(True, 0, 1), '-1', '1', 'word', '', '', '={}.{}'.format(struct, search_attr))
+        is_result = kw.nextline()
+        if not is_result:
+            return None
+        ans = kw.get_ref_list()
+        if len(ans) == 0:
+            return None
+        return ans[0]
+    except RuntimeError as ex:
+        if 'AttrNotFound' in str(ex):
+            return None
+        raise ex
