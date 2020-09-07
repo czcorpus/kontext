@@ -1825,13 +1825,16 @@ class Actions(Querying):
         def is_invalid(v):
             return re.search(r'[<>\]\[]', v) is not None
 
+        def export_s(s):
+            return l10n.export_string(s, to_encoding=self.corp.get_conf('ENCODING'))
+
         if (is_invalid(request.args.get('struct')) or is_invalid(request.args.get('attr')) or
                 is_invalid(request.args.get('attr_val')) or is_invalid(request.args.get('search_attr'))):
             raise UserActionException('Invalid character in attribute/structure name/value')
 
         ans, found, used = corplib.matching_structattr(
-            self.corp, request.args.get('struct'), request.args.get('attr'), request.args.get('attr_val'),
-            request.args.get('search_attr'))
+            self.corp, export_s(request.args.get('struct')), export_s(request.args.get('attr')),
+            export_s(request.args.get('attr_val')), export_s(request.args.get('search_attr')))
         if len(ans) == 0:
             self._status = 404
         return dict(result=ans, conc_size=found, lines_used=used)
