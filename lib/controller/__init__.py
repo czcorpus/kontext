@@ -374,7 +374,7 @@ class Controller(object):
         (i.e. you can pass either pure ASCII values or UTF-8 ones).
 
         arguments:
-        action -- action identification (e.g. 'query', 'admin/users')
+        action -- action identification (e.g. 'first_form', 'admin/users')
         params -- a dict-like object containing parameter names and values
         """
         root = self.get_root_url()

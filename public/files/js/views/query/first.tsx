@@ -99,7 +99,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     });
     const contextViews = contextInit(dispatcher, he, queryContextModel);
     const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
-
+    const layoutViews = he.getLayoutViews();
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
 
@@ -292,9 +292,12 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         }
                     </fieldset>
                     <div className="buttons">
-                        <button type="button" className="default-button" onClick={this._handleSubmit}>
-                            {he.translate('query__search_btn')}
-                        </button>
+                        {this.props.isBusy ?
+                            <layoutViews.AjaxLoaderBarImage /> :
+                            <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                {he.translate('query__search_btn')}
+                            </button>
+                        }
                     </div>
                 </form>
             );

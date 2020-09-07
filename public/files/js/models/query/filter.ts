@@ -289,7 +289,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 List.map(k => tuple(k, false)),
                 Dict.fromEntries()
             ),
-            suggestionsVisibility: props.suggestionsVisibility
+            suggestionsVisibility: props.suggestionsVisibility,
+            isBusy: false
         });
         this.syncInitialArgs = syncInitialArgs;
 

@@ -519,7 +519,7 @@ class Actions(Querying):
         first query screen
         """
         def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
-            filter_args = ContextFilterArgsConv(self.args)(attrname, items, ctx, fctxtype)
+            filter_args = ContextFilterArgsConv(data)(corpora[0], attrname, items, ctx, fctxtype)
             self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
 
         def ctx_to_str(ctx):
@@ -567,36 +567,36 @@ class Actions(Querying):
                 nopq.append(al_corpname)
         self.args.q = [
             ' '.join(x for x in [qbase + self._compile_query(corpora[0], data), ttquery, par_query] if x)]
-        if self.args.fc_lemword_window_type == 'left':
+        if data.fc_lemword_window_type == 'left':
             append_filter(lemmaattr,
-                          self.args.fc_lemword.split(),
-                          (-self.args.fc_lemword_wsize, -1, -1),
-                          self.args.fc_lemword_type)
-        elif self.args.fc_lemword_window_type == 'right':
+                          data.fc_lemword.split(),
+                          (-data.fc_lemword_wsize, -1, -1),
+                          data.fc_lemword_type)
+        elif data.fc_lemword_window_type == 'right':
             append_filter(lemmaattr,
-                          self.args.fc_lemword.split(),
-                          (1, self.args.fc_lemword_wsize, 1),
-                          self.args.fc_lemword_type)
-        elif self.args.fc_lemword_window_type == 'both':
+                          data.fc_lemword.split(),
+                          (1, data.fc_lemword_wsize, 1),
+                          data.fc_lemword_type)
+        elif data.fc_lemword_window_type == 'both':
             append_filter(lemmaattr,
-                          self.args.fc_lemword.split(),
-                          (-self.args.fc_lemword_wsize, self.args.fc_lemword_wsize, 1),
-                          self.args.fc_lemword_type)
-        if self.args.fc_pos_window_type == 'left':
+                          data.fc_lemword.split(),
+                          (-data.fc_lemword_wsize, data.fc_lemword_wsize, 1),
+                          data.fc_lemword_type)
+        if data.fc_pos_window_type == 'left':
             append_filter('tag',
-                          [wposlist.get(t, '') for t in self.args.fc_pos],
-                          (-self.args.fc_pos_wsize, -1, -1),
-                          self.args.fc_pos_type)
-        elif self.args.fc_pos_window_type == 'right':
+                          [wposlist.get(t, '') for t in data.fc_pos],
+                          (-data.fc_pos_wsize, -1, -1),
+                          data.fc_pos_type)
+        elif data.fc_pos_window_type == 'right':
             append_filter('tag',
-                          [wposlist.get(t, '') for t in self.args.fc_pos],
-                          (1, self.args.fc_pos_wsize, 1),
-                          self.args.fc_pos_type)
-        elif self.args.fc_pos_window_type == 'both':
+                          [wposlist.get(t, '') for t in data.fc_pos],
+                          (1, data.fc_pos_wsize, 1),
+                          data.fc_pos_type)
+        elif data.fc_pos_window_type == 'both':
             append_filter('tag',
-                          [wposlist.get(t, '') for t in self.args.fc_pos],
-                          (-self.args.fc_pos_wsize, self.args.fc_pos_wsize, 1),
-                          self.args.fc_pos_type)
+                          [wposlist.get(t, '') for t in data.fc_pos],
+                          (-data.fc_pos_wsize, data.fc_pos_wsize, 1),
+                          data.fc_pos_type)
         for al_corpname in self.args.align:
             if al_corpname in nopq and not int(getattr(self.args, 'include_empty_' + al_corpname, '0')):
                 self.args.q.append('X%s' % al_corpname)
