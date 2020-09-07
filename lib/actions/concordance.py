@@ -551,7 +551,8 @@ class Actions(Querying):
             qbase = f'a{data.curr_default_attr_values[corpora[0]]},'
         else:
             qbase = 'q'
-        texttypes = TextTypeCollector(self.corp, self.args).get_query()
+
+        texttypes = TextTypeCollector(self.corp, data.selected_text_types).get_query()
         if texttypes:
             ttquery = ' '.join(['within <%s %s />' % nq for nq in texttypes])
         else:

@@ -159,20 +159,18 @@ class TextTypeCollector(object):
         """
         self._corp = corpus
         self._src_obj = src_obj
-        if isinstance(src_obj, Args):
-            self._attr_producer_fn = lambda o: dir(o)
-            self._access_fn = lambda o, att: getattr(o, att)
+        if type(src_obj) is dict:
+            self._attr_producer_fn = lambda o: o.keys()
+            self._access_fn = lambda o, att: o.get(att)
         elif isinstance(src_obj, Request):
             self._attr_producer_fn = lambda o: list(o.form.keys())
             self._access_fn = lambda o, x: o.form.getlist(*(x,))
         else:
-            raise ValueError('Invalid source object (must be either argmapping.Args or Request): %s' % (
+            raise ValueError('Invalid source object (must be either a dict or Request): %s' % (
                              src_obj.__class__.__name__,))
 
     def get_attrmap(self):
-        scas = [(a[4:], self._access_fn(self._src_obj, a))
-                for a in self._attr_producer_fn(self._src_obj) if a.startswith('sca_')]
-        return dict(scas)
+        return dict((a, self._access_fn(self._src_obj, a)) for a in self._attr_producer_fn(self._src_obj))
 
     def get_query(self):
         """
@@ -180,8 +178,7 @@ class TextTypeCollector(object):
         a list of tuples (struct, condition); strings are encoded to the encoding current
         corpus uses!
         """
-        scas = [(a[4:], self._access_fn(self._src_obj, a))
-                for a in self._attr_producer_fn(self._src_obj) if a.startswith('sca_')]
+        scas = [(a, self._access_fn(self._src_obj, a)) for a in self._attr_producer_fn(self._src_obj)]
         structs = {}
         for sa, v in scas:
             if type(v) in (str, str) and '|' in v:

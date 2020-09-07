@@ -756,7 +756,6 @@ class Kontext(Controller):
         """
         cn = ''
         redirect = False
-        logging.getLogger(__name__).debug('form.corpora: {}'.format(form.corpora))
         if len(form.corpora) > 0:
             cn = form.corpora[0]
         elif not self.user_is_anonymous():

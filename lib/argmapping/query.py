@@ -184,6 +184,8 @@ class QueryFormArgs(ConcFormArgs):
         self.fc_pos_wsize = ctx.get('fc_pos_wsize', self.fc_pos_wsize)
         self.fc_pos = ctx.get('fc_pos', self.fc_pos)
 
+        self.selected_text_types = data['text_types']
+
     def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.TAGHELPER as th:
             self.tag_builder_support[corpus_id] = getattr(th, 'tags_enabled_for')(corpus_id)
