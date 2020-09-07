@@ -38,11 +38,11 @@ export type QueryType = 'simple'|'advanced';
 
 export interface QueryContextArgs {
     fc_lemword_window_type:string;
-    fc_lemword_wsize:string;
+    fc_lemword_wsize:number;
     fc_lemword:string;
     fc_lemword_type:string;
     fc_pos_window_type:string;
-    fc_pos_wsize:string;
+    fc_pos_wsize:number;
     fc_pos:string[];
     fc_pos_type:string;
 }
@@ -189,6 +189,8 @@ export interface QueryFormModelState {
     suggestionsVisible:{[sourceId:string]:boolean};
 
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+
+    isBusy:boolean;
 
 }
 

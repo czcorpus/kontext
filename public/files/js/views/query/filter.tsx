@@ -245,11 +245,14 @@ export function init({
                         </tbody>
                     </table>
                     <div className="buttons">
-                        <button type="button" className="default-button" onClick={this._handleSubmit}>
-                            {this.props.operationIdx !== undefined ?
-                                he.translate('global__proceed')
-                                : he.translate('query__search_btn')}
-                        </button>
+                        {this.props.isBusy ?
+                            <layoutViews.AjaxLoaderBarImage /> :
+                            <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                {this.props.operationIdx !== undefined ?
+                                    he.translate('global__proceed')
+                                    : he.translate('query__search_btn')}
+                            </button>
+                        }
                     </div>
                 </form>
             );

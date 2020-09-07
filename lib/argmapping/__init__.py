@@ -66,20 +66,11 @@ def def_attr(value, persistent: Persistence = Persistence.NON_PERSISTENT):
 @attr.s(kw_only=True, auto_attribs=True)
 class Args(object):
     """
-    This class serves as a template for argument handling and
-    is not intended to be instantiated.
+
     """
     # specifies response output format (used in case default one is not applicable)
     format: str = def_attr('')
 
-    fc_lemword_window_type: str = def_attr('both')
-    fc_lemword_type: str = def_attr('all')
-    fc_lemword_wsize: int = def_attr(5)
-    fc_lemword: str = def_attr('')
-    fc_pos_window_type: str = def_attr('both')
-    fc_pos_type: str = def_attr('all')
-    fc_pos_wsize: int = def_attr(5)
-    fc_pos: List = def_attr(attr.Factory(list))
     ml: int = def_attr(0)
     concarf: str = def_attr('')
     concsize: str = def_attr('')
@@ -254,7 +245,7 @@ class Args(object):
                 return 'visible-kwic'
         return value
 
-    def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]], json_data: Dict[str, Any] = None):
+    def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]]):
         """
         Set existing attrs of self to the values provided by args. Multi-value keys are supported
         in a limited way - only list of strings can be set.

@@ -146,6 +146,16 @@ class QueryFormArgs(ConcFormArgs):
         self.tagset_docs = empty_dict.copy()
         self.has_lemma = empty_dict.copy()
 
+        # context filter
+        self.fc_lemword_window_type = 'both'
+        self.fc_lemword_type = 'all'
+        self.fc_lemword_wsize = 5
+        self.fc_lemword = ''
+        self.fc_pos_window_type = 'both'
+        self.fc_pos_type = 'all'
+        self.fc_pos_wsize = 5
+        self.fc_pos = []
+
         self.selected_text_types: Dict[str, str] = {}
         # for bibliography structattr - maps from hidden ids to visible titles (this is optional)
         self.bib_mapping: Dict[str, str] = {}
@@ -163,6 +173,16 @@ class QueryFormArgs(ConcFormArgs):
             self.curr_qmcase_values[corp] = query['qmcase']
             self.curr_default_attr_values[corp] = query['default_attr']
         self.bib_mapping = bib_mapping
+
+        ctx = data['context']
+        self.fc_lemword_window_type = ctx.get('fc_lemword_window_type', self.fc_lemword_window_type)
+        self.fc_lemword_type = ctx.get('fc_lemword_type', self.fc_lemword_type)
+        self.fc_lemword_wsize = ctx.get('fc_lemword_wsize', self.fc_lemword_wsize)
+        self.fc_lemword = ctx.get('fc_lemword', self.fc_lemword)
+        self.fc_pos_window_type = ctx.get('fc_pos_window_type', self.fc_pos_window_type)
+        self.fc_pos_type = ctx.get('fc_pos_type', self.fc_pos_type)
+        self.fc_pos_wsize = ctx.get('fc_pos_wsize', self.fc_pos_wsize)
+        self.fc_pos = ctx.get('fc_pos', self.fc_pos)
 
     def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.TAGHELPER as th:
@@ -376,7 +396,7 @@ class ContextFilterArgsConv(object):
     form arguments into the regular filter ones.
     """
 
-    def __init__(self, args) -> None:  # TODO args type ???
+    def __init__(self, args: QueryFormArgs) -> None:
         self.args = args
 
     @staticmethod
@@ -393,16 +413,15 @@ class ContextFilterArgsConv(object):
             return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
         raise ValueError(f'Unknown type fctxtype = {fctxtype}')
 
-    def __call__(self, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:  # TODO ctx type
-        ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-                                 persist=True)
-        ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
+    def __call__(self, corpname: str, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:
+        ff_args = FilterFormArgs(maincorp=corpname, persist=True)
+        ff_args.maincorp = corpname
         ff_args.pnfilter = 'p' if fctxtype in ('any', 'all') else 'n'
         ff_args.filfpos = ctx[0]
         ff_args.filtpos = ctx[1]
         ff_args.filfl = 'f' if ctx[2] > 0 else 'l'
         ff_args.inclkwic = False
-        ff_args.default_attr = self.args.default_attr
+        ff_args.default_attr = self.args.curr_default_attr_values[corpname]
         ff_args.query_type = 'cql'
         ff_args.query = self._convert_query(attrname, items, fctxtype)
         return ff_args

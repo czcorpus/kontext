@@ -21,14 +21,13 @@
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
 import { IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { Observable, of as rxOf } from 'rxjs';
+import { tap, map, concatMap } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState,
@@ -38,8 +37,7 @@ import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../o
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
-import { Attributes } from 'react';
-import { AjaxConcResponse, ConcQueryResponse } from '../concordance/common';
+import { ConcQueryResponse } from '../concordance/common';
 
 
 export interface QueryFormUserEntries {
@@ -320,7 +318,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 List.map(c => tuple(c, false)),
                 Dict.fromEntries()
             ),
-            suggestionsVisibility: props.suggestionsVisibility
+            suggestionsVisibility: props.suggestionsVisibility,
+            isBusy: false
         });
         this.setUserValues(this.state, props);
 
@@ -492,17 +491,48 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.addActionHandler<Actions.QuerySubmit>(
             ActionName.QuerySubmit,
             action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
                 this.suspend({}, (action, syncData) => {
                     return action.name === ActionName.QueryContextFormPrepareArgsDone ?
                         null : syncData;
 
-                }).subscribe(
-                    (wAction:Actions.QueryContextFormPrepareArgsDone) => {
-                        if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
-                            this.submitQuery(wAction.payload.data);
+                }).pipe(
+                    concatMap(
+                        (wAction:Actions.QueryContextFormPrepareArgsDone) => {
+                            if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
+                                return this.submitQuery(wAction.payload.data);
+                            }
+                            return rxOf(null);
                         }
+                    )
+
+                ).subscribe(
+                    (data) => {
+                        window.location.href =
+                            this.pageModel.createActionUrl(
+                                'view', [
+                                    ['q', '~' + data.conc_persistence_op_id],
+                                    ['corpname', List.head(this.state.corpora)],
+                                    ...pipe(
+                                        this.state.corpora,
+                                        List.tail(),
+                                        List.map(
+                                            c => tuple('align', c)
+                                        )
+                                    )
+                                ]
+                            )
+                    },
+                    (err) => {
+                        console.log('error: ', err);
+                        this.pageModel.showMessage('error', err);
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                     }
-                );
+                )
             }
         );
 
@@ -801,25 +831,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return args;
     }
 
-    submitQuery(contextFormArgs:QueryContextArgs):void {
-        this.pageModel.ajax$<ConcQueryResponse>(
+    submitQuery(contextFormArgs:QueryContextArgs):Observable<ConcQueryResponse|null> {
+        return this.pageModel.ajax$<ConcQueryResponse>(
             HTTP.Method.POST,
             this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
             this.createSubmitArgs(contextFormArgs),
             {
                 contentType: 'application/json'
             }
-
-        ).subscribe(
-            (data) => {
-                window.location.href =
-                    this.pageModel.createActionUrl('view', [['q', '~' + data.conc_persistence_op_id]])
-            },
-            (err) => {
-                console.log('error: ', err);
-                this.pageModel.showMessage('error', err);
-            }
-        )
+        );
     }
 
 
