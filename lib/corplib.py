@@ -814,25 +814,27 @@ def subc_keywords_onstr(sc: SubCorpus, scref: SubCorpus, attrname: str = 'word',
     return items[:wlmaxitems]
 
 
-def matching_structattr(corp: manatee.Corpus, struct: str, attr: str, val: str, search_attr: str) -> Union[str, None]:
+def matching_structattr(corp: manatee.Corpus, struct: str, attr: str, val: str, search_attr: str) -> Tuple[List[str], int, int]:
     """
     Return a value of search_attr matching provided structural attribute
     [struct].[attr] = [val]
     """
     try:
+        size_limit = 1000000
+        ans = set()
         query = '<{struct} {attr}="{attr_val}">[]'.format(struct=struct, attr=attr, attr_val=val)
         conc = manatee.Concordance(corp, query, 0, -1)
         conc.sync()
+        size = conc.size()
+
         kw = manatee.KWICLines(
-            corp, conc.RS(True, 0, 1), '-1', '1', 'word', '', '', '={}.{}'.format(struct, search_attr))
-        is_result = kw.nextline()
-        if not is_result:
-            return None
-        ans = kw.get_ref_list()
-        if len(ans) == 0:
-            return None
-        return ans[0]
+            corp, conc.RS(True, 0, size_limit), '-1', '1', 'word', '', '', '={}.{}'.format(struct, search_attr))
+        while kw.nextline():
+            refs = kw.get_ref_list()
+            if len(refs) > 0:
+                ans.add(refs[0])
+        return sorted(ans), size,  min(size, size_limit)
     except RuntimeError as ex:
         if 'AttrNotFound' in str(ex):
-            return None
+            return [], 0, 0
         raise ex

@@ -1835,9 +1835,9 @@ class Actions(Querying):
                 is_invalid(request.args.get('attr_val')) or is_invalid(request.args.get('search_attr'))):
             raise UserActionException('Invalid character in attribute/structure name/value')
 
-        ans = corplib.matching_structattr(
+        ans, found, used = corplib.matching_structattr(
             self.corp, request.args.get('struct'), request.args.get('attr'), request.args.get('attr_val'),
             request.args.get('search_attr'))
-        if ans is None:
+        if len(ans) == 0:
             self._status = 404
-        return dict(result=ans)
+        return dict(result=ans, conc_size=found, lines_used=used)
