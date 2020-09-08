@@ -451,12 +451,12 @@ class Kontext(Controller):
         if len(self._auto_generated_conc_ops) > 0:
             q_limit = self._auto_generated_conc_ops[0][0]
         else:
-            q_limit = len(getattr(self.args, 'q'))
+            q_limit = len(self.args.q)
         return dict(
             # we don't want to store all the items from self.args.q in case auto generated
             # operations are present (we will store them individually later).
             user_id=self.session_get('user', 'id'),
-            q=getattr(self.args, 'q')[:q_limit],
+            q=self.args.q[:q_limit],
             corpora=self.get_current_aligned_corpora(),
             usesubcorp=getattr(self.args, 'usesubcorp'),
             lines_groups=self._lines_groups.serialize()

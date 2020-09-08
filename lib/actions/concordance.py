@@ -515,9 +515,7 @@ class Actions(Querying):
         return self._compile_basic_query(corpus, data)
 
     def _set_first_query(self, corpora: List[str], data: QueryFormArgs):
-        """
-        first query screen
-        """
+
         def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
             filter_args = ContextFilterArgsConv(data)(corpora[0], attrname, items, ctx, fctxtype)
             self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
@@ -525,21 +523,29 @@ class Actions(Querying):
         def ctx_to_str(ctx):
             return ' '.join(str(x) for x in ctx)
 
-        def append_filter(attrname, items, ctx, fctxtype):
+        def append_filter(idx: int, attrname, items, ctx, fctxtype) -> int:
+            """
+            return next idx of a new acknowledged auto-operation idx (to be able to continue
+            with appending of other ops). I.e. if the last operation appended
+            here has idx of 7 then the returned value will be 8.
+            """
             if not items:
-                return
+                return idx
             if fctxtype == 'any':
                 self.args.q.append('P%s [%s]' %
                                    (ctx_to_str(ctx), '|'.join(['%s="%s"' % (attrname, i) for i in items])))
-                append_form_filter_op(1, attrname, items, ctx, fctxtype)
+                append_form_filter_op(idx, attrname, items, ctx, fctxtype)
+                return idx + 1
             elif fctxtype == 'none':
                 self.args.q.append('N%s [%s]' %
                                    (ctx_to_str(ctx), '|'.join(['%s="%s"' % (attrname, i) for i in items])))
-                append_form_filter_op(1, attrname, items, ctx, fctxtype)
+                append_form_filter_op(idx, attrname, items, ctx, fctxtype)
+                return idx + 1
             elif fctxtype == 'all':
                 for i, v in enumerate(items):
                     self.args.q.append('P%s [%s="%s"]' % (ctx_to_str(ctx), attrname, v))
-                    append_form_filter_op(1 + i, attrname, [v], ctx, fctxtype)
+                    append_form_filter_op(idx + i, attrname, [v], ctx, fctxtype)
+                return idx + len(items)
 
         if 'lemma' in self.corp.get_conf('ATTRLIST').split(','):
             lemmaattr = 'lemma'
@@ -568,38 +574,47 @@ class Actions(Querying):
                 nopq.append(al_corpname)
         self.args.q = [
             ' '.join(x for x in [qbase + self._compile_query(corpora[0], data), ttquery, par_query] if x)]
+
+        ag_op_idx = 1  # an initial index of auto-generated conc. operations
         if data.fc_lemword_window_type == 'left':
-            append_filter(lemmaattr,
-                          data.fc_lemword.split(),
-                          (-data.fc_lemword_wsize, -1, -1),
-                          data.fc_lemword_type)
+            ag_op_idx = append_filter(ag_op_idx,
+                                      lemmaattr,
+                                      data.fc_lemword.split(),
+                                      (-data.fc_lemword_wsize, -1, -1),
+                                      data.fc_lemword_type)
         elif data.fc_lemword_window_type == 'right':
-            append_filter(lemmaattr,
-                          data.fc_lemword.split(),
-                          (1, data.fc_lemword_wsize, 1),
-                          data.fc_lemword_type)
+            ag_op_idx = append_filter(ag_op_idx,
+                                      lemmaattr,
+                                      data.fc_lemword.split(),
+                                      (1, data.fc_lemword_wsize, 1),
+                                      data.fc_lemword_type)
         elif data.fc_lemword_window_type == 'both':
-            append_filter(lemmaattr,
-                          data.fc_lemword.split(),
-                          (-data.fc_lemword_wsize, data.fc_lemword_wsize, 1),
-                          data.fc_lemword_type)
+            ag_op_idx = append_filter(ag_op_idx,
+                                      lemmaattr,
+                                      data.fc_lemword.split(),
+                                      (-data.fc_lemword_wsize, data.fc_lemword_wsize, 1),
+                                      data.fc_lemword_type)
         if data.fc_pos_window_type == 'left':
-            append_filter('tag',
+            append_filter(ag_op_idx,
+                          'tag',
                           [wposlist.get(t, '') for t in data.fc_pos],
                           (-data.fc_pos_wsize, -1, -1),
                           data.fc_pos_type)
         elif data.fc_pos_window_type == 'right':
-            append_filter('tag',
+            append_filter(ag_op_idx,
+                          'tag',
                           [wposlist.get(t, '') for t in data.fc_pos],
                           (1, data.fc_pos_wsize, 1),
                           data.fc_pos_type)
         elif data.fc_pos_window_type == 'both':
-            append_filter('tag',
+            append_filter(ag_op_idx,
+                          'tag',
                           [wposlist.get(t, '') for t in data.fc_pos],
                           (-data.fc_pos_wsize, data.fc_pos_wsize, 1),
                           data.fc_pos_type)
+
         for al_corpname in self.args.align:
-            if al_corpname in nopq and not int(getattr(self.args, 'include_empty_' + al_corpname, '0')):
+            if al_corpname in nopq and not int(data.curr_include_empty_values[al_corpname]):
                 self.args.q.append('X%s' % al_corpname)
 
     @exposed(mutates_conc=True, http_method=('POST',), return_type='json')
