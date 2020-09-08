@@ -69,7 +69,7 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
     }
 
     getSubmitUrl(opKey:string):string {
-        const args = this.layoutModel.getConcArgs() as MultiDict<FirstHitsServerArgs>;
+        const args = this.layoutModel.exportConcArgs() as MultiDict<FirstHitsServerArgs>;
         args.set('fh_struct', this.state.docStructValues[opKey]);
         return this.layoutModel.createActionUrl('filter_firsthits', args);
     }

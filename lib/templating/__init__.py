@@ -47,10 +47,14 @@ class StateGlobals(object):
         return list(self._data.items())
 
     def export(self):
-        ans = []
-        for k, v in list(self._data.items()):
-            for item in v:
-                ans.append((k, item))
+        ans = {}
+        for k, v in self._data.items():
+            if len(v) == 0:
+                continue
+            elif len(v) == 1:
+                ans[k] = v[0]
+            else:
+                ans[k] = v[:]
         return ans
 
     def _copy_data(self):

@@ -51,7 +51,8 @@ export interface IPluginApi extends ITranslator {
     getModels():Kontext.LayoutModel;
     getViews():CoreViews.Runtime;
     pluginTypeIsActive(name:string):boolean;
-    getConcArgs():Kontext.IMultiDict<ConcServerArgs>;
+    getConcArgs():ConcServerArgs;
+    exportConcArgs():Kontext.IMultiDict<ConcServerArgs>;
     getCorpusIdent():Kontext.FullCorpusIdent;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;

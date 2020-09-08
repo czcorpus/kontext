@@ -218,7 +218,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
             ttModel:TextTypesModel, lineViewProps:ViewConfiguration,
             initialData:Array<ServerLineData>) {
-        const viewAttrs = layoutModel.getConcArgs().head('attrs').split(',');
+        const viewAttrs = layoutModel.exportConcArgs().head('attrs').split(',');
         super(
             dispatcher,
             {
@@ -298,6 +298,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 }
             );
         };
+
+        this.addActionHandler<Actions.AddedNewOperation>(
+            ActionName.AddedNewOperation,
+            action => {
+                if (!action.error) {
+                    this.importData(action.payload.data);
+                }
+            }
+        );
 
         this.addActionHandler<Actions.ChangeMainCorpus>(
             ActionName.ChangeMainCorpus,
@@ -755,7 +764,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     getViewAttrs():Array<string> {
-        return this.layoutModel.getConcArgs().head('attrs').split(',');
+        return this.layoutModel.exportConcArgs().head('attrs').split(',');
     }
 
     getNumItemsInLockedGroups():number {
@@ -763,7 +772,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     private pushHistoryState(pageNum:number):void {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.exportConcArgs();
         args.set('fromp', pageNum);
         this.layoutModel.getHistory().pushState(
             'view', args, { pagination: true, pageNum });
@@ -803,7 +812,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 'concview__invalid_page_num_err')));
         }
 
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.exportConcArgs();
         args.set('fromp', pageNum);
         args.set('format', 'json');
         if (concId) {
@@ -822,7 +831,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                     state.currentPage = pageNum
                 });
             }),
-            map(_ => this.layoutModel.getConcArgs())
+            map(_ => this.layoutModel.exportConcArgs())
         );
     }
 
@@ -861,7 +870,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         }
         this.changeState(state => {state.viewMode = mode});
         this.layoutModel.replaceConcArg('viewmode', [this.state.viewMode]);
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.exportConcArgs();
         args.set('format', 'json');
 
         return this.layoutModel.ajax$<AjaxConcResponse>(
@@ -890,7 +899,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     private changeMainCorpus(corpusId:string) {
-        const args = this.layoutModel.getConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
+        const args = this.layoutModel.exportConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
         if (this.state.kwicCorps.indexOf(corpusId) > -1) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');

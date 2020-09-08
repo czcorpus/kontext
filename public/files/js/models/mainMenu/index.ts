@@ -245,7 +245,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 };
             },
             (_, action, __) => {
-                if (action.payload.within === 1) {
+                if (action.payload.within) {
                     this.pageModel.replaceConcArg('maincorp', [action.payload.maincorp]);
                 }
             }
@@ -261,10 +261,10 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
 
     exportKeyShortcutActions():Kontext.IMainMenuShortcutMapper {
         return new MenuShortcutMapper(pipe(
-                    this.getState().data,
-                    List.flatMap(([,v]) => v.items),
-                    List.filter(v => isEventTriggeringItem(v) && !!v.keyCode),
-                    List.map(v => v as Kontext.EventTriggeringSubmenuItem)
+            this.getState().data,
+            List.flatMap(([,v]) => v.items),
+            List.filter(v => isEventTriggeringItem(v) && !!v.keyCode),
+            List.map(v => v as Kontext.EventTriggeringSubmenuItem)
         ));
     }
 

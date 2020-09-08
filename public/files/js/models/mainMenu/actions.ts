@@ -109,7 +109,7 @@ export namespace Actions {
     }
 
     export interface ShowFilter extends Action<{
-        within:number; // TODO should be boolean instead
+        within:boolean;
         maincorp:string;
     }> {
         name: ActionName.ShowFilter;

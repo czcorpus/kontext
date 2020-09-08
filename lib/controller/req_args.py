@@ -17,7 +17,7 @@ from collections import defaultdict
 from typing import List, Union, Dict, Any
 
 
-class RequestArgsProxy(object):
+class RequestArgsProxy:
     """
     A wrapper class allowing an access to both
     Werkzeug's request.form and request.args (MultiDict objects).
@@ -50,8 +50,11 @@ class RequestArgsProxy(object):
 
     @property
     def corpora(self) -> List[str]:
-        if self._json is not None and self._json.get('type') == 'concQueryArgs':
-            return [q['corpname'] for q in self._json['queries']]
+        if self._json is not None:
+            if self._json.get('type') == 'concQueryArgs':
+                return [q['corpname'] for q in self._json['queries']]
+            else:
+                return [self._json.get('corpname')]
         return self.getlist('corpname')
 
     def keys(self):

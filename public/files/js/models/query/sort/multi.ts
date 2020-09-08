@@ -215,7 +215,7 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
     }
 
     private createSubmitArgs(sortId:string):MultiDict<ConcSortServerArgs> {
-        const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<ConcSortServerArgs>;
         for (let i = 0; i < this.state.sortlevelValues[sortId]; i += 1) {
             args.replace('sortlevel', [String(this.state.sortlevelValues[sortId])]);
             args.replace(`ml${i+1}attr`, [this.state.mlxattrValues[sortId][i]]);

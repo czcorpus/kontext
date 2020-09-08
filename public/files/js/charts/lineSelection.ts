@@ -207,7 +207,7 @@ export class LineSelGroupsRatiosChart {
             HTTP.Method.GET,
             this.layoutModel.createActionUrl(
                 'ajax_get_line_groups_stats',
-                this.layoutModel.getConcArgs().items()
+                this.layoutModel.exportConcArgs().items()
             ),
             {}
 

@@ -21,7 +21,7 @@ This module contains a functionality related to
 extended, re-editable query processing.
 """
 
-from typing import Dict, Any, Optional, Callable, List, Tuple
+from typing import Dict, Any, Optional, List
 from argmapping.query import ConcFormArgs
 from werkzeug import Request
 
@@ -90,14 +90,6 @@ class Querying(Kontext):
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
             ans.update(lastop_form=self._curr_conc_form_args.serialize())
         return ans
-
-    @staticmethod
-    def import_qs(qs: Optional[str]) -> Optional[str]:
-        """
-        Import query selector value (e.g. 'iqueryrow')
-        into a query type identifier (e.g. 'iquery').
-        """
-        return qs[:-3] if qs is not None else None
 
     def _select_current_aligned_corpora(self, active_only: bool):
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()

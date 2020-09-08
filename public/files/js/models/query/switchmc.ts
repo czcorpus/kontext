@@ -93,7 +93,7 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
     }
 
     getSubmitUrl(opId:string):string {
-        const args = this.layoutModel.getConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
+        const args = this.layoutModel.exportConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
         args.set('maincorp', this.state.maincorpValues[opId]);
         return this.layoutModel.createActionUrl('switch_main_corp', args);
     }

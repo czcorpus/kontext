@@ -20,7 +20,7 @@ import re
 import json
 from collections import defaultdict
 import time
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
@@ -503,15 +503,19 @@ class Actions(Querying):
         availstruct = self.corp.get_conf('STRUCTLIST').split(',')
         return 'err' in availstruct and 'corr' in availstruct
 
-    def _compile_basic_query(self, corpus: str, data: QueryFormArgs):
-        qtype = data.curr_query_types[corpus]
-        query = data.curr_queries[corpus]
+    def _compile_basic_query(self, corpus: str, data: Union[QueryFormArgs, FilterFormArgs]):
+        if isinstance(data, QueryFormArgs):
+            qtype = data.curr_query_types[corpus]
+            query = data.curr_queries[corpus]
+        else:
+            qtype = data.query_type
+            query = data.query
         if qtype == 'simple':
             return ' '.join([f'[word="(?i){part.strip()}"]' for part in query.split(' ')])
         else:
             return re.sub(r'[\n\r]+', ' ', query).strip()
 
-    def _compile_query(self, corpus, data: QueryFormArgs):
+    def _compile_query(self, corpus, data: Union[QueryFormArgs, FilterFormArgs]):
         return self._compile_basic_query(corpus, data)
 
     def _set_first_query(self, corpora: List[str], data: QueryFormArgs):
@@ -672,7 +676,7 @@ class Actions(Querying):
         self.add_conc_form_args(ksargs)
         return self.view()
 
-    @exposed(access_level=1, template='view.html', vars=('orig_query', ), page_model='view', mutates_conc=True)
+    @exposed(access_level=1, mutates_conc=True, http_method='POST', return_type='json')
     def filter(self, request):
         """
         Positive/Negative filter
@@ -680,54 +684,33 @@ class Actions(Querying):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a filter once a group of lines has been saved')
 
-        pnfilter = request.args.get('pnfilter', '')
-        filfl = request.args.get('filfl', 'f')
-        filfpos = request.args.get('filfpos', '-5')
-        filtpos = request.args.get('filtpos', '5')
-        inclkwic = request.args.get('inclkwic', '0')
-        within = request.args.get('within', '0')
-
-        qtype = self.import_qs(self.args.queryselector)
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
-        ff_args.query_type = qtype
-        ff_args.query = getattr(self.args, qtype, None) if qtype is not None else None
-        ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
-        ff_args.pnfilter = self.args.pnfilter
-        ff_args.filfl = self.args.filfl
-        ff_args.filfpos = self.args.filfpos
-        ff_args.filtpos = self.args.filtpos
-        ff_args.inclkwic = bool(int(inclkwic))
-        ff_args.qmcase = self.args.qmcase
-        ff_args.default_attr = self.args.default_attr
+        ff_args.update_by_user_query(request.json)
         self.add_conc_form_args(ff_args)
-
-        if pnfilter not in ('p', 'n'):
-            raise ConcError(translate('Select Positive or Negative filter type'))
-        if not int(inclkwic):
-            pnfilter = pnfilter.upper()
-        rank = dict(f=1, l=-1).get(filfl, 1)
-        texttypes = TextTypeCollector(self.corp, self.args).get_query()
+        rank = dict(f=1, l=-1).get(ff_args.filfl, 1)
+        texttypes = TextTypeCollector(self.corp, {}).get_query()
         try:
             query = self._compile_query(data=ff_args, corpus=self.args.maincorp)
         except ConcError:
             if texttypes:
                 query = '[]'
-                filfpos = '0'
-                filtpos = '0'
+                ff_args.filfpos = '0'
+                ff_args.filtpos = '0'
             else:
                 raise ConcError(translate('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
-        if int(within):
+        if ff_args.within:
             wquery = ' within %s:(%s)' % (self.args.maincorp or self.args.corpname, query)
             self.args.q[0] += wquery
             self.args.q.append('x-' + (self.args.maincorp or self.args.corpname))
         else:
-            self.args.q.append('%s%s %s %i %s' % (pnfilter, filfpos, filtpos, rank, query))
+            wquery = ''
+            self.args.q.append(f'{ff_args.pnfilter}{ff_args.filfpos} {ff_args.filtpos} {rank} {query}')
         try:
             return self.view()
         except:
-            if int(within):
+            if ff_args.within:
                 self.args.q[0] = self.args.q[0][:-len(wquery)]
             else:
                 del self.args.q[-1]

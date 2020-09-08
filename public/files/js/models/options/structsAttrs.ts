@@ -727,7 +727,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
     private loadData():Observable<ViewOptions.LoadOptionsResponse> {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.exportConcArgs();
         args.set('format', 'json');
         return this.layoutModel.ajax$<ViewOptions.LoadOptionsResponse>(
             HTTP.Method.GET,

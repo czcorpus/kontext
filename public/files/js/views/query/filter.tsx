@@ -205,7 +205,7 @@ export function init({
         }
 
         _renderForm() {
-            if (this.props.withinArgs[this.props.filterId] === 1) {
+            if (this.props.withinArgs[this.props.filterId]) {
                 return this._renderSwitchMaincorpForm();
 
             } else {

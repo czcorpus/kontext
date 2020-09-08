@@ -689,7 +689,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
      *
      */
     private loadSpeechDetail(expand?:string):Observable<boolean> {
-        const structs = this.layoutModel.getConcArgs().getList('structs');
+        const structs = this.layoutModel.exportConcArgs().getList('structs');
         const args = this.state.speechAttrs
                 .map(x => `${this.state.speechOpts.speakerIdAttr[0]}.${x}`)
                 .concat([this.state.speechOpts.speechSegment.join('.')]);

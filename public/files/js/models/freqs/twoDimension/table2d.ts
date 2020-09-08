@@ -569,7 +569,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
     }
 
     getSubmitArgs():MultiDict<CTFreqServerArgs> {
-        const args = this.pageModel.getConcArgs() as MultiDict<CTFreqServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<CTFreqServerArgs>;
         args.set('ctfcrit1', this.state.ctFcrit1);
         args.set('ctfcrit2', this.state.ctFcrit2);
         args.set('ctattr1', this.state.attr1);

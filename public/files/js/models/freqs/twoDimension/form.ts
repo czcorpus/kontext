@@ -226,7 +226,7 @@ export class Freq2DFormModel extends StatelessModel<Freq2DFormModelState> {
     }
 
     private getSubmitArgs(state:Freq2DFormModelState):MultiDict<CTFreqServerArgs> {
-        const args = this.pageModel.getConcArgs() as MultiDict<CTFreqServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<CTFreqServerArgs>;
         args.set('ctfcrit1', this.generateCrit(state, 1));
         args.set('ctfcrit2', this.generateCrit(state, 2));
         args.set('ctattr1', state.attr1);
