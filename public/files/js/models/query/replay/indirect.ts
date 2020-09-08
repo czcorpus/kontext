@@ -58,7 +58,7 @@ export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplay
                 window.location.replace(
                     this.pageModel.createActionUrl(
                         'view',
-                        this.pageModel.getConcArgs().items()
+                        this.pageModel.exportConcArgs().items()
                     ) + '#edit_op/operationIdx=' + action.payload.operationIdx
                 );
             }

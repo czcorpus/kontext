@@ -147,7 +147,7 @@ export namespace AjaxResponse {
         default_attr_value:string;
         tag_builder_support:boolean;
         lpos:string;
-        within:number; // used when switching to an aligned corp without specific query (set to 1)
+        within:boolean; // used when switching to an aligned corp without specific query (true)
         has_lemma:boolean;
         tagset_doc:string;
     }

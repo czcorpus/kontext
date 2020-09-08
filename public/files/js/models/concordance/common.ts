@@ -193,15 +193,9 @@ export interface ConcSaveServerArgs extends ConcServerArgs {
  * provide and update concordance page parameters.
  */
 export interface IConcArgsHandler {
-    getConcArgs():Kontext.IMultiDict<ConcServerArgs> ;
+    exportConcArgs():Kontext.IMultiDict<ConcServerArgs>;
+    getConcArgs():ConcServerArgs;
     replaceConcArg(name:string, values:Array<string>):void;
-
-    /**
-     * Export current conc args to a URL with additional
-     * argument updates. Original arguments stored in model
-     * are unchanged.
-     */
-    exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string;
 }
 
 /**

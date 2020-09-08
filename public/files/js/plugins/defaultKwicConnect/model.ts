@@ -393,7 +393,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
     }
 
     private fetchUniqValues(fDistType:FreqDistType):Observable<Array<string>> {
-        const args = this.pluginApi.getConcArgs() as MultiDict<FreqServerArgs>;
+        const args = this.pluginApi.exportConcArgs() as MultiDict<FreqServerArgs>;
         args.set('fcrit', `${fDistType}/ie 0~0>0`);
         args.set('ml', 0);
         args.set('flimit', this.concLinesProvider.getRecommOverviewMinFreq());

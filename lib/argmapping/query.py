@@ -216,7 +216,7 @@ class FilterFormArgs(ConcFormArgs):
     def __init__(self, maincorp: str, persist: bool) -> None:
         super().__init__(persist)
         self.form_type: str = 'filter'
-        self.query_type: str = 'iquery'
+        self.query_type: str = 'simple'
         self.query: str = ''
         self.maincorp: str = maincorp
         self.pnfilter: str = 'p'
@@ -229,7 +229,20 @@ class FilterFormArgs(ConcFormArgs):
         self.has_lemma: bool = False
         self.tagset_doc: str = ''
         self.tag_builder_support: bool = False
+        self.within: bool = False
         self._add_corpus_metadata()
+
+    def update_by_user_query(self, data):
+        self.query_type = data['qtype']
+        self.query = data['query']
+        self.pnfilter = data['pnfilter']
+        self.filfl = data['filfl']
+        self.filfpos = data['filfpos']
+        self.filfpos = data['filfpos']
+        self.filtpos = data['filtpos']
+        self.inclkwic = data['inclkwic']
+        self.qmcase = data['qmcase']
+        self.within = data['within']
 
     def _add_corpus_metadata(self):
         with plugins.runtime.TAGHELPER as th:
@@ -379,7 +392,7 @@ class QuickFilterArgsConv(object):
         elms = self._parse(query)
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
-        ff_args.query_type = 'cql'
+        ff_args.query_type = 'advanced'
         ff_args.query = elms[-1]
         ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
         ff_args.pnfilter = elms[0].lower()
@@ -424,6 +437,6 @@ class ContextFilterArgsConv(object):
         ff_args.filfl = 'f' if ctx[2] > 0 else 'l'
         ff_args.inclkwic = False
         ff_args.default_attr = self.args.curr_default_attr_values[corpname]
-        ff_args.query_type = 'cql'
+        ff_args.query_type = 'advanced'
         ff_args.query = self._convert_query(attrname, items, fctxtype)
         return ff_args

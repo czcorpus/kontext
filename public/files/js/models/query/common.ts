@@ -102,9 +102,12 @@ export interface FilterServerArgs extends ConcServerArgs {
     filfl:string;
     filfpos:string;
     filtpos:string;
-    inclkwic:'1'|'0';
+    inclkwic:0|1;
     qtype:QueryType;
-    within:'1'|'0';
+    query:string;
+    qmcase:boolean;
+    within:boolean;
+    type:'filterQueryArgs';
 }
 
 export interface GeneralQueryFormProperties {

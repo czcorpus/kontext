@@ -187,7 +187,7 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
     private createSubmitArgs(sortId:string):MultiDict<ConcSortServerArgs> {
         const val2List = (v) => v ? [v] : [];
 
-        const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<ConcSortServerArgs>;
         args.replace('sattr', val2List(this.state.sattrValues[sortId]));
         args.replace('skey', val2List(this.state.skeyValues[sortId]));
         args.replace('sbward', val2List(this.state.sbwardValues[sortId]));

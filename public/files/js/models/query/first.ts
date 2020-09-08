@@ -115,9 +115,13 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 };
 
 
-function determineSupportedWidgets(corpora:Array<string>, queryTypes:{[key:string]:QueryType},
-        tagBuilderSupport:{[key:string]:boolean},
-        isAnonymousUser:boolean):{[key:string]:Array<string>} {
+function determineSupportedWidgets(
+    corpora:Array<string>,
+    queryTypes:{[key:string]:QueryType},
+    tagBuilderSupport:{[key:string]:boolean},
+    isAnonymousUser:boolean
+
+):{[key:string]:Array<string>} {
 
     const getCorpWidgets = (corpname:string, queryType:QueryType):Array<string> => {
         const ans = ['keyboard'];
@@ -724,6 +728,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             state.tagBuilderSupport = data.tag_builder_support;
                             state.hasLemma = data.has_lemma;
                             state.tagsetDocs = data.tagset_docs;
+                            state.supportedWidgets = determineSupportedWidgets(
+                                state.corpora,
+                                state.queryTypes,
+                                state.tagBuilderSupport,
+                                state.isAnonymousUser
+                            );
                         });
                     }
                 }
@@ -790,7 +800,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     createSubmitArgs(contextFormArgs:QueryContextArgs):ConcQueryArgs {
         const primaryCorpus = this.state.corpora[0];
-        const currArgs = this.pageModel.getConcArgs();
+        const currArgs = this.pageModel.exportConcArgs();
         const args:ConcQueryArgs = {
             type:'concQueryArgs',
             maincorp: primaryCorpus,

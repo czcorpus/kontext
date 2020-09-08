@@ -127,7 +127,7 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
     }
 
     private createSubmitArgs(sortId:string):MultiDict<SampleServerArgs> {
-        const args = this.pageModel.getConcArgs() as MultiDict<SampleServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<SampleServerArgs>;
         args.set('rlines', parseInt(this.state.rlinesValues[sortId]));
         return args;
     }

@@ -309,7 +309,7 @@ export class ViewPage {
                         this.layoutModel.ajax$<AjaxResponse.ConcStatus>(
                             HTTP.Method.GET,
                             this.layoutModel.createActionUrl('get_cached_conc_sizes'),
-                            this.layoutModel.getConcArgs()
+                            this.layoutModel.exportConcArgs()
                         ),
                         rxOf(interval)
                     )
@@ -356,12 +356,12 @@ export class ViewPage {
             case 'reduce': {
                 this.layoutModel.getHistory().replaceState(
                     'view',
-                    this.layoutModel.getConcArgs(),
+                    this.layoutModel.exportConcArgs(),
                     {
                         modalAction: {
                             name: QueryActionName.EditLastQueryOperation,
                             payload: {
-                                sourceId: this.layoutModel.getConcArgs()['q']
+                                sourceId: this.layoutModel.exportConcArgs()['q']
                             }
                         }
                     },
@@ -369,7 +369,7 @@ export class ViewPage {
                 );
                 this.layoutModel.getHistory().pushState(
                     'view',
-                    this.layoutModel.getConcArgs(),
+                    this.layoutModel.exportConcArgs(),
                     {
                         pagination: true,
                         pageNum: this.viewModels.lineViewModel.getCurrentPage()
@@ -381,7 +381,7 @@ export class ViewPage {
             default:
                 this.layoutModel.getHistory().replaceState(
                     'view',
-                    this.layoutModel.getConcArgs(),
+                    this.layoutModel.exportConcArgs(),
                     {
                         pagination: true,
                         pageNum: this.viewModels.lineViewModel.getCurrentPage()
@@ -524,7 +524,7 @@ export class ViewPage {
             currFiltposValues: fetchArgs<string>(item => item.filtpos),
             currInclkwicValues: fetchArgs<boolean>(item => item.inclkwic),
             tagBuilderSupport: fetchArgs<boolean>(item => item.tag_builder_support),
-            withinArgValues: fetchArgs<number>(item => item.within),
+            withinArgValues: fetchArgs<boolean>(item => !!item.within),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
@@ -751,7 +751,7 @@ export class ViewPage {
                 filterSubHitsFormProps: {
                     formType: Kontext.ConcFormTypes.SUBHITS,
                     submitFn:() => {
-                        const args = this.layoutModel.getConcArgs();
+                        const args = this.layoutModel.exportConcArgs();
                         window.location.href = this.layoutModel.createActionUrl(
                             'filter_subhits', args.items());
                     },
@@ -772,7 +772,7 @@ export class ViewPage {
                         'ShuffleMinResultWarning'
                     ),
                     shuffleSubmitFn: () => {
-                        const args = this.layoutModel.getConcArgs();
+                        const args = this.layoutModel.exportConcArgs();
                         window.location.href = this.layoutModel.createActionUrl(
                             'shuffle', args.items());
                     }
@@ -941,8 +941,8 @@ export class ViewPage {
         };
         const lineViewProps:ViewConfiguration = {
             basePosAttr: this.layoutModel.getConf<string>('baseAttr'),
-            baseViewAttr: this.layoutModel.getConcArgs().head('base_viewattr'),
-            activePosAttrs: this.layoutModel.getConcArgs().head('attrs').split(','),
+            baseViewAttr: this.layoutModel.exportConcArgs().head('base_viewattr'),
+            activePosAttrs: this.layoutModel.exportConcArgs().head('attrs').split(','),
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<'kwic'|'sen'|'align'>('ViewMode'),
             AttrViewMode: this.layoutModel.getConf<ViewOptions.AttrViewMode>('AttrViewMode'),
@@ -959,7 +959,7 @@ export class ViewPage {
             origSubCorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
             pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
             currentPage: this.layoutModel.getConf<number>('FromPage'),
-            mainCorp: this.layoutModel.getConcArgs()['maincorp'],
+            mainCorp: this.layoutModel.exportConcArgs()['maincorp'],
             concSummary: concSummaryProps,
             Unfinished: this.layoutModel.getConf<boolean>('Unfinished'),
             FastAdHocIpm: this.layoutModel.getConf<boolean>('FastAdHocIpm'),

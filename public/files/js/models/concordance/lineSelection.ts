@@ -144,7 +144,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             queryHash: '',
             lastCheckpointUrl: layoutModel.createActionUrl(
                 'view',
-                layoutModel.getConcArgs().items()
+                layoutModel.exportConcArgs().items()
             ),
             renameLabelDialogVisible: false
         };
@@ -554,7 +554,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
                 HTTP.Method.POST,
                 this.layoutModel.createActionUrl(
                     'ajax_rename_line_group',
-                    this.layoutModel.getConcArgs().items()
+                    this.layoutModel.exportConcArgs().items()
                 ),
                 {
                     'from_num': srcGroupNum,
@@ -564,7 +564,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
                 tap(data => {
                     this.updateGlobalArgs(data);
                     this.layoutModel.getHistory().replaceState(
-                        'view', this.layoutModel.getConcArgs());
+                        'view', this.layoutModel.exportConcArgs());
                 })
             );
         }
@@ -606,7 +606,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
          */
         src.subscribe(
             (data:AjaxConcResponse) => {
-                const args = this.layoutModel.getConcArgs();
+                const args = this.layoutModel.exportConcArgs();
                 args.replace('q', data.Q);
                 const nextUrl = this.layoutModel.createActionUrl('view', args.items());
                 window.location.href = nextUrl;
@@ -622,14 +622,14 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                     'ajax_unset_lines_groups',
-                    this.layoutModel.getConcArgs().items()
+                    this.layoutModel.exportConcArgs().items()
             ),
             {},
 
         ).pipe(
             tap((data) => {
                 this.updateGlobalArgs(data);
-                this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
+                this.layoutModel.getHistory().replaceState('view', this.layoutModel.exportConcArgs());
             })
         );
     }
@@ -639,7 +639,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_apply_lines_groups',
-                this.layoutModel.getConcArgs().items()
+                this.layoutModel.exportConcArgs().items()
             ),
             {
                 rows : JSON.stringify(this.clStorage.exportAll(state))
@@ -647,7 +647,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
         ).pipe(
             tap(data => {
                 this.updateGlobalArgs(data);
-                this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
+                this.layoutModel.getHistory().replaceState('view', this.layoutModel.exportConcArgs());
             })
         );
     }
@@ -657,7 +657,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_remove_non_group_lines',
-                this.layoutModel.getConcArgs().items()
+                this.layoutModel.exportConcArgs().items()
             ),
             {}
         ));
@@ -668,20 +668,20 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'ajax_reedit_line_selection',
-                this.layoutModel.getConcArgs().items()
+                this.layoutModel.exportConcArgs().items()
             ),
             {}
 
         ).pipe(
             tap((data) => {
-                this.layoutModel.getHistory().replaceState('view', this.layoutModel.getConcArgs());
+                this.layoutModel.getHistory().replaceState('view', this.layoutModel.exportConcArgs());
                 this.updateGlobalArgs(data);
             })
         );
     }
 
     private removeLines(state:LineSelectionModelState, filter:'n'|'p'):void {
-        const args = this.layoutModel.getConcArgs() as MultiDict<
+        const args = this.layoutModel.exportConcArgs() as MultiDict<
                 ConcServerArgs & {pnfilter:string}>;
         args.set('pnfilter', filter);
         this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
@@ -714,7 +714,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
         this.finishAjaxActionWithRedirect(this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('ajax_sort_group_lines',
-                    this.layoutModel.getConcArgs().items()),
+                    this.layoutModel.exportConcArgs().items()),
             {}
         ));
     }
