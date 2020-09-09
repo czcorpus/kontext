@@ -56,13 +56,12 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     currInclkwicValues:Array<[string, boolean]>;
     inputLanguage:string;
     currPnFilterValues:Array<[string, string]>;
-    currFilflVlaues:Array<[string, string]>;
+    currFilflVlaues:Array<[string, 'f'|'l']>;
     currFilfposValues:Array<[string, string]>;
     currFiltposValues:Array<[string, string]>;
     withinArgValues:Array<[string, boolean]>;
     opLocks:Array<[string, boolean]>;
     hasLemma:Array<[string, boolean]>;
-    tagsetDoc:Array<[string, string]>;
     isAnonymousUser:boolean;
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
@@ -132,7 +131,7 @@ export interface FilterFormModelState extends QueryFormModelState {
      * Highlighted token FIRST/LAST. Specifies which token is highlighted.
      * This applies in case multiple matching tokens are found.
      */
-    filflValues:{[key:string]:string};
+    filflValues:{[key:string]:'f'|'l'};
 
     /**
      * Left range
@@ -152,8 +151,6 @@ export interface FilterFormModelState extends QueryFormModelState {
     withinArgs:{[key:string]:boolean};
 
     hasLemma:{[key:string]:boolean};
-
-    tagsetDocs:{[key:string]:string};
 
     /**
      * If true for a certain key then the operation cannot be edited.
@@ -274,10 +271,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 props.hasLemma,
                 Dict.fromEntries()
             ),
-            tagsetDocs: pipe(
-                props.tagsetDoc,
-                Dict.fromEntries()
-            ),
             inputLanguage: props.inputLanguage,
             isAnonymousUser: props.isAnonymousUser,
             supportedWidgets: determineSupportedWidgets(
@@ -287,7 +280,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ),
             contextFormVisible: false,
             textTypesFormVisible: false,
-            historyVisible: false,
+            historyVisible: pipe(
+                queries,
+                Dict.keys(),
+                List.map(k => tuple(k, false)),
+                Dict.fromEntries()
+            ),
             suggestionsVisible: pipe(
                 queries,
                 Dict.keys(),
@@ -372,8 +370,9 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FilterInputSetPCQPosNeg>(
+        this.addActionSubtypeHandler<Actions.FilterInputSetPCQPosNeg>(
             ActionName.FilterInputSetPCQPosNeg,
+            action => action.payload.formType === 'filter',
             action => {
                 this.changeState(state => {
                     state.pnFilterValues[action.payload.filterId] = action.payload.value;
@@ -543,7 +542,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                             state.withinArgs[filterId] = data.within;
                             state.lposValues[filterId] = data.lpos;
                             state.hasLemma[filterId] = data.has_lemma;
-                            state.tagsetDocs[filterId] = data.tagset_doc;
                             state.opLocks[filterId] = false;
                             state.supportedWidgets = determineSupportedWidgets(
                                 state.queries,

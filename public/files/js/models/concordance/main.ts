@@ -265,7 +265,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.saveModel = saveModel;
         this.ttModel = ttModel;
         this.syntaxViewModel = syntaxViewModel;
-        this.busyTimer = lineViewProps.Unfinished ? this.runBusyTimer(this.busyTimer) : null;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
@@ -298,6 +297,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 }
             );
         };
+        this.busyTimer = lineViewProps.Unfinished ? this.runBusyTimer(this.busyTimer) : null;
 
         this.addActionHandler<Actions.AddedNewOperation>(
             ActionName.AddedNewOperation,
@@ -783,7 +783,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      * The returned promise passes URL argument matching
      * currently displayed data page.
      */
-    private reloadPage(concId?:string):Observable<MultiDict<ConcServerArgs>> {
+    private reloadPage(concId?:string):Observable<ConcServerArgs> {
         return this.changePage(
             'customPage', this.state.currentPage, concId ? `~${concId}` : undefined);
     }
@@ -804,7 +804,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      */
     private changePage(
         action:string, pageNumber?:number, concId?:string
-    ):Observable<MultiDict<ConcServerArgs>> {
+    ):Observable<ConcServerArgs> {
         const pageNum:number = action === 'customPage' ?
             pageNumber : this.state.pagination[action];
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
@@ -812,11 +812,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 'concview__invalid_page_num_err')));
         }
 
-        const args = this.layoutModel.exportConcArgs();
-        args.set('fromp', pageNum);
-        args.set('format', 'json');
+        const args = this.layoutModel.getConcArgs();
+        args.fromp = pageNum;
+        args.format ='json';
         if (concId) {
-            args.set('q', concId);
+            args.q = concId;
         }
 
         return this.layoutModel.ajax$<AjaxConcResponse>(
@@ -831,7 +831,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                     state.currentPage = pageNum
                 });
             }),
-            map(_ => this.layoutModel.exportConcArgs())
+            map(_ => args)
         );
     }
 

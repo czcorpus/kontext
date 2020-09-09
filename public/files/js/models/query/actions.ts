@@ -363,6 +363,7 @@ export namespace Actions {
     }
 
     export interface FilterInputSetPCQPosNeg extends Action<{
+        formType:QueryFormType;
         filterId:string;
         value:'pos'|'neg';
     }> {
@@ -371,7 +372,7 @@ export namespace Actions {
 
     export interface FilterInputSetFilfl extends Action<{
         filterId:string;
-        value:string;
+        value:'f'|'l';
     }> {
         name:ActionName.FilterInputSetFilfl;
     }

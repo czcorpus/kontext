@@ -67,7 +67,6 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
         return (
             <tr>
-                <th>{he.translate('global__corpus')}:</th>
                 <td>
                     <props.corparchWidget />
                 </td>

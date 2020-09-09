@@ -10,14 +10,41 @@ body {
     height: 100%;
 }
 
-section > h2 {
-    margin: 0;
-    padding: 0.4em 0.6em;
-    background-color: @color-light-frame;
-    border-radius: 6px 6px 0 0;
-    font-size: 140%;
-    font-weight: 300;
-    color: @color-dark-green-text;
+section {
+
+    #topbar-help-mount {
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+
+    > .bar {
+        display: flex;
+        align-content: center;
+        margin: 0;
+        padding: 0.4em 0.6em;
+        background-color: @color-light-frame;
+        border-radius: 6px 6px 0 0;
+
+        > h2 {
+            margin: 0;
+            padding: 0;
+            font-size: 140%;
+            font-weight: 300;
+            color: @color-dark-green-text;
+            flex-grow: 1;
+        }
+
+        .topbar-help-icon {
+            display: flex;
+            align-content: center;
+
+            img {
+                display: block;
+                width: 0.9em;
+            }
+        }
+    }
 }
 
 button,
@@ -136,7 +163,7 @@ a.external {
     margin: 1em 0 0 0;
     background-color: @color-section-bg;
     box-shadow: @portal-box-shadow;
-    min-width: 46%;
+    min-width: 70%;
 }
 
 section.inner {

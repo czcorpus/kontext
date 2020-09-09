@@ -146,11 +146,7 @@ export class QueryPage {
         );
     }
 
-    createTTViews():QueryFormProps {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
-            'ConcFormsArgs'
-        );
-        const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
+    createTTViews(queryFormArgs:AjaxResponse.QueryFormArgs):QueryFormProps {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
@@ -194,11 +190,7 @@ export class QueryPage {
         };
     }
 
-    private initQueryModel():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
-            'ConcFormsArgs'
-        );
-        const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
+    private initQueryModel(queryFormArgs:AjaxResponse.QueryFormArgs):void {
         this.queryModel = new FirstQueryFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -237,7 +229,6 @@ export class QueryPage {
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
-                tagsetDocs: queryFormArgs.tagset_docs,
                 useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
                 tagAttr: this.layoutModel.getConf<string>('tagAttr'),
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
@@ -261,7 +252,12 @@ export class QueryPage {
         });
     }
 
-    private attachQueryForm(properties:QueryFormProps, corparchWidget:React.ComponentClass):void {
+    private attachQueryForm(
+        properties:QueryFormProps,
+        tagsetDocs:{[corp:string]:string},
+        corparchWidget:React.ComponentClass
+
+    ):void {
         const queryFormComponents = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
@@ -279,6 +275,13 @@ export class QueryPage {
             queryFormComponents.QueryForm,
             window.document.getElementById('query-form-mount'),
             properties
+        );
+        this.layoutModel.renderReactComponent(
+            queryFormComponents.QueryHelp,
+            window.document.getElementById('topbar-help-mount'),
+            {
+                tagsetDocs
+            }
         );
     }
 
@@ -323,7 +326,11 @@ export class QueryPage {
             this.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
             const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
 
-            const ttAns = this.createTTViews();
+            const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+                'ConcFormsArgs'
+            );
+            const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
+            const ttAns = this.createTTViews(queryFormArgs);
 
             const qsPlugin = queryStoragePlugin(
                 this.layoutModel.pluginApi(),
@@ -358,9 +365,9 @@ export class QueryPage {
 
             ttAns.allowCorpusSelection = true;
 
-            this.initQueryModel();
+            this.initQueryModel(queryFormArgs);
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
-            this.attachQueryForm(ttAns, corparchWidget);
+            this.attachQueryForm(ttAns, queryFormArgs.tagset_docs, corparchWidget);
             this.initCorpnameLink();
             const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
             // all the models must be unregistered and components must

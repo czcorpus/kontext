@@ -458,6 +458,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         return new MultiDict([
             tuple('corpname', args.corpname),
             tuple('maincorp', args.maincorp),
+            tuple('align', args.align),
             tuple('viewmode', args.viewmode),
             tuple('format', args.format),
             tuple('pagesize', args.pagesize),

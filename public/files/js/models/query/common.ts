@@ -187,7 +187,7 @@ export interface QueryFormModelState {
 
     textTypesFormVisible:boolean;
 
-    historyVisible:boolean;
+    historyVisible:{[sourceId:string]:boolean};
 
     suggestionsVisible:{[sourceId:string]:boolean};
 
@@ -271,7 +271,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.historyVisible = !state.historyVisible;
+                    state.historyVisible[action.payload.sourceId] =
+                        !state.historyVisible[action.payload.sourceId];
                     state.suggestionsVisible[action.payload.sourceId] = false;
                 });
             }
@@ -352,7 +353,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
                         ) {
                             state.suggestionsVisible[action.payload.sourceId] = true;
-                            state.historyVisible = false;
+                            state.historyVisible[action.payload.sourceId] = false;
                         }
 
                     } else {

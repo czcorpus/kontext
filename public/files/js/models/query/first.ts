@@ -65,7 +65,6 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     inputLanguages:{[corpname:string]:string};
     selectedTextTypes:{[structattr:string]:Array<string>};
     hasLemma:{[corpname:string]:boolean};
-    tagsetDocs:{[corpname:string]:string};
     isAnonymousUser:boolean;
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
@@ -176,8 +175,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
     inputLanguages:{[key:string]:string};
 
     hasLemma:{[key:string]:boolean};
-
-    tagsetDocs:{[key:string]:string};
 
     includeEmptyValues:{[key:string]:boolean}; // applies only for aligned languages
 
@@ -300,7 +297,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             tagBuilderSupport,
             inputLanguages: props.inputLanguages,
             hasLemma: props.hasLemma,
-            tagsetDocs: props.tagsetDocs,
             textTypesNotes: props.textTypesNotes,
             activeWidgets: pipe(
                 props.corpora,
@@ -316,7 +312,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             contextFormVisible: false,
             textTypesFormVisible: false,
-            historyVisible: false,
+            historyVisible: pipe(
+                props.corpora,
+                List.map(item => tuple(item, false)),
+                Dict.fromEntries()
+            ),
             suggestionsVisible: pipe(
                 props.corpora,
                 List.map(c => tuple(c, false)),
@@ -513,7 +513,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     )
 
                 ).subscribe(
-                    (data) => {
+                    (data:ConcQueryResponse) => {
                         window.location.href =
                             this.pageModel.createActionUrl(
                                 'view', [
@@ -525,7 +525,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                         List.map(
                                             c => tuple('align', c)
                                         )
+                                    ),
+                                    ...pipe(
+                                        data.conc_args,
+                                        Dict.toEntries()
                                     )
+
                                 ]
                             )
                     },
@@ -593,6 +598,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.shuffleConcByDefault = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.FilterInputSetPCQPosNeg>(
+            ActionName.FilterInputSetPCQPosNeg,
+            action => {
+                this.changeState(state => {
+                    state.pcqPosNegValues[action.payload.filterId] = action.payload.value;
                 });
             }
         );
@@ -727,7 +741,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             );
                             state.tagBuilderSupport = data.tag_builder_support;
                             state.hasLemma = data.has_lemma;
-                            state.tagsetDocs = data.tagset_docs;
                             state.supportedWidgets = determineSupportedWidgets(
                                 state.corpora,
                                 state.queryTypes,
