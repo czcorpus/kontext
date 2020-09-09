@@ -152,7 +152,8 @@ export interface ServerPagination {
  */
 export interface ConcServerArgs {
     corpname:string;
-    maincorp?:string;
+    maincorp:string;
+    align:string;
     viewmode:'kwic'|'sen'|'align';
     format:Kontext.ResponseFormat;
     pagesize:number;
@@ -163,7 +164,7 @@ export interface ConcServerArgs {
     structs:string; // comma-separated values
     refs:string; //comma-separated values
     q:string;
-    fromp?:number;
+    fromp:number;
 }
 
 /**
@@ -207,6 +208,7 @@ export interface ConcQueryResponse extends Kontext.AjaxResponse {
     conc_persistence_op_id:string;
     num_lines_in_groups:number;
     lines_groups_numbers:Array<number>;
+    conc_args:ConcServerArgs;
 }
 
 /**

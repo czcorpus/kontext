@@ -2,6 +2,25 @@
 
 form.query-form {
 
+    margin: 1.5em;
+
+    .primary-language,
+    .parallel .AlignedCorpBlock .form {
+
+        > *:not(:first-child) {
+            margin-top: 1em;
+        }
+
+        .query {
+            margin-top: 1.2em;
+        }
+    }
+
+    .specify-context,
+    .specify-text-types {
+        margin-top: 0.7em;
+    }
+
     .AlignedCorpBlock table.form {
         margin: 5px 10px;
     }
@@ -93,7 +112,6 @@ form.query-form {
     .pos-filter {
         margin-top: 1.7em;
     }
-
 }
 
 
@@ -135,6 +153,15 @@ a.form-extension-switch.collapse:hover {
     background-image: url(../../img/collapse_s.svg);
 }
 
+.form-extension-switch.always-expand {
+    background-image: url(../../img/sort_desc_grey.svg);
+    display: inline-block;
+    background-position: 0 3pt;
+    background-repeat: no-repeat;
+    padding-left: 1em;
+    margin-left: 0.2em;
+}
+
 .form-extension-switch .status {
     vertical-align: middle;
     display: inline-block;
@@ -159,7 +186,6 @@ div.query-form-spa {
 }
 
 .query-area {
-    max-width: 50em;
     border-radius: @input-border-radius;
     border: @input-border-style;
     background-color: #FFFFFF;
@@ -178,7 +204,12 @@ div.query-form-spa {
         min-width: 40em;
     }
 
+    .simple-input {
+        font-size: 1.2em;
+    }
+
     .cql-input {
+        font-size: 1.1em;
         min-height: 5em;
         overflow: hidden;
         resize: vertical;
@@ -193,7 +224,6 @@ div.query-form-spa {
     .query-hints {
 
         background-color: #FAFAFA;
-        max-width: 40em;
         white-space: initial;
 
         div {
@@ -283,8 +313,16 @@ div.query-form-spa {
 }
 
 .query-options {
-    display: block;
-    margin-top: 7pt;
+    margin-top: 1.2em;
+    margin-bottom: 1.2em;
+
+    label * {
+        vertical-align: middle;
+    }
+
+    > *:not(:first-child) {
+        margin-left: 1em;
+    }
 
     .default-attr-selection {
         white-space: nowrap;

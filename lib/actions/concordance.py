@@ -503,20 +503,22 @@ class Actions(Querying):
         availstruct = self.corp.get_conf('STRUCTLIST').split(',')
         return 'err' in availstruct and 'corr' in availstruct
 
-    def _compile_basic_query(self, corpus: str, data: Union[QueryFormArgs, FilterFormArgs]):
+    def _compile_query(self, corpus: str, data: Union[QueryFormArgs, FilterFormArgs]):
         if isinstance(data, QueryFormArgs):
             qtype = data.curr_query_types[corpus]
             query = data.curr_queries[corpus]
+            icase = '' if data.curr_qmcase_values[corpus] else '(?i)'
+            attr = data.curr_default_attr_values[corpus]
         else:
             qtype = data.query_type
             query = data.query
+            icase = '' if data.qmcase else '(?i)'
+            attr = data.default_attr
         if qtype == 'simple':
-            return ' '.join([f'[word="(?i){part.strip()}"]' for part in query.split(' ')])
+
+            return ' '.join([f'[{attr}="{icase}{part.strip()}"]' for part in query.split(' ')])
         else:
             return re.sub(r'[\n\r]+', ' ', query).strip()
-
-    def _compile_query(self, corpus, data: Union[QueryFormArgs, FilterFormArgs]):
-        return self._compile_basic_query(corpus, data)
 
     def _set_first_query(self, corpora: List[str], data: QueryFormArgs):
 
@@ -571,7 +573,7 @@ class Actions(Querying):
         nopq = []
         for al_corpname in corpora[1:]:
             wnot = '' if data.curr_pcq_pos_neg_values[al_corpname] == 'pos' else '!'
-            pq = self._compile_basic_query(corpus=al_corpname)
+            pq = self._compile_query(corpus=al_corpname, data=data)
             if pq:
                 par_query += 'within%s %s:%s' % (wnot, al_corpname, pq)
             if not pq or wnot:
@@ -620,6 +622,9 @@ class Actions(Querying):
         for al_corpname in self.args.align:
             if al_corpname in nopq and not int(data.curr_include_empty_values[al_corpname]):
                 self.args.q.append('X%s' % al_corpname)
+                self.args.align.append(al_corpname)
+        if len(corpora) > 1:
+            self.args.viewmode = 'align'
 
     @exposed(mutates_conc=True, http_method=('POST',), return_type='json')
     def query_submit(self, request):
@@ -646,6 +651,7 @@ class Actions(Querying):
             self._status = 201
         except ConcError as e:
             self.add_system_message('warning', str(e))
+        ans['conc_args'] = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping)).export()
         return ans
 
     @exposed(template='view.html', page_model='view', mutates_conc=True)
@@ -707,6 +713,7 @@ class Actions(Querying):
         else:
             wquery = ''
             self.args.q.append(f'{ff_args.pnfilter}{ff_args.filfpos} {ff_args.filtpos} {rank} {query}')
+        self._status = 201
         try:
             return self.view()
         except:

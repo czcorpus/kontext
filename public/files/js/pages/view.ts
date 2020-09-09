@@ -378,17 +378,6 @@ export class ViewPage {
                 );
             }
             break;
-            default:
-                this.layoutModel.getHistory().replaceState(
-                    'view',
-                    this.layoutModel.exportConcArgs(),
-                    {
-                        pagination: true,
-                        pageNum: this.viewModels.lineViewModel.getCurrentPage()
-                    },
-                    window.document.title
-                );
-            break;
         }
     }
 
@@ -449,7 +438,6 @@ export class ViewPage {
             lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemma: queryFormArgs.has_lemma,
-            tagsetDocs: queryFormArgs.tagset_docs,
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
             textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
@@ -519,7 +507,7 @@ export class ViewPage {
             currQmcaseValues: fetchArgs<boolean>(item => item.qmcase),
             currDefaultAttrValues: fetchArgs<string>(item => item.default_attr_value),
             currLposValues: fetchArgs<string>(item => item.lpos),
-            currFilflVlaues: fetchArgs<string>(item => item.filfl),
+            currFilflVlaues: fetchArgs<'f'|'l'>(item => item.filfl),
             currFilfposValues: fetchArgs<string>(item => item.filfpos),
             currFiltposValues: fetchArgs<string>(item => item.filtpos),
             currInclkwicValues: fetchArgs<boolean>(item => item.inclkwic),
@@ -531,7 +519,6 @@ export class ViewPage {
             lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),
-            tagsetDoc: fetchArgs<string>(item => item.tagset_doc),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>(
                 'InputLanguages'

@@ -139,7 +139,7 @@ export namespace AjaxResponse {
         query:string;
         maincorp:string;
         pnfilter:string;
-        filfl:string;
+        filfl:'f'|'l';
         filfpos:string;
         filtpos:string;
         inclkwic:boolean;

@@ -726,18 +726,49 @@ fieldset.FieldsetOutputOptions {
 
 .TRQueryTypeField {
 
-    .hint {
+    display: flex;
 
-        padding-left: 0.4em;
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        display: flex;
 
-        img {
-            display: inline-block;
-            width: 0.7em;
+        li {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-content: center;
+
+            > label {
+
+                input {
+                    position: relative;
+                    top: 0.1em;
+                    margin-right: 0.3em;
+                }
+
+                * {
+                    vertical-align: baseline;
+                }
+            }
+        }
+
+        li:not(:last-child) {
+            margin-right: 0.4em;
         }
     }
 
-    h3 span.type {
-        text-transform: lowercase;
+    .hint {
+        display: block;
+        margin-left: 2em;
+
+        img {
+            margin: 0;
+            padding: 0;
+            display: block;
+            width: 0.9em;
+        }
     }
 }
 
