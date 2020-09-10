@@ -37,7 +37,7 @@ import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../o
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
-import { ConcQueryResponse } from '../concordance/common';
+import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 
 
 export interface QueryFormUserEntries {
@@ -514,25 +514,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
                 ).subscribe(
                     (data:ConcQueryResponse) => {
-                        window.location.href =
-                            this.pageModel.createActionUrl(
-                                'view', [
-                                    ['q', '~' + data.conc_persistence_op_id],
-                                    ['corpname', List.head(this.state.corpora)],
-                                    ...pipe(
-                                        this.state.corpora,
-                                        List.tail(),
-                                        List.map(
-                                            c => tuple('align', c)
-                                        )
-                                    ),
-                                    ...pipe(
-                                        data.conc_args,
-                                        Dict.toEntries()
-                                    )
-
-                                ]
-                            )
+                        window.location.href = this.createViewUrl(
+                            data.conc_persistence_op_id,
+                            data.conc_args,
+                            false
+                        );
                     },
                     (err) => {
                         console.log('error: ', err);
@@ -854,6 +840,20 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return args;
     }
 
+
+    createViewUrl(concId:string, args:ConcServerArgs, retJson:boolean):string {
+        return this.pageModel.createActionUrl(
+            'view', [
+                ['q', '~' + concId],
+                ['format', retJson ? 'json' : undefined],
+                ...pipe(
+                    args,
+                    Dict.toEntries()
+                )
+            ]
+        );
+    }
+
     submitQuery(contextFormArgs:QueryContextArgs):Observable<ConcQueryResponse|null> {
         return this.pageModel.ajax$<ConcQueryResponse>(
             HTTP.Method.POST,
@@ -864,8 +864,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
     }
-
-
 
     isPossibleQueryTypeMismatch(corpname:string):boolean {
         const query = this.state.queries[corpname];
