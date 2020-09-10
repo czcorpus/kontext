@@ -22,7 +22,6 @@ import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { WithinBuilderData, QueryType, QueryContextArgs } from './common';
-import { AjaxConcResponse } from '../concordance/common';
 
 
 export enum ActionName {
@@ -32,7 +31,6 @@ export enum ActionName {
     EditLastQueryOperation = 'EDIT_LAST_QUERY_OPERATION',
     EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
     BranchQuery = 'BRANCH_QUERY',
-    BranchQueryDone = 'BRANCH_QUERY_DONE',
     TrimQuery = 'TRIM_QUERY',
     QuerySetStopAfterIdx = 'QUERY_SET_STOP_AFTER_IDX',
     RedirectToEditQueryOperation = 'REDIRECT_TO_EDIT_QUERY_OPERATION',
@@ -150,13 +148,6 @@ export namespace Actions {
         operationIdx:number;
     }> {
         name:ActionName.BranchQuery
-    }
-
-    export interface BranchQueryDone extends Action<{
-        queryOverview:Array<Kontext.QueryOperation>;
-        lastOpId:string;
-    }> {
-        name:ActionName.BranchQueryDone
     }
 
     export interface TrimQuery extends Action<{

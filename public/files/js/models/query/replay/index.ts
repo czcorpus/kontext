@@ -139,11 +139,6 @@ type OperationChainArgs = [
     {[k:string]:AjaxResponse.ConcFormArgs}
 ];
 
-interface OperationChainAccum {
-    conc_persistence_op_id:string;
-    query_overview:Array<Kontext.QueryOperation>;
-}
-
 /**
  * QueryReplayModel reads operations stored in the breadcrumb-like navigation
  * and query operation data stored on server (handled by conc_persistence plug-in)
@@ -202,11 +197,11 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             ConcActionName.AddedNewOperation,
             (state, action) => {
                 if (!action.error) {
+                    state.branchReplayIsRunning = false;
                     state.lastOperationKey = action.payload.data.conc_persistence_op_id;
-                    state.currEncodedOperations.push(
-                        importEncodedOperation(List.last(action.payload.data.query_overview))
-                    );
-                    state.replayOperations.push(null);
+                    state.currEncodedOperations = List.map(importEncodedOperation, action.payload.data.query_overview);
+                    state.replayOperations = List.repeat(() => null, List.size(state.currEncodedOperations));
+                    state.concArgsCache = {};
                 }
             }
         );
@@ -319,15 +314,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
                 ).subscribe(
                     data => {
-                        dispatch<Actions.BranchQueryDone>({
-                            name: ActionName.BranchQueryDone,
-                            payload: {
-                                queryOverview: data.query_overview,
-                                lastOpId: data.conc_persistence_op_id,
-                            }
-                        });
-                        /*
-                        TODO xx
                         dispatch<ConcActions.AddedNewOperation>({
                             name: ConcActionName.AddedNewOperation,
                             payload: {
@@ -335,29 +321,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                                 data: data
                             }
                         });
-                        */
                     },
                     err => {
                         this.pageModel.showMessage('error', err);
-                        dispatch<Actions.BranchQueryDone>({
-                            name: ActionName.BranchQueryDone,
+                        dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
                             error: err
                         });
                     }
                 )
-            }
-        );
-
-        this.addActionHandler<Actions.BranchQueryDone>(
-            ActionName.BranchQueryDone,
-            (state, action) => {
-                state.branchReplayIsRunning = false;
-                if (!action.error) {
-                    state.currEncodedOperations = List.map(importEncodedOperation, action.payload.queryOverview);
-                    state.replayOperations = List.repeat(() => null, List.size(state.currEncodedOperations));
-                    state.lastOperationKey = action.payload.lastOpId;
-                    state.concArgsCache = {};
-                }
             }
         );
 
@@ -463,7 +435,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         op,
         pipeOp,
         dispatch
-    }:CreateOperationArgs):Observable<ConcQueryResponse|null> {
+    }:CreateOperationArgs):Observable<AjaxConcResponse|null> {
         const prepareFormData:Observable<AjaxResponse.ConcFormArgs|null> = changedOpIdx !== opIdx ?
                 this.syncFormData(state, opIdx) : rxOf(null);
         if (opIdx === 0) {
@@ -501,6 +473,17 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             return this.queryModel.submitQuery(queryContext)
                         }
                     }
+                ),
+                concatMap(
+                    data => this.pageModel.ajax$<AjaxConcResponse>(
+                        HTTP.Method.GET,
+                        this.queryModel.createViewUrl(
+                            data.conc_persistence_op_id,
+                            data.conc_args,
+                            true
+                        ),
+                        {}
+                    )
                 )
             );
 
@@ -719,8 +702,9 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * something like observable.pipe(tap(foo)=>sideEffect(foo)).
      */
     private branchQuery(state:QueryReplayModelState, queryContext:QueryContextArgs,
-                changedOpIdx:number, dispatch:SEDispatcher):Observable<OperationChainAccum> {
+                changedOpIdx:number, dispatch:SEDispatcher):Observable<AjaxConcResponse> {
         const args = this.pageModel.exportConcArgs();
+        args.set('q', '~' + state.lastOperationKey);
         return this.pageModel.ajax$<QueryPipelineResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('load_query_pipeline'),
@@ -754,12 +738,12 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     )
                 }
             ),
-            reduce<OperationChainArgs, Observable<OperationChainAccum>>(
-                (prev, [op, pipeOp, numOps, newCache], opIdx) => {
+            reduce<OperationChainArgs, Observable<AjaxConcResponse>>(
+                (prev:Observable<AjaxConcResponse|null>, [op, pipeOp, numOps, newCache], opIdx) => {
                     return prev.pipe(
                         concatMap(
                             (data) => this.createOperation({
-                                baseOnConcId: data.conc_persistence_op_id,
+                                baseOnConcId: data ? data.conc_persistence_op_id : null,
                                 state,
                                 opIdx,
                                 numOps,
@@ -772,10 +756,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         )
                     );
                 },
-                rxOf({
-                    conc_persistence_op_id: null,
-                    query_overview: []
-                })
+                rxOf(null)
             ),
             concatMap(
                 last => last
@@ -795,7 +776,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     private syncQueryForm(state:QueryReplayModelState,
             opIdx:number):Observable<AjaxResponse.QueryFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
-        console.log('sync query form: ', queryKey);
         return (queryKey !== undefined ?
             // cache hit
             this.queryModel.syncFrom(
@@ -969,8 +949,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     private syncFormData(state:QueryReplayModelState,
             opIdx:number):Observable<[AjaxResponse.ConcFormArgs|null, string]> {
         const formType = state.currEncodedOperations[opIdx].formType;
-        console.log('formType: ', formType);
-        console.log('state.currEncodedOperations: ', state.currEncodedOperations)
         if (formType === Kontext.ConcFormTypes.QUERY) {
             return this.syncQueryForm(state, opIdx).pipe(
                 map(v => tuple(v, this.getActualCorpname()))

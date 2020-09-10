@@ -841,12 +841,20 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.changeState(state => {
             state.lines = importLines(
                 data.Lines,
-                this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
+                this.getViewAttrs().indexOf(state.baseViewAttr) - 1
             );
             state.numItemsInLockedGroups = data.num_lines_in_groups;
             state.pagination = data.pagination;
             state.unfinishedCalculation = !!data.running_calc;
             state.lineGroupIds = [];
+            state.concSummary = {
+                concSize: data.concsize,
+                fullSize: data.fullsize,
+                sampledSize: data.sampled_size,
+                ipm: data.result_relative_freq,
+                arf: data.result_arf,
+                isShuffled: data.result_shuffled
+            };
         });
     }
 
