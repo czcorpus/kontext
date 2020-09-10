@@ -118,11 +118,7 @@ class Actions(Querying):
             conc_args.set('usesubcorp', self.corp.subcname)
         args = {}
         result['Globals'] = conc_args.update(args)
-        result['query_overview'] = self.concdesc_json().get('Desc', [])
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
-        if len(result['query_overview']) > 0:
-            result['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
-                                                      result['query_overview'][0].get('nicearg'))
 
     def _apply_linegroups(self, conc):
         """
@@ -182,6 +178,12 @@ class Actions(Querying):
         else:
             self.args.leftctx = self.args.senleftctx_tpl % sentence_struct
             self.args.rightctx = self.args.senrightctx_tpl % sentence_struct
+
+    def _attach_query_overview(self, out):
+        out['query_overview'] = self.concdesc_json().get('Desc', [])
+        if len(out['query_overview']) > 0:
+            out['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
+                                                   out['query_overview'][0].get('nicearg'))
 
     @exposed(vars=('orig_query', ), mutates_conc=True)
     def view(self, _=None):
@@ -300,6 +302,7 @@ class Actions(Querying):
             out['conc_cache_key'] = os.path.splitext(os.path.basename(conc.get_conc_file()))[0]
         else:
             out['conc_cache_key'] = None
+        self._attach_query_overview(out)
         return out
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
@@ -363,22 +366,6 @@ class Actions(Querying):
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
             active_only=False), persist=False)
         # TODO xx reuse selections from last submit
-        cid = self.args.corpname
-
-        # TODO xx remove this
-        for item in self.args.align:
-            q_type = request.args.get('queryselector_{0}'.format(item), '')[:-3]
-            qf_args.curr_query_types[item] = q_type
-            qf_args.curr_queries[item] = request.args.get('{0}_{1}'.format(q_type, item))
-            qf_args.curr_lpos_values[item] = request.args.get('lpos_{0}'.format(item))
-            qf_args.curr_qmcase_values[item] = bool(
-                int(request.args.get('qmcase_{0}'.format(item), '0')))
-            qf_args.curr_pcq_pos_neg_values[item] = request.args.get('pcq_pos_neg_{0}'.format(item))
-            qf_args.curr_include_empty_values[item] = bool(
-                int(request.args.get('include_empty_{0}'.format(item), '0')))
-            qf_args.curr_default_attr_values[item] = request.args.get(
-                'default_attr_{0}'.format(item))
-
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)
@@ -652,6 +639,7 @@ class Actions(Querying):
         except ConcError as e:
             self.add_system_message('warning', str(e))
         ans['conc_args'] = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping)).export()
+        self._attach_query_overview(ans)
         return ans
 
     @exposed(template='view.html', page_model='view', mutates_conc=True)
@@ -947,6 +935,7 @@ class Actions(Querying):
             self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         result['quick_save_row_limit'] = self.FREQ_QUICK_SAVE_MAX_LINES
         self._attach_query_params(result)
+        self._attach_query_overview(result)
         return result
 
     def _make_wl_query(self):
@@ -1173,6 +1162,7 @@ class Actions(Querying):
             self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         ans['quick_save_row_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
         ans['savecoll_max_lines'] = self.SAVECOLL_MAX_LINES
+        self._attach_query_overview(ans)
         return ans
 
     @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/savecoll.html',
@@ -1679,7 +1669,9 @@ class Actions(Querying):
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, _):
         pipeline = self.load_pipeline_ops(self._q_code)
-        return dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
+        ans = dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
+        self._attach_query_overview(ans)
+        return ans
 
     @exposed(http_method='GET', return_type='json')
     def matching_structattr(self, request):

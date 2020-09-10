@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { WithinBuilderData, QueryType, QueryContextArgs } from './common';
+import { AjaxConcResponse } from '../concordance/common';
 
 
 export enum ActionName {
@@ -152,8 +153,8 @@ export namespace Actions {
     }
 
     export interface BranchQueryDone extends Action<{
-        replayOperations:Array<string>;
-        concArgsCache:{[key:string]:AjaxResponse.ConcFormArgs};
+        queryOverview:Array<Kontext.QueryOperation>;
+        lastOpId:string;
     }> {
         name:ActionName.BranchQueryDone
     }

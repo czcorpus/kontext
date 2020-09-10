@@ -7,6 +7,8 @@ form.query-form {
     .primary-language,
     .parallel .AlignedCorpBlock .form {
 
+        max-width: 60em;
+
         > *:not(:first-child) {
             margin-top: 1em;
         }
@@ -316,16 +318,20 @@ div.query-form-spa {
     margin-top: 1.2em;
     margin-bottom: 1.2em;
 
-    label * {
-        vertical-align: middle;
+    .option-list,
+    .option-list-custom {
+        display: flex;
+        justify-content: space-between;
+        margin: 0.7em 1em;
+
+        label input {
+            display: inline-block;
+            vertical-align: middle;
+        }
     }
 
-    > *:not(:first-child) {
-        margin-left: 1em;
-    }
-
-    .default-attr-selection {
-        white-space: nowrap;
+    .option-list-custom {
+        margin-bottom: 1.5em;
     }
 }
 

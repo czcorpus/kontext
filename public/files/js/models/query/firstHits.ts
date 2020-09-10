@@ -63,19 +63,20 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
         this.addActionHandler<Actions.FilterFirstHitsSubmit>(
             ActionName.FilterFirstHitsSubmit,
             action => {
-                this.submitForm(action.payload.opKey);
+                this.submitForm(action.payload.opKey, action.payload.opKey);
             }
         );
     }
 
-    getSubmitUrl(opKey:string):string {
+    getSubmitUrl(opKey:string, concId:string):string {
         const args = this.layoutModel.exportConcArgs() as MultiDict<FirstHitsServerArgs>;
+        args.set('q', '~' + concId);
         args.set('fh_struct', this.state.docStructValues[opKey]);
         return this.layoutModel.createActionUrl('filter_firsthits', args);
     }
 
-    submitForm(opKey:string):void {
-        window.location.href = this.getSubmitUrl(opKey);
+    submitForm(opKey:string, concId:string):void {
+        window.location.href = this.getSubmitUrl(opKey, concId);
     }
 
     syncFrom(fn:Observable<AjaxResponse.FirstHitsFormArgs>):Observable<AjaxResponse.FirstHitsFormArgs> {

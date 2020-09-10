@@ -94,7 +94,7 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         this.addActionHandler<Actions.SampleFormSubmit>(
             ActionName.SampleFormSubmit,
             action => {
-                this.submitQuery(action.payload.sampleId);
+                this.submitQuery(action.payload.sampleId, action.payload.sampleId);
             }
         );
     }
@@ -126,19 +126,20 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         );
     }
 
-    private createSubmitArgs(sortId:string):MultiDict<SampleServerArgs> {
+    private createSubmitArgs(sortId:string, concId:string):MultiDict<SampleServerArgs> {
         const args = this.pageModel.exportConcArgs() as MultiDict<SampleServerArgs>;
+        args.set('q', '~' + concId);
         args.set('rlines', parseInt(this.state.rlinesValues[sortId]));
         return args;
     }
 
-    submitQuery(sortId:string):void {
-        const args = this.createSubmitArgs(sortId);
+    submitQuery(sortId:string, concId:string):void {
+        const args = this.createSubmitArgs(sortId, concId);
         window.location.href = this.pageModel.createActionUrl('reduce', args.items());
     }
 
-    getSubmitUrl(sortId:string):string {
-        return this.pageModel.createActionUrl('reduce', this.createSubmitArgs(sortId).items());
+    getSubmitUrl(sortId:string, concId:string):string {
+        return this.pageModel.createActionUrl('reduce', this.createSubmitArgs(sortId, concId).items());
     }
 
 }

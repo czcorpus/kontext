@@ -139,9 +139,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                         </span>
                     </div>
                     <div className="form">
-                        <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
-                                value={this.props.pcqPosNegValue}
-                                formType={Kontext.ConcFormTypes.QUERY} />
                         <inputViews.TRQueryTypeField queryType={this.props.queryType}
                                 formType={Kontext.ConcFormTypes.QUERY}
                                 sourceId={this.props.corpname}
@@ -162,8 +159,13 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             onEnterKey={this.props.onEnterKey}
                             tagHelperView={this.props.tagHelperView}
                             qsuggPlugin={null}
-                            customOptions={[<inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
-                                corpname={this.props.corpname} />]} />
+                            customOptions={[
+                                <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
+                                    value={this.props.pcqPosNegValue}
+                                    formType={Kontext.ConcFormTypes.QUERY} />,
+                                <inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
+                                    corpname={this.props.corpname} />
+                            ]} />
                     </div>
                 </div>
             );
