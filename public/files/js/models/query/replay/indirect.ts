@@ -19,11 +19,12 @@
  */
 
 import { QueryInfoModel } from './info';
-import { ExtendedQueryOperation, importEncodedOperations } from './common';
+import { ExtendedQueryOperation, importEncodedOperation } from './common';
 import { Kontext } from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
 import { PageModel } from '../../../app/page';
 import { Actions, ActionName } from '../actions';
+import { List } from 'cnc-tskit';
 
 
 export interface IndirectQueryReplayModelState {
@@ -45,7 +46,7 @@ export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplay
     constructor(dispatcher:IActionDispatcher, pageModel:PageModel,
             currentOperations:Array<Kontext.QueryOperation>) {
         super(dispatcher, pageModel, {
-            currEncodedOperations: importEncodedOperations(currentOperations),
+            currEncodedOperations: List.map(importEncodedOperation, currentOperations),
             currentQueryOverview: [...currentOperations],
             overviewVisible: false
         });

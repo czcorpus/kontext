@@ -347,7 +347,6 @@ export class ViewPage {
                 return;
             }
         }
-
         const currAction = this.layoutModel.getConf<string>('currentAction');
         switch (currAction) {
             case 'filter':

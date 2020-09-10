@@ -212,6 +212,7 @@ export function init({
 
         return (
             <div>
+                <label>{he.translate('query__align_posneg_label')}</label>:{'\u00a0'}
                 <select value={props.value} onChange={handleSelectChange}>
                     <option value="pos">{he.translate('query__align_contains')}</option>
                     <option value="neg">{he.translate('query__align_not_contains')}</option>
@@ -237,9 +238,9 @@ export function init({
         return (
             <div className="TRIncludeEmptySelector">
                 <label>
+                    {he.translate('query__include_empty_aligned')}:{'\u00a0'}
                     <input type="checkbox" checked={props.value}
                         onChange={handleCheckbox} />
-                    {he.translate('query__include_empty_aligned')}
                 </label>
             </div>
         );
@@ -849,45 +850,72 @@ export function init({
         }
 
         _renderInputOptions() {
+            const customOpts = this.props.customOptions || [];
             switch (this.props.queryType) {
                 case 'simple':
-                    return <>
-                        {List.map(
-                            (opt, i) => <span key={`item:${i}`}>{opt}</span>,
-                            this.props.customOptions || []
-                        )}
-                        <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                            sourceId={this.props.sourceId}
-                            formType={this.props.formType} />
-                        <DefaultAttrSelector
-                            label={he.translate('query__applied_attr')}
-                            sourceId={this.props.sourceId}
-                            defaultAttr={this.props.defaultAttr}
-                            forcedAttr={this.props.forcedAttr}
-                            attrList={this.props.attrList}
-                            formType={this.props.formType} />
-                        {Kontext.isWordLikePosAttr(this.props.defaultAttr) ?
-                            <LposSelector wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType}  /> :
-                            null
-                        }
-                    </>;
+                    return (
+                        <>
+                            {!List.empty(customOpts) ?
+                                <div className="option-list-custom">
+                                    {List.map(
+                                        (opt, i) => <div key={`item:${i}`}>{opt}</div>,
+                                        customOpts
+                                    )}
+                                </div> :
+                                null
+                            }
+                            <div className="option-list">
+                                <div>
+                                    <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
+                                        sourceId={this.props.sourceId}
+                                        formType={this.props.formType} />
+                                </div>
+                                <div>
+                                    <DefaultAttrSelector
+                                        label={he.translate('query__applied_attr')}
+                                        sourceId={this.props.sourceId}
+                                        defaultAttr={this.props.defaultAttr}
+                                        forcedAttr={this.props.forcedAttr}
+                                        attrList={this.props.attrList}
+                                        formType={this.props.formType} />
+                                </div>
+                                <div>
+                                {Kontext.isWordLikePosAttr(this.props.defaultAttr) ?
+                                    <LposSelector wPoSList={this.props.wPoSList}
+                                        lposValue={this.props.lposValue}
+                                        sourceId={this.props.sourceId}
+                                        formType={this.props.formType}  /> :
+                                    null
+                                }
+                                </div>
+                            </div>
+                        </>
+                    );
                 case 'advanced':
-                    return <>
-                        {List.map(
-                            (opt, i) => <span key={`item:${i}`}>{opt}</span>,
-                            this.props.customOptions || []
-                        )}
-                        <DefaultAttrSelector
-                            label={he.translate('query__default_attr')}
-                            sourceId={this.props.sourceId}
-                            defaultAttr={this.props.defaultAttr}
-                            forcedAttr={this.props.forcedAttr}
-                            attrList={this.props.attrList}
-                            formType={this.props.formType} />
-                    </>;
+                    return (
+                        <>
+                            {!List.empty(customOpts) ?
+                                <div className="option-list-custom">
+                                    {List.map(
+                                        (opt, i) => <div key={`item:${i}`}>{opt}</div>,
+                                        customOpts
+                                    )}
+                                </div> :
+                                null
+                            }
+                            <div className="option-list">
+                                <div>
+                                    <DefaultAttrSelector
+                                        label={he.translate('query__default_attr')}
+                                        sourceId={this.props.sourceId}
+                                        defaultAttr={this.props.defaultAttr}
+                                        forcedAttr={this.props.forcedAttr}
+                                        attrList={this.props.attrList}
+                                        formType={this.props.formType} />
+                                </div>
+                            </div>
+                        </>
+                    );
             }
         }
 

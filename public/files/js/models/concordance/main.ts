@@ -303,7 +303,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ActionName.AddedNewOperation,
             action => {
                 if (!action.error) {
+                    this.layoutModel.replaceConcArg('q', ['~' + action.payload.data.conc_persistence_op_id])
                     this.importData(action.payload.data);
+                    this.pushHistoryState(this.state.currentPage);
                 }
             }
         );

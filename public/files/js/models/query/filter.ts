@@ -29,7 +29,7 @@ import { PageModel } from '../../app/page';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
-    FilterServerArgs, QueryType, ConcQueryArgs } from './common';
+    FilterServerArgs, QueryType } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
@@ -198,8 +198,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'filter-form-model', {
             formType: Kontext.ConcFormTypes.FILTER,
             forcedAttr: '', // TODO
-            attrList: [], // TODO
-            structAttrList: [], // TODO
+            attrList: [...props.attrList],
+            structAttrList: [...props.structAttrList],
             lemmaWindowSizes: [], // TODO
             posWindowSizes: [], // TODO
             wPoSList: [], // TODO
@@ -407,7 +407,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ActionName.FilterInputSetInclKwic,
             action => {
                 this.changeState(state => {
-                    this.state.inclkwicValues[action.payload.filterId] = action.payload.value;
+                    state.inclkwicValues[action.payload.filterId] = action.payload.value;
                 });
             }
         );
@@ -428,7 +428,23 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     err = this.testQueryTypeMismatch(action.payload.filterId);
                 });
                 if (!err) {
-                    this.submitQuery(action.payload.filterId).subscribe(
+                    this.changeState(state => {
+                        state.isBusy = true;
+                    });
+                    this.submitQuery(
+                        action.payload.filterId,
+                        this.pageModel.getConcArgs().q.substr(1)
+                    ).pipe(
+                        tap(
+                            (data) => {
+                                this.pageModel.replaceConcArg('q', [
+                                    '~' + data.conc_persistence_op_id]);
+                                this.changeState(state => {
+                                    state.isBusy = false;
+                                });
+                            }
+                        )
+                    ).subscribe(
                         (data) => {
                             dispatcher.dispatch<ConcActions.AddedNewOperation>({
                                 name: ConcActionName.AddedNewOperation,
@@ -604,7 +620,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         return null;
     }
 
-    submitQuery(filterId:string):Observable<AjaxConcResponse> {
+    /**
+     *
+     * @param filterId id of filter operation (__new__ for new, conc ID if already applied)
+     * @param concId concID we want to attach the submit to (it may or may not be equal to filterId)
+     */
+    submitQuery(filterId:string, concId:string):Observable<AjaxConcResponse> {
         const args = this.createSubmitArgs(filterId);
         return this.pageModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
@@ -612,7 +633,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 'filter',
                 [
                     ['format', 'json'],
-                    ['q', this.pageModel.getConcArgs().q]
+                    ['q', '~' + concId]
                 ]
             ),
             args,

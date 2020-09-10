@@ -112,6 +112,7 @@ export function init({
 
     const layoutViews = he.getLayoutViews();
 
+
     // -------- <HighlightTokenSelector /> -----------------
 
     const HighlightTokenSelector:React.SFC<{
@@ -130,15 +131,44 @@ export function init({
         }
         return (
             <div>
+                <label>{he.translate('query__highlight_token_hd')}</label>:{'\u00a0'}
                 <select onChange={handleSelTokenSelect}
                         value={props.value}>
                     <option value="f">{he.translate('query__highlight_token_first')}</option>
                     <option value="l">{he.translate('query__highlight_token_last')}</option>
                 </select>
-                {'\u00a0'}
-                <span className="hint">
-                    ({he.translate('query__qlfilter_sel_token_hint')})
-                </span>
+                <layoutViews.InlineHelp noSuperscript={true}>
+                    {he.translate('query__qlfilter_sel_token_hint')}
+                </layoutViews.InlineHelp>
+            </div>
+        );
+    };
+
+    // ---------------------- <InclKwicCheckbox /> ------------------------
+
+    const InclKWicCheckbox:React.SFC<{
+        filterId:string;
+        value:boolean;
+
+    }> = (props) => {
+
+        const handleCheckbox = (evt) => {
+            dispatcher.dispatch<Actions.FilterInputSetInclKwic>({
+                name: ActionName.FilterInputSetInclKwic,
+                payload: {
+                    filterId: props.filterId,
+                    value: !props.value
+                }
+            });
+        }
+
+        return (
+            <div>
+                <label>
+                    {he.translate('query__qfilter_include_kwic')}
+                    <input type="checkbox" checked={props.value}
+                        onChange={handleCheckbox} />
+                </label>
             </div>
         );
     };
@@ -147,22 +177,10 @@ export function init({
 
     const RangeSelector:React.SFC<{
         filterId:string;
-        inclKwic:boolean;
         filfposValue:Kontext.FormValue<string>;
         filtposValue:Kontext.FormValue<string>;
 
     }> = (props) => {
-
-
-        const handleInclKwicCheckbox = (evt) => {
-            dispatcher.dispatch<Actions.FilterInputSetInclKwic>({
-                name: ActionName.FilterInputSetInclKwic,
-                payload: {
-                    filterId: props.filterId,
-                    value: !props.inclKwic
-                }
-            });
-        }
 
         const handleToFromRangeValChange = (pos) => (evt) => {
             dispatcher.dispatch<Actions.FilterInputSetRange>({
@@ -195,12 +213,6 @@ export function init({
                             onChange={handleToFromRangeValChange('to')} />
                     </layoutViews.ValidatedItem>
                 </label>
-                {'\u00a0,\u00a0'}
-                <label>
-                    {he.translate('query__qfilter_include_kwic')}
-                    <input type="checkbox" checked={props.inclKwic}
-                        onChange={handleInclKwicCheckbox} />
-                </label>
             </div>
         );
     };
@@ -212,19 +224,7 @@ export function init({
         constructor(props) {
             super(props);
             this._keyEventHandler = this._keyEventHandler.bind(this);
-            this._handlePosNegSelect = this._handlePosNegSelect.bind(this);
             this._handleSubmit = this._handleSubmit.bind(this);
-        }
-
-        _handlePosNegSelect(evt) {
-            dispatcher.dispatch<Actions.FilterInputSetPCQPosNeg>({
-                name: ActionName.FilterInputSetPCQPosNeg,
-                payload: {
-                    formType: this.props.formType,
-                    filterId: this.props.filterId,
-                    value: evt.target.value
-                }
-            });
         }
 
         _keyEventHandler(evt) {
@@ -320,27 +320,24 @@ export function init({
         }
 
         _renderFullForm() {
-            const opts = [];
+            const opts = [
+                <RangeSelector
+                    filterId={this.props.filterId}
+                    filfposValue={this.props.filfposValues[this.props.filterId]}
+                    filtposValue={this.props.filtposValues[this.props.filterId]} />,
+                <InclKWicCheckbox
+                    value={this.props.inclkwicValues[this.props.filterId]}
+                    filterId={this.props.filterId} />
+            ];
             if (this.props.pnFilterValues[this.props.filterId] === 'p') {
                 opts.push(<HighlightTokenSelector
                             filterId={this.props.filterId}
                             value={this.props.filflValues[this.props.filterId]} />);
             }
-            opts.push(<RangeSelector
-                filterId={this.props.filterId}
-                filfposValue={this.props.filfposValues[this.props.filterId]}
-                filtposValue={this.props.filtposValues[this.props.filterId]}
-                inclKwic={this.props.inclkwicValues[this.props.filterId]} />);
 
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <div className="form primary-language">
-                        <div>
-                            <select value={this.props.pnFilterValues[this.props.filterId]} onChange={this._handlePosNegSelect}>
-                                <option value="p">{he.translate('query__qfilter_pos')}</option>
-                                <option value="n">{he.translate('query__qfilter_neg')}</option>
-                            </select>
-                        </div>
                         <div>
                             <inputViews.TRQueryTypeField
                                 queryType={this.props.queryTypes[this.props.filterId]}

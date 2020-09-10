@@ -208,6 +208,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             (state, action) => {
                 state.activeItem = null;
             }
+        ).reduceAlsoOn(
+            ConcActionName.AddedNewOperation
         );
 
         this.addActionHandler<Actions.ShowSort>(
