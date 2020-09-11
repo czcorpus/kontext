@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List } from 'cnc-tskit';
+import { Dict, List, tuple } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
 import { Kontext, ViewOptions } from '../../types/common';
@@ -214,7 +214,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     protected readonly formType:QueryFormType;
 
-    protected readonly autoSuggestTrigger:Subject<string>; // stream of source IDs
+    // stream of [source ID, rawAnchorIdx, rawFocusIdx]
+    protected readonly autoSuggestTrigger:Subject<[string, number, number]>;
 
     // -------
 
@@ -236,11 +237,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
         this.formType = initState.formType;
-        this.autoSuggestTrigger = new Subject<string>();
+        this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.autoSuggestTrigger.pipe(
             debounceTime(500)
         ).subscribe(
-            (sourceId) => {
+            ([sourceId, rawAnchorIdx, rawFocusIdx]) => {
                 if (this.state.queryTypes[sourceId] !== 'advanced'
                         && this.state.suggestionsVisibility !==
                             PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
@@ -253,6 +254,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             ),
                             subcorpus: this.state.currentSubcorp,
                             value: this.state.queries[sourceId],
+                            rawAnchorIdx: rawAnchorIdx,
+                            rawFocusIdx: rawFocusIdx,
                             valueType: 'unspecified',
                             queryType: this.state.queryTypes[sourceId],
                             posAttr: null,
@@ -323,7 +326,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             action.payload.rawFocusIdx
                         );
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    action.payload.rawAnchorIdx,
+                    action.payload.rawFocusIdx
+                ));
             }
         );
 
@@ -339,6 +346,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             action.payload.rawFocusIdx
                         )
                 });
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    action.payload.rawAnchorIdx,
+                    action.payload.rawFocusIdx
+                ));
             }
         );
 

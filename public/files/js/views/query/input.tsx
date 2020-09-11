@@ -660,48 +660,73 @@ export function init({
 
     // ------------------- <SingleLineInput /> -----------------------------
 
-    class SingleLineInput extends React.Component<SingleLineInputProps & QueryFormModelState> {
+    const SingleLineInput:React.SFC<SingleLineInputProps & QueryFormModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.handleInputChange = this.handleInputChange.bind(this);
-            this.handleKeyDown = this.handleKeyDown.bind(this);
-        }
-
-        private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
+        const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch<Actions.QueryInputSetQuery>({
                 name: ActionName.QueryInputSetQuery,
                 payload: {
-                    formType: this.props.formType,
-                    sourceId: this.props.sourceId,
+                    formType: props.formType,
+                    sourceId: props.sourceId,
                     query: evt.target.value,
-                    rawAnchorIdx: this.props.refObject.current.selectionStart,
-                    rawFocusIdx: this.props.refObject.current.selectionEnd,
+                    rawAnchorIdx: props.refObject.current.selectionStart,
+                    rawFocusIdx: props.refObject.current.selectionEnd,
                     insertRange: null
                 }
             });
-        }
+        };
 
-        private handleKeyDown(evt) {
+        const handleKeyDown = (evt) => {
             if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
-                    this.props.hasHistoryWidget &&
-                    this.props.downArrowTriggersHistory[this.props.sourceId] &&
-                        !this.props.historyIsVisible) {
-                this.props.onReqHistory();
+                    props.hasHistoryWidget &&
+                    props.downArrowTriggersHistory[props.sourceId] &&
+                        !props.historyIsVisible) {
+                props.onReqHistory();
 
             } else if (evt.keyCode === Keyboard.Code.ESC) {
-                this.props.onEsc();
+                props.onEsc();
+            }
+        };
+
+        const handleKeyUp = (evt) => {
+            if ((evt.keyCode === Keyboard.Code.LEFT_ARROW ||
+                    evt.keyCode === Keyboard.Code.HOME ||
+                    evt.keyCode === Keyboard.Code.END ||
+                    evt.keyCode === Keyboard.Code.RIGHT_ARROW) && props.refObject.current) {
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
+                    payload: {
+                        formType: props.formType,
+                        sourceId: props.sourceId,
+                        rawAnchorIdx: props.refObject.current.selectionStart,
+                        rawFocusIdx: props.refObject.current.selectionEnd
+                    }
+                });
             }
         }
 
-        render() {
-            return <input className="simple-input" type="text"
-                                spellCheck={false}
-                                ref={this.props.refObject}
-                                onChange={this.handleInputChange}
-                                value={this.props.queries[this.props.sourceId]}
-                                onKeyDown={this.handleKeyDown} />;
-        }
+        const handleClick = (evt) => {
+            if (props.refObject.current) {
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
+                    payload: {
+                        formType: props.formType,
+                        sourceId: props.sourceId,
+                        rawAnchorIdx: props.refObject.current.selectionStart,
+                        rawFocusIdx: props.refObject.current.selectionEnd
+                    }
+                });
+            }
+        };
+
+        return <input className="simple-input" type="text"
+                            spellCheck={false}
+                            ref={props.refObject}
+                            onChange={handleInputChange}
+                            value={props.queries[props.sourceId]}
+                            onKeyDown={handleKeyDown}
+                            onKeyUp={handleKeyUp}
+                            onClick={handleClick} />;
     }
 
     const BoundSingleLineInput = BoundWithProps<SingleLineInputProps, QueryFormModelState>(SingleLineInput, queryModel);
