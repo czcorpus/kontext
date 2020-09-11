@@ -498,6 +498,8 @@ export namespace PluginInterfaces {
         export interface SuggestionArgs {
             sourceId:string;
             value:string;
+            rawAnchorIdx:number;
+            rawFocusIdx:number;
             valueType:SuggestionValueType;
             queryType:QueryType;
             corpora:Array<string>;
@@ -509,6 +511,7 @@ export namespace PluginInterfaces {
 
         export interface SuggestionReturn extends SuggestionArgs {
             results:Array<DataAndRenderer>;
+            parsedWord:string;
         }
 
         export namespace Actions {
@@ -533,6 +536,7 @@ export namespace PluginInterfaces {
         }
 
         export interface SuggestionAnswer {
+            parsedValue:string; // the word actually used to search the suggestion
             results:Array<DataAndRenderer>;
         }
 

@@ -130,7 +130,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
 
     private readonly hintListener:(state:CQLEditorModelState, sourceId:string, msg:string)=>void;
 
-    private readonly autoSuggestTrigger:Subject<string>; // stream of source IDs
+    // stream of [source ID, rawAnchorIdx, rawFocusIdx]
+    protected readonly autoSuggestTrigger:Subject<[string, number, number]>;
 
 
     constructor({dispatcher, pageModel, attrList, structAttrList, structList, tagAttr,
@@ -167,9 +168,9 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         this.hintListener = (state, sourceId, msg) => {
             state.message[sourceId] = msg;
         };
-        this.autoSuggestTrigger = new Subject<string>();
+        this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
-            (sourceId) => {
+            ([sourceId, rawAnchorIdx, rawFocusIdx]) => {
                 const currAttr = this.state.focusedAttr[sourceId];
                 if (currAttr && this.state.suggestionsVisibility !==
                     PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
@@ -182,6 +183,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             ),
                             subcorpus: null, // TODO
                             value: currAttr.value.replace(/^"(.+)"$/, '$1'),
+                            rawAnchorIdx: rawAnchorIdx,
+                            rawFocusIdx: rawFocusIdx,
                             valueType: 'unspecified',
                             queryType: 'advanced',
                             posAttr: currAttr.type === 'posattr' ? currAttr.name : null,
@@ -266,7 +269,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
                         state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    action.payload.rawAnchorIdx,
+                    action.payload.rawFocusIdx
+                ));
             }
         );
 
@@ -293,7 +300,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.focusedAttr[args.sourceId] = this.findFocusedAttr(
                         state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    action.payload.rawAnchorIdx,
+                    action.payload.rawFocusIdx
+                ));
             }
         );
 
@@ -314,7 +325,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
                         state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    this.state.rawAnchorIdx[action.payload.sourceId],
+                    this.state.rawFocusIdx[action.payload.sourceId]
+                ));
             }
         );
 
@@ -333,7 +348,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
                         state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    this.state.rawAnchorIdx[action.payload.sourceId],
+                    this.state.rawFocusIdx[action.payload.sourceId]
+                ));
             }
         );
 

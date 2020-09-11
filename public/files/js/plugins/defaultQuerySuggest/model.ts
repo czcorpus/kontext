@@ -118,14 +118,18 @@ export class Model extends StatelessModel<ModelState> {
                 state.isBusy = false;
                 if (!action.error) {
                     const cacheIdx = List.findIndex(
-                        ([hash,]) => hash === this.createSuggestionHash(action.payload),
+                        ([hash,]) => hash === this.createSuggestionHash(
+                            action.payload, action.payload.parsedWord),
                         state.cache
                     );
 
                     if (cacheIdx === -1) {
                         state.cache.push([
-                            this.createSuggestionHash(action.payload),
-                            {results: action.payload.results}
+                            this.createSuggestionHash(action.payload, action.payload.parsedWord),
+                            {
+                                results: action.payload.results,
+                                parsedValue: action.payload.parsedWord
+                            }
                         ]);
                         if (state.cache.length > this.CACHE_SIZE) {
                             state.cache = List.tail(state.cache);
@@ -140,10 +144,10 @@ export class Model extends StatelessModel<ModelState> {
         );
     }
 
-    private createSuggestionHash(args:PluginInterfaces.QuerySuggest.SuggestionArgs):string {
+    private createSuggestionHash(args:PluginInterfaces.QuerySuggest.SuggestionArgs, srchWord:string):string {
         return Ident.hashCode(
             args.corpora + args.posAttr + args.queryType + args.sourceId +
-            args.struct + args.structAttr + args.subcorpus + args.value + args.valueType);
+            args.struct + args.structAttr + args.subcorpus + srchWord + args.valueType);
     }
 
     private loadSuggestions(
@@ -162,8 +166,9 @@ export class Model extends StatelessModel<ModelState> {
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                         payload: {
+                            ...args,
                             results: data.results,
-                            ...args
+                            parsedWord: data.parsedValue
                         }
                     });
                 },
@@ -171,16 +176,9 @@ export class Model extends StatelessModel<ModelState> {
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                         payload: {
-                            sourceId: args.sourceId,
-                            value: args.value,
-                            valueType: args.valueType,
-                            queryType: args.queryType,
-                            corpora: args.corpora,
-                            subcorpus: args.subcorpus,
-                            posAttr: args.posAttr,
-                            struct: args.struct,
-                            structAttr: args.structAttr,
-                            results: []
+                            ...args,
+                            results: [],
+                            parsedWord: ''
                         },
                         error: err
                     });
@@ -191,11 +189,37 @@ export class Model extends StatelessModel<ModelState> {
             dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                 name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                 payload: {
+                    ...args,
                     results: [],
-                    ...args
+                    parsedWord: ''
                 }
             });
         }
+    }
+
+    private findCursorWord(args:PluginInterfaces.QuerySuggest.SuggestionArgs):string {
+        const ans:Array<[string, number, number]> = [];
+        let curr:[string, number, number] = null;
+        for (let i = 0; i < args.value.length; i++) {
+            if (args.value[i] === ' ' || i === 0) {
+                if (curr) {
+                    ans.push(curr);
+                }
+                curr = [args.value[i] === ' ' ? '' : args.value[i], i, i + 1];
+
+            } else {
+                curr[0] += args.value[i];
+                curr[2] = i + 1;
+            }
+        }
+        ans.push(curr);
+        for (let i = 0; i < ans.length; i++) {
+            const [w, f, t] = ans[i];
+            if (args.rawFocusIdx >= f && args.rawFocusIdx <= t) {
+                return w;
+            }
+        }
+        return '';
     }
 
 
@@ -204,8 +228,9 @@ export class Model extends StatelessModel<ModelState> {
         suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs
 
     ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
+        const srchWord = this.findCursorWord(suggArgs);
         const cacheIdx = List.findIndex(
-            ([key,]) => key === this.createSuggestionHash(suggArgs),
+            ([key,]) => key === this.createSuggestionHash(suggArgs, srchWord),
             state.cache
         );
         if (cacheIdx > -1) {
@@ -224,11 +249,12 @@ export class Model extends StatelessModel<ModelState> {
             struct:string;
             s_attr:string;
         }>();
+
         args.set('ui_lang', state.uiLang);
         args.set('corpname', List.head(suggArgs.corpora));
         args.set('subcorpus', suggArgs.subcorpus);
         args.replace('align', List.tail(suggArgs.corpora));
-        args.set('value', suggArgs.value);
+        args.set('value', srchWord);
         args.set('value_type', suggArgs.valueType);
         args.set('query_type', suggArgs.queryType);
         args.set('p_attr', suggArgs.posAttr);
@@ -250,7 +276,8 @@ export class Model extends StatelessModel<ModelState> {
                             heading: item.heading
                         }),
                         data.items
-                    )
+                    ),
+                    parsedValue: srchWord
                 })
             )
         );
