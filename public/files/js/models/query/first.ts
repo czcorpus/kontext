@@ -480,13 +480,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         this.changeState(state => {
                             this.makeCorpusPrimary(state, action.payload.corpname);
                         });
-                        /*
-                        TODO XX
                         window.location.href = this.pageModel.createActionUrl(
                             this.state.currentAction,
-                            this.createSubmitArgs(wAction.payload.data).items()
+                            Dict.toEntries(this.createSubmitArgs(wAction.payload.data))
                         );
-                        */
                     }
                 );
             }
