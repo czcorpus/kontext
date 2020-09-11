@@ -27,7 +27,7 @@ userTokenConfirmPage.init(__conf);
 
 {% block main %}
 <section>
-    <h2>{{ "Verification key confirmation"|_ }}</h2>
+    <div class="bar"><h2>{{ "Verification key confirmation"|_ }}</h2></div>
     <div>
     {% if ok %}
         <p class="token-confirmation">{{ label }} - {{ 'confirmed'|_ }}<p>
@@ -42,6 +42,6 @@ userTokenConfirmPage.init(__conf);
             <a class="util-button" href={{ sign_up_url }}>{{ 'Sign up'|_ }}</a>
         </p>
     {% endif %}
-    </p>
+    </div>
 </section>
 {% endblock %}
