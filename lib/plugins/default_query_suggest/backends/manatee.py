@@ -1,6 +1,7 @@
 # Copyright (c) 2020 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2020 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright (c) 2020 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,32 +17,29 @@ from plugins.abstract.query_suggest import AbstractBackend
 from typing import List
 from corplib import CorpusManager
 from conclib.search import get_conc
+import manatee
 
 
 class MatchingPosAttrManateeBackend(AbstractBackend):
 
     def __init__(self, conf, ident):
         super().__init__(ident)
-        self._cm = CorpusManager()
-        self._corp = self._cm.get_Corpus(conf['corpus'])
         self._conf = conf
+        fixed_corp = conf.get('corpus')
+        self._corp = CorpusManager().get_Corpus(fixed_corp) if fixed_corp else None
 
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
-                        query_type: str, p_attr: str, struct: str, s_attr: str):
-        conc = get_conc(self._corp, 2, [f'aword,[{self._conf["search_attr"]}="{value}"]'])
+    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
+                        value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
+        used_corp = self._corp if self._corp is not None else maincorp
+        conc = get_conc(used_corp, user_id, (f'aword,[{self._conf["search_attr"]}="{value}"]',))
         conc.sync()
         freq = conc.xfreq_dist(
-            self._conf["crit_attr"],
+            f'{self._conf["crit_attr"]}/e 0<0',
             limit=1,
             sortkey='f',
             ml=0,
             ftt_include_empty=False,
-            rel_mode=0,
+            rel_mode=1,
             collator_locale=ui_lang
         )
-
-        return [
-            word['n']
-            for item in freq['Items']
-            for word in item['Word']
-        ]
+        return [word['n'] for item in freq.get('Items', []) for word in item['Word']]

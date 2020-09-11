@@ -15,6 +15,7 @@
 from typing import Any, List
 import importlib
 import json
+import manatee
 
 from plugins.abstract.query_suggest import AbstractQuerySuggest
 import plugins
@@ -24,11 +25,13 @@ from actions import concordance
 
 
 @exposed(return_type='json')
-def fetch_query_suggestions(_, request):
+def fetch_query_suggestions(self, request):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
-        ans = plg.find_suggestions(ui_lang=request.args.get('ui_lang'), corpora=request.args.getlist('corpora'),
+        user_id = self._request.session.get('user', {'id': None}).get('id')
+        ans = plg.find_suggestions(user_id=user_id, ui_lang=request.args.get('ui_lang'),
+                                   maincorp=self.corp, corpora=request.args.getlist('corpora'),
                                    subcorpus=request.args.get('subcorpus'), value=request.args.get('value'),
                                    value_type=request.args.get('value_type'), query_type=request.args.get('query_type'),
                                    p_attr=request.args.get('p_attr'), struct=request.args.get('struct'),
@@ -42,14 +45,14 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
         self._providers = providers
         self._corparch = corparch
 
-    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
-                         query_type: str, p_attr: str, struct: str, s_attr: str):
+    def find_suggestions(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
+                         value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
         ans = []
         for ident, provider in self._providers.items():
             backend, frontend = provider
-            resp = backend.find_suggestion(ui_lang=ui_lang, corpora=corpora, subcorpus=subcorpus, value=value,
-                                           value_type=value_type, query_type=query_type, p_attr=p_attr,
-                                           struct=struct, s_attr=s_attr)
+            resp = backend.find_suggestion(user_id=user_id, ui_lang=ui_lang, maincorp=maincorp, corpora=corpora,
+                                           subcorpus=subcorpus, value=value, value_type=value_type,
+                                           query_type=query_type, p_attr=p_attr, struct=struct, s_attr=s_attr)
             ans.append(frontend.export_data(ui_lang, resp).to_dict())
         return ans
 

@@ -237,9 +237,8 @@ class PyConc(manatee.Concordance):
         sortkey -- a key according to which the distribution will be sorted
         ml -- str, if non-empty then multi-level freq. distribution is generated
         ftt_include_empty -- str, TODO
-        rel_mode -- {0, 1}, TODO
+        rel_mode -- {0, 1} (0 for structural attrs. , 1 for positional ones ??)
         """
-
         # ml = determines how the bar appears (multilevel x text type)
         # import math
         normwidth_freq = 100

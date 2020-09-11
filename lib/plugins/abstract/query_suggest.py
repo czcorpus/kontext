@@ -21,6 +21,7 @@
 
 import abc
 from typing import List, Dict, Any
+import manatee
 
 
 class AbstractQuerySuggest(abc.ABC):
@@ -31,8 +32,8 @@ class AbstractQuerySuggest(abc.ABC):
     """
 
     @abc.abstractmethod
-    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
-                         query_type: str, p_attr: str, struct: str, s_attr: str):
+    def find_suggestions(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
+                         value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
         """
         note: the 'value' argument does not necessarily mean the whole query as e.g. in case of CQL query
         the client may send just a parsed value of a structural attribute and we want to provide a suggestion
@@ -51,8 +52,8 @@ class AbstractBackend(abc.ABC):
         self._ident = ident
 
     @abc.abstractmethod
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
-                        query_type: str, p_attr: str, struct: str, s_attr: str):
+    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
+                        value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
         pass
 
 
