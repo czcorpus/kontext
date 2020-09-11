@@ -57,7 +57,8 @@ class KorpusDBBackend(AbstractBackend):
             'page': {
                 'from': 0,
                 'size': 100
-            }
+            },
+            '_client': 'kontext'
         }
 
         resp, is_found = self._client.request(
