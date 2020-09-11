@@ -73,10 +73,12 @@ class HTTPClient:
                 ans.append(f'{key}={self.enc_val(val)}')
         return '&'.join(ans)
 
-    def request(self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], body: Any = None, headers={}):
+    def request(self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], body: Any = None,
+                headers=None):
         connection = self.create_connection()
         try:
-            connection.request(method, path + '?' + self._process_args(args), body, headers)
+            connection.request(method, path + '?' + self._process_args(args), body,
+                               headers if headers is not None else {})
             return self.process_response(connection)
         finally:
             connection.close()
