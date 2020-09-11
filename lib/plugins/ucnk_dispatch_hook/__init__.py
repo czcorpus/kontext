@@ -72,7 +72,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
     def pre_dispatch(self, plugin_api, action_name, action_metadata, request):
         # Recent KonText versions avoid specifying corpus variant directly in URL but
         # we still have to handle external links
-        if action_name in ('first_form', 'first', 'view'):
+        if action_name in ('query', 'view'):
             corp = request.args.get('corpname')
             if corp is not None and corp.startswith('omezeni/'):
                 logging.getLogger(__name__).warning(

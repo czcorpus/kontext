@@ -337,42 +337,6 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         return this.history;
     }
 
-    /**
-     * @param overwriteArgs a list of arguments whose values overwrite the current ones
-     * @param appendArgs a list of arguments which will be appended to the existing ones
-     */
-    exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string {
-        const tmp = new MultiDict(this.conf.getConf<Kontext.ListOfPairs>('currentArgs'));
-
-        function importArgs(args:Kontext.MultiDictSrc):Array<[string,string]> {
-            if (!args) {
-                return [];
-
-            } else if (!Array.isArray(args)) {
-                const impArgs:Array<[string, string]> = [];
-                for (let p in args) {
-                    if (args.hasOwnProperty(p)) {
-                        impArgs.push([p, args[p]]);
-                    }
-                }
-                return impArgs;
-
-            } else {
-                return <Array<[string,string]>>args;
-            }
-        }
-
-        const overwriteArgs2 = importArgs(overwriteArgs);
-        overwriteArgs2.forEach(([key,]) => {
-            tmp.replace(key, []);
-        });
-
-        overwriteArgs2.concat(importArgs(appendArgs)).forEach(([key, value]) => {
-            tmp.add(key, value);
-        });
-        return this.encodeURLParameters(tmp);
-    }
-
     registerCorpusSwitchAwareModels(
         onDone:()=>void,
         ...models:Array<IUnregistrable>

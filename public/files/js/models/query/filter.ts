@@ -21,20 +21,21 @@
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { tuple, pipe, Dict, List } from 'cnc-tskit';
+import { tuple, pipe, Dict, List, HTTP } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
-import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
-    FilterServerArgs, QueryType, AnyQuery } from './common';
+    FilterServerArgs, QueryType } from './common';
 import { ActionName, Actions } from './actions';
+import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginInterfaces } from '../../types/plugins';
+import { TextTypesModel } from '../textTypes/main';
+import { AjaxConcResponse } from '../concordance/common';
 
 
 /**
@@ -55,13 +56,12 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     currInclkwicValues:Array<[string, boolean]>;
     inputLanguage:string;
     currPnFilterValues:Array<[string, string]>;
-    currFilflVlaues:Array<[string, string]>;
+    currFilflVlaues:Array<[string, 'f'|'l']>;
     currFilfposValues:Array<[string, string]>;
     currFiltposValues:Array<[string, string]>;
-    withinArgValues:Array<[string, number]>;
+    withinArgValues:Array<[string, boolean]>;
     opLocks:Array<[string, boolean]>;
     hasLemma:Array<[string, boolean]>;
-    tagsetDoc:Array<[string, string]>;
     isAnonymousUser:boolean;
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
@@ -86,17 +86,18 @@ export function fetchFilterFormArgs<T extends
 }
 
 
-function determineSupportedWidgets(queries:{[key:string]:string},
-        queryTypes:{[key:string]:QueryType},
-        tagBuilderSupport:{[key:string]:boolean}):{[key:string]:Array<string>} {
+function determineSupportedWidgets(
+    queries:{[key:string]:string},
+    queryTypes:{[key:string]:QueryType},
+    tagBuilderSupport:{[key:string]:boolean}
+
+):{[key:string]:Array<string>} {
+
     const getWidgets = (filterId:string):Array<string> => {
         switch (queryTypes[filterId]) {
-            case 'iquery':
-            case 'lemma':
-            case 'phrase':
-            case 'word':
+            case 'simple':
                 return ['keyboard', 'history'];
-            case 'cql':
+            case 'advanced':
                 const ans = ['keyboard', 'history'];
                 if (tagBuilderSupport[filterId]) {
                     ans.push('tag');
@@ -130,7 +131,7 @@ export interface FilterFormModelState extends QueryFormModelState {
      * Highlighted token FIRST/LAST. Specifies which token is highlighted.
      * This applies in case multiple matching tokens are found.
      */
-    filflValues:{[key:string]:string};
+    filflValues:{[key:string]:'f'|'l'};
 
     /**
      * Left range
@@ -147,11 +148,9 @@ export interface FilterFormModelState extends QueryFormModelState {
      */
     inclkwicValues:{[key:string]:boolean};
 
-    withinArgs:{[key:string]:number};
+    withinArgs:{[key:string]:boolean};
 
     hasLemma:{[key:string]:boolean};
-
-    tagsetDocs:{[key:string]:string};
 
     /**
      * If true for a certain key then the operation cannot be edited.
@@ -185,7 +184,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             Dict.fromEntries()
         );
         const queryTypes = pipe(
-            [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'iquery')]],
+            [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'simple')]],
             Dict.fromEntries()
         );
         const querySuggestions = pipe(
@@ -199,8 +198,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'filter-form-model', {
             formType: Kontext.ConcFormTypes.FILTER,
             forcedAttr: '', // TODO
-            attrList: [], // TODO
-            structAttrList: [], // TODO
+            attrList: [...props.attrList],
+            structAttrList: [...props.structAttrList],
             lemmaWindowSizes: [], // TODO
             posWindowSizes: [], // TODO
             wPoSList: [], // TODO
@@ -272,10 +271,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 props.hasLemma,
                 Dict.fromEntries()
             ),
-            tagsetDocs: pipe(
-                props.tagsetDoc,
-                Dict.fromEntries()
-            ),
             inputLanguage: props.inputLanguage,
             isAnonymousUser: props.isAnonymousUser,
             supportedWidgets: determineSupportedWidgets(
@@ -285,14 +280,20 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ),
             contextFormVisible: false,
             textTypesFormVisible: false,
-            historyVisible: false,
+            historyVisible: pipe(
+                queries,
+                Dict.keys(),
+                List.map(k => tuple(k, false)),
+                Dict.fromEntries()
+            ),
             suggestionsVisible: pipe(
                 queries,
                 Dict.keys(),
                 List.map(k => tuple(k, false)),
                 Dict.fromEntries()
             ),
-            suggestionsVisibility: props.suggestionsVisibility
+            suggestionsVisibility: props.suggestionsVisibility,
+            isBusy: false
         });
         this.syncInitialArgs = syncInitialArgs;
 
@@ -369,8 +370,9 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FilterInputSetPCQPosNeg>(
+        this.addActionSubtypeHandler<Actions.FilterInputSetPCQPosNeg>(
             ActionName.FilterInputSetPCQPosNeg,
+            action => action.payload.formType === 'filter',
             action => {
                 this.changeState(state => {
                     state.pnFilterValues[action.payload.filterId] = action.payload.value;
@@ -405,7 +407,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ActionName.FilterInputSetInclKwic,
             action => {
                 this.changeState(state => {
-                    this.state.inclkwicValues[action.payload.filterId] = action.payload.value;
+                    state.inclkwicValues[action.payload.filterId] = action.payload.value;
                 });
             }
         );
@@ -416,9 +418,47 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 let err:Error;
                 this.changeState(state => {
                     err = this.validateForm(state, action.payload.filterId);
+                    if (err) {
+                        return;
+                    }
+                    err = this.testQueryNonEmpty(action.payload.filterId);
+                    if (err) {
+                        return;
+                    }
+                    err = this.testQueryTypeMismatch(action.payload.filterId);
                 });
                 if (!err) {
-                    this.submitQuery(action.payload.filterId);
+                    this.changeState(state => {
+                        state.isBusy = true;
+                    });
+                    this.submitQuery(
+                        action.payload.filterId,
+                        this.pageModel.getConcArgs().q.substr(1)
+                    ).pipe(
+                        tap(
+                            (data) => {
+                                this.pageModel.replaceConcArg('q', [
+                                    '~' + data.conc_persistence_op_id]);
+                                this.changeState(state => {
+                                    state.isBusy = false;
+                                });
+                            }
+                        )
+                    ).subscribe(
+                        (data) => {
+                            dispatcher.dispatch<ConcActions.AddedNewOperation>({
+                                name: ConcActionName.AddedNewOperation,
+                                payload: {
+                                    concId: data.conc_persistence_op_id,
+                                    data: data
+                                }
+                            });
+
+                        },
+                        (err) => {
+                            this.pageModel.showMessage('error', err);
+                        }
+                    )
 
                 } else {
                     this.pageModel.showMessage('error', err);
@@ -518,8 +558,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                             state.withinArgs[filterId] = data.within;
                             state.lposValues[filterId] = data.lpos;
                             state.hasLemma[filterId] = data.has_lemma;
-                            state.tagsetDocs[filterId] = data.tagset_doc;
                             state.opLocks[filterId] = false;
+                            state.supportedWidgets = determineSupportedWidgets(
+                                state.queries,
+                                state.queryTypes,
+                                state.tagBuilderSupport
+                            );
                         });
 
                     } else if (data.form_type === Kontext.ConcFormTypes.LOCKED ||
@@ -537,51 +581,65 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         );
     }
 
-    private createSubmitArgs(filterId:string):MultiDict<FilterServerArgs> {
-        const args = this.pageModel.getConcArgs() as MultiDict<FilterServerArgs & AnyQuery>;
-        args.set('pnfilter', this.state.pnFilterValues[filterId]);
-        args.set('filfl', this.state.filflValues[filterId]);
-        args.set('filfpos', this.state.filfposValues[filterId].value);
-        args.set('filtpos', this.state.filtposValues[filterId].value);
-        args.set('inclkwic', this.state.inclkwicValues[filterId] ? '1' : '0');
-        args.set('queryselector', `${this.state.queryTypes[filterId]}row`);
-        if (this.state.withinArgs[filterId]) {
-            args.set('within', '1');
-
-        } else {
-            args.remove('within');
+    private createSubmitArgs(filterId:string):FilterServerArgs {
+        return {
+            type:'filterQueryArgs',
+            qtype: this.state.queryTypes[filterId],
+            query: this.state.queries[filterId],
+            pnfilter: this.state.pnFilterValues[filterId],
+            filfl: this.state.filflValues[filterId],
+            filfpos: this.state.filfposValues[filterId].value,
+            filtpos: this.state.filtposValues[filterId].value,
+            inclkwic: this.state.inclkwicValues[filterId] ? 1 : 0,
+            within: this.state.withinArgs[filterId],
+            qmcase: this.state.matchCaseValues[filterId],
+            ...this.pageModel.getConcArgs()
         }
-        args.set(this.state.queryTypes[filterId], this.getQueryUnicodeNFC(filterId));
-        return args;
     }
 
-    getSubmitUrl(filterId:string):string {
-        return this.pageModel.createActionUrl('filter', this.createSubmitArgs(filterId));
-    }
-
-    private testQueryNonEmpty(filterId:string):boolean {
+    private testQueryNonEmpty(filterId:string):Error|null {
         if (this.state.queries[filterId].length > 0) {
-            return true;
+            return null;
 
         } else {
-            this.pageModel.showMessage('error',
-                this.pageModel.translate('query__query_must_be_entered'));
-            return false;
+            return new Error(this.pageModel.translate('query__query_must_be_entered'));
         }
     }
 
-    private testQueryTypeMismatch(filterId):boolean {
+    private testQueryTypeMismatch(filterId):Error|null {
         const error = this.validateQuery(
             this.state.queries[filterId],
             this.state.queryTypes[filterId]
         );
-        return !error || window.confirm(this.pageModel.translate('global__query_type_mismatch'));
+        if (!error) {
+            return null;
+        }
+        if (!window.confirm(this.pageModel.translate('global__query_type_mismatch'))) {
+            return new Error(this.pageModel.translate('global__the_form_contains_errors_msg'));
+        }
+        return null;
     }
 
-    submitQuery(filterId:string):void {
-        if (this.testQueryNonEmpty(filterId) && this.testQueryTypeMismatch(filterId)) {
-            const args = this.createSubmitArgs(filterId);
-            window.location.href = this.pageModel.createActionUrl('filter', args.items());
-        }
+    /**
+     *
+     * @param filterId id of filter operation (__new__ for new, conc ID if already applied)
+     * @param concId concID we want to attach the submit to (it may or may not be equal to filterId)
+     */
+    submitQuery(filterId:string, concId:string):Observable<AjaxConcResponse> {
+        const args = this.createSubmitArgs(filterId);
+        return this.pageModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
+            this.pageModel.createActionUrl(
+                'filter',
+                [
+                    ['format', 'json'],
+                    ['q', '~' + concId]
+                ]
+            ),
+            args,
+            {
+                contentType: 'application/json'
+            }
+        );
     }
 }

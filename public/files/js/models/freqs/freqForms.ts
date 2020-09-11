@@ -204,7 +204,7 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
     }
 
     private submit(state:MLFreqFormModelState):void {
-        const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<FreqServerArgs>;
         args.set('flimit', parseInt(state.flimit.value));
         state.mlxattr.forEach((item, i) => {
             args.set(`ml${i+1}attr`, item);
@@ -305,7 +305,7 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
     }
 
     private submit(state:TTFreqFormModelState):void {
-        const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<FreqServerArgs>;
         args.replace('fttattr', state.fttattr);
         args.set('ftt_include_empty', state.fttIncludeEmpty ? '1' : '0');
         args.set('flimit', parseInt(state.flimit.value));

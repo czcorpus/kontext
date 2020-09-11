@@ -21,7 +21,7 @@ This module contains a functionality related to
 extended, re-editable query processing.
 """
 
-from typing import Dict, Any, Optional, Callable, List, Tuple
+from typing import Dict, Any, Optional, List
 from argmapping.query import ConcFormArgs
 from werkzeug import Request
 
@@ -91,14 +91,6 @@ class Querying(Kontext):
             ans.update(lastop_form=self._curr_conc_form_args.serialize())
         return ans
 
-    @staticmethod
-    def import_qs(qs: Optional[str]) -> Optional[str]:
-        """
-        Import query selector value (e.g. 'iqueryrow')
-        into a query type identifier (e.g. 'iquery').
-        """
-        return qs[:-3] if qs is not None else None
-
     def _select_current_aligned_corpora(self, active_only: bool):
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
 
@@ -163,22 +155,6 @@ class Querying(Kontext):
                     poslist = getattr(self.cm, 'corpconf_pairs')(alcorp, 'LPOSLIST')
                 tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 tpl_out['input_languages'][al] = self.get_corpus_info(al)['collator_locale']
-
-    def export_aligned_form_params(self, aligned_corp: str, state_only: bool, name_filter: Callable[[str], bool] = lambda x: True) -> Dict[str, Any]:
-        """
-        Collects aligned corpora-related arguments with dynamic names
-        (i.e. the names with corpus name as a suffix)
-        """
-
-        args: Tuple[Tuple[str, Callable[[Any], Any]], ...] = (('include_empty', lambda x: int(x)), ('pcq_pos_neg', lambda x: x))
-        if not state_only:
-            args += (('queryselector', lambda x: x),)
-        ans: Dict[str, Any] = {}
-        for param_name, type_conv in args:
-            full_name = f'{param_name}_{aligned_corp}'
-            if full_name in self._request.args and name_filter(param_name):
-                ans[full_name] = type_conv(self._request.args[full_name])
-        return ans
 
     @exposed(return_type='json', http_method='GET')
     def ajax_fetch_conc_form_args(self, request: Request) -> Dict[str, Any]:

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
 
 import { init as saveViewInit } from './save';
 import { init as basicOverviewInit } from './basicOverview';
@@ -37,7 +37,6 @@ import { QueryFormLiteProps, QueryFormProps } from './first';
 import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
 import { SortFormProps } from './sort';
 import { MainMenuModelState } from '../../models/mainMenu';
-import { PluginInterfaces } from '../../types/plugins';
 
 /*
 Important note regarding variable naming conventions:
@@ -122,12 +121,17 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     const basicOverviewViews = basicOverviewInit(dispatcher, he);
 
 
-    const formTypeToTitle = (opFormType:string) => {
+    const formTypeToTitle = (opFormType:string, subvariant?:string) => {
         switch (opFormType) {
             case Kontext.ConcFormTypes.QUERY:
                 return he.translate('query__operation_name_query');
             case Kontext.ConcFormTypes.FILTER:
-                return he.translate('query__operation_name_filter');
+                if (subvariant === 'p') {
+                    return he.translate('query__operation_name_filter_p');
+
+                } else if (subvariant === 'n') {
+                    return he.translate('query__operation_name_filter_n');
+                }
             case Kontext.ConcFormTypes.SORT:
                 return he.translate('query__operation_name_sort');
             case Kontext.ConcFormTypes.SAMPLE:
@@ -589,7 +593,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     // ------------------------ <AppendOperationOverlay /> --------------------------------
 
     interface AppendOperationOverlayProps {
-        menuActiveItem:{actionName:string};
+        menuActiveItem:{actionName:string, actionArgs:{}};
         filterFormProps:FilterFormProps;
         shuffleFormProps:ShuffleFormProps;
         switchMcFormProps:SwitchMainCorpFormProps;
@@ -638,16 +642,17 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const createTitle = () => {
             const m = {
-                [MainMenuActionName.ShowFilter]: Kontext.ConcFormTypes.FILTER,
-                [MainMenuActionName.ShowSort]: Kontext.ConcFormTypes.SORT,
-                [MainMenuActionName.ShowSample]: Kontext.ConcFormTypes.SAMPLE,
-                [MainMenuActionName.ApplyShuffle]: Kontext.ConcFormTypes.SHUFFLE,
-                [MainMenuActionName.ShowSwitchMc]: Kontext.ConcFormTypes.SWITCHMC,
-                [MainMenuActionName.FilterApplySubhitsRemove]: Kontext.ConcFormTypes.SUBHITS,
-                [MainMenuActionName.FilterApplyFirstOccurrences]: Kontext.ConcFormTypes.FIRSTHITS
+                [MainMenuActionName.ShowFilter]: (args:{}) => tuple(Kontext.ConcFormTypes.FILTER, args['pnfilter']),
+                [MainMenuActionName.ShowSort]: () => tuple(Kontext.ConcFormTypes.SORT, null),
+                [MainMenuActionName.ShowSample]: () => tuple(Kontext.ConcFormTypes.SAMPLE, null),
+                [MainMenuActionName.ApplyShuffle]: () => tuple(Kontext.ConcFormTypes.SHUFFLE, null),
+                [MainMenuActionName.ShowSwitchMc]: () => tuple(Kontext.ConcFormTypes.SWITCHMC, null),
+                [MainMenuActionName.FilterApplySubhitsRemove]: () => tuple(Kontext.ConcFormTypes.SUBHITS, null),
+                [MainMenuActionName.FilterApplyFirstOccurrences]: () => tuple(Kontext.ConcFormTypes.FIRSTHITS, null)
             };
-            const ident = formTypeToTitle(m[props.menuActiveItem.actionName]);
-            return he.translate('query__add_an_operation_title_{opname}', {opname: ident});
+            const [ident, subtype] = m[props.menuActiveItem.actionName](props.menuActiveItem.actionArgs);
+            const opname = formTypeToTitle(ident, subtype);
+            return he.translate('query__add_an_operation_title_{opname}', {opname});
         };
 
         return (

@@ -69,17 +69,17 @@ export interface TRQueryInputFieldProps {
     defaultAttr:string;
     attrList:Array<Kontext.AttrItem>;
     matchCaseValue:boolean;
-    tagsetDocUrl:string;
     onEnterKey:()=>void;
     takeFocus?:boolean;
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    customOptions?:Array<React.ReactElement>;
 }
 
 
 export interface TRQueryTypeFieldProps {
     formType:QueryFormType;
     sourceId:string;
-    queryType:string; // TODO enum
+    queryType:QueryType;
     hasLemmaAttr:boolean;
 }
 
@@ -159,77 +159,6 @@ export function init({
 
     const BoundQueryHints = Bound<UsageTipsState>(QueryHints, queryHintModel);
 
-    // ------------------- <QueryTypeHints /> -----------------------------
-
-    class QueryTypeHints extends React.Component<{
-        queryType:string;
-    },
-    {
-        visible:boolean;
-    }> {
-
-        constructor(props) {
-            super(props);
-            this.state = {visible: false};
-            this._handleHintClick = this._handleHintClick.bind(this);
-        }
-
-        _handleHintClick() {
-            this.setState({visible: !this.state.visible});
-        }
-
-        _getHintText() {
-            switch (this.props.queryType) {
-                case 'iquery':
-                    return [he.translate('query__qt_basic'), he.translate('query__type_hint_basic'), null];
-                case 'lemma':
-                    return [he.translate('query__qt_lemma'), he.translate('query__type_hint_lemma'), null];
-                case 'phrase':
-                    return [he.translate('query__qt_phrase'), he.translate('query__type_hint_phrase'), null];
-                case 'word':
-                    return [he.translate('query__qt_word_form'), he.translate('query__type_hint_word'), null];
-                case 'char':
-                    return [he.translate('query__qt_word_part'), he.translate('query__type_hint_char'), null];
-                case 'cql':
-                    return [he.translate('query__qt_cql'), he.translate('query__type_hint_cql'), he.getHelpLink('term_cql')];
-                default:
-                    return ['', '', null];
-            }
-        }
-
-        render() {
-            const [heading, text, helpUrl] = this._getHintText();
-            return (
-                <span>
-                    <span className="hint" onClick={this._handleHintClick}>
-                        <a>
-                            <img src={he.createStaticUrl('img/question-mark.svg')}
-                                alt={he.translate('global__info_icon')} />
-                        </a>
-                    </span>
-                    {this.state.visible ?
-                        <layoutViews.PopupBox onCloseClick={this._handleHintClick} takeFocus={true} customClass="hint">
-                            <div>
-                                <h3>{he.translate('query__select_type')} <span className="type">"{heading}"</span></h3>
-                                <p dangerouslySetInnerHTML={{__html: text}} />
-                                {helpUrl ?
-                                    <p className="link">
-                                        <hr />
-                                        <a href={helpUrl} className="external" target='_blank'>
-                                            {he.translate('global__get_more_info')}
-                                        </a>
-                                    </p> :
-                                    null
-                                }
-                            </div>
-                        </layoutViews.PopupBox> :
-                        null
-                    }
-                </span>
-            );
-        }
-    }
-
 
     // ------------------- <TRQueryTypeField /> -----------------------------
 
@@ -247,20 +176,22 @@ export function init({
         };
 
         return (
-            <tr className="TRQueryTypeField">
-                <th>{he.translate('query__select_type')}:</th>
-                <td>
-                    <select value={props.queryType} onChange={handleSelection}>
-                        <option value="iquery">{he.translate('query__qt_basic')}</option>
-                        {props.hasLemmaAttr ? <option value="lemma">{he.translate('query__qt_lemma')}</option> : null}
-                        <option value="phrase">{he.translate('query__qt_phrase')}</option>
-                        <option value="word">{he.translate('query__qt_word_form')}</option>
-                        <option value="char">{he.translate('query__qt_word_part')}</option>
-                        <option value="cql">{he.translate('query__qt_cql')}</option>
-                    </select>
-                    <QueryTypeHints queryType={props.queryType} />
-                </td>
-            </tr>
+            <div className="TRQueryTypeField">
+                <ul>
+                    <li>
+                        <label>
+                            <input type="radio" value="simple" checked={props.queryType === 'simple'} onChange={handleSelection} />
+                            {he.translate('query__qt_simple')}
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" value="advanced" checked={props.queryType === 'advanced'} onChange={handleSelection} />
+                            {he.translate('query__qt_advanced')}
+                        </label>
+                    </li>
+                </ul>
+            </div>
         );
     };
 
@@ -273,21 +204,20 @@ export function init({
                 name: ActionName.FilterInputSetPCQPosNeg,
                 payload: {
                     filterId: props.sourceId,
+                    formType: props.formType,
                     value: evt.target.value
                 }
             });
         };
 
         return (
-            <tr>
-                <th />
-                <td>
-                    <select value={props.value} onChange={handleSelectChange}>
-                        <option value="pos">{he.translate('query__align_contains')}</option>
-                        <option value="neg">{he.translate('query__align_not_contains')}</option>
-                    </select>
-                </td>
-            </tr>
+            <div>
+                <label>{he.translate('query__align_posneg_label')}</label>:{'\u00a0'}
+                <select value={props.value} onChange={handleSelectChange}>
+                    <option value="pos">{he.translate('query__align_contains')}</option>
+                    <option value="neg">{he.translate('query__align_not_contains')}</option>
+                </select>
+            </div>
         );
     };
 
@@ -306,16 +236,13 @@ export function init({
         };
 
         return (
-            <tr className="TRIncludeEmptySelector">
-                <th />
-                <td>
-                    <label>
-                        <input type="checkbox" checked={props.value}
-                            onChange={handleCheckbox} />
-                        {he.translate('query__include_empty_aligned')}
-                    </label>
-                </td>
-            </tr>
+            <div className="TRIncludeEmptySelector">
+                <label>
+                    {he.translate('query__include_empty_aligned')}:{'\u00a0'}
+                    <input type="checkbox" checked={props.value}
+                        onChange={handleCheckbox} />
+                </label>
+            </div>
         );
     };
 
@@ -710,6 +637,27 @@ export function init({
         );
     };
 
+    // -------------------- <DefaultAttrSelector /> ------------------------
+
+    const DefaultAttrSelector:React.SFC<{
+        defaultAttr:string;
+        forcedAttr:string;
+        attrList:Array<Kontext.AttrItem>;
+        sourceId:string;
+        formType:QueryFormType;
+        label:string;
+
+    }> = (props) => (
+        <span className="default-attr-selection">
+            {props.label + ':\u00a0'}
+            <DefaultAttrSelect defaultAttr={props.defaultAttr}
+                forcedAttr={props.forcedAttr}
+                attrList={props.attrList}
+                sourceId={props.sourceId}
+                formType={props.formType} />{'\u00a0'}
+    </span>
+    )
+
     // ------------------- <SingleLineInput /> -----------------------------
 
     class SingleLineInput extends React.Component<SingleLineInputProps & QueryFormModelState> {
@@ -758,9 +706,9 @@ export function init({
 
     const BoundSingleLineInput = BoundWithProps<SingleLineInputProps, QueryFormModelState>(SingleLineInput, queryModel);
 
-    // ------------------- <DefaultAttrSelector /> -----------------------------
+    // ------------------- <DefaultAttrSelect /> -----------------------------
 
-    const DefaultAttrSelector:React.SFC<{
+    const DefaultAttrSelect:React.SFC<{
         formType:QueryFormType;
         sourceId:string;
         forcedAttr:string;
@@ -837,7 +785,7 @@ export function init({
                     sourceId: this.props.sourceId
                 }
             });
-            if (!this.props.historyVisible && this._queryInputElement.current) {
+            if (!this.props.historyVisible[this.props.sourceId] && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
         }
@@ -849,7 +797,7 @@ export function init({
         }
 
         componentDidUpdate(prevProps, prevState) {
-            if (prevProps.historyVisible && !this.props.historyVisible &&
+            if (prevProps.historyVisible[this.props.sourceId] && !this.props.historyVisible &&
                     this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
@@ -871,18 +819,15 @@ export function init({
 
         _renderInput() {
             switch (this.props.queryType) {
-                case 'iquery':
-                case 'lemma':
-                case 'phrase':
-                case 'word':
+                case 'simple':
                     return <BoundSingleLineInput
                                 sourceId={this.props.sourceId}
                                 refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.props.historyVisible}
+                                historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown} />;
-                case 'cql':
+                case 'advanced':
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
                                 formType={this.props.formType}
@@ -891,7 +836,7 @@ export function init({
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.props.historyVisible}
+                                historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 inputRef={this._queryInputElement as React.RefObject<HTMLPreElement>} /> :
                         <cqlEditorViews.CQLEditorFallback
                                 formType={this.props.formType}
@@ -900,100 +845,127 @@ export function init({
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.props.historyVisible} />;
+                                historyIsVisible={this.props.historyVisible[this.props.sourceId]} />;
             }
         }
 
         _renderInputOptions() {
+            const customOpts = this.props.customOptions || [];
             switch (this.props.queryType) {
-                case 'iquery':
-                    return null;
-                case 'lemma':
-                    return <LposSelector wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType}  />;
-                case 'phrase':
-                    return <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType} />;
-                case 'word':
+                case 'simple':
                     return (
-                        <span>
-                            <LposSelector wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType}  />
-                            {'\u00a0'}
-                            <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType} />
-                        </span>
+                        <>
+                            {!List.empty(customOpts) ?
+                                <div className="option-list-custom">
+                                    {List.map(
+                                        (opt, i) => <div key={`item:${i}`}>{opt}</div>,
+                                        customOpts
+                                    )}
+                                </div> :
+                                null
+                            }
+                            <div className="option-list">
+                                <div>
+                                    <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
+                                        sourceId={this.props.sourceId}
+                                        formType={this.props.formType} />
+                                </div>
+                                <div>
+                                    <DefaultAttrSelector
+                                        label={he.translate('query__applied_attr')}
+                                        sourceId={this.props.sourceId}
+                                        defaultAttr={this.props.defaultAttr}
+                                        forcedAttr={this.props.forcedAttr}
+                                        attrList={this.props.attrList}
+                                        formType={this.props.formType} />
+                                </div>
+                                <div>
+                                {Kontext.isWordLikePosAttr(this.props.defaultAttr) ?
+                                    <LposSelector wPoSList={this.props.wPoSList}
+                                        lposValue={this.props.lposValue}
+                                        sourceId={this.props.sourceId}
+                                        formType={this.props.formType}  /> :
+                                    null
+                                }
+                                </div>
+                            </div>
+                        </>
                     );
-                case 'cql':
+                case 'advanced':
                     return (
-                        <span className="default-attr-selection">
-                            {he.translate('query__default_attr') + ':\u00a0'}
-                            <DefaultAttrSelector defaultAttr={this.props.defaultAttr}
-                                    forcedAttr={this.props.forcedAttr}
-                                    attrList={this.props.attrList}
-                                    sourceId={this.props.sourceId}
-                                    formType={this.props.formType} />{'\u00a0'}
-                            {this.props.tagsetDocUrl ?
-                                (<span className="tagset-summary">(
-                                    <a className="external" target="_blank" href={this.props.tagsetDocUrl}>
-                                    {he.translate('query__tagset_summary')}</a>)</span>)
-                                : null}
-                        </span>
+                        <>
+                            {!List.empty(customOpts) ?
+                                <div className="option-list-custom">
+                                    {List.map(
+                                        (opt, i) => <div key={`item:${i}`}>{opt}</div>,
+                                        customOpts
+                                    )}
+                                </div> :
+                                null
+                            }
+                            <div className="option-list">
+                                <div>
+                                    <DefaultAttrSelector
+                                        label={he.translate('query__default_attr')}
+                                        sourceId={this.props.sourceId}
+                                        defaultAttr={this.props.defaultAttr}
+                                        forcedAttr={this.props.forcedAttr}
+                                        attrList={this.props.attrList}
+                                        formType={this.props.formType} />
+                                </div>
+                            </div>
+                        </>
                     );
             }
         }
 
         render() {
             return (
-                <tr>
-                    <th>{he.translate('query__query_th')}:</th>
-                    <td>
-                        <div className="query-area">
-                            <BoundQueryToolbox
-                                widgets={this.props.widgets}
-                                tagHelperView={this.props.tagHelperView}
-                                sourceId={this.props.sourceId}
-                                toggleHistoryWidget={this._toggleHistoryWidget}
-                                inputLanguage={this.props.inputLanguage}
-                                qsAvailable={!List.empty(
-                                    this.props.querySuggestions[this.props.sourceId])} />
-                            {this._renderInput()}
-                            {this.props.historyVisible ?
-                                <HistoryWidget
-                                        queryStorageView={this.props.queryStorageView}
-                                        sourceId={this.props.sourceId}
-                                        onCloseTrigger={this._toggleHistoryWidget}
-                                        formType={this.props.formType}/>
-                                : null
-                            }
+                <div>
+                    <div className="query-area">
+                        <BoundQueryToolbox
+                            widgets={this.props.widgets}
+                            tagHelperView={this.props.tagHelperView}
+                            sourceId={this.props.sourceId}
+                            toggleHistoryWidget={this._toggleHistoryWidget}
+                            inputLanguage={this.props.inputLanguage}
+                            qsAvailable={!List.empty(
+                                this.props.querySuggestions[this.props.sourceId])} />
+                        {this._renderInput()}
+                        {this.props.historyVisible[this.props.sourceId] ?
+                            <HistoryWidget
+                                    queryStorageView={this.props.queryStorageView}
+                                    sourceId={this.props.sourceId}
+                                    onCloseTrigger={this._toggleHistoryWidget}
+                                    formType={this.props.formType}/>
+                            : null
+                        }
 
-                            {
-                                !this.props.historyVisible &&
-                                this.props.suggestionsVisible[this.props.sourceId] &&
-                                this.props.querySuggestions[this.props.sourceId] &&
-                                this.props.querySuggestions[this.props.sourceId].length ?
-                                    <SuggestionsWidget
-                                        qsuggPlugin={this.props.qsuggPlugin}
-                                        querySuggestions={this.props.querySuggestions}
-                                        sourceId={this.props.sourceId}
-                                        formType={this.props.formType} />
-                                    : null
-                            }
-                            <div className="query-hints">
-                                <BoundQueryHints  />
-                            </div>
+                        {
+                            !this.props.historyVisible[this.props.sourceId] &&
+                            this.props.suggestionsVisible[this.props.sourceId] &&
+                            this.props.querySuggestions[this.props.sourceId] &&
+                            this.props.querySuggestions[this.props.sourceId].length ?
+                                <SuggestionsWidget
+                                    qsuggPlugin={this.props.qsuggPlugin}
+                                    querySuggestions={this.props.querySuggestions}
+                                    sourceId={this.props.sourceId}
+                                    formType={this.props.formType} />
+                                : null
+                        }
+                        <div className="query-hints">
+                            <BoundQueryHints  />
                         </div>
-                        <div className="query-options">
-                            {this._renderInputOptions()}
-                        </div>
-                    </td>
-                </tr>
+                    </div>
+                    <fieldset className="query-options">
+                        <legend>
+                            <span className="form-extension-switch always-expand">
+                                {he.translate('global__options')}
+                            </span>
+                        </legend>
+                        {this._renderInputOptions()}
+                    </fieldset>
+                </div>
             );
         }
     }

@@ -93,7 +93,7 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         this.addActionHandler<Actions.SortFormSubmit>(
             ActionName.SortFormSubmit,
             action => {
-                this.submit(action.payload.sortId);
+                this.submit(action.payload.sortId, action.payload.sortId);
                 // no need to notify anybody - we're leaving the page here
             }
         );
@@ -174,20 +174,21 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         );
     }
 
-    submit(sortId:string):void {
-        const args = this.createSubmitArgs(sortId);
+    submit(sortId:string, concId:string):void {
+        const args = this.createSubmitArgs(sortId, concId);
         const url = this.pageModel.createActionUrl('sortx', args.items());
         window.location.href = url;
     }
 
-    getSubmitUrl(sortId:string):string {
-        return this.pageModel.createActionUrl('sortx', this.createSubmitArgs(sortId).items());
+    getSubmitUrl(sortId:string, concId:string):string {
+        return this.pageModel.createActionUrl('sortx', this.createSubmitArgs(sortId, concId).items());
     }
 
-    private createSubmitArgs(sortId:string):MultiDict<ConcSortServerArgs> {
+    private createSubmitArgs(sortId:string, concId:string):MultiDict<ConcSortServerArgs> {
         const val2List = (v) => v ? [v] : [];
 
-        const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<ConcSortServerArgs>;
+        args.set('q', '~' + concId);
         args.replace('sattr', val2List(this.state.sattrValues[sortId]));
         args.replace('skey', val2List(this.state.skeyValues[sortId]));
         args.replace('sbward', val2List(this.state.sbwardValues[sortId]));

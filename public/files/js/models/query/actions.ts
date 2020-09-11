@@ -31,7 +31,6 @@ export enum ActionName {
     EditLastQueryOperation = 'EDIT_LAST_QUERY_OPERATION',
     EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
     BranchQuery = 'BRANCH_QUERY',
-    BranchQueryDone = 'BRANCH_QUERY_DONE',
     TrimQuery = 'TRIM_QUERY',
     QuerySetStopAfterIdx = 'QUERY_SET_STOP_AFTER_IDX',
     RedirectToEditQueryOperation = 'REDIRECT_TO_EDIT_QUERY_OPERATION',
@@ -149,13 +148,6 @@ export namespace Actions {
         operationIdx:number;
     }> {
         name:ActionName.BranchQuery
-    }
-
-    export interface BranchQueryDone extends Action<{
-        replayOperations:Array<string>;
-        concArgsCache:{[key:string]:AjaxResponse.ConcFormArgs};
-    }> {
-        name:ActionName.BranchQueryDone
     }
 
     export interface TrimQuery extends Action<{
@@ -363,6 +355,7 @@ export namespace Actions {
     }
 
     export interface FilterInputSetPCQPosNeg extends Action<{
+        formType:QueryFormType;
         filterId:string;
         value:'pos'|'neg';
     }> {
@@ -371,7 +364,7 @@ export namespace Actions {
 
     export interface FilterInputSetFilfl extends Action<{
         filterId:string;
-        value:string;
+        value:'f'|'l';
     }> {
         name:ActionName.FilterInputSetFilfl;
     }

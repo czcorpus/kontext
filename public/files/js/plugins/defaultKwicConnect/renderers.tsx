@@ -70,13 +70,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         args.set('align', v);
                         // currently we have to ignore aligned kwics (the are not that easy to fetch)
                         // so we just set a key for query type and ignore the aligned query
-                        args.set(`queryselector_${v}`, 'iquery');
+                        args.set(`qtype_${v}`, 'simple');
                     }
                 )
             );
-            args.set('queryselector', 'phraserow');
-            args.set('phrase', word);
-            return he.createActionLink('first', args);
+            args.set('qtype', 'simple');
+            args.set('query', word);
+            return he.createActionLink('query_submit', args);
         };
 
         return (
@@ -123,13 +123,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             args.set('corpname', props.data.contents.primary_corp);
             args.set('align', props.data.contents.translat_corp);
             args.set('maincorp', props.data.contents.primary_corp);
-            args.set('queryselector', 'phraserow');
-            args.set('phrase', word1);
+            args.set('qtype', 'simple');
+            args.set('query', word1);
             args.set('viewmode', 'align');
-            args.set('queryselector_' + props.data.contents.translat_corp, 'phraserow');
-            args.set('phrase_' + props.data.contents.translat_corp, word2);
+            args.set('qtype_' + props.data.contents.translat_corp, 'simple');
+            args.set('simple_' + props.data.contents.translat_corp, word2);
             args.set('pcq_pos_neg_' + props.data.contents.translat_corp, 'pos');
-            return he.createActionLink('first', args);
+            return he.createActionLink('query_submit', args);
         };
 
         const renderWords = () => {

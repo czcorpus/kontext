@@ -98,9 +98,6 @@ __conf.availableAlignedCorpora = {{ Aligned|default([], true)|to_json }};
 __conf.pluginData = {{ plugin_data|to_json  }};
 __conf.notifications = {{ messages|to_json }};
 __conf.popupServerMessages = {{ popup_server_messages|to_json }};
-__conf.queryTypesHints = {
-    iqueryrow : {{"Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well."|_|to_json}}
-};
 __conf.ttIntervalChars = {{ interval_chars|default([], true)|to_json }};
 __conf.structsAndAttrs = {{ structs_and_attrs|default({}, true)|to_json }};
 __conf.menuData = {{ menu_data|to_json }};

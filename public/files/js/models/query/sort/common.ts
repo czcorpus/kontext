@@ -46,8 +46,8 @@ export interface SortFormProperties {
  *
  */
 export interface ISubmitableConcSortModel {
-    getSubmitUrl(sortId:string):string;
-    submit(sortId:string):void;
+    getSubmitUrl(sortId:string, concId:string):string;
+    submit(sortId:string, concId:string):void;
 }
 
 

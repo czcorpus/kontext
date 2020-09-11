@@ -56,7 +56,7 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
         loadChunkSize:number
     ) {
         this.pluginApi = pluginApi;
-        const concArgs = this.pluginApi.getConcArgs();
+        const concArgs = this.pluginApi.exportConcArgs();
         this.model = new KwicConnectModel({
             dispatcher: pluginApi.dispatcher(),
             pluginApi,

@@ -42,8 +42,7 @@ export interface InputBoxHistoryItem {
 
 
 const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) => {
-    if (item.query_type === 'cql' || item.query_type === 'word' ||
-            item.query_type === 'phrase' || item.query_type === 'lemma') {
+    if (item.query_type === 'advanced') {
         [item.query_sh,] = highlightSyntaxStatic(item.query, item.query_type, he);
     }
     return item;
@@ -244,7 +243,7 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
         args.set('corpname', item.corpname);
         args.set('usesubcorp', item.subcorpname);
         args.set(item.query_type, item.query);
-        args.set('queryselector', item.query_type + 'row');
+        args.set('qtype', item.query_type);
         args.replace('align', List.map(v => v.corpname, item.aligned));
         args.set('lpos', item.lpos);
         args.set('qmcase', item.qmcase ? '1' : '0');
@@ -252,7 +251,7 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
         args.set('pcq_pos_neg', item.pcq_pos_neg);
         List.forEach(v => {
             args.set(`${v.query_type}_${v.corpname}`, v.query);
-            args.set(`queryselector_${v.corpname}`, v.query_type + 'row');
+            args.set(`qtype_${v.corpname}`, v.query_type);
             args.set(`lpos_${v.corpname}`, v.lpos);
             args.set(`qmcase_${v.corpname}`, v.qmcase ? '1' : '0');
             args.set(`default_attr_${v.corpname}`, v.default_attr);

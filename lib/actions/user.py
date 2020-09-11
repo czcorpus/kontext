@@ -54,7 +54,7 @@ class User(Kontext):
                     if request.args.get('return_url', None):
                         self.redirect(request.args.get('return_url'))
                     else:
-                        self.redirect(self.create_url('first_form', {}))
+                        self.redirect(self.create_url('query', {}))
                 else:
                     self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
                     self.add_system_message('error', _('Incorrect username or password'))
@@ -68,7 +68,7 @@ class User(Kontext):
         self.init_session()
         self.refresh_session_id()
         plugins.runtime.AUTH.instance.logout_hook(self._plugin_api)
-        self.redirect(self.create_url('first_form', {}))
+        self.redirect(self.create_url('query', {}))
         return {}
 
     @exposed(access_level=0, template='user/administration.html', skip_corpus_init=True, page_model='userSignUp',
@@ -257,5 +257,5 @@ class User(Kontext):
             self._new_cookies['kontext_ui_lang']['expires'] = time.strftime('%a, %d %b %Y %T GMT',
                                                                             time.gmtime(time.time() + 180 * 24 * 3600))
             self.redirect(
-                request.environ.get('HTTP_REFERER', self.create_url('first_form', dict(corpname=self.args.corpname))))
+                request.environ.get('HTTP_REFERER', self.create_url('query', dict(corpname=self.args.corpname))))
         return {}

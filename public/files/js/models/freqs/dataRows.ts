@@ -104,7 +104,7 @@ export function importData(pageModel:PageModel, data:Array<FreqResultResponse.Bl
 
 function createQuickFilterUrl(pageModel:PageModel, args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>):string {
     if (args && args.length > 0) {
-        const submitArgs = pageModel.getConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
+        const submitArgs = pageModel.exportConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
         submitArgs.remove('q2');
         args.forEach(([key, value]) => submitArgs.add(key, value));
         return pageModel.createActionUrl('quick_filter', submitArgs.items());
@@ -304,7 +304,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     }
 
     getSubmitArgs(state:FreqDataRowsModelState):MultiDict {
-        const args = this.pageModel.getConcArgs() as MultiDict<FreqServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<FreqServerArgs>;
         args.remove('fcrit');
         state.freqCrit.forEach((item) => {
             args.add(item[0], item[1]);

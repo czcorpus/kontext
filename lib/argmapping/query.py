@@ -122,7 +122,7 @@ class LockedOpFormsArgs(ConcFormArgs):
 class QueryFormArgs(ConcFormArgs):
     """
     QueryFormArgs collects arguments required
-    to initialize the 'first_form' for one or more
+    to initialize the 'query' for one or more
     corpora.
 
     The class is only used to make collecting and
@@ -146,12 +146,45 @@ class QueryFormArgs(ConcFormArgs):
         self.tagset_docs = empty_dict.copy()
         self.has_lemma = empty_dict.copy()
 
+        # context filter
+        self.fc_lemword_window_type = 'both'
+        self.fc_lemword_type = 'all'
+        self.fc_lemword_wsize = 5
+        self.fc_lemword = ''
+        self.fc_pos_window_type = 'both'
+        self.fc_pos_type = 'all'
+        self.fc_pos_wsize = 5
+        self.fc_pos = []
+
         self.selected_text_types: Dict[str, str] = {}
         # for bibliography structattr - maps from hidden ids to visible titles (this is optional)
         self.bib_mapping: Dict[str, str] = {}
 
         for corp in corpora:
             self._add_corpus_metadata(corp)
+
+    def update_by_user_query(self, data, bib_mapping):
+        for query in data['queries']:
+            corp = query['corpname']
+            self.curr_query_types[corp] = query['qtype']
+            self.curr_queries[corp] = query['query']
+            self.curr_pcq_pos_neg_values[corp] = query['pcq_pos_neg']
+            self.curr_include_empty_values[corp] = query['include_empty']
+            self.curr_qmcase_values[corp] = query['qmcase']
+            self.curr_default_attr_values[corp] = query['default_attr']
+        self.bib_mapping = bib_mapping
+
+        ctx = data['context']
+        self.fc_lemword_window_type = ctx.get('fc_lemword_window_type', self.fc_lemword_window_type)
+        self.fc_lemword_type = ctx.get('fc_lemword_type', self.fc_lemword_type)
+        self.fc_lemword_wsize = ctx.get('fc_lemword_wsize', self.fc_lemword_wsize)
+        self.fc_lemword = ctx.get('fc_lemword', self.fc_lemword)
+        self.fc_pos_window_type = ctx.get('fc_pos_window_type', self.fc_pos_window_type)
+        self.fc_pos_type = ctx.get('fc_pos_type', self.fc_pos_type)
+        self.fc_pos_wsize = ctx.get('fc_pos_wsize', self.fc_pos_wsize)
+        self.fc_pos = ctx.get('fc_pos', self.fc_pos)
+
+        self.selected_text_types = data['text_types']
 
     def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.TAGHELPER as th:
@@ -183,7 +216,7 @@ class FilterFormArgs(ConcFormArgs):
     def __init__(self, maincorp: str, persist: bool) -> None:
         super().__init__(persist)
         self.form_type: str = 'filter'
-        self.query_type: str = 'iquery'
+        self.query_type: str = 'simple'
         self.query: str = ''
         self.maincorp: str = maincorp
         self.pnfilter: str = 'p'
@@ -196,7 +229,20 @@ class FilterFormArgs(ConcFormArgs):
         self.has_lemma: bool = False
         self.tagset_doc: str = ''
         self.tag_builder_support: bool = False
+        self.within: bool = False
         self._add_corpus_metadata()
+
+    def update_by_user_query(self, data):
+        self.query_type = data['qtype']
+        self.query = data['query']
+        self.pnfilter = data['pnfilter']
+        self.filfl = data['filfl']
+        self.filfpos = data['filfpos']
+        self.filfpos = data['filfpos']
+        self.filtpos = data['filtpos']
+        self.inclkwic = data['inclkwic']
+        self.qmcase = data['qmcase']
+        self.within = data['within']
 
     def _add_corpus_metadata(self):
         with plugins.runtime.TAGHELPER as th:
@@ -346,7 +392,7 @@ class QuickFilterArgsConv(object):
         elms = self._parse(query)
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
-        ff_args.query_type = 'cql'
+        ff_args.query_type = 'advanced'
         ff_args.query = elms[-1]
         ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
         ff_args.pnfilter = elms[0].lower()
@@ -365,7 +411,7 @@ class ContextFilterArgsConv(object):
     form arguments into the regular filter ones.
     """
 
-    def __init__(self, args) -> None:  # TODO args type ???
+    def __init__(self, args: QueryFormArgs) -> None:
         self.args = args
 
     @staticmethod
@@ -382,16 +428,15 @@ class ContextFilterArgsConv(object):
             return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
         raise ValueError(f'Unknown type fctxtype = {fctxtype}')
 
-    def __call__(self, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:  # TODO ctx type
-        ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-                                 persist=True)
-        ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
+    def __call__(self, corpname: str, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:
+        ff_args = FilterFormArgs(maincorp=corpname, persist=True)
+        ff_args.maincorp = corpname
         ff_args.pnfilter = 'p' if fctxtype in ('any', 'all') else 'n'
         ff_args.filfpos = ctx[0]
         ff_args.filtpos = ctx[1]
         ff_args.filfl = 'f' if ctx[2] > 0 else 'l'
         ff_args.inclkwic = False
-        ff_args.default_attr = self.args.default_attr
-        ff_args.query_type = 'cql'
+        ff_args.default_attr = self.args.curr_default_attr_values[corpname]
+        ff_args.query_type = 'advanced'
         ff_args.query = self._convert_query(attrname, items, fctxtype)
         return ff_args
