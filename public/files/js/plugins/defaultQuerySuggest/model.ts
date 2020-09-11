@@ -199,7 +199,7 @@ export class Model extends StatelessModel<ModelState> {
 
     private findCursorWord(args:PluginInterfaces.QuerySuggest.SuggestionArgs):string {
         const ans:Array<[string, number, number]> = [];
-        let curr:[string, number, number] = null;
+        let curr:[string, number, number] = ['', 0, 0];
         for (let i = 0; i < args.value.length; i++) {
             if (args.value[i] === ' ' || i === 0) {
                 if (curr) {
