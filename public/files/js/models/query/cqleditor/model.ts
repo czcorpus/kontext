@@ -340,26 +340,31 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         this.addActionHandler<Actions.EditQueryOperationDone>(
             ActionName.EditQueryOperationDone,
             action => {
-                this.changeState(state => {
-                    const data = action.payload.data;
-                    if (AjaxResponse.isQueryFormArgs(data) &&
-                            data.curr_query_types[action.payload.sourceId] === 'advanced') {
-                        this.setRawQuery(
-                            state,
-                            action.payload.sourceId,
-                            data.curr_queries[action.payload.sourceId],
-                            null
-                        );
+                if (action.error) {
+                    this.pageModel.showMessage('error', action.error);
 
-                    } else if (AjaxResponse.isFilterFormArgs(data) && data.query_type === 'advanced') {
-                        this.setRawQuery(
-                            state,
-                            action.payload.sourceId,
-                            data.query,
-                            null
-                        );
-                    }
-                });
+                } else {
+                    this.changeState(state => {
+                        const data = action.payload.data;
+                        if (AjaxResponse.isQueryFormArgs(data) &&
+                                data.curr_query_types[action.payload.sourceId] === 'advanced') {
+                            this.setRawQuery(
+                                state,
+                                action.payload.sourceId,
+                                data.curr_queries[action.payload.sourceId],
+                                null
+                            );
+
+                        } else if (AjaxResponse.isFilterFormArgs(data) && data.query_type === 'advanced') {
+                            this.setRawQuery(
+                                state,
+                                action.payload.sourceId,
+                                data.query,
+                                null
+                            );
+                        }
+                    });
+                }
             }
         );
 
