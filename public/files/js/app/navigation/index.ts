@@ -22,7 +22,7 @@ import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 import { IFullActionControl } from 'kombo';
-import { pipe, List, HTTP } from 'cnc-tskit';
+import { pipe, List, HTTP, Dict, tuple, id } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
@@ -210,23 +210,20 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             return v === null || v === undefined ? '' : encodeURIComponent(v);
         }
 
-        function encodeArgs(obj) {
-            const ans = [];
-            let p; // ES5 issue
-            for (p in obj) {
-                if (obj.hasOwnProperty(p)) {
-                    const val = obj[p] !== null && obj[p] !== undefined ? obj[p] : '';
-                    if (Array.isArray(val)) {
-                        val.forEach(item => {
-                            ans.push(encodeURIComponent(p) + '=' + exportValue(item));
-                        });
-
-                    } else {
-                        ans.push(encodeURIComponent(p) + '=' + exportValue(val));
+        function encodeArgs(obj:{[k:string]:any}):string {
+            return pipe(
+                obj,
+                Dict.toEntries(),
+                List.filter(([,v]) => v !== undefined),
+                List.map(([k, v]) => {
+                    if (Array.isArray(v)) {
+                        return List.map(v2 => tuple(k, v2), v);
                     }
-                }
-            }
-            return ans.join('&');
+                    return [tuple(k, v)];
+                }),
+                List.flatMap(id),
+                List.map(([k, v]) => encodeURIComponent(k) + '=' + exportValue(v))
+            ).join('&');
         }
 
         let body;

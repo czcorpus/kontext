@@ -25,7 +25,7 @@ import { Observable } from 'rxjs';
 import { List, HTTP, tuple } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
-import { Kontext } from '../types/common';
+import { Kontext, ViewOptions } from '../types/common';
 import { CoreViews } from '../types/coreViews';
 import { init as documentViewsFactory } from '../views/document';
 import { init as commonViewsFactory, CommonViews } from '../views/common';
@@ -474,7 +474,23 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     getConcArgs():ConcServerArgs {
-        return {...this.getConf<ConcServerArgs>('currentArgs')};
+        return {
+            corpname: '',
+            maincorp: undefined,
+            align: undefined,
+            viewmode: 'kwic',
+            format: 'json',
+            pagesize: 0,
+            attrs: undefined,
+            attr_vmode: undefined,
+            base_viewattr: undefined,
+            ctxattrs: undefined,
+            structs: undefined,
+            refs: undefined,
+            q: undefined,
+            fromp: undefined,
+            ...this.getConf<ConcServerArgs>('currentArgs')
+        };
     }
 
     /**

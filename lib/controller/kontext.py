@@ -369,7 +369,7 @@ class Kontext(Controller):
         else:
             tosave = [(att.name, getattr(self.args, att.name))
                       for att in attr.fields(Args) if att.name in optlist]
-        logging.getLogger(__name__).debug('TOSAAVE: {}'.format(tosave))
+
         def normalize_opts(opts):
             if opts is None:
                 opts = {}
