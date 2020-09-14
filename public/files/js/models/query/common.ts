@@ -242,9 +242,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             debounceTime(500)
         ).subscribe(
             ([sourceId, rawAnchorIdx, rawFocusIdx]) => {
-                if (this.state.queryTypes[sourceId] !== 'advanced'
-                        && this.state.suggestionsVisibility !==
-                            PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
+                if (this.shouldAskForSuggestion(sourceId)) {
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                         name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                         payload: {
@@ -264,6 +262,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             structAttr: undefined,
                             sourceId
                         }
+                    });
+
+                } else {
+                    dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>({
+                        name: PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions
                     });
                 }
             }
@@ -376,6 +379,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>(
+            PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions,
+            action => {
+                this.changeState(state => {
+                    state.querySuggestions = {};
+                });
+            }
+        );
+
         this.addActionHandler<CorpOptActions.SaveSettingsDone>(
             CorpOptActionName.SaveSettingsDone,
             action => {
@@ -393,6 +405,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 });
             }
         );
+    }
+
+    private shouldAskForSuggestion(sourceId:string):boolean {
+        return this.state.queryTypes[sourceId] !== 'advanced'
+                        && this.state.suggestionsVisibility !==
+                            PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED
+                        && !!this.state.queries[sourceId];
     }
 
     protected validateQuery(query:string, queryType:QueryType):boolean {
