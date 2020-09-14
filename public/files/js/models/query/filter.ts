@@ -425,7 +425,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     if (err) {
                         return;
                     }
-                    err = this.testQueryTypeMismatch(action.payload.filterId);
+                    err = this.testQueryTypeMismatch();
                 });
                 if (!err) {
                     this.changeState(state => {
@@ -595,29 +595,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             qmcase: this.state.matchCaseValues[filterId],
             ...this.pageModel.getConcArgs()
         }
-    }
-
-    private testQueryNonEmpty(filterId:string):Error|null {
-        if (this.state.queries[filterId].length > 0) {
-            return null;
-
-        } else {
-            return new Error(this.pageModel.translate('query__query_must_be_entered'));
-        }
-    }
-
-    private testQueryTypeMismatch(filterId):Error|null {
-        const error = this.validateQuery(
-            this.state.queries[filterId],
-            this.state.queryTypes[filterId]
-        );
-        if (!error) {
-            return null;
-        }
-        if (!window.confirm(this.pageModel.translate('global__query_type_mismatch'))) {
-            return new Error(this.pageModel.translate('global__the_form_contains_errors_msg'));
-        }
-        return null;
     }
 
     /**
