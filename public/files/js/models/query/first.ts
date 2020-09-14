@@ -502,10 +502,16 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 }).pipe(
                     concatMap(
                         (wAction:Actions.QueryContextFormPrepareArgsDone) => {
-                            if (this.testPrimaryQueryNonEmpty() && this.testQueryTypeMismatch()) {
-                                return this.submitQuery(wAction.payload.data);
+                            let err:Error;
+                            err = this.testPrimaryQueryNonEmpty();
+                            if (err !== null) {
+                                throw err;
                             }
-                            return rxOf(null);
+                            err = this.testQueryTypeMismatch();
+                            if (err !== null) {
+                                throw err;
+                            }
+                            return this.submitQuery(wAction.payload.data);
                         }
                     )
 
@@ -601,27 +607,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         });
     }
 
-    private testPrimaryQueryNonEmpty():boolean {
-        if (this.state.queries[this.state.corpora[0]].length > 0) {
-            return true;
-
-        } else {
-            this.pageModel.showMessage(
-                'error',
-                this.pageModel.translate('query__query_must_be_entered')
-            );
-            return false;
+    private testPrimaryQueryNonEmpty():Error|null {
+        if (this.state.queries[List.head(this.state.corpora)].length === 0) {
+            return new Error(this.pageModel.translate('query__query_must_be_entered'));
         }
-    }
-
-    private testQueryTypeMismatch():boolean {
-        const errors = pipe(
-            this.state.corpora,
-            List.map(corpname => this.isPossibleQueryTypeMismatch(corpname)),
-            List.filter(err => !!err)
-        );
-        return errors.length === 0 || window.confirm(
-            this.pageModel.translate('global__query_type_mismatch'));
+        return null;
     }
 
     getRegistrationId():string {
@@ -860,12 +850,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 contentType: 'application/json'
             }
         );
-    }
-
-    isPossibleQueryTypeMismatch(corpname:string):boolean {
-        const query = this.state.queries[corpname];
-        const queryType = this.state.queryTypes[corpname];
-        return this.validateQuery(query, queryType);
     }
 
 }

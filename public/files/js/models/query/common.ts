@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List, tuple } from 'cnc-tskit';
+import { Dict, List, tuple, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
 import { Kontext, ViewOptions } from '../../types/common';
@@ -422,6 +422,42 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             insertRange:[number, number]):void {
         state.queries[sourceId] = state.queries[sourceId].substring(0, insertRange[0]) + query +
                 state.queries[sourceId].substr(insertRange[1]);
+    }
+
+    protected testQueryNonEmpty(sourceId:string):Error|null {
+        if (this.state.queries[sourceId].length > 0) {
+            return null;
+
+        } else {
+            return new Error(this.pageModel.translate('query__query_must_be_entered'));
+        }
+    }
+
+    private isPossibleQueryTypeMismatch(sourceId:string):[boolean, QueryType] {
+        const query = this.state.queries[sourceId];
+        const queryType = this.state.queryTypes[sourceId];
+        return tuple(this.validateQuery(query, queryType), queryType);
+    }
+
+    protected testQueryTypeMismatch():Error|null {
+        const errors = pipe(
+            this.state.queries,
+            Dict.toEntries(),
+            List.map(([corpname,]) => this.isPossibleQueryTypeMismatch(corpname)),
+            List.filter(([err,]) => !!err)
+        );
+        if (List.empty(errors)) {
+            return null;
+        }
+        const [err, type] = List.head(errors);
+        if (window.confirm(this.pageModel.translate(
+                'global__query_type_mismatch_confirm_{type}', {type:
+                    type === 'advanced' ?
+                            this.pageModel.translate('query__qt_advanced') :
+                            this.pageModel.translate('query__qt_simple')}))) {
+            return null;
+        }
+        return new Error(this.pageModel.translate('global__query_type_mismatch'));
     }
 
     getRegistrationId():string {
