@@ -484,6 +484,7 @@ export namespace PluginInterfaces {
 
         export enum ActionName {
             AskSuggestions = 'QUERY_SUGGEST_ASK_SUGGESTIONS',
+            ClearSuggestions = 'QUERY_SUGGEST_CLEAR_SUGGESTIONS',
             SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED'
         }
 
@@ -518,6 +519,10 @@ export namespace PluginInterfaces {
 
             export interface AskSuggestions extends Action<SuggestionArgs> {
                 name: ActionName.AskSuggestions
+            }
+
+            export interface ClearSuggestions extends Action<{}> {
+                name: ActionName.ClearSuggestions
             }
 
             export interface SuggestionsReceived extends Action<SuggestionReturn> {
