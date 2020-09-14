@@ -358,7 +358,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                             'ctxattrs', [formArgs['setattrs'].join(',')]);
                     }
                     this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
-                    this.layoutModel.replaceConcArg('attr_allpos', [formArgs['setattr_allpos']])
                     this.layoutModel.replaceConcArg('attr_vmode', [formArgs['setattr_vmode']]);
                     this.layoutModel.replaceConcArg('base_viewattr', [formArgs['base_viewattr']]);
                     this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
