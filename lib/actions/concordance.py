@@ -50,6 +50,7 @@ from controller.querying import Querying
 import templating
 import mailing
 import attr
+from conclib.freq import one_level_crit, multi_level_crit
 
 
 class ConcError(UserActionException):
@@ -147,16 +148,6 @@ class Actions(Querying):
                 ':%s' % self.corp.subcname
         else:
             return translate('related to the whole %s') % corpus_name
-
-    @staticmethod
-    def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
-        fromcode = {'lc': '<0', 'rc': '>0', 'kl': '<0', 'kr': '>0'}
-        attrpart = '%s%s/%s%s%s ' % (prefix, attr, icase, bward, empty)
-        if not ctx:
-            ctx = '%i%s' % (pos, fromcode.get(fcode, '0'))
-        if '~' in ctx and '.' in attr:
-            ctx = ctx.split('~')[0]
-        return attrpart + ctx
 
     @staticmethod
     def _create_empty_conc_result_dict() -> Dict[str, Any]:
@@ -475,14 +466,14 @@ class Actions(Querying):
         self.add_conc_form_args(qinfo)
 
         mlxfcode = 'rc'
-        crit = self.onelevelcrit('s', self.args.ml1attr, self.args.ml1ctx, self.args.ml1pos, mlxfcode,
-                                 self.args.ml1icase, self.args.ml1bward)
+        crit = one_level_crit('s', self.args.ml1attr, self.args.ml1ctx, self.args.ml1pos, mlxfcode,
+                              self.args.ml1icase, self.args.ml1bward)
         if self.args.sortlevel > 1:
-            crit += self.onelevelcrit(' ', self.args.ml2attr, self.args.ml2ctx, self.args.ml2pos, mlxfcode,
-                                      self.args.ml2icase, self.args.ml2bward)
+            crit += one_level_crit(' ', self.args.ml2attr, self.args.ml2ctx, self.args.ml2pos, mlxfcode,
+                                   self.args.ml2icase, self.args.ml2bward)
             if self.args.sortlevel > 2:
-                crit += self.onelevelcrit(' ', self.args.ml3attr, self.args.ml3ctx, self.args.ml3pos, mlxfcode,
-                                          self.args.ml3icase, self.args.ml3bward)
+                crit += one_level_crit(' ', self.args.ml3attr, self.args.ml3ctx, self.args.ml3pos, mlxfcode,
+                                       self.args.ml3icase, self.args.ml3bward)
         self.args.q.append(crit)
         return self.view()
 
@@ -761,7 +752,6 @@ class Actions(Querying):
         """
         display a frequency list
         """
-        time.sleep(6)
         self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
                                     MainMenu.CONCORDANCE('query-overview'))
 
@@ -825,7 +815,7 @@ class Actions(Querying):
             quick_to_line=None)
 
         if not result['Blocks'][0]:
-            logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
+            logging.getLogger(__name__).warning('freqs - empty list: %s' % (result,))
             result.update(
                 message=('error', translate('Empty list')),
                 Blocks=[],
@@ -1025,11 +1015,7 @@ class Actions(Querying):
         """
         multilevel frequency list
         """
-        fcrit = ' '.join([self.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'), kwargs.get('ml%dctx' % i, '0'),
-                                            kwargs.get('ml%dpos' % i, 1), kwargs.get(
-                                                'ml%dfcode' % i, 'rc'),
-                                            kwargs.get('ml%dicase' % i, ''), 'e')
-                          for i in range(1, freqlevel + 1)])
+        fcrit = multi_level_crit(freqlevel, **kwargs)
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1
         self._session['last_freq_level'] = freqlevel

@@ -224,7 +224,7 @@ class FreqCalcCache(object):
         return data, cache_path
 
 
-def calc_freqs_bg(args):
+def calc_freqs_bg(args: FreqCalsArgs):
     """
     Calculate actual frequency data.
 
