@@ -318,20 +318,29 @@ div.query-form-spa {
     margin-top: 1.2em;
     margin-bottom: 1.2em;
 
-    .option-list,
-    .option-list-custom {
-        display: flex;
-        justify-content: space-between;
-        margin: 0.7em 1em;
+    div.options {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        grid-template-rows: auto;
+        grid-gap: 1em;
+        grid-row-gap: 1.5em;
 
-        label input {
-            display: inline-block;
-            vertical-align: middle;
+        div.option {
+            white-space: nowrap;
+            margin-right: 1.3em;
+
+            label {
+
+                input {
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+            }
         }
-    }
 
-    .option-list-custom {
-        margin-bottom: 1.5em;
+        div.option.custom div.option {
+            grid-column-start: 1;
+        }
     }
 }
 

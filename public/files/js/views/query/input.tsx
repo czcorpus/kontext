@@ -72,7 +72,7 @@ export interface TRQueryInputFieldProps {
     onEnterKey:()=>void;
     takeFocus?:boolean;
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
-    customOptions?:Array<React.ReactElement>;
+    customOptions?:Array<React.ReactElement<{span:number}>>;
 }
 
 
@@ -85,12 +85,14 @@ export interface TRQueryTypeFieldProps {
 
 
 export interface TRPcqPosNegFieldProps {
+    span:number;
     formType:QueryFormType;
     sourceId:string;
     value:string; // TODO enum
 }
 
 export interface TRIncludeEmptySelectorProps {
+    span:number;
     value:boolean;
     corpname:string;
 }
@@ -881,21 +883,26 @@ export function init({
                     return (
                         <>
                             {!List.empty(customOpts) ?
-                                <div className="option-list-custom">
+                                <>
                                     {List.map(
-                                        (opt, i) => <div key={`item:${i}`}>{opt}</div>,
+                                        (opt, i) => (
+                                            <div className="option custom" key={`item:${i}`}
+                                                    style={{gridColumnEnd: `span ${opt.props.span || 1}`}}>
+                                                {opt}
+                                            </div>
+                                        ),
                                         customOpts
                                     )}
-                                </div> :
+                                </> :
                                 null
                             }
-                            <div className="option-list">
-                                <div>
+                            <>
+                                <div className="option">
                                     <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
                                         sourceId={this.props.sourceId}
                                         formType={this.props.formType} />
                                 </div>
-                                <div>
+                                <div className="option">
                                     <DefaultAttrSelector
                                         label={he.translate('query__applied_attr')}
                                         sourceId={this.props.sourceId}
@@ -904,7 +911,7 @@ export function init({
                                         attrList={this.props.attrList}
                                         formType={this.props.formType} />
                                 </div>
-                                <div>
+                                <div className="option">
                                 {Kontext.isWordLikePosAttr(this.props.defaultAttr) ?
                                     <LposSelector wPoSList={this.props.wPoSList}
                                         lposValue={this.props.lposValue}
@@ -913,7 +920,7 @@ export function init({
                                     null
                                 }
                                 </div>
-                            </div>
+                            </>
                         </>
                     );
                 case 'advanced':
@@ -988,7 +995,9 @@ export function init({
                                 {he.translate('global__options')}
                             </span>
                         </legend>
-                        {this._renderInputOptions()}
+                        <div className="options">
+                            {this._renderInputOptions()}
+                        </div>
                     </fieldset>
                 </div>
             );

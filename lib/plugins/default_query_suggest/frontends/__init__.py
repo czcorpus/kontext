@@ -25,8 +25,8 @@ class ErrorFrontend(AbstractFrontend):
     def __init__(self, conf):
         super().__init__(conf, 'error')
 
-    def export_data(self, ui_lang, data):
-        response = super().export_data(ui_lang, data)
+    def export_data(self, data, value, ui_lang):
+        response = super().export_data(data, value, ui_lang)
         response.contents = data
         return response
 
@@ -36,8 +36,8 @@ class BasicFrontend(AbstractFrontend):
     def __init__(self, conf):
         super().__init__(conf, 'basic')
 
-    def export_data(self, ui_lang, data):
-        response = super().export_data(ui_lang, data)
+    def export_data(self, data, value, ui_lang):
+        response = super().export_data(data, value, ui_lang)
         response.contents = data
         return response
 
@@ -47,7 +47,7 @@ class PosAttrPairRelFrontend(AbstractFrontend):
     def __init__(self, conf):
         super().__init__(conf, 'posAttrPairRel')
 
-    def export_data(self, ui_lang, data):
-        response = super().export_data(ui_lang, data)
+    def export_data(self, data, value, ui_lang):
+        response = super().export_data(data, value, ui_lang)
         response.contents = data
         return response
