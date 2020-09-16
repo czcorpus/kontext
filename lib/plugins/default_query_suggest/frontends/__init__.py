@@ -39,5 +39,15 @@ class BasicFrontend(AbstractFrontend):
     def export_data(self, ui_lang, data):
         response = super().export_data(ui_lang, data)
         response.contents = data
-        response.heading = self.headings.get(ui_lang, '--')
+        return response
+
+
+class PosAttrPairRelFrontend(AbstractFrontend):
+
+    def __init__(self, conf):
+        super().__init__(conf, 'posAttrPairRel')
+
+    def export_data(self, ui_lang, data):
+        response = super().export_data(ui_lang, data)
+        response.contents = data
         return response

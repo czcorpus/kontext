@@ -844,7 +844,11 @@ class Controller(object):
         if callable(result):
             return result()
         elif return_type == 'json':
-            return json.dumps(result)
+            try:
+                return json.dumps(result)
+            except Exception as e:
+                self._status = 500
+                return json.dumps(dict(messages=[('error', str(e))]))
         elif return_type == 'xml':
             from templating import Type2XML
             return Type2XML.to_xml(result)

@@ -36,7 +36,7 @@
     "@types/react-dom": "^16.9.8",
     "rxjs": "^6.6.2",
     "kombo": "^0.82.0",
-    "cnc-tskit": "0.22.0",
+    "cnc-tskit": "0.22.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   }

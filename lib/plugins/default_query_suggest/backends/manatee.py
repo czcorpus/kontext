@@ -13,8 +13,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from collections import defaultdict
 from plugins.abstract.query_suggest import AbstractBackend
-from typing import List
+from typing import List, Dict
 from corplib import CorpusManager
 from conclib.search import get_conc
 from conclib.freq import multi_level_crit
@@ -22,7 +23,7 @@ from bgcalc import freq_calc
 import manatee
 
 
-class MatchingPosAttrManateeBackend(AbstractBackend):
+class PosAttrPairRelManateeBackend(AbstractBackend):
 
     def __init__(self, conf, ident):
         super().__init__(ident)
@@ -34,9 +35,9 @@ class MatchingPosAttrManateeBackend(AbstractBackend):
                         value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
         used_corp = self._corp if self._corp is not None else maincorp
         conc = get_conc(used_corp, user_id,
-                        (f'aword,[{self._conf["search_attr"]}="{value}" | {self._conf["crit_attr"]}="{value}"]',))
+                        (f'aword,[{self._conf["attr1"]}="{value}" | {self._conf["attr2"]}="{value}"]',))
         conc.sync()
-        mlargs = dict(ml1attr=self._conf["search_attr"], ml2attr=self._conf["crit_attr"])
+        mlargs = dict(ml1attr=self._conf["attr1"], ml2attr=self._conf["attr2"])
         fcrit = multi_level_crit(2, **mlargs)
 
         args = freq_calc.FreqCalsArgs()
@@ -62,6 +63,10 @@ class MatchingPosAttrManateeBackend(AbstractBackend):
         freqs = [conc.xfreq_dist(cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode,
                                  args.collator_locale)
                  for cr in args.fcrit]
-        import logging
-        logging.getLogger(__name__).debug('calc_RES: {}'.format(freqs))
-        return []
+        data = freqs[0].get('Items', [])
+        rels = defaultdict(lambda: set())
+        for item in data:
+            attr1, attr2 = tuple([w['n'] for w in item['Word']])[:2]
+            rels[attr1].add(attr2.lower())
+        return dict(attrs=(self._conf['attr1'], self._conf['attr2']),
+                    data=dict((k, list(v)) for k,v in rels.items()))

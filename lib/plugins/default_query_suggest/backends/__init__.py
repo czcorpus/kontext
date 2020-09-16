@@ -57,7 +57,7 @@ class MorseBackend(AbstractBackend):
             'y': 'ý se ztrácí',
             'z': 'známá žena'
         }
-        return [data.get(value[-1], '---'), 'a jiné']
+        return [data.get(value[-1], '---')] if value is not None and len(value) > 0 else []
 
 
 class HTTPBackend(AbstractBackend):

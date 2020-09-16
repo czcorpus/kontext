@@ -22,7 +22,7 @@
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { IActionDispatcher } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, pipe, Dict } from 'cnc-tskit';
 import { Model } from './model';
 
 
@@ -30,6 +30,7 @@ import { Model } from './model';
 export enum KnownRenderers {
     BASIC = 'basic',
     ERROR = 'error',
+    POS_ATTR_PAIR_REL = 'posAttrPairRel',
     UNSUPPORTED = 'unsupported'
 }
 
@@ -46,11 +47,17 @@ export interface UnsupportedRendererProps {
     data:unknown;
 }
 
+export interface PosAttrPairRelRendererProps {
+    attrs:[string, string];
+    data:{[attr1:string]:Array<string>};
+}
+
 
 export interface SuggestionsViews {
     [KnownRenderers.BASIC]:React.SFC<BasicRendererProps>;
     [KnownRenderers.ERROR]:React.SFC<ErrorRendererProps>;
     [KnownRenderers.UNSUPPORTED]:React.SFC<UnsupportedRendererProps>;
+    [KnownRenderers.POS_ATTR_PAIR_REL]:React.SFC<PosAttrPairRelRendererProps>;
 }
 
 
@@ -79,7 +86,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
         </div>
     };
 
-    // --------------QueryFormModelState <BasicRenderer /> ------------------------------
+    // -------------- <BasicRenderer /> ------------------------------
 
     const BasicRenderer:React.SFC<BasicRendererProps> = (props) => {
         return <div className="BasicRenderer">
@@ -92,8 +99,48 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
         </div>
     };
 
+    // ------------- <PosAttrPairRelRenderer /> ----------------------
+
+    const PosAttrPairRelRenderer:React.SFC<PosAttrPairRelRendererProps> = (props) => {
+        return <div className="PosAttrPairRelRenderer">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{props.attrs[0]}</th>
+                        <th>{props.attrs[1]}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {pipe(
+                    props.data,
+                    Dict.toEntries(),
+                    List.sortedAlphaBy(([k,]) => k),
+                    List.map(
+                        ([attr1, attrs2], index) => (
+                            <React.Fragment key={`${attr1}`}>
+                                <tr>
+                                    <th className="attr1" rowSpan={List.size(attrs2)}>{attr1}</th>
+                                    <td>{List.head(attrs2)}</td>
+                                </tr>
+                                {pipe(
+                                    attrs2,
+                                    List.tail(),
+                                    List.map(
+                                        attr2 => <tr key={`${attr1}:${attr2}`}><td>{attr2}</td></tr>,
+                                    )
+                                )}
+                            </React.Fragment>
+                        )
+                    )
+                )}
+                </tbody>
+            </table>
+        </div>
+    };
+
     return {
         [KnownRenderers.BASIC]: BasicRenderer,
+        [KnownRenderers.POS_ATTR_PAIR_REL]:PosAttrPairRelRenderer,
         [KnownRenderers.ERROR]: ErrorRenderer,
         [KnownRenderers.UNSUPPORTED]: UnsupportedRenderer
     }
