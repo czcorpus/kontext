@@ -89,8 +89,8 @@ class AbstractFrontend(abc.ABC):
         self.headings = conf.get('heading', conf.get('ident'))
         self.renderer = renderer
 
-    @abc.abstractmethod
     def export_data(self, ui_lang, data: Response):
+        ui_lang = ui_lang.replace('_', '-')
         return Response(contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'))
 
 

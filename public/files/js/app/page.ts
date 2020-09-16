@@ -479,7 +479,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             maincorp: undefined,
             align: undefined,
             viewmode: 'kwic',
-            format: 'json',
+            format: undefined,
             pagesize: 0,
             attrs: undefined,
             attr_vmode: undefined,

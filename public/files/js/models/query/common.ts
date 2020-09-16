@@ -360,8 +360,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             action => {
-                this.changeState(state => {
-                    if (action.error === undefined) {
+                if (action.error) {
+                    this.pageModel.showMessage('error', action.error);
+                    this.changeState(state => {
+                        state.querySuggestions = {};
+                        state.suggestionsVisible[action.payload.sourceId] = false;
+                    });
+
+                } else {
+                    this.changeState(state => {
                         state.querySuggestions[action.payload.sourceId] = action.payload.results;
                         if (
                             state.suggestionsVisibility ===
@@ -370,12 +377,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             state.suggestionsVisible[action.payload.sourceId] = true;
                             state.historyVisible[action.payload.sourceId] = false;
                         }
-
-                    } else {
-                        state.querySuggestions = {};
-                        state.suggestionsVisible[action.payload.sourceId] = false;
-                    }
-                });
+                    });
+                }
             }
         );
 

@@ -415,7 +415,7 @@ export function init({
                     (v, i) => (
                         <React.Fragment key={`${v.rendererId}${i}`}>
                             <h2>{v.heading}:</h2>
-                            {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
+                            {props.qsuggPlugin.createElement(v)}
                         </React.Fragment>
                     ),
                 )

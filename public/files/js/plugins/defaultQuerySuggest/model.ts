@@ -25,7 +25,7 @@ import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict } from 'cnc-tskit';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 

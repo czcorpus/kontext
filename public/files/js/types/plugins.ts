@@ -477,7 +477,7 @@ export namespace PluginInterfaces {
     export namespace QuerySuggest {
 
         export interface IPlugin extends BasePlugin {
-            createElement(rendererId:string, data:unknown):React.ReactElement;
+            createElement<T>(dr:DataAndRenderer<T>):React.ReactElement;
             isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
             listCurrentProviders():Array<string>;
         }
