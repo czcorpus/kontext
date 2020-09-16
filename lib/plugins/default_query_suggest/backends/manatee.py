@@ -31,18 +31,10 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         fixed_corp = conf.get('corpus')
         self._corp = CorpusManager().get_Corpus(fixed_corp) if fixed_corp else None
 
-    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
-                        value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
-        used_corp = self._corp if self._corp is not None else maincorp
-        conc = get_conc(used_corp, user_id,
-                        (f'aword,[{self._conf["attr1"]}="{value}" | {self._conf["attr2"]}="{value}"]',))
-        conc.sync()
-        mlargs = dict(ml1attr=self._conf["attr1"], ml2attr=self._conf["attr2"])
-        fcrit = multi_level_crit(2, **mlargs)
-
+    def _freq_dist(self, corp: manatee.Corpus, conc: manatee.Concordance, fcrit: str, user_id: int):
         args = freq_calc.FreqCalsArgs()
-        args.corpname = used_corp.corpname
-        args.subcname = getattr(used_corp, 'subcname', None)
+        args.corpname = corp.corpname
+        args.subcname = getattr(corp, 'subcname', None)
         args.subcpath = ''  # TODO xx
         args.user_id = user_id
         args.fromp = 0
@@ -63,10 +55,20 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         freqs = [conc.xfreq_dist(cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode,
                                  args.collator_locale)
                  for cr in args.fcrit]
-        data = freqs[0].get('Items', [])
+        return freqs[0].get('Items', [])
+
+    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
+                        value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
+        used_corp = self._corp if self._corp is not None else maincorp
+        conc = get_conc(used_corp, user_id,
+                        (f'aword,[{self._conf["attr1"]}="{value}" | {self._conf["attr2"]}="{value}"]',))
+        conc.sync()
+        mlargs = dict(ml1attr=self._conf["attr1"], ml2attr=self._conf["attr2"])
+        fcrit = multi_level_crit(2, **mlargs)
+        data = self._freq_dist(corp=used_corp, conc=conc, fcrit=fcrit, user_id=user_id)
         rels = defaultdict(lambda: set())
         for item in data:
             attr1, attr2 = tuple([w['n'] for w in item['Word']])[:2]
             rels[attr1].add(attr2.lower())
         return dict(attrs=(self._conf['attr1'], self._conf['attr2']),
-                    data=dict((k, list(v)) for k,v in rels.items()))
+                    data=dict((k, list(v)) for k, v in rels.items()))

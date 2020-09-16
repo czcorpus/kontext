@@ -161,10 +161,12 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             qsuggPlugin={null}
                             customOptions={[
                                 <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
+                                    span={2}
                                     value={this.props.pcqPosNegValue}
                                     formType={Kontext.ConcFormTypes.QUERY} />,
                                 <inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
-                                    corpname={this.props.corpname} />
+                                    corpname={this.props.corpname}
+                                    span={1} />
                             ]} />
                     </div>
                 </div>

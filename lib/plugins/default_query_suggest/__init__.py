@@ -57,7 +57,7 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
                                            maincorp=plugin_api.current_corpus, corpora=corpora,
                                            subcorpus=subcorpus, value=value, value_type=value_type,
                                            query_type=query_type, p_attr=p_attr, struct=struct, s_attr=s_attr)
-            ans.append(frontend.export_data(plugin_api.user_lang, resp).to_dict())
+            ans.append(frontend.export_data(resp, value, plugin_api.user_lang).to_dict())
         return ans
 
     def export(self, plugin_api):

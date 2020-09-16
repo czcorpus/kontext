@@ -64,12 +64,13 @@ class Response(object):
     frontend receives data from a respective backend).
     """
 
-    def __init__(self, contents: str, renderer: str, heading: str) -> None:
+    def __init__(self, contents: str, renderer: str, heading: str, partial: bool) -> None:
         """
         """
         self.contents: str = contents
         self.renderer: str = renderer
         self.heading: str = heading
+        self.partial: bool = partial
 
     def to_dict(self) -> Dict[str, Any]:
         return self.__dict__
@@ -88,10 +89,12 @@ class AbstractFrontend(abc.ABC):
         self.query_types = conf.get('queryTypes', [])
         self.headings = conf.get('heading', conf.get('ident'))
         self.renderer = renderer
+        self.partial = False
 
-    def export_data(self, ui_lang, data: Response):
+    def export_data(self, data: Response, value: str, ui_lang: str):
         ui_lang = ui_lang.replace('_', '-')
-        return Response(contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'))
+        return Response(contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'),
+                        partial=self.partial)
 
 
 class BackendException(Exception):
