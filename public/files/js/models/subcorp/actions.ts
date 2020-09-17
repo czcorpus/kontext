@@ -22,7 +22,7 @@ import { Action } from 'kombo';
 import { SubcListFilter } from './list';
 import { InputMode } from './common';
 import { TextTypes } from '../../types/common';
-import { LoadDataResponse, SearchTypes } from './listPublic';
+import { LoadDataResponse } from './listPublic';
 
 
 export enum ActionName {
@@ -46,10 +46,8 @@ export enum ActionName {
     FormSetDescription = 'SUBCORP_FORM_SET_DESCRIPTION',
     FormSubmit = 'SUBCORP_FORM_SUBMIT',
     FormSetAlignedCorpora = 'SUBCORP_FORM_SET_ALIGNED_CORPORA',
-    SetSearchType = 'PUBSUBC_SET_SEARCH_TYPE',
     SetSearchQuery = 'PUBSUBC_SET_SEARCH_QUERY',
-    SetInputPrefixThrottle = 'PUBSUBC_SET_INPUT_PREFIX_THROTTLE',
-    SetCodePrefixDone = 'PUBSUBC_SET_CODE_PREFIX_DONE',
+    SubmitSearchQuery = 'PUBSUBC_SUBMIT_SEARCH_QUERY',
     DataLoadDone = 'PUBSUBC_DATA_LOAD_DONE',
     UseInQuery = 'PUBSUBC_USE_IN_QUERY',
     FormWithinLineAdded = 'SUBCORP_FORM_WITHIN_LINE_ADDED',
@@ -181,27 +179,16 @@ export namespace Actions {
         name:ActionName.FormSetAlignedCorpora;
     }
 
-    export interface SetSearchType extends Action<{
-        value:SearchTypes;
-    }> {
-        name:ActionName.SetSearchType;
-    }
-
     export interface SetSearchQuery extends Action<{
         value:string;
     }> {
         name:ActionName.SetSearchQuery;
     }
 
-    export interface SetInputPrefixThrottle extends Action<{
-        timerId:number;
+    export interface SubmitSearchQuery extends Action<{
+        query:string;
     }> {
-        name:ActionName.SetInputPrefixThrottle;
-    }
-
-    export interface SetCodePrefixDone extends Action<{
-    }> {
-        name:ActionName.SetCodePrefixDone;
+        name:ActionName.SubmitSearchQuery;
     }
 
     export interface DataLoadDone extends Action<{
