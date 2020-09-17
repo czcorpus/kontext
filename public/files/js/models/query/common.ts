@@ -140,7 +140,9 @@ export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number,
     }
 }
 
-export type SuggestionsData = {[sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]};
+export type SuggestionsData = {
+    [sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]
+};
 
 
 export interface QueryFormModelState {
@@ -196,6 +198,8 @@ export interface QueryFormModelState {
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 
     isBusy:boolean;
+
+    cursorPos:number;
 
 }
 
@@ -254,8 +258,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             ),
                             subcorpus: this.state.currentSubcorp,
                             value: this.state.queries[sourceId],
-                            rawAnchorIdx: rawAnchorIdx,
-                            rawFocusIdx: rawFocusIdx,
+                            rawAnchorIdx,
+                            rawFocusIdx,
                             valueType: 'unspecified',
                             queryType: this.state.queryTypes[sourceId],
                             posAttr: null,
@@ -330,6 +334,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             action.payload.rawAnchorIdx,
                             action.payload.rawFocusIdx
                         );
+                    state.cursorPos = action.payload.rawAnchorIdx;
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
@@ -349,13 +354,58 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             state.queries[action.payload.sourceId],
                             action.payload.rawAnchorIdx,
                             action.payload.rawFocusIdx
-                        )
+                        );
+                        state.cursorPos = action.payload.rawAnchorIdx;
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
                     action.payload.rawAnchorIdx,
                     action.payload.rawFocusIdx
                 ));
+            }
+        );
+
+        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.ItemClicked>(
+            PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
+            action => action.payload.formType === this.formType,
+            action => {
+                this.changeState(state => {
+                    const wordPos =
+                        action.payload.onItemClick === 'replace' ?
+                            List.reduce(
+                                ([start, end], value) => {
+                                    return start + value.length + 1 < state.cursorPos ?
+                                        [start + value.length + 1, end + value.length + 1] :
+                                        start === end ?
+                                            [start, end + value.length] :
+                                            [start, end]
+                                },
+                                [0, state.queries[action.payload.sourceId].length],
+                                state.queries[action.payload.sourceId].split(' ')
+                            ) :
+                        action.payload.onItemClick === 'insert' ?
+                            [state.cursorPos, state.cursorPos] :
+                            undefined
+
+                    if (wordPos === undefined) {
+                        pageModel.showMessage(
+                            'error',
+                            `Unknown query suggestion click action: "${action.payload.onItemClick}"`
+                        );
+
+                    } else {
+                        this.addQueryInfix(
+                            state,
+                            action.payload.sourceId,
+                            action.payload.value,
+                            [wordPos[0], wordPos[1]]
+                        );
+
+                        // TODO on refocus on the input cursor is on the end
+                        // this is to prevent confusion
+                        state.cursorPos = state.queries[action.payload.sourceId].length - 1;
+                    }
+                });
             }
         );
 

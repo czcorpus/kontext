@@ -326,7 +326,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 Dict.fromEntries()
             ),
             suggestionsVisibility: props.suggestionsVisibility,
-            isBusy: false
+            isBusy: false,
+            cursorPos: 0
         });
         this.setUserValues(this.state, props);
 

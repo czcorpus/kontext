@@ -25,7 +25,7 @@ import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
-import { map, tap, concatMap, mergeMap, scan, first } from 'rxjs/operators';
+import { map, tap, concatMap, mergeMap } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { listAttrs1ToExtend, mergeResults } from './frontends';
@@ -41,9 +41,10 @@ export interface HTTPResponse extends Kontext.AjaxResponse {
 
 export interface ProviderInfo {
     ident:string;
-    frontendId:string;
+    rendererId:string;
     queryTypes:Array<QueryType>;
     heading:string;
+    onItemClick:PluginInterfaces.QuerySuggest.ItemClickAction;
 }
 
 export interface ModelState {
@@ -155,7 +156,11 @@ export class Model extends StatelessModel<ModelState> {
         );
     }
 
-    private createSuggestionHash(args:PluginInterfaces.QuerySuggest.SuggestionArgs, srchWord:string):string {
+    private createSuggestionHash(
+        args:PluginInterfaces.QuerySuggest.SuggestionArgs,
+        srchWord:string
+
+    ):string {
         return Ident.hashCode(
             args.corpora + args.posAttr + args.queryType + args.sourceId +
             args.struct + args.structAttr + args.subcorpus + srchWord + args.valueType);

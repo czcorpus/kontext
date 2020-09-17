@@ -37,6 +37,7 @@ export enum KnownRenderers {
 
 export interface BasicRendererProps {
     data:Array<string>;
+    itemClickHandler:(value)=>void;
 }
 
 export interface ErrorRendererProps {
@@ -50,6 +51,7 @@ export interface UnsupportedRendererProps {
 export interface PosAttrPairRelRendererProps {
     attrs:[string, string];
     data:{[attr1:string]:Array<string>};
+    itemClickHandler:(value)=>void;
 }
 
 
@@ -92,7 +94,11 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
         return <div className="BasicRenderer">
             <ul>
                 {List.map(
-                    (item, index) => <li key={index}>{item}</li>,
+                    (item, index) => <li key={index}>{
+                        props.itemClickHandler ?
+                        <a onClick={e => props.itemClickHandler(item)}>{item}</a> :
+                        item
+                    }</li>,
                     props.data
                 )}
             </ul>
@@ -121,14 +127,26 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                 null :
                                 <React.Fragment key={`${attr1}`}>
                                     <tr className={index > 0 ? 'separ' : null}>
-                                        <th className="attr1" rowSpan={List.size(attrs2)}>{attr1}</th>
-                                        <td>{List.head(attrs2)}</td>
+                                        <th className="attr1" rowSpan={List.size(attrs2)}>{
+                                            props.itemClickHandler ?
+                                            <a onClick={e => props.itemClickHandler(attr1)}>{attr1}</a> :
+                                            attr1
+                                        }</th>
+                                        <td>{
+                                            props.itemClickHandler ?
+                                            <a onClick={e => props.itemClickHandler(List.head(attrs2))}>{List.head(attrs2)}</a> :
+                                            List.head(attrs2)
+                                        }</td>
                                     </tr>
                                     {pipe(
                                         attrs2,
                                         List.tail(),
                                         List.map(
-                                            attr2 => <tr key={`${attr1}:${attr2}`}><td>{attr2}</td></tr>,
+                                            attr2 => <tr key={`${attr1}:${attr2}`}><td>{
+                                                props.itemClickHandler ?
+                                                <a onClick={e => props.itemClickHandler(attr2)}>{attr2}</a> :
+                                                attr2
+                                            }</td></tr>,
                                         )
                                     )}
                                 </React.Fragment>

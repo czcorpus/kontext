@@ -477,7 +477,10 @@ export namespace PluginInterfaces {
     export namespace QuerySuggest {
 
         export interface IPlugin extends BasePlugin {
-            createElement<T>(dr:DataAndRenderer<T>):React.ReactElement;
+            createElement<T>(
+                dr:DataAndRenderer<T>,
+                itemClickHandler:(onItemClick:string, value:string)=>void
+            ):React.ReactElement;
             isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
             listCurrentProviders():Array<string>;
         }
@@ -485,10 +488,13 @@ export namespace PluginInterfaces {
         export enum ActionName {
             AskSuggestions = 'QUERY_SUGGEST_ASK_SUGGESTIONS',
             ClearSuggestions = 'QUERY_SUGGEST_CLEAR_SUGGESTIONS',
-            SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED'
+            SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED',
+            ItemClicked = 'QUERY_SUGGEST_ITEM_CLICKED'
         }
 
         export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';
+
+        export type ItemClickAction = 'replace'|'insert'|null;
 
         export enum SuggestionVisibility {
             DISABLED = 0,
@@ -530,6 +536,15 @@ export namespace PluginInterfaces {
 
             export interface SuggestionsReceived extends Action<SuggestionReturn> {
                 name: ActionName.SuggestionsReceived
+            }
+
+            export interface ItemClicked extends Action<{
+                onItemClick: string;
+                value: string;
+                sourceId: string;
+                formType: string;
+            }> {
+                name: ActionName.ItemClicked
             }
 
         }

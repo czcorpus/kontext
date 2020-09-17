@@ -71,7 +71,8 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
                     'ident': ident,
                     'rendererId': frontend.renderer,
                     'heading': frontend.headings.get(plugin_api.user_lang.replace('_', '-'), '--'),
-                    'queryTypes': frontend.query_types
+                    'queryTypes': frontend.query_types,
+                    'onItemClick': frontend.on_item_click
                 })
         return dict(providers=active_providers)
 
