@@ -23,7 +23,7 @@ import { List, pipe, Dict } from 'cnc-tskit';
 import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { init as initView, SuggestionsViews, KnownRenderers } from './view';
+import { init as initView, SuggestionsViews } from './view';
 import { Model, ProviderInfo } from './model';
 import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend } from './frontends';
 
@@ -39,8 +39,6 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
     protected readonly pluginApi:IPluginApi;
 
     protected readonly views:SuggestionsViews;
-
-    protected readonly
 
     protected readonly model:Model;
 
