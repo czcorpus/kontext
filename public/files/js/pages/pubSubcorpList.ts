@@ -41,8 +41,7 @@ class PubSubcorpPage {
                 this.layoutModel.dispatcher,
                 this.layoutModel,
                 this.layoutModel.getConf<Array<DataItem>>('Data'),
-                this.layoutModel.getConf<number>('MinCodePrefix'),
-                this.layoutModel.getConf<number>('MinAuthorPrefix')
+                this.layoutModel.getConf<number>('MinQuerySize'),
             );
             const views = viewInit(
                 this.layoutModel.dispatcher,

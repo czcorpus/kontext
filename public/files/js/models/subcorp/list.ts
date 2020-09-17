@@ -41,7 +41,7 @@ export interface SubcListFilter {
 export interface SubcorpListItem {
     name:string;
     corpname:string;
-    usesubcorp:string;
+    usesubcorp:string; // user-defined name or public key (if published)
     origSubcName:string;
     deleted:boolean;
     created:Date;
