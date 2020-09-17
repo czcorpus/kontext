@@ -45,7 +45,7 @@ if settings.get('global', 'manatee_path', None):
 from . import general
 import bgcalc
 
-app = bgcalc.calc_backend_server(settings, 'worker')
+app = bgcalc.calc_backend_server(settings, '')
 
 
 class CustomTasks(object):

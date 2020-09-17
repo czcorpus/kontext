@@ -13,3 +13,6 @@ openpyxl >= 2.1
 redis >= 2.10
 PyICU >= 1.5
 attrs >= 19.3.0
+
+rq-scheduler >= 0.10.0
+rq >= 1.5.1

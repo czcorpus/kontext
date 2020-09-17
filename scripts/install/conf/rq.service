@@ -1,0 +1,11 @@
+[Unit]
+Description=Rq Service
+After=network.target
+
+[Service]
+Group=www-data
+WorkingDirectory=/opt/kontext/worker
+ExecStart=/bin/sh -ec 'python3 rqworker.py'
+
+[Install]
+WantedBy=multi-user.target

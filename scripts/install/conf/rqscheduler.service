@@ -1,0 +1,10 @@
+[Unit]
+Description=RQScheduler service
+After=network.target
+
+[Service]
+Group=www-data
+ExecStart=/bin/sh -ce 'rqscheduler --host localhost --port 6379 --db 10 -i 10'
+
+[Install]
+WantedBy=multi-user.target
