@@ -140,6 +140,8 @@ export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number,
     }
 }
 
+export type SuggestionsData = {[sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]};
+
 
 export interface QueryFormModelState {
 
@@ -165,7 +167,7 @@ export interface QueryFormModelState {
 
     queryTypes:{[sourceId:string]:QueryType};
 
-    querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
+    querySuggestions:SuggestionsData;
 
     tagBuilderSupport:{[sourceId:string]:boolean};
 
@@ -369,7 +371,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                 } else {
                     this.changeState(state => {
-                        state.querySuggestions[action.payload.sourceId] = action.payload.results;
+                        state.querySuggestions[action.payload.sourceId] = tuple(
+                            action.payload.results,
+                            action.payload.isPartial
+                        );
                         if (
                             state.suggestionsVisibility ===
                             PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
@@ -484,5 +489,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     getRegistrationId():string {
         return this.ident;
+    }
+
+    static hasSuggestionsFor(data:SuggestionsData, sourceId:string):boolean {
+        return data[sourceId] && !List.empty(data[sourceId][0]);
     }
 }

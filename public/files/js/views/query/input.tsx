@@ -404,24 +404,28 @@ export function init({
 
     const SuggestionsWidget:React.SFC<{
         qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
-        querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
+        querySuggestions:{[sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]};
         sourceId:string;
         formType:QueryFormType;
 
     }> = (props) => (
         <div className="suggestions-box">
-            {pipe(
-                props.querySuggestions[props.sourceId],
-                List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
-                List.map(
-                    (v, i) => (
-                        <React.Fragment key={`${v.rendererId}${i}`}>
-                            <h2>{v.heading}:</h2>
-                            {props.qsuggPlugin.createElement(v)}
-                        </React.Fragment>
-                    ),
-                )
-            )}
+            {QueryFormModel.hasSuggestionsFor(props.querySuggestions, props.sourceId) ?
+                pipe(
+                    props.querySuggestions[props.sourceId][0],
+                    List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
+                    List.map(
+                        (v, i) => (
+                            <React.Fragment key={`${v.rendererId}${i}`}>
+                                <h2>{v.heading}:</h2>
+                                {props.qsuggPlugin.createElement(v)}
+                                {props.querySuggestions[props.sourceId][1] ?
+                                    <layoutViews.AjaxLoaderBarImage /> : null}
+                            </React.Fragment>
+                        ),
+                    )
+                ) : null
+            }
         </div>
     );
 
@@ -961,8 +965,7 @@ export function init({
                             sourceId={this.props.sourceId}
                             toggleHistoryWidget={this._toggleHistoryWidget}
                             inputLanguage={this.props.inputLanguage}
-                            qsAvailable={!List.empty(
-                                this.props.querySuggestions[this.props.sourceId])} />
+                            qsAvailable={QueryFormModel.hasSuggestionsFor(this.props.querySuggestions, this.props.sourceId)} />
                         {this._renderInput()}
                         {this.props.historyVisible[this.props.sourceId] ?
                             <HistoryWidget
@@ -976,8 +979,7 @@ export function init({
                         {
                             !this.props.historyVisible[this.props.sourceId] &&
                             this.props.suggestionsVisible[this.props.sourceId] &&
-                            this.props.querySuggestions[this.props.sourceId] &&
-                            this.props.querySuggestions[this.props.sourceId].length ?
+                            QueryFormModel.hasSuggestionsFor(this.props.querySuggestions, this.props.sourceId) ?
                                 <SuggestionsWidget
                                     qsuggPlugin={this.props.qsuggPlugin}
                                     querySuggestions={this.props.querySuggestions}

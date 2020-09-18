@@ -15,18 +15,18 @@
 from typing import Any, List
 import importlib
 import json
-import manatee
 
 from plugins.abstract.query_suggest import AbstractQuerySuggest
 import plugins
 import plugins.abstract.corpora
 from controller import exposed
+from controller.kontext import Kontext
 from actions import concordance
 from controller.plg import PluginApi
 
 
 @exposed(return_type='json')
-def fetch_query_suggestions(self, request):
+def fetch_query_suggestions(self: Kontext, request):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:

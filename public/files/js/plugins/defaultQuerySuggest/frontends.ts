@@ -20,6 +20,7 @@
  */
 
 import { PluginInterfaces } from '../../types/plugins';
+import { Dict, List, pipe } from 'cnc-tskit';
 
 
 export interface BasicFrontend extends
@@ -65,4 +66,52 @@ export function isErrorFrontend(
 
 ):v is ErrorFrontend {
     return isDataAndRenderer(v) && v['rendererId'] === 'error';
+}
+
+// -----------------------
+
+export function listAttrs1ToExtend<T>(data:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):Array<string> {
+
+    if (isPosAttrPairRelFrontend(data)) {
+        return pipe(
+            data.contents.data,
+            Dict.toEntries(),
+            List.filter(
+                ([attr1, attrs2]) => attrs2.length === 1 && attrs2[0] !== attr1
+            ),
+            List.map(
+                ([attr1,]) => attr1
+            )
+        );
+    }
+    return [];
+}
+
+
+export function mergeResults<T>(
+    data1:PluginInterfaces.QuerySuggest.DataAndRenderer<T>,
+    data2:PluginInterfaces.QuerySuggest.DataAndRenderer<T>
+
+):PluginInterfaces.QuerySuggest.DataAndRenderer<unknown> {
+    if (isPosAttrPairRelFrontend(data1) && isPosAttrPairRelFrontend(data2)) {
+        return {
+            rendererId: data1.rendererId,
+            heading: data1.heading,
+            contents: {
+                attrs: data1.contents.attrs,
+                data: pipe(
+                    data1.contents.data,
+                    Dict.map(
+                        (_, attr1) => data2.contents.data[attr1] ?
+                            data2.contents.data[attr1] :
+                            data1.contents.data[attr1]
+                    )
+                )
+            }
+        }
+
+    } else {
+        return data2; // TODO
+    }
+
 }
