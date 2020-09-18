@@ -190,7 +190,10 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         const querySuggestions = pipe(
             [...props.currQueries, ...[tuple<string, Array<unknown>>('__new__', [])]],
             List.map(([k,]) => tuple(
-                k, [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer>)),
+                k, tuple(
+                    [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
+                    false)
+            )),
             Dict.fromEntries()
         );
 

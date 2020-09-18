@@ -230,7 +230,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         const querySuggestions = pipe(
             props.corpora,
             List.map(corp => tuple(corp,
-                [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer>)),
+                tuple(
+                    [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
+                    false)
+            )),
             Dict.fromEntries()
         );
         const tagBuilderSupport = props.tagBuilderSupport;

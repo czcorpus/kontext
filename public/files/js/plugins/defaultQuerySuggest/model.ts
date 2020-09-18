@@ -24,10 +24,11 @@ import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
-import { List, HTTP, Ident, Dict } from 'cnc-tskit';
-import { map, tap } from 'rxjs/operators';
+import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
+import { map, tap, concatMap, mergeMap, scan, first } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { listAttrs1ToExtend, mergeResults } from './frontends';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {
@@ -54,6 +55,15 @@ export interface ModelState {
     cache:Array<[string, PluginInterfaces.QuerySuggest.SuggestionAnswer]>;
 }
 
+
+function listUnion<T>(key:(v:T)=>string,...items:Array<Array<T>>):Array<T> {
+    return pipe(
+        items,
+        List.flatMap(v => v),
+        List.groupBy(key),
+        List.map(([,grouped]) => grouped[0]) // we assume all the grouped items are equivalent
+    );
+}
 
 export class Model extends StatelessModel<ModelState> {
 
@@ -128,7 +138,8 @@ export class Model extends StatelessModel<ModelState> {
                             this.createSuggestionHash(action.payload, action.payload.parsedWord),
                             {
                                 results: action.payload.results,
-                                parsedValue: action.payload.parsedWord
+                                parsedWord: action.payload.parsedWord,
+                                isPartial: action.payload.isPartial
                             }
                         ]);
                         if (state.cache.length > this.CACHE_SIZE) {
@@ -150,6 +161,8 @@ export class Model extends StatelessModel<ModelState> {
             args.struct + args.structAttr + args.subcorpus + srchWord + args.valueType);
     }
 
+
+
     private loadSuggestions(
         state:ModelState,
         args:PluginInterfaces.QuerySuggest.SuggestionArgs,
@@ -161,14 +174,64 @@ export class Model extends StatelessModel<ModelState> {
                 state,
                 args
 
+            ).pipe(
+                tap(
+                    data => {
+                        const isPartial = pipe(
+                            data.results,
+                            List.map(
+                                item => listAttrs1ToExtend(item)
+                            ),
+                            List.some(x => !List.empty(x))
+                        );
+                        dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                            name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                            payload: {
+                                ...args,
+                                results: data.results,
+                                parsedWord: data.parsedWord,
+                                isPartial
+                            }
+                        });
+                    }
+                ),
+                concatMap(
+                    data => rxOf(...pipe(
+                        data.results,
+                        List.map(
+                            item => listAttrs1ToExtend(item)
+                        ),
+                        v => listUnion(id, ...v),
+                        List.map(v => tuple(data, v))
+                    ))
+                ),
+                mergeMap(
+                    ([firstData, item]) => this.fetchSuggestionsForWord(state, args, item).pipe(
+                        map(
+                            resp => tuple(firstData, resp)
+                        )
+                    )
+                )
+
             ).subscribe(
-                data => {
+                ([firstData, secondData]) => {
+                    const data = {
+                        results: pipe(
+                            firstData.results,
+                            List.zip(secondData.results),
+                            List.map(
+                                ([values1, values2]) => mergeResults(values1, values2)
+                            )
+                        ),
+                        parsedWord: firstData.parsedWord,
+                        isPartial: false
+                    };
+
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                         payload: {
                             ...args,
-                            results: data.results,
-                            parsedWord: data.parsedValue
+                            ...data
                         }
                     });
                 },
@@ -178,7 +241,8 @@ export class Model extends StatelessModel<ModelState> {
                         payload: {
                             ...args,
                             results: [],
-                            parsedWord: ''
+                            parsedWord: '',
+                            isPartial: false
                         },
                         error: err
                     });
@@ -191,7 +255,8 @@ export class Model extends StatelessModel<ModelState> {
                 payload: {
                     ...args,
                     results: [],
-                    parsedWord: ''
+                    parsedWord: '',
+                    isPartial: false
                 }
             });
         }
@@ -222,13 +287,24 @@ export class Model extends StatelessModel<ModelState> {
         return '';
     }
 
-
     private fetchSuggestions(
         state:ModelState,
         suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs
 
     ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
-        const srchWord = this.findCursorWord(suggArgs);
+        return this.fetchSuggestionsForWord(
+            state,
+            suggArgs,
+            this.findCursorWord(suggArgs)
+        );
+    }
+
+    private fetchSuggestionsForWord(
+        state:ModelState,
+        suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs,
+        srchWord:string
+
+    ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
         const cacheIdx = List.findIndex(
             ([key,]) => key === this.createSuggestionHash(suggArgs, srchWord),
             state.cache
@@ -277,7 +353,8 @@ export class Model extends StatelessModel<ModelState> {
                         }),
                         data.items
                     ),
-                    parsedValue: srchWord
+                    parsedWord: srchWord,
+                    isPartial: false // yet to be resolved
                 })
             )
         );

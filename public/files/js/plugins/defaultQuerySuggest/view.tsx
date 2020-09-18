@@ -117,19 +117,21 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                     List.sortedAlphaBy(([k,]) => k),
                     List.map(
                         ([attr1, attrs2], index) => (
-                            <React.Fragment key={`${attr1}`}>
-                                <tr>
-                                    <th className="attr1" rowSpan={List.size(attrs2)}>{attr1}</th>
-                                    <td>{List.head(attrs2)}</td>
-                                </tr>
-                                {pipe(
-                                    attrs2,
-                                    List.tail(),
-                                    List.map(
-                                        attr2 => <tr key={`${attr1}:${attr2}`}><td>{attr2}</td></tr>,
-                                    )
-                                )}
-                            </React.Fragment>
+                            List.empty(attrs2) ?
+                                null :
+                                <React.Fragment key={`${attr1}`}>
+                                    <tr className={index > 0 ? 'separ' : null}>
+                                        <th className="attr1" rowSpan={List.size(attrs2)}>{attr1}</th>
+                                        <td>{List.head(attrs2)}</td>
+                                    </tr>
+                                    {pipe(
+                                        attrs2,
+                                        List.tail(),
+                                        List.map(
+                                            attr2 => <tr key={`${attr1}:${attr2}`}><td>{attr2}</td></tr>,
+                                        )
+                                    )}
+                                </React.Fragment>
                         )
                     )
                 )}

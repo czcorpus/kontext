@@ -20,7 +20,7 @@
 """
 
 import abc
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Generic, TypeVar
 import manatee
 from controller.plg import PluginApi
 
@@ -58,22 +58,24 @@ class AbstractBackend(abc.ABC):
         pass
 
 
-class Response(object):
+CT = TypeVar('CT')
+
+
+class Response(Generic[CT]):
     """
     A response as returned by server-side frontend (where server-side
     frontend receives data from a respective backend).
     """
 
-    def __init__(self, contents: str, renderer: str, heading: str, partial: bool) -> None:
+    def __init__(self, contents: CT, renderer: str, heading: str) -> None:
         """
         """
-        self.contents: str = contents
+        self.contents: CT = contents
         self.renderer: str = renderer
         self.heading: str = heading
-        self.partial: bool = partial
 
     def to_dict(self) -> Dict[str, Any]:
-        return self.__dict__
+        return dict((k, v) for k, v in self.__dict__.items() if not k.startswith('__'))
 
 
 class AbstractFrontend(abc.ABC):
@@ -91,10 +93,9 @@ class AbstractFrontend(abc.ABC):
         self.renderer = renderer
         self.partial = False
 
-    def export_data(self, data: Response, value: str, ui_lang: str):
+    def export_data(self, data: Response[CT], value: str, ui_lang: str):
         ui_lang = ui_lang.replace('_', '-')
-        return Response(contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'),
-                        partial=self.partial)
+        return Response[CT](contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'))
 
 
 class BackendException(Exception):

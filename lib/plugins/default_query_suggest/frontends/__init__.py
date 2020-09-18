@@ -16,8 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from plugins.abstract.query_suggest import AbstractFrontend
-import json
+from plugins.abstract.query_suggest import AbstractFrontend, Response
+from typing import Any, Dict
 
 
 class ErrorFrontend(AbstractFrontend):
@@ -47,7 +47,7 @@ class PosAttrPairRelFrontend(AbstractFrontend):
     def __init__(self, conf):
         super().__init__(conf, 'posAttrPairRel')
 
-    def export_data(self, data, value, ui_lang):
+    def export_data(self, data: Response[Dict[str, Any]], value, ui_lang):
         response = super().export_data(data, value, ui_lang)
         response.contents = data
         return response

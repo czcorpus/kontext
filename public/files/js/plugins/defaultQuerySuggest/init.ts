@@ -83,6 +83,9 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
     }
 
     isEmptyResponse<T>(v:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):boolean {
+        if (v === undefined) {
+            return true;
+        }
         const data = v.contents;
         if (isBasicFrontend(v)) {
             return List.empty(v.contents);

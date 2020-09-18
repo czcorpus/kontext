@@ -510,10 +510,13 @@ export namespace PluginInterfaces {
             structAttr:string|undefined;
         }
 
-        export interface SuggestionReturn extends SuggestionArgs {
-            results:Array<DataAndRenderer>;
-            parsedWord:string;
+        export interface SuggestionAnswer {
+            parsedWord:string; // the word actually used to search the suggestion
+            results:Array<DataAndRenderer<unknown>>;
+            isPartial:boolean;
         }
+
+        export type SuggestionReturn = SuggestionArgs & SuggestionAnswer;
 
         export namespace Actions {
 
@@ -534,15 +537,10 @@ export namespace PluginInterfaces {
         export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
             React.SFC<Kontext.GeneralProps>;
 
-        export interface DataAndRenderer<T=unknown> {
+        export interface DataAndRenderer<T> {
             rendererId:string;
             contents:T;
             heading:string;
-        }
-
-        export interface SuggestionAnswer {
-            parsedValue:string; // the word actually used to search the suggestion
-            results:Array<DataAndRenderer>;
         }
 
         export type Factory = (pluginApi:IPluginApi)=>IPlugin;
