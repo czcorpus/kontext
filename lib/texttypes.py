@@ -243,6 +243,7 @@ class TextTypes(object):
         corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
             self._plugin_api.user_lang, self._corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
+        logging.getLogger(__name__).debug('>>> maxlistsize: {}'.format(maxlistsize))
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
         subcorp_attr_list_tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
@@ -273,6 +274,7 @@ class TextTypes(object):
             list_none = ()
         tt = self._tt_cache.get_values(corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
                                        shrink_list=list_none, collator_locale=corpus_info.collator_locale)
+        logging.getLogger(__name__).debug('tt: {}'.format(tt))
         self._add_tt_custom_metadata(tt)
 
         if ret_nums:

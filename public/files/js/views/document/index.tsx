@@ -21,10 +21,11 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../types/common';
-import { CoreViews } from '../types/coreViews';
-import { MessageModel, MessageModelState} from '../models/common/layout';
-import { Actions, ActionName } from '../models/common/actions';
+import { Kontext } from '../../types/common';
+import { CoreViews } from '../../types/coreViews';
+import { MessageModel, MessageModelState} from '../../models/common/layout';
+import { Actions, ActionName } from '../../models/common/actions';
+import { init as calendarInit } from './calendar';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -44,10 +45,14 @@ const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
 
 
 export function init(
-        dispatcher:IActionDispatcher,
-        he:Kontext.ComponentHelpers,
-        modelProvider:Kontext.LayoutModel,
-        messageModel:MessageModel):CoreViews.Runtime {
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    modelProvider:Kontext.LayoutModel, // TODO remove
+    messageModel:MessageModel
+
+):CoreViews.Runtime {
+
+    const Calendar = calendarInit(he);
 
     // ------------------------------ <ErrorBoundary /> -----------------------------
 
@@ -493,9 +498,8 @@ export function init(
 
 
     // ------------------------------ <Message /> -----------------------------
-    // (info/error/warning message box)
 
-    const Message:React.SFC<CoreViews.Message.Props> = (props) => {
+    const Message:React.FC<CoreViews.Message.Props> = (props) => {
 
         const handleCloseClick = (e) => {
             e.preventDefault();
@@ -778,6 +782,7 @@ export function init(
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
         TabView: TabView,
-        PlusButton: PlusButton
+        PlusButton: PlusButton,
+        Calendar: Calendar
     };
 }
