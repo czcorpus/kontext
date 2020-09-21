@@ -589,7 +589,6 @@ def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int, shrink_li
             hsep = corp.get_conf(n + '.HIERARCHICAL')
             multisep = corp.get_conf(n + '.MULTISEP')
             is_multival = corp.get_conf(n + '.MULTIVAL') in ('y', 'yes')
-            logging.getLogger(__name__).debug('shrink: {}, max: {}, actual: {}'.format(shrink_list, maxlistsize, attr.id_range()))
             if (not hsep and (corp.get_conf(n + '.TEXTBOXLENGTH')
                               or attr.id_range() > maxlistsize or n in shrink_list)):
                 attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH') or 24)

@@ -133,11 +133,7 @@ export namespace CoreViews {
             style?:{[prop:string]:string};
         }
 
-        export interface State {
-            isMouseover:boolean;
-        }
-
-        export type Component = React.ComponentClass<Props>;
+        export type Component = React.FC<Props>;
     }
 
     // -------------------------------

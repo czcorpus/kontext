@@ -835,7 +835,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         </div>
                     </>)
                 }
-                <layoutViews.Calendar onClick={(y, m, d) => console.log(`y: ${y}, m: ${m}, d: ${d}`)} />
             </div>
         );
     }

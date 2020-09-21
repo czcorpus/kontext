@@ -336,7 +336,6 @@ class LiveAttributes(AbstractLiveAttributes):
         values = {}
         exported = dict(attr_values=values, aligned=aligned_corpora)
         for k in list(data.keys()):
-            logging.getLogger(__name__).debug('len(data[k]) = {}, max: {}'.format(len(data[k]), max_attr_list_size))
             if isinstance(data[k], Iterable):
                 if len(data[k]) <= max_attr_list_size or max_attr_list_size is None or k in expand_attrs:
                     out_data = l10n.sort(data[k], collator_locale, key=lambda t: t[0])
