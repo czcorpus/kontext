@@ -271,7 +271,7 @@ export class Model extends StatelessModel<ModelState> {
         const ans:Array<[string, number, number]> = [];
         let curr:[string, number, number] = ['', 0, 0];
         for (let i = 0; i < args.value.length; i++) {
-            if (args.value[i] === ' ' || i === 0) {
+            if (args.value[i] === ' ') {
                 if (curr) {
                     ans.push(curr);
                 }
