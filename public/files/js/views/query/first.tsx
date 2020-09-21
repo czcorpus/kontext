@@ -213,11 +213,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         {this.props.allowCorpusSelection ?
                             <TRCorpusField corparchWidget={CorparchWidget} />
                             : null}
-                        <inputViews.TRQueryTypeField
-                                formType={this.props.formType}
-                                queryType={this.props.queryTypes[primaryCorpname]}
-                                sourceId={primaryCorpname}
-                                hasLemmaAttr={this.props.hasLemma[primaryCorpname]} />
                         <div className="query">
                             <inputViews.TRQueryInputField
                                 queryType={this.props.queryTypes[primaryCorpname]}
@@ -381,11 +376,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <div className="form primary-language">
-                        <inputViews.TRQueryTypeField
-                                formType={this.props.formType}
-                                queryType={this.props.queryTypes[this.props.corpname]}
-                                sourceId={this.props.corpname}
-                                hasLemmaAttr={this.props.hasLemma[this.props.corpname]} />
                         <inputViews.TRQueryInputField
                             queryType={this.props.queryTypes[this.props.corpname]}
                             widgets={this.props.supportedWidgets[this.props.corpname]}

@@ -49,7 +49,6 @@ export interface InputModuleArgs {
 
 export interface InputModuleViews {
     TRQueryInputField:React.ComponentClass<TRQueryInputFieldProps>;
-    TRQueryTypeField:React.SFC<TRQueryTypeFieldProps>;
     TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps>;
     TRIncludeEmptySelector:React.SFC<TRIncludeEmptySelectorProps>;
 }
@@ -80,7 +79,6 @@ export interface TRQueryTypeFieldProps {
     formType:QueryFormType;
     sourceId:string;
     queryType:QueryType;
-    hasLemmaAttr:boolean;
 }
 
 
@@ -164,35 +162,29 @@ export function init({
 
     // ------------------- <TRQueryTypeField /> -----------------------------
 
-    const TRQueryTypeField:React.SFC<TRQueryTypeFieldProps> = (props) => {
+    const TRQueryTypeField:React.FC<TRQueryTypeFieldProps> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSelectType>({
-                name: ActionName.QueryInputSelectType,
+            dispatcher.dispatch<Actions.QueryInputSetQType>({
+                name: ActionName.QueryInputSetQType,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
-                    queryType: evt.target.value
+                    queryType: props.queryType === 'advanced' ? 'simple' : 'advanced'
                 }
             });
         };
 
         return (
             <div className="TRQueryTypeField">
-                <ul>
-                    <li>
-                        <label>
-                            <input type="radio" value="simple" checked={props.queryType === 'simple'} onChange={handleSelection} />
-                            {he.translate('query__qt_simple')}
-                        </label>
-                    </li>
-                    <li>
-                        <label>
-                            <input type="radio" value="advanced" checked={props.queryType === 'advanced'} onChange={handleSelection} />
-                            {he.translate('query__qt_advanced')}
-                        </label>
-                    </li>
-                </ul>
+                <label>
+                    <a onClick={handleSelection}>
+                        {props.queryType === 'advanced' ?
+                            he.translate('query__qt_simple') :
+                            he.translate('query__qt_advanced')
+                        }
+                    </a>
+                </label>
             </div>
         );
     };
@@ -569,6 +561,11 @@ export function init({
                 <div className="query-toolbox">
                     {this._renderWidget()}
                     <ul>
+                        <li>
+                            <TRQueryTypeField formType={this.props.formType}
+                                queryType={this.props.queryTypes[this.props.sourceId]}
+                                sourceId={this.props.sourceId} />
+                        </li>
                         {List.map(
                             (item, i) => <li key={i}>{item}</li>,
                             this._renderButtons()
@@ -850,7 +847,7 @@ export function init({
             });
         }
 
-        handleSuggestionItemClick(onItemClick:string, value:string):void {            
+        handleSuggestionItemClick(onItemClick:string, value:string):void {
             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
                 name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
                 payload: {
@@ -1025,7 +1022,6 @@ export function init({
 
     return {
         TRQueryInputField: BoundTRQueryInputField,
-        TRQueryTypeField: TRQueryTypeField,
         TRPcqPosNegField: TRPcqPosNegField,
         TRIncludeEmptySelector: TRIncludeEmptySelector
     };

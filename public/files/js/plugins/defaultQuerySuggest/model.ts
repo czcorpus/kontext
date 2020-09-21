@@ -95,8 +95,8 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSelectType>(
-            QueryActionName.QueryInputSelectType,
+        this.addActionHandler<QueryActions.QueryInputSetQType>(
+            QueryActionName.QueryInputSetQType,
             (state, action) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {

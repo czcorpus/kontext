@@ -726,36 +726,16 @@ fieldset.FieldsetOutputOptions {
 
 .TRQueryTypeField {
 
-    display: flex;
+    label {
 
-    ul {
-        margin: 0;
-        padding: 0;
-        list-style-type: none;
-        display: flex;
-
-        li {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            align-content: center;
-
-            > label {
-
-                input {
-                    position: relative;
-                    top: 0.1em;
-                    margin-right: 0.3em;
-                }
-
-                * {
-                    vertical-align: baseline;
-                }
-            }
+        input {
+            position: relative;
+            top: 0.1em;
+            margin-right: 0.3em;
         }
 
-        li:not(:last-child) {
-            margin-right: 0.4em;
+        * {
+            vertical-align: baseline;
         }
     }
 
