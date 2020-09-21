@@ -93,7 +93,7 @@ class AbstractFrontend(abc.ABC):
         self.renderer = renderer
         self.partial = False
 
-    def export_data(self, data: Response[CT], value: str, ui_lang: str):
+    def export_data(self, data: CT, value: str, ui_lang: str):
         ui_lang = ui_lang.replace('_', '-')
         return Response[CT](contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'))
 

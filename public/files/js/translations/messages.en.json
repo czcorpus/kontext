@@ -194,6 +194,7 @@
         "global__dec_full": "December",
         "global__prev_month": "previous mounth",
         "global__next_month": "next month",
+        "global__shortened": "shortened",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",

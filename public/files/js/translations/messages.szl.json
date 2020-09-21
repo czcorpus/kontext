@@ -194,6 +194,7 @@
         "global__dec_full": "December",
         "global__prev_month": "předchozí měsíc",
         "global__next_month": "následující měsíc",
+        "global__shortened": "shortened",
         "linesel__remove_selected_lines": "Skasuj ôznaczōne linije",
         "linesel__remove_all_but_selected_lines": "Ôstŏw ino ôznaczōne linije",
         "linesel__clear_the_selection": "Wysnŏż wybōr",

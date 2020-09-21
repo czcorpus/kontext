@@ -194,6 +194,7 @@
         "global__dec_full": "Prosinec",
         "global__prev_month": "předchozí měsíc",
         "global__next_month": "následující měsíc",
+        "global__shortened": "kráceno",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",

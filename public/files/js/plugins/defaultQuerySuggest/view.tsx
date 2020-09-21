@@ -72,7 +72,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
 
     // ------------- <ErrorRenderer /> -------------------------------
 
-    const ErrorRenderer:React.SFC<ErrorRendererProps> = (props) => {
+    const ErrorRenderer:React.FC<ErrorRendererProps> = (props) => {
         return <div className="ErrorRenderer">
             <p>
                 <img className="error-icon"
@@ -90,7 +90,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
 
     // -------------- <BasicRenderer /> ------------------------------
 
-    const BasicRenderer:React.SFC<BasicRendererProps> = (props) => {
+    const BasicRenderer:React.FC<BasicRendererProps> = (props) => {
         return <div className="BasicRenderer">
             <ul>
                 {List.map(
@@ -107,7 +107,8 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
 
     // ------------- <PosAttrPairRelRenderer /> ----------------------
 
-    const PosAttrPairRelRenderer:React.SFC<PosAttrPairRelRendererProps> = (props) => {
+    const PosAttrPairRelRenderer:React.FC<PosAttrPairRelRendererProps> = (props) => {
+
         return <div className="PosAttrPairRelRenderer">
             <table>
                 <thead>
@@ -142,11 +143,19 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                         attrs2,
                                         List.tail(),
                                         List.map(
-                                            attr2 => <tr key={`${attr1}:${attr2}`}><td>{
-                                                props.itemClickHandler ?
-                                                <a onClick={e => props.itemClickHandler(attr2)}>{attr2}</a> :
-                                                attr2
-                                            }</td></tr>,
+                                            (attr2, i) => (
+                                                <tr key={`${attr1}:${attr2}`}>
+                                                <td>
+                                                    {attr2 === null && i === List.size(attrs2) - 2 ?
+                                                    <span title={he.translate('global__shortened')}>{'\u2026'}</span> :
+                                                    (props.itemClickHandler ?
+                                                        <a onClick={e => props.itemClickHandler(attr2)}>{attr2}</a> :
+                                                        attr2
+                                                    )
+                                                    }
+                                                    </td>
+                                                </tr>
+                                            )
                                         )
                                     )}
                                 </React.Fragment>
