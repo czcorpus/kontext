@@ -380,7 +380,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                             [start, end + value.length] :
                                             [start, end]
                                 },
-                                [0, state.queries[action.payload.sourceId].length],
+                                [0, 0],
                                 state.queries[action.payload.sourceId].split(' ')
                             ) :
                         action.payload.onItemClick === 'insert' ?
