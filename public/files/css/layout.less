@@ -1183,6 +1183,61 @@ p.boxed-par {
     color: #FFFFFF !important;
 }
 
+.Calendar {
+
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+
+        th, td {
+            border: 1px solid @color-light-grey;
+            padding: 0.2em;
+        }
+
+        th {
+            text-align: center;
+        }
+
+        td {
+            text-align: right;
+        }
+
+        tbody td a {
+            text-decoration: none;
+        }
+
+        tbody td a:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .controls {
+
+        .prev-month-change {
+
+            border-right-width: 0;
+
+            img {
+                width: 1.1em;
+            }
+        }
+
+        .next-month-change {
+
+            border-left-width: 0;
+
+            img {
+                display: block;
+                width: 1.1em;
+            }
+        }
+
+        .curr-date {
+            text-align: center;
+        }
+    }
+}
+
 .query-overview {
 
     padding: 1.5em;

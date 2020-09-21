@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,10 +23,12 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../types/common';
-import { CoreViews } from '../types/coreViews';
-import { MessageModel, MessageModelState} from '../models/common/layout';
-import { Actions, ActionName } from '../models/common/actions';
+import { Kontext } from '../../types/common';
+import { CoreViews } from '../../types/coreViews';
+import { MessageModel, MessageModelState} from '../../models/common/layout';
+import { Actions, ActionName } from '../../models/common/actions';
+import { init as calendarInit } from './calendar';
+import { ImgWithMouseover } from './general';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -44,10 +48,14 @@ const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
 
 
 export function init(
-        dispatcher:IActionDispatcher,
-        he:Kontext.ComponentHelpers,
-        modelProvider:Kontext.LayoutModel,
-        messageModel:MessageModel):CoreViews.Runtime {
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    modelProvider:Kontext.LayoutModel, // TODO remove
+    messageModel:MessageModel
+
+):CoreViews.Runtime {
+
+    const Calendar = calendarInit(he);
 
     // ------------------------------ <ErrorBoundary /> -----------------------------
 
@@ -289,43 +297,6 @@ export function init(
                     style={props.style ? props.style : null} />;
     };
 
-    // ------------------------------ <ImgWithMouseover /> -----------------------------
-
-    class ImgWithMouseover extends React.Component<CoreViews.ImgWithMouseover.Props, CoreViews.ImgWithMouseover.State> {
-
-        constructor(props) {
-            super(props);
-            this._handleCloseMouseover = this._handleCloseMouseover.bind(this);
-            this._handleCloseMouseout = this._handleCloseMouseout.bind(this);
-            this.state = {isMouseover : false};
-        }
-
-        _handleCloseMouseover() {
-            this.setState({isMouseover: true});
-        }
-
-        _handleCloseMouseout() {
-            this.setState({isMouseover: false});
-        }
-
-        _mkAltSrc(s) {
-            const tmp = s.split('.');
-            return `${tmp.slice(0, -1).join('.')}_s.${tmp[tmp.length - 1]}`;
-        }
-
-        render() {
-            const src2 = this.props.src2 ? this.props.src2 : this._mkAltSrc(this.props.src);
-            return <img className={this.props.htmlClass}
-                        src={this.state.isMouseover ? src2 : this.props.src}
-                        onClick={this.props.clickHandler}
-                        alt={this.props.alt}
-                        title={this.props.alt}
-                        style={this.props.style ? this.props.style : null}
-                        onMouseOver={this._handleCloseMouseover}
-                        onMouseOut={this._handleCloseMouseout}  />;
-        }
-    }
-
     // ------------------------------ <CloseableFrame /> -----------------------------
 
     class CloseableFrame extends React.PureComponent<CoreViews.CloseableFrame.Props> {
@@ -493,9 +464,8 @@ export function init(
 
 
     // ------------------------------ <Message /> -----------------------------
-    // (info/error/warning message box)
 
-    const Message:React.SFC<CoreViews.Message.Props> = (props) => {
+    const Message:React.FC<CoreViews.Message.Props> = (props) => {
 
         const handleCloseClick = (e) => {
             e.preventDefault();
@@ -778,6 +748,7 @@ export function init(
         DelItemIcon: DelItemIcon,
         ValidatedItem: ValidatedItem,
         TabView: TabView,
-        PlusButton: PlusButton
+        PlusButton: PlusButton,
+        Calendar: Calendar
     };
 }

@@ -116,7 +116,7 @@ export namespace CoreViews {
             style?:{[prop:string]:string};
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     // -------------------------------
@@ -133,11 +133,7 @@ export namespace CoreViews {
             style?:{[prop:string]:string};
         }
 
-        export interface State {
-            isMouseover:boolean;
-        }
-
-        export type Component = React.ComponentClass<Props>;
+        export type Component = React.FC<Props>;
     }
 
     // -------------------------------
@@ -222,7 +218,7 @@ export namespace CoreViews {
             children:React.ReactNode;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     // -------------------------------
@@ -237,7 +233,7 @@ export namespace CoreViews {
             onClick:()=>void;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     // -------------------------------
@@ -247,7 +243,7 @@ export namespace CoreViews {
             htmlClass?:string;
             title?:string;
         }
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     // -------------------------------
@@ -257,7 +253,7 @@ export namespace CoreViews {
             htmlClass?:string;
             title?:string;
         }
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     // -------------------------------
@@ -272,7 +268,7 @@ export namespace CoreViews {
             humanCorpname:string;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
 
     }
 
@@ -284,7 +280,7 @@ export namespace CoreViews {
             className?:string;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     export namespace StatusIcon {
@@ -295,7 +291,7 @@ export namespace CoreViews {
             inline?:boolean;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     export namespace DelItemIcon {
@@ -307,7 +303,7 @@ export namespace CoreViews {
             onClick?:()=>void;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     export namespace ValidatedItem {
@@ -317,7 +313,7 @@ export namespace CoreViews {
             errorDesc?:string;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     export namespace TabButton {
@@ -329,7 +325,7 @@ export namespace CoreViews {
             onClick:()=>void;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     export namespace TabView {
@@ -341,7 +337,7 @@ export namespace CoreViews {
             callback?:(id:string) => void;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
     }
 
     export namespace PlusButton {
@@ -352,7 +348,16 @@ export namespace CoreViews {
             onClick:()=>void;
         }
 
-        export type Component = React.SFC<Props>;
+        export type Component = React.FC<Props>;
+    }
+
+    export namespace Calendar {
+
+        export interface Props {
+            onClick:(year:number, month:number, day:number)=>void;
+        }
+
+        export type Component = React.FC<Props>;
     }
 
     // -------------------------------
@@ -377,6 +382,7 @@ export namespace CoreViews {
         ValidatedItem:ValidatedItem.Component;
         TabView:TabView.Component;
         PlusButton:PlusButton.Component;
+        Calendar:Calendar.Component;
     }
 }
 
