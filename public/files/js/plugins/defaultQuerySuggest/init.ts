@@ -60,12 +60,31 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         return true;
     }
 
-    createElement<T>(dr:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):React.ReactElement {
+    createElement<T>(
+        dr:PluginInterfaces.QuerySuggest.DataAndRenderer<T>,
+        itemClickHandler:(onItemClick, value)=>void
+    ):React.ReactElement {
+
+        const onItemClick = List.find(
+            v => v.rendererId === dr.rendererId,
+            this.providers
+        ).onItemClick;
+
         if (isBasicFrontend(dr)) {
-            return createElement(this.views.basic, {data: dr.contents});
+            return createElement(this.views.basic, {
+                data: dr.contents,
+                itemClickHandler: onItemClick ?
+                    value => itemClickHandler(onItemClick, value) :
+                    null
+            });
 
         } else if (isPosAttrPairRelFrontend(dr)) {
-            return createElement(this.views.posAttrPairRel, {...dr.contents});
+            return createElement(this.views.posAttrPairRel, {
+                ...dr.contents,
+                itemClickHandler: onItemClick ?
+                    value => itemClickHandler(onItemClick, value) :
+                    null
+            });
 
         } else if (isErrorFrontend(dr)) {
             return createElement(this.views.error, {data: dr.contents});
@@ -108,9 +127,10 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
         List.map(
             item => ({
                 ident: item.ident,
-                frontendId: item.frontendId,
+                rendererId: item.rendererId,
                 queryTypes: item.queryTypes,
-                heading: item.heading
+                heading: item.heading,
+                onItemClick: item.onItemClick
             })
         )
     );

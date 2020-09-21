@@ -296,7 +296,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 Dict.fromEntries()
             ),
             suggestionsVisibility: props.suggestionsVisibility,
-            isBusy: false
+            isBusy: false,
+            cursorPos: 0
         });
         this.syncInitialArgs = syncInitialArgs;
 
@@ -453,7 +454,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 name: ConcActionName.AddedNewOperation,
                                 payload: {
                                     concId: data.conc_persistence_op_id,
-                                    data: data
+                                    data
                                 }
                             });
 

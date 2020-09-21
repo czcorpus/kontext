@@ -35,6 +35,7 @@ class BasicFrontend(AbstractFrontend):
 
     def __init__(self, conf):
         super().__init__(conf, 'basic')
+        self.on_item_click = conf.get('onItemClick', None)
 
     def export_data(self, data, value, ui_lang):
         response = super().export_data(data, value, ui_lang)
@@ -46,6 +47,7 @@ class PosAttrPairRelFrontend(AbstractFrontend):
 
     def __init__(self, conf):
         super().__init__(conf, 'posAttrPairRel')
+        self.on_item_click = conf.get('onItemClick', None)
 
     def export_data(self, data: Response[Dict[str, Any]], value, ui_lang):
         response = super().export_data(data, value, ui_lang)

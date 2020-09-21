@@ -406,10 +406,11 @@ export function init({
         qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
         querySuggestions:{[sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]};
         sourceId:string;
-        formType:QueryFormType;
+        handleItemClick:(onItemClick:string, value:string) => void;
 
-    }> = (props) => (
-        <div className="suggestions-box">
+    }> = (props) => {
+
+        return <div className="suggestions-box">
             {QueryFormModel.hasSuggestionsFor(props.querySuggestions, props.sourceId) ?
                 pipe(
                     props.querySuggestions[props.sourceId][0],
@@ -418,7 +419,7 @@ export function init({
                         (v, i) => (
                             <React.Fragment key={`${v.rendererId}${i}`}>
                                 <h2>{v.heading}:</h2>
-                                {props.qsuggPlugin.createElement(v)}
+                                {props.qsuggPlugin.createElement(v, props.handleItemClick)}
                                 {props.querySuggestions[props.sourceId][1] ?
                                     <layoutViews.AjaxLoaderBarImage /> : null}
                             </React.Fragment>
@@ -427,7 +428,7 @@ export function init({
                 ) : null
             }
         </div>
-    );
+    };
 
     // ------------------- <KeyboardWidget /> --------------------------------
 
@@ -790,6 +791,7 @@ export function init({
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
             this.handleReqHistory = this.handleReqHistory.bind(this);
             this.handleInputEscKeyDown = this.handleInputEscKeyDown.bind(this);
+            this.handleSuggestionItemClick = this.handleSuggestionItemClick.bind(this);
         }
 
         _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
@@ -846,6 +848,19 @@ export function init({
                     sourceId: this.props.sourceId
                 }
             });
+        }
+
+        handleSuggestionItemClick(onItemClick:string, value:string):void {            
+            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
+                name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
+                payload: {
+                    sourceId: this.props.sourceId,
+                    formType: this.props.formType,
+                    onItemClick,
+                    value
+                }
+            });
+            this._queryInputElement.current.focus();
         }
 
         _renderInput() {
@@ -984,7 +999,7 @@ export function init({
                                     qsuggPlugin={this.props.qsuggPlugin}
                                     querySuggestions={this.props.querySuggestions}
                                     sourceId={this.props.sourceId}
-                                    formType={this.props.formType} />
+                                    handleItemClick={this.handleSuggestionItemClick} />
                                 : null
                         }
                         <div className="query-hints">
