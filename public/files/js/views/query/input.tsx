@@ -177,14 +177,8 @@ export function init({
 
         return (
             <div className="TRQueryTypeField">
-                <label>
-                    <a onClick={handleSelection}>
-                        {props.queryType === 'advanced' ?
-                            he.translate('query__qt_simple') :
-                            he.translate('query__qt_advanced')
-                        }
-                    </a>
-                </label>
+                <label htmlFor="chck_wsdA3fe">{he.translate('query__qt_advanced')}:</label>
+                <input id="chck_wsdA3fe" type="checkbox" onChange={handleSelection} />
             </div>
         );
     };
