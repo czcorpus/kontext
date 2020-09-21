@@ -266,12 +266,15 @@ div.query-form-spa {
     > ul {
         list-style-type: none;
         margin: 0;
-        padding: 2pt 0;
+        padding: 0.1em 0;
         background-color: @color-section-bg;
         color: @color-light-text;
+        display: flex;
+        align-items: center;
+        font-size: 90%;
 
         li {
-            display: inline-block;
+            margin: 0.1em 0.2em;
 
             .notifications {
                 color: @color-logo-pink;
@@ -286,11 +289,6 @@ div.query-form-spa {
             content: none;
         }
 
-        li a,
-        li .hint {
-            font-size: 75%;
-        }
-
         li .hint strong {
             font-size: 100%;
             font-weight: normal;
@@ -299,12 +297,11 @@ div.query-form-spa {
             border-style: @border-radius-default;
         }
 
-        li a {
+        li a,
+        li label {
             background-color: transparent;
             color: @color-logo-blue;
-            padding: 2px 5px;
             text-decoration: none;
-            margin: 0;
         }
 
         li a:hover {

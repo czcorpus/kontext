@@ -726,17 +726,15 @@ fieldset.FieldsetOutputOptions {
 
 .TRQueryTypeField {
 
-    label {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
 
-        input {
-            position: relative;
-            top: 0.1em;
-            margin-right: 0.3em;
-        }
 
-        * {
-            vertical-align: baseline;
-        }
+    input[type="checkbox"] {
+        margin-left: 0.3em;
+
     }
 
     .hint {
