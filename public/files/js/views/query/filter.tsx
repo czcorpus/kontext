@@ -279,13 +279,6 @@ export function init({
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <div className="form">
-                        <div>
-                            <inputViews.TRQueryTypeField
-                                queryType={this.props.queryTypes[this.props.filterId]}
-                                sourceId={this.props.filterId}
-                                formType={this.props.formType}
-                                hasLemmaAttr={this.props.hasLemma[this.props.filterId]} />
-                        </div>
                         <div className="query">
                             <inputViews.TRQueryInputField
                                 queryType={this.props.queryTypes[this.props.filterId]}
@@ -338,13 +331,6 @@ export function init({
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <div className="form primary-language">
-                        <div>
-                            <inputViews.TRQueryTypeField
-                                queryType={this.props.queryTypes[this.props.filterId]}
-                                formType={this.props.formType}
-                                sourceId={this.props.filterId}
-                                hasLemmaAttr={this.props.hasLemma[this.props.filterId]} />
-                        </div>
                         <div>
                             <inputViews.TRQueryInputField
                                 queryType={this.props.queryTypes[this.props.filterId]}

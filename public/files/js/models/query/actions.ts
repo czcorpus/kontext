@@ -50,7 +50,7 @@ export enum ActionName {
     SetWithinValue = 'QUERY_INPUT_SET_WITHIN_VALUE',
     SetWithinAttr = 'QUERY_INPUT_SET_WITHIN_ATTR',
     SetActiveInputWidget = 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-    QueryInputSelectType = 'QUERY_INPUT_SELECT_TYPE',
+    QueryInputSetQType = 'QUERY_INPUT_SELECT_TYPE',
     QueryInputSelectSubcorp = 'QUERY_INPUT_SELECT_SUBCORP',
     QueryInputMoveCursor = 'QUERY_INPUT_MOVE_CURSOR',
     QueryInputSetQuery = 'QUERY_INPUT_SET_QUERY',
@@ -264,12 +264,12 @@ export namespace Actions {
         name:ActionName.SetActiveInputWidget;
     }
 
-    export interface QueryInputSelectType extends Action<{
+    export interface QueryInputSetQType extends Action<{
         formType:QueryFormType;
         sourceId:string;
         queryType:QueryType;
     }> {
-        name:ActionName.QueryInputSelectType;
+        name:ActionName.QueryInputSetQType;
     }
 
     export interface QueryInputSelectSubcorp extends Action<{

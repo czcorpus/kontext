@@ -315,8 +315,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.QueryInputSelectType>(
-            ActionName.QueryInputSelectType,
+        this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
+            ActionName.QueryInputSetQType,
             action => action.payload.formType === 'filter',
             action => {
                 this.changeState(state => {

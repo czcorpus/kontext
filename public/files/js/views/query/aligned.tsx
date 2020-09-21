@@ -139,10 +139,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                         </span>
                     </div>
                     <div className="form">
-                        <inputViews.TRQueryTypeField queryType={this.props.queryType}
-                                formType={Kontext.ConcFormTypes.QUERY}
-                                sourceId={this.props.corpname}
-                                hasLemmaAttr={this.props.hasLemmaAttr} />
                         <inputViews.TRQueryInputField
                             sourceId={this.props.corpname}
                             queryType={this.props.queryType}

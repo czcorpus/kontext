@@ -338,13 +338,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionSubtypeHandler<Actions.QueryInputSelectType>(
-            ActionName.QueryInputSelectType,
+        this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
+            ActionName.QueryInputSetQType,
             action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
-                    let qType = action.payload.queryType;
-                    state.queryTypes[action.payload.sourceId] = qType;
+                    state.queryTypes[action.payload.sourceId] = action.payload.queryType;
                     state.supportedWidgets = determineSupportedWidgets(
                         state.corpora,
                         state.queryTypes,
