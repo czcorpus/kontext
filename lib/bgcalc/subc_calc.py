@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 
 import corplib
-import conclib
+import conclib.search
 import os
 import time
 import logging
@@ -36,7 +36,7 @@ class CreateSubcorpusTask(object):
         True in case of success
         In case of an empty subcorus, EmptySubcorpusException is thrown
         """
-        conc = conclib.get_conc(self._corp, self._user_id, q=cql, asnc=0)
+        conc = conclib.search.get_conc(self._corp, self._user_id, q=cql, asnc=0)
         if conc.size() == 0:
             raise EmptySubcorpusException('Empty subcorpus')
         ans = corplib.subcorpus_from_conc(path, conc)
