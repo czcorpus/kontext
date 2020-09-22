@@ -30,7 +30,6 @@ import { TextTypesModel } from '../models/textTypes/main';
 import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import { InputMode } from '../models/subcorp/common';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
 import corplistComponent from 'plugins/corparch/init';
@@ -201,13 +200,13 @@ export class SubcorpForm {
                 this.layoutModel,
                 ttComponent.ttModel,
                 this.layoutModel.getCorpusIdent().id,
-                InputMode.GUI
+                'gui'
             );
 
             this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
-                InputMode.GUI,
+                'gui',
                 this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'),
                 this.subcorpFormModel
             );

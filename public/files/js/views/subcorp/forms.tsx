@@ -52,7 +52,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <WithinSwitch /> ----------------------------
 
-    const WithinSwitch:React.SFC<{
+    const WithinSwitch:React.FC<{
         rowIdx:number;
         withinType:string;
 
@@ -112,7 +112,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <ExpressionDescLine /> ----------------------------
 
-    const ExpressionDescLine:React.SFC<{
+    const ExpressionDescLine:React.FC<{
         viewIdx:number;
 
     }> = (props) => {
@@ -138,7 +138,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <StructLine /> ----------------------------
 
-    const StructLine:React.SFC<{
+    const StructLine:React.FC<{
         rowIdx:number;
         structsAndAttrs:Kontext.StructsAndAttrs;
         lineData:WithinLine;
@@ -209,7 +209,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <WithinBuilder /> ----------------------------
 
-    const WithinBuilder:React.SFC<{
+    const WithinBuilder:React.FC<{
         structsAndAttrs:Kontext.StructsAndAttrs;
         lines:Array<WithinLine>;
     }> = (props) => {
@@ -305,7 +305,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     /**
      *
      */
-    const SubcNameInput:React.SFC<{
+    const SubcNameInput:React.FC<{
         value:Kontext.FormValue<string>;
     }> = (props) => {
 
@@ -323,7 +323,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------ <SubcNamePublicCheckbox /> --------------------------
 
-    const SubcNamePublicCheckbox:React.SFC<{
+    const SubcNamePublicCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -343,7 +343,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------ <SubcDescription /> --------------------------
 
-    const SubcDescription:React.SFC<{
+    const SubcDescription:React.FC<{
         value:Kontext.FormValue<string>;
 
     }> = (props) => {
@@ -370,7 +370,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     /**
      *
      */
-    const TDInputModeSelection:React.SFC<{
+    const TDInputModeSelection:React.FC<{
         inputMode:string;
         onModeChange:(mode:string)=>void;
 
@@ -391,7 +391,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     /**
      */
-    const StructsHint:React.SFC<{
+    const StructsHint:React.FC<{
         structsAndAttrs:Kontext.StructsAndAttrs;
         onCloseClick:()=>void;
 
@@ -452,23 +452,6 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             });
         }
 
-        _renderTextTypeSelection() {
-            switch (this.props.inputMode) {
-                case 'raw':
-                    return <BoundTRWithinBuilderWrapper  />;
-                case 'gui':
-                    return (
-                        <tr>
-                            <td colSpan={2}>
-                                <this.props.ttComponent {...this.props.ttProps} />
-                            </td>
-                        </tr>
-                    );
-                default:
-                    return null;
-            }
-        }
-
         render() {
             return (
                 <form id="subcorp-form">
@@ -518,7 +501,18 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                 <TDInputModeSelection inputMode={this.props.inputMode}
                                         onModeChange={this._handleInputModeChange} />
                             </tr>
-                            {this._renderTextTypeSelection()}
+                            <layoutViews.TabView
+                                    className="FreqFormSelector"
+                                    defaultId={this.props.inputMode}
+                                    callback={this._handleInputModeChange}
+                                    items={[{id: 'gui', label: 'gui'}, {id: 'within', label: 'within'}]}>
+                                <BoundTRWithinBuilderWrapper  />
+                                <tr>
+                                    <td colSpan={2}>
+                                        <this.props.ttComponent {...this.props.ttProps} />
+                                    </td>
+                                </tr>
+                            </layoutViews.TabView>
                             <tr id="subc-mixer-row">
                                 <th></th>
                                 <td className="widget"></td>

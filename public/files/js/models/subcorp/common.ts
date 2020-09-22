@@ -20,13 +20,37 @@
 
 import { Kontext } from '../../types/common';
 
-export enum InputMode {
-    GUI = 'gui',
-    RAW = 'raw'
-}
+export type InputMode = 'gui'|'within';
 
 export interface BaseSubcorFormState {
     subcname:Kontext.FormValue<string>;
     description:Kontext.FormValue<string>;
     otherValidationError:Error|null;
+}
+
+interface SubmitBase {
+    corpname:string;
+    subcname:string;
+    publish:boolean;
+    description:string;
+    aligned_corpora:Array<string>;
+}
+
+export interface CreateSubcorpusArgs extends SubmitBase {
+    text_types:{[sca:string]:Array<string>|Array<number>};
+    form_type:'gui';
+}
+
+export interface CreateSubcorpusWithinArgs extends SubmitBase {
+    within:Array<{
+        negated:boolean;
+        structure_name:string;
+        attribute_cql:string;
+    }>;
+    form_type:'within';
+}
+
+export interface CreateSubcorpusRawCQLArgs extends SubmitBase {
+    cql:string;
+    form_type:'cql';
 }

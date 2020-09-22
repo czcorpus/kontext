@@ -20,7 +20,7 @@
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
-import { InputMode } from './common';
+import { CreateSubcorpusWithinArgs, InputMode } from './common';
 import { SubcorpFormModel } from './form';
 import { MultiDict } from '../../multidict';
 import { StatelessModel, IActionDispatcher } from 'kombo';
@@ -157,7 +157,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             ActionName.FormSubmit,
             null,
             (state, action, dispatch) => {
-                if (state.inputMode === InputMode.RAW) {
+                if (state.inputMode === 'within') {
                     const args = this.getSubmitArgs(state);
                     const err = this.validateForm(state);
                     (err === null ?
@@ -167,7 +167,10 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                                 '/subcorpus/subcorp',
                                 MultiDict.fromDict({format: 'json'})
                             ),
-                            args
+                            args,
+                            {
+                                contentType: 'application/json'
+                            }
                         ) :
                         throwError(err)
 
@@ -268,24 +271,14 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         return null;
     }
 
-    private getSubmitArgs(state:SubcorpWithinFormModelState):MultiDict {
-        const args = new MultiDict();
-        args.set('corpname', this.subcFormModel.getCorpname());
-        args.set('subcname', this.subcFormModel.getSubcname().value);
-        args.set('publish', this.subcFormModel.getIsPublic() ? '1' : '0');
-        args.set('description', this.subcFormModel.getDescription().value);
-        args.set('method', state.inputMode);
-        const alignedCorpora = List.map(v => v.value, this.subcFormModel.getAlignedCorpora());
-        if (alignedCorpora.length > 0) {
-            args.replace(
-                'aligned_corpora',
-                List.map(v => v.value, this.subcFormModel.getAlignedCorpora())
-            );
-            args.set('attrs', JSON.stringify(this.subcFormModel.getTTSelections()));
-        }
-        args.set(
-            'within_json',
-            JSON.stringify(pipe(
+    private getSubmitArgs(state:SubcorpWithinFormModelState):CreateSubcorpusWithinArgs {
+        return {
+            corpname: this.subcFormModel.getCorpname(),
+            subcname: this.subcFormModel.getSubcname().value,
+            publish: this.subcFormModel.getIsPublic(),
+            description: this.subcFormModel.getDescription().value,
+            aligned_corpora:  List.map(v => v.value, this.subcFormModel.getAlignedCorpora()),
+            within: pipe(
                 state.lines,
                 List.filter((v)=>v != null),
                 List.map((v:WithinLine) => ({
@@ -293,9 +286,9 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                     structure_name: v.structureName,
                     attribute_cql: v.attributeCql.value
                 }))
-            ))
-        );
-        return args;
+            ),
+            form_type:'within'
+        };
     }
 
 }
