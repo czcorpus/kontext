@@ -50,6 +50,8 @@ def convert_func_mapping_types(args: Dict[str, Any], fun: Callable[..., Dict[str
                 except ValueError as e:
                     raise werkzeug.exceptions.BadRequest(
                         description='Failed to process parameter "{0}": {1}'.format(full_k, e))
+            else:
+                ans[k] = value
         elif not del_nondef:
             ans[k] = value
     return ans

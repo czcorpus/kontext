@@ -429,10 +429,7 @@ class Controller(object):
         action -- name of the action
         named_args -- a dictionary of named args and their defined default values
         """
-        if hasattr(action, 'accept_kwargs') and getattr(action, 'accept_kwargs') is True:
-            del_nondef = False
-        else:
-            del_nondef = True
+        del_nondef = not getattr(action, 'accept_kwargs', False)
         return action(**convert_func_mapping_types(form.as_dict(), action, del_nondef=del_nondef))
 
     def _get_method_metadata(self, method_name: str, attr_name: Optional[str] = None) -> Union[Any, Dict[str, Any]]:
