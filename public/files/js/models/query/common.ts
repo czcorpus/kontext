@@ -541,7 +541,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return this.ident;
     }
 
-    static hasSuggestionsFor(data:SuggestionsData, sourceId:string):boolean {
-        return data[sourceId] && !List.empty(data[sourceId][0]);
+    static hasSuggestionsFor(
+        data:SuggestionsData,
+        sourceId:string,
+        plugin:PluginInterfaces.QuerySuggest.IPlugin
+
+    ):boolean {
+        return data[sourceId] && List.some(s => !plugin.isEmptyResponse(s), data[sourceId][0]);
     }
 }

@@ -50,7 +50,7 @@ export interface MainModuleArgs {
     virtualKeyboardModel:VirtualKeyboardModel;
     queryContextModel:QueryContextModel;
     cqlEditorModel:CQLEditorModel;
-    qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
 
@@ -82,16 +82,17 @@ export interface MainViews {
 
 export function init({dispatcher, he, CorparchWidget, queryModel,
                       textTypesModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
-                      queryContextModel, cqlEditorModel, qsuggPlugin}:MainModuleArgs):MainViews {
+                      queryContextModel, cqlEditorModel, querySuggest}:MainModuleArgs):MainViews {
 
     const inputViews = inputInit({
-        dispatcher: dispatcher,
-        he: he,
-        queryModel: queryModel,
-        queryHintModel: queryHintModel,
-        withinBuilderModel: withinBuilderModel,
-        virtualKeyboardModel: virtualKeyboardModel,
-        cqlEditorModel: cqlEditorModel
+        dispatcher,
+        he,
+        queryModel,
+        queryHintModel,
+        withinBuilderModel,
+        virtualKeyboardModel,
+        cqlEditorModel,
+        querySuggest
     });
     const alignedViews = alignedInit({
             dispatcher: dispatcher,
@@ -230,7 +231,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 onEnterKey={this._handleSubmit}
                                 useCQLEditor={this.props.useCQLEditor}
                                 takeFocus={true}
-                                qsuggPlugin={qsuggPlugin} />
+                                qsuggPlugin={querySuggest} />
                         </div>
                     </div>
                     {this.props.corpora.length > 1 || this.props.availableAlignedCorpora.length > 0 ?
@@ -391,7 +392,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             inputLanguage={this.props.inputLanguages[this.props.corpname]}
                             onEnterKey={this._handleSubmit}
                             useCQLEditor={this.props.useCQLEditor}
-                            qsuggPlugin={qsuggPlugin} />
+                            qsuggPlugin={querySuggest} />
                     </div>
                     <fieldset className="specify-context">
                         <BoundAdvancedFormLegend

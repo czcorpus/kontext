@@ -65,9 +65,10 @@ export interface SuggestionsViews {
 
 export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers):SuggestionsViews {
 
+    // ------------- <UnsupportedRenderer /> -------------------------------
 
-    const UnsupportedRenderer:React.SFC<UnsupportedRendererProps> = (props) => {
-        return <div className="suggestions-box">Unsupported renderer (TODO)</div>
+    const UnsupportedRenderer:React.FC<UnsupportedRendererProps> = (props) => {
+        return <div className="UnsupportedRenderer">Unsupported renderer {JSON.stringify(props.data)}</div>
     }
 
     // ------------- <ErrorRenderer /> -------------------------------

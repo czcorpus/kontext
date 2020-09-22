@@ -207,11 +207,11 @@ div.query-form-spa {
     }
 
     .simple-input {
-        font-size: 1.2em;
+        font-size: 1.3em;
     }
 
     .cql-input {
-        font-size: 1.1em;
+        font-size: 1.3em;
         min-height: 5em;
         overflow: hidden;
         resize: vertical;
@@ -223,16 +223,16 @@ div.query-form-spa {
         font-family: @monospace-font-family;
     }
 
-    .query-hints {
+    .QueryHints {
 
         background-color: #FAFAFA;
         white-space: initial;
+        padding: 1em 0.3em 0.2em 0.3em;
+        color: @color-light-text;
+        font-size: 0.8em;
 
-        div {
-            color: @color-light-text;
-            padding: 3pt 5pt;
-            font-size: 8pt;
-            display: inline-block;
+        > * {
+            display: inline;
         }
 
         .next-hint {
@@ -271,13 +271,14 @@ div.query-form-spa {
         color: @color-light-text;
         display: flex;
         align-items: center;
-        font-size: 90%;
+        font-size: 85%;
 
         li {
             margin: 0.1em 0.2em;
 
             .notifications {
                 color: @color-logo-pink;
+                padding-left: 0.2em;
             }
         }
 

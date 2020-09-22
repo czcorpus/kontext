@@ -479,7 +479,7 @@ export class ViewPage {
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             queryContextModel: this.queryModels.queryContextModel,
             cqlEditorModel: this.queryModels.cqlEditorModel,
-            qsuggPlugin: this.layoutModel.qsuggPlugin
+            querySuggest: this.layoutModel.qsuggPlugin
         });
     }
 

@@ -1,6 +1,6 @@
 @import "../../../css/shared/globals.less";
 
-.suggestions-box {
+.SuggestionsWidget {
 
     min-width: 25em;
     max-width: 30em;
@@ -84,7 +84,7 @@
                 color: @color-logo-blue;
                 text-decoration: none;
             }
-    
+
             a:hover {
                 color: @color-logo-blue;
                 text-decoration: underline;
@@ -92,4 +92,8 @@
 
         }
     }
+}
+
+.SuggestionsWidget.empty {
+    display: none;
 }
