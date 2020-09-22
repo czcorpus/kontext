@@ -110,12 +110,14 @@ def _list_public_corp_dir(corpname: str, path: str, value_prefix: Optional[str])
         full_path = os.path.join(path, item)
         meta, desc = get_subcorp_pub_info(full_path)
         if meta.subcpath is None or meta.author_name is None or not desc:
-            logging.getLogger(__name__).warning(f'Missing metainformation for published subcorpus {item}')
+            logging.getLogger(__name__).warning(
+                f'Missing metainformation for published subcorpus {item}')
         else:
             try:
                 ident = os.path.splitext(os.path.basename(item))[0]
-                author_rev = ' '.join(reversed(meta.author_name.split(' '))).lower() if meta.author_name else ''
-                if ident.startswith(value_prefix) or author_rev.startswith(value_prefix):
+                author_rev = ' '.join(reversed(meta.author_name.split(' '))
+                                      ).lower() if meta.author_name else ''
+                if ident.startswith(value_prefix) or author_rev.startswith(value_prefix.lower()):
                     ans.append(dict(
                         ident=ident,
                         origName=os.path.splitext(os.path.basename(meta.subcpath))[0],
