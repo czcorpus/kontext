@@ -82,8 +82,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
             } else if (evt.keyCode === Keyboard.Code.ENTER) {
                 const historyItem = data[this.props.currentItem];
-                dispatcher.dispatch<QueryActions.QueryInputSelectType>({
-                    name: QueryActionName.QueryInputSelectType,
+                dispatcher.dispatch<QueryActions.QueryInputSetQType>({
+                    name: QueryActionName.QueryInputSetQType,
                     payload: {
                         sourceId: this.props.sourceId, // either corpname or filterId
                         queryType: historyItem.query_type,
@@ -112,8 +112,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         _handleClickSelection(itemNum, data) {
             const historyItem = data[itemNum];
-            dispatcher.dispatch<QueryActions.QueryInputSelectType>({
-                name: QueryActionName.QueryInputSelectType,
+            dispatcher.dispatch<QueryActions.QueryInputSetQType>({
+                name: QueryActionName.QueryInputSetQType,
                 payload: {
                     sourceId: this.props.sourceId,
                     queryType: historyItem.query_type,

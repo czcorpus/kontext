@@ -87,13 +87,17 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
         this.addActionHandler<Actions.SwitchMcFormSubmit>(
             ActionName.SwitchMcFormSubmit,
             action => {
-                window.location.href = this.getSubmitUrl(action.payload.operationId);
+                window.location.href = this.getSubmitUrl(
+                    action.payload.operationId,
+                    action.payload.operationId
+                );
             }
         );
     }
 
-    getSubmitUrl(opId:string):string {
-        const args = this.layoutModel.getConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
+    getSubmitUrl(opId:string, concId:string):string {
+        const args = this.layoutModel.exportConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
+        args.set('q', '~' + concId);
         args.set('maincorp', this.state.maincorpValues[opId]);
         return this.layoutModel.createActionUrl('switch_main_corp', args);
     }

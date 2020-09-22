@@ -19,7 +19,7 @@
  */
 
 import { Observable, of as rxOf } from 'rxjs';
-import { concatMap, tap, map } from 'rxjs/operators';
+import { concatMap, tap, map, scan, reduce } from 'rxjs/operators';
 import { SEDispatcher, IActionDispatcher } from 'kombo';
 import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
 
@@ -35,8 +35,8 @@ import { FirstHitsModel } from '../../query/firstHits';
 import { QueryInfoModel } from './info';
 import { Actions, ActionName } from '../actions';
 import { Actions as ConcActions, ActionName as ConcActionName } from '../../concordance/actions';
-import { ExtendedQueryOperation, importEncodedOperations, QueryPipelineResponse } from './common';
-import { AjaxConcResponse } from '../../concordance/common';
+import { ExtendedQueryOperation, importEncodedOperation, QueryPipelineResponse, QueryPipelineResponseItem } from './common';
+import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
 import { QueryContextArgs } from '../common';
 import { ConcSortModel } from '../sort/single';
 import { MultiLevelConcSortModel } from '../sort/multi';
@@ -85,12 +85,14 @@ export interface QueryReplayModelState {
 
     replayOperations:Array<string>;
 
+    lastOperationKey:string;
+
     /**
      * Contains args used by different input forms involved in the current query operations.
      * The used key is the one used by conc_persistence to store operations to db.
-     * There are also two special keys:
-     * __new__: contains arguments for a form of a new operation which will be submitted
-     *          and appended to the current query (e.g. we add a filter/sort/...)
+     * There is also a special key __new__ which contains arguments for a form of a new
+     * operation which will be submitted and appended to the current query (e.g. we add a
+     * filter/sort/...)
      */
     concArgsCache:{[key:string]:AjaxResponse.ConcFormArgs};
 
@@ -109,11 +111,6 @@ export interface QueryReplayModelState {
     overviewVisible:boolean;
 }
 
-function getCurrentQueryKey(pageModel:PageModel):string {
-    const compiledQuery = pageModel.getConf<Array<string>>('compiledQuery') || [];
-    const lastOp = compiledQuery[compiledQuery.length - 1] || '';
-    return lastOp.substr(0, 1) === '~' ? lastOp.substr(1) : undefined;
-}
 
 export interface QueryReplayModelArgs {
     dispatcher:IActionDispatcher;
@@ -125,13 +122,22 @@ export interface QueryReplayModelArgs {
 
 interface CreateOperationArgs {
     state:QueryReplayModelState;
+    baseOnConcId:string;
     queryContext:QueryContextArgs;
+    op:Kontext.QueryOperation;
+    pipeOp:QueryPipelineResponseItem;
     opIdx:number;
-    opKey:string;
     changedOpIdx:number;
     numOps:number;
-    formType:string;
+    dispatch:SEDispatcher;
 }
+
+type OperationChainArgs = [
+    Kontext.QueryOperation,
+    QueryPipelineResponseItem,
+    number,
+    {[k:string]:AjaxResponse.ConcFormArgs}
+];
 
 /**
  * QueryReplayModel reads operations stored in the breadcrumb-like navigation
@@ -166,8 +172,9 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             dispatcher,
             pageModel,
             {
+                lastOperationKey: pageModel.getConf<string>('concPersistenceOpId'),
                 currentQueryOverview: null,
-                currEncodedOperations: importEncodedOperations(currentOperations),
+                currEncodedOperations: List.map(importEncodedOperation, currentOperations),
                 replayOperations: List.map(_ => null, currentOperations),
                 concArgsCache: {...concArgsCache},
                 branchReplayIsRunning: false,
@@ -185,6 +192,19 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.switchMcModel = replayModelDeps.switchMcModel;
         this.textTypesModel = replayModelDeps.textTypesModel;
         this.firstHitsModel = replayModelDeps.firstHitsModel;
+
+        this.addActionHandler<ConcActions.AddedNewOperation>(
+            ConcActionName.AddedNewOperation,
+            (state, action) => {
+                if (!action.error) {
+                    state.branchReplayIsRunning = false;
+                    state.lastOperationKey = action.payload.data.conc_persistence_op_id;
+                    state.currEncodedOperations = List.map(importEncodedOperation, action.payload.data.query_overview);
+                    state.replayOperations = List.repeat(() => null, List.size(state.currEncodedOperations));
+                    state.concArgsCache = {};
+                }
+            }
+        );
 
         this.addActionHandler<ConcActions.MarkLinesDone>(
             ConcActionName.MarkLinesDone,
@@ -293,24 +313,23 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     )
 
                 ).subscribe(
-                    null,
+                    data => {
+                        dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
+                            payload: {
+                                concId: data.conc_persistence_op_id,
+                                data: data
+                            }
+                        });
+                    },
                     err => {
                         this.pageModel.showMessage('error', err);
-                        dispatch<Actions.BranchQueryDone>({
-                            name: ActionName.BranchQueryDone,
+                        dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
                             error: err
                         });
                     }
                 )
-            }
-        );
-
-        this.addActionHandler<Actions.BranchQueryDone>(
-            ActionName.BranchQueryDone,
-            (state, action) => {
-                state.branchReplayIsRunning = false;
-                state.replayOperations = action.payload.replayOperations;
-                state.concArgsCache = action.payload.concArgsCache;
             }
         );
 
@@ -320,7 +339,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.branchReplayIsRunning = true;
             },
             (state, action, dispatch) => {
-                const args = this.pageModel.getConcArgs();
+                const args = this.pageModel.exportConcArgs();
                 return this.pageModel.ajax$<QueryPipelineResponse>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('load_query_pipeline'),
@@ -406,8 +425,17 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * @param numOps a total number of operations in the query pipeline
      * @param formType a form type used to enter data to this operation (query, filter, sort)
      */
-    private createOperation({state, queryContext, opIdx, opKey, changedOpIdx,
-            numOps, formType}:CreateOperationArgs):Observable<AjaxConcResponse|null> {
+    private createOperation({
+        state,
+        baseOnConcId,
+        queryContext,
+        opIdx,
+        changedOpIdx,
+        numOps,
+        op,
+        pipeOp,
+        dispatch
+    }:CreateOperationArgs):Observable<AjaxConcResponse|null> {
         const prepareFormData:Observable<AjaxResponse.ConcFormArgs|null> = changedOpIdx !== opIdx ?
                 this.syncFormData(state, opIdx) : rxOf(null);
         if (opIdx === 0) {
@@ -431,82 +459,74 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 ),
                 concatMap(
                     () => {
-                        const url = this.queryModel.getSubmitUrl(queryContext);
+                        const args = this.queryModel.createSubmitArgs(queryContext);
+                        const url = this.pageModel.createActionUrl('query_submit', [['format', 'json']]);
                         if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<AjaxConcResponse>(
-                                HTTP.Method.GET,
+                            return this.pageModel.ajax$<ConcQueryResponse>(
+                                HTTP.Method.POST,
                                 url,
-                                {
-                                    format: 'json',
-                                    async: 0
-                                }
-                            );
+                                args,
+                                {contentType: 'application/json'}
+                            )
 
                         } else {
-                            return rxOf(null).pipe(
-                                tap(() => this.queryModel.submitQuery(queryContext))
-                            );
+                            return this.queryModel.submitQuery(queryContext)
                         }
                     }
+                ),
+                concatMap(
+                    data => this.pageModel.ajax$<AjaxConcResponse>(
+                        HTTP.Method.GET,
+                        this.queryModel.createViewUrl(
+                            data.conc_persistence_op_id,
+                            data.conc_args,
+                            true
+                        ),
+                        {}
+                    )
                 )
             );
 
-        } else if (formType === Kontext.ConcFormTypes.FILTER) {
+        } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.FILTER) {
             return prepareFormData.pipe(
                 concatMap(
-                    () => {
-                        const url = this.filterModel.getSubmitUrl(opKey);
-                        if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$(
-                                HTTP.Method.GET,
-                                url,
-                                {format: 'json'}
-                            );
-
-                        } else {
-                            return rxOf(null).pipe(
-                                tap(
-                                    () => this.filterModel.submitQuery(opKey)
-                                )
-                            );
-                        }
-                    }
+                    () => this.filterModel.submitQuery(pipeOp.id, baseOnConcId)
                 )
             );
 
-        } else if (formType === Kontext.ConcFormTypes.SORT) {
+        } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SORT) {
             return prepareFormData.pipe(
                 concatMap(
                     () => {
                         let activeModel:ISubmitableConcSortModel;
 
-                        if (this.sortModel.isActiveActionValue(opKey)) {
+                        if (this.sortModel.isActiveActionValue(pipeOp.id)) {
                             activeModel = this.sortModel;
 
-                        } else if (this.mlConcSortModel.isActiveActionValue(opKey)) {
+                        } else if (this.mlConcSortModel.isActiveActionValue(pipeOp.id)) {
                             activeModel = this.mlConcSortModel;
                         }
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
-                                activeModel.getSubmitUrl(opKey),
+                                activeModel.getSubmitUrl(pipeOp.id, baseOnConcId),
                                 {format: 'json'}
                             );
 
                         } else {
                             return rxOf(null).pipe(
-                                tap(() => activeModel.submit(opKey))
+                                tap(() => activeModel.submit(pipeOp.id, baseOnConcId))
                             );
                         }
                     }
                 )
             );
 
-        } else if (formType === Kontext.ConcFormTypes.SAMPLE) {
+        } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SAMPLE) {
             return prepareFormData.pipe(
                 concatMap(
                     () => {
-                        const url = this.sampleModel.getSubmitUrl(opKey);
+                        const url = this.sampleModel.getSubmitUrl(pipeOp.id, baseOnConcId);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
@@ -517,7 +537,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         } else {
                             return rxOf(null).pipe(
                                 tap(
-                                    (_) => this.sampleModel.submitQuery(opKey)
+                                    (_) => this.sampleModel.submitQuery(pipeOp.id, baseOnConcId)
                                 )
                             );
                         }
@@ -526,9 +546,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             );
 
         // please note that shuffle does not have its own store
-        } else if (formType === Kontext.ConcFormTypes.SHUFFLE) {
-            return rxOf(this.pageModel.createActionUrl(
-                    'shuffle', this.pageModel.getConcArgs().items())).pipe(
+        } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SHUFFLE) {
+            const args = this.pageModel.exportConcArgs();
+            args.set('q', '~' + baseOnConcId);
+            return rxOf(this.pageModel.createActionUrl('shuffle', args)).pipe(
                 concatMap(
                     (targetUrl) => {
                         if (opIdx < numOps - 1) {
@@ -551,8 +572,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 )
             );
 
-        } else if (formType === Kontext.ConcFormTypes.SWITCHMC) {
-            return rxOf(this.switchMcModel.getSubmitUrl(opKey)).pipe(
+        } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SWITCHMC) {
+            return rxOf(this.switchMcModel.getSubmitUrl(pipeOp.id, baseOnConcId)).pipe(
                 concatMap(
                     (url) => {
                         if (opIdx < numOps - 1) {
@@ -575,13 +596,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 )
             );
 
-        } else if (formType === Kontext.ConcFormTypes.SUBHITS) {
+        } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SUBHITS) {
+            const args = this.pageModel.exportConcArgs();
+            args.set('q', '~' + baseOnConcId);
             return prepareFormData.pipe(
                 concatMap(
                     () => {
                         const targetUrl = this.pageModel.createActionUrl(
                             'filter_subhits',
-                            this.pageModel.getConcArgs().items()
+                            args
                         );
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<AjaxConcResponse>(
@@ -603,11 +626,11 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 )
             );
 
-        } else if (formType === Kontext.ConcFormTypes.FIRSTHITS) {
+        } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.FIRSTHITS) {
             return prepareFormData.pipe(
                 concatMap(
                     () => {
-                        const targetUrl = this.firstHitsModel.getSubmitUrl(opKey);
+                        const targetUrl = this.firstHitsModel.getSubmitUrl(pipeOp.id, baseOnConcId);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<AjaxConcResponse>(
                                 HTTP.Method.GET,
@@ -619,7 +642,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             return rxOf(null).pipe(
                                 tap(
                                     () => {
-                                        this.firstHitsModel.submitForm(opKey);
+                                        this.firstHitsModel.submitForm(pipeOp.id, baseOnConcId);
                                     }
                                 )
                             );
@@ -628,14 +651,13 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 )
             );
 
-        } else if (formType === Kontext.ConcFormTypes.LOCKED) {
+        } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.LOCKED) {
             return new Observable<string>((observer) => {
-                    const args = this.pageModel.getConcArgs();
-                    args.add(
-                        'q',
-                        state.currEncodedOperations[opIdx].opid +
-                            state.currEncodedOperations[opIdx].arg
-                    );
+                    const args = this.pageModel.exportConcArgs();
+                    args.replace('q', [
+                        '~' + baseOnConcId,
+                        op ? `${op.opid}${op.arg}` : ''
+                    ]);
                     observer.next(this.pageModel.createActionUrl('view', args.items()));
                     observer.complete();
 
@@ -663,7 +685,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             );
 
         } else {
-            throw new Error('cannot prepare operation for type ' + formType);
+            throw new Error('cannot prepare operation for type ' + pipeOp.form_args.form_type);
         }
     }
 
@@ -680,8 +702,9 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * something like observable.pipe(tap(foo)=>sideEffect(foo)).
      */
     private branchQuery(state:QueryReplayModelState, queryContext:QueryContextArgs,
-                changedOpIdx:number, dispatch:SEDispatcher):Observable<AjaxConcResponse|null> {
-        const args = this.pageModel.getConcArgs();
+                changedOpIdx:number, dispatch:SEDispatcher):Observable<AjaxConcResponse> {
+        const args = this.pageModel.exportConcArgs();
+        args.set('q', '~' + state.lastOperationKey);
         return this.pageModel.ajax$<QueryPipelineResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('load_query_pipeline'),
@@ -698,46 +721,45 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     return tuple(data, newCache);
                 }
             ),
-            tap(
-                // now we store some stuff to the state but we cannot
-                // use the values within the stream!
-                ([data, newCache]) => {
-                    dispatch<Actions.BranchQueryDone>({
-                        name: ActionName.BranchQueryDone,
-                        payload: {
-                            replayOperations: List.map(item => item.id, data.ops),
-                            concArgsCache: newCache
-                        }
-                    });
-                }
-            ),
             concatMap(
                 ([data, newCache]) => {
-                    const appliedOps = List.filter(
-                        (_, i) => i <= state.stopAfterOpIdx || state.stopAfterOpIdx === null,
-                        data.ops
+                    const appliedOps = pipe(
+                        data.ops,
+                        List.zipAll(data.query_overview),
+                        List.filter(
+                            (_, i) => i <= state.stopAfterOpIdx || state.stopAfterOpIdx === null
+                        ),
+                        List.map(
+                            v => v
+                        )
                     );
                     return rxOf(
-                        ...List.map(op => tuple(op, appliedOps.length, newCache), appliedOps)
+                        ...List.map(([pipeOp, op]) => tuple(op, pipeOp, appliedOps.length, newCache), appliedOps)
                     )
                 }
             ),
-            concatMap(
-                ([opItem, numOps, newCache], opIdx) => this.createOperation({
-                    state,
-                    opIdx,
-                    opKey: opItem.id,
-                    changedOpIdx,
-                    queryContext,
-                    numOps,
-                    formType: newCache[opItem.id].form_type
-                })
+            reduce<OperationChainArgs, Observable<AjaxConcResponse>>(
+                (prev:Observable<AjaxConcResponse|null>, [op, pipeOp, numOps, newCache], opIdx) => {
+                    return prev.pipe(
+                        concatMap(
+                            (data) => this.createOperation({
+                                baseOnConcId: data ? data.conc_persistence_op_id : null,
+                                state,
+                                opIdx,
+                                numOps,
+                                changedOpIdx,
+                                queryContext,
+                                op,
+                                pipeOp,
+                                dispatch
+                            })
+                        )
+                    );
+                },
+                rxOf(null)
             ),
-            tap(
-                (data:AjaxConcResponse|null) => {
-                    const newQVal = data !== null && data.Q ? data.Q || [] : [];
-                    this.pageModel.replaceConcArg('q', newQVal);
-                }
+            concatMap(
+                last => last
             )
         );
     }
@@ -765,7 +787,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: getCurrentQueryKey(this.pageModel),
+                        last_key: state.lastOperationKey,
                         idx: opIdx
                     }
                 )
@@ -796,7 +818,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: getCurrentQueryKey(this.pageModel),
+                        last_key: state.lastOperationKey,
                         idx: opIdx
                     }
                 )
@@ -818,7 +840,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: getCurrentQueryKey(this.pageModel),
+                        last_key: state.lastOperationKey,
                         idx: opIdx
                     }
                 ).pipe(
@@ -843,7 +865,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: getCurrentQueryKey(this.pageModel),
+                        last_key: state.lastOperationKey,
                         idx: opIdx
                     }
                 )
@@ -860,7 +882,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                 {
                     corpname: this.getActualCorpname(),
-                    last_key: getCurrentQueryKey(this.pageModel),
+                    last_key: state.lastOperationKey,
                     idx: opIdx
                 }
 
@@ -877,7 +899,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                 {
                     corpname: this.getActualCorpname(),
-                    last_key: getCurrentQueryKey(this.pageModel),
+                    last_key: state.lastOperationKey,
                     idx: opIdx
                 }
             );
@@ -896,7 +918,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: getCurrentQueryKey(this.pageModel),
+                        last_key: state.lastOperationKey,
                         idx: opIdx
                     }
 
@@ -917,7 +939,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
                         corpname: this.getActualCorpname(),
-                        last_key: getCurrentQueryKey(this.pageModel),
+                        last_key: state.lastOperationKey,
                         idx: opIdx
                     }
                 )
@@ -927,11 +949,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     private syncFormData(state:QueryReplayModelState,
             opIdx:number):Observable<[AjaxResponse.ConcFormArgs|null, string]> {
         const formType = state.currEncodedOperations[opIdx].formType;
-
-        if (Dict.size(state.concArgsCache) === 0) {
-            return rxOf(null);
-
-        } else if (formType === Kontext.ConcFormTypes.QUERY) {
+        if (formType === Kontext.ConcFormTypes.QUERY) {
             return this.syncQueryForm(state, opIdx).pipe(
                 map(v => tuple(v, this.getActualCorpname()))
             );

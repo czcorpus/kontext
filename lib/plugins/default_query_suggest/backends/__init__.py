@@ -16,15 +16,19 @@ from plugins.abstract.query_suggest import AbstractBackend
 import logging
 from typing import List
 from plugins.common.http import HTTPClient
+import manatee
 
 
-class ManateeBackend(AbstractBackend):
+class MorseBackend(AbstractBackend):
+    """
+    TODO this is just a debugging stuff
+    """
 
     def __init__(self, conf, ident):
         super().__init__(ident)
 
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
-                        query_type: str, p_attr: str, struct: str, s_attr: str):
+    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
+                        value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
         data = {
             'a': 'akát',
             'b': 'blýskavice',
@@ -53,7 +57,7 @@ class ManateeBackend(AbstractBackend):
             'y': 'ý se ztrácí',
             'z': 'známá žena'
         }
-        return [data.get(value[-1], '---'), 'a jiné']
+        return [data.get(value[-1], '---')] if value is not None and len(value) > 0 else []
 
 
 class HTTPBackend(AbstractBackend):
@@ -74,8 +78,8 @@ class HTTPBackend(AbstractBackend):
         else:
             return self._conf.get('attrs', [])
 
-    def find_suggestion(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
-                        query_type: str, p_attr: str, struct: str, s_attr: str):
+    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
+                        value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
         args = dict(
             ui_lang=self.enc_val(ui_lang), corpora=[self.enc_val(c) for c in corpora])
         logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))

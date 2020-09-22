@@ -103,7 +103,7 @@ class PublishedSubcMetadata(object):
         return PublishedSubcMetadata(**json.loads(data))
 
 
-def _list_public_corp_dir(corpname: str, path: str, code_prefix: Optional[str], author_prefix: Optional[str]) -> List[Dict[str, Any]]:
+def _list_public_corp_dir(corpname: str, path: str, value_prefix: Optional[str]) -> List[Dict[str, Any]]:
     ans: List[Dict[str, Any]] = []
     subc_root = os.path.dirname(os.path.dirname(path))
     for item in glob.glob(f'{path}/*.subc'):
@@ -115,15 +115,14 @@ def _list_public_corp_dir(corpname: str, path: str, code_prefix: Optional[str], 
             try:
                 ident = os.path.splitext(os.path.basename(item))[0]
                 author_rev = ' '.join(reversed(meta.author_name.split(' '))).lower() if meta.author_name else ''
-                author_prefix = author_prefix.lower() if author_prefix else None
-                if (code_prefix and ident.startswith(code_prefix) or author_prefix and
-                        author_rev.startswith(author_prefix)):
+                if ident.startswith(value_prefix) or author_rev.startswith(value_prefix):
                     ans.append(dict(
                         ident=ident,
                         origName=os.path.splitext(os.path.basename(meta.subcpath))[0],
                         corpname=corpname,
                         author=meta.author_name,
                         description=k_markdown(desc),
+                        created=int(os.path.getctime(full_path)),
                         userId=int(meta.subcpath.lstrip(subc_root).split(os.path.sep, 1)[0])
                     ))
             except Exception as ex:
@@ -131,11 +130,12 @@ def _list_public_corp_dir(corpname: str, path: str, code_prefix: Optional[str], 
     return ans
 
 
-def list_public_subcorpora(subcpath: str, author_prefix: Optional[str] = None, code_prefix: Optional[str] = None, offset: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
+def list_public_subcorpora(subcpath: str, value_prefix: Optional[str] = None,
+                           offset: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
     data: List[Dict[str, Any]] = []
     for corp in os.listdir(subcpath):
         try:
-            data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), code_prefix, author_prefix)
+            data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), value_prefix)
             if len(data) >= offset + limit:
                 break
         except Exception as ex:

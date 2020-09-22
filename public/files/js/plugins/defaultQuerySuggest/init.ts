@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe } from 'cnc-tskit';
+import { List, pipe, Dict } from 'cnc-tskit';
 import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { init as initView, SuggestionsViews, KnownRenderers } from './view';
+import { init as initView, SuggestionsViews } from './view';
 import { Model, ProviderInfo } from './model';
+import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend } from './frontends';
 
 
 declare var require:any;
@@ -38,8 +39,6 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
     protected readonly pluginApi:IPluginApi;
 
     protected readonly views:SuggestionsViews;
-
-    protected readonly
 
     protected readonly model:Model;
 
@@ -61,25 +60,38 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         return true;
     }
 
-    createElement(rendererId:string, data:unknown):React.ReactElement {
-        switch (rendererId) {
-            case KnownRenderers.ERROR:
-                if (this.errorTypeGuard(data)) {
-                    return createElement(this.views.error, {data});
-                }
-            break;
-            case KnownRenderers.BASIC:
-                if (this.basicTypeGuard(data)) {
-                    return createElement(this.views.basic, {data});
-                }
-            break;
-            default:
-                return createElement(this.views.unsupported, {data});
+    createElement<T>(
+        dr:PluginInterfaces.QuerySuggest.DataAndRenderer<T>,
+        itemClickHandler:(onItemClick, value)=>void
+    ):React.ReactElement {
+
+        const onItemClick = List.find(
+            v => v.rendererId === dr.rendererId,
+            this.providers
+        ).onItemClick;
+
+        if (isBasicFrontend(dr)) {
+            return createElement(this.views.basic, {
+                data: dr.contents,
+                itemClickHandler: onItemClick ?
+                    value => itemClickHandler(onItemClick, value) :
+                    null
+            });
+
+        } else if (isPosAttrPairRelFrontend(dr)) {
+            return createElement(this.views.posAttrPairRel, {
+                ...dr.contents,
+                itemClickHandler: onItemClick ?
+                    value => itemClickHandler(onItemClick, value) :
+                    null
+            });
+
+        } else if (isErrorFrontend(dr)) {
+            return createElement(this.views.error, {data: dr.contents});
+
+        } else {
+            return createElement(this.views.unsupported, {data: dr.contents});
         }
-        return createElement(
-            this.views.error,
-            {data: `Invalid data for the ${rendererId} frontend`}
-        );
     }
 
     listCurrentProviders():Array<string> {
@@ -89,18 +101,19 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         );
     }
 
-    errorTypeGuard(data:unknown):data is Error {
-        return data instanceof Error || typeof data === 'string';
-    }
-
-    basicTypeGuard(data:unknown):data is Array<string> {
-        return data instanceof Array && List.every(v => typeof v === 'string', data);
-    }
-
     isEmptyResponse<T>(v:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):boolean {
+        if (v === undefined) {
+            return true;
+        }
         const data = v.contents;
-        if (this.basicTypeGuard(data)) {
-            return List.empty(data)
+        if (isBasicFrontend(v)) {
+            return List.empty(v.contents);
+
+        } else if (isPosAttrPairRelFrontend(v)) {
+            return Dict.empty(v.contents.data);
+
+        } else if (isErrorFrontend(v)) {
+            return false;
         }
         return !!data;
     }
@@ -114,9 +127,10 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
         List.map(
             item => ({
                 ident: item.ident,
-                frontendId: item.frontendId,
+                rendererId: item.rendererId,
                 queryTypes: item.queryTypes,
-                heading: item.heading
+                heading: item.heading,
+                onItemClick: item.onItemClick
             })
         )
     );

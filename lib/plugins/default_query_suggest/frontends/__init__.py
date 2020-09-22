@@ -16,8 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from plugins.abstract.query_suggest import AbstractFrontend
-import json
+from plugins.abstract.query_suggest import AbstractFrontend, Response
+from typing import Any, Dict
 
 
 class ErrorFrontend(AbstractFrontend):
@@ -25,8 +25,8 @@ class ErrorFrontend(AbstractFrontend):
     def __init__(self, conf):
         super().__init__(conf, 'error')
 
-    def export_data(self, ui_lang, data):
-        response = super().export_data(ui_lang, data)
+    def export_data(self, data, value, ui_lang):
+        response = super().export_data(data, value, ui_lang)
         response.contents = data
         return response
 
@@ -35,9 +35,27 @@ class BasicFrontend(AbstractFrontend):
 
     def __init__(self, conf):
         super().__init__(conf, 'basic')
+        self.on_item_click = conf.get('onItemClick', None)
 
-    def export_data(self, ui_lang, data):
-        response = super().export_data(ui_lang, data)
+    def export_data(self, data, value, ui_lang):
+        response = super().export_data(data, value, ui_lang)
         response.contents = data
-        response.heading = self.headings.get(ui_lang, '--')
+        return response
+
+
+class PosAttrPairRelFrontend(AbstractFrontend):
+
+    def __init__(self, conf):
+        super().__init__(conf, 'posAttrPairRel')
+        self.on_item_click = conf.get('onItemClick', None)
+
+    def export_data(self, data: Dict[str, Any], value, ui_lang):
+        data_norm = data['data']
+        for k, v in data['data'].items():
+            data_norm[k] = v[:10]
+            if len(v) > 20:
+                data_norm[k].append(None)
+        data['data'] = data_norm
+        response = super().export_data(data_norm, value, ui_lang)
+        response.contents = data
         return response

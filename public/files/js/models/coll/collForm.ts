@@ -264,7 +264,7 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
     }
 
     getSubmitArgs(state:CollFormModelState):MultiDict<CollServerArgs> {
-        const args = this.pageModel.getConcArgs() as MultiDict<CollServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<CollServerArgs>;
         args.set('cattr', state.cattr);
         args.set('cfromw', state.cfromw.value);
         args.set('ctow', state.ctow.value);

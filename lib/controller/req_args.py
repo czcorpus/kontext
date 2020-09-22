@@ -17,7 +17,7 @@ from collections import defaultdict
 from typing import List, Union, Dict, Any
 
 
-class RequestArgsProxy(object):
+class RequestArgsProxy:
     """
     A wrapper class allowing an access to both
     Werkzeug's request.form and request.args (MultiDict objects).
@@ -32,18 +32,30 @@ class RequestArgsProxy(object):
     mapping.
     """
 
-    def __init__(self, form: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]], args: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]]):
+    def __init__(self, form: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]],
+                 args: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]],
+                 json_data: Dict[str, Any]):
         self._form = form if isinstance(
             form, werkzeug.datastructures.MultiDict) else werkzeug.datastructures.MultiDict(form)
         self._args = args if isinstance(
             form, werkzeug.datastructures.MultiDict) else werkzeug.datastructures.MultiDict(args)
         self._forced = defaultdict(lambda: [])
+        self._json = json_data
 
     def __iter__(self):
         return list(self.keys()).__iter__()
 
     def __contains__(self, item):
         return item in self._forced or item in self._form or item in self._args
+
+    @property
+    def corpora(self) -> List[str]:
+        if self._json is not None:
+            if self._json.get('type') == 'concQueryArgs':
+                return [q['corpname'] for q in self._json['queries']]
+            else:
+                return [self._json.get('corpname')]
+        return self.getlist('corpname')
 
     def keys(self):
         return list(set(list(self._forced.keys()) + list(self._form.keys()) + list(self._args.keys())))

@@ -131,8 +131,12 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.pluginTypeIsActive(name);
     }
 
-    getConcArgs():MultiDict<ConcServerArgs> {
+    getConcArgs():ConcServerArgs {
         return this.pageModel.getConcArgs();
+    }
+
+    exportConcArgs():MultiDict<ConcServerArgs> {
+        return this.pageModel.exportConcArgs();
     }
 
     getCorpusIdent():Kontext.FullCorpusIdent {

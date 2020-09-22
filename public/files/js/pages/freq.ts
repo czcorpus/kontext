@@ -398,26 +398,26 @@ class FreqPage {
                             window.location.replace(
                                 this.layoutModel.createActionUrl(
                                     'view',
-                                    this.layoutModel.getConcArgs().items()
+                                    this.layoutModel.exportConcArgs().items()
                                 ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
                             );
                         break;
                         case MMActionName.ShowSort:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.getConcArgs().items()
+                                this.layoutModel.exportConcArgs().items()
                             ) + '#sort');
                         break;
                         case MMActionName.ShowSample:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.getConcArgs().items()
+                                this.layoutModel.exportConcArgs().items()
                             ) + '#sample');
                         break;
                         case MMActionName.ApplyShuffle:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.getConcArgs().items()
+                                this.layoutModel.exportConcArgs().items()
                             ) + '#shuffle');
                         break;
                     }

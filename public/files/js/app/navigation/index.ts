@@ -22,7 +22,7 @@ import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 import { IFullActionControl } from 'kombo';
-import { pipe, List, HTTP } from 'cnc-tskit';
+import { pipe, List, HTTP, Dict, tuple, id } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
@@ -210,23 +210,20 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             return v === null || v === undefined ? '' : encodeURIComponent(v);
         }
 
-        function encodeArgs(obj) {
-            const ans = [];
-            let p; // ES5 issue
-            for (p in obj) {
-                if (obj.hasOwnProperty(p)) {
-                    const val = obj[p] !== null && obj[p] !== undefined ? obj[p] : '';
-                    if (Array.isArray(val)) {
-                        val.forEach(item => {
-                            ans.push(encodeURIComponent(p) + '=' + exportValue(item));
-                        });
-
-                    } else {
-                        ans.push(encodeURIComponent(p) + '=' + exportValue(val));
+        function encodeArgs(obj:{[k:string]:any}):string {
+            return pipe(
+                obj,
+                Dict.toEntries(),
+                List.filter(([,v]) => v !== undefined),
+                List.map(([k, v]) => {
+                    if (Array.isArray(v)) {
+                        return List.map(v2 => tuple(k, v2), v);
                     }
-                }
-            }
-            return ans.join('&');
+                    return [tuple(k, v)];
+                }),
+                List.flatMap(id),
+                List.map(([k, v]) => encodeURIComponent(k) + '=' + exportValue(v))
+            ).join('&');
         }
 
         let body;
@@ -335,42 +332,6 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
 
     getHistory():Kontext.IHistory {
         return this.history;
-    }
-
-    /**
-     * @param overwriteArgs a list of arguments whose values overwrite the current ones
-     * @param appendArgs a list of arguments which will be appended to the existing ones
-     */
-    exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string {
-        const tmp = new MultiDict(this.conf.getConf<Kontext.ListOfPairs>('currentArgs'));
-
-        function importArgs(args:Kontext.MultiDictSrc):Array<[string,string]> {
-            if (!args) {
-                return [];
-
-            } else if (!Array.isArray(args)) {
-                const impArgs:Array<[string, string]> = [];
-                for (let p in args) {
-                    if (args.hasOwnProperty(p)) {
-                        impArgs.push([p, args[p]]);
-                    }
-                }
-                return impArgs;
-
-            } else {
-                return <Array<[string,string]>>args;
-            }
-        }
-
-        const overwriteArgs2 = importArgs(overwriteArgs);
-        overwriteArgs2.forEach(([key,]) => {
-            tmp.replace(key, []);
-        });
-
-        overwriteArgs2.concat(importArgs(appendArgs)).forEach(([key, value]) => {
-            tmp.add(key, value);
-        });
-        return this.encodeURLParameters(tmp);
     }
 
     registerCorpusSwitchAwareModels(

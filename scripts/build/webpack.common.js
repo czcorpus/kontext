@@ -45,7 +45,7 @@ module.exports = {
             coll: mkpath('js/pages/coll.ts'),
             corplist: mkpath('js/pages/corplist.ts'),
             fcs: mkpath('js/pages/fcs.ts'),
-            firstForm: mkpath('js/pages/firstForm.ts'),
+            query: mkpath('js/pages/query.ts'),
             freq: mkpath('js/pages/freq.ts'),
             message: mkpath('js/pages/message.ts'),
             queryHistory: mkpath('js/pages/queryHistory.ts'),

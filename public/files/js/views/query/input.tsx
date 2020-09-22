@@ -44,14 +44,14 @@ export interface InputModuleArgs {
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     cqlEditorModel:CQLEditorModel;
+    querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
 
 export interface InputModuleViews {
     TRQueryInputField:React.ComponentClass<TRQueryInputFieldProps>;
-    TRQueryTypeField:React.SFC<TRQueryTypeFieldProps>;
-    TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps>;
-    TRIncludeEmptySelector:React.SFC<TRIncludeEmptySelectorProps>;
+    TRPcqPosNegField:React.FC<TRPcqPosNegFieldProps>;
+    TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps>;
 }
 
 
@@ -69,28 +69,29 @@ export interface TRQueryInputFieldProps {
     defaultAttr:string;
     attrList:Array<Kontext.AttrItem>;
     matchCaseValue:boolean;
-    tagsetDocUrl:string;
     onEnterKey:()=>void;
     takeFocus?:boolean;
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    customOptions?:Array<React.ReactElement<{span:number}>>;
 }
 
 
 export interface TRQueryTypeFieldProps {
     formType:QueryFormType;
     sourceId:string;
-    queryType:string; // TODO enum
-    hasLemmaAttr:boolean;
+    queryType:QueryType;
 }
 
 
 export interface TRPcqPosNegFieldProps {
+    span:number;
     formType:QueryFormType;
     sourceId:string;
     value:string; // TODO enum
 }
 
 export interface TRIncludeEmptySelectorProps {
+    span:number;
     value:boolean;
     corpname:string;
 }
@@ -113,9 +114,10 @@ interface QueryToolboxProps {
     toggleHistoryWidget:()=>void;
 }
 
+
 export function init({
     dispatcher, he, queryModel, queryHintModel, withinBuilderModel,
-    virtualKeyboardModel, cqlEditorModel}:InputModuleArgs):InputModuleViews {
+    virtualKeyboardModel, cqlEditorModel, querySuggest}:InputModuleArgs):InputModuleViews {
 
     const keyboardViews = keyboardInit({
         dispatcher: dispatcher,
@@ -144,7 +146,7 @@ export function init({
 
         render() {
             return (
-                <div>
+                <div className="QueryHints">
                     <span className="hint">{this.props.currentHints[UsageTipCategory.QUERY]}</span>
                     <span className="next-hint">
                         <a onClick={this._clickHandler} title={he.translate('global__next_tip')}>
@@ -159,141 +161,59 @@ export function init({
 
     const BoundQueryHints = Bound<UsageTipsState>(QueryHints, queryHintModel);
 
-    // ------------------- <QueryTypeHints /> -----------------------------
-
-    class QueryTypeHints extends React.Component<{
-        queryType:string;
-    },
-    {
-        visible:boolean;
-    }> {
-
-        constructor(props) {
-            super(props);
-            this.state = {visible: false};
-            this._handleHintClick = this._handleHintClick.bind(this);
-        }
-
-        _handleHintClick() {
-            this.setState({visible: !this.state.visible});
-        }
-
-        _getHintText() {
-            switch (this.props.queryType) {
-                case 'iquery':
-                    return [he.translate('query__qt_basic'), he.translate('query__type_hint_basic'), null];
-                case 'lemma':
-                    return [he.translate('query__qt_lemma'), he.translate('query__type_hint_lemma'), null];
-                case 'phrase':
-                    return [he.translate('query__qt_phrase'), he.translate('query__type_hint_phrase'), null];
-                case 'word':
-                    return [he.translate('query__qt_word_form'), he.translate('query__type_hint_word'), null];
-                case 'char':
-                    return [he.translate('query__qt_word_part'), he.translate('query__type_hint_char'), null];
-                case 'cql':
-                    return [he.translate('query__qt_cql'), he.translate('query__type_hint_cql'), he.getHelpLink('term_cql')];
-                default:
-                    return ['', '', null];
-            }
-        }
-
-        render() {
-            const [heading, text, helpUrl] = this._getHintText();
-            return (
-                <span>
-                    <span className="hint" onClick={this._handleHintClick}>
-                        <a>
-                            <img src={he.createStaticUrl('img/question-mark.svg')}
-                                alt={he.translate('global__info_icon')} />
-                        </a>
-                    </span>
-                    {this.state.visible ?
-                        <layoutViews.PopupBox onCloseClick={this._handleHintClick} takeFocus={true} customClass="hint">
-                            <div>
-                                <h3>{he.translate('query__select_type')} <span className="type">"{heading}"</span></h3>
-                                <p dangerouslySetInnerHTML={{__html: text}} />
-                                {helpUrl ?
-                                    <p className="link">
-                                        <hr />
-                                        <a href={helpUrl} className="external" target='_blank'>
-                                            {he.translate('global__get_more_info')}
-                                        </a>
-                                    </p> :
-                                    null
-                                }
-                            </div>
-                        </layoutViews.PopupBox> :
-                        null
-                    }
-                </span>
-            );
-        }
-    }
-
 
     // ------------------- <TRQueryTypeField /> -----------------------------
 
-    const TRQueryTypeField:React.SFC<TRQueryTypeFieldProps> = (props) => {
+    const TRQueryTypeField:React.FC<TRQueryTypeFieldProps> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSelectType>({
-                name: ActionName.QueryInputSelectType,
+            dispatcher.dispatch<Actions.QueryInputSetQType>({
+                name: ActionName.QueryInputSetQType,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
-                    queryType: evt.target.value
+                    queryType: props.queryType === 'advanced' ? 'simple' : 'advanced'
                 }
             });
         };
 
         return (
-            <tr className="TRQueryTypeField">
-                <th>{he.translate('query__select_type')}:</th>
-                <td>
-                    <select value={props.queryType} onChange={handleSelection}>
-                        <option value="iquery">{he.translate('query__qt_basic')}</option>
-                        {props.hasLemmaAttr ? <option value="lemma">{he.translate('query__qt_lemma')}</option> : null}
-                        <option value="phrase">{he.translate('query__qt_phrase')}</option>
-                        <option value="word">{he.translate('query__qt_word_form')}</option>
-                        <option value="char">{he.translate('query__qt_word_part')}</option>
-                        <option value="cql">{he.translate('query__qt_cql')}</option>
-                    </select>
-                    <QueryTypeHints queryType={props.queryType} />
-                </td>
-            </tr>
+            <div className="TRQueryTypeField">
+                <label htmlFor="chck_wsdA3fe">{he.translate('query__qt_advanced')}:</label>
+                <input id="chck_wsdA3fe" type="checkbox" onChange={handleSelection} />
+            </div>
         );
     };
 
     // ------------------- <TRPcqPosNegField /> -----------------------------
 
-    const TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps> = (props) => {
+    const TRPcqPosNegField:React.FC<TRPcqPosNegFieldProps> = (props) => {
 
         const handleSelectChange = (evt) => {
             dispatcher.dispatch<Actions.FilterInputSetPCQPosNeg>({
                 name: ActionName.FilterInputSetPCQPosNeg,
                 payload: {
                     filterId: props.sourceId,
+                    formType: props.formType,
                     value: evt.target.value
                 }
             });
         };
 
         return (
-            <tr>
-                <th />
-                <td>
-                    <select value={props.value} onChange={handleSelectChange}>
-                        <option value="pos">{he.translate('query__align_contains')}</option>
-                        <option value="neg">{he.translate('query__align_not_contains')}</option>
-                    </select>
-                </td>
-            </tr>
+            <div>
+                <label>{he.translate('query__align_posneg_label')}</label>:{'\u00a0'}
+                <select value={props.value} onChange={handleSelectChange}>
+                    <option value="pos">{he.translate('query__align_contains')}</option>
+                    <option value="neg">{he.translate('query__align_not_contains')}</option>
+                </select>
+            </div>
         );
     };
 
     // ---------------- <TRIncludeEmptySelector /> ---------------------------
 
-    const TRIncludeEmptySelector:React.SFC<TRIncludeEmptySelectorProps> = (props) => {
+    const TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps> = (props) => {
 
         const handleCheckbox = () => {
             dispatcher.dispatch<Actions.QueryInputSetIncludeEmpty>({
@@ -306,22 +226,19 @@ export function init({
         };
 
         return (
-            <tr className="TRIncludeEmptySelector">
-                <th />
-                <td>
-                    <label>
-                        <input type="checkbox" checked={props.value}
-                            onChange={handleCheckbox} />
-                        {he.translate('query__include_empty_aligned')}
-                    </label>
-                </td>
-            </tr>
+            <div className="TRIncludeEmptySelector">
+                <label>
+                    {he.translate('query__include_empty_aligned')}:{'\u00a0'}
+                    <input type="checkbox" checked={props.value}
+                        onChange={handleCheckbox} />
+                </label>
+            </div>
         );
     };
 
     // ------------------- <TagWidget /> --------------------------------
 
-    const TagWidget:React.SFC<{
+    const TagWidget:React.FC<{
         formType:QueryFormType;
         sourceId:string;
         args:Kontext.GeneralProps;
@@ -454,7 +371,7 @@ export function init({
 
     // ------------------- <HistoryWidget /> -----------------------------
 
-    const HistoryWidget:React.SFC<{
+    const HistoryWidget:React.FC<{
         sourceId:string;
         formType:QueryFormType;
         onCloseTrigger:()=>void;
@@ -473,32 +390,54 @@ export function init({
 
     // ------------------- <SuggestionsWidget /> -----------------------------
 
-    const SuggestionsWidget:React.SFC<{
+    const SuggestionsWidget:React.FC<{
         qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
-        querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
-        sourceId:string;
+        querySuggestions:{[sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]};
         formType:QueryFormType;
+        sourceId:string;
+        handleItemClick:(onItemClick:string, value:string) => void;
 
-    }> = (props) => (
-        <div className="suggestions-box">
-            {pipe(
-                props.querySuggestions[props.sourceId],
-                List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
-                List.map(
-                    (v, i) => (
-                        <React.Fragment key={`${v.rendererId}${i}`}>
-                            <h2>{v.heading}:</h2>
-                            {props.qsuggPlugin.createElement(v.rendererId, v.contents)}
-                        </React.Fragment>
-                    ),
-                )
-            )}
-        </div>
-    );
+    }> = (props) => {
+
+        const suggestions = props.querySuggestions[props.sourceId][0];
+        const dynCls = List.every(s => querySuggest.isEmptyResponse(s), suggestions) ?
+            ' empty' : '';
+
+        const handleKey = () => {
+            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
+                name: ActionName.ToggleQuerySuggestionWidget,
+                payload: {
+                    formType: props.formType,
+                    sourceId: props.sourceId
+                }
+            });
+        }
+
+        return (
+            <div className={`SuggestionsWidget${dynCls}`} tabIndex={-1} onKeyDown={handleKey}>
+            {QueryFormModel.hasSuggestionsFor(props.querySuggestions, props.sourceId, querySuggest) ?
+                pipe(
+                    suggestions,
+                    List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
+                    List.map(
+                        (v, i) => (
+                            <React.Fragment key={`${v.rendererId}${i}`}>
+                                <h2>{v.heading}:</h2>
+                                {props.qsuggPlugin.createElement(v, props.handleItemClick)}
+                                {props.querySuggestions[props.sourceId][1] ?
+                                    <layoutViews.AjaxLoaderBarImage /> : null}
+                            </React.Fragment>
+                        ),
+                    )
+                ) : null
+            }
+            </div>
+        );
+    };
 
     // ------------------- <KeyboardWidget /> --------------------------------
 
-    const KeyboardWidget:React.SFC<{
+    const KeyboardWidget:React.FC<{
         sourceId:string;
         formType:QueryFormType;
         inputLanguage:string;
@@ -635,6 +574,11 @@ export function init({
                 <div className="query-toolbox">
                     {this._renderWidget()}
                     <ul>
+                        <li>
+                            <TRQueryTypeField formType={this.props.formType}
+                                queryType={this.props.queryTypes[this.props.sourceId]}
+                                sourceId={this.props.sourceId} />
+                        </li>
                         {List.map(
                             (item, i) => <li key={i}>{item}</li>,
                             this._renderButtons()
@@ -649,7 +593,7 @@ export function init({
 
     // ------------------- <LposSelector /> -----------------------------
 
-    const LposSelector:React.SFC<{
+    const LposSelector:React.FC<{
         sourceId:string;
         formType:QueryFormType;
         wPoSList:Array<{v:string; n:string}>;
@@ -683,7 +627,7 @@ export function init({
 
     // ------------------- <MatchCaseSelector /> -----------------------------
 
-    const MatchCaseSelector:React.SFC<{
+    const MatchCaseSelector:React.FC<{
         formType:QueryFormType;
         sourceId:string;
         matchCaseValue:boolean;
@@ -710,57 +654,103 @@ export function init({
         );
     };
 
+    // -------------------- <DefaultAttrSelector /> ------------------------
+
+    const DefaultAttrSelector:React.FC<{
+        defaultAttr:string;
+        forcedAttr:string;
+        attrList:Array<Kontext.AttrItem>;
+        sourceId:string;
+        formType:QueryFormType;
+        label:string;
+
+    }> = (props) => (
+        <span className="default-attr-selection">
+            {props.label + ':\u00a0'}
+            <DefaultAttrSelect defaultAttr={props.defaultAttr}
+                forcedAttr={props.forcedAttr}
+                attrList={props.attrList}
+                sourceId={props.sourceId}
+                formType={props.formType} />{'\u00a0'}
+    </span>
+    )
+
     // ------------------- <SingleLineInput /> -----------------------------
 
-    class SingleLineInput extends React.Component<SingleLineInputProps & QueryFormModelState> {
+    const SingleLineInput:React.FC<SingleLineInputProps & QueryFormModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.handleInputChange = this.handleInputChange.bind(this);
-            this.handleKeyDown = this.handleKeyDown.bind(this);
-        }
-
-        private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
+        const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch<Actions.QueryInputSetQuery>({
                 name: ActionName.QueryInputSetQuery,
                 payload: {
-                    formType: this.props.formType,
-                    sourceId: this.props.sourceId,
+                    formType: props.formType,
+                    sourceId: props.sourceId,
                     query: evt.target.value,
-                    rawAnchorIdx: this.props.refObject.current.selectionStart,
-                    rawFocusIdx: this.props.refObject.current.selectionEnd,
+                    rawAnchorIdx: props.refObject.current.selectionStart,
+                    rawFocusIdx: props.refObject.current.selectionEnd,
                     insertRange: null
                 }
             });
-        }
+        };
 
-        private handleKeyDown(evt) {
+        const handleKeyDown = (evt) => {
             if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
-                    this.props.hasHistoryWidget &&
-                    this.props.downArrowTriggersHistory[this.props.sourceId] &&
-                        !this.props.historyIsVisible) {
-                this.props.onReqHistory();
+                    props.hasHistoryWidget &&
+                    props.downArrowTriggersHistory[props.sourceId] &&
+                        !props.historyIsVisible) {
+                props.onReqHistory();
 
             } else if (evt.keyCode === Keyboard.Code.ESC) {
-                this.props.onEsc();
+                props.onEsc();
+            }
+        };
+
+        const handleKeyUp = (evt) => {
+            if ((evt.keyCode === Keyboard.Code.LEFT_ARROW ||
+                    evt.keyCode === Keyboard.Code.HOME ||
+                    evt.keyCode === Keyboard.Code.END ||
+                    evt.keyCode === Keyboard.Code.RIGHT_ARROW) && props.refObject.current) {
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
+                    payload: {
+                        formType: props.formType,
+                        sourceId: props.sourceId,
+                        rawAnchorIdx: props.refObject.current.selectionStart,
+                        rawFocusIdx: props.refObject.current.selectionEnd
+                    }
+                });
             }
         }
 
-        render() {
-            return <input className="simple-input" type="text"
-                                spellCheck={false}
-                                ref={this.props.refObject}
-                                onChange={this.handleInputChange}
-                                value={this.props.queries[this.props.sourceId]}
-                                onKeyDown={this.handleKeyDown} />;
-        }
+        const handleClick = (evt) => {
+            if (props.refObject.current) {
+                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                    name: ActionName.QueryInputMoveCursor,
+                    payload: {
+                        formType: props.formType,
+                        sourceId: props.sourceId,
+                        rawAnchorIdx: props.refObject.current.selectionStart,
+                        rawFocusIdx: props.refObject.current.selectionEnd
+                    }
+                });
+            }
+        };
+
+        return <input className="simple-input" type="text"
+                            spellCheck={false}
+                            ref={props.refObject}
+                            onChange={handleInputChange}
+                            value={props.queries[props.sourceId]}
+                            onKeyDown={handleKeyDown}
+                            onKeyUp={handleKeyUp}
+                            onClick={handleClick} />;
     }
 
     const BoundSingleLineInput = BoundWithProps<SingleLineInputProps, QueryFormModelState>(SingleLineInput, queryModel);
 
-    // ------------------- <DefaultAttrSelector /> -----------------------------
+    // ------------------- <DefaultAttrSelect /> -----------------------------
 
-    const DefaultAttrSelector:React.SFC<{
+    const DefaultAttrSelect:React.FC<{
         formType:QueryFormType;
         sourceId:string;
         forcedAttr:string;
@@ -811,6 +801,7 @@ export function init({
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
             this.handleReqHistory = this.handleReqHistory.bind(this);
             this.handleInputEscKeyDown = this.handleInputEscKeyDown.bind(this);
+            this.handleSuggestionItemClick = this.handleSuggestionItemClick.bind(this);
         }
 
         _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
@@ -837,7 +828,7 @@ export function init({
                     sourceId: this.props.sourceId
                 }
             });
-            if (!this.props.historyVisible && this._queryInputElement.current) {
+            if (!this.props.historyVisible[this.props.sourceId] && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
         }
@@ -849,7 +840,7 @@ export function init({
         }
 
         componentDidUpdate(prevProps, prevState) {
-            if (prevProps.historyVisible && !this.props.historyVisible &&
+            if (prevProps.historyVisible[this.props.sourceId] && !this.props.historyVisible &&
                     this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
@@ -869,20 +860,30 @@ export function init({
             });
         }
 
+        handleSuggestionItemClick(onItemClick:string, value:string):void {
+            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
+                name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
+                payload: {
+                    sourceId: this.props.sourceId,
+                    formType: this.props.formType,
+                    onItemClick,
+                    value
+                }
+            });
+            this._queryInputElement.current.focus();
+        }
+
         _renderInput() {
             switch (this.props.queryType) {
-                case 'iquery':
-                case 'lemma':
-                case 'phrase':
-                case 'word':
+                case 'simple':
                     return <BoundSingleLineInput
                                 sourceId={this.props.sourceId}
                                 refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.props.historyVisible}
+                                historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown} />;
-                case 'cql':
+                case 'advanced':
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
                                 formType={this.props.formType}
@@ -891,7 +892,7 @@ export function init({
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.props.historyVisible}
+                                historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 inputRef={this._queryInputElement as React.RefObject<HTMLPreElement>} /> :
                         <cqlEditorViews.CQLEditorFallback
                                 formType={this.props.formType}
@@ -900,100 +901,135 @@ export function init({
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
-                                historyIsVisible={this.props.historyVisible} />;
+                                historyIsVisible={this.props.historyVisible[this.props.sourceId]} />;
             }
         }
 
         _renderInputOptions() {
+            const customOpts = this.props.customOptions || [];
             switch (this.props.queryType) {
-                case 'iquery':
-                    return null;
-                case 'lemma':
-                    return <LposSelector wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType}  />;
-                case 'phrase':
-                    return <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType} />;
-                case 'word':
+                case 'simple':
                     return (
-                        <span>
-                            <LposSelector wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType}  />
-                            {'\u00a0'}
-                            <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                                sourceId={this.props.sourceId}
-                                formType={this.props.formType} />
-                        </span>
+                        <>
+                            {!List.empty(customOpts) ?
+                                <>
+                                    {List.map(
+                                        (opt, i) => (
+                                            <div className="option custom" key={`item:${i}`}
+                                                    style={{gridColumnEnd: `span ${opt.props.span || 1}`}}>
+                                                {opt}
+                                            </div>
+                                        ),
+                                        customOpts
+                                    )}
+                                </> :
+                                null
+                            }
+                            <>
+                                <div className="option">
+                                    <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
+                                        sourceId={this.props.sourceId}
+                                        formType={this.props.formType} />
+                                </div>
+                                <div className="option">
+                                    <DefaultAttrSelector
+                                        label={he.translate('query__applied_attr')}
+                                        sourceId={this.props.sourceId}
+                                        defaultAttr={this.props.defaultAttr}
+                                        forcedAttr={this.props.forcedAttr}
+                                        attrList={this.props.attrList}
+                                        formType={this.props.formType} />
+                                </div>
+                                <div className="option">
+                                {Kontext.isWordLikePosAttr(this.props.defaultAttr) ?
+                                    <LposSelector wPoSList={this.props.wPoSList}
+                                        lposValue={this.props.lposValue}
+                                        sourceId={this.props.sourceId}
+                                        formType={this.props.formType}  /> :
+                                    null
+                                }
+                                </div>
+                            </>
+                        </>
                     );
-                case 'cql':
+                case 'advanced':
                     return (
-                        <span className="default-attr-selection">
-                            {he.translate('query__default_attr') + ':\u00a0'}
-                            <DefaultAttrSelector defaultAttr={this.props.defaultAttr}
-                                    forcedAttr={this.props.forcedAttr}
-                                    attrList={this.props.attrList}
-                                    sourceId={this.props.sourceId}
-                                    formType={this.props.formType} />{'\u00a0'}
-                            {this.props.tagsetDocUrl ?
-                                (<span className="tagset-summary">(
-                                    <a className="external" target="_blank" href={this.props.tagsetDocUrl}>
-                                    {he.translate('query__tagset_summary')}</a>)</span>)
-                                : null}
-                        </span>
+                        <>
+                            {!List.empty(customOpts) ?
+                                <div className="option-list-custom">
+                                    {List.map(
+                                        (opt, i) => <div key={`item:${i}`}>{opt}</div>,
+                                        customOpts
+                                    )}
+                                </div> :
+                                null
+                            }
+                            <div className="option-list">
+                                <div>
+                                    <DefaultAttrSelector
+                                        label={he.translate('query__default_attr')}
+                                        sourceId={this.props.sourceId}
+                                        defaultAttr={this.props.defaultAttr}
+                                        forcedAttr={this.props.forcedAttr}
+                                        attrList={this.props.attrList}
+                                        formType={this.props.formType} />
+                                </div>
+                            </div>
+                        </>
                     );
             }
         }
 
         render() {
             return (
-                <tr>
-                    <th>{he.translate('query__query_th')}:</th>
-                    <td>
-                        <div className="query-area">
-                            <BoundQueryToolbox
-                                widgets={this.props.widgets}
-                                tagHelperView={this.props.tagHelperView}
-                                sourceId={this.props.sourceId}
-                                toggleHistoryWidget={this._toggleHistoryWidget}
-                                inputLanguage={this.props.inputLanguage}
-                                qsAvailable={!List.empty(
-                                    this.props.querySuggestions[this.props.sourceId])} />
-                            {this._renderInput()}
-                            {this.props.historyVisible ?
-                                <HistoryWidget
-                                        queryStorageView={this.props.queryStorageView}
-                                        sourceId={this.props.sourceId}
-                                        onCloseTrigger={this._toggleHistoryWidget}
-                                        formType={this.props.formType}/>
-                                : null
-                            }
+                <div>
+                    <div className="query-area">
+                        <BoundQueryToolbox
+                            widgets={this.props.widgets}
+                            tagHelperView={this.props.tagHelperView}
+                            sourceId={this.props.sourceId}
+                            toggleHistoryWidget={this._toggleHistoryWidget}
+                            inputLanguage={this.props.inputLanguage}
+                            qsAvailable={QueryFormModel.hasSuggestionsFor(
+                                this.props.querySuggestions, this.props.sourceId,
+                                querySuggest)} />
+                        {this._renderInput()}
+                        {this.props.historyVisible[this.props.sourceId] ?
+                            <HistoryWidget
+                                    queryStorageView={this.props.queryStorageView}
+                                    sourceId={this.props.sourceId}
+                                    onCloseTrigger={this._toggleHistoryWidget}
+                                    formType={this.props.formType}/>
+                            : null
+                        }
 
-                            {
-                                !this.props.historyVisible &&
-                                this.props.suggestionsVisible[this.props.sourceId] &&
-                                this.props.querySuggestions[this.props.sourceId] &&
-                                this.props.querySuggestions[this.props.sourceId].length ?
-                                    <SuggestionsWidget
-                                        qsuggPlugin={this.props.qsuggPlugin}
-                                        querySuggestions={this.props.querySuggestions}
-                                        sourceId={this.props.sourceId}
-                                        formType={this.props.formType} />
-                                    : null
-                            }
-                            <div className="query-hints">
-                                <BoundQueryHints  />
-                            </div>
-                        </div>
-                        <div className="query-options">
+                        {
+                            !this.props.historyVisible[this.props.sourceId] &&
+                            this.props.suggestionsVisible[this.props.sourceId] &&
+                            QueryFormModel.hasSuggestionsFor(
+                                this.props.querySuggestions, this.props.sourceId,
+                                querySuggest) ?
+                                <SuggestionsWidget
+                                    qsuggPlugin={this.props.qsuggPlugin}
+                                    querySuggestions={this.props.querySuggestions}
+                                    formType={this.props.formType}
+                                    sourceId={this.props.sourceId}
+                                    handleItemClick={this.handleSuggestionItemClick} />
+                                : null
+                        }
+                        <BoundQueryHints />
+                    </div>
+                    <fieldset className="query-options">
+                        <legend>
+                            <span className="form-extension-switch always-expand">
+                                {he.translate('global__options')}
+                            </span>
+                        </legend>
+                        <div className="options">
                             {this._renderInputOptions()}
                         </div>
-                    </td>
-                </tr>
+                    </fieldset>
+                </div>
             );
         }
     }
@@ -1002,7 +1038,6 @@ export function init({
 
     return {
         TRQueryInputField: BoundTRQueryInputField,
-        TRQueryTypeField: TRQueryTypeField,
         TRPcqPosNegField: TRPcqPosNegField,
         TRIncludeEmptySelector: TRIncludeEmptySelector
     };

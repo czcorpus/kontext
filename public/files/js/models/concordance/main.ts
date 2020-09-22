@@ -218,7 +218,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
             ttModel:TextTypesModel, lineViewProps:ViewConfiguration,
             initialData:Array<ServerLineData>) {
-        const viewAttrs = layoutModel.getConcArgs().head('attrs').split(',');
+        const viewAttrs = layoutModel.exportConcArgs().head('attrs').split(',');
         super(
             dispatcher,
             {
@@ -265,7 +265,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.saveModel = saveModel;
         this.ttModel = ttModel;
         this.syntaxViewModel = syntaxViewModel;
-        this.busyTimer = lineViewProps.Unfinished ? this.runBusyTimer(this.busyTimer) : null;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
@@ -298,6 +297,18 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 }
             );
         };
+        this.busyTimer = lineViewProps.Unfinished ? this.runBusyTimer(this.busyTimer) : null;
+
+        this.addActionHandler<Actions.AddedNewOperation>(
+            ActionName.AddedNewOperation,
+            action => {
+                if (!action.error) {
+                    this.layoutModel.replaceConcArg('q', ['~' + action.payload.data.conc_persistence_op_id])
+                    this.importData(action.payload.data);
+                    this.pushHistoryState(this.state.currentPage);
+                }
+            }
+        );
 
         this.addActionHandler<Actions.ChangeMainCorpus>(
             ActionName.ChangeMainCorpus,
@@ -755,7 +766,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     getViewAttrs():Array<string> {
-        return this.layoutModel.getConcArgs().head('attrs').split(',');
+        return this.layoutModel.exportConcArgs().head('attrs').split(',');
     }
 
     getNumItemsInLockedGroups():number {
@@ -763,7 +774,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     private pushHistoryState(pageNum:number):void {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.exportConcArgs();
         args.set('fromp', pageNum);
         this.layoutModel.getHistory().pushState(
             'view', args, { pagination: true, pageNum });
@@ -774,7 +785,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      * The returned promise passes URL argument matching
      * currently displayed data page.
      */
-    private reloadPage(concId?:string):Observable<MultiDict<ConcServerArgs>> {
+    private reloadPage(concId?:string):Observable<ConcServerArgs> {
         return this.changePage(
             'customPage', this.state.currentPage, concId ? `~${concId}` : undefined);
     }
@@ -795,7 +806,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
      */
     private changePage(
         action:string, pageNumber?:number, concId?:string
-    ):Observable<MultiDict<ConcServerArgs>> {
+    ):Observable<ConcServerArgs> {
         const pageNum:number = action === 'customPage' ?
             pageNumber : this.state.pagination[action];
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
@@ -804,10 +815,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         }
 
         const args = this.layoutModel.getConcArgs();
-        args.set('fromp', pageNum);
-        args.set('format', 'json');
+        args.fromp = pageNum;
+        args.format ='json';
         if (concId) {
-            args.set('q', concId);
+            args.q = concId;
         }
 
         return this.layoutModel.ajax$<AjaxConcResponse>(
@@ -822,7 +833,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                     state.currentPage = pageNum
                 });
             }),
-            map(_ => this.layoutModel.getConcArgs())
+            map(_ => args)
         );
     }
 
@@ -830,12 +841,20 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.changeState(state => {
             state.lines = importLines(
                 data.Lines,
-                this.getViewAttrs().indexOf(this.state.baseViewAttr) - 1
+                this.getViewAttrs().indexOf(state.baseViewAttr) - 1
             );
             state.numItemsInLockedGroups = data.num_lines_in_groups;
             state.pagination = data.pagination;
             state.unfinishedCalculation = !!data.running_calc;
             state.lineGroupIds = [];
+            state.concSummary = {
+                concSize: data.concsize,
+                fullSize: data.fullsize,
+                sampledSize: data.sampled_size,
+                ipm: data.result_relative_freq,
+                arf: data.result_arf,
+                isShuffled: data.result_shuffled
+            };
         });
     }
 
@@ -861,7 +880,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         }
         this.changeState(state => {state.viewMode = mode});
         this.layoutModel.replaceConcArg('viewmode', [this.state.viewMode]);
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.exportConcArgs();
         args.set('format', 'json');
 
         return this.layoutModel.ajax$<AjaxConcResponse>(
@@ -890,7 +909,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     private changeMainCorpus(corpusId:string) {
-        const args = this.layoutModel.getConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
+        const args = this.layoutModel.exportConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
         if (this.state.kwicCorps.indexOf(corpusId) > -1) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');

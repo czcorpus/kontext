@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List } from 'cnc-tskit';
+import { Dict, List, tuple, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import { Kontext, ViewOptions } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
@@ -34,30 +34,44 @@ import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
 
 
-export type QueryType = 'iquery'|'phrase'|'lemma'|'word'|'cql';
+export type QueryType = 'simple'|'advanced';
 
 export interface QueryContextArgs {
     fc_lemword_window_type:string;
-    fc_lemword_wsize:string;
+    fc_lemword_wsize:number;
     fc_lemword:string;
     fc_lemword_type:string;
     fc_pos_window_type:string;
-    fc_pos_wsize:string;
+    fc_pos_wsize:number;
     fc_pos:string[];
     fc_pos_type:string;
 }
 
-export type AnyQuery = {
-    iquery?:string;
-    phrase?:string;
-    lemma?:string;
-    word?:string;
-    cql?:string
-}
-
-export interface ConcQueryArgs extends ConcServerArgs, AnyQuery {
+export interface ConcQueryArgs {
+    queries:Array<{
+        corpname:string;
+        qtype:QueryType;
+        query:string;
+        qmcase:boolean;
+        pcq_pos_neg:string;
+        include_empty:boolean;
+        default_attr:string;
+    }>;
+    maincorp:string|null;
+    usesubcorp:string|null;
+    viewmode:'kwic'|'sen'|'align';
+    pagesize:number;
     shuffle:0|1;
-    [sca:string]:string|number;
+    attrs:Array<string>;
+    ctxattrs:Array<string>;
+    attr_vmode:ViewOptions.AttrViewMode;
+    base_viewattr:string;
+    structs:Array<string>;
+    refs:Array<string>;
+    fromp:number;
+    text_types:{[sca:string]:Array<string>|Array<number>};
+    context:QueryContextArgs;
+    type:'concQueryArgs';
 }
 
 
@@ -88,9 +102,12 @@ export interface FilterServerArgs extends ConcServerArgs {
     filfl:string;
     filfpos:string;
     filtpos:string;
-    inclkwic:'1'|'0';
-    queryselector:string; // TODO more specific type here
-    within:'1'|'0';
+    inclkwic:0|1;
+    qtype:QueryType;
+    query:string;
+    qmcase:boolean;
+    within:boolean;
+    type:'filterQueryArgs';
 }
 
 export interface GeneralQueryFormProperties {
@@ -123,6 +140,10 @@ export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number,
     }
 }
 
+export type SuggestionsData = {
+    [sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]
+};
+
 
 export interface QueryFormModelState {
 
@@ -148,7 +169,7 @@ export interface QueryFormModelState {
 
     queryTypes:{[sourceId:string]:QueryType};
 
-    querySuggestions:{[sourceId:string]:Array<PluginInterfaces.QuerySuggest.DataAndRenderer>};
+    querySuggestions:SuggestionsData;
 
     tagBuilderSupport:{[sourceId:string]:boolean};
 
@@ -170,11 +191,15 @@ export interface QueryFormModelState {
 
     textTypesFormVisible:boolean;
 
-    historyVisible:boolean;
+    historyVisible:{[sourceId:string]:boolean};
 
     suggestionsVisible:{[sourceId:string]:boolean};
 
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+
+    isBusy:boolean;
+
+    cursorPos:number;
 
 }
 
@@ -195,7 +220,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     protected readonly formType:QueryFormType;
 
-    protected readonly autoSuggestTrigger:Subject<string>; // stream of source IDs
+    // stream of [source ID, rawAnchorIdx, rawFocusIdx]
+    protected readonly autoSuggestTrigger:Subject<[string, number, number]>;
 
     // -------
 
@@ -217,14 +243,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
         this.formType = initState.formType;
-        this.autoSuggestTrigger = new Subject<string>();
+        this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.autoSuggestTrigger.pipe(
             debounceTime(500)
         ).subscribe(
-            (sourceId) => {
-                if (this.state.queryTypes[sourceId] !== 'cql'
-                        && this.state.suggestionsVisibility !==
-                            PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
+            ([sourceId, rawAnchorIdx, rawFocusIdx]) => {
+                if (this.shouldAskForSuggestion(sourceId)) {
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                         name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                         payload: {
@@ -234,14 +258,21 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             ),
                             subcorpus: this.state.currentSubcorp,
                             value: this.state.queries[sourceId],
+                            rawAnchorIdx,
+                            rawFocusIdx,
                             valueType: 'unspecified',
                             queryType: this.state.queryTypes[sourceId],
-                            posAttr: this.state.queryTypes[sourceId] === 'lemma' ?
-                                'lemma' : undefined,
+                            posAttr: null,
+                            // TODO posAttr: [default attribute] if 'simple' type
                             struct: undefined,
                             structAttr: undefined,
                             sourceId
                         }
+                    });
+
+                } else {
+                    dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>({
+                        name: PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions
                     });
                 }
             }
@@ -252,7 +283,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.historyVisible = !state.historyVisible;
+                    state.historyVisible[action.payload.sourceId] =
+                        !state.historyVisible[action.payload.sourceId];
                     state.suggestionsVisible[action.payload.sourceId] = false;
                 });
             }
@@ -302,8 +334,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             action.payload.rawAnchorIdx,
                             action.payload.rawFocusIdx
                         );
+                    state.cursorPos = action.payload.rawAnchorIdx;
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    action.payload.rawAnchorIdx,
+                    action.payload.rawFocusIdx
+                ));
             }
         );
 
@@ -317,7 +354,57 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             state.queries[action.payload.sourceId],
                             action.payload.rawAnchorIdx,
                             action.payload.rawFocusIdx
-                        )
+                        );
+                        state.cursorPos = action.payload.rawAnchorIdx;
+                });
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    action.payload.rawAnchorIdx,
+                    action.payload.rawFocusIdx
+                ));
+            }
+        );
+
+        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.ItemClicked>(
+            PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
+            action => action.payload.formType === this.formType,
+            action => {
+                this.changeState(state => {
+                    const wordPos =
+                        action.payload.onItemClick === 'replace' ?
+                            List.reduce(
+                                ([start, end], value) => {
+                                    return start + value.length + 1 < state.cursorPos ?
+                                        [start + value.length + 1, end + value.length + 1] :
+                                        start === end ?
+                                            [start, end + value.length] :
+                                            [start, end]
+                                },
+                                [0, 0],
+                                state.queries[action.payload.sourceId].split(' ')
+                            ) :
+                        action.payload.onItemClick === 'insert' ?
+                            [state.cursorPos, state.cursorPos] :
+                            undefined
+
+                    if (wordPos === undefined) {
+                        pageModel.showMessage(
+                            'error',
+                            `Unknown query suggestion click action: "${action.payload.onItemClick}"`
+                        );
+
+                    } else {
+                        this.addQueryInfix(
+                            state,
+                            action.payload.sourceId,
+                            action.payload.value,
+                            [wordPos[0], wordPos[1]]
+                        );
+
+                        // TODO on refocus on the input cursor is on the end
+                        // this is to prevent confusion
+                        state.cursorPos = state.queries[action.payload.sourceId].length;
+                    }
                 });
             }
         );
@@ -325,21 +412,36 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             action => {
-                this.changeState(state => {
-                    if (action.error === undefined) {
-                        state.querySuggestions[action.payload.sourceId] = action.payload.results;
+                if (action.error) {
+                    this.pageModel.showMessage('error', action.error);
+                    this.changeState(state => {
+                        state.querySuggestions = {};
+                        state.suggestionsVisible[action.payload.sourceId] = false;
+                    });
+
+                } else {
+                    this.changeState(state => {
+                        state.querySuggestions[action.payload.sourceId] = tuple(
+                            action.payload.results,
+                            action.payload.isPartial
+                        );
                         if (
                             state.suggestionsVisibility ===
                             PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
                         ) {
                             state.suggestionsVisible[action.payload.sourceId] = true;
-                            state.historyVisible = false;
+                            state.historyVisible[action.payload.sourceId] = false;
                         }
+                    });
+                }
+            }
+        );
 
-                    } else {
-                        state.querySuggestions = {};
-                        state.suggestionsVisible[action.payload.sourceId] = false;
-                    }
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>(
+            PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions,
+            action => {
+                this.changeState(state => {
+                    state.querySuggestions = {};
                 });
             }
         );
@@ -363,24 +465,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         );
     }
 
+    private shouldAskForSuggestion(sourceId:string):boolean {
+        return this.state.queryTypes[sourceId] !== 'advanced'
+                        && this.state.suggestionsVisibility !==
+                            PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED
+                        && !!this.state.queries[sourceId];
+    }
+
     protected validateQuery(query:string, queryType:QueryType):boolean {
         const parseFn = ((query:string) => {
             switch (queryType) {
-                case 'iquery':
-                    return () => {
-                        if (!!(/^"[^\"]+"$/.exec(query) ||
-                                /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
-                            throw new Error();
-                        }
-                    }
-                case 'phrase':
-                    return parseQuery.bind(
-                        null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
-                case 'lemma':
-                case 'word':
-                    return parseQuery.bind(
-                        null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
-                case 'cql':
+                case 'advanced':
                     return parseQuery.bind(
                         null, query + ';', {tracer: this.queryTracer});
                 default:
@@ -406,14 +501,52 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 state.queries[sourceId].substr(insertRange[1]);
     }
 
-    getQueryUnicodeNFC(queryId:string):string {
-         // TODO ES2015 stuff here
-        return Dict.hasKey(queryId, this.state.queries) ?
-            this.state.queries[queryId]['normalize']() :
-            undefined;
+    protected testQueryNonEmpty(sourceId:string):Error|null {
+        if (this.state.queries[sourceId].length > 0) {
+            return null;
+
+        } else {
+            return new Error(this.pageModel.translate('query__query_must_be_entered'));
+        }
+    }
+
+    private isPossibleQueryTypeMismatch(sourceId:string):[boolean, QueryType] {
+        const query = this.state.queries[sourceId];
+        const queryType = this.state.queryTypes[sourceId];
+        return tuple(this.validateQuery(query, queryType), queryType);
+    }
+
+    protected testQueryTypeMismatch():Error|null {
+        const errors = pipe(
+            this.state.queries,
+            Dict.toEntries(),
+            List.map(([corpname,]) => this.isPossibleQueryTypeMismatch(corpname)),
+            List.filter(([err,]) => !!err)
+        );
+        if (List.empty(errors)) {
+            return null;
+        }
+        const [err, type] = List.head(errors);
+        if (window.confirm(this.pageModel.translate(
+                'global__query_type_mismatch_confirm_{type}', {type:
+                    type === 'advanced' ?
+                            this.pageModel.translate('query__qt_advanced') :
+                            this.pageModel.translate('query__qt_simple')}))) {
+            return null;
+        }
+        return new Error(this.pageModel.translate('global__query_type_mismatch'));
     }
 
     getRegistrationId():string {
         return this.ident;
+    }
+
+    static hasSuggestionsFor(
+        data:SuggestionsData,
+        sourceId:string,
+        plugin:PluginInterfaces.QuerySuggest.IPlugin
+
+    ):boolean {
+        return data[sourceId] && List.some(s => !plugin.isEmptyResponse(s), data[sourceId][0]);
     }
 }

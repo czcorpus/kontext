@@ -46,6 +46,7 @@ export interface QueryPipelineResponseItem {
 
 export interface QueryPipelineResponse extends Kontext.AjaxResponse {
     ops:Array<QueryPipelineResponseItem>;
+    query_overview:Array<Kontext.QueryOperation>;
 }
 
 /**
@@ -93,17 +94,14 @@ function mapOpIdToFormType(opId:string):string {
     }
 }
 
-export function importEncodedOperations(currentOperations:Array<Kontext.QueryOperation>):Array<ExtendedQueryOperation> {
-    return List.map(
-        item => ({
-            op: item.op,
-            opid: item.opid,
-            nicearg: item.nicearg,
-            tourl: item.tourl,
-            arg: item.arg,
-            size: item.size,
-            formType: mapOpIdToFormType(item.opid)
-        }),
-        currentOperations
-    );
+export function importEncodedOperation(operation:Kontext.QueryOperation):ExtendedQueryOperation {
+    return {
+        op: operation.op,
+        opid: operation.opid,
+        nicearg: operation.nicearg,
+        tourl: operation.tourl,
+        arg: operation.arg,
+        size: operation.size,
+        formType: mapOpIdToFormType(operation.opid)
+    };
 }

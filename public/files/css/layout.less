@@ -10,14 +10,41 @@ body {
     height: 100%;
 }
 
-section > h2 {
-    margin: 0;
-    padding: 0.4em 0.6em;
-    background-color: @color-light-frame;
-    border-radius: 6px 6px 0 0;
-    font-size: 140%;
-    font-weight: 300;
-    color: @color-dark-green-text;
+section {
+
+    #topbar-help-mount {
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+
+    > .bar {
+        display: flex;
+        align-content: center;
+        margin: 0;
+        padding: 0.4em 0.6em;
+        background-color: @color-light-frame;
+        border-radius: 6px 6px 0 0;
+
+        > h2 {
+            margin: 0;
+            padding: 0;
+            font-size: 140%;
+            font-weight: 300;
+            color: @color-dark-green-text;
+            flex-grow: 1;
+        }
+
+        .topbar-help-icon {
+            display: flex;
+            align-content: center;
+
+            img {
+                display: block;
+                width: 0.9em;
+            }
+        }
+    }
 }
 
 button,
@@ -136,7 +163,11 @@ a.external {
     margin: 1em 0 0 0;
     background-color: @color-section-bg;
     box-shadow: @portal-box-shadow;
-    min-width: 46%;
+    min-width: 70%;
+}
+
+#content > section.query {
+    min-width: auto;
 }
 
 section.inner {
@@ -456,6 +487,7 @@ header#topbar {
     }
 
     > li.notifications {
+
         a {
             display: inline-block;
             font-size: 1.2em;
@@ -1150,6 +1182,61 @@ p.boxed-par {
 .DelItemIcon:hover {
     text-decoration: none !important;
     color: #FFFFFF !important;
+}
+
+.Calendar {
+
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+
+        th, td {
+            border: 1px solid @color-light-grey;
+            padding: 0.2em;
+        }
+
+        th {
+            text-align: center;
+        }
+
+        td {
+            text-align: right;
+        }
+
+        tbody td a {
+            text-decoration: none;
+        }
+
+        tbody td a:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .controls {
+
+        .prev-month-change {
+
+            border-right-width: 0;
+
+            img {
+                width: 1.1em;
+            }
+        }
+
+        .next-month-change {
+
+            border-left-width: 0;
+
+            img {
+                display: block;
+                width: 1.1em;
+            }
+        }
+
+        .curr-date {
+            text-align: center;
+        }
+    }
 }
 
 .query-overview {

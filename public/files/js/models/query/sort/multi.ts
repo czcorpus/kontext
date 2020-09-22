@@ -107,7 +107,7 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         this.addActionHandler<Actions.MLSortFormSubmit>(
             ActionName.MLSortFormSubmit,
             action => {
-                this.submit(action.payload.sortId);
+                this.submit(action.payload.sortId, action.payload.sortId);
             }
         );
 
@@ -208,14 +208,15 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         );
     }
 
-    submit(sortId:string):void {
-        const args = this.createSubmitArgs(sortId);
+    submit(sortId:string, concId:string):void {
+        const args = this.createSubmitArgs(sortId, concId);
         const url = this.pageModel.createActionUrl('mlsortx', args.items());
         window.location.href = url;
     }
 
-    private createSubmitArgs(sortId:string):MultiDict<ConcSortServerArgs> {
-        const args = this.pageModel.getConcArgs() as MultiDict<ConcSortServerArgs>;
+    private createSubmitArgs(sortId:string, concId:string):MultiDict<ConcSortServerArgs> {
+        const args = this.pageModel.exportConcArgs() as MultiDict<ConcSortServerArgs>;
+        args.set('q', '~' + concId);
         for (let i = 0; i < this.state.sortlevelValues[sortId]; i += 1) {
             args.replace('sortlevel', [String(this.state.sortlevelValues[sortId])]);
             args.replace(`ml${i+1}attr`, [this.state.mlxattrValues[sortId][i]]);
@@ -227,8 +228,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         return args;
     }
 
-    getSubmitUrl(sortId:string):string {
-        return this.pageModel.createActionUrl('mlsortx', this.createSubmitArgs(sortId).items());
+    getSubmitUrl(sortId:string, concId:string):string {
+        return this.pageModel.createActionUrl('mlsortx', this.createSubmitArgs(sortId, concId).items());
     }
 
     /**

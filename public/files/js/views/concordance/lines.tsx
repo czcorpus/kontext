@@ -132,7 +132,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                 dispatcher.dispatch<MainMenuActions.ShowFilter>({
                     name: MainMenuActionName.ShowFilter,
                     payload: {
-                        within: 1,
+                        within: true,
                         maincorp: corpusId
                     }
                 });

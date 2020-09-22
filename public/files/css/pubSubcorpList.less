@@ -8,14 +8,20 @@
 
         border: none;
 
-        margin-bottom: 1.5em;
-
         label {
             display :inline-block;
         }
 
+        input[type="text"] {
+            font-size: 1.5em;
+        }
+
         .CodePrefixInput {
             font-size: 120%;
+        }
+
+        p.note {
+            margin-bottom: 0;
         }
     }
 
@@ -90,6 +96,13 @@
             a.DetailExpandSwitch:hover {
                 text-decoration: underline;
                 color: @color-logo-pink;
+            }
+
+            table.props {
+
+                th {
+                    text-transform: lowercase;
+                }
             }
 
             .description {

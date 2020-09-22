@@ -20,15 +20,17 @@ from plugins.abstract.query_suggest import AbstractQuerySuggest
 import plugins
 import plugins.abstract.corpora
 from controller import exposed
+from controller.kontext import Kontext
 from actions import concordance
+from controller.plg import PluginApi
 
 
 @exposed(return_type='json')
-def fetch_query_suggestions(_, request):
+def fetch_query_suggestions(self: Kontext, request):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
-        ans = plg.find_suggestions(ui_lang=request.args.get('ui_lang'), corpora=request.args.getlist('corpora'),
+        ans = plg.find_suggestions(plugin_api=self._plugin_api, corpora=request.args.getlist('corpora'),
                                    subcorpus=request.args.get('subcorpus'), value=request.args.get('value'),
                                    value_type=request.args.get('value_type'), query_type=request.args.get('query_type'),
                                    p_attr=request.args.get('p_attr'), struct=request.args.get('struct'),
@@ -42,15 +44,20 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
         self._providers = providers
         self._corparch = corparch
 
-    def find_suggestions(self, ui_lang: str, corpora: List[str], subcorpus: str, value: str, value_type: str,
+    def find_suggestions(self, plugin_api: PluginApi, corpora: List[str], subcorpus: str, value: str, value_type: str,
                          query_type: str, p_attr: str, struct: str, s_attr: str):
+        corpus_info = self._corparch.get_corpus_info(
+            plugin_api.user_lang, plugin_api.current_corpus.corpname)
         ans = []
         for ident, provider in self._providers.items():
+            if ident not in corpus_info.query_suggest.providers:
+                continue
             backend, frontend = provider
-            resp = backend.find_suggestion(ui_lang=ui_lang, corpora=corpora, subcorpus=subcorpus, value=value,
-                                           value_type=value_type, query_type=query_type, p_attr=p_attr,
-                                           struct=struct, s_attr=s_attr)
-            ans.append(frontend.export_data(ui_lang, resp).to_dict())
+            resp = backend.find_suggestion(user_id=plugin_api.user_id, ui_lang=plugin_api.user_lang,
+                                           maincorp=plugin_api.current_corpus, corpora=corpora,
+                                           subcorpus=subcorpus, value=value, value_type=value_type,
+                                           query_type=query_type, p_attr=p_attr, struct=struct, s_attr=s_attr)
+            ans.append(frontend.export_data(resp, value, plugin_api.user_lang).to_dict())
         return ans
 
     def export(self, plugin_api):
@@ -64,7 +71,8 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
                     'ident': ident,
                     'rendererId': frontend.renderer,
                     'heading': frontend.headings.get(plugin_api.user_lang.replace('_', '-'), '--'),
-                    'queryTypes': frontend.query_types
+                    'queryTypes': frontend.query_types,
+                    'onItemClick': frontend.on_item_click
                 })
         return dict(providers=active_providers)
 

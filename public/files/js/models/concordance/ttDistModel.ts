@@ -178,7 +178,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
 
     private performDataLoad():void {
         if (!this.state.blockedByAsyncConc && this.getConcSize() > 0) {
-            const args = this.layoutModel.getConcArgs();
+            const args = this.layoutModel.exportConcArgs();
             if (this.state.lastArgs !== args.head('q')) {
                 this.state.isBusy = true;
                 this.emitChange();
@@ -219,7 +219,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             }
         })().pipe(
             map(
-                (reduceAns) => tuple(reduceAns, this.layoutModel.getConcArgs() as MultiDict<FreqServerArgs>)
+                (reduceAns) => tuple(reduceAns, this.layoutModel.exportConcArgs() as MultiDict<FreqServerArgs>)
             ),
             concatMap(([reduceAns, args]) => {  // TODO side effects here
                 this.state.ttCrit.forEach(([key, value]) => args.add(key, value));

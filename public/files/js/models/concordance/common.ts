@@ -21,6 +21,7 @@
 import { Color, pipe, List } from 'cnc-tskit';
 import { ViewOptions, Kontext } from '../../types/common';
 import { SaveData } from '../../app/navigation';
+import { ConcQueryArgs } from '../query/common';
 
 /**
  * RefsColumn describes a meta-data information
@@ -151,9 +152,10 @@ export interface ServerPagination {
  */
 export interface ConcServerArgs {
     corpname:string;
-    usesubcorp:string;
+    maincorp:string;
+    align:string;
     viewmode:'kwic'|'sen'|'align';
-    format:'plain'|'json'|'template'|'xml';
+    format:Kontext.ResponseFormat;
     pagesize:number;
     attrs:string;
     attr_vmode:ViewOptions.AttrViewMode;
@@ -162,9 +164,7 @@ export interface ConcServerArgs {
     structs:string; // comma-separated values
     refs:string; //comma-separated values
     q:string;
-    maincorp?:string;
-    align?:string;
-    fromp?:number;
+    fromp:number;
 }
 
 /**
@@ -194,34 +194,42 @@ export interface ConcSaveServerArgs extends ConcServerArgs {
  * provide and update concordance page parameters.
  */
 export interface IConcArgsHandler {
-    getConcArgs():Kontext.IMultiDict<ConcServerArgs> ;
+    exportConcArgs():Kontext.IMultiDict<ConcServerArgs>;
+    getConcArgs():ConcServerArgs;
     replaceConcArg(name:string, values:Array<string>):void;
+}
 
-    /**
-     * Export current conc args to a URL with additional
-     * argument updates. Original arguments stored in model
-     * are unchanged.
-     */
-    exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string;
+/**
+ * ConcQueryResponse defines a server response to the initial
+ * query request.
+ */
+export interface ConcQueryResponse extends Kontext.AjaxResponse {
+    Q:Array<string>;
+    conc_persistence_op_id:string;
+    num_lines_in_groups:number;
+    lines_groups_numbers:Array<number>;
+    conc_args:ConcServerArgs;
+    query_overview:Array<Kontext.QueryOperation>;
 }
 
 /**
  * AjaxConcResponse defines a server response when
  * providing a concordance.
  */
-export interface AjaxConcResponse extends Kontext.AjaxResponse {
-    Q:Array<string>;
-    conc_persistence_op_id:string;
-    num_lines_in_groups:number;
-    lines_groups_numbers:Array<number>;
+export interface AjaxConcResponse extends ConcQueryResponse {
     Lines:Array<ServerLineData>;
     conc_use_safe_font:number; // TODO should be boolean
     concsize:number;
+    fullsize:number;
     finished:boolean;
     fast_adhoc_ipm:boolean;
     pagination:ServerPagination;
     running_calc:number; // TODO should be boolean
     user_owns_conc:boolean;
+    result_relative_freq:number;
+    result_shuffled:boolean;
+    result_arf:number;
+    sampled_size:number;
 }
 
 /**

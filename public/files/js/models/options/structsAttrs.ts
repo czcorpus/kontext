@@ -358,7 +358,6 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                             'ctxattrs', [formArgs['setattrs'].join(',')]);
                     }
                     this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
-                    this.layoutModel.replaceConcArg('attr_allpos', [formArgs['setattr_allpos']])
                     this.layoutModel.replaceConcArg('attr_vmode', [formArgs['setattr_vmode']]);
                     this.layoutModel.replaceConcArg('base_viewattr', [formArgs['base_viewattr']]);
                     this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
@@ -727,7 +726,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
     private loadData():Observable<ViewOptions.LoadOptionsResponse> {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.layoutModel.exportConcArgs();
         args.set('format', 'json');
         return this.layoutModel.ajax$<ViewOptions.LoadOptionsResponse>(
             HTTP.Method.GET,

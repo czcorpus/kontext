@@ -21,9 +21,9 @@
 import * as React from 'react';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
-import {PublicSubcorpListState, PublicSubcorpListModel, DataItem, SearchTypes} from '../../models/subcorp/listPublic';
+import {PublicSubcorpListState, PublicSubcorpListModel, DataItem} from '../../models/subcorp/listPublic';
 import {Actions, ActionName} from '../../models/subcorp/actions';
-import { List } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
 
 export interface Views {
     ListPublic:React.ComponentClass<ListPublicProps>;
@@ -38,36 +38,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const layoutViews = he.getLayoutViews();
 
-    // -------------------------- <SearchTypeSelect /> -------------------
-
-    const SearchTypeSelect:React.SFC<{
-        value:SearchTypes;
-
-    }> = (props) => {
-
-        const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            dispatcher.dispatch<Actions.SetSearchType>({
-                name: ActionName.SetSearchType,
-                payload: {
-                    value: evt.target.value as SearchTypes
-                }
-            });
-        };
-
-        return (
-            <label>
-                {he.translate('pubsubclist__search_type')}{'\u00a0'}
-                <select value={props.value} onChange={handleChange}>
-                    <option value={SearchTypes.BY_CODE}>
-                        {he.translate('pubsubclist__search_by_code')}
-                    </option>
-                    <option value={SearchTypes.BY_AUTHOR}>
-                        {he.translate('pubsubclist__search_by_author')}
-                    </option>
-                </select>
-            </label>
-        );
-    };
 
     // -------------------------- <PropertyPrefixInput /> ----------------
 
@@ -109,7 +79,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             onChange={this.handleChange}
                             ref={this.inputRef} />
                         {'\u00a0'}<span className="note">
-                        ({he.translate('pubsubclist__input_prefix_warn_{min_size}', {min_size: this.props.minPrefixSize})})
+
                         </span>
                 </label>
             );
@@ -120,15 +90,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const Filter:React.SFC<{
         query:string;
-        searchType:SearchTypes;
         minQuerySize:number;
 
     }> = (props) => {
 
         return (
             <fieldset className="Filter">
-                <SearchTypeSelect value={props.searchType} />{'\u00a0'}:{'\u00a0'}
                 <QueryInput value={props.query} minPrefixSize={props.minQuerySize} />
+                <p className="note">
+                    {he.translate('pubsubclist__search_type_{min_size}', {min_size: props.minQuerySize})}
+                </p>
             </fieldset>
         );
     };
@@ -195,12 +166,31 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </button>
                 <h3>
                     {`${this.props.item.corpname} / ${this.props.item.origName}`}
-                    {'\u00a0'}<span className="code">({this.props.item.ident})</span>
                 </h3>
-                <span className="author">
-                    {he.translate('pubsubclist__author')}:{'\u00a0'}
-                    <strong>{this.props.item.author}</strong><br />
-                </span>
+                <table className="props">
+                    <tbody>
+                        <tr className="created">
+                            <th>{he.translate('global__creation_date')}:</th>
+                            <td>{he.formatDate(new Date(this.props.item.created * 1000))}</td>
+                        </tr>
+                        <tr className="author">
+                            <th>{he.translate('pubsubclist__author')}:</th>
+                            <td>{this.props.item.author}</td>
+                        </tr>
+                        <tr className="code">
+                            <th>{he.translate('subclist__public_code')}:</th>
+                            <td>
+                                <a href={he.createActionLink(
+                                    'query', [
+                                        tuple('corpname', this.props.item.corpname),
+                                        tuple('usesubcorp', this.props.item.ident)])
+                                } title={he.translate('pubsubclist__use_in_query')}>
+                                    {this.props.item.ident}
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 <DetailExpandSwitch expanded={this.state.expanded}
                     onClick={this._handleExpandAction} />
                 {this.state.expanded ?
@@ -247,9 +237,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <div className="List">
                     <form>
-                        <Filter searchType={this.props.searchType}
-                                query={this.props.searchQuery}
+                        <fieldset>
+                            <legend>{he.translate('pubsubclist__filter_legend')}</legend>
+                            <Filter query={this.props.searchQuery}
                                 minQuerySize={this.props.minQuerySize} />
+                        </fieldset>
                     </form>
                     {this.props.isBusy ?
                         <div className="loader"><layoutViews.AjaxLoaderImage /></div> :

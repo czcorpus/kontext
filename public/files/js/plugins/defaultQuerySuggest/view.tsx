@@ -22,7 +22,7 @@
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { IActionDispatcher } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, pipe, Dict } from 'cnc-tskit';
 import { Model } from './model';
 
 
@@ -30,12 +30,14 @@ import { Model } from './model';
 export enum KnownRenderers {
     BASIC = 'basic',
     ERROR = 'error',
+    POS_ATTR_PAIR_REL = 'posAttrPairRel',
     UNSUPPORTED = 'unsupported'
 }
 
 
 export interface BasicRendererProps {
     data:Array<string>;
+    itemClickHandler:(value)=>void;
 }
 
 export interface ErrorRendererProps {
@@ -46,24 +48,32 @@ export interface UnsupportedRendererProps {
     data:unknown;
 }
 
+export interface PosAttrPairRelRendererProps {
+    attrs:[string, string];
+    data:{[attr1:string]:Array<string>};
+    itemClickHandler:(value)=>void;
+}
+
 
 export interface SuggestionsViews {
     [KnownRenderers.BASIC]:React.SFC<BasicRendererProps>;
     [KnownRenderers.ERROR]:React.SFC<ErrorRendererProps>;
     [KnownRenderers.UNSUPPORTED]:React.SFC<UnsupportedRendererProps>;
+    [KnownRenderers.POS_ATTR_PAIR_REL]:React.SFC<PosAttrPairRelRendererProps>;
 }
 
 
 export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers):SuggestionsViews {
 
+    // ------------- <UnsupportedRenderer /> -------------------------------
 
-    const UnsupportedRenderer:React.SFC<UnsupportedRendererProps> = (props) => {
-        return <div className="suggestions-box">Unsupported renderer (TODO)</div>
+    const UnsupportedRenderer:React.FC<UnsupportedRendererProps> = (props) => {
+        return <div className="UnsupportedRenderer">Unsupported renderer {JSON.stringify(props.data)}</div>
     }
 
     // ------------- <ErrorRenderer /> -------------------------------
 
-    const ErrorRenderer:React.SFC<ErrorRendererProps> = (props) => {
+    const ErrorRenderer:React.FC<ErrorRendererProps> = (props) => {
         return <div className="ErrorRenderer">
             <p>
                 <img className="error-icon"
@@ -79,21 +89,88 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
         </div>
     };
 
-    // --------------QueryFormModelState <BasicRenderer /> ------------------------------
+    // -------------- <BasicRenderer /> ------------------------------
 
-    const BasicRenderer:React.SFC<BasicRendererProps> = (props) => {
+    const BasicRenderer:React.FC<BasicRendererProps> = (props) => {
         return <div className="BasicRenderer">
             <ul>
                 {List.map(
-                    (item, index) => <li key={index}>{item}</li>,
+                    (item, index) => <li key={index}>{
+                        props.itemClickHandler ?
+                        <a onClick={e => props.itemClickHandler(item)}>{item}</a> :
+                        item
+                    }</li>,
                     props.data
                 )}
             </ul>
         </div>
     };
 
+    // ------------- <PosAttrPairRelRenderer /> ----------------------
+
+    const PosAttrPairRelRenderer:React.FC<PosAttrPairRelRendererProps> = (props) => {
+
+        return <div className="PosAttrPairRelRenderer">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{props.attrs[0]}</th>
+                        <th>{props.attrs[1]}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {pipe(
+                    props.data,
+                    Dict.toEntries(),
+                    List.sortedAlphaBy(([k,]) => k),
+                    List.map(
+                        ([attr1, attrs2], index) => (
+                            List.empty(attrs2) ?
+                                null :
+                                <React.Fragment key={`${attr1}`}>
+                                    <tr className={index > 0 ? 'separ' : null}>
+                                        <th className="attr1" rowSpan={List.size(attrs2)}>{
+                                            props.itemClickHandler ?
+                                            <a onClick={e => props.itemClickHandler(attr1)}>{attr1}</a> :
+                                            attr1
+                                        }</th>
+                                        <td>{
+                                            props.itemClickHandler ?
+                                            <a onClick={e => props.itemClickHandler(List.head(attrs2))}>{List.head(attrs2)}</a> :
+                                            List.head(attrs2)
+                                        }</td>
+                                    </tr>
+                                    {pipe(
+                                        attrs2,
+                                        List.tail(),
+                                        List.map(
+                                            (attr2, i) => (
+                                                <tr key={`${attr1}:${attr2}`}>
+                                                <td>
+                                                    {attr2 === null && i === List.size(attrs2) - 2 ?
+                                                    <span title={he.translate('global__shortened')}>{'\u2026'}</span> :
+                                                    (props.itemClickHandler ?
+                                                        <a onClick={e => props.itemClickHandler(attr2)}>{attr2}</a> :
+                                                        attr2
+                                                    )
+                                                    }
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )
+                                    )}
+                                </React.Fragment>
+                        )
+                    )
+                )}
+                </tbody>
+            </table>
+        </div>
+    };
+
     return {
         [KnownRenderers.BASIC]: BasicRenderer,
+        [KnownRenderers.POS_ATTR_PAIR_REL]:PosAttrPairRelRenderer,
         [KnownRenderers.ERROR]: ErrorRenderer,
         [KnownRenderers.UNSUPPORTED]: UnsupportedRenderer
     }

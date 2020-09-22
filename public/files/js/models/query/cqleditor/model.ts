@@ -109,7 +109,7 @@ function highlightAllQueries(
             ...(queries[sourceId] ?
                 highlightSyntax(
                     queries[sourceId],
-                    'cql',
+                    'advanced',
                     pageModel.getComponentHelpers(),
                     attrHelper,
                     (_) => () => undefined
@@ -130,7 +130,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
 
     private readonly hintListener:(state:CQLEditorModelState, sourceId:string, msg:string)=>void;
 
-    private readonly autoSuggestTrigger:Subject<string>; // stream of source IDs
+    // stream of [source ID, rawAnchorIdx, rawFocusIdx]
+    protected readonly autoSuggestTrigger:Subject<[string, number, number]>;
 
 
     constructor({dispatcher, pageModel, attrList, structAttrList, structList, tagAttr,
@@ -167,9 +168,9 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         this.hintListener = (state, sourceId, msg) => {
             state.message[sourceId] = msg;
         };
-        this.autoSuggestTrigger = new Subject<string>();
+        this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
-            (sourceId) => {
+            ([sourceId, rawAnchorIdx, rawFocusIdx]) => {
                 const currAttr = this.state.focusedAttr[sourceId];
                 if (currAttr && this.state.suggestionsVisibility !==
                     PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
@@ -182,8 +183,10 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             ),
                             subcorpus: null, // TODO
                             value: currAttr.value.replace(/^"(.+)"$/, '$1'),
+                            rawAnchorIdx: rawAnchorIdx,
+                            rawFocusIdx: rawFocusIdx,
                             valueType: 'unspecified',
-                            queryType: 'cql',
+                            queryType: 'advanced',
                             posAttr: currAttr.type === 'posattr' ? currAttr.name : null,
                             struct: undefined, // TODO
                             structAttr: undefined, // TODO
@@ -222,7 +225,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             [state.richCode[sourceId], state.parsedAttrs[sourceId]] =
                                 highlightSyntax(
                                     query,
-                                    'cql',
+                                    'advanced',
                                     this.pageModel.getComponentHelpers(),
                                     this.attrHelper,
                                     (msg) => this.hintListener(state, sourceId, msg)
@@ -266,7 +269,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
                         state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    action.payload.rawAnchorIdx,
+                    action.payload.rawFocusIdx
+                ));
             }
         );
 
@@ -293,7 +300,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.focusedAttr[args.sourceId] = this.findFocusedAttr(
                         state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    action.payload.rawAnchorIdx,
+                    action.payload.rawFocusIdx
+                ));
             }
         );
 
@@ -314,7 +325,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
                         state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    this.state.rawAnchorIdx[action.payload.sourceId],
+                    this.state.rawFocusIdx[action.payload.sourceId]
+                ));
             }
         );
 
@@ -333,33 +348,42 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
                         state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(action.payload.sourceId);
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    this.state.rawAnchorIdx[action.payload.sourceId],
+                    this.state.rawFocusIdx[action.payload.sourceId]
+                ));
             }
         );
 
         this.addActionHandler<Actions.EditQueryOperationDone>(
             ActionName.EditQueryOperationDone,
             action => {
-                this.changeState(state => {
-                    const data = action.payload.data;
-                    if (AjaxResponse.isQueryFormArgs(data) &&
-                            data.curr_query_types[action.payload.sourceId] === 'cql') {
-                        this.setRawQuery(
-                            state,
-                            action.payload.sourceId,
-                            data.curr_queries[action.payload.sourceId],
-                            null
-                        );
+                if (action.error) {
+                    this.pageModel.showMessage('error', action.error);
 
-                    } else if (AjaxResponse.isFilterFormArgs(data) && data.query_type === 'cql') {
-                        this.setRawQuery(
-                            state,
-                            action.payload.sourceId,
-                            data.query,
-                            null
-                        );
-                    }
-                });
+                } else {
+                    this.changeState(state => {
+                        const data = action.payload.data;
+                        if (AjaxResponse.isQueryFormArgs(data) &&
+                                data.curr_query_types[action.payload.sourceId] === 'advanced') {
+                            this.setRawQuery(
+                                state,
+                                action.payload.sourceId,
+                                data.curr_queries[action.payload.sourceId],
+                                null
+                            );
+
+                        } else if (AjaxResponse.isFilterFormArgs(data) && data.query_type === 'advanced') {
+                            this.setRawQuery(
+                                state,
+                                action.payload.sourceId,
+                                data.query,
+                                null
+                            );
+                        }
+                    });
+                }
             }
         );
 
@@ -516,7 +540,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         if (state.isEnabled) {
             [state.richCode[sourceId], state.parsedAttrs[sourceId]] = highlightSyntax(
                 state.rawCode[sourceId] ? state.rawCode[sourceId] : '',
-                'cql',
+                'advanced',
                 this.pageModel.getComponentHelpers(),
                 this.attrHelper,
                 (msg) => this.hintListener(state, sourceId, msg)

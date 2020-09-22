@@ -46,7 +46,6 @@ export interface AlignedCorporaProps {
     forcedAttr:string;
     defaultAttrValues:{[key:string]:string};
     attrList:Array<Kontext.AttrItem>;
-    tagsetDocUrls:{[key:string]:string};
     pcqPosNegValues:{[key:string]:string};
     includeEmptyValues:{[key:string]:boolean};
     inputLanguages:{[key:string]:string};
@@ -90,7 +89,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         forcedAttr:string;
         defaultAttr:string;
         attrList:Array<Kontext.AttrItem>;
-        tagsetDocUrl:string;
         inputLanguage:string;
         queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
         useCQLEditor:boolean;
@@ -140,36 +138,33 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             </a>
                         </span>
                     </div>
-                    <table className="form">
-                        <tbody>
-                            <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
+                    <div className="form">
+                        <inputViews.TRQueryInputField
+                            sourceId={this.props.corpname}
+                            queryType={this.props.queryType}
+                            widgets={this.props.widgets}
+                            wPoSList={this.props.wPoSList}
+                            lposValue={this.props.lposValue}
+                            matchCaseValue={this.props.matchCaseValue}
+                            forcedAttr={this.props.forcedAttr}
+                            defaultAttr={this.props.defaultAttr}
+                            attrList={this.props.attrList}
+                            inputLanguage={this.props.inputLanguage}
+                            queryStorageView={this.props.queryStorageView}
+                            useCQLEditor={this.props.useCQLEditor}
+                            onEnterKey={this.props.onEnterKey}
+                            tagHelperView={this.props.tagHelperView}
+                            qsuggPlugin={null}
+                            customOptions={[
+                                <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
+                                    span={2}
                                     value={this.props.pcqPosNegValue}
-                                    formType={Kontext.ConcFormTypes.QUERY} />
-                            <inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
-                                    corpname={this.props.corpname} />
-                            <inputViews.TRQueryTypeField queryType={this.props.queryType}
-                                    formType={Kontext.ConcFormTypes.QUERY}
-                                    sourceId={this.props.corpname}
-                                    hasLemmaAttr={this.props.hasLemmaAttr} />
-                            <inputViews.TRQueryInputField
-                                sourceId={this.props.corpname}
-                                queryType={this.props.queryType}
-                                widgets={this.props.widgets}
-                                wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValue}
-                                matchCaseValue={this.props.matchCaseValue}
-                                forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttr}
-                                attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocUrl}
-                                inputLanguage={this.props.inputLanguage}
-                                queryStorageView={this.props.queryStorageView}
-                                useCQLEditor={this.props.useCQLEditor}
-                                onEnterKey={this.props.onEnterKey}
-                                tagHelperView={this.props.tagHelperView}
-                                qsuggPlugin={null} />
-                        </tbody>
-                    </table>
+                                    formType={Kontext.ConcFormTypes.QUERY} />,
+                                <inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
+                                    corpname={this.props.corpname}
+                                    span={1} />
+                            ]} />
+                    </div>
                 </div>
             );
         }
@@ -214,7 +209,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                         forcedAttr={props.forcedAttr}
                         defaultAttr={props.defaultAttrValues[item]}
                         attrList={props.attrList}
-                        tagsetDocUrl={props.tagsetDocUrls[item]}
                         tagHelperView={props.tagHelperViews[item]}
                         pcqPosNegValue={props.pcqPosNegValues[item]}
                         includeEmptyValue={props.includeEmptyValues[item]}

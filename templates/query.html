@@ -43,12 +43,12 @@ __conf.QSVisibilityMode = {{ qs_visibility_mode }};
 __conf.StructAttrList = {{ StructAttrList|to_json }};
 __conf.StructList = {{ StructList|to_json }};
 __conf.DefaultVirtKeyboard = {{ default_virt_keyboard|to_json }};
-firstFormPage.init(__conf);
+queryPage.init(__conf);
 {% endblock %}
 
 {% block main %}
-<section>
-    <h2>{{ "Search in the corpus"|_ }}</h2>
+<section class="query">
+    <div class="bar"><h2>{{ "Search in the corpus"|_ }}</h2><span id="topbar-help-mount"></span></div>
     <div id="query-form-mount"></div>
 </section>
 {% endblock %}

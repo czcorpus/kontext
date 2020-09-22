@@ -24,10 +24,11 @@ import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
-import { List, HTTP, Ident, Dict } from 'cnc-tskit';
-import { map } from 'rxjs/operators';
+import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
+import { map, tap, concatMap, mergeMap } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { listAttrs1ToExtend, mergeResults } from './frontends';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {
@@ -40,9 +41,10 @@ export interface HTTPResponse extends Kontext.AjaxResponse {
 
 export interface ProviderInfo {
     ident:string;
-    frontendId:string;
+    rendererId:string;
     queryTypes:Array<QueryType>;
     heading:string;
+    onItemClick:PluginInterfaces.QuerySuggest.ItemClickAction;
 }
 
 export interface ModelState {
@@ -54,6 +56,15 @@ export interface ModelState {
     cache:Array<[string, PluginInterfaces.QuerySuggest.SuggestionAnswer]>;
 }
 
+
+function listUnion<T>(key:(v:T)=>string,...items:Array<Array<T>>):Array<T> {
+    return pipe(
+        items,
+        List.flatMap(v => v),
+        List.groupBy(key),
+        List.map(([,grouped]) => grouped[0]) // we assume all the grouped items are equivalent
+    );
+}
 
 export class Model extends StatelessModel<ModelState> {
 
@@ -84,16 +95,12 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSelectType>(
-            QueryActionName.QueryInputSelectType,
+        this.addActionHandler<QueryActions.QueryInputSetQType>(
+            QueryActionName.QueryInputSetQType,
             (state, action) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {
                     currArgs.queryType = action.payload.queryType;
-                    if (action.payload.queryType === 'lemma') {
-                        currArgs.valueType = 'posattr';
-                        currArgs.posAttr = 'lemma';
-                    }
                 }
             },
             (state, action, dispatch) => {
@@ -122,14 +129,19 @@ export class Model extends StatelessModel<ModelState> {
                 state.isBusy = false;
                 if (!action.error) {
                     const cacheIdx = List.findIndex(
-                        ([hash,]) => hash === this.createSuggestionHash(action.payload),
+                        ([hash,]) => hash === this.createSuggestionHash(
+                            action.payload, action.payload.parsedWord),
                         state.cache
                     );
 
                     if (cacheIdx === -1) {
                         state.cache.push([
-                            this.createSuggestionHash(action.payload),
-                            {results: action.payload.results}
+                            this.createSuggestionHash(action.payload, action.payload.parsedWord),
+                            {
+                                results: action.payload.results,
+                                parsedWord: action.payload.parsedWord,
+                                isPartial: action.payload.isPartial
+                            }
                         ]);
                         if (state.cache.length > this.CACHE_SIZE) {
                             state.cache = List.tail(state.cache);
@@ -144,11 +156,17 @@ export class Model extends StatelessModel<ModelState> {
         );
     }
 
-    private createSuggestionHash(args:PluginInterfaces.QuerySuggest.SuggestionArgs):string {
+    private createSuggestionHash(
+        args:PluginInterfaces.QuerySuggest.SuggestionArgs,
+        srchWord:string
+
+    ):string {
         return Ident.hashCode(
             args.corpora + args.posAttr + args.queryType + args.sourceId +
-            args.struct + args.structAttr + args.subcorpus + args.value + args.valueType);
+            args.struct + args.structAttr + args.subcorpus + srchWord + args.valueType);
     }
+
+
 
     private loadSuggestions(
         state:ModelState,
@@ -161,13 +179,64 @@ export class Model extends StatelessModel<ModelState> {
                 state,
                 args
 
+            ).pipe(
+                tap(
+                    data => {
+                        const isPartial = pipe(
+                            data.results,
+                            List.map(
+                                item => listAttrs1ToExtend(item)
+                            ),
+                            List.some(x => !List.empty(x))
+                        );
+                        dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                            name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                            payload: {
+                                ...args,
+                                results: data.results,
+                                parsedWord: data.parsedWord,
+                                isPartial
+                            }
+                        });
+                    }
+                ),
+                concatMap(
+                    data => rxOf(...pipe(
+                        data.results,
+                        List.map(
+                            item => listAttrs1ToExtend(item)
+                        ),
+                        v => listUnion(id, ...v),
+                        List.map(v => tuple(data, v))
+                    ))
+                ),
+                mergeMap(
+                    ([firstData, item]) => this.fetchSuggestionsForWord(state, args, item).pipe(
+                        map(
+                            resp => tuple(firstData, resp)
+                        )
+                    )
+                )
+
             ).subscribe(
-                data => {
+                ([firstData, secondData]) => {
+                    const data = {
+                        results: pipe(
+                            firstData.results,
+                            List.zip(secondData.results),
+                            List.map(
+                                ([values1, values2]) => mergeResults(values1, values2)
+                            )
+                        ),
+                        parsedWord: firstData.parsedWord,
+                        isPartial: false
+                    };
+
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                         payload: {
-                            results: data.results,
-                            ...args
+                            ...args,
+                            ...data
                         }
                     });
                 },
@@ -175,16 +244,10 @@ export class Model extends StatelessModel<ModelState> {
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                         payload: {
-                            sourceId: args.sourceId,
-                            value: args.value,
-                            valueType: args.valueType,
-                            queryType: args.queryType,
-                            corpora: args.corpora,
-                            subcorpus: args.subcorpus,
-                            posAttr: args.posAttr,
-                            struct: args.struct,
-                            structAttr: args.structAttr,
-                            results: []
+                            ...args,
+                            results: [],
+                            parsedWord: '',
+                            isPartial: false
                         },
                         error: err
                     });
@@ -195,21 +258,60 @@ export class Model extends StatelessModel<ModelState> {
             dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                 name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                 payload: {
+                    ...args,
                     results: [],
-                    ...args
+                    parsedWord: '',
+                    isPartial: false
                 }
             });
         }
     }
 
+    private findCursorWord(args:PluginInterfaces.QuerySuggest.SuggestionArgs):string {
+        const ans:Array<[string, number, number]> = [];
+        let curr:[string, number, number] = ['', 0, 0];
+        for (let i = 0; i < args.value.length; i++) {
+            if (args.value[i] === ' ') {
+                if (curr) {
+                    ans.push(curr);
+                }
+                curr = [args.value[i] === ' ' ? '' : args.value[i], i, i + 1];
+
+            } else {
+                curr[0] += args.value[i];
+                curr[2] = i + 1;
+            }
+        }
+        ans.push(curr);
+        for (let i = 0; i < ans.length; i++) {
+            const [w, f, t] = ans[i];
+            if (args.rawFocusIdx >= f && args.rawFocusIdx <= t) {
+                return w;
+            }
+        }
+        return '';
+    }
 
     private fetchSuggestions(
         state:ModelState,
         suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs
 
     ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
+        return this.fetchSuggestionsForWord(
+            state,
+            suggArgs,
+            this.findCursorWord(suggArgs)
+        );
+    }
+
+    private fetchSuggestionsForWord(
+        state:ModelState,
+        suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs,
+        srchWord:string
+
+    ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
         const cacheIdx = List.findIndex(
-            ([key,]) => key === this.createSuggestionHash(suggArgs),
+            ([key,]) => key === this.createSuggestionHash(suggArgs, srchWord),
             state.cache
         );
         if (cacheIdx > -1) {
@@ -228,11 +330,12 @@ export class Model extends StatelessModel<ModelState> {
             struct:string;
             s_attr:string;
         }>();
+
         args.set('ui_lang', state.uiLang);
         args.set('corpname', List.head(suggArgs.corpora));
         args.set('subcorpus', suggArgs.subcorpus);
         args.replace('align', List.tail(suggArgs.corpora));
-        args.set('value', suggArgs.value);
+        args.set('value', srchWord);
         args.set('value_type', suggArgs.valueType);
         args.set('query_type', suggArgs.queryType);
         args.set('p_attr', suggArgs.posAttr);
@@ -254,7 +357,9 @@ export class Model extends StatelessModel<ModelState> {
                             heading: item.heading
                         }),
                         data.items
-                    )
+                    ),
+                    parsedWord: srchWord,
+                    isPartial: false // yet to be resolved
                 })
             )
         );

@@ -51,7 +51,8 @@ export interface IPluginApi extends ITranslator {
     getModels():Kontext.LayoutModel;
     getViews():CoreViews.Runtime;
     pluginTypeIsActive(name:string):boolean;
-    getConcArgs():Kontext.IMultiDict<ConcServerArgs>;
+    getConcArgs():ConcServerArgs;
+    exportConcArgs():Kontext.IMultiDict<ConcServerArgs>;
     getCorpusIdent():Kontext.FullCorpusIdent;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
@@ -476,17 +477,24 @@ export namespace PluginInterfaces {
     export namespace QuerySuggest {
 
         export interface IPlugin extends BasePlugin {
-            createElement(rendererId:string, data:unknown):React.ReactElement;
+            createElement<T>(
+                dr:DataAndRenderer<T>,
+                itemClickHandler:(onItemClick:string, value:string)=>void
+            ):React.ReactElement;
             isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
             listCurrentProviders():Array<string>;
         }
 
         export enum ActionName {
             AskSuggestions = 'QUERY_SUGGEST_ASK_SUGGESTIONS',
-            SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED'
+            ClearSuggestions = 'QUERY_SUGGEST_CLEAR_SUGGESTIONS',
+            SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED',
+            ItemClicked = 'QUERY_SUGGEST_ITEM_CLICKED'
         }
 
         export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';
+
+        export type ItemClickAction = 'replace'|'insert'|null;
 
         export enum SuggestionVisibility {
             DISABLED = 0,
@@ -497,6 +505,8 @@ export namespace PluginInterfaces {
         export interface SuggestionArgs {
             sourceId:string;
             value:string;
+            rawAnchorIdx:number;
+            rawFocusIdx:number;
             valueType:SuggestionValueType;
             queryType:QueryType;
             corpora:Array<string>;
@@ -506,9 +516,13 @@ export namespace PluginInterfaces {
             structAttr:string|undefined;
         }
 
-        export interface SuggestionReturn extends SuggestionArgs {
-            results:Array<DataAndRenderer>;
+        export interface SuggestionAnswer {
+            parsedWord:string; // the word actually used to search the suggestion
+            results:Array<DataAndRenderer<unknown>>;
+            isPartial:boolean;
         }
+
+        export type SuggestionReturn = SuggestionArgs & SuggestionAnswer;
 
         export namespace Actions {
 
@@ -516,8 +530,21 @@ export namespace PluginInterfaces {
                 name: ActionName.AskSuggestions
             }
 
+            export interface ClearSuggestions extends Action<{}> {
+                name: ActionName.ClearSuggestions
+            }
+
             export interface SuggestionsReceived extends Action<SuggestionReturn> {
                 name: ActionName.SuggestionsReceived
+            }
+
+            export interface ItemClicked extends Action<{
+                onItemClick: string;
+                value: string;
+                sourceId: string;
+                formType: string;
+            }> {
+                name: ActionName.ItemClicked
             }
 
         }
@@ -525,14 +552,10 @@ export namespace PluginInterfaces {
         export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
             React.SFC<Kontext.GeneralProps>;
 
-        export interface DataAndRenderer<T=unknown> {
+        export interface DataAndRenderer<T> {
             rendererId:string;
             contents:T;
             heading:string;
-        }
-
-        export interface SuggestionAnswer {
-            results:Array<DataAndRenderer>;
         }
 
         export type Factory = (pluginApi:IPluginApi)=>IPlugin;

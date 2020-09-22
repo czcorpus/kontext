@@ -2,6 +2,27 @@
 
 form.query-form {
 
+    margin: 1.5em;
+
+    .primary-language,
+    .parallel .AlignedCorpBlock .form {
+
+        max-width: 60em;
+
+        > *:not(:first-child) {
+            margin-top: 1em;
+        }
+
+        .query {
+            margin-top: 1.2em;
+        }
+    }
+
+    .specify-context,
+    .specify-text-types {
+        margin-top: 0.7em;
+    }
+
     .AlignedCorpBlock table.form {
         margin: 5px 10px;
     }
@@ -93,7 +114,6 @@ form.query-form {
     .pos-filter {
         margin-top: 1.7em;
     }
-
 }
 
 
@@ -135,6 +155,15 @@ a.form-extension-switch.collapse:hover {
     background-image: url(../../img/collapse_s.svg);
 }
 
+.form-extension-switch.always-expand {
+    background-image: url(../../img/sort_desc_grey.svg);
+    display: inline-block;
+    background-position: 0 3pt;
+    background-repeat: no-repeat;
+    padding-left: 1em;
+    margin-left: 0.2em;
+}
+
 .form-extension-switch .status {
     vertical-align: middle;
     display: inline-block;
@@ -159,7 +188,6 @@ div.query-form-spa {
 }
 
 .query-area {
-    max-width: 50em;
     border-radius: @input-border-radius;
     border: @input-border-style;
     background-color: #FFFFFF;
@@ -178,7 +206,12 @@ div.query-form-spa {
         min-width: 40em;
     }
 
+    .simple-input {
+        font-size: 1.3em;
+    }
+
     .cql-input {
+        font-size: 1.3em;
         min-height: 5em;
         overflow: hidden;
         resize: vertical;
@@ -190,17 +223,16 @@ div.query-form-spa {
         font-family: @monospace-font-family;
     }
 
-    .query-hints {
+    .QueryHints {
 
         background-color: #FAFAFA;
-        max-width: 40em;
         white-space: initial;
+        padding: 1em 0.3em 0.2em 0.3em;
+        color: @color-light-text;
+        font-size: 0.8em;
 
-        div {
-            color: @color-light-text;
-            padding: 3pt 5pt;
-            font-size: 8pt;
-            display: inline-block;
+        > * {
+            display: inline;
         }
 
         .next-hint {
@@ -234,15 +266,19 @@ div.query-form-spa {
     > ul {
         list-style-type: none;
         margin: 0;
-        padding: 2pt 0;
+        padding: 0.1em 0;
         background-color: @color-section-bg;
         color: @color-light-text;
+        display: flex;
+        align-items: center;
+        font-size: 85%;
 
         li {
-            display: inline-block;
+            margin: 0.1em 0.2em;
 
             .notifications {
                 color: @color-logo-pink;
+                padding-left: 0.2em;
             }
         }
 
@@ -254,11 +290,6 @@ div.query-form-spa {
             content: none;
         }
 
-        li a,
-        li .hint {
-            font-size: 75%;
-        }
-
         li .hint strong {
             font-size: 100%;
             font-weight: normal;
@@ -267,12 +298,11 @@ div.query-form-spa {
             border-style: @border-radius-default;
         }
 
-        li a {
+        li a,
+        li label {
             background-color: transparent;
             color: @color-logo-blue;
-            padding: 2px 5px;
             text-decoration: none;
-            margin: 0;
         }
 
         li a:hover {
@@ -283,11 +313,32 @@ div.query-form-spa {
 }
 
 .query-options {
-    display: block;
-    margin-top: 7pt;
+    margin-top: 1.2em;
+    margin-bottom: 1.2em;
 
-    .default-attr-selection {
-        white-space: nowrap;
+    div.options {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        grid-template-rows: auto;
+        grid-gap: 1em;
+        grid-row-gap: 1.5em;
+
+        div.option {
+            white-space: nowrap;
+            margin-right: 1.3em;
+
+            label {
+
+                input {
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+            }
+        }
+
+        div.option.custom div.option {
+            grid-column-start: 1;
+        }
     }
 }
 

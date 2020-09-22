@@ -21,6 +21,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
+import { Keyboard, List, Dict, pipe } from 'cnc-tskit';
 
 import { init as inputInit } from './input';
 import { init as alignedInit } from './aligned';
@@ -36,7 +37,6 @@ import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../models/query/context';
 import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { ActionName, Actions } from '../../models/query/actions';
-import { Keyboard, List } from 'cnc-tskit';
 
 
 export interface MainModuleArgs {
@@ -50,7 +50,7 @@ export interface MainModuleArgs {
     virtualKeyboardModel:VirtualKeyboardModel;
     queryContextModel:QueryContextModel;
     cqlEditorModel:CQLEditorModel;
-    qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
 
@@ -76,21 +76,23 @@ export interface QueryFormLiteProps {
 export interface MainViews {
     QueryForm:React.ComponentClass<QueryFormProps>;
     QueryFormLite:React.ComponentClass<QueryFormLiteProps>;
+    QueryHelp:React.SFC<{tagsetDocs:{[corpname:string]:string}}>;
 }
 
 
 export function init({dispatcher, he, CorparchWidget, queryModel,
                       textTypesModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
-                      queryContextModel, cqlEditorModel, qsuggPlugin}:MainModuleArgs):MainViews {
+                      queryContextModel, cqlEditorModel, querySuggest}:MainModuleArgs):MainViews {
 
     const inputViews = inputInit({
-        dispatcher: dispatcher,
-        he: he,
-        queryModel: queryModel,
-        queryHintModel: queryHintModel,
-        withinBuilderModel: withinBuilderModel,
-        virtualKeyboardModel: virtualKeyboardModel,
-        cqlEditorModel: cqlEditorModel
+        dispatcher,
+        he,
+        queryModel,
+        queryHintModel,
+        withinBuilderModel,
+        virtualKeyboardModel,
+        cqlEditorModel,
+        querySuggest
     });
     const alignedViews = alignedInit({
             dispatcher: dispatcher,
@@ -99,7 +101,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     });
     const contextViews = contextInit(dispatcher, he, queryContextModel);
     const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
-
+    const layoutViews = he.getLayoutViews();
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
 
@@ -155,12 +157,9 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     }> = (props) => {
 
         return (
-            <tr>
-                <th>{he.translate('global__corpus')}:</th>
-                <td>
-                    <props.corparchWidget  />
-                </td>
-            </tr>
+            <div>
+                <props.corparchWidget  />
+            </div>
         );
     };
 
@@ -211,18 +210,11 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
             const primaryCorpname = this.props.corpora[0];
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
-                    <table className="form primary-language">
-                        <tbody>
-                            {this.props.allowCorpusSelection ?
-                                <TRCorpusField corparchWidget={CorparchWidget} />
-                                : null}
-                            <inputViews.TRQueryTypeField
-                                    formType={this.props.formType}
-                                    queryType={this.props.queryTypes[primaryCorpname]}
-                                    sourceId={primaryCorpname}
-                                    hasLemmaAttr={this.props.hasLemma[primaryCorpname]} />
-                        </tbody>
-                        <tbody>
+                    <div className="form primary-language">
+                        {this.props.allowCorpusSelection ?
+                            <TRCorpusField corparchWidget={CorparchWidget} />
+                            : null}
+                        <div className="query">
                             <inputViews.TRQueryInputField
                                 queryType={this.props.queryTypes[primaryCorpname]}
                                 widgets={this.props.supportedWidgets[primaryCorpname]}
@@ -233,16 +225,15 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 forcedAttr={this.props.forcedAttr}
                                 defaultAttr={this.props.defaultAttrValues[primaryCorpname]}
                                 attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocs[primaryCorpname]}
                                 tagHelperView={this.props.tagHelperViews[primaryCorpname]}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguages[primaryCorpname]}
                                 onEnterKey={this._handleSubmit}
                                 useCQLEditor={this.props.useCQLEditor}
                                 takeFocus={true}
-                                qsuggPlugin={qsuggPlugin} />
-                        </tbody>
-                    </table>
+                                qsuggPlugin={querySuggest} />
+                        </div>
+                    </div>
                     {this.props.corpora.length > 1 || this.props.availableAlignedCorpora.length > 0 ?
                         <alignedViews.AlignedCorpora
                                 availableCorpora={this.props.availableAlignedCorpora}
@@ -255,7 +246,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 forcedAttr={this.props.forcedAttr}
                                 defaultAttrValues={this.props.defaultAttrValues}
                                 attrList={this.props.attrList}
-                                tagsetDocUrls={this.props.tagsetDocs}
                                 pcqPosNegValues={this.props.pcqPosNegValues}
                                 includeEmptyValues={this.props.includeEmptyValues}
                                 inputLanguages={this.props.inputLanguages}
@@ -266,7 +256,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 onEnterKey={this._handleSubmit} />
                         : null
                     }
-                    <fieldset id="specify-context">
+                    <fieldset className="specify-context">
                         <BoundAdvancedFormLegend
                                 formVisible={this.props.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
@@ -279,7 +269,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     wPoSList={this.props.wPoSList} />
                             : null}
                     </fieldset>
-                    <fieldset className="specify-query-metainformation">
+                    <fieldset className="specify-text-types">
                         <BoundAdvancedFormLegend
                                 formVisible={this.props.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
@@ -292,9 +282,12 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         }
                     </fieldset>
                     <div className="buttons">
-                        <button type="button" className="default-button" onClick={this._handleSubmit}>
-                            {he.translate('query__search_btn')}
-                        </button>
+                        {this.props.isBusy ?
+                            <layoutViews.AjaxLoaderBarImage /> :
+                            <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                {he.translate('query__search_btn')}
+                            </button>
+                        }
                     </div>
                 </form>
             );
@@ -306,7 +299,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     const SelectedTextTypesLite:React.SFC<TextTypesModelState> = (props) => {
         if (props.hasSelectedItems) {
             return (
-                <fieldset className="SelectedTextTypesLite specify-query-metainformation">
+                <fieldset className="SelectedTextTypesLite specify-text-types">
                     <legend>{he.translate('query__chosen_texts')}</legend>
                     <ul>
                         {Object.keys(props.attributes).map(v => (
@@ -383,33 +376,25 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         render() {
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
-                    <table className="form primary-language">
-                        <tbody>
-                            <inputViews.TRQueryTypeField
-                                    formType={this.props.formType}
-                                    queryType={this.props.queryTypes[this.props.corpname]}
-                                    sourceId={this.props.corpname}
-                                    hasLemmaAttr={this.props.hasLemma[this.props.corpname]} />
-                            <inputViews.TRQueryInputField
-                                queryType={this.props.queryTypes[this.props.corpname]}
-                                widgets={this.props.supportedWidgets[this.props.corpname]}
-                                sourceId={this.props.corpname}
-                                wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValues[this.props.corpname]}
-                                matchCaseValue={this.props.matchCaseValues[this.props.corpname]}
-                                forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttrValues[this.props.corpname]}
-                                attrList={this.props.attrList}
-                                tagsetDocUrl={this.props.tagsetDocs[this.props.corpname]}
-                                tagHelperView={this.props.tagHelperView}
-                                queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.props.inputLanguages[this.props.corpname]}
-                                onEnterKey={this._handleSubmit}
-                                useCQLEditor={this.props.useCQLEditor}
-                                qsuggPlugin={qsuggPlugin} />
-                        </tbody>
-                    </table>
-                    <fieldset id="specify-context">
+                    <div className="form primary-language">
+                        <inputViews.TRQueryInputField
+                            queryType={this.props.queryTypes[this.props.corpname]}
+                            widgets={this.props.supportedWidgets[this.props.corpname]}
+                            sourceId={this.props.corpname}
+                            wPoSList={this.props.wPoSList}
+                            lposValue={this.props.lposValues[this.props.corpname]}
+                            matchCaseValue={this.props.matchCaseValues[this.props.corpname]}
+                            forcedAttr={this.props.forcedAttr}
+                            defaultAttr={this.props.defaultAttrValues[this.props.corpname]}
+                            attrList={this.props.attrList}
+                            tagHelperView={this.props.tagHelperView}
+                            queryStorageView={this.props.queryStorageView}
+                            inputLanguage={this.props.inputLanguages[this.props.corpname]}
+                            onEnterKey={this._handleSubmit}
+                            useCQLEditor={this.props.useCQLEditor}
+                            qsuggPlugin={querySuggest} />
+                    </div>
+                    <fieldset className="specify-context">
                         <BoundAdvancedFormLegend
                                 formVisible={this.props.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
@@ -436,8 +421,63 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
     }
 
+    // ------------------- <QueryHelp /> -----------------------------
+
+    const QueryHelp:React.SFC<{
+        tagsetDocs:{[corpname:string]:string};
+    }> = (props) => {
+
+        const [visible, changeState] = React.useState(false);
+
+        const toggleHelp = () => {
+            changeState(!visible);
+        };
+
+        return (
+            <div className="QueryHelp topbar-help-icon">
+                <a className="icon" onClick={toggleHelp}>
+                    <layoutViews.ImgWithMouseover
+                        htmlClass="over-img"
+                        src={he.createStaticUrl('img/question-mark.svg')}
+                        alt={he.translate('global__click_to_see_help')} />
+                </a>
+                {visible ?
+                    <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp}customClass="hint" label={"query help"}>
+                            <div>
+                                <h2>Query types</h2>
+                                <h3>{he.translate('query__qt_simple')}</h3>
+                                <div dangerouslySetInnerHTML={{__html: he.translate('query__type_hint_simple')}} />
+                                <h3>{he.translate('query__qt_advanced')}</h3>
+                                <div dangerouslySetInnerHTML={{__html: he.translate('query__type_hint_advanced')}} />
+                                <p><a target="_blank" href={he.getHelpLink('term_cql')}>{he.getHelpLink('term_cql')}</a></p>
+                                <h2>Tagsets</h2>
+                                {Dict.empty(props.tagsetDocs) ?
+                                    null :
+                                    <ul>{pipe(
+                                        props.tagsetDocs,
+                                        Dict.toEntries(),
+                                        List.map(
+                                            ([k, v]) => (
+                                                <li key={`item:${k}`}>{k}:
+                                                    <a target="_blank" href={v}>{v}</a>
+                                                </li>
+                                            )
+                                        )
+                                    )}</ul>
+                                }
+                            </div>
+                        </layoutViews.CloseableFrame>
+                    </layoutViews.ModalOverlay> :
+                    null
+                }
+            </div>
+        );
+    };
+
     return {
         QueryForm: BoundWithProps<QueryFormProps, FirstQueryFormModelState>(QueryForm, queryModel),
-        QueryFormLite: BoundWithProps<QueryFormLiteProps, FirstQueryFormModelState>(QueryFormLite, queryModel)
+        QueryFormLite: BoundWithProps<QueryFormLiteProps, FirstQueryFormModelState>(QueryFormLite, queryModel),
+        QueryHelp: QueryHelp
     };
 }

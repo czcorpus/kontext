@@ -42,7 +42,7 @@ import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dash
 import { UsageTipsModel } from '../../models/usageTips';
 import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/concordance/actions';
-import { LineSelectionModes, DrawLineSelectionChart } from '../../models/concordance/common';
+import { LineSelectionModes, DrawLineSelectionChart, ViewConfiguration } from '../../models/concordance/common';
 import { Actions as UserActions, ActionName as UserActionName } from '../../models/user/actions';
 
 
@@ -546,7 +546,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <ConcordanceView /> ---------------------------
 
-    class ConcordanceView extends React.Component<
+    class ConcordanceView extends React.PureComponent<
     ConcordanceDashboardProps['concViewProps'] & ConcordanceModelState> {
 
         constructor(props) {
@@ -641,7 +641,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
 
     const BoundConcordanceView = BoundWithProps<ConcordanceDashboardProps['concViewProps'],
-            ConcordanceModelState>(ConcordanceView, lineViewModel)
+            ConcordanceModelState>(ConcordanceView, lineViewModel);
 
 
     // ------------------------- <ConcordanceDashboard /> ---------------------------
@@ -665,7 +665,17 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.kwicConnectView} /> :
                         null
                     }
-                    <BoundConcordanceView {...this.props.concViewProps} />
+                    <BoundConcordanceView
+                        baseCorpname={this.props.concViewProps.baseCorpname}
+                        mainCorp={this.props.concViewProps.mainCorp}
+                        anonymousUser={this.props.concViewProps.anonymousUser}
+                        SortIdx={this.props.concViewProps.SortIdx}
+                        NumItemsInLockedGroups={this.props.concViewProps.NumItemsInLockedGroups}
+                        KWICCorps={this.props.concViewProps.KWICCorps}
+                        canSendEmail={this.props.concViewProps.canSendEmail}
+                        ShowConcToolbar={this.props.concViewProps.ShowConcToolbar}
+                        anonymousUserConcLoginPrompt={this.props.concViewProps.anonymousUserConcLoginPrompt}
+                        onLineSelChartFrameReady={this.props.concViewProps.onLineSelChartFrameReady} />
                 </div>
             );
         }

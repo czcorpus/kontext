@@ -325,10 +325,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <FormActionTemplate /> --------------------------
 
-    const FormActionTemplate:React.SFC<{}> = (props) => {
+    const FormActionTemplate:React.SFC<{auxInfoElm?:React.ReactElement}> = (props) => {
 
         return (
             <form className="subc-action">
+                {props.auxInfoElm ? props.auxInfoElm : null}
                 <fieldset>
                     <legend>
                         <img src={he.createStaticUrl('img/collapse.svg')} alt="action form" />
@@ -356,7 +357,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             this._handleNameChange = this._handleNameChange.bind(this);
             this._handleCqlChange = this._handleCqlChange.bind(this);
             this.state = {
-                newName: this.props.data.usesubcorp + ' (' + he.translate('global__copy') + ')',
+                newName: this.props.data.origSubcName + ' (' + he.translate('global__copy') + ')',
                 newCql: this.props.data.cql
             };
         }
@@ -396,7 +397,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </div>
                     <div>
                         <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
-                        <textarea id="inp_zBuJi" defaultValue={this.props.data.cql}
+                        <textarea id="inp_zBuJi" className="cql" defaultValue={this.props.data.cql}
                                 onChange={this._handleCqlChange} rows={4} />
                     </div>
                     <p>
@@ -492,6 +493,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         rowIdx:number;
         description:string;
         published:boolean;
+        publicCode:string;
 
     }> {
 
@@ -531,10 +533,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
+        private renderPublicCodeInfo() {
+            if (this.props.publicCode) {
+                return (
+                    <dl className="public-code">
+                        <dt>{he.translate('subclist__public_code')}:</dt>
+                        <dd><input type="text" value={this.props.publicCode} readOnly={true} /></dd>
+                    </dl>
+                );
+            }
+            return null;
+        }
+
         render() {
-            return <FormActionTemplate>
+            return <FormActionTemplate auxInfoElm={this.renderPublicCodeInfo()}>
                 <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
-                <textarea id="inp_3IDJH" cols={60} rows={10}
+                <textarea className="desc" id="inp_3IDJH" cols={60} rows={10}
                         onChange={this.handleTextAreaChange}
                         value={this.props.description || ''} />
                 <p className="note">({he.translate('global__markdown_supported')})</p>
@@ -584,7 +598,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             let children = [];
             if (!this.props.data.deleted) {
                 items.push({id: 'pub', label: he.translate('subclist__public_access_btn')});
-                children.push(<PublishingTab key="publish" published={this.props.data.published} description={this.props.data.description} rowIdx={this.props.idx} />)
+                children.push(<PublishingTab key="publish" published={this.props.data.published}
+                    description={this.props.data.description} rowIdx={this.props.idx}
+                    publicCode={this.props.data.published ? this.props.data.usesubcorp : null} />)
             }
             if (!!this.props.data.cql) {
                 items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})

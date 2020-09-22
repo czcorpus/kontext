@@ -24,9 +24,20 @@ import { QueryContextArgs } from './common';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 
+export interface FormData {
+    fc_lemword_window_type:string;
+    fc_lemword_wsize:string;
+    fc_lemword:string;
+    fc_lemword_type:string;
+    fc_pos_window_type:string;
+    fc_pos_wsize:string;
+    fc_pos:string[];
+    fc_pos_type:string;
+}
+
 
 export interface QueryContextModelState {
-    formData:QueryContextArgs;
+    formData:FormData;
 }
 
 
@@ -61,7 +72,16 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
                 dispatch<Actions.QueryContextFormPrepareArgsDone>({
                     name: ActionName.QueryContextFormPrepareArgsDone,
                     payload: {
-                        data: state.formData
+                        data: {
+                            fc_lemword_window_type: state.formData.fc_lemword_window_type,
+                            fc_lemword_wsize: parseInt(state.formData.fc_lemword_wsize),
+                            fc_lemword: state.formData.fc_lemword,
+                            fc_lemword_type: state.formData.fc_lemword_type,
+                            fc_pos_window_type: state.formData.fc_pos_window_type,
+                            fc_pos_wsize: parseInt(state.formData.fc_pos_wsize),
+                            fc_pos: state.formData.fc_pos,
+                            fc_pos_type: state.formData.fc_pos_type
+                        }
                     }
                 });
             }

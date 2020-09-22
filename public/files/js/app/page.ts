@@ -22,10 +22,10 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { List, HTTP } from 'cnc-tskit';
+import { List, HTTP, tuple } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
-import { Kontext } from '../types/common';
+import { Kontext, ViewOptions } from '../types/common';
 import { CoreViews } from '../types/coreViews';
 import { init as documentViewsFactory } from '../views/document';
 import { init as commonViewsFactory, CommonViews } from '../views/common';
@@ -453,10 +453,44 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Return a list of concordance arguments and their values. Multi-value keys
      * are preserved.
      */
-    getConcArgs():MultiDict<ConcServerArgs> {
-        return new MultiDict(
-            this.getConf<Array<[keyof ConcServerArgs, ConcServerArgs[keyof ConcServerArgs]]>>(
-                'currentArgs'));
+    exportConcArgs():MultiDict<ConcServerArgs> {
+        const args = this.getConcArgs();
+        return new MultiDict([
+            tuple('corpname', args.corpname),
+            tuple('maincorp', args.maincorp),
+            tuple('align', args.align),
+            tuple('viewmode', args.viewmode),
+            tuple('format', args.format),
+            tuple('pagesize', args.pagesize),
+            tuple('attrs', args.attrs),
+            tuple('attr_vmode', args.attr_vmode),
+            tuple('base_viewattr', args.base_viewattr),
+            tuple('ctxattrs', args.ctxattrs),
+            tuple('structs', args.structs),
+            tuple('refs', args.refs),
+            tuple('q', args.q),
+            tuple('fromp', args.fromp)
+        ]);
+    }
+
+    getConcArgs():ConcServerArgs {
+        return {
+            corpname: '',
+            maincorp: undefined,
+            align: undefined,
+            viewmode: 'kwic',
+            format: undefined,
+            pagesize: 0,
+            attrs: undefined,
+            attr_vmode: undefined,
+            base_viewattr: undefined,
+            ctxattrs: undefined,
+            structs: undefined,
+            refs: undefined,
+            q: undefined,
+            fromp: undefined,
+            ...this.getConf<ConcServerArgs>('currentArgs')
+        };
     }
 
     /**
@@ -464,17 +498,22 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * triggers an event calling all the config change handlers.
      */
     replaceConcArg(name:string, values:Array<string>):void {
-        let tmp = new MultiDict(this.getConf<Kontext.ListOfPairs>('currentArgs'));
-        tmp.replace(name, values);
-        this.setConf('currentArgs', tmp.items());
-    }
+        const tmp = this.getConcArgs();
+        if (name in tmp) {
+            if (Array.isArray(tmp[name])) {
+                tmp[name] = values;
 
-    /**
-     * @param overwriteArgs a list of arguments whose values overwrite the current ones
-     * @param appendArgs a list of arguments which will be appended to the existing ones
-     */
-    exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string {
-        return this.appNavig.exportConcArgs(overwriteArgs, appendArgs);
+            } else if (!List.empty(values)) {
+                tmp[name] = values[0];
+
+            } else {
+                tmp[name] = undefined;
+            }
+            this.setConf<ConcServerArgs>('currentArgs', tmp);
+
+        } else {
+            throw new Error(`Unknown conc. arg. ${name}`);
+        }
     }
 
     /**
@@ -689,7 +728,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     this.getConf<InitialMenuData>('menuData'),
                     ...disabledMenuItems
                 ),
-                this.getConf<Array<[string, string]>>('currentArgs')
+                this.exportConcArgs().items()
             );
 
             this.generalViewOptionsModel = new GeneralViewOptionsModel(

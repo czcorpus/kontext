@@ -374,18 +374,13 @@ class Subcorpus(Querying):
 
     @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')
     def list_published(self, request):
-        min_author_prefix = 3
-        min_code_prefix = 2
+        min_query_size = 3
         query = request.args.get('query', '')
-        search_type = request.args.get('search_type', '')
         offset = int(request.args.get('offset', '0'))
         limit = int(request.args.get('limit', '20'))
-        if search_type == 'author' and len(query) >= min_author_prefix:
-            subclist = corplib.list_public_subcorpora(self.subcpath[-1], author_prefix=query,
-                                                      code_prefix=None, offset=offset, limit=limit)
-        elif search_type == 'code' and len(query) >= min_code_prefix:
-            subclist = corplib.list_public_subcorpora(self.subcpath[-1], author_prefix=None,
-                                                      code_prefix=query, offset=offset, limit=limit)
+        if len(query) >= min_query_size:
+            subclist = corplib.list_public_subcorpora(self.subcpath[-1], value_prefix=query,
+                                                      offset=offset, limit=limit)
         else:
             subclist = []
-        return dict(data=subclist, min_author_prefix=min_author_prefix, min_code_prefix=min_code_prefix)
+        return dict(data=subclist, min_query_size=min_query_size)

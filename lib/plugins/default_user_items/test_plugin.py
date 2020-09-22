@@ -57,7 +57,7 @@ class TestActions(unittest.TestCase):
 
     def test_set_favorite_item(self):
         ctrl = Controller()
-        req = Request(url='http://localhost/first_form',
+        req = Request(url='http://localhost/query',
                       form=dict(corpora=['intercorp_en', 'intercorp_cs'],
                                 subcorpus_orig_id='my_subc1_orig',
                                 subcorpus_id='my_subc1',

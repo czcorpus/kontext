@@ -429,10 +429,7 @@ class Controller(object):
         action -- name of the action
         named_args -- a dictionary of named args and their defined default values
         """
-        if hasattr(action, 'accept_kwargs') and getattr(action, 'accept_kwargs') is True:
-            del_nondef = False
-        else:
-            del_nondef = True
+        del_nondef = not getattr(action, 'accept_kwargs', False)
         return action(**convert_func_mapping_types(form.as_dict(), action, del_nondef=del_nondef))
 
     def _get_method_metadata(self, method_name: str, attr_name: Optional[str] = None) -> Union[Any, Dict[str, Any]]:
@@ -583,7 +580,7 @@ class Controller(object):
                 raise UserActionException(
                     'Unknown output format: {0}'.format(self._request.args['format']))
         self.add_validator(partial(self._validate_http_method, action_metadata))
-        return RequestArgsProxy(self._request.form, self._request.args)
+        return RequestArgsProxy(self._request.form, self._request.args, self._request.json)
 
     def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str], result: Optional[Dict[str, Any]], err_desc: Tuple[Optional[Exception], Optional[str]]) -> None:
         """
@@ -671,7 +668,7 @@ class Controller(object):
         ex -- a risen exception
         return_type --
         """
-        ans = RequestArgsProxy(self._request.form, self._request.args)
+        ans = RequestArgsProxy(self._request.form, self._request.args, self._request.json)
         if return_type == 'json':
             ans.add_forced_arg('error_code', getattr(ex, 'error_code', None))
             ans.add_forced_arg('error_args', getattr(ex, 'error_args', {}))
@@ -844,7 +841,11 @@ class Controller(object):
         if callable(result):
             return result()
         elif return_type == 'json':
-            return json.dumps(result)
+            try:
+                return json.dumps(result)
+            except Exception as e:
+                self._status = 500
+                return json.dumps(dict(messages=[('error', str(e))]))
         elif return_type == 'xml':
             from templating import Type2XML
             return Type2XML.to_xml(result)

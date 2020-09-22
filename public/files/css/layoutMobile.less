@@ -169,6 +169,29 @@
         width: calc(100% - 3.7em);
         min-width: initial;
     }
+
+    form.query-form {
+
+        margin: 1em;
+
+        .primary-language,
+        .parallel .AlignedCorpBlock .form {
+
+            max-width: auto;
+        }
+
+        .query-area {
+            border-radius: @input-border-radius;
+            border: @input-border-style;
+            background-color: #FFFFFF;
+
+            > textarea,
+            pre.cql-input,
+            > input[type=text] {
+                min-width: auto;
+            }
+        }
+    }
 }
 
 @import "~custom-styles/theme-mobile.less";

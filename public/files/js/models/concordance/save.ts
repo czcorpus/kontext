@@ -191,7 +191,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
     }
 
     private submit():void {
-        const args = this.layoutModel.getConcArgs() as MultiDict<ConcSaveServerArgs>;
+        const args = this.layoutModel.exportConcArgs() as MultiDict<ConcSaveServerArgs>;
         args.set('saveformat', this.state.saveformat);
         args.set('from_line', this.state.fromLine.value);
         args.set('to_line', this.state.toLine.value);

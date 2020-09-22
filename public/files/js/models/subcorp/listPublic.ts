@@ -21,10 +21,12 @@
 import {PageModel} from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { Kontext } from '../../types/common';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
-import { Observable } from 'rxjs';
+import { StatelessModel, IActionDispatcher } from 'kombo';
+import { Observable, Subject } from 'rxjs';
 import { ActionName, Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
+import { debounceTime } from 'rxjs/operators';
+
 
 export interface LoadDataResponse extends Kontext.AjaxResponse {
     data:Array<DataItem>;
@@ -38,6 +40,7 @@ export interface DataItem {
     author:string;
     description:string;
     userId:number;
+    created:number;
 }
 
 export interface CorpusItem {
@@ -45,18 +48,11 @@ export interface CorpusItem {
     label:string;
 }
 
-export enum SearchTypes {
-    BY_CODE = 'code',
-    BY_AUTHOR = 'author'
-}
-
 export interface PublicSubcorpListState {
     isBusy:boolean;
     data:Array<DataItem>;
     searchQuery:string;
     minQuerySize:number;
-    searchType:SearchTypes;
-    inputPrefixThrottleTimer:number;
 }
 
 export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListState> {
@@ -65,91 +61,59 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
     private pageModel:PageModel;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, data:Array<DataItem>,
-                minCodePrefix:number, minAuthorPrefix:number) {
+    private autoSubmitTrigger:Subject<string>;
+
+    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, data:Array<DataItem>, minQuerySize:number) {
         super(
             dispatcher,
             {
                 isBusy: false,
                 data,
                 searchQuery: '',
-                minQuerySize: minCodePrefix,
-                searchType: SearchTypes.BY_CODE,
-                inputPrefixThrottleTimer: -1
+                minQuerySize
             }
         );
-        this.queryTypeMinPrefixMapping = {
-            [SearchTypes.BY_CODE]: minCodePrefix,
-            [SearchTypes.BY_AUTHOR]: minAuthorPrefix
-        };
-        this.pageModel = pageModel;
+        this.autoSubmitTrigger = new Subject<string>();
+        this.autoSubmitTrigger.pipe(
+            debounceTime(300)
 
-        this.addActionHandler<Actions.SetSearchType>(
-            ActionName.SetSearchType,
-            (state, action) => {
-                state.searchType = action.payload.value;
-                state.minQuerySize = this.queryTypeMinPrefixMapping[action.payload.value];
+        ).subscribe(
+            query => {
+                dispatcher.dispatch<Actions.SubmitSearchQuery>({
+                    name: ActionName.SubmitSearchQuery,
+                    payload: {
+                        query
+                    }
+                });
             },
-            this.setSearch
+            (err) => {
+                this.pageModel.showMessage('error', err);
+                dispatcher.dispatch<Actions.SubmitSearchQuery>({
+                    name: ActionName.SubmitSearchQuery,
+                    error: err
+                });
+            }
         );
+
+        this.pageModel = pageModel;
 
         this.addActionHandler<Actions.SetSearchQuery>(
             ActionName.SetSearchQuery,
             (state, action) => {
                 state.searchQuery = action.payload.value;
-                if (state.inputPrefixThrottleTimer) {
-                    window.clearTimeout(state.inputPrefixThrottleTimer);
+                this.autoSubmitTrigger.next(state.searchQuery);
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitSearchQuery>(
+            ActionName.SubmitSearchQuery,
+            (state, action) => {
+                if (action.payload.query.length >= state.minQuerySize) {
+                    state.isBusy = true;
                 }
             },
-            this.setSearch
-        );
-
-        this.addActionHandler<Actions.SetInputPrefixThrottle>(
-            ActionName.SetInputPrefixThrottle,
-            (state, action) => {
-                state.inputPrefixThrottleTimer = action.payload.timerId;
-            }
-        );
-
-        this.addActionHandler<Actions.SetCodePrefixDone>(
-            ActionName.SetCodePrefixDone,
-            (state, action) => {
-                state.isBusy = true;
-            }
-        );
-
-        this.addActionHandler<Actions.DataLoadDone>(
-            ActionName.DataLoadDone,
-            (state, action) => {
-                state.isBusy = false;
-                state.data = action.payload.data.data;
-            }
-        );
-
-        this.addActionHandler<Actions.UseInQuery>(
-            ActionName.UseInQuery,
-            null,
             (state, action, dispatch) => {
-                const args = new MultiDict();
-                args.set('corpname', action.payload.corpname);
-                args.set('usesubcorp', action.payload.id);
-                window.location.href = this.pageModel.createActionUrl(
-                    'first_form',
-                    args
-                );
-            }
-
-        );
-    }
-
-    private setSearch(state:PublicSubcorpListState, action:Action, dispatch:SEDispatcher):void {
-        const timerId = window.setTimeout(
-            () => {
-                if (state.searchQuery.length >= state.minQuerySize) {
-                    dispatch<Actions.SetCodePrefixDone>({
-                        name: ActionName.SetCodePrefixDone,
-                        payload: {}
-                    });
+                if (action.payload.query.length >= state.minQuerySize) {
                     this.loadData(state).subscribe(
                         (data) => {
                             dispatch<Actions.DataLoadDone>({
@@ -168,16 +132,33 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                         }
                     );
                 }
-                window.clearTimeout(state.inputPrefixThrottleTimer);
-            },
-            250
-        );
-        dispatch<Actions.SetInputPrefixThrottle>({
-            name: ActionName.SetInputPrefixThrottle,
-            payload: {
-                timerId
             }
-        });
+        );
+
+        this.addActionHandler<Actions.DataLoadDone>(
+            ActionName.DataLoadDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (action.error) {
+                    state.data = [];
+
+                } else {
+                    state.data = action.payload.data.data;
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.UseInQuery>(
+            ActionName.UseInQuery,
+            null,
+            (state, action, dispatch) => {
+                const args = new MultiDict();
+                args.set('corpname', action.payload.corpname);
+                args.set('usesubcorp', action.payload.id);
+                window.location.href = this.pageModel.createActionUrl('query', args);
+            }
+
+        );
     }
 
     private loadData(state:PublicSubcorpListState):Observable<LoadDataResponse> {
@@ -185,7 +166,6 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         const args = new MultiDict();
         args.set('format', 'json');
         args.set('query', state.searchQuery);
-        args.set('search_type', state.searchType);
         args.set('offset', 0); // TODO
         args.set('limit', 20); // TODO
         return this.pageModel.ajax$<LoadDataResponse>(

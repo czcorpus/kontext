@@ -31,7 +31,6 @@ export enum ActionName {
     EditLastQueryOperation = 'EDIT_LAST_QUERY_OPERATION',
     EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
     BranchQuery = 'BRANCH_QUERY',
-    BranchQueryDone = 'BRANCH_QUERY_DONE',
     TrimQuery = 'TRIM_QUERY',
     QuerySetStopAfterIdx = 'QUERY_SET_STOP_AFTER_IDX',
     RedirectToEditQueryOperation = 'REDIRECT_TO_EDIT_QUERY_OPERATION',
@@ -51,7 +50,7 @@ export enum ActionName {
     SetWithinValue = 'QUERY_INPUT_SET_WITHIN_VALUE',
     SetWithinAttr = 'QUERY_INPUT_SET_WITHIN_ATTR',
     SetActiveInputWidget = 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-    QueryInputSelectType = 'QUERY_INPUT_SELECT_TYPE',
+    QueryInputSetQType = 'QUERY_INPUT_SELECT_TYPE',
     QueryInputSelectSubcorp = 'QUERY_INPUT_SELECT_SUBCORP',
     QueryInputMoveCursor = 'QUERY_INPUT_MOVE_CURSOR',
     QueryInputSetQuery = 'QUERY_INPUT_SET_QUERY',
@@ -149,13 +148,6 @@ export namespace Actions {
         operationIdx:number;
     }> {
         name:ActionName.BranchQuery
-    }
-
-    export interface BranchQueryDone extends Action<{
-        replayOperations:Array<string>;
-        concArgsCache:{[key:string]:AjaxResponse.ConcFormArgs};
-    }> {
-        name:ActionName.BranchQueryDone
     }
 
     export interface TrimQuery extends Action<{
@@ -272,12 +264,12 @@ export namespace Actions {
         name:ActionName.SetActiveInputWidget;
     }
 
-    export interface QueryInputSelectType extends Action<{
+    export interface QueryInputSetQType extends Action<{
         formType:QueryFormType;
         sourceId:string;
         queryType:QueryType;
     }> {
-        name:ActionName.QueryInputSelectType;
+        name:ActionName.QueryInputSetQType;
     }
 
     export interface QueryInputSelectSubcorp extends Action<{
@@ -363,6 +355,7 @@ export namespace Actions {
     }
 
     export interface FilterInputSetPCQPosNeg extends Action<{
+        formType:QueryFormType;
         filterId:string;
         value:'pos'|'neg';
     }> {
@@ -371,7 +364,7 @@ export namespace Actions {
 
     export interface FilterInputSetFilfl extends Action<{
         filterId:string;
-        value:string;
+        value:'f'|'l';
     }> {
         name:ActionName.FilterInputSetFilfl;
     }

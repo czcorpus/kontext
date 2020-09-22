@@ -425,48 +425,52 @@ export function init({dispatcher, helpers, viewOptionsModel,
         return (
             <section>
                 <div className="Extensions">
-                    <h2 className="label">{helpers.translate('options__query_suggestions_label')}</h2>
-                    <p>
-                        {helpers.translate('options__currently_avail_qs_providers')}:
-                    </p>
-                    {props.availProviders.length > 0 ?
-                        <ul>
-                            {List.map(
-                                (v, i) => <li key={`item:${i}`}>{'\u25CF'} <span>{v}</span></li>,
-                                props.availProviders
-                            )}
-                        </ul> :
-                        null
-                    }
-                    <ul className="switch">
-                        <li>
-                            <label>
-                                <input type="radio" name="queryHintMode"
-                                    checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
-                                    value={PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
-                                    onChange={handleSelectChangeFn} />
-                                <span>{helpers.translate('options__query_suggestions_disabled')}</span>
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="queryHintMode"
-                                    checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
-                                    value={PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
-                                    onChange={handleSelectChangeFn} />
-                                <span>{helpers.translate('options__query_suggestions_manual')}</span>
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="queryHintMode"
-                                    checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
-                                    value={PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
-                                    onChange={handleSelectChangeFn} />
-                                <span>{helpers.translate('options__query_suggestions_auto')}</span>
-                            </label>
-                        </li>
-                    </ul>
+                    <fieldset>
+                        <legend className="label">{helpers.translate('options__query_suggestions_label')}</legend>
+                        <ul className="switch">
+                            <li>
+                                <label>
+                                    <input type="radio" name="queryHintMode"
+                                        checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
+                                        value={PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
+                                        onChange={handleSelectChangeFn} />
+                                    <span>{helpers.translate('options__query_suggestions_disabled')}</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="queryHintMode"
+                                        checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
+                                        value={PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
+                                        onChange={handleSelectChangeFn} />
+                                    <span>{helpers.translate('options__query_suggestions_manual')}</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="queryHintMode"
+                                        checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
+                                        value={PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
+                                        onChange={handleSelectChangeFn} />
+                                    <span>{helpers.translate('options__query_suggestions_auto')}</span>
+                                </label>
+                            </li>
+                        </ul>
+                        <p className="configured-items note">
+                            {helpers.translate('options__currently_avail_qs_providers')}:{'\u00a0'}
+                            {!List.empty(props.availProviders) ?
+                                <>
+                                    {List.map(
+                                        (v, i) => <React.Fragment key={`item:${i}`}>{i > 0 ? ', ' : ''}
+                                            <span className="item">&quot;{v}&quot;</span>
+                                        </React.Fragment>,
+                                        props.availProviders
+                                    )}
+                                </> :
+                                null
+                            }
+                        </p>
+                    </fieldset>
                 </div>
             </section>
         );

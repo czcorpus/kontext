@@ -166,7 +166,7 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
      * @param v2
      */
     generatePFilter(state:GeneralFreq2DModelState, v1:string, v2:string):string {
-        const args = this.pageModel.getConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
+        const args = this.pageModel.exportConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
 
         if (isStructAttr(state.attr1) && isStructAttr(state.attr2)) {
             const [s1, a1] = state.attr1.split('.');

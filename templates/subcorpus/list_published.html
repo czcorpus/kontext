@@ -21,14 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 {% block bodyonload %}
 __conf.Data = {{ data|to_json }};
-__conf.MinAuthorPrefix = {{ min_author_prefix|to_json }};
-__conf.MinCodePrefix = {{ min_code_prefix|to_json }};
+__conf.MinQuerySize = {{ min_query_size|to_json }};
 pubSubcorpListPage.init(__conf);
 {% endblock %}
 
 {% block main %}
 <section>
-    <h2>{{ 'Find a published subcorpus'|_ }}</h2>
-    <div id="published-subcorpora-mount"></di>
+    <div class="bar"><h2>{{ 'Find a published subcorpus'|_ }}</h2></div>
+    <div id="published-subcorpora-mount"></div>
 </section>
 {% endblock %}

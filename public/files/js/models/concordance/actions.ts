@@ -24,6 +24,7 @@ import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelV
 import { SaveData } from '../../app/navigation';
 
 export enum ActionName {
+    AddedNewOperation = 'CONCORDANCE_ADDED_NEW_OPERATION',
     ChangeMainCorpus = 'CONCORDANCE_CHANGE_MAIN_CORPUS',
     ExpandKwicDetail = 'CONCORDANCE_EXPAND_KWIC_DETAIL',
     PlayAudioSegment = 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
@@ -108,6 +109,13 @@ export interface PublishLineSelectionPayload {
 }
 
 export namespace Actions {
+
+    export interface AddedNewOperation extends Action<{
+        concId:string;
+        data:AjaxConcResponse;
+    }> {
+        name:ActionName.AddedNewOperation;
+    }
 
     export interface ChangeMainCorpus extends Action<{
         maincorp:string;
