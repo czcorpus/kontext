@@ -44,13 +44,14 @@ export interface InputModuleArgs {
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     cqlEditorModel:CQLEditorModel;
+    querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
 
 export interface InputModuleViews {
     TRQueryInputField:React.ComponentClass<TRQueryInputFieldProps>;
-    TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps>;
-    TRIncludeEmptySelector:React.SFC<TRIncludeEmptySelectorProps>;
+    TRPcqPosNegField:React.FC<TRPcqPosNegFieldProps>;
+    TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps>;
 }
 
 
@@ -113,9 +114,10 @@ interface QueryToolboxProps {
     toggleHistoryWidget:()=>void;
 }
 
+
 export function init({
     dispatcher, he, queryModel, queryHintModel, withinBuilderModel,
-    virtualKeyboardModel, cqlEditorModel}:InputModuleArgs):InputModuleViews {
+    virtualKeyboardModel, cqlEditorModel, querySuggest}:InputModuleArgs):InputModuleViews {
 
     const keyboardViews = keyboardInit({
         dispatcher: dispatcher,
@@ -144,7 +146,7 @@ export function init({
 
         render() {
             return (
-                <div>
+                <div className="QueryHints">
                     <span className="hint">{this.props.currentHints[UsageTipCategory.QUERY]}</span>
                     <span className="next-hint">
                         <a onClick={this._clickHandler} title={he.translate('global__next_tip')}>
@@ -185,7 +187,7 @@ export function init({
 
     // ------------------- <TRPcqPosNegField /> -----------------------------
 
-    const TRPcqPosNegField:React.SFC<TRPcqPosNegFieldProps> = (props) => {
+    const TRPcqPosNegField:React.FC<TRPcqPosNegFieldProps> = (props) => {
 
         const handleSelectChange = (evt) => {
             dispatcher.dispatch<Actions.FilterInputSetPCQPosNeg>({
@@ -211,7 +213,7 @@ export function init({
 
     // ---------------- <TRIncludeEmptySelector /> ---------------------------
 
-    const TRIncludeEmptySelector:React.SFC<TRIncludeEmptySelectorProps> = (props) => {
+    const TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps> = (props) => {
 
         const handleCheckbox = () => {
             dispatcher.dispatch<Actions.QueryInputSetIncludeEmpty>({
@@ -236,7 +238,7 @@ export function init({
 
     // ------------------- <TagWidget /> --------------------------------
 
-    const TagWidget:React.SFC<{
+    const TagWidget:React.FC<{
         formType:QueryFormType;
         sourceId:string;
         args:Kontext.GeneralProps;
@@ -369,7 +371,7 @@ export function init({
 
     // ------------------- <HistoryWidget /> -----------------------------
 
-    const HistoryWidget:React.SFC<{
+    const HistoryWidget:React.FC<{
         sourceId:string;
         formType:QueryFormType;
         onCloseTrigger:()=>void;
@@ -388,18 +390,34 @@ export function init({
 
     // ------------------- <SuggestionsWidget /> -----------------------------
 
-    const SuggestionsWidget:React.SFC<{
+    const SuggestionsWidget:React.FC<{
         qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
         querySuggestions:{[sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]};
+        formType:QueryFormType;
         sourceId:string;
         handleItemClick:(onItemClick:string, value:string) => void;
 
     }> = (props) => {
 
-        return <div className="suggestions-box">
-            {QueryFormModel.hasSuggestionsFor(props.querySuggestions, props.sourceId) ?
+        const suggestions = props.querySuggestions[props.sourceId][0];
+        const dynCls = List.every(s => querySuggest.isEmptyResponse(s), suggestions) ?
+            ' empty' : '';
+
+        const handleKey = () => {
+            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
+                name: ActionName.ToggleQuerySuggestionWidget,
+                payload: {
+                    formType: props.formType,
+                    sourceId: props.sourceId
+                }
+            });
+        }
+
+        return (
+            <div className={`SuggestionsWidget${dynCls}`} tabIndex={-1} onKeyDown={handleKey}>
+            {QueryFormModel.hasSuggestionsFor(props.querySuggestions, props.sourceId, querySuggest) ?
                 pipe(
-                    props.querySuggestions[props.sourceId][0],
+                    suggestions,
                     List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
                     List.map(
                         (v, i) => (
@@ -413,12 +431,13 @@ export function init({
                     )
                 ) : null
             }
-        </div>
+            </div>
+        );
     };
 
     // ------------------- <KeyboardWidget /> --------------------------------
 
-    const KeyboardWidget:React.SFC<{
+    const KeyboardWidget:React.FC<{
         sourceId:string;
         formType:QueryFormType;
         inputLanguage:string;
@@ -574,7 +593,7 @@ export function init({
 
     // ------------------- <LposSelector /> -----------------------------
 
-    const LposSelector:React.SFC<{
+    const LposSelector:React.FC<{
         sourceId:string;
         formType:QueryFormType;
         wPoSList:Array<{v:string; n:string}>;
@@ -608,7 +627,7 @@ export function init({
 
     // ------------------- <MatchCaseSelector /> -----------------------------
 
-    const MatchCaseSelector:React.SFC<{
+    const MatchCaseSelector:React.FC<{
         formType:QueryFormType;
         sourceId:string;
         matchCaseValue:boolean;
@@ -637,7 +656,7 @@ export function init({
 
     // -------------------- <DefaultAttrSelector /> ------------------------
 
-    const DefaultAttrSelector:React.SFC<{
+    const DefaultAttrSelector:React.FC<{
         defaultAttr:string;
         forcedAttr:string;
         attrList:Array<Kontext.AttrItem>;
@@ -658,7 +677,7 @@ export function init({
 
     // ------------------- <SingleLineInput /> -----------------------------
 
-    const SingleLineInput:React.SFC<SingleLineInputProps & QueryFormModelState> = (props) => {
+    const SingleLineInput:React.FC<SingleLineInputProps & QueryFormModelState> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch<Actions.QueryInputSetQuery>({
@@ -731,7 +750,7 @@ export function init({
 
     // ------------------- <DefaultAttrSelect /> -----------------------------
 
-    const DefaultAttrSelect:React.SFC<{
+    const DefaultAttrSelect:React.FC<{
         formType:QueryFormType;
         sourceId:string;
         forcedAttr:string;
@@ -971,7 +990,9 @@ export function init({
                             sourceId={this.props.sourceId}
                             toggleHistoryWidget={this._toggleHistoryWidget}
                             inputLanguage={this.props.inputLanguage}
-                            qsAvailable={QueryFormModel.hasSuggestionsFor(this.props.querySuggestions, this.props.sourceId)} />
+                            qsAvailable={QueryFormModel.hasSuggestionsFor(
+                                this.props.querySuggestions, this.props.sourceId,
+                                querySuggest)} />
                         {this._renderInput()}
                         {this.props.historyVisible[this.props.sourceId] ?
                             <HistoryWidget
@@ -985,17 +1006,18 @@ export function init({
                         {
                             !this.props.historyVisible[this.props.sourceId] &&
                             this.props.suggestionsVisible[this.props.sourceId] &&
-                            QueryFormModel.hasSuggestionsFor(this.props.querySuggestions, this.props.sourceId) ?
+                            QueryFormModel.hasSuggestionsFor(
+                                this.props.querySuggestions, this.props.sourceId,
+                                querySuggest) ?
                                 <SuggestionsWidget
                                     qsuggPlugin={this.props.qsuggPlugin}
                                     querySuggestions={this.props.querySuggestions}
+                                    formType={this.props.formType}
                                     sourceId={this.props.sourceId}
                                     handleItemClick={this.handleSuggestionItemClick} />
                                 : null
                         }
-                        <div className="query-hints">
-                            <BoundQueryHints  />
-                        </div>
+                        <BoundQueryHints />
                     </div>
                     <fieldset className="query-options">
                         <legend>

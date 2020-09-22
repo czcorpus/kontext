@@ -269,7 +269,7 @@ export class QueryPage {
             virtualKeyboardModel: this.virtualKeyboardModel,
             queryContextModel: this.queryContextModel,
             cqlEditorModel: this.cqlEditorModel,
-            qsuggPlugin: this.layoutModel.qsuggPlugin
+            querySuggest: this.layoutModel.qsuggPlugin
         });
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,

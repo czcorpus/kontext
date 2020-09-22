@@ -33,7 +33,6 @@ import { PluginInterfaces } from '../../types/plugins';
 import { UsageTipsModel } from '../../models/usageTips';
 import { ActionName, Actions } from '../../models/query/actions';
 import { Keyboard } from 'cnc-tskit';
-import { AudioPlayerStatus } from '../../models/concordance/media';
 
 
 
@@ -104,10 +103,11 @@ export function init({
         dispatcher: dispatcher,
         he: he,
         queryModel: filterModel,
-        queryHintModel: queryHintModel,
-        withinBuilderModel: withinBuilderModel,
-        virtualKeyboardModel: virtualKeyboardModel,
-        cqlEditorModel: cqlEditorModel
+        queryHintModel,
+        withinBuilderModel,
+        virtualKeyboardModel,
+        cqlEditorModel,
+        querySuggest
     });
 
     const layoutViews = he.getLayoutViews();
