@@ -51,7 +51,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <ConcDependentItem /> --------------------------
 
-    const ConcDependentItem:React.SFC<{
+    const ConcDependentItem:React.FC<{
         concArgs:Array<[string, string]>;
         data:StaticSubmenuItem;
 
@@ -76,7 +76,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <ExternalURLItem /> --------------------------
 
-    const StaticItem:React.SFC<{
+    const StaticItem:React.FC<{
         data:StaticSubmenuItem
     }> = (props) => {
 
@@ -109,7 +109,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <Item /> --------------------------
 
-    const DynamicItem:React.SFC<{
+    const DynamicItem:React.FC<{
         data:DynamicSubmenuItem
 
     }> = (props) => {
@@ -133,7 +133,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <DisabledItem /> ----------------------
 
-    const DisabledItem:React.SFC<{
+    const DisabledItem:React.FC<{
         data:{label:string};
 
     }> = (props) => {
@@ -149,7 +149,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <EventTriggeringItem /> -----------------
 
-    const EventTriggeringItem:React.SFC<{
+    const EventTriggeringItem:React.FC<{
         data: {
             message:string;
             label:string;
@@ -181,7 +181,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <SubMenu /> --------------------------
 
-    const SubMenu:React.SFC<{
+    const SubMenu:React.FC<{
         isOpened:boolean;
         isDisabled:boolean;
         label:string;
@@ -249,7 +249,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
     // ----------------------------- <AsyncTaskList /> --------------------------
 
-    const AsyncTaskList:React.SFC<{
+    const AsyncTaskList:React.FC<{
         clearOnCloseCheckboxStatus:boolean;
         items:Array<Kontext.AsyncTaskInfo>;
         closeClickHandler:()=>void;

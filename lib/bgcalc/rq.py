@@ -15,6 +15,8 @@
 import logging
 import time
 from rq import Queue
+from rq.job import Job
+from rq.exceptions import NoSuchJobError
 from redis import Redis
 from rq_scheduler import Scheduler
 import json
@@ -32,6 +34,7 @@ class ResultWrapper:
 
     def __init__(self, job):
         self.job = job
+        self.result = None
 
     def get(self, timeout=None):
         try:
@@ -39,18 +42,22 @@ class ResultWrapper:
             while True:
                 time.sleep(0.5)
                 if self.job.is_finished:
+                    self.result = self.job.result
                     return self.job.result
                 elif self.job.is_failed:
-                    raise Exception(f'Task failed: {self.job}')
+                    self.result = Exception(f'Task failed: {self.job}')
+                    raise self.result
                 elif timeout and total_time > timeout:
-                    raise Exception(f'Task result timeout: {self.job}')
+                    self.result = Exception(f'Task result timeout: {self.job}')
+                    raise self.result
                 total_time += 0.5
         except Exception as e:
+            self.result = e
             logging.getLogger(__name__).error(e)
 
     @property
     def status(self):
-        return ResultWrapper.status_map[self.job.get_status()]
+        return ResultWrapper.status_map[self.job.get_status()] if self.job else 'FAILURE'
 
     @property
     def id(self):
@@ -62,6 +69,10 @@ class RqConfig(object):
     PORT = None
     DB = None
     SCHEDULER_CONF_PATH = None
+
+
+class RqResult:
+    message = None
 
 
 class RqClient:
@@ -94,3 +105,10 @@ class RqClient:
             return ResultWrapper(job)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
+
+    def AsyncResult(self, ident):
+        try:
+            return ResultWrapper(Job.fetch(ident, connection=self.redis_conn))
+        except NoSuchJobError:
+            logging.getLogger(__name__).warning(f'Job {ident} not found')
+            return None
