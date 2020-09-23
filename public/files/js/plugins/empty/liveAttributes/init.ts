@@ -17,17 +17,36 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import { PluginInterfaces } from '../../../types/plugins';
+import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
 import { TextTypesModel } from '../../../models/textTypes/main';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../../models/common/actions';
 
 
 export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {
+
+    constructor(pluginApi:IPluginApi) {
+        pluginApi.dispatcher().registerActionListener((action) => {
+            if (action.name === GlobalActionName.SwitchCorpus) {
+                pluginApi.dispatcher().dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                })
+            }
+        });
+    }
 
     isActive():boolean {
         return false;
     }
 
-    getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):PluginInterfaces.LiveAttributes.Views {
+    getViews(
+        subcMixerView:PluginInterfaces.SubcMixer.View,
+        textTypesModel:TextTypesModel
+    ):PluginInterfaces.LiveAttributes.Views {
+
         return {
             LiveAttrsView: null,
             LiveAttrsCustomTT: null
@@ -49,6 +68,6 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
     isEnabled,
     controlsAlignedCorpora,
     args
-) => new EmptyLiveAttributesPlugin();
+) => new EmptyLiveAttributesPlugin(pluginApi);
 
 export default create;
