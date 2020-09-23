@@ -81,7 +81,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
             QueryActionName.QueryInputAddAlignedCorpus,
             action => {
                 const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
-                List.addUnique(action.payload.corpname, currAligned);
+                List.addUnique(action.payload.corpname, [...currAligned]);
                 this.conf.setConf('alignedCorpora', currAligned);
 
                 this.changeState(state => {
