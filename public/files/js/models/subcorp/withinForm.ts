@@ -164,7 +164,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                         this.pageModel.ajax$<any>(
                             HTTP.Method.POST,
                             this.pageModel.createActionUrl(
-                                '/subcorpus/subcorp',
+                                '/subcorpus/create',
                                 MultiDict.fromDict({format: 'json'})
                             ),
                             args,
@@ -177,7 +177,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                     ).subscribe(
                         () => {
                             window.location.href = this.pageModel.createActionUrl(
-                                'subcorpus/subcorp_list');
+                                'subcorpus/list');
                         },
                         (err) => {
                             this.pageModel.showMessage('error', err);
@@ -277,7 +277,6 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             subcname: this.subcFormModel.getSubcname().value,
             publish: this.subcFormModel.getIsPublic(),
             description: this.subcFormModel.getDescription().value,
-            aligned_corpora:  List.map(v => v.value, this.subcFormModel.getAlignedCorpora()),
             within: pipe(
                 state.lines,
                 List.filter((v)=>v != null),

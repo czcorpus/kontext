@@ -351,7 +351,7 @@ class MenuGenerator(object):
 
         self.my_subcorpora = (
             MenuItemInternal(MainMenu.CORPORA('my-subcorpora'),
-                             te('My subcorpora'), 'subcorpus/subcorp_list')
+                             te('My subcorpora'), 'subcorpus/list')
             .mark_indirect()
         )
 

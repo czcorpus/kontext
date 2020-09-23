@@ -349,11 +349,11 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
             });
         }
 
-        _renderHourglass() {
-            if (this.props.numRunning > 0) {
+        _renderHourglass(numRunning:number) {
+            if (numRunning > 0) {
                 const title = he.translate(
                     'global__there_are_tasks_running_{num_tasks}',
-                    {num_tasks: this.props.numRunning}
+                    {num_tasks: numRunning}
                 );
                 return <a className="hourglass" title={title}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/hourglass.svg')}
@@ -366,11 +366,11 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
             }
         }
 
-        _renderEnvelope() {
-            if (this.props.numFinished > 0) {
+        _renderEnvelope(numFinished:number) {
+            if (numFinished > 0) {
                 const title = he.translate(
                     'global__there_are_tasks_finished_{num_tasks}',
-                    {num_tasks: this.props.numFinished}
+                    {num_tasks: numFinished}
                 );
                 return <a className="envelope" title={title}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/envelope.svg')}
@@ -383,12 +383,14 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         render() {
-            if (this.props.numFinished > 0 || this.props.numRunning > 0) {
+            const numRunning = AsyncTaskChecker.numRunning(this.props);
+            const numFinished = AsyncTaskChecker.numFinished(this.props);
+            if (numFinished > 0 || numRunning > 0) {
                 return (
                     <li className="notifications">
                         <span className="icons" onClick={this._handleViewListClick}>
-                            {this._renderHourglass()}
-                            {this._renderEnvelope()}
+                            {this._renderHourglass(numRunning)}
+                            {this._renderEnvelope(numFinished)}
                         </span>
                         {this.props.overviewVisible ?
                             <AsyncTaskList items={this.props.asyncTasks}

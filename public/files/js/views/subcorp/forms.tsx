@@ -226,7 +226,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         return (
-            <table>
+            <table className="WithinBuilder">
                 <tbody>
                     {List.map((line, i) =>
                         <React.Fragment key ={'wl' + line.rowIdx}>
@@ -236,7 +236,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                         </React.Fragment>,
                         props.lines
                     )}
-                    <tr key="button-row" className="last-line">
+                    <tr className="button-row">
                         <td>
                             <a className="add-within"
                                     onClick={addLineHandler}
@@ -279,23 +279,21 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         render() {
             return (
-                <tr id="subc-within-row">
-                    <th>
-                        {he.translate('subcform__mode_raw_within')}
-                        <a id="custom-within-hint" className="context-help"
-                                onClick={this._handleHelpClick}>
+                <div className="TRWithinBuilderWrapper">
+                    <div>
+                        <a id="custom-within-hint" onClick={this._handleHelpClick}>
                             <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
-                        </a>:
+                        </a>
                         {this.props.helpHintVisible ?
                             <StructsHint structsAndAttrs={this.props.structsAndAttrs}
                                     onCloseClick={this._handleHelpCloseClick} /> :
                             null
                         }
-                    </th>
-                    <td className="container">
+                    </div>
+                    <div className="container">
                         <WithinBuilder lines={this.props.lines} structsAndAttrs={this.props.structsAndAttrs} />
-                    </td>
-                </tr>
+                    </div>
+                </div>
             );
         }
     }
@@ -365,30 +363,6 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             </>;
     };
 
-    // ------------------------ <TDInputModeSelection /> --------------------------
-
-    /**
-     *
-     */
-    const TDInputModeSelection:React.FC<{
-        inputMode:string;
-        onModeChange:(mode:string)=>void;
-
-     }> = (props) => {
-        return (
-            <td>
-                <select value={props.inputMode} onChange={(e)=>props.onModeChange(e.target.value)}>
-                    <option value="gui">
-                        {he.translate('subcform__mode_attr_list')}
-                    </option>
-                    <option value="raw">
-                        {he.translate('subcform__mode_raw_within')}
-                    </option>
-                </select>
-            </td>
-        );
-    };
-
     /**
      */
     const StructsHint:React.FC<{
@@ -454,7 +428,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         render() {
             return (
-                <form id="subcorp-form">
+                <form className="SubcorpForm">
                     <table className="form">
                         <tbody>
                             <tr>
@@ -494,37 +468,37 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                     </td>
                                 </tr>) : null
                             }
-                            <tr>
-                                <th>
-                                    {he.translate('subcform__specify_subc_using')}:
-                                </th>
-                                <TDInputModeSelection inputMode={this.props.inputMode}
-                                        onModeChange={this._handleInputModeChange} />
-                            </tr>
-                            <layoutViews.TabView
-                                    className="FreqFormSelector"
-                                    defaultId={this.props.inputMode}
-                                    callback={this._handleInputModeChange}
-                                    items={[{id: 'gui', label: 'gui'}, {id: 'within', label: 'within'}]}>
-                                <BoundTRWithinBuilderWrapper  />
-                                <tr>
-                                    <td colSpan={2}>
-                                        <this.props.ttComponent {...this.props.ttProps} />
-                                    </td>
-                                </tr>
-                            </layoutViews.TabView>
-                            <tr id="subc-mixer-row">
-                                <th></th>
-                                <td className="widget"></td>
-                            </tr>
                         </tbody>
                     </table>
+                    <div className="data-sel">
+                        <layoutViews.TabView
+                                className="FreqFormSelector"
+                                defaultId={this.props.inputMode}
+                                callback={this._handleInputModeChange}
+                                items={[
+                                    {
+                                        id: 'gui',
+                                        label: he.translate('subcform__mode_attr_list')
+                                    },
+                                    {
+                                        id: 'within',
+                                        label: he.translate('subcform__mode_raw_within')
+                                    }]}>
+                            <this.props.ttComponent {...this.props.ttProps} />
+                            <BoundTRWithinBuilderWrapper  />
+                        </layoutViews.TabView>
+                        <div id="subc-mixer-row">
+                            <div className="widget"></div>
+                        </div>
+                    </div>
                     {this.props.isBusy ?
                         <layoutViews.AjaxLoaderBarImage /> :
+                        <p>
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>
                             {he.translate('subcform__create_subcorpus')}
                         </button>
+                        </p>
                     }
                 </form>
             );

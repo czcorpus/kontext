@@ -33,12 +33,12 @@ interface SubmitBase {
     subcname:string;
     publish:boolean;
     description:string;
-    aligned_corpora:Array<string>;
 }
 
 export interface CreateSubcorpusArgs extends SubmitBase {
     text_types:{[sca:string]:Array<string>|Array<number>};
-    form_type:'gui';
+    aligned_corpora:Array<string>;
+    form_type:'tt-sel';
 }
 
 export interface CreateSubcorpusWithinArgs extends SubmitBase {

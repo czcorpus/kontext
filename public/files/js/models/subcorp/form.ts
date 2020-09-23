@@ -138,7 +138,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
                                 state.isBusy = false
                             });
                             window.location.href = this.pageModel.createActionUrl(
-                                'subcorpus/subcorp_list');
+                                'subcorpus/list');
                         },
                         (err) => {
                             this.changeState(state => {state.isBusy = false});
@@ -178,7 +178,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
             description: this.state.description.value,
             aligned_corpora: List.map(v => v.value, this.state.alignedCorpora),
             text_types: this.textTypesModel.exportSelections(false),
-            form_type: 'gui'
+            form_type: 'tt-sel'
         };
     }
 

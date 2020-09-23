@@ -22,6 +22,14 @@ import json
 
 class ResultWrapper:
 
+    status_map = dict(
+        queued='PENDING',
+        started='STARTED',
+        deferred='deferred',  # TODO Rq specific
+        finished='SUCCESS',
+        failed='FAILURE'
+    )
+
     def __init__(self, job):
         self.job = job
 
@@ -39,6 +47,14 @@ class ResultWrapper:
                 total_time += 0.5
         except Exception as e:
             logging.getLogger(__name__).error(e)
+
+    @property
+    def status(self):
+        return ResultWrapper.status_map[self.job.get_status()]
+
+    @property
+    def id(self):
+        return self.job.id
 
 
 class RqConfig(object):

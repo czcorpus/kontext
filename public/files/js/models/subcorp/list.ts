@@ -105,6 +105,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         })
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
+            console.log('itemList: ', itemList);
             const subcTasks = itemList.filter(item => item.category === 'subcorpus');
             if (subcTasks.length > 0) {
                 this.layoutModel.showMessage('info',
@@ -492,7 +493,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('subcorpus/subcorp_list'),
+            this.layoutModel.createActionUrl('subcorpus/list'),
             args
 
         ).pipe(
@@ -536,7 +537,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.mergeFilter(args, filter);
         return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('subcorpus/subcorp_list'),
+            this.layoutModel.createActionUrl('subcorpus/list'),
             args
 
         ).pipe(

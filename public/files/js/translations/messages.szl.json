@@ -518,7 +518,6 @@
         "subcform__create_subcorpus": "Stwōrz podkorpus",
         "subcform__mode_attr_list": "Wykŏz atrybutōw",
         "subcform__mode_raw_within": "Włŏsny warōnek 'within'",
-        "subcform__specify_subc_using": "Ôkryśl podkorpus bez użycie",
         "subcform__missing_subcname": "Musi być ôkryślōnŏ nazwa ôd podkorpusu",
         "subcform__missing_description": "A published subcorpus must have a description",
         "subcform__at_least_one_type_must_be_selected": "At least one text type must be selected",

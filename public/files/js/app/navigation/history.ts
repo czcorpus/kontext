@@ -51,7 +51,7 @@ export class History implements Kontext.IHistory {
     /**
      * Replace the current state with the one specified by passed arguments.
      *
-     * @param action action name (e.g. 'first_form', 'subcorpus/subcorp_list')
+     * @param action action name (e.g. 'query', 'subcorpus/list')
      * @param args a multi-dict instance containing URL arguments to be used
      * @param stateData (just like in window.history.replaceState)
      * @param title (just like in window.history.replaceState), default is window.document.title
@@ -70,7 +70,7 @@ export class History implements Kontext.IHistory {
     /**
      * Push a new state
      *
-     * @param action action name (e.g. 'first_form', 'subcorpus/subcorp_list')
+     * @param action action name (e.g. 'first_form', 'subcorpus/list')
      * @param args a multi-dict instance containing URL arguments to be used
      * @param stateData (just like in window.history.replaceState)
      * @param title (just like in window.history.replaceState), default is window.document.title

@@ -124,19 +124,18 @@ class Subcorpus(Querying):
         within_cql = None
         form_type = request.json['form_type']
 
-        if form_type == 'gui':
+        if form_type == 'tt-sel':
             data = CreateSubcorpusArgs.from_dict(request.json)
             corpus_info = self.get_corpus_info(data.corpname)
             if data.has_aligned_corpora() and plugins.runtime.LIVE_ATTRIBUTES.exists:
                 if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
                     within_cql = None
-                    attrs = json.loads(request.form.get('attrs', '{}'))
                     sel_match = plugins.runtime.LIVE_ATTRIBUTES.instance.get_attr_values(
                         self._plugin_api, corpus=self.corp,
-                        attr_map=attrs,
+                        attr_map=data.text_types,
                         aligned_corpora=data.aligned_corpora,
                         limit_lists=False)
-                    tt_query = TextTypeCollector(self.corp, data.text_types).get_query()
+                    tt_query = TextTypeCollector(self.corp, sel_match).get_query()
                     tmp = ['<%s %s />' % item for item in tt_query]
                     full_cql = ' within '.join(tmp)
                     full_cql = 'aword,[] within %s' % full_cql
@@ -170,7 +169,7 @@ class Subcorpus(Querying):
 
         if data.publish and not data.description:
             raise UserActionException(translate('No description specified'))
-        
+
         basecorpname = self.args.corpname.split(':')[0]
         path = self.prepare_subc_path(basecorpname, data.subcname, publish=False)
         publish_path = self.prepare_subc_path(
@@ -280,8 +279,8 @@ class Subcorpus(Querying):
                 logging.getLogger(__name__).warning(e)
         return {}
 
-    @exposed(access_level=1, skip_corpus_init=True)
-    def subcorp_list(self, request):
+    @exposed(access_level=1, skip_corpus_init=True, page_model='subcorpList')
+    def list(self, request):
         """
         Displays a list of user subcorpora. In case there is a 'subc_restore' plug-in
         installed then the list is enriched by additional re-use/undelete information.
