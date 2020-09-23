@@ -71,13 +71,9 @@ class RqConfig(object):
     SCHEDULER_CONF_PATH = None
 
 
-class RqResult:
-    message = None
-
-
 class RqClient:
 
-    def __init__(self, conf: RqConfig, prefix: str=''):
+    def __init__(self, conf: RqConfig, prefix: str = ''):
         self.redis_conn = Redis(host=conf.HOST, port=conf.PORT, db=conf.DB)
         self.queue = Queue(connection=self.redis_conn)
         self.prefix = prefix
