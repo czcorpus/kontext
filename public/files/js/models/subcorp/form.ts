@@ -22,7 +22,7 @@ import { Kontext, TextTypes } from '../../types/common';
 import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../../models/textTypes/main';
-import { InputMode, BaseSubcorFormState } from './common';
+import { InputMode, BaseSubcorFormState, CreateSubcorpusArgs } from './common';
 import { ITranslator, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { List, HTTP } from 'cnc-tskit';
@@ -38,11 +38,13 @@ export function validateSubcProps(
         mustHaveTTSelection:boolean,
         hasSelectedTTItems:boolean,
         translator:ITranslator
-):void {
 
+):Error|null {
+    let lastErr:Error|null = null;
     if (state.subcname.value === '') {
         state.subcname.isInvalid = true;
         state.subcname.errorDesc = translator.translate('subcform__missing_subcname');
+        lastErr = new Error(state.subcname.errorDesc);
 
     } else {
         state.subcname.isInvalid = false;
@@ -51,6 +53,7 @@ export function validateSubcProps(
     if (state.description.isRequired && state.description.value === '') {
         state.description.isInvalid = true;
         state.description.errorDesc = translator.translate('subcform__missing_description');
+        lastErr = new Error(state.description.errorDesc);
 
     } else {
         state.subcname.isInvalid = false;
@@ -59,8 +62,9 @@ export function validateSubcProps(
     if (mustHaveTTSelection && !hasSelectedTTItems) {
         state.otherValidationError = new Error(
             translator.translate('subcform__at_least_one_type_must_be_selected'));
+        lastErr = state.otherValidationError;
     }
-    return null;
+    return lastErr;
 }
 
 
@@ -126,7 +130,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
         this.addActionHandler<Actions.FormSubmit>(
             ActionName.FormSubmit,
             action => {
-                if (this.state.inputMode === InputMode.GUI) {
+                if (this.state.inputMode === 'gui') {
                     this.changeState(state => {state.isBusy = true});
                     this.submit().subscribe(
                         () => {
@@ -134,7 +138,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
                                 state.isBusy = false
                             });
                             window.location.href = this.pageModel.createActionUrl(
-                                'subcorpus/subcorp_list');
+                                'subcorpus/list');
                         },
                         (err) => {
                             this.changeState(state => {state.isBusy = false});
@@ -142,7 +146,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
                         }
                     );
 
-                } else if (this.state.inputMode === InputMode.RAW) {
+                } else if (this.state.inputMode === 'within') {
                     this.validateForm(false);
                     if (this.state.otherValidationError) {
                         this.pageModel.showMessage('error', this.state.otherValidationError);
@@ -166,57 +170,47 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
         );
     }
 
-    private getSubmitArgs():MultiDict<{
-        corpname:string;
-        subcname:string;
-        publish:boolean;
-        description:string;
-        method:string;
-        aligned_corpora:string;
-        attrs:string;
-    } & {[scaKey:string]:string}> {
-
-        const args = new MultiDict();
-        args.set('corpname', this.state.corpname);
-        args.set('subcname', this.state.subcname.value);
-        args.set('publish', this.state.isPublic ? '1' : '0');
-        args.set('description', this.state.description.value);
-        args.set('method', this.state.inputMode);
-        const alignedCorpora = List.map(v => v.value, this.state.alignedCorpora);
-        if (alignedCorpora.length > 0) {
-            args.replace('aligned_corpora', List.map(v => v.value, this.state.alignedCorpora));
-            args.set('attrs', JSON.stringify(this.textTypesModel.exportSelections(false)));
-        }
-        const selections = this.textTypesModel.exportSelections(false);
-        for (let p in selections) {
-            args.replace(`sca_${p}`, selections[p]);
-        }
-        return args;
+    private getSubmitArgs():CreateSubcorpusArgs {
+        return {
+            corpname: this.state.corpname,
+            subcname: this.state.subcname.value,
+            publish: this.state.isPublic,
+            description: this.state.description.value,
+            aligned_corpora: List.map(v => v.value, this.state.alignedCorpora),
+            text_types: this.textTypesModel.exportSelections(false),
+            form_type: 'tt-sel'
+        };
     }
 
-    validateForm(mustHaveTTSelection:boolean):void {
+    validateForm(mustHaveTTSelection:boolean):Error|null {
+        let err:Error|null;
         this.changeState(state => {
             state.otherValidationError = null;
-            validateSubcProps(
+            err = validateSubcProps(
                 state,
                 mustHaveTTSelection,
                 this.textTypesModel.hasSelectedItems(),
                 this.pageModel
             );
         });
+        return err;
     }
 
     submit():Observable<any> {
         const args = this.getSubmitArgs();
+        console.log('args: ', args);
         const err = this.validateForm(true);
-        if (err === null) {
+        if (!err) {
             return this.pageModel.ajax$<any>(
                 HTTP.Method.POST,
                 this.pageModel.createActionUrl(
-                    '/subcorpus/subcorp',
+                    '/subcorpus/create',
                     MultiDict.fromDict({format: 'json'})
                 ),
-                args
+                args,
+                {
+                    contentType: 'application/json'
+                }
             );
 
         } else {

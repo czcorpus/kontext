@@ -52,7 +52,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <WithinSwitch /> ----------------------------
 
-    const WithinSwitch:React.SFC<{
+    const WithinSwitch:React.FC<{
         rowIdx:number;
         withinType:string;
 
@@ -112,7 +112,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <ExpressionDescLine /> ----------------------------
 
-    const ExpressionDescLine:React.SFC<{
+    const ExpressionDescLine:React.FC<{
         viewIdx:number;
 
     }> = (props) => {
@@ -138,7 +138,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <StructLine /> ----------------------------
 
-    const StructLine:React.SFC<{
+    const StructLine:React.FC<{
         rowIdx:number;
         structsAndAttrs:Kontext.StructsAndAttrs;
         lineData:WithinLine;
@@ -209,7 +209,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------------------------- <WithinBuilder /> ----------------------------
 
-    const WithinBuilder:React.SFC<{
+    const WithinBuilder:React.FC<{
         structsAndAttrs:Kontext.StructsAndAttrs;
         lines:Array<WithinLine>;
     }> = (props) => {
@@ -226,7 +226,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         return (
-            <table>
+            <table className="WithinBuilder">
                 <tbody>
                     {List.map((line, i) =>
                         <React.Fragment key ={'wl' + line.rowIdx}>
@@ -236,7 +236,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                         </React.Fragment>,
                         props.lines
                     )}
-                    <tr key="button-row" className="last-line">
+                    <tr className="button-row">
                         <td>
                             <a className="add-within"
                                     onClick={addLineHandler}
@@ -279,23 +279,21 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         render() {
             return (
-                <tr id="subc-within-row">
-                    <th>
-                        {he.translate('subcform__mode_raw_within')}
-                        <a id="custom-within-hint" className="context-help"
-                                onClick={this._handleHelpClick}>
+                <div className="TRWithinBuilderWrapper">
+                    <div>
+                        <a id="custom-within-hint" onClick={this._handleHelpClick}>
                             <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
-                        </a>:
+                        </a>
                         {this.props.helpHintVisible ?
                             <StructsHint structsAndAttrs={this.props.structsAndAttrs}
                                     onCloseClick={this._handleHelpCloseClick} /> :
                             null
                         }
-                    </th>
-                    <td className="container">
+                    </div>
+                    <div className="container">
                         <WithinBuilder lines={this.props.lines} structsAndAttrs={this.props.structsAndAttrs} />
-                    </td>
-                </tr>
+                    </div>
+                </div>
             );
         }
     }
@@ -305,7 +303,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     /**
      *
      */
-    const SubcNameInput:React.SFC<{
+    const SubcNameInput:React.FC<{
         value:Kontext.FormValue<string>;
     }> = (props) => {
 
@@ -323,7 +321,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------ <SubcNamePublicCheckbox /> --------------------------
 
-    const SubcNamePublicCheckbox:React.SFC<{
+    const SubcNamePublicCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -343,7 +341,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     // ------------------------ <SubcDescription /> --------------------------
 
-    const SubcDescription:React.SFC<{
+    const SubcDescription:React.FC<{
         value:Kontext.FormValue<string>;
 
     }> = (props) => {
@@ -365,33 +363,9 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             </>;
     };
 
-    // ------------------------ <TDInputModeSelection /> --------------------------
-
-    /**
-     *
-     */
-    const TDInputModeSelection:React.SFC<{
-        inputMode:string;
-        onModeChange:(mode:string)=>void;
-
-     }> = (props) => {
-        return (
-            <td>
-                <select value={props.inputMode} onChange={(e)=>props.onModeChange(e.target.value)}>
-                    <option value="gui">
-                        {he.translate('subcform__mode_attr_list')}
-                    </option>
-                    <option value="raw">
-                        {he.translate('subcform__mode_raw_within')}
-                    </option>
-                </select>
-            </td>
-        );
-    };
-
     /**
      */
-    const StructsHint:React.SFC<{
+    const StructsHint:React.FC<{
         structsAndAttrs:Kontext.StructsAndAttrs;
         onCloseClick:()=>void;
 
@@ -452,26 +426,9 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             });
         }
 
-        _renderTextTypeSelection() {
-            switch (this.props.inputMode) {
-                case 'raw':
-                    return <BoundTRWithinBuilderWrapper  />;
-                case 'gui':
-                    return (
-                        <tr>
-                            <td colSpan={2}>
-                                <this.props.ttComponent {...this.props.ttProps} />
-                            </td>
-                        </tr>
-                    );
-                default:
-                    return null;
-            }
-        }
-
         render() {
             return (
-                <form id="subcorp-form">
+                <form className="SubcorpForm">
                     <table className="form">
                         <tbody>
                             <tr>
@@ -511,26 +468,37 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                                     </td>
                                 </tr>) : null
                             }
-                            <tr>
-                                <th>
-                                    {he.translate('subcform__specify_subc_using')}:
-                                </th>
-                                <TDInputModeSelection inputMode={this.props.inputMode}
-                                        onModeChange={this._handleInputModeChange} />
-                            </tr>
-                            {this._renderTextTypeSelection()}
-                            <tr id="subc-mixer-row">
-                                <th></th>
-                                <td className="widget"></td>
-                            </tr>
                         </tbody>
                     </table>
+                    <div className="data-sel">
+                        <layoutViews.TabView
+                                className="FreqFormSelector"
+                                defaultId={this.props.inputMode}
+                                callback={this._handleInputModeChange}
+                                items={[
+                                    {
+                                        id: 'gui',
+                                        label: he.translate('subcform__mode_attr_list')
+                                    },
+                                    {
+                                        id: 'within',
+                                        label: he.translate('subcform__mode_raw_within')
+                                    }]}>
+                            <this.props.ttComponent {...this.props.ttProps} />
+                            <BoundTRWithinBuilderWrapper  />
+                        </layoutViews.TabView>
+                        <div id="subc-mixer-row">
+                            <div className="widget"></div>
+                        </div>
+                    </div>
                     {this.props.isBusy ?
                         <layoutViews.AjaxLoaderBarImage /> :
+                        <p>
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>
                             {he.translate('subcform__create_subcorpus')}
                         </button>
+                        </p>
                     }
                 </form>
             );

@@ -15,6 +15,7 @@ import logging
 import json
 import time
 import hashlib
+from typing import List, Dict, Any, Union
 
 from controller import exposed
 from controller.errors import FunctionNotSupported, UserActionException
@@ -35,6 +36,48 @@ TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 class SubcorpusError(Exception):
     pass
+
+
+class SubmitBase:
+    corpname: str
+    subcname: str
+    publish: bool
+    description: str
+    aligned_corpora: List[str]
+    form_type: str
+
+    def has_aligned_corpora(self):
+        return len(self.aligned_corpora) > 0 if type(self.aligned_corpora) is list else False
+
+
+class CreateSubcorpusArgs(SubmitBase):
+    text_types: Dict[str, Union[List[str], List[int]]]
+
+    @staticmethod
+    def from_dict(data):
+        ans = CreateSubcorpusArgs()
+        ans.__dict__.update(data)
+        return ans
+
+
+class CreateSubcorpusWithinArgs(SubmitBase):
+    within: List[Dict[str, Union[str, bool]]]  # negated, structure_name, attribute_cql
+
+    @staticmethod
+    def from_dict(data):
+        ans = CreateSubcorpusWithinArgs()
+        ans.__dict__.update(data)
+        return ans
+
+
+class CreateSubcorpusRawCQLArgs(SubmitBase):
+    cql: str
+
+    @staticmethod
+    def from_dict(data):
+        ans = CreateSubcorpusRawCQLArgs()
+        ans.__dict__.update(data)
+        return ans
 
 
 class Subcorpus(Querying):
@@ -78,81 +121,75 @@ class Subcorpus(Querying):
         create -- bool, sets whether to create new subcorpus
         cql -- custom within condition
         """
-        subcname = request.form['subcname']
-        within_json = request.form.get('within_json')
-        raw_cql = request.form.get('cql')
-        aligned_corpora = request.form.getlist('aligned_corpora')
-        publish = bool(int(request.form.get('publish')))
-        corpus_info = self.get_corpus_info(self.args.corpname)
-        description = request.form.get('description')
+        within_cql = None
+        form_type = request.json['form_type']
 
-        if not subcname:
-            raise UserActionException(translate('No subcorpus name specified!'))
-
-        if publish and not description:
-            raise UserActionException(translate('No description specified'))
-
-        if raw_cql:
-            aligned_corpora = []
-            tt_query = ()
-            within_cql = raw_cql
-            full_cql = 'aword,[] %s' % raw_cql
-            imp_cql = (full_cql,)
-        elif within_json:  # user entered a subcorpus query manually
-            aligned_corpora = []
-            tt_query = ()
-            within_cql = self._deserialize_custom_within(json.loads(within_json))
-            full_cql = 'aword,[] %s' % within_cql
-            imp_cql = (full_cql,)
-        elif len(aligned_corpora) > 0 and plugins.runtime.LIVE_ATTRIBUTES.exists:
-            if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
-                within_cql = None
-                attrs = json.loads(request.form.get('attrs', '{}'))
-                sel_match = plugins.runtime.LIVE_ATTRIBUTES.instance.get_attr_values(
-                    self._plugin_api, corpus=self.corp,
-                    attr_map=attrs,
-                    aligned_corpora=aligned_corpora,
-                    limit_lists=False)
-                values = sel_match['attr_values'][corpus_info.metadata.label_attr]
-                args = argmapping.Args()
-                setattr(args, 'sca_{0}'.format(
-                    corpus_info.metadata.id_attr), [v[1] for v in values])
-                tt_query = TextTypeCollector(self.corp, args).get_query()
+        if form_type == 'tt-sel':
+            data = CreateSubcorpusArgs.from_dict(request.json)
+            corpus_info = self.get_corpus_info(data.corpname)
+            if data.has_aligned_corpora() and plugins.runtime.LIVE_ATTRIBUTES.exists:
+                if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
+                    within_cql = None
+                    sel_match = plugins.runtime.LIVE_ATTRIBUTES.instance.get_attr_values(
+                        self._plugin_api, corpus=self.corp,
+                        attr_map=data.text_types,
+                        aligned_corpora=data.aligned_corpora,
+                        limit_lists=False)
+                    tt_query = TextTypeCollector(self.corp, sel_match).get_query()
+                    tmp = ['<%s %s />' % item for item in tt_query]
+                    full_cql = ' within '.join(tmp)
+                    full_cql = 'aword,[] within %s' % full_cql
+                    imp_cql = (full_cql,)
+                else:
+                    raise FunctionNotSupported(
+                        'Corpus must have a bibliography item defined to support this function')
+            else:
+                tt_query = TextTypeCollector(self.corp, data.text_types).get_query()
                 tmp = ['<%s %s />' % item for item in tt_query]
                 full_cql = ' within '.join(tmp)
                 full_cql = 'aword,[] within %s' % full_cql
                 imp_cql = (full_cql,)
-            else:
-                raise FunctionNotSupported(
-                    'Corpus must have a bibliography item defined to support this function')
-        else:
-            within_cql = None
-            tt_query = TextTypeCollector(self.corp, request).get_query()
-            tmp = ['<%s %s />' % item for item in tt_query]
-            full_cql = ' within '.join(tmp)
-            full_cql = 'aword,[] within %s' % full_cql
+        elif form_type == 'within':
+            data = CreateSubcorpusWithinArgs.from_dict(request.json)
+            tt_query = ()
+            within_cql = self._deserialize_custom_within(data.within)
+            full_cql = 'aword,[] %s' % within_cql
             imp_cql = (full_cql,)
+        elif form_type == 'cql':
+            data = CreateSubcorpusRawCQLArgs.from_dict(request.json)
+            tt_query = ()
+            within_cql = data.cql
+            full_cql = f'aword,[] {data.cql}'
+            imp_cql = (full_cql,)
+        else:
+            raise UserActionException(f'Invalid form type provided - "{form_type}"')
+
+        if not data.subcname:
+            raise UserActionException(translate('No subcorpus name specified!'))
+
+        if data.publish and not data.description:
+            raise UserActionException(translate('No description specified'))
 
         basecorpname = self.args.corpname.split(':')[0]
-        path = self.prepare_subc_path(basecorpname, subcname, publish=False)
+        path = self.prepare_subc_path(basecorpname, data.subcname, publish=False)
         publish_path = self.prepare_subc_path(
-            basecorpname, subcname, publish=True) if publish else None
+            basecorpname, data.subcname, publish=True) if data.publish else None
 
-        if len(tt_query) == 1 and len(aligned_corpora) == 0:
+        if len(tt_query) == 1 and not data.has_aligned_corpora():
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
             if result and publish_path:
                 corplib.mk_publish_links(path, publish_path, self.session_get(
-                    'user', 'fullname'), description)
-        elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
+                    'user', 'fullname'), data.description)
+        elif len(tt_query) > 1 or within_cql or data.has_aligned_corpora():
             app = bgcalc.calc_backend_client(settings)
             res = app.send_task('create_subcorpus',
                                 (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
-                                 tt_query, imp_cql, self.session_get('user', 'fullname'), description),
+                                 tt_query, imp_cql, self.session_get('user', 'fullname'), data.description),
                                 time_limit=TASK_TIME_LIMIT)
             self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                    category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
-                                                   label='%s:%s' % (basecorpname, subcname),
-                                                   args=dict(subcname=subcname, corpname=basecorpname)))
+                                                   label=f'{basecorpname}:{data.subcname}',
+                                                   args=dict(subcname=data.subcname, corpname=basecorpname)))
             result = {}
         else:
             raise UserActionException(translate('Nothing specified!'))
@@ -161,7 +198,7 @@ class Subcorpus(Querying):
                 try:
                     sr.store_query(user_id=self.session_get('user', 'id'),
                                    corpname=self.args.corpname,
-                                   subcname=subcname,
+                                   subcname=data.subcname,
                                    cql=full_cql.strip().split('[]', 1)[-1])
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
@@ -175,14 +212,14 @@ class Subcorpus(Querying):
 
     @exposed(access_level=1, template='subcorpus/subcorp_form.html', page_model='subcorpForm',
              http_method='POST', return_type='json')
-    def subcorp(self, request):
+    def create(self, request):
         try:
             return self._create_subcorpus(request)
         except (SubcorpusError, RuntimeError) as e:
             raise UserActionException(str(e)) from e
 
-    @exposed(access_level=1, apply_semi_persist_args=True)
-    def subcorp_form(self, request):
+    @exposed(access_level=1, apply_semi_persist_args=True, page_model='subcorpForm')
+    def new(self, request):
         """
         Displays a form to create a new subcorpus
         """
@@ -242,8 +279,8 @@ class Subcorpus(Querying):
                 logging.getLogger(__name__).warning(e)
         return {}
 
-    @exposed(access_level=1, skip_corpus_init=True)
-    def subcorp_list(self, request):
+    @exposed(access_level=1, skip_corpus_init=True, page_model='subcorpList')
+    def list(self, request):
         """
         Displays a list of user subcorpora. In case there is a 'subc_restore' plug-in
         installed then the list is enriched by additional re-use/undelete information.

@@ -175,8 +175,6 @@ export function init(
      */
     class PopupBox extends React.Component<CoreViews.PopupBox.Props, CoreViews.PopupBox.State> {
 
-        private customCss:React.CSSProperties;
-
         private rootElm:HTMLElement;
 
         private resize:(ref:HTMLElement)=>void;

@@ -518,7 +518,6 @@
         "subcform__create_subcorpus": "Vytvořit subkorpus",
         "subcform__mode_attr_list": "Seznam atributů",
         "subcform__mode_raw_within": "Vlastní 'within' podmínka",
-        "subcform__specify_subc_using": "Specifikovat subkorpus pomocí",
         "subcform__missing_subcname": "Musí být vyplněn název subkorpusu",
         "subcform__missing_description": "U veřejného korpusu musí být vyplněn popis",
         "subcform__at_least_one_type_must_be_selected": "Musí být vybrán alespoň jeden typ textu",

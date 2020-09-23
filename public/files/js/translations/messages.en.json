@@ -518,7 +518,6 @@
         "subcform__create_subcorpus": "Create subcorpus",
         "subcform__mode_attr_list": "Attribute list",
         "subcform__mode_raw_within": "Custom 'within' condition",
-        "subcform__specify_subc_using": "Specify subcorpus using",
         "subcform__missing_subcname": "A subcorpus name must be specified",
         "subcform__missing_description": "A published subcorpus must have a description",
         "subcform__at_least_one_type_must_be_selected": "At least one text type must be selected",

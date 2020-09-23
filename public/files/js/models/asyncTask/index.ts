@@ -19,12 +19,12 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
+import { interval, Observable, of as rxOf } from 'rxjs';
 import { List, HTTP, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { IPluginApi } from '../../types/plugins';
-import { map } from 'rxjs/operators';
+import { concatAll, concatMap, filter, map, repeat, take, takeUntil, takeWhile, tap, timeout } from 'rxjs/operators';
 import { Actions, ActionName } from './actions';
 
 
@@ -52,8 +52,6 @@ export interface AsyncTaskCheckerState {
     asyncTasks:Array<Kontext.AsyncTaskInfo>;
     asyncTaskCheckerInterval:number;
     removeFinishedOnSubmit:boolean;
-    numRunning:number;
-    numFinished:number;
     overviewVisible:boolean;
 }
 
@@ -71,7 +69,9 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private readonly onUpdate:Array<Kontext.AsyncTaskOnUpdate>;
 
-    static CHECK_INTERVAL = 10000;
+    static CHECK_INTERVAL = 5000;
+
+    private checker$:Observable<AsyncTaskResponse>;
 
     constructor(
         dispatcher:IFullActionControl,
@@ -80,16 +80,13 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     ) {
         super(
             dispatcher,
-            AsyncTaskChecker.recalcNums({
+            {
                 asyncTasks: [...currTasks],
                 asyncTaskCheckerInterval: AsyncTaskChecker.CHECK_INTERVAL,
                 removeFinishedOnSubmit: false,
-                numRunning: 0,
-                numFinished: 0,
                 overviewVisible: false
-            })
+            }
         );
-        ;
         this.pageModel = pageModel;
         this.onUpdate = [];
 
@@ -122,13 +119,11 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     (data) => {
                         this.changeState(state => {
                             this.updateMessageList(state, data);
-                            AsyncTaskChecker.recalcNums(state);
                             state.overviewVisible = false;
                         });
                     },
                     (err) => {
                         this.changeState(state => {
-                            AsyncTaskChecker.recalcNums(state);
                             state.overviewVisible = false;
                         });
                         this.pageModel.showMessage('error', err);
@@ -150,7 +145,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                         error: null,
                         args: {}
                     });
-                    AsyncTaskChecker.recalcNums(state);
                 });
             }
         );
@@ -176,7 +170,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                                     state.asyncTasks[srchIdx].status === AsyncTaskStatus.SUCCESS)) {
                             state.overviewVisible = true;
                         }
-                        AsyncTaskChecker.recalcNums(state);
                     }
                 });
             }
@@ -194,17 +187,16 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         this.init();
     }
 
-    /**
-     * note: returns mutated version of provided state
-     */
-    static recalcNums(state:AsyncTaskCheckerState):AsyncTaskCheckerState {
-        state.numRunning = List.filter(taskIsActive, state.asyncTasks).length;
-        state.numFinished = List.filter(taskIsFinished, state.asyncTasks).length;
-        return state;
+    static numRunning(state:AsyncTaskCheckerState):number {
+        return pipe(state.asyncTasks, List.filter(taskIsActive), List.size());
     }
 
-    private getNumRunningTasks(state:AsyncTaskCheckerState):number {
-        return List.filter(taskIsActive, state.asyncTasks).length;
+    static numFinished(state:AsyncTaskCheckerState):number {
+        return pipe(state.asyncTasks, List.filter(taskIsFinished), List.size());
+    }
+
+    private getNumRunningTasks(tasks:Array<Kontext.AsyncTaskInfo>):number {
+        return List.filter(taskIsActive, tasks).length;
     }
 
     private checkForStatus():Observable<AsyncTaskResponse> {
@@ -229,7 +221,26 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         ).pipe(map(resp => resp.data));
     }
 
-    private getFinishedTasks(state:AsyncTaskCheckerState):Array<Kontext.AsyncTaskInfo> {
+    private updateTasksStatus(
+        state:AsyncTaskCheckerState,
+        incoming:Array<Kontext.AsyncTaskInfo>
+    ):Array<Kontext.AsyncTaskInfo> {
+        state.asyncTasks = pipe(
+            state.asyncTasks,
+            List.map(
+                curr => {
+                    const ans = {...curr};
+                    const idx = List.findIndex(incom => incom.ident === curr.ident , incoming);
+                    if (idx === -1) {
+                        ans.status = "FAILURE";
+                    }
+                    return ans;
+                }
+            ),
+            List.concat(incoming),
+            List.groupBy(v => v.ident),
+            List.map(([,v]) => List.maxItem(item => item.created, v))
+        );
         return List.filter(taskIsFinished, state.asyncTasks);
     }
 
@@ -244,31 +255,43 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     init():void {
         if (!List.empty(this.state.asyncTasks)) {
             this.emitChange();
-            if (!this.state.asyncTaskCheckerInterval) {
-                this.state.asyncTaskCheckerInterval = window.setInterval(() => {
-                    this.checkForStatus().subscribe(
-                        (data) => {
-                            this.changeState(state => {
-                                state.asyncTasks = [...data.data];
-                                if (this.getNumRunningTasks(state) === 0) {
-                                    window.clearInterval(this.state.asyncTaskCheckerInterval);
-                                    this.state.asyncTaskCheckerInterval = null;
-                                }
-                                const finished = this.getFinishedTasks(state);
-                                if (finished.length > 0) {
-                                    this.onUpdate.forEach(item => {
-                                        item(finished);
-                                    });
-                                    }
-                                this.updateMessageList(state, data.data);
+            this.checker$ = rxOf(
+                rxOf(1, 1, 1, 1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4,
+                    1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 2, 2.5, 3, 3.5, 4, 4.5),
+                rxOf(5).pipe(repeat(100))
+            ).pipe(
+                concatAll(),
+                concatMap(
+                    v => interval(v * 1000).pipe(take(1))
+                ),
+                concatMap(
+                    _ => this.checkForStatus()
+                ),
+            );
+
+            const noTasks$ = this.checker$.pipe(
+                filter(
+                    (ans, i) => {
+                        return this.getNumRunningTasks(ans.data) === 0 && i > 0;
+                    }
+                )
+            );
+
+            this.checker$.pipe(takeUntil(noTasks$)).subscribe(
+                (data) => {
+                    this.changeState(state => {
+                        const finished = this.updateTasksStatus(state, data.data);
+                        if (!List.empty(finished)) {
+                            this.onUpdate.forEach(item => {
+                                item(finished);
                             });
-                        },
-                        (err) => {
-                            this.pageModel.showMessage('error', err);
                         }
-                    );
-                }, AsyncTaskChecker.CHECK_INTERVAL);
-            }
+                    });
+                },
+                (err) => {
+                    this.pageModel.showMessage('error', err);
+                }
+            );
         }
     }
 }

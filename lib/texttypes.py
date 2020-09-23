@@ -19,6 +19,7 @@ from functools import partial
 import collections
 import re
 import logging
+from typing import List, Tuple
 
 import l10n
 from argmapping import Args
@@ -172,7 +173,7 @@ class TextTypeCollector(object):
     def get_attrmap(self):
         return dict((a, self._access_fn(self._src_obj, a)) for a in self._attr_producer_fn(self._src_obj))
 
-    def get_query(self):
+    def get_query(self) -> List[Tuple[str, str]]:
         """
         returns:
         a list of tuples (struct, condition); strings are encoded to the encoding current

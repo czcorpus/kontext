@@ -351,7 +351,7 @@ class MenuGenerator(object):
 
         self.my_subcorpora = (
             MenuItemInternal(MainMenu.CORPORA('my-subcorpora'),
-                             te('My subcorpora'), 'subcorpus/subcorp_list')
+                             te('My subcorpora'), 'subcorpus/list')
             .mark_indirect()
         )
 
@@ -362,7 +362,7 @@ class MenuGenerator(object):
 
         self.create_subcorpus = (
             MenuItemInternal(MainMenu.CORPORA('create-subcorpus'),
-                             te('Create new subcorpus'), 'subcorpus/subcorp_form')
+                             te('Create new subcorpus'), 'subcorpus/new')
             .add_args(
                 ('corpname', self._args['corpname']))
             .mark_indirect()
