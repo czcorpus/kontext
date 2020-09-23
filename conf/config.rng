@@ -346,6 +346,7 @@
                 <interleave>
                     <element name="type">
                         <choice>
+                            <value>rq</value>
                             <value>celery</value>
                             <value>konserver</value>
                             <value>multiprocessing</value>
@@ -415,6 +416,20 @@
                                     </oneOrMore>
                                 </element>
                                 <element name="celery_timezone">
+                                    <text />
+                                </element>
+                            </group>
+                            <group>
+                                <element name="rq_redis_host">
+                                    <text />
+                                </element>
+                                <element name="rq_redis_port">
+                                    <data type="positiveInteger" />
+                                </element>
+                                <element name="rq_redis_db">
+                                    <data type="positiveInteger" />
+                                </element>
+                                <element name="rq_log_path">
                                     <text />
                                 </element>
                             </group>
