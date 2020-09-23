@@ -35,6 +35,7 @@ if settings.get('global', 'manatee_path', None):
 
 import general
 import bgcalc
+import logging
 
 app = bgcalc.calc_backend_server(settings, 'rq')
 
@@ -124,6 +125,17 @@ if __name__ == "__main__":
         port=settings.get('calc_backend', 'rq_redis_port'),
         db=settings.get('calc_backend', 'rq_redis_db')
     )):
+        logging_handlers = [logging.StreamHandler()]
+        if settings.get('calc_backend', 'rq_log_path'):
+            logging_handlers.append(
+                logging.FileHandler(settings.get('calc_backend', 'rq_log_path'))
+            )
+
+        logging.basicConfig(
+            format="%(asctime)s [%(levelname)s] %(message)s",
+            handlers=logging_handlers
+        )
+
         qs = sys.argv[1:] or ['default']
         app.init_scheduler()
 
