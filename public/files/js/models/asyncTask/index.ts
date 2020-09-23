@@ -239,7 +239,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             ),
             List.concat(incoming),
             List.groupBy(v => v.ident),
-            List.map(([,v]) => List.maxItem(item => item.created, v))
+            List.map(([,v]) => List.maxItem(
+                item => item.status === 'FAILURE' || item.status === 'SUCCESS' ? 2 : 1, v))
         );
         return List.filter(taskIsFinished, state.asyncTasks);
     }
@@ -267,17 +268,14 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 concatMap(
                     _ => this.checkForStatus()
                 ),
-            );
-
-            const noTasks$ = this.checker$.pipe(
-                filter(
+                takeWhile(
                     (ans, i) => {
-                        return this.getNumRunningTasks(ans.data) === 0 && i > 0;
+                        return this.getNumRunningTasks(ans.data) > 0 || i === 0;
                     }
                 )
             );
 
-            this.checker$.pipe(takeUntil(noTasks$)).subscribe(
+            this.checker$.subscribe(
                 (data) => {
                     this.changeState(state => {
                         const finished = this.updateTasksStatus(state, data.data);

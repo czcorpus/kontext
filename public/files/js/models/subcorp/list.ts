@@ -105,7 +105,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         })
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
-            console.log('itemList: ', itemList);
             const subcTasks = itemList.filter(item => item.category === 'subcorpus');
             if (subcTasks.length > 0) {
                 this.layoutModel.showMessage('info',

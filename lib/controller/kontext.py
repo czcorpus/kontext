@@ -1262,20 +1262,28 @@ class Kontext(Controller):
     @exposed(return_type='json', skip_corpus_init=True)
     def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
-        if backend in ('celery', 'konserver'):
+        now = time.time()
+        if backend in ('celery', 'konserver', 'rq'):
             import bgcalc
             app = bgcalc.calc_backend_client(settings)
             at_list = self.get_async_tasks()
+            upd_list = []
             for at in at_list:
                 r = app.AsyncResult(at.ident)
-                at.status = r.status
-                if at.status == 'FAILURE':
-                    if hasattr(r.result, 'message'):
-                        at.error = r.result.message
-                    else:
-                        at.error = str(r.result)
-            self._set_async_tasks(at_list)
-            return dict(data=[d.to_dict() for d in at_list])
+                if r:
+                    at.status = r.status
+                    if at.status == 'FAILURE':
+                        if hasattr(r.result, 'message'):
+                            at.error = r.result.message
+                        else:
+                            at.error = str(r.result)
+                else:
+                    at.status = 'FAILURE'
+                    at.error = 'job not found'
+                if now - at.created < 1800:
+                    upd_list.append(at)
+            self._set_async_tasks(upd_list)
+            return dict(data=[d.to_dict() for d in upd_list])
         else:
             return dict(data=[])  # other backends are not supported
 
