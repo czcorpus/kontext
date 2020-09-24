@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher } from 'kombo';
+import { Bound, IActionDispatcher, IModel } from 'kombo';
 import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 import { Subscription } from 'rxjs';
 
@@ -29,31 +29,13 @@ import { Actions, ActionName } from '../../models/query/actions';
 import { QueryType } from '../../models/query/common';
 
 
-export interface RecentQueriesPageListProps {
-
-}
-
-
-interface RecentQueriesPageListState {
-    queryType:string;
-    currentCorpusOnly:boolean;
-    offset:number;
-    data:any; // TODO
-    modelIsBusy:boolean;
-    hasMoreItems:boolean;
-    archivedOnly:boolean;
-    editingQueryId:string;
-    editingQueryName:string;
-}
-
-
 export interface HistoryViews {
-    RecentQueriesPageList:React.ComponentClass<RecentQueriesPageListProps>;
+    RecentQueriesPageList:React.ComponentClass<{}>;
 }
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            queryHistoryModel:PluginInterfaces.QueryStorage.IModel):HistoryViews {
+            queryHistoryModel:IModel<{}>):HistoryViews {
 
     const queryTypes:{[k in QueryType]:string} = {
         'simple': he.translate('query__qt_simple'),
@@ -62,7 +44,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <QueryTypeSelector /> ------------------------
 
-    const QueryTypeSelector:React.SFC<{
+    const QueryTypeSelector:React.FC<{
         value:string;
 
     }> = (props) => {
@@ -105,7 +87,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <CurrentCorpCheckbox /> ------------------------
 
-    const CurrentCorpCheckbox:React.SFC<{
+    const CurrentCorpCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -124,7 +106,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <ArchivedOnlyCheckbox /> ------------------------
 
-    const ArchivedOnlyCheckbox:React.SFC<{
+    const ArchivedOnlyCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -144,7 +126,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <FilterForm /> ------------------------
 
-    const FilterForm:React.SFC<{
+    const FilterForm:React.FC<{
         currentCorpusOnly:boolean;
         queryType:string;
         archivedOnly:boolean;
@@ -175,7 +157,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <AlignedQueryInfo /> ------------------------
 
-    const AlignedQueryInfo:React.SFC<{
+    const AlignedQueryInfo:React.FC<{
         query_type:string;
         query:string;
 
@@ -244,7 +226,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <QueryInfo /> ------------------------
 
-    const QueryInfo:React.SFC<{
+    const QueryInfo:React.FC<{
         query_type:string;
         query_sh:string;
         query:string;
@@ -272,7 +254,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <SavedNameInfo /> ------------------------
 
-    const SavedNameInfo:React.SFC<{
+    const SavedNameInfo:React.FC<{
         queryId:string;
         hasEditor:boolean;
         editingQueryName:string;
@@ -328,7 +310,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <SaveItemForm /> ------------------------
 
-    const SaveItemForm:React.SFC<{
+    const SaveItemForm:React.FC<{
         name:string;
 
     }> = (props) => {
@@ -390,7 +372,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <DataRow /> ------------------------
 
-    const DataRow:React.SFC<{
+    const DataRow:React.FC<{
         data:Kontext.QueryHistoryItem;
         hasEditor:boolean;
         editingQueryName:string;
@@ -449,7 +431,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <LoadMoreBlock /> ------------------------
 
-    const LoadMoreBlock:React.SFC<{
+    const LoadMoreBlock:React.FC<{
         modelIsBusy:boolean;
 
     }> = (props) => {
@@ -475,7 +457,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <NoDataBlock /> ------------------------
 
-    const NoDataBlock:React.SFC<{}> = (props) => {
+    const NoDataBlock:React.FC<{}> = (props) => {
         return (
             <div className="last-row">
                 {he.translate('global__no_data_found')}
@@ -485,7 +467,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <DataTableFooter /> ------------------------
 
-    const DataTableFooter:React.SFC<{
+    const DataTableFooter:React.FC<{
         dataLength:number;
         hasMoreItems:boolean;
         modelIsBusy:boolean;
@@ -508,7 +490,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
 
 
-    const DataTable:React.SFC<{
+    const DataTable:React.FC<{
         editingQueryId:string;
         offset:number;
         editingQueryName:string;
@@ -534,61 +516,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <RecentQueriesPageList /> ------------------------
 
-    class RecentQueriesPageList extends React.Component<RecentQueriesPageListProps, RecentQueriesPageListState> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchModelState();
-            this._handleModelChange = this._handleModelChange.bind(this);
-        }
-
-        _fetchModelState() {
-            return {
-                queryType: queryHistoryModel.getQueryType(),
-                currentCorpusOnly: queryHistoryModel.getCurrentCorpusOnly(),
-                offset: queryHistoryModel.getOffset(),
-                data: queryHistoryModel.getData(),
-                modelIsBusy: queryHistoryModel.getIsBusy(),
-                hasMoreItems: queryHistoryModel.getHasMoreItems(),
-                archivedOnly: queryHistoryModel.getArchivedOnly(),
-                editingQueryId: queryHistoryModel.getEditingQueryId(),
-                editingQueryName: queryHistoryModel.getEditingQueryName()
-            };
-        }
-
-        _handleModelChange() {
-            this.setState(this._fetchModelState());
-        }
-
-        componentDidMount() {
-            this.modelSubscription = queryHistoryModel.addListener(this._handleModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
-        render() {
-            return (
-                <div className="RecentQueriesPageList">
-                    <FilterForm queryType={this.state.queryType}
-                            currentCorpusOnly={this.state.currentCorpusOnly}
-                            archivedOnly={this.state.archivedOnly} />
-                    <DataTable data={this.state.data} offset={this.state.offset}
-                            modelIsBusy={this.state.modelIsBusy}
-                            hasMoreItems={this.state.hasMoreItems}
-                            editingQueryId={this.state.editingQueryId}
-                            editingQueryName={this.state.editingQueryName} />
-                </div>
-            );
-        }
+    const RecentQueriesPageList:React.FC<PluginInterfaces.QueryStorage.ModelState> = (props) => {
+        return (
+            <div className="RecentQueriesPageList">
+                <FilterForm queryType={props.queryType}
+                        currentCorpusOnly={props.currentCorpusOnly}
+                        archivedOnly={props.archivedOnly} />
+                <DataTable data={props.data} offset={props.offset}
+                        modelIsBusy={props.isBusy}
+                        hasMoreItems={props.hasMoreItems}
+                        editingQueryId={props.editingQueryId}
+                        editingQueryName={props.editingQueryName} />
+            </div>
+        );
     }
 
 
     return {
-        RecentQueriesPageList: RecentQueriesPageList
+        RecentQueriesPageList: Bound(RecentQueriesPageList, queryHistoryModel)
     };
 
 }

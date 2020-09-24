@@ -48,26 +48,8 @@ const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) =>
     return item;
 };
 
-/**
- *
- */
-export interface QueryStorageModelState {
-    data:Array<Kontext.QueryHistoryItem>;
-    offset:number;
-    limit:number;
-    queryType:string;
-    currentCorpusOnly:boolean;
-    isBusy:boolean;
-    pageSize:number;
-    hasMoreItems:boolean;
-    archivedOnly:boolean;
-    editingQueryId:string;
-    editingQueryName:string;
-    currentItem:number;
-}
 
-export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
-        implements PluginInterfaces.QueryStorage.IModel {
+export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStorage.ModelState> {
 
     private pluginApi:IPluginApi;
 
@@ -83,7 +65,7 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
             {
                 data: initialData,
                 queryType: '',
-                currentCorpusOnly: false,
+                currentCorpusOnly: true,
                 offset,
                 limit,
                 pageSize,
@@ -281,11 +263,12 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
 
     private loadData():Observable<any> {
         const args = new MultiDict();
-        args.set('corpname', this.pluginApi.getCorpusIdent().id);
         args.set('offset', this.state.offset);
         args.set('limit', this.state.limit + 1);
         args.set('query_type', this.state.queryType);
-        args.set('current_corpus', this.state.currentCorpusOnly ? '1' : '0');
+        if (this.state.currentCorpusOnly) {
+            args.set('corpname', this.pluginApi.getCorpusIdent().id);
+        }
         args.set('archived_only', this.state.archivedOnly ? '1' : '0');
         return this.pluginApi.ajax$<AjaxResponse.QueryHistory>(
             HTTP.Method.GET,
@@ -342,45 +325,5 @@ export class QueryStorageModel extends StatefulModel<QueryStorageModelState>
                     this.pluginApi.translate('query__save_as_item_removed')
             )
         );
-    }
-
-    getData():Array<Kontext.QueryHistoryItem> {
-        return this.state.data;
-    }
-
-    getOffset():number {
-        return this.state.offset;
-    }
-
-    getLimit():number {
-        return this.state.limit;
-    }
-
-    getQueryType():string {
-        return this.state.queryType;
-    }
-
-    getCurrentCorpusOnly():boolean {
-        return this.state.currentCorpusOnly;
-    }
-
-    getIsBusy():boolean {
-        return this.state.isBusy;
-    }
-
-    getHasMoreItems():boolean {
-        return this.state.hasMoreItems;
-    }
-
-    getArchivedOnly():boolean {
-        return this.state.archivedOnly;
-    }
-
-    getEditingQueryId():string {
-        return this.state.editingQueryId;
-    }
-
-    getEditingQueryName():string {
-        return this.state.editingQueryName;
     }
 }

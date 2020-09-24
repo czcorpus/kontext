@@ -1,3 +1,4 @@
+import { IModel } from 'kombo';
 /*
  * Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
@@ -18,9 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {QueryStorageModel} from './models';
-import {init as viewsInit} from './view';
+import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import { QueryStorageModel } from './models';
+import { init as viewsInit } from './view';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -48,7 +49,7 @@ export class QueryStoragePlugin implements PluginInterfaces.QueryStorage.IPlugin
         ).QueryStorage;
     }
 
-    getModel():PluginInterfaces.QueryStorage.IModel {
+    getModel():IModel<PluginInterfaces.QueryStorage.ModelState> {
         return this.model;
     }
 

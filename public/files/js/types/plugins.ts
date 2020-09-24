@@ -232,23 +232,25 @@ export namespace PluginInterfaces {
 
     export namespace QueryStorage {
 
-        export interface IModel extends IEventEmitter {
-
-            getCurrentCorpusOnly():boolean;
-            getData():Array<Kontext.QueryHistoryItem>;
-            getQueryType():string;
-            getOffset():number;
-            getIsBusy():boolean;
-            getHasMoreItems():boolean;
-            getArchivedOnly():boolean;
-            getEditingQueryId():string;
-            getEditingQueryName():string;
-        }
-
         export interface WidgetProps {
             sourceId:string;
             formType:QueryFormType;
             onCloseTrigger:()=>void;
+        }
+
+        export interface ModelState {
+            data:Array<Kontext.QueryHistoryItem>;
+            offset:number;
+            limit:number;
+            queryType:string;
+            currentCorpusOnly:boolean;
+            isBusy:boolean;
+            pageSize:number;
+            hasMoreItems:boolean;
+            archivedOnly:boolean;
+            editingQueryId:string;
+            editingQueryName:string;
+            currentItem:number;
         }
 
         export type WidgetView = React.ComponentClass<WidgetProps>;
@@ -257,7 +259,7 @@ export namespace PluginInterfaces {
 
             getWidgetView():WidgetView;
 
-            getModel():IModel;
+            getModel():IModel<ModelState>;
         }
 
         export interface Factory {

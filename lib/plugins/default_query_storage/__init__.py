@@ -151,7 +151,6 @@ class QueryStorage(AbstractQueryStorage):
         arguments:
         see the super-class
         """
-
         def matches_corp_prop(data, prop_name, value):
             if data.get(prop_name, None) == value:
                 return True
@@ -200,7 +199,7 @@ class QueryStorage(AbstractQueryStorage):
 
         if corpname:
             full_data = [x for x in full_data if matches_corp_prop(
-                x, 'corpus_id', corpname)]
+                x, 'corpname', corpname)]
 
         if archived_only:
             full_data = [x for x in full_data if x.get('name', None) is not None]
