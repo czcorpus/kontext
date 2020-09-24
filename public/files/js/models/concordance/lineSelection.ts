@@ -526,7 +526,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
     private updateGlobalArgs(data:AjaxLineGroupRenameResponse):void {
         this.layoutModel.setConf<number>('NumLinesInGroups', data.num_lines_in_groups);
         this.layoutModel.setConf<Array<number>>('LinesGroupsNumbers', data.lines_groups_numbers);
-        this.layoutModel.replaceConcArg('q', data.Q);
+        this.layoutModel.updateConcPersistenceId(data.Q);
     }
 
     private clearSelection(state:LineSelectionModelState):void {

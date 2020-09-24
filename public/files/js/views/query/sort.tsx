@@ -400,19 +400,19 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                         </tr>
                         <tr>
                             <th>
-                                <label htmlFor="ml1icase_checkbox">
+                                <label htmlFor={`ml1icase_checkbox_${this.props.level}`}>
                                     {he.translate('query__sort_th_ignore_case')}:
                                 </label>
                             </th>
                             <td>
-                                <input id="ml1icase_checkbox" type="checkbox"
+                                <input id={`ml1icase_checkbox_${this.props.level}`} type="checkbox"
                                         onChange={this._handleSicaseCheck}
                                         checked={this.props.mlxicase === 'i'} />
                             </td>
                         </tr>
                         <tr>
                             <th>
-                                <label htmlFor="sbward_checkbox2">
+                                <label htmlFor={`sbward_checkbox2_${this.props.level}`}>
                                     {he.translate('query__sort_th_backward')}
                                 </label>
                                 <layoutViews.InlineHelp>
@@ -421,7 +421,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                                 :
                             </th>
                             <td>
-                                <input id="sbward_checkbox2" type="checkbox"
+                                <input id={`sbward_checkbox2_${this.props.level}`} type="checkbox"
                                         checked={this.props.mlxbward === 'r'}
                                         onChange={this._handleSbwardCheck} />
                             </td>

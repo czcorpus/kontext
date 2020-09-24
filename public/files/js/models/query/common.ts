@@ -74,17 +74,6 @@ export interface ConcQueryArgs {
     type:'concQueryArgs';
 }
 
-
-export interface ConcSortServerArgs extends ConcServerArgs {
-    sattr:string;
-    skey:string;
-    sbward:string;
-    sicase:string;
-    spos:string;
-    sortlevel:string;
-    [other:string]:string|number;
-}
-
 export interface SampleServerArgs extends ConcServerArgs {
     rlines:number;
 }
@@ -108,6 +97,26 @@ export interface FilterServerArgs extends ConcServerArgs {
     qmcase:boolean;
     within:boolean;
     type:'filterQueryArgs';
+}
+
+export interface SortServerArgs extends ConcServerArgs {
+    sattr:string;
+    skey:string;
+    sbward:string;
+    sicase:string;
+    spos:string;
+    type:'sortQueryArgs';
+}
+
+export interface MLSortServerArgs extends ConcServerArgs {
+    levels:Array<{
+        sattr:string;
+        sbward:string;
+        sicase:string;
+        spos:string;
+        ctx:string;
+    }>;
+    type:'mlSortQueryArgs';
 }
 
 export interface GeneralQueryFormProperties {

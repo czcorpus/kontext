@@ -408,11 +408,12 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         queryFormProps:QueryFormLiteProps;
         filterFormProps:FilterFormProps;
         filterFirstDocHitsFormProps:FirstHitsFormProps;
+        sortFormProps:SortFormProps;
         switchMcFormProps:SwitchMainCorpFormProps;
         shuffleFormProps:ShuffleFormProps;
     }
 
-    const QueryOverview:React.SFC<QueryOverviewProps & QueryReplayModelState> = (props) => {
+    const QueryOverview:React.FC<QueryOverviewProps & QueryReplayModelState> = (props) => {
 
 
         const handleEditClick = (idx:number, opId:string) => () => {
@@ -441,6 +442,9 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
             } else if (['p', 'P', 'n', 'N'].indexOf(opId) > -1) {
                 return props.filterFormProps;
+
+            } else if (List.some(v => v === opId, ['s'])) {
+                return props.sortFormProps;
 
             } else if (opId === 'f') {
                 return {

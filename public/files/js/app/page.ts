@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { List, HTTP, tuple } from 'cnc-tskit';
+import { List, HTTP, tuple, pipe } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
 import { Kontext, ViewOptions } from '../types/common';
@@ -56,6 +56,7 @@ import querySuggestPlugin from 'plugins/querySuggest/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
+import { concatMap } from 'rxjs/operators';
 
 
 export enum DownloadType {
@@ -513,6 +514,24 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
         } else {
             throw new Error(`Unknown conc. arg. ${name}`);
+        }
+    }
+
+    updateConcPersistenceId(value:string|Array<string>):void {
+        if (Array.isArray(value)) {
+            this.replaceConcArg('q', value);
+            const concIds = pipe(
+                value,
+                List.filter(v => v[0] === '~'),
+                List.map(v => v.substr(1))
+            );
+            if (!List.empty(concIds)) {
+                this.setConf<string>('concPersistenceOpId', List.head(concIds));
+            }
+
+        } else {
+            this.replaceConcArg('q', ['~' + value]);
+            this.setConf<string>('concPersistenceOpId', value);
         }
     }
 
