@@ -524,6 +524,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 ans[keyword] = keyword
         return list(ans.items())
 
+    def _get_interval_attrs(self, root):
+        return list(set(k.text.strip() for k in root.findall('./interval_attrs/item')))
+
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
 
@@ -584,6 +587,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 meta_elm.find('avg_label_attr_len'), 'text', None)
             if ans.metadata.avg_label_attr_len is not None:
                 ans.metadata.avg_label_attr_len = int(ans.metadata.avg_label_attr_len)
+            ans.metadata.interval_attrs = self._get_interval_attrs(meta_elm)
 
         token_connect_elm = node.find('token_connect')
         if token_connect_elm is not None:
