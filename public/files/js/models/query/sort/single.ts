@@ -93,7 +93,10 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         this.addActionHandler<Actions.SortFormSubmit>(
             ActionName.SortFormSubmit,
             action => {
-                this.submit(action.payload.sortId, action.payload.sortId);
+                this.submit(
+                    action.payload.sortId,
+                    this.pageModel.getConf('concPersistenceOpId')
+                );
                 // no need to notify anybody - we're leaving the page here
             }
         );

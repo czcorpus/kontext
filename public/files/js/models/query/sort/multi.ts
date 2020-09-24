@@ -107,7 +107,10 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         this.addActionHandler<Actions.MLSortFormSubmit>(
             ActionName.MLSortFormSubmit,
             action => {
-                this.submit(action.payload.sortId, action.payload.sortId);
+                this.submit(
+                    action.payload.sortId,
+                    this.pageModel.getConf('concPersistenceOpId')
+                );
             }
         );
 
