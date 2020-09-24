@@ -333,7 +333,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 case 'year':
                     return <RangeSelector attrName={props.attrObj.name} hasSelectedValues={props.hasSelectedItems} />
                 case 'days':
-                    return <div>Days not implemented yet</div>
+                    return <layoutViews.Calendar onClick={(year, month, day)=>null} />
                 default:
                     return <div>Unknown widget: {props.widget}</div>
             }
