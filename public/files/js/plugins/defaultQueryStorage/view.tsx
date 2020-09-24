@@ -23,9 +23,10 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard, List, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
-import { QueryStorageModel, QueryStorageModelState, InputBoxHistoryItem } from './models';
+import { QueryStorageModel, InputBoxHistoryItem } from './models';
 import { Actions as QueryActions, ActionName as QueryActionName, QueryFormType } from '../../models/query/actions';
 import { Actions, ActionName } from './actions';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 export interface QueryStorageProps {
@@ -44,7 +45,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     const layoutViews = he.getLayoutViews();
 
-    class QueryStorage extends React.Component<QueryStorageProps & QueryStorageModelState> {
+    class QueryStorage extends React.Component<QueryStorageProps & PluginInterfaces.QueryStorage.ModelState> {
 
         constructor(props) {
             super(props);
