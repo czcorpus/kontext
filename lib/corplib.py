@@ -218,7 +218,11 @@ def get_subcorp_pub_info(spath: str) -> Tuple[PublishedSubcMetadata, Optional[st
             desc = ''
             for i, line in enumerate(nf):
                 if i == 0:
-                    metadata = PublishedSubcMetadata.from_json(line)
+                    try:
+                        metadata = PublishedSubcMetadata.from_json(line)
+                    except Exception as ex:
+                        logging.getLogger(__name__).error(
+                            f'Failed to read published subcorpus data. File {namepath}, error: {ex}')
                 elif i > 1:
                     desc += line
     return metadata, desc
