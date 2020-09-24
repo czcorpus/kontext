@@ -25,12 +25,13 @@ import { tap, map } from 'rxjs/operators';
 import { Kontext } from '../../../types/common';
 import { AjaxResponse } from '../../../types/ajaxResponses';
 import { PageModel } from '../../../app/page';
-import { MultiDict } from '../../../multidict';
-import { ConcSortServerArgs } from '../common';
+import { SortServerArgs } from '../common';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../mainMenu/actions';
 import { Actions, ActionName } from '../actions';
-import { Dict, List } from 'cnc-tskit';
-import { ISubmitableConcSortModel, SortFormProperties } from './common';
+import { Dict, HTTP, List } from 'cnc-tskit';
+import { SortFormProperties } from './common';
+import { AjaxConcResponse } from '../../concordance/common';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../../concordance/actions';
 
 
 /**
@@ -51,9 +52,10 @@ export interface ConcSortModelState {
      * in MultiLevelConcSortModel.
      */
     isActiveActionValues:{[key:string]:boolean};
+    isBusy:boolean;
 }
 
-export class ConcSortModel extends StatefulModel<ConcSortModelState> implements ISubmitableConcSortModel {
+export class ConcSortModel extends StatefulModel<ConcSortModelState> {
 
     private readonly pageModel:PageModel;
 
@@ -71,6 +73,7 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
                 sicaseValues: Dict.fromEntries(props.sicase),
                 sposValues: Dict.fromEntries(props.spos),
                 isActiveActionValues: Dict.fromEntries(List.map(item => [item[0], item[1] === 'sortx'], props.defaultFormAction)),
+                isBusy: false
             }
         );
         this.pageModel = pageModel;
@@ -93,11 +96,36 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         this.addActionHandler<Actions.SortFormSubmit>(
             ActionName.SortFormSubmit,
             action => {
-                this.submit(
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
+                this.submitQuery(
                     action.payload.sortId,
-                    this.pageModel.getConf('concPersistenceOpId')
+                    this.pageModel.getConf<string>('concPersistenceOpId')
+                ).pipe(
+                    tap(
+                        (data) => {
+                            this.pageModel.updateConcPersistenceId(data.conc_persistence_op_id);
+                            this.changeState(state => {
+                                state.isBusy = false;
+                            });
+                        }
+                    )
+                ).subscribe(
+                    (data) => {
+                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
+                            payload: {
+                                concId: data.conc_persistence_op_id,
+                                data
+                            }
+                        });
+
+                    },
+                    (err) => {
+                        this.pageModel.showMessage('error', err);
+                    }
                 );
-                // no need to notify anybody - we're leaving the page here
             }
         );
 
@@ -177,27 +205,40 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> implements 
         );
     }
 
-    submit(sortId:string, concId:string):void {
+    /**
+     *
+     * @param sortId id of a sort operation (__new__ for new, conc ID if already applied)
+     * @param concId concID we want to attach the submit to (it may or may not be equal to filterId)
+     */
+    submitQuery(sortId:string, concId:string):Observable<AjaxConcResponse> {
         const args = this.createSubmitArgs(sortId, concId);
-        const url = this.pageModel.createActionUrl('sortx', args.items());
-        window.location.href = url;
+        return this.pageModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
+            this.pageModel.createActionUrl(
+                'sortx',
+                [
+                    ['format', 'json'],
+                    ['q', '~' + concId]
+                ]
+            ),
+            args,
+            {
+                contentType: 'application/json'
+            }
+        );
     }
 
-    getSubmitUrl(sortId:string, concId:string):string {
-        return this.pageModel.createActionUrl('sortx', this.createSubmitArgs(sortId, concId).items());
-    }
-
-    private createSubmitArgs(sortId:string, concId:string):MultiDict<ConcSortServerArgs> {
-        const val2List = (v) => v ? [v] : [];
-
-        const args = this.pageModel.exportConcArgs() as MultiDict<ConcSortServerArgs>;
-        args.set('q', '~' + concId);
-        args.replace('sattr', val2List(this.state.sattrValues[sortId]));
-        args.replace('skey', val2List(this.state.skeyValues[sortId]));
-        args.replace('sbward', val2List(this.state.sbwardValues[sortId]));
-        args.replace('sicase', val2List(this.state.sicaseValues[sortId]));
-        args.replace('spos', val2List(this.state.sposValues[sortId]));
-        return args;
+    private createSubmitArgs(sortId:string, concId:string):SortServerArgs {
+        return {
+            type:'sortQueryArgs',
+            sattr: this.state.sattrValues[sortId],
+            skey: this.state.skeyValues[sortId],
+            sbward: this.state.sbwardValues[sortId],
+            sicase: this.state.sicaseValues[sortId],
+            spos: this.state.sposValues[sortId],
+            ...this.pageModel.getConcArgs(),
+            q: '~' + concId
+        }
     }
 
     isActiveActionValue(sortId:string):boolean {

@@ -402,8 +402,8 @@ class Actions(Querying):
                     relconcsize=1e6 * fullsize / self.corp.search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
-    @exposed(access_level=1, template='view.html', page_model='view', func_arg_mapped=True, mutates_conc=True)
-    def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
+    @exposed(access_level=1, template='view.html', page_model='view', mutates_conc=True, http_method='POST')
+    def sortx(self, request):
         """
         simple sort concordance
         """
@@ -413,67 +413,41 @@ class Actions(Querying):
             raise UserActionException('Cannot apply a sorting once a group of lines has been saved')
 
         qinfo = SortFormArgs(persist=True)
-        qinfo.sattr = self.args.sattr
-        qinfo.sbward = self.args.sbward
-        qinfo.sicase = self.args.sicase
-        qinfo.skey = self.args.skey
-        qinfo.spos = self.args.spos
-        qinfo.form_action = 'sortx'
+        qinfo.update_by_user_query(request.json)
         self.add_conc_form_args(qinfo)
 
-        if skey == 'lc':
-            ctx = '-1<0~-%i<0' % spos
-        elif skey == 'kw':
+        if qinfo.skey == 'lc':
+            ctx = f'-1<0~-{qinfo.spos}<0'
+        elif qinfo.skey == 'kw':
             ctx = '0<0~0>0'
-        elif skey == 'rc':
-            ctx = '1>0~%i>0' % spos
+        elif qinfo.skey == 'rc':
+            ctx = f'1>0~{qinfo.spos}>0'
         else:
             ctx = ''
-        if '.' in sattr:
+        if '.' in qinfo.sattr:
             ctx = ctx.split('~')[0]
 
-        self.args.q.append('s%s/%s%s %s' % (sattr, sicase, sbward, ctx))
+        self.args.q.append(f's{qinfo.sattr}/{qinfo.sicase}{qinfo.sbward} {ctx}')
         return self.view()
 
-    @exposed(access_level=1, template='view.html', page_model='view', mutates_conc=True)
-    def mlsortx(self, _):
+    @exposed(access_level=1, template='view.html', page_model='view', mutates_conc=True, http_method='POST')
+    def mlsortx(self, request):
         """
         multiple level sort concordance
         """
         qinfo = SortFormArgs(persist=True)
-        qinfo.form_action = 'mlsortx'
-        qinfo.sortlevel = self.args.sortlevel
-        qinfo.ml1attr = self.args.ml1attr
-        qinfo.ml2attr = self.args.ml2attr
-        qinfo.ml3attr = self.args.ml3attr
-        qinfo.ml4attr = self.args.ml4attr
-        qinfo.ml1bward = self.args.ml1bward
-        qinfo.ml2bward = self.args.ml2bward
-        qinfo.ml3bward = self.args.ml3bward
-        qinfo.ml4bward = self.args.ml4bward
-        qinfo.ml1ctx = self.args.ml1ctx
-        qinfo.ml2ctx = self.args.ml2ctx
-        qinfo.ml3ctx = self.args.ml3ctx
-        qinfo.ml4ctx = self.args.ml4ctx
-        qinfo.ml1icase = self.args.ml1icase
-        qinfo.ml2icase = self.args.ml2icase
-        qinfo.ml3icase = self.args.ml3icase
-        qinfo.ml4icase = self.args.ml4icase
-        qinfo.ml1pos = self.args.ml1pos
-        qinfo.ml2pos = self.args.ml2pos
-        qinfo.ml3pos = self.args.ml3pos
-        qinfo.ml4pos = self.args.ml4pos
+        qinfo.update_by_user_query(request.json)
         self.add_conc_form_args(qinfo)
 
         mlxfcode = 'rc'
-        crit = one_level_crit('s', self.args.ml1attr, self.args.ml1ctx, self.args.ml1pos, mlxfcode,
-                              self.args.ml1icase, self.args.ml1bward)
-        if self.args.sortlevel > 1:
-            crit += one_level_crit(' ', self.args.ml2attr, self.args.ml2ctx, self.args.ml2pos, mlxfcode,
-                                   self.args.ml2icase, self.args.ml2bward)
-            if self.args.sortlevel > 2:
-                crit += one_level_crit(' ', self.args.ml3attr, self.args.ml3ctx, self.args.ml3pos, mlxfcode,
-                                       self.args.ml3icase, self.args.ml3bward)
+        crit = one_level_crit('s', qinfo.ml1attr, qinfo.ml1ctx, qinfo.ml1pos, mlxfcode,
+                              qinfo.ml1icase, qinfo.ml1bward)
+        if qinfo.sortlevel > 1:
+            crit += one_level_crit(' ', qinfo.ml2attr, qinfo.ml2ctx, qinfo.ml2pos, mlxfcode,
+                                   qinfo.ml2icase, qinfo.ml2bward)
+            if qinfo.sortlevel > 2:
+                crit += one_level_crit(' ', qinfo.ml3attr, qinfo.ml3ctx, qinfo.ml3pos, mlxfcode,
+                                       qinfo.ml3icase, qinfo.ml3bward)
         self.args.q.append(crit)
         return self.view()
 

@@ -42,15 +42,6 @@ export interface SortFormProperties {
     mlxctx:Array<[string, Array<string>]>;
 }
 
-/**
- *
- */
-export interface ISubmitableConcSortModel {
-    getSubmitUrl(sortId:string, concId:string):string;
-    submit(sortId:string, concId:string):void;
-}
-
-
 
 export function importMultiLevelArg<T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
     name:string,

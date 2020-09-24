@@ -273,16 +273,16 @@ class SortFormArgs(ConcFormArgs):
         super().__init__(persist)
         self.form_type: str = 'sort'
         self.form_action: str = 'sortx'
-        self.sattr: str = ''
+        self.sattr: str = 'word'
         self.skey: str = 'kw'
         self.spos: int = 3  # number of tokens to sort
         self.sicase: str = ''
         self.sbward: str = ''
         self.sortlevel: int = 1
-        self.ml1attr: str = ''
-        self.ml2attr: str = ''
-        self.ml3attr: str = ''
-        self.ml4attr: str = ''
+        self.ml1attr: str = 'word'
+        self.ml2attr: str = 'word'
+        self.ml3attr: str = 'word'
+        self.ml4attr: str = 'word'
         self.ml1icase: str = ''
         self.ml2icase: str = ''
         self.ml3icase: str = ''
@@ -299,6 +299,26 @@ class SortFormArgs(ConcFormArgs):
         self.ml2ctx: str = '0~0>0'
         self.ml3ctx: str = '0~0>0'
         self.ml4ctx: str = '0~0>0'
+
+    def update_by_user_query(self, data: Dict[str, Any]):
+        if data.get('type') == 'sortQueryArgs':
+            self.sattr = data['sattr']
+            self.skey = data['skey']
+            self.sbward = data['sbward']
+            self.sicase = data['sicase']
+            self.spos = data['spos']
+            self.form_action = 'sortx'
+        elif data.get('type') == 'mlSortQueryArgs':
+            self.form_action = 'mlsortx'
+            self.sortlevel = len(data['levels'])
+            for i, args in enumerate(data['levels']):
+                setattr(self, f'ml{i+1}attr', args['sattr'])
+                setattr(self, f'ml{i+1}bward', args['sbward'])
+                setattr(self, f'ml{i+1}ctx', args['ctx'])
+                setattr(self, f'ml{i+1}icase', args['sicase'])
+                setattr(self, f'ml{i+1}pos', args['spos'])
+        else:
+            raise Exception('Failed to recognize sort form source data')
 
 
 class SampleFormArgs(ConcFormArgs):

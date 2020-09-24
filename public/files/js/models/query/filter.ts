@@ -441,8 +441,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     ).pipe(
                         tap(
                             (data) => {
-                                this.pageModel.replaceConcArg('q', [
-                                    '~' + data.conc_persistence_op_id]);
+                                this.pageModel.updateConcPersistenceId(data.conc_persistence_op_id);
                                 this.changeState(state => {
                                     state.isBusy = false;
                                 });
@@ -585,7 +584,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         );
     }
 
-    private createSubmitArgs(filterId:string):FilterServerArgs {
+    private createSubmitArgs(filterId:string, concId:string):FilterServerArgs {
         return {
             type:'filterQueryArgs',
             qtype: this.state.queryTypes[filterId],
@@ -597,7 +596,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             inclkwic: this.state.inclkwicValues[filterId] ? 1 : 0,
             within: this.state.withinArgs[filterId],
             qmcase: this.state.matchCaseValues[filterId],
-            ...this.pageModel.getConcArgs()
+            ...this.pageModel.getConcArgs(),
+            q: '~' + concId
         }
     }
 
@@ -607,7 +607,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
      * @param concId concID we want to attach the submit to (it may or may not be equal to filterId)
      */
     submitQuery(filterId:string, concId:string):Observable<AjaxConcResponse> {
-        const args = this.createSubmitArgs(filterId);
+        const args = this.createSubmitArgs(filterId, concId);
         return this.pageModel.ajax$<AjaxConcResponse>(
             HTTP.Method.POST,
             this.pageModel.createActionUrl(

@@ -194,9 +194,27 @@ export interface ConcSaveServerArgs extends ConcServerArgs {
  * provide and update concordance page parameters.
  */
 export interface IConcArgsHandler {
+
     exportConcArgs():Kontext.IMultiDict<ConcServerArgs>;
+
     getConcArgs():ConcServerArgs;
-    replaceConcArg(name:string, values:Array<string>):void;
+
+    /**
+     * Upgrade any of concordance arguments. Please note
+     * that in case of the 'q' argument, it is better
+     * to use updateConcPersistenceId which ensures all
+     * the occurences of the value are updated consistently.
+     *
+     * It accepts either a conc ID (= a hash) or a list of
+     * q values where it expects also the ~hash value.
+     */
+    updateConcPersistenceId(value:string|Array<string>):void;
+
+    /**
+     * Change the current conc persistence ID in both
+     * conc. args and concPersistenceId config. variable.
+     */
+    updateConcPersistenceId(value:string):void;
 }
 
 /**

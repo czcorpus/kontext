@@ -19,18 +19,19 @@
  */
 
  import { StatefulModel, IFullActionControl } from 'kombo';
- import { Dict, pipe, List } from 'cnc-tskit';
+ import { Dict, pipe, List, HTTP } from 'cnc-tskit';
  import { of as rxOf, Observable } from 'rxjs';
 
 import { Kontext } from '../../../types/common';
-import { ISubmitableConcSortModel, SortFormProperties, importMultiLevelArg } from './common';
+import { SortFormProperties, importMultiLevelArg } from './common';
 import { PageModel } from '../../../app/page';
 import { AjaxResponse } from '../../../types/ajaxResponses';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../mainMenu/actions';
 import { Actions, ActionName } from '../actions';
 import { tap, map } from 'rxjs/operators';
-import { MultiDict } from '../../../multidict';
-import { ConcSortServerArgs } from '../common';
+import { MLSortServerArgs } from '../common';
+import { AjaxConcResponse } from '../../concordance/common';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../../concordance/actions';
 
 
  /**
@@ -56,9 +57,10 @@ export interface MultiLevelConcSortModelState {
      * mutually-exclusive  when compared with the same attribute and its keys in ConcSortModel.
      */
     isActiveActionValues:{[key:string]:boolean};
+    isBusy:boolean;
 }
 
-export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortModelState> implements ISubmitableConcSortModel {
+export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortModelState> {
 
     private static LEFTMOST_CTX = ['-3<0', '-2<0', '-1<0', '0~0<0', '1<0', '2<0', '3<0'];
     private static RIGHTMOST_CTX = ['-3>0', '-2>0', '-1>0', '0~0>0', '1>0', '2>0', '3>0'];
@@ -91,7 +93,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
                     props.defaultFormAction,
                     Dict.fromEntries(),
                     Dict.map((v, k) => v === 'mlsortx')
-                )
+                ),
+                isBusy: false
             }
         );
         this.pageModel = pageModel;
@@ -107,9 +110,33 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         this.addActionHandler<Actions.MLSortFormSubmit>(
             ActionName.MLSortFormSubmit,
             action => {
-                this.submit(
+                this.submitQuery(
                     action.payload.sortId,
                     this.pageModel.getConf('concPersistenceOpId')
+
+                ).pipe(
+                    tap(
+                        (data) => {
+                            this.pageModel.updateConcPersistenceId(data.conc_persistence_op_id);
+                            this.changeState(state => {
+                                state.isBusy = false;
+                            });
+                        }
+                    )
+                ).subscribe(
+                    (data) => {
+                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
+                            payload: {
+                                concId: data.conc_persistence_op_id,
+                                data
+                            }
+                        });
+
+                    },
+                    (err) => {
+                        this.pageModel.showMessage('error', err);
+                    }
                 );
             }
         );
@@ -211,28 +238,42 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         );
     }
 
-    submit(sortId:string, concId:string):void {
+    submitQuery(sortId:string, concId:string):Observable<AjaxConcResponse> {
         const args = this.createSubmitArgs(sortId, concId);
-        const url = this.pageModel.createActionUrl('mlsortx', args.items());
-        window.location.href = url;
+        return this.pageModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
+            this.pageModel.createActionUrl(
+                'mlsortx',
+                [
+                    ['format', 'json'],
+                    ['q', '~' + concId]
+                ]
+            ),
+            args,
+            {
+                contentType: 'application/json'
+            }
+        );
     }
 
-    private createSubmitArgs(sortId:string, concId:string):MultiDict<ConcSortServerArgs> {
-        const args = this.pageModel.exportConcArgs() as MultiDict<ConcSortServerArgs>;
-        args.set('q', '~' + concId);
+    private createSubmitArgs(sortId:string, concId:string):MLSortServerArgs {
+        const args:MLSortServerArgs = {
+            levels: [],
+            type:'mlSortQueryArgs',
+            ...this.pageModel.getConcArgs(),
+            q: '~' + concId
+        };
         for (let i = 0; i < this.state.sortlevelValues[sortId]; i += 1) {
-            args.replace('sortlevel', [String(this.state.sortlevelValues[sortId])]);
-            args.replace(`ml${i+1}attr`, [this.state.mlxattrValues[sortId][i]]);
-            args.replace(`ml${i+1}icase`, [this.state.mlxicaseValues[sortId][i]]);
-            args.replace(`ml${i+1}bward`, [this.state.mlxbwardValues[sortId][i]]);
-            args.replace(`ml${i+1}ctx`, [MultiLevelConcSortModel.encodeCtxValue(this.state.ctxIndexValues[sortId][i],
-                                         this.state.ctxAlignValues[sortId][i])]);
+            args.levels.push({
+                sattr: this.state.mlxattrValues[sortId][i],
+                sbward: this.state.mlxbwardValues[sortId][i],
+                sicase: this.state.mlxicaseValues[sortId][i],
+                ctx: MultiLevelConcSortModel.encodeCtxValue(this.state.ctxIndexValues[sortId][i],
+                    this.state.ctxAlignValues[sortId][i]),
+                spos: null // TODO
+            });
         }
         return args;
-    }
-
-    getSubmitUrl(sortId:string, concId:string):string {
-        return this.pageModel.createActionUrl('mlsortx', this.createSubmitArgs(sortId, concId).items());
     }
 
     /**

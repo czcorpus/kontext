@@ -40,7 +40,6 @@ import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
 import { QueryContextArgs } from '../common';
 import { ConcSortModel } from '../sort/single';
 import { MultiLevelConcSortModel } from '../sort/multi';
-import { ISubmitableConcSortModel } from '../sort/common';
 
 
 /*
@@ -443,7 +442,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 tap(
                     (q) => {
                         // !!! 'q' must be cleared as it contains current encoded query
-                        this.pageModel.replaceConcArg('q', q);
+                        this.pageModel.updateConcPersistenceId(q);
                     }
                 ),
                 concatMap(
@@ -498,25 +497,16 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             return prepareFormData.pipe(
                 concatMap(
                     () => {
-                        let activeModel:ISubmitableConcSortModel;
+                        let activeModel:ConcSortModel|MultiLevelConcSortModel;
 
                         if (this.sortModel.isActiveActionValue(pipeOp.id)) {
-                            activeModel = this.sortModel;
+                            return this.sortModel.submitQuery(pipeOp.id, baseOnConcId);
 
                         } else if (this.mlConcSortModel.isActiveActionValue(pipeOp.id)) {
-                            activeModel = this.mlConcSortModel;
-                        }
-                        if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<AjaxConcResponse>(
-                                HTTP.Method.GET,
-                                activeModel.getSubmitUrl(pipeOp.id, baseOnConcId),
-                                {format: 'json'}
-                            );
+                            return this.mlConcSortModel.submitQuery(pipeOp.id, baseOnConcId);
 
                         } else {
-                            return rxOf(null).pipe(
-                                tap(() => activeModel.submit(pipeOp.id, baseOnConcId))
-                            );
+                            throw new Error('No sorting model set as active.');
                         }
                     }
                 )
