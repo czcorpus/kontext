@@ -55,6 +55,8 @@ export interface BlockLine {
 
     is_interval:number;
 
+    widget:string;
+
     label:string;
 
     name:string;
@@ -145,6 +147,7 @@ export function importInitialData(data:InitialData,
                     label: attrItem.label,
                     isNumeric: attrItem.numeric,
                     isInterval: !!attrItem.is_interval,
+                    widget: attrItem.widget,
                     attrInfo: {
                         doc: attrItem.attr_doc,
                         docLabel: attrItem.attr_doc_label
@@ -176,6 +179,7 @@ export function importInitialData(data:InitialData,
                     label: attrItem.label,
                     isNumeric: attrItem.numeric,
                     isInterval: !!attrItem.is_interval,
+                    widget: attrItem.widget,
                     attrInfo: {
                         doc: attrItem.attr_doc,
                         docLabel: attrItem.attr_doc_label

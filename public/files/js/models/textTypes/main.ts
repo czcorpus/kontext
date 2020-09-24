@@ -82,6 +82,8 @@ export interface TextTypesModelState {
 
     rangeModeStatus:{[key:string]:boolean};
 
+    widgets:{[key:string]:string};
+
     intervalChars:Array<string>;
 
     metaInfoHelpVisible:boolean;
@@ -139,6 +141,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 rangeModeStatus: pipe(
                     attributes,
                     List.map(item => tuple(item.name, item.isInterval ? true : false)),
+                    Dict.fromEntries()
+                ),
+                widgets: pipe(
+                    attributes,
+                    List.map(item => tuple(item.name, item.widget)),
                     Dict.fromEntries()
                 ),
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),

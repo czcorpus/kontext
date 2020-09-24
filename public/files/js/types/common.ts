@@ -678,6 +678,7 @@ export namespace TextTypes {
     export interface FullAttributeSelection {
         attrInfo:TextTypes.AttrInfo;
         isInterval:boolean;
+        widget:string;
         isNumeric:boolean;
         label:string;
         name:string;
@@ -688,6 +689,7 @@ export namespace TextTypes {
     export interface TextInputAttributeSelection {
         attrInfo:AttrInfo;
         isInterval:boolean;
+        widget:string;
         isNumeric:boolean;
         label:string;
         name:string;

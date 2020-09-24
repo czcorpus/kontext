@@ -179,7 +179,8 @@ class TextTypeCollector(object):
         a list of tuples (struct, condition); strings are encoded to the encoding current
         corpus uses!
         """
-        scas = [(a, self._access_fn(self._src_obj, a)) for a in self._attr_producer_fn(self._src_obj)]
+        scas = [(a, self._access_fn(self._src_obj, a))
+                for a in self._attr_producer_fn(self._src_obj)]
         structs = {}
         for sa, v in scas:
             if type(v) in (str, str) and '|' in v:
@@ -324,7 +325,10 @@ class TextTypes(object):
             self._plugin_api.user_lang, self._corpname)['metadata']
         for line in tt:
             for item in line.get('Line', ()):
-                item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))
+                label, widget = next((x for x in metadata.get('interval_attrs')
+                                      if x[0] == item['label']), (None, None))
+                item['is_interval'] = int(bool(label))
+                item['widget'] = widget
 
 
 def get_tt(corp, plugin_api):

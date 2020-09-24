@@ -323,9 +323,21 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         hasExtendedInfo:boolean;
         hasSelectedItems:boolean;
         rangeIsOn:boolean;
+        widget:string;
         isBusy:boolean;
 
     }> = (props) => {
+
+        const renderRangeSelector = () => {
+            switch (props.widget) {
+                case 'year':
+                    return <RangeSelector attrName={props.attrObj.name} hasSelectedValues={props.hasSelectedItems} />
+                case 'days':
+                    return <div>Days not implemented yet</div>
+                default:
+                    return <div>Unknown widget: {props.widget}</div>
+            }
+        }
 
         const renderListOfCheckBoxes = () => {
             return (
@@ -362,7 +374,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         return (
             <div>
                 {
-                    props.rangeIsOn ? <RangeSelector attrName={props.attrObj.name} hasSelectedValues={props.hasSelectedItems} /> :
+                    props.rangeIsOn ?
+                        renderRangeSelector() :
                         renderListOfCheckBoxes()
                 }
             </div>
@@ -607,6 +620,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const ValueSelector:React.SFC<{
         attrObj:AnyTTSelection;
         rangeIsOn:boolean;
+        widget:string;
         isLocked:boolean;
         hasExtendedInfo:boolean;
         textInputPlaceholder:string;
@@ -617,6 +631,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             <div className="ValueSelector">
             {TTSelOps.containsFullList(props.attrObj) || props.rangeIsOn
                 ? <FullListContainer attrObj={props.attrObj} rangeIsOn={props.rangeIsOn}
+                        widget={props.widget}
                         hasExtendedInfo={props.hasExtendedInfo}
                         isBusy={props.isBusy}
                         hasSelectedItems={TTSelOps.hasUserChanges(props.attrObj)} />
@@ -654,6 +669,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TableTextTypeAttribute:React.SFC<{
         attrObj:AnyTTSelection;
         rangeIsOn:boolean;
+        widget:string;
         isMinimized:boolean;
         metaInfoHelpVisible:boolean;
         hasExtendedInfo:boolean;
@@ -822,6 +838,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <div className={props.rangeIsOn ? 'range' : 'data-rows'}>
                             <ValueSelector attrObj={props.attrObj}
                                     rangeIsOn={props.rangeIsOn}
+                                    widget={props.widget}
                                     isLocked={TTSelOps.isLocked(props.attrObj)}
                                     hasExtendedInfo={props.hasExtendedInfo}
                                     textInputPlaceholder={props.textInputPlaceholder}
@@ -890,6 +907,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 <TableTextTypeAttribute
                                         attrObj={attrObj}
                                         rangeIsOn={props.rangeModeStatus[attrObj.name]}
+                                        widget={props.widgets[attrObj.name]}
                                         isMinimized={props.minimizedBoxes[attrObj.name]}
                                         metaInfoHelpVisible={props.metaInfoHelpVisible}
                                         hasExtendedInfo={props.bibIdAttr === attrObj.name}
