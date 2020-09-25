@@ -51,7 +51,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <THSortableColumn /> -------------------
 
-    const THSortableColumn:React.SFC<{
+    const THSortableColumn:React.FC<{
         sortKey:string;
         isActive:boolean;
         str:string;
@@ -94,7 +94,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
     /**
      *
      */
-    const ResultRowPosFilter:React.SFC<{
+    const ResultRowPosFilter:React.FC<{
         word:string;
         usesStructAttr:boolean;
 
@@ -120,7 +120,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <TRResultRow /> -------------------
 
-    const TRResultRow:React.SFC<{
+    const TRResultRow:React.FC<{
         idx:number;
         str:string;
         usesStructAttr:boolean;
@@ -150,7 +150,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <PaginatorTextInput /> -------------------
 
-    const PaginatorTextInput:React.SFC<{
+    const PaginatorTextInput:React.FC<{
         modelIsBusy:boolean;
         value:string;
         hint:string;
@@ -180,7 +180,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <PaginatorLeftArrows /> -------------------
 
-    const PaginatorLeftArrows:React.SFC<{}> = (props) => {
+    const PaginatorLeftArrows:React.FC<{}> = (props) => {
 
         const handlePrevPageClick = () => {
             dispatcher.dispatch<Actions.WordlistResultPrevPage>({
@@ -209,7 +209,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <PaginatorRightArrows /> -------------------
 
-    const PaginatorRightArrows:React.SFC<{}> = (props) => {
+    const PaginatorRightArrows:React.FC<{}> = (props) => {
 
         const handleNextPageClick = () => {
             dispatcher.dispatch<Actions.WordlistResultNextPage>({
@@ -239,7 +239,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <Paginator /> -------------------
 
-    const Paginator:React.SFC<{
+    const Paginator:React.FC<{
         currPage:number;
         currPageInput:string;
         modelIsBusy:boolean;
@@ -276,7 +276,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <CalculationStatus /> -------------------
 
-    const CalculationStatus:React.SFC<{
+    const CalculationStatus:React.FC<{
         progressPercent:number;
         isError:boolean;
 
@@ -319,7 +319,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         wlpat:string;
     }
 
-    const DataTable:React.SFC<WordlistResultModelState & DataTableProps> = (props) => {
+    const DataTable:React.FC<WordlistResultModelState & DataTableProps> = (props) => {
         if (props.isUnfinished) {
             return (
                 <div className="WordlistResult">
@@ -369,7 +369,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <WordlistResult /> -------------------
 
-    const WordlistResult:React.SFC<WordlistFormState> = (props) => {
+    const WordlistResult:React.FC<WordlistFormState> = (props) => {
     return<div className="WordlistResult">
             <BoundDataTable wlpat={props.wlpat} wlsort={props.wlsort} usesStructAttr={props.usesStructAttr} />
             <wordlistSaveViews.WordlistSaveForm />

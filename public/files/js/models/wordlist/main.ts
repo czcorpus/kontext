@@ -23,13 +23,14 @@ import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
 import { List, HTTP, tuple } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
+import { Kontext, ViewOptions } from '../../types/common';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { WordlistFormModel } from './form';
 import { MultiDict } from '../../multidict';
 import { ActionName, Actions } from './actions';
-import { ResultItem, IndexedResultItem, HeadingItem, ResultData } from './common';
+import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common';
+import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 
 
 
@@ -147,16 +148,10 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     otherAction => {
                         const formArgs = (otherAction as Actions.WordlistFormSubmitReady
                             ).payload.args;
-                        const args = new MultiDict();
-                        args.set('corpname', formArgs.head('corpname'));
-                        args.set('usesubcorp', formArgs.head('usesubcorp'));
-                        args.set('default_attr', formArgs.head('wlattr'));
-                        args.set('qmcase', '1');
-                        args.set('qtype', 'advanced');
-                        args.set('cql', this.createPQuery(
-                            action.payload.word, formArgs.head('wlattr')));
-                        window.location.href = this.layoutModel.createActionUrl(
-                            'query_submit', args.items());
+
+                        const submitArgs = this.createConcSubmitArgs(
+                            state, formArgs, action.payload.word);
+
                     },
                     err => {
                         this.layoutModel.showMessage('error', err);
@@ -311,14 +306,14 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
 
     private fetchLastPage(
         state:WordlistResultModelState,
-        formSubmitArgs:MultiDict
+        formSubmitArgs:WordlistSubmitArgs
     ):Observable<[Array<IndexedResultItem>, number, boolean, number]> {
         return (() => {
             if (state.numItems === null) {
                 return this.layoutModel.ajax$<WlSizeAjaxResponse>(
                     HTTP.Method.GET,
                     this.layoutModel.createActionUrl('wordlist/ajax_get_wordlist_size'),
-                    formSubmitArgs
+                    new MultiDict(WordlistFormModel.encodeSubmitArgs(formSubmitArgs))
                 );
 
             } else {
@@ -331,25 +326,48 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             map(
                 data => tuple(
                     data.size,
-                    Math.ceil(state.numItems / state.pageSize)
+                    Math.ceil(data.size / state.pageSize)
                 )
             ),
             concatMap(
-                ([size, numPages]) => {
-                    return this.pageLoad(state, numPages).pipe(
-                        map(
-                            ([data, pageNum, isLast]) => tuple(
-                                data, pageNum, isLast, size
-                            )
+                ([size, numPages]) => this.pageLoadUsingFormArgs(state, numPages, formSubmitArgs).pipe(
+                    map(
+                        ([data, pageNum, isLast]) => tuple(
+                            data, pageNum, isLast, size
                         )
                     )
-                }
+                )
             )
         );
     }
 
     private createPQuery(s:string, wlattr:string):string {
         return `[${wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
+    }
+
+    private pageLoadUsingFormArgs(
+        state:WordlistResultModelState,
+        newPage:number,
+        formARgs:WordlistSubmitArgs,
+        skipHistory=false
+    ):Observable<[Array<IndexedResultItem>, number, boolean]> {
+        return this.loadData(state, newPage, formARgs).pipe(
+            tap(
+                ([pageNum,]) => {
+                    if (!skipHistory) {
+                        this.layoutModel.getHistory().pushState(
+                            'wordlist/result',
+                            new MultiDict(
+                                state.reloadArgs.concat([['wlpage', state.currPage.toString()]])),
+                            {
+                                pagination: true,
+                                page: pageNum
+                            }
+                        );
+                    }
+                }
+            )
+        );
     }
 
     private pageLoad(
@@ -369,22 +387,12 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                         throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
                     }
                     const args = (action as Actions.WordlistFormSubmitReady).payload.args;
-                    return this.loadData(state, newPage, args);
-                }
-            ),
-            tap(
-                ([pageNum,]) => {
-                    if (!skipHistory) {
-                        this.layoutModel.getHistory().pushState(
-                            'wordlist/result',
-                            new MultiDict(
-                                state.reloadArgs.concat([['wlpage', state.currPage.toString()]])),
-                            {
-                                pagination: true,
-                                page: pageNum
-                            }
-                        );
-                    }
+                    return this.pageLoadUsingFormArgs(
+                        state,
+                        newPage,
+                        args,
+                        skipHistory
+                    );
                 }
             )
         );
@@ -420,13 +428,13 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
     private loadData(
         state:WordlistResultModelState,
         newPage:number,
-        formModelSubmitArgs:MultiDict
+        formModelSubmitArgs:WordlistSubmitArgs
     ):Observable<[Array<IndexedResultItem>, number, boolean]> {
-        formModelSubmitArgs.set('wlpage', newPage);
+        formModelSubmitArgs.wlpage = newPage;
         return this.layoutModel.ajax$<DataAjaxResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('wordlist/result', [['format', 'json']]),
-            formModelSubmitArgs
+            new MultiDict(WordlistFormModel.encodeSubmitArgs(formModelSubmitArgs))
 
         ).pipe(
             concatMap(
@@ -442,5 +450,49 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 }
             )
         );
+    }
+
+    private createConcSubmitArgs(state:WordlistResultModelState, formSubmitArgs:WordlistSubmitArgs, word:string):ConcQueryArgs {
+
+        const primaryCorpus = formSubmitArgs.corpname;
+        const currArgs = this.layoutModel.exportConcArgs();
+        const args:ConcQueryArgs = {
+            type:'concQueryArgs',
+            maincorp: primaryCorpus,
+            usesubcorp: formSubmitArgs.usesubcorp || null,
+            viewmode: 'kwic',
+            pagesize: parseInt(currArgs.head('pagesize')),
+            attrs: currArgs.getList('attrs'),
+            attr_vmode: currArgs.head('attr_vmode') as ViewOptions.AttrViewMode,
+            base_viewattr: currArgs.head('base_viewattr'),
+            ctxattrs: currArgs.getList('ctxattrs'),
+            structs: currArgs.getList('structs'),
+            refs: currArgs.getList('refs'),
+            fromp: parseInt(currArgs.head('fromp') || '0'),
+            shuffle: 0,
+            queries: [
+                {
+                    corpname: formSubmitArgs.corpname,
+                    query: this.createPQuery(word, formSubmitArgs.wlattr),
+                    qtype: 'advanced',
+                    qmcase: true,
+                    pcq_pos_neg: 'pos',
+                    include_empty: false,
+                    default_attr: formSubmitArgs.wlattr
+                }
+            ],
+            text_types: {},
+            context: {
+                fc_lemword_window_type: null,
+                fc_lemword_wsize: 0,
+                fc_lemword: null,
+                fc_lemword_type: 'none',
+                fc_pos_window_type: 'both',
+                fc_pos_wsize: 0,
+                fc_pos: [],
+                fc_pos_type: 'none'
+            }
+        };
+        return args;
     }
 }

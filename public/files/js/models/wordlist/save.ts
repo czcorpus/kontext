@@ -27,6 +27,8 @@ import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions, ActionName } from '../wordlist/actions';
 import { MultiDict } from '../../multidict';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { WordlistSubmitArgs } from './common';
+import { Dict, List } from 'cnc-tskit';
 
 
 export interface WordlistSaveModelArgs {
@@ -202,7 +204,16 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
         }
     }
 
-    private submit(state:WordlistSaveModelState, submitArgs:MultiDict):Observable<{}> {
+    private submit(state:WordlistSaveModelState, wlArgs:WordlistSubmitArgs):Observable<{}> {
+        const submitArgs = new MultiDict<
+            WordlistSubmitArgs & {
+                format:string;
+                saveformat:string;
+                from_line:string;
+                to_line:string;
+                colheaders:string;
+                heading:string;
+        }>(Dict.toEntries(wlArgs));
         submitArgs.remove('format');
         submitArgs.set('saveformat', state.saveFormat);
         submitArgs.set('from_line', '1');

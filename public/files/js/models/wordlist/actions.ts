@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { MultiDict } from '../../multidict';
-import { IndexedResultItem, WlTypes, FileTarget } from './common';
+import { IndexedResultItem, WlTypes, FileTarget, WordlistSubmitArgs } from './common';
 import { SaveData } from '../../app/navigation';
 import { FilterEditorData } from './form';
 
@@ -80,7 +80,7 @@ export namespace Actions {
     };
 
     export interface WordlistFormSubmitReady extends Action<{
-        args:MultiDict; // TODO not very type safe here
+        args:WordlistSubmitArgs;
     }> {
         name:ActionName.WordlistFormSubmitReady;
     }

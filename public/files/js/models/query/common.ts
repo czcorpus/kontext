@@ -36,15 +36,19 @@ import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../o
 
 export type QueryType = 'simple'|'advanced';
 
+export type CtxWindowType = 'left'|'both'|'right';
+
+export type CtxLemwordType = 'any'|'all'|'none';
+
 export interface QueryContextArgs {
-    fc_lemword_window_type:string;
+    fc_lemword_window_type:CtxWindowType;
     fc_lemword_wsize:number;
     fc_lemword:string;
-    fc_lemword_type:string;
-    fc_pos_window_type:string;
+    fc_lemword_type:CtxLemwordType;
+    fc_pos_window_type:CtxWindowType;
     fc_pos_wsize:number;
     fc_pos:string[];
-    fc_pos_type:string;
+    fc_pos_type:CtxLemwordType;
 }
 
 export interface ConcQueryArgs {
