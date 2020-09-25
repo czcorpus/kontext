@@ -20,19 +20,21 @@
 
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions, ActionName } from './actions';
-import { QueryContextArgs } from './common';
+import { CtxLemwordType, CtxWindowType, QueryContextArgs } from './common';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 
+
+
 export interface FormData {
-    fc_lemword_window_type:string;
+    fc_lemword_window_type:CtxWindowType;
     fc_lemword_wsize:string;
     fc_lemword:string;
-    fc_lemword_type:string;
-    fc_pos_window_type:string;
+    fc_lemword_type:CtxLemwordType;
+    fc_pos_window_type:CtxWindowType;
     fc_pos_wsize:string;
-    fc_pos:string[];
-    fc_pos_type:string;
+    fc_pos:Array<string>;
+    fc_pos_type:CtxLemwordType;
 }
 
 

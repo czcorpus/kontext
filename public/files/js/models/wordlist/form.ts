@@ -21,7 +21,7 @@
 import { Observable, Observer, of as rxOf } from 'rxjs';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { concatMap } from 'rxjs/operators';
-import { Dict, List, Ident, pipe } from 'cnc-tskit';
+import { Dict, List, Ident, pipe, tuple } from 'cnc-tskit';
 
 
 import { Kontext } from '../../types/common';
@@ -32,7 +32,7 @@ import { ActionName, Actions } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
-import { FileTarget, WlnumsTypes, WlTypes } from './common';
+import { FileTarget, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
 import { IUnregistrable } from '../common/common';
 
 
@@ -514,31 +514,38 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         }
     }
 
-    createSubmitArgs(state:WordlistFormState):MultiDict {
-        const ans = new MultiDict();
-        ans.set('corpname', state.corpusId);
-        if (state.currentSubcorpus) {
-            ans.set('usesubcorp', state.currentSubcorpus);
-        }
-        ans.set('wlattr', state.wlattr);
-        ans.set('wlpat', state.wlpat['normalize']()); // TODO ES2015 stuff here
-        ans.set('wlminfreq', state.wlminfreq.value);
-        ans.set('wlnums', state.wlnums);
-        ans.set('wltype', state.wltype);
-        ans.set('wlsort', state.wlsort);
-        if (state.wlwords.trim()) {
-            ans.set('wlwords', state.wlwords.trim());
-        }
-        if (state.blacklist.trim()) {
-            ans.set('blacklist', state.blacklist.trim());
-        }
-        ans.set('include_nonwords', state.includeNonwords ? '1' : '0');
-        if (state.wltype === WlTypes.MULTILEVEL) {
-            ans.set('wlposattr1', state.wlposattrs[0]);
-            ans.set('wlposattr2', state.wlposattrs[1]);
-            ans.set('wlposattr3', state.wlposattrs[2]);
-        }
-        return ans;
+    createSubmitArgs(state:WordlistFormState):WordlistSubmitArgs {
+        return {
+            corpname: state.corpusId,
+            usesubcorp: state.currentSubcorpus,
+            wlattr: state.wlattr,
+            wlpat: state.wlpat['normalize'](),
+            wlminfreq: parseInt(state.wlminfreq.value),
+            wlnums: state.wlnums,
+            wltype: state.wltype,
+            wlsort: state.wlsort,
+            wlwords: state.wlwords.trim(),
+            blacklist: state.blacklist.trim(),
+            include_nonwords: state.includeNonwords,
+            wlposattr1: state.wlposattrs[0],
+            wlposattr2: state.wlposattrs[1],
+            wlposattr3: state.wlposattrs[2],
+            wlpage: 1
+        };
+    }
+
+    static encodeSubmitArgs(args:WordlistSubmitArgs):Array<[string, string]> {
+        return pipe(
+            args,
+            Dict.toEntries(),
+            List.filter(([,v]) => v !== undefined && v !== null),
+            List.map(([k, v]) => {
+                if (typeof v === 'boolean') {
+                    return tuple(k, v ? '1' : '0')
+                }
+                return tuple(k, v + '')
+            })
+        )
     }
 
     private submit(state:WordlistFormState):void {
@@ -546,7 +553,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         const action = state.wltype === WlTypes.MULTILEVEL ? 'wordlist/struct_result' : 'wordlist/result';
         this.layoutModel.setLocationPost(
             this.layoutModel.createActionUrl(action),
-            args.items()
+            WordlistFormModel.encodeSubmitArgs(args)
         );
     }
 

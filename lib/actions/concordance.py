@@ -607,7 +607,7 @@ class Actions(Querying):
         self._attach_query_overview(ans)
         return ans
 
-    @exposed(template='view.html', page_model='view', mutates_conc=True)
+    @exposed(template='view.html', page_model='view', mutates_conc=True, http_method='POST')
     def quick_filter(self, request):
         """
         A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls pages).

@@ -18,6 +18,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+export enum WlnumsTypes {
+    FRQ = 'frq',
+    DOCF = 'docf',
+    ARF = 'arf'
+}
+
+export interface WordlistSubmitArgs {
+    corpname:string;
+    usesubcorp:string;
+    wlattr:string;
+    wlpat:string;
+    wlminfreq:number;
+    wlnums:WlnumsTypes;
+    wltype:string;
+    wlsort:string;
+    wlwords:string;
+    blacklist:string;
+    include_nonwords:boolean;
+    wlposattr1:string;
+    wlposattr2:string;
+    wlposattr3:string;
+    wlpage:number;
+}
+
 export type ResultData = {
     data:Array<ResultItem>,
     page:number;
@@ -38,13 +62,6 @@ export interface IndexedResultItem extends ResultItem {
 export interface HeadingItem {
     str:string;
     sortKey:string;
-}
-
-
-export enum WlnumsTypes {
-    FRQ = 'frq',
-    DOCF = 'docf',
-    ARF = 'arf'
 }
 
 export enum WlTypes {

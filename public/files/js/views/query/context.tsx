@@ -24,11 +24,11 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Kontext} from '../../types/common';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Kontext } from '../../types/common';
 import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
 import { Actions, ActionName } from '../../models/query/actions';
-import { pipe, List } from 'cnc-tskit';
+import { CtxLemwordType, CtxWindowType } from '../../models/query/common';
 
 
 export interface SpecifyContextFormProps {
@@ -49,9 +49,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <AllAnyNoneSelector /> ---------------------
 
-    const AllAnyNoneSelector:React.SFC<{
+    const AllAnyNoneSelector:React.FC<{
         inputName:string;
-        value:string;
+        value:CtxLemwordType;
 
     }> = (props) => {
 
@@ -77,9 +77,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <TRWindowSelector /> ---------------------
 
-    const TRWindowSelector:React.SFC<{
+    const TRWindowSelector:React.FC<{
         namePrefix:string;
-        windowTypeSelector:string;
+        windowTypeSelector:CtxWindowType;
         windowSizeSelector:string;
         options:Array<number>;
 
@@ -123,9 +123,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <TRLemmaWindowSelector /> ---------------------
 
-    const TRLemmaWindowSelector:React.SFC<{
+    const TRLemmaWindowSelector:React.FC<{
         options:Array<number>;
-        fc_lemword_window_type:string;
+        fc_lemword_window_type:CtxWindowType;
         fc_lemword_wsize:string;
 
     }> = (props) => {
@@ -139,9 +139,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <TRPosWindowSelector /> ---------------------
 
-    const TRPosWindowSelector:React.SFC<{
+    const TRPosWindowSelector:React.FC<{
         options:Array<number>;
-        fc_pos_window_type:string;
+        fc_pos_window_type:CtxWindowType;
         fc_pos_wsize:string;
 
     }> = (props) => {
@@ -155,12 +155,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <LemmaFilter /> ---------------------
 
-    const LemmaFilter:React.SFC<{
+    const LemmaFilter:React.FC<{
         hasLemmaAttr:boolean;
         fc_lemword_wsize:string;
-        fc_lemword_type:string;
+        fc_lemword_type:CtxLemwordType;
         fc_lemword:string;
-        fc_lemword_window_type:string;
+        fc_lemword_window_type:CtxWindowType;
         lemmaWindowSizes:Array<number>;
 
     }> = (props) => {
@@ -204,13 +204,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <PoSFilter /> ---------------------
 
-    const PoSFilter:React.SFC<{
+    const PoSFilter:React.FC<{
         posWindowSizes:Array<number>;
-        fc_pos_window_type:string;
+        fc_pos_window_type:CtxWindowType;
         fc_pos_wsize:string;
         fc_pos:Array<string>;
         wPoSList:Array<{v:string; n:string}>;
-        fc_pos_type:string;
+        fc_pos_type:CtxLemwordType;
 
     }> = (props) => {
 
@@ -269,7 +269,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------------- <SpecifyContextForm /> ---------------------
 
-    const SpecifyContextForm:React.SFC<SpecifyContextFormProps & QueryContextModelState> = (props) => {
+    const SpecifyContextForm:React.FC<SpecifyContextFormProps & QueryContextModelState> = (props) => {
 
             return (
                 <div>
