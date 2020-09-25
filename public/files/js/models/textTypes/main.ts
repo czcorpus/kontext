@@ -210,10 +210,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ActionName.ToggleRangeMode,
             action => {
                 this.changeState(state => {
-                    this.setRangeMode(
-                        action.payload.attrName,
-                        !state.rangeModeStatus[action.payload.attrName]
-                    );
+                    state.rangeModeStatus[action.payload.attrName] =
+                            !state.rangeModeStatus[action.payload.attrName]
                 });
             }
         );
@@ -979,7 +977,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         );
     }
 
-    _applyRange(
+    private _applyRange(
         state:TextTypesModelState,
         attrName:string,
         fromVal:number,
@@ -1040,11 +1038,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         );
     }
 
-    getAttrSummary():{[key:string]:TextTypes.AttrSummary} {
-        return this.state.metaInfo;
-    }
-
-    setExtendedInfo(
+    private setExtendedInfo(
         state:TextTypesModelState,
         attrName:string,
         ident:string,
@@ -1058,21 +1052,4 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             throw new Error('Failed to find attribute ' + attrName);
         }
     }
-
-    setTextInputPlaceholder(s:string):void {
-        this.changeState(state => {
-            state.textInputPlaceholder = s;
-        });
-    }
-
-    getTextInputPlaceholder():string {
-        return this.state.textInputPlaceholder;
-    }
-
-    setRangeMode(attrName:string, rangeIsOn:boolean) {
-        this.changeState(state => {
-            state.rangeModeStatus[attrName] = rangeIsOn;
-        });
-    }
-
 }
