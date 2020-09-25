@@ -28,7 +28,7 @@ import { ExtendedInfo, TTSelOps } from '../models/textTypes/selectionOps';
 import { CoreViews } from '../types/coreViews';
 import { TextTypesModelState } from '../models/textTypes/main';
 import { Actions, ActionName } from '../models/textTypes/actions';
-import { AnyTTSelection } from '../models/textTypes/common';
+import { AnyTTSelection, WidgetView } from '../models/textTypes/common';
 
 
 export interface TextTypesPanelProps {
@@ -323,16 +323,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         hasExtendedInfo:boolean;
         hasSelectedItems:boolean;
         rangeIsOn:boolean;
-        widget:string;
+        widget:WidgetView;
         isBusy:boolean;
 
     }> = (props) => {
 
         const renderRangeSelector = () => {
             switch (props.widget) {
-                case 'year':
+                case 'years':
                     return <RangeSelector attrName={props.attrObj.name} hasSelectedValues={props.hasSelectedItems} />
                 case 'days':
+                    // TODO functionality
                     return <layoutViews.Calendar onClick={(year, month, day)=>null} />
                 default:
                     return <div>Unknown widget: {props.widget}</div>
@@ -620,7 +621,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const ValueSelector:React.SFC<{
         attrObj:AnyTTSelection;
         rangeIsOn:boolean;
-        widget:string;
+        widget:WidgetView;
         isLocked:boolean;
         hasExtendedInfo:boolean;
         textInputPlaceholder:string;
@@ -669,7 +670,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TableTextTypeAttribute:React.SFC<{
         attrObj:AnyTTSelection;
         rangeIsOn:boolean;
-        widget:string;
+        widget:WidgetView;
         isMinimized:boolean;
         metaInfoHelpVisible:boolean;
         hasExtendedInfo:boolean;
@@ -907,7 +908,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 <TableTextTypeAttribute
                                         attrObj={attrObj}
                                         rangeIsOn={props.rangeModeStatus[attrObj.name]}
-                                        widget={props.widgets[attrObj.name]}
+                                        widget={props.attributeWidgets[attrObj.name]}
                                         isMinimized={props.minimizedBoxes[attrObj.name]}
                                         metaInfoHelpVisible={props.metaInfoHelpVisible}
                                         hasExtendedInfo={props.bibIdAttr === attrObj.name}

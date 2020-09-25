@@ -32,6 +32,8 @@ export enum IntervalChar {
     LEFT, BOTH, RIGHT
 }
 
+export type WidgetView = 'years'|'days'
+
 export interface BlockLine {
 
 
@@ -55,7 +57,7 @@ export interface BlockLine {
 
     is_interval:number;
 
-    widget:string;
+    widget:WidgetView;
 
     label:string;
 

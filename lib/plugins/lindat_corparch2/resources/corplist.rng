@@ -174,7 +174,15 @@ A schema describing default_corparch and ucnk_corparch compatible corpus list.
                                     <optional>
                                         <element name="interval_attrs">
                                             <oneOrMore>
-                                                <element name="item"><text /></element>
+                                                <element name="item">
+                                                    <attribute name="widget">
+                                                        <choice>
+                                                            <value>years</value>
+                                                            <value>days</value>
+                                                        </choice>
+                                                    </attribute>
+                                                    <text />
+                                                </element>
                                             </oneOrMore>
                                         </element>
                                     </optional>

@@ -277,6 +277,7 @@ CREATE TABLE kontext_interval_attr (
     corpus_name VARCHAR(63) NOT NULL,
     interval_struct VARCHAR(63) NOT NULL,
     interval_attr VARCHAR(63) NOT NULL,
+    widget VARCHAR(31) NOT NULL,
     CONSTRAINT kontext_interval_attr_pkey PRIMARY KEY (corpus_name, interval_struct, interval_attr),
     CONSTRAINT kontext_interval_attr_interval_attr_fkey FOREIGN KEY (corpus_name, interval_struct, interval_attr) REFERENCES corpus_structattr(corpus_name, structure_name, name)
 ) ENGINE = INNODB CHARSET=utf8;
