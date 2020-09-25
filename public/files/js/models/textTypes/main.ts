@@ -80,9 +80,10 @@ export interface TextTypesModelState {
 
     hasSelectedItems:boolean;
 
-    rangeModeStatus:{[key:string]:boolean};
-
-    attributeWidgets:{[key:string]:WidgetView};
+    attributeWidgets:{[key:string]:{
+        widget:WidgetView;
+        active:boolean;
+    }};
 
     intervalChars:Array<string>;
 
@@ -138,15 +139,10 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 // user of this model.
                 autoCompleteSupport: false,
                 hasSelectedItems: false,
-                rangeModeStatus: pipe(
-                    attributes,
-                    List.map(item => tuple(item.name, item.isInterval ? true : false)),
-                    Dict.fromEntries()
-                ),
                 attributeWidgets: pipe(
                     attributes,
-                    List.map(item => tuple(item.name, item.widget)),
-                    Dict.fromEntries()
+                    List.map(item => tuple(item.name, {widget: item.widget, active: false})),
+                    Dict.fromEntries(),
                 ),
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),
                 metaInfoHelpVisible: false
@@ -210,8 +206,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ActionName.ToggleRangeMode,
             action => {
                 this.changeState(state => {
-                    state.rangeModeStatus[action.payload.attrName] =
-                            !state.rangeModeStatus[action.payload.attrName]
+                    state.attributeWidgets[action.payload.attrName].active =
+                            !state.attributeWidgets[action.payload.attrName].active
                 });
             }
         );
@@ -696,18 +692,19 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         const ans = {};
         this.state.attributes.forEach((attrSel:AnyTTSelection) => {
             if (TTSelOps.hasUserChanges(attrSel)) {
-                if (this.state.autoCompleteSupport) {
+                if (attrSel.type === 'text' && attrSel.widget === 'days') {
+                    ans[attrSel.name] = [attrSel.textFieldValue];
+
+                } else if (this.state.autoCompleteSupport) {
                     ans[attrSel.name !== this.state.bibLabelAttr ?
                         attrSel.name :
                         this.state.bibIdAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
 
-                } else {
-                    if (attrSel.type === 'text') {
-                        ans[attrSel.name] = [attrSel.textFieldValue];
+                } else if (attrSel.type === 'text') {
+                    ans[attrSel.name] = [attrSel.textFieldValue];
 
-                    } else {
-                        ans[attrSel.name] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
-                    }
+                } else {
+                    ans[attrSel.name] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
                 }
             }
         });
@@ -1011,7 +1008,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         );
 
                     } else {
-                        state.rangeModeStatus[attrName] = false;
+                        state.attributeWidgets[attrName].active = false;
                     }
                 }),
                 map(([,updatedSelection]) => updatedSelection)

@@ -32,7 +32,7 @@ export enum IntervalChar {
     LEFT, BOTH, RIGHT
 }
 
-export type WidgetView = 'years'|'days'
+export type WidgetView = 'years'|'days';
 
 export interface BlockLine {
 
