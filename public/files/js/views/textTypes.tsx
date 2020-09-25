@@ -28,7 +28,7 @@ import { ExtendedInfo, TTSelOps } from '../models/textTypes/selectionOps';
 import { CoreViews } from '../types/coreViews';
 import { TextTypesModelState } from '../models/textTypes/main';
 import { Actions, ActionName } from '../models/textTypes/actions';
-import { AnyTTSelection } from '../models/textTypes/common';
+import { AnyTTSelection, WidgetView } from '../models/textTypes/common';
 
 
 export interface TextTypesPanelProps {
@@ -323,9 +323,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         hasExtendedInfo:boolean;
         hasSelectedItems:boolean;
         rangeIsOn:boolean;
+        widget:WidgetView;
         isBusy:boolean;
 
     }> = (props) => {
+
+        const renderRangeSelector = () => {
+            switch (props.widget) {
+                case 'years':
+                    return <RangeSelector attrName={props.attrObj.name} hasSelectedValues={props.hasSelectedItems} />
+                case 'days':
+                    // TODO functionality
+                    return <layoutViews.Calendar onClick={(year, month, day)=>null} />
+                default:
+                    return <div>Unknown widget: {props.widget}</div>
+            }
+        }
 
         const renderListOfCheckBoxes = () => {
             return (
@@ -362,7 +375,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         return (
             <div>
                 {
-                    props.rangeIsOn ? <RangeSelector attrName={props.attrObj.name} hasSelectedValues={props.hasSelectedItems} /> :
+                    props.rangeIsOn ?
+                        renderRangeSelector() :
                         renderListOfCheckBoxes()
                 }
             </div>
@@ -607,6 +621,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const ValueSelector:React.SFC<{
         attrObj:AnyTTSelection;
         rangeIsOn:boolean;
+        widget:WidgetView;
         isLocked:boolean;
         hasExtendedInfo:boolean;
         textInputPlaceholder:string;
@@ -617,6 +632,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             <div className="ValueSelector">
             {TTSelOps.containsFullList(props.attrObj) || props.rangeIsOn
                 ? <FullListContainer attrObj={props.attrObj} rangeIsOn={props.rangeIsOn}
+                        widget={props.widget}
                         hasExtendedInfo={props.hasExtendedInfo}
                         isBusy={props.isBusy}
                         hasSelectedItems={TTSelOps.hasUserChanges(props.attrObj)} />
@@ -654,6 +670,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TableTextTypeAttribute:React.SFC<{
         attrObj:AnyTTSelection;
         rangeIsOn:boolean;
+        widget:WidgetView;
         isMinimized:boolean;
         metaInfoHelpVisible:boolean;
         hasExtendedInfo:boolean;
@@ -822,6 +839,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <div className={props.rangeIsOn ? 'range' : 'data-rows'}>
                             <ValueSelector attrObj={props.attrObj}
                                     rangeIsOn={props.rangeIsOn}
+                                    widget={props.widget}
                                     isLocked={TTSelOps.isLocked(props.attrObj)}
                                     hasExtendedInfo={props.hasExtendedInfo}
                                     textInputPlaceholder={props.textInputPlaceholder}
@@ -890,6 +908,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 <TableTextTypeAttribute
                                         attrObj={attrObj}
                                         rangeIsOn={props.rangeModeStatus[attrObj.name]}
+                                        widget={props.attributeWidgets[attrObj.name]}
                                         isMinimized={props.minimizedBoxes[attrObj.name]}
                                         metaInfoHelpVisible={props.metaInfoHelpVisible}
                                         hasExtendedInfo={props.bibIdAttr === attrObj.name}

@@ -419,10 +419,10 @@ class Backend(DatabaseBackend):
 
     def load_interval_attrs(self, corpus_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT interval_struct, interval_attr '
+        cursor.execute('SELECT interval_struct, interval_attr, widget '
                        'FROM kontext_interval_attr '
                        'WHERE corpus_name = %s', (corpus_id,))
-        return ['{0}.{1}'.format(r['interval_struct'], r['interval_attr']) for r in cursor.fetchall()]
+        return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) for r in cursor.fetchall()]
 
     def load_corpus_tagsets(self, corpus_id):
         cursor = self._db.cursor()

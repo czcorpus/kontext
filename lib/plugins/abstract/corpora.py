@@ -79,7 +79,7 @@ class CorpusMetadata(DictLike):
         self.sort_attrs: bool = False
         self.desc: Dict[str, Any] = {}
         self.keywords: List[Tuple[str, str]] = []
-        self.interval_attrs: List[str] = []
+        self.interval_attrs: List[Tuple[str, str]] = []
         self.group_duplicates: bool = False
         self.default_virt_keyboard: Optional[str] = None
 

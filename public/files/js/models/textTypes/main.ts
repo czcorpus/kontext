@@ -28,7 +28,7 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { IPluginApi } from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
 import { SelectedTextTypes, importInitialData, InitialData, SelectionFilterMap,
-    IntervalChar, AnyTTSelection} from './common';
+    IntervalChar, AnyTTSelection, WidgetView} from './common';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
@@ -81,6 +81,8 @@ export interface TextTypesModelState {
     hasSelectedItems:boolean;
 
     rangeModeStatus:{[key:string]:boolean};
+
+    attributeWidgets:{[key:string]:WidgetView};
 
     intervalChars:Array<string>;
 
@@ -139,6 +141,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 rangeModeStatus: pipe(
                     attributes,
                     List.map(item => tuple(item.name, item.isInterval ? true : false)),
+                    Dict.fromEntries()
+                ),
+                attributeWidgets: pipe(
+                    attributes,
+                    List.map(item => tuple(item.name, item.widget)),
                     Dict.fromEntries()
                 ),
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),

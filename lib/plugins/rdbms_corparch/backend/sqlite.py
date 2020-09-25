@@ -240,3 +240,10 @@ class Backend(DatabaseBackend):
         cursor.execute('SELECT pos_attr, feat_attr, tagset_type, tagset_name FROM kontext_corpus_taghelper '
                        'WHERE corpus_name = ?', (corpus_id,))
         return cursor.fetchall()
+
+    def load_interval_attrs(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT interval_struct, interval_attr, widget '
+                       'FROM kontext_interval_attr '
+                       'WHERE corpus_name = ?', (corpus_id,))
+        return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) for r in cursor.fetchall()]

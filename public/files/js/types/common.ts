@@ -29,6 +29,7 @@ import { GeneralViewOptionsModelState } from '../models/options/general';
 import { QueryType } from '../models/query/common';
 import { CorpusSwitchModel } from '../models/common/corpusSwitch';
 import { PluginInterfaces } from './plugins';
+import { WidgetView } from '../models/textTypes/common';
 
 /**
  *
@@ -678,6 +679,7 @@ export namespace TextTypes {
     export interface FullAttributeSelection {
         attrInfo:TextTypes.AttrInfo;
         isInterval:boolean;
+        widget:WidgetView;
         isNumeric:boolean;
         label:string;
         name:string;
@@ -688,6 +690,7 @@ export namespace TextTypes {
     export interface TextInputAttributeSelection {
         attrInfo:AttrInfo;
         isInterval:boolean;
+        widget:WidgetView;
         isNumeric:boolean;
         label:string;
         name:string;

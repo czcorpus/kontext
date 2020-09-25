@@ -32,6 +32,8 @@ export enum IntervalChar {
     LEFT, BOTH, RIGHT
 }
 
+export type WidgetView = 'years'|'days'
+
 export interface BlockLine {
 
 
@@ -54,6 +56,8 @@ export interface BlockLine {
     attr_doc_label:string;
 
     is_interval:number;
+
+    widget:WidgetView;
 
     label:string;
 
@@ -145,6 +149,7 @@ export function importInitialData(data:InitialData,
                     label: attrItem.label,
                     isNumeric: attrItem.numeric,
                     isInterval: !!attrItem.is_interval,
+                    widget: attrItem.widget,
                     attrInfo: {
                         doc: attrItem.attr_doc,
                         docLabel: attrItem.attr_doc_label
@@ -176,6 +181,7 @@ export function importInitialData(data:InitialData,
                     label: attrItem.label,
                     isNumeric: attrItem.numeric,
                     isInterval: !!attrItem.is_interval,
+                    widget: attrItem.widget,
                     attrInfo: {
                         doc: attrItem.attr_doc,
                         docLabel: attrItem.attr_doc_label
