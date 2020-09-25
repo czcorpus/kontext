@@ -71,11 +71,20 @@ export function init(
             }
         };
 
+        const handlePFilter = () => {
+            dispatcher.dispatch<Actions.FreqctApplyQuickFilter>({
+                name: ActionName.FreqctApplyQuickFilter,
+                payload: {
+                    url: props.data.pfilter
+                }
+            });
+        };
+
         return (
             <tr>
                 <td className="num">{props.idx}.</td>
                 <td>
-                    <a href={props.data.pfilter}>p</a>
+                    <a onClick={handlePFilter}>p</a>
                 </td>
                 <td>{props.data.val1}</td>
                 <td>{props.data.val2}</td>

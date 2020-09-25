@@ -21,7 +21,7 @@
 import { Observable, of as rxOf } from 'rxjs';
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
-import { List, HTTP, tuple } from 'cnc-tskit';
+import { List, HTTP, tuple, pipe, Dict } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { validateGzNumber } from '../base';
@@ -30,7 +30,8 @@ import { WordlistFormModel } from './form';
 import { MultiDict } from '../../multidict';
 import { ActionName, Actions } from './actions';
 import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common';
-import { ConcQueryArgs, QueryContextArgs } from '../query/common';
+import { ConcQueryArgs } from '../query/common';
+import { ConcQueryResponse } from '../concordance/common';
 
 
 
@@ -102,12 +103,9 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
 
     private readonly layoutModel:PageModel;
 
-    private readonly formModel:WordlistFormModel;
-
     constructor(
         dispatcher:IActionDispatcher,
         layoutModel:PageModel,
-        formModel:WordlistFormModel,
         data:ResultData,
         headings:Array<HeadingItem>,
         reloadArgs:Kontext.ListOfPairs,
@@ -131,7 +129,6 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
         this.layoutModel = layoutModel;
-        this.formModel = formModel;
 
 
         this.addActionHandler<Actions.WordlistResultViewConc>(
@@ -144,19 +141,39 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     }
                     return {};
 
-                }).subscribe(
-                    otherAction => {
-                        const formArgs = (otherAction as Actions.WordlistFormSubmitReady
-                            ).payload.args;
-
-                        const submitArgs = this.createConcSubmitArgs(
-                            state, formArgs, action.payload.word);
+                }).pipe(
+                    concatMap(
+                        otherAction => {
+                            const formArgs = (otherAction as Actions.WordlistFormSubmitReady
+                                ).payload.args;
+                            return this.layoutModel.ajax$<ConcQueryResponse>(
+                                HTTP.Method.POST,
+                                this.layoutModel.createActionUrl(
+                                    'query_submit', [tuple('format', 'json')]),
+                                    this.createConcSubmitArgs(state, formArgs, action.payload.word),
+                                {
+                                    contentType: 'application/json'
+                                }
+                            );
+                        }
+                    )
+                ).subscribe(
+                    (data:ConcQueryResponse) => {
+                        window.location.href = this.layoutModel.createActionUrl(
+                            'view', [
+                                ['q', '~' + data.conc_persistence_op_id],
+                                ...pipe(
+                                    data.conc_args,
+                                    Dict.toEntries()
+                                )
+                            ]
+                        );
 
                     },
                     err => {
                         this.layoutModel.showMessage('error', err);
                     }
-                )
+                );
             }
         );
 

@@ -280,6 +280,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 })
             }
         );
+
+        this.addActionHandler<Actions.ResultApplyQuickFilter>(
+            ActionName.ResultApplyQuickFilter,
+            null,
+            (state, action, dispatch) => {
+                this.pageModel.setLocationPost(action.payload.url, []);
+            }
+        );
     }
 
     private pushStateToHistory(state:FreqDataRowsModelState):void {

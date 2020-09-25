@@ -217,7 +217,6 @@ export class WordlistPage {
             const resultModel = new WordlistResultModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
-                formModel,
                 {
                     data: this.layoutModel.getConf<Array<ResultItem>>('Data'),
                     page: this.layoutModel.getConf<number>('PageNum'),

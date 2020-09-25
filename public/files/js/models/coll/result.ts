@@ -240,7 +240,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         const submitArgs = this.layoutModel.exportConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
         submitArgs.remove('q2');
         args.forEach(item => submitArgs.add(item[0], item[1]));
-        window.location.href = this.layoutModel.createActionUrl('quick_filter', submitArgs.items());
+        this.layoutModel.setLocationPost(this.layoutModel.createActionUrl('quick_filter', submitArgs.items()), []);
     }
 
     private processDataReload(state:CollResultModelState, dispatch:SEDispatcher):void {
