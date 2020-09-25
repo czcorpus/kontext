@@ -35,6 +35,7 @@ export enum ActionName {
     ResultSetCurrentPage = 'FREQ_RESULT_SET_CURRENT_PAGE',
     ResultCloseSaveForm = 'FREQ_RESULT_CLOSE_SAVE_FORM',
     ResultPrepareSubmitArgsDone = 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE',
+    ResultApplyQuickFilter = 'FREQ_RESULT_APPLY_QUICK_FILTER',
     SaveFormSetFormat = 'FREQ_SAVE_FORM_SET_FORMAT',
     SaveFormSetFromLine = 'FREQ_SAVE_FORM_SET_FROM_LINE',
     SaveFormSetToLine = 'FREQ_SAVE_FORM_SET_TO_LINE',
@@ -71,7 +72,8 @@ export enum ActionName {
     FreqctSetHighlightedGroup = 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
     FreqctSortFlatList = 'FREQ_CT_SORT_FLAT_LIST',
     FreqctHighlight2DCoord = 'FREQ_CT_HIGHLIGHT_2D_COORD',
-    FreqctReset2DCoordHighlight = 'FREQ_CT_RESET_2D_COORD_HIGHLIGHT'
+    FreqctReset2DCoordHighlight = 'FREQ_CT_RESET_2D_COORD_HIGHLIGHT',
+    FreqctApplyQuickFilter = 'FREQ_CT_APPLY_QUICK_FILTER',
 
 }
 
@@ -117,6 +119,12 @@ export namespace Actions {
         data:MultiDict;
     }> {
         name: ActionName.ResultPrepareSubmitArgsDone;
+    }
+
+    export interface ResultApplyQuickFilter extends Action<{
+        url:string;
+    }> {
+        name: ActionName.ResultApplyQuickFilter;
     }
 
     export interface SaveFormSetFormat extends Action<{
@@ -341,4 +349,11 @@ export namespace Actions {
     }> {
         name: ActionName.FreqctReset2DCoordHighlight;
     }
+
+    export interface FreqctApplyQuickFilter extends Action<{
+        url:string;
+    }> {
+        name: ActionName.FreqctApplyQuickFilter;
+    }
+
 }

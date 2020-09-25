@@ -475,56 +475,58 @@ export function init(
         highlighted:boolean;
     }
 
-    class TbodyCellAttrVals extends React.Component<TbodyCellAttrValsProps, TbodyCellAttrValsState> {
+    const TbodyCellAttrVals:React.FC<TbodyCellAttrValsProps> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleMouseOver = this._handleMouseOver.bind(this);
-            this._handleMouseOut = this._handleMouseOut.bind(this);
-            this.state = {highlighted: false};
-        }
+        const [highlighted, setHighlighted] = React.useState(false);
 
-        _handleMouseOver() {
-            this.setState({highlighted: true});
-        }
+        const handleMouseOver = () => {
+            setHighlighted(true);
+        };
 
-        _handleMouseOut() {
-            this.setState({highlighted: false});
-        }
+        const handleMouseOut = () => {
+            setHighlighted(false);
+        };
 
-        render() {
-            return (
-                <tbody>
-                    <tr>
-                        <th>
-                            {this.props.attr1}
-                        </th>
-                        <td colSpan={2}>
-                            <input className={this.state.highlighted ? 'highlighted' : null}
-                                    type="text" readOnly value={this.props.label1} />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            {this.props.attr2}
-                        </th>
-                        <td colSpan={2}>
-                            <input className={this.state.highlighted ? 'highlighted' : null}
-                                    type="text" readOnly value={this.props.label2} />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th />
-                        <td colSpan={2}>
-                            <a className="conc" href={this.props.pfilter}
-                                    onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
-                                {he.translate('freq__ct_pfilter_btn_label')}
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            );
-        }
+        const handlePFilter = () => {
+            dispatcher.dispatch<Actions.FreqctApplyQuickFilter>({
+                name: ActionName.FreqctApplyQuickFilter,
+                payload: {
+                    url: props.pfilter
+                }
+            });
+        };
+
+        return (
+            <tbody>
+                <tr>
+                    <th>
+                        {props.attr1}
+                    </th>
+                    <td colSpan={2}>
+                        <input className={highlighted ? 'highlighted' : null}
+                                type="text" readOnly value={props.label1} />
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        {props.attr2}
+                    </th>
+                    <td colSpan={2}>
+                        <input className={highlighted ? 'highlighted' : null}
+                                type="text" readOnly value={props.label2} />
+                    </td>
+                </tr>
+                <tr>
+                    <th />
+                    <td colSpan={2}>
+                        <a className="conc" onClick={handlePFilter}
+                                onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>
+                            {he.translate('freq__ct_pfilter_btn_label')}
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        );
     }
 
     /**

@@ -338,7 +338,14 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
                     state.highlightedCoord = null;
                 });
             }
-        )
+        );
+
+        this.addActionHandler<Actions.FreqctApplyQuickFilter>(
+            ActionName.FreqctApplyQuickFilter,
+            action => {
+                this.pageModel.setLocationPost(action.payload.url, []);
+            }
+        );
     }
 
     private pushStateToHistory():void {

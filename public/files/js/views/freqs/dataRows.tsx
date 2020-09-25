@@ -33,7 +33,7 @@ interface DataTableProps {
 
 
 interface ExportedComponents {
-    DataTable:React.SFC<DataTableProps>;
+    DataTable:React.FC<DataTableProps>;
 }
 
 export function init(
@@ -48,16 +48,34 @@ export function init(
         nfilter:string;
     }
 
-    const DataRowPNFilter:React.SFC<DataRowPNFilterProps> = (props) => {
+    const DataRowPNFilter:React.FC<DataRowPNFilterProps> = (props) => {
+
+        const handlePFilter = () => {
+            dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
+                name: ActionName.ResultApplyQuickFilter,
+                payload: {
+                    url: props.pfilter
+                }
+            });
+        };
+
+        const handleNFilter = () => {
+            dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
+                name: ActionName.ResultApplyQuickFilter,
+                payload: {
+                    url: props.nfilter
+                }
+            });
+        };
 
         if (props.pfilter || props.nfilter) {
             return (
                 <td>
-                    {props.pfilter ? <a href={props.pfilter}
+                    {props.pfilter ? <a onClick={handlePFilter}
                                 title={he.translate('global__pnfilter_label_p')}>p</a> :
                             <span title={he.translate('freq__neg_filter_disabled')}>p</span>}
                     {'\u00a0/\u00a0'}
-                    {props.nfilter ? <a href={props.nfilter}
+                    {props.nfilter ? <a onClick={handleNFilter}
                                 title={he.translate('global__pnfilter_label_n')}>n</a> :
                             <span title={he.translate('freq__neg_filter_disabled')}>n</span>}
                 </td>
@@ -74,7 +92,7 @@ export function init(
         data:ResultItem;
     }
 
-    const DataRow:React.SFC<DataRowProps> = (props) => {
+    const DataRow:React.FC<DataRowProps> = (props) => {
 
         return (
             <tr>
@@ -96,7 +114,7 @@ export function init(
         data:ResultItem;
     }
 
-    const DataRowNoRel:React.SFC<DataRowNoRelProps> = (props) => {
+    const DataRowNoRel:React.FC<DataRowNoRelProps> = (props) => {
 
         return (
             <tr>
@@ -120,7 +138,7 @@ export function init(
         sortColumn:string;
     }
 
-    const TableColHead:React.SFC<TableColHeadProps> = (props) => {
+    const TableColHead:React.FC<TableColHeadProps> = (props) => {
 
         const handleClick = () => {
             dispatcher.dispatch<Actions.ResultSortByColumn>({
@@ -160,7 +178,7 @@ export function init(
     /**
      * ----------------------- <DataTable /> --------------------------------
      */
-    const DataTable:React.SFC<DataTableProps> = (props) => {
+    const DataTable:React.FC<DataTableProps> = (props) => {
 
         const getBarChartTitle = () => {
             if (props.head.length > 0) {

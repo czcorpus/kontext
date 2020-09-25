@@ -421,7 +421,6 @@ class QuickFilterArgsConv(object):
         ff_args.filtpos = elms[3]
         ff_args.inclkwic = self._incl_kwic(elms[0])
         ff_args.qmcase = True
-        ff_args.default_attr = self.args.default_attr
         return ff_args
 
 
