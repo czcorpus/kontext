@@ -22,14 +22,14 @@ import * as React from 'react';
 import { Keyboard, List } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import { Kontext, TextTypes } from '../../types/common';
 import { CoreViews } from '../../types/coreViews';
 import { Actions, ActionName } from '../../models/textTypes/actions';
-import { AnyTTSelection, WidgetView } from '../../models/textTypes/common';
+import { WidgetView } from '../../models/textTypes/common';
 import { init as commonViewInit } from './common';
 
 export interface FullListContainerProps {
-    attrObj:AnyTTSelection;
+    attrObj:TextTypes.FullAttributeSelection;
     hasExtendedInfo:boolean;
     hasSelectedItems:boolean;
     widget:{widget:WidgetView; active:boolean};

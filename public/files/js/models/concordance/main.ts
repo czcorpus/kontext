@@ -1008,7 +1008,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         const args = new MultiDict();
         args.set('corpname', this.state.baseCorpname);
         for (let p in selections) {
-            args.replace(`sca_${p}`, selections[p]);
+            const v = selections[p];
+            args.replace(`sca_${p}`, Array.isArray(v) ? v : [v]); // TODO this is completely broken !!!
         }
         return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
             HTTP.Method.POST,

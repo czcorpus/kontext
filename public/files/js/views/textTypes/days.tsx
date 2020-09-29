@@ -19,16 +19,11 @@
  */
 
 import * as React from 'react';
-import { Keyboard, List, tuple } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
 import { Kontext, TextTypes } from '../../types/common';
-import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { CoreViews } from '../../types/coreViews';
 import { Actions, ActionName } from '../../models/textTypes/actions';
-import { AnyTTSelection, WidgetView } from '../../models/textTypes/common';
-import { init as commonViewInit } from './common';
-
 
 
 function rangeToRegexp(d1:Date, d2:Date):string {
@@ -37,7 +32,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         return List.foldl(
             ([,,days], curr) => tuple(
                 curr.getFullYear().toFixed(),
-                md2str(curr.getMonth()),
+                md2str(curr.getMonth() + 1),
                 days.concat([md2str(curr.getDate())])
             ),
             ['', '', []] as [string, string, Array<string>],
@@ -49,7 +44,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         return List.foldl(
             ([,months], curr) => tuple(
                 curr.getFullYear().toFixed(),
-                months.concat([md2str(curr.getMonth())])
+                months.concat([md2str(curr.getMonth() + 1)])
             ),
             ['', []] as [string, Array<string>],
             data
@@ -59,7 +54,9 @@ function rangeToRegexp(d1:Date, d2:Date):string {
     function md2str(v:number):string {
         return (v < 10 ? '0' : '') + v;
     }
-
+    if (Math.abs(d1.getTime() - d2.getTime()) > 100 * 365 * 3600 * 1000) {
+        throw new Error('Only ranges up to 100 years can be selected via the calendars');
+    }
     const toEndOfMonth1:Array<Date> = [];
     let md = new Date(d1);
     while (md.getMonth() === d1.getMonth() && md.getTime() < d2.getTime()) {
@@ -68,7 +65,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         md.setDate(md.getDate() + 1);
     }
     const toEndOfYear1:Array<Date> = [];
-    while (md.getFullYear() === d1.getFullYear() && md.getTime() < d2.getTime()) {
+    while (md.getFullYear() === d1.getFullYear() && md.getMonth() < d2.getMonth()) {
         toEndOfYear1.push(md);
         md = new Date(md);
         md.setMonth(md.getMonth() + 1);
@@ -86,7 +83,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         md.setMonth(md.getMonth() + 1);
     }
     const toTargetDay:Array<Date> = [];
-    while (md.getDate() <= d2.getDate()) {
+    while (md.getDate() <= d2.getDate() && md.getTime() <= d2.getTime()) {
         toTargetDay.push(md);
         md = new Date(md);
         md.setDate(md.getDate() + 1);
@@ -117,51 +114,53 @@ function rangeToRegexp(d1:Date, d2:Date):string {
     if (!List.empty(comp5[2])) {
         ans.push(`${comp5[0]}-${comp5[1]}-(${comp5[2].join('|')})`);
     }
+
     return ans.join('|');
 }
 
 export interface CalendarDaysSelectorProps {
-    attrObj:AnyTTSelection;
+    attrObj:TextTypes.AnyTTSelection;
 }
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):React.FC<CalendarDaysSelectorProps> {
 
-    const commonViews = commonViewInit(dispatcher, he);
     const layoutViews = he.getLayoutViews();
 
 
     const CalendarDaysSelector:React.FC<CalendarDaysSelectorProps> = (props) => {
 
+        const now = new Date();
+        const normNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const [state, setState] = React.useState({
-            fromDate:[0, 0, 0],
-            toDate:[0, 0, 0]
+            fromDate: normNow,
+            toDate: normNow
         });
 
-        const handleCalClick = (cal:'from'|'to') => (y:number, m:number, d:number) => {
-            if (cal === 'from') {
-                setState({fromDate: [y, m, d], toDate: state.toDate});
+        const handleCalClick = (cal:'from'|'to') => (d:Date) => {
+            const newState = cal === 'from' ?
+                    {fromDate: d, toDate: state.toDate} :
+                    {fromDate: state.fromDate, toDate: d};
 
-            } else {
-                setState({fromDate: state.fromDate, toDate: [y, m, d]});
-            }
-        };
+            setState({...newState});
 
-        const handleConfirmClick = () => {
             dispatcher.dispatch<Actions.AttributeTextInputChanged>({
                 name: ActionName.AttributeTextInputChanged,
                 payload: {
                     attrName: props.attrObj.name,
-                    value: rangeToRegexp(
-                        new Date(state.fromDate[0], state.fromDate[1], state.fromDate[2]),
-                        new Date(state.toDate[0], state.toDate[1], state.toDate[2]))
+                    value: rangeToRegexp(newState.fromDate, newState.toDate)
                 }
             });
-        }
+        };
 
         return <div className="CalendarDaysSelector">
-            <layoutViews.Calendar onClick={handleCalClick('from')} />
-            <layoutViews.Calendar onClick={handleCalClick('to')} />
-            <button type="button" onClick={handleConfirmClick}>OK</button>
+            <div>
+                <h3>{he.translate('query__tt_calendar_from_date')}</h3>
+                <layoutViews.Calendar currDate={state.fromDate} onClick={handleCalClick('from')} />
+            </div>
+            <div>
+                <h3>{he.translate('query__tt_calendar_to_date')}</h3>
+                <layoutViews.Calendar currDate={state.toDate} onClick={handleCalClick('to')} />
+            </div>
         </div>;
     }
 

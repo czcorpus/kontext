@@ -20,32 +20,29 @@
 
 import { TextTypes } from '../../types/common';
 import { List, pipe } from 'cnc-tskit';
-import { AnyTTSelection } from './common';
+import { TextTypesDistModel } from '../concordance/ttDistModel';
+import { select } from 'vendor/d3';
 
 
 export type ExtendedInfo = {[key:string]:any}; // TODO type
 
 
 /**
- * TTSelOps is a set of operations for both
- * TextTypes.TextInputAttributeSelection and TextTypes.FullAttributeSelection
+ * TTSelOps is a set of operations applicable for any type of text type selection
+ * (full list, raw input, regexp)
  */
 export namespace TTSelOps {
 
-
     export function mapValues(
-        sel:AnyTTSelection,
+        sel:TextTypes.AnyTTSelection,
         mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue
-    ):AnyTTSelection {
-        return {
-            ...sel,
-            values: List.map(mapFn, sel.values)
-        };
-    }
+    ):TextTypes.AnyTTSelection {
+        return sel.type === 'regexp' ? sel : {...sel, values: List.map(mapFn, sel.values)}
+    };
 
-    export function toggleValueSelection(sel:AnyTTSelection, idx:number):AnyTTSelection {
-        const val = sel.values[idx];
+    export function toggleValueSelection(sel:TextTypes.AnyTTSelection, idx:number):TextTypes.AnyTTSelection {
         if (sel.type === 'text') {
+            const val = sel.values[idx];
             if (val.selected) {
                 return {
                     ...sel,
@@ -56,7 +53,7 @@ export namespace TTSelOps {
                 return sel;
             }
 
-        } else {
+        } else if (sel.type === 'full') {
             return {
                 ...sel,
                 values: List.map(
@@ -70,22 +67,30 @@ export namespace TTSelOps {
         }
     }
 
-    export function containsFullList(sel:AnyTTSelection):boolean {
+    export function containsFullList(sel:TextTypes.AnyTTSelection):boolean {
         if (sel.type === 'full') {
             return true;
         }
         return false;
     }
 
-    export function hasUserChanges(sel:AnyTTSelection):boolean {
-        const hasSelected = List.some((item:TextTypes.AttributeValue) => item.selected === true, sel.values);
-        if (sel.type === 'text') {
-            return hasSelected || !!sel.textFieldValue;
+    export function hasUserChanges(sel:TextTypes.AnyTTSelection):boolean {
+        if (sel.type === 'regexp') {
+            return !!sel.textFieldValue;
+
+        } else {
+            const hasSelected = List.some((item:TextTypes.AttributeValue) => item.selected === true, sel.values);
+            if (sel.type === 'text') {
+                return hasSelected || !!sel.textFieldValue;
+            }
+            return hasSelected;
         }
-        return hasSelected;
     }
 
-    export function exportSelections(sel:AnyTTSelection, lockedOnesOnly:boolean):Array<string> {
+    export function exportSelections(sel:TextTypes.AnyTTSelection, lockedOnesOnly:boolean):Array<string> {
+        if (sel.type === 'regexp') {
+            return [sel.textFieldValue];
+        }
         const items = lockedOnesOnly ?
         sel.values.filter((item:TextTypes.AttributeValue)=>item.locked) :
         sel.values;
@@ -97,39 +102,44 @@ export namespace TTSelOps {
         );
     }
 
-    export function keepIfPresentIn(sel:AnyTTSelection, items:Array<string>):AnyTTSelection {
-        let values;
-        if (!List.empty(sel.values)) {
-            values = List.filter(
-                (item:TextTypes.AttributeValue) => items.indexOf(item.ident) > -1,
-                sel.values
-            );
+    export function keepIfPresentIn(sel:TextTypes.AnyTTSelection, items:Array<string>):TextTypes.AnyTTSelection {
+        if (sel.type === 'regexp') {
+            return sel;
 
         } else {
-            values = List.map(
-                item => ({
-                    value: item,
-                    selected: false,
-                    locked: false,
-                }),
-                items
-            );
+            let values;
+            if (!List.empty(sel.values)) {
+                values = List.filter(
+                    (item:TextTypes.AttributeValue) => items.indexOf(item.ident) > -1,
+                    sel.values
+                );
+
+            } else {
+                values = List.map(
+                    item => ({
+                        value: item,
+                        selected: false,
+                        locked: false,
+                    }),
+                    items
+                );
+            }
+            return {
+                ...sel,
+                values
+            };
+
         }
-        return {
-            ...sel,
-            values
-        };
     }
 
-    export function filter(sel:AnyTTSelection, fn:(v:TextTypes.AttributeValue)=>boolean):AnyTTSelection {
-        return {
-            ...sel,
-            values: sel.values.filter(fn)
-        };
+    export function filter(sel:TextTypes.AnyTTSelection, fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AnyTTSelection {
+        return sel.type === 'regexp' ?
+            sel :
+            {...sel, values: sel.values.filter(fn)};
     }
 
-    export function addValue(sel:AnyTTSelection, value:TextTypes.AttributeValue):AnyTTSelection {
-        if (sel.type === 'text') {
+    export function addValue(sel:TextTypes.AnyTTSelection, value:TextTypes.AttributeValue):TextTypes.AnyTTSelection {
+        if (sel.type == 'text') {
             if (sel.values.find(x => x.value === value.value) === undefined) {
                 return {
                     ...sel,
@@ -141,11 +151,11 @@ export namespace TTSelOps {
             }
 
         } else {
-            throw new Error('FullAttributeSelection cannot add new values');
+            throw new Error('only TextInputAttributeSelection can add new values');
         }
     }
 
-    export function removeValue(sel:AnyTTSelection, value:string):AnyTTSelection {
+    export function removeValue(sel:TextTypes.AnyTTSelection, value:string):TextTypes.AnyTTSelection {
         if (sel.type === 'text') {
             const idx = List.findIndex(x => x.value === value, sel.values);
             if (idx > -1) {
@@ -160,25 +170,27 @@ export namespace TTSelOps {
             }
 
         } else {
-            throw new Error('FullAttributeSelection cannot remove values');
+            throw new Error('only TextInputAttributeSelection can add new values');
         }
     }
 
-    export function clearValues(sel:AnyTTSelection):AnyTTSelection {
-        return {
-            ...sel,
-            values: []
-        };
+    export function clearValues(sel:TextTypes.AnyTTSelection):TextTypes.AnyTTSelection {
+        return sel.type === 'regexp' ?
+            sel :
+            {...sel, values: []};
     }
 
-    export function setValues(sel:AnyTTSelection, values:Array<TextTypes.AttributeValue>):AnyTTSelection {
-        return {
-            ...sel,
-            values
-        };
+    export function setValues(sel:TextTypes.AnyTTSelection, values:Array<TextTypes.AttributeValue>):TextTypes.AnyTTSelection {
+        return sel.type === 'regexp' ?
+            sel :
+            {...sel, values};
     }
 
-    export function setAutoComplete(sel:AnyTTSelection, values:Array<TextTypes.AutoCompleteItem>):AnyTTSelection {
+    export function getValues(sel:TextTypes.AnyTTSelection):Array<TextTypes.AttributeValue> {
+        return sel.type === 'regexp' ? [] : sel.values;
+    }
+
+    export function setAutoComplete(sel:TextTypes.AnyTTSelection, values:Array<TextTypes.AutoCompleteItem>):TextTypes.AnyTTSelection {
         if (sel.type === 'text') {
             return {
                 ...sel,
@@ -190,7 +202,7 @@ export namespace TTSelOps {
         }
     }
 
-    export function resetAutoComplete(sel:AnyTTSelection):AnyTTSelection {
+    export function resetAutoComplete(sel:TextTypes.AnyTTSelection):TextTypes.AnyTTSelection {
         if (sel.type === 'text') {
             return {
                 ...sel,
@@ -202,7 +214,7 @@ export namespace TTSelOps {
         }
     }
 
-    export function getAutoComplete(sel:AnyTTSelection):Array<TextTypes.AutoCompleteItem> {
+    export function getAutoComplete(sel:TextTypes.AnyTTSelection):Array<TextTypes.AutoCompleteItem> {
         if (sel.type === 'text') {
             return sel.autoCompleteHints;
 
@@ -211,57 +223,64 @@ export namespace TTSelOps {
         }
     }
 
-    export function isLocked(sel:AnyTTSelection):boolean {
-        return List.some(item => item.locked, sel.values);
+    export function isLocked(sel:TextTypes.AnyTTSelection):boolean {
+        return sel.type === 'regexp' ? sel.isLocked : List.some(item => item.locked, sel.values);
     }
 
-    export function setExtendedInfo(sel:AnyTTSelection, ident:string, data:ExtendedInfo):AnyTTSelection {
-        const srchIdx = sel.values.findIndex(v => v.ident === ident);
-        if (srchIdx > -1) {
-            const valuesCopy = [...sel.values];
-            const currVal = valuesCopy[srchIdx];
-            const newVal = {
-                ...currVal,
-                extendedInfo: data
-            };
-            valuesCopy[srchIdx] = newVal;
-            return {
-                ...sel,
-                values: valuesCopy
-            };
+    export function setExtendedInfo(sel:TextTypes.AnyTTSelection, ident:string, data:ExtendedInfo):TextTypes.AnyTTSelection {
+        if (sel.type === 'regexp') {
+            return sel;
 
         } else {
-            throw new Error(`Cannot set extended info - ident ${ident} not found`);
+            const srchIdx = sel.values.findIndex(v => v.ident === ident);
+            if (srchIdx > -1) {
+                const valuesCopy = [...sel.values];
+                const currVal = valuesCopy[srchIdx];
+                const newVal = {
+                    ...currVal,
+                    extendedInfo: data
+                };
+                valuesCopy[srchIdx] = newVal;
+                return {
+                    ...sel,
+                    values: valuesCopy
+                };
+
+            } else {
+                throw new Error(`Cannot set extended info - ident ${ident} not found`);
+            }
         }
     }
 
-    export function getNumOfSelectedItems(sel:AnyTTSelection):number {
-        return List.foldl(
-            (p, curr) => p + (curr.selected ? 1 : 0),
-            0,
-            sel.values
-        );
+    export function getNumOfSelectedItems(sel:TextTypes.AnyTTSelection):number {
+        return sel.type === 'regexp' ?
+            0 :
+            List.foldl(
+                (p, curr) => p + (curr.selected ? 1 : 0),
+                0,
+                sel.values
+            );
     }
 
-    export function setTextFieldValue(sel:AnyTTSelection, value:string):AnyTTSelection {
-        if (sel.type === 'text') {
+    export function setTextFieldValue(sel:TextTypes.AnyTTSelection, value:string):TextTypes.AnyTTSelection {
+        if (sel.type === 'text' || sel.type === 'regexp') {
             return {
                 ...sel,
                 textFieldValue: value
             };
 
         } else {
-            throw new Error('Cannot set text field in checkbox only text type selection');
+            throw new Error('Only "text" and "regexp" selections support setting of textFiledValue');
         }
     }
 
 
-    export function getTextFieldValue(sel:AnyTTSelection):string {
-        if (sel.type === 'text') {
+    export function getTextFieldValue(sel:TextTypes.AnyTTSelection):string {
+        if (sel.type === 'text' || sel.type === 'regexp') {
             return sel.textFieldValue;
 
         } else {
-            throw new Error('Cannot set text field in checkbox only text type selection');
+            throw new Error('Only "text" and "regexp" selections support getting of textFiledValue');
         }
     }
 }

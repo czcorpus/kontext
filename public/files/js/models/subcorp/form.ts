@@ -246,7 +246,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
         return this.state.alignedCorpora;
     }
 
-    getTTSelections():{[attr:string]:Array<string>} {
+    getTTSelections():TextTypes.ExportedSelection {
         return this.textTypesModel.exportSelections(false);
     }
 }

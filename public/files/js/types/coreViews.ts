@@ -354,7 +354,8 @@ export namespace CoreViews {
     export namespace Calendar {
 
         export interface Props {
-            onClick:(year:number, month:number, day:number)=>void;
+            onClick:(date:Date)=>void;
+            currDate?:Date;
         }
 
         export type Component = React.FC<Props>;

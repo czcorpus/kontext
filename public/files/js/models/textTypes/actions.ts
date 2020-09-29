@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { TextTypes } from '../../types/common';
-import { SelectionFilterMap, AnyTTSelection } from './common';
+import { SelectionFilterMap } from './common';
 
 
 export enum ActionName {
@@ -52,7 +52,7 @@ export namespace Actions {
 
     export interface SelectionChanged extends Action<{
         hasSelectedItems:boolean;
-        attributes:Array<AnyTTSelection>;
+        attributes:Array<TextTypes.AnyTTSelection>;
     }> {
         name:ActionName.SelectionChanged;
     };

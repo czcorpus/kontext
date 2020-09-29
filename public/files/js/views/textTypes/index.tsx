@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Keyboard, List, Dict } from 'cnc-tskit';
+import { List, Dict } from 'cnc-tskit';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 
 import { PluginInterfaces } from '../../types/plugins';
@@ -28,7 +28,7 @@ import { ExtendedInfo, TTSelOps } from '../../models/textTypes/selectionOps';
 import { CoreViews } from '../../types/coreViews';
 import { TextTypesModelState } from '../../models/textTypes/main';
 import { Actions, ActionName } from '../../models/textTypes/actions';
-import { AnyTTSelection, WidgetView } from '../../models/textTypes/common';
+import { WidgetView } from '../../models/textTypes/common';
 import { init as listSelectorInit } from './list';
 import { init as rawInputMultiValSelectorInit } from './input';
 import { init as daysSelectorInit } from './days';
@@ -107,7 +107,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <ValueSelector /> --------------------------
 
     const ValueSelector:React.FC<{
-        attrObj:AnyTTSelection;
+        attrObj:TextTypes.AnyTTSelection;
         widget:{widget:WidgetView; active:boolean};
         isLocked:boolean;
         hasExtendedInfo:boolean;
@@ -117,15 +117,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const renderSelector = () => {
-            if (TTSelOps.containsFullList(props.attrObj)) {
+            if (props.attrObj.type === 'full') {
                 return <FullListSelector attrObj={props.attrObj}
                         widget={props.widget}
                         hasExtendedInfo={props.hasExtendedInfo}
                         isBusy={props.isBusy}
                         hasSelectedItems={TTSelOps.hasUserChanges(props.attrObj)} />;
 
-            } else if (props.widget.widget === 'days') {
-                return <CalendarDaysSelector attrObj={props.attrObj} />;
+            } else if (props.attrObj.type === 'regexp') {
+                if (props.widget.widget === 'days') {
+                    return <CalendarDaysSelector attrObj={props.attrObj} />;
+                }
+                return null;
 
             } else {
                 return <RawInputMultiValueContainer
@@ -165,7 +168,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <TableTextTypeAttribute /> --------------------------
 
     const TableTextTypeAttribute:React.FC<{
-        attrObj:AnyTTSelection;
+        attrObj:TextTypes.AnyTTSelection;
         widget:{widget:WidgetView; active:boolean};
         isMinimized:boolean;
         metaInfoHelpVisible:boolean;
@@ -210,25 +213,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         );
 
         const renderFooter = () => {
-            if (TTSelOps.containsFullList(props.attrObj) && !TTSelOps.isLocked(props.attrObj)) {
-                if (props.attrObj.isInterval) {
-                    if (props.widget.active) {
-                        return renderModeSwitch();
-
-                    } else {
-                        return <>
-                            {renderSelectAll()}
-                            {renderModeSwitch()}
-                        </>;
-                    }
+            if (props.attrObj.type === 'full' && !TTSelOps.isLocked(props.attrObj)) {
+                if (props.widget.active) {
+                    return renderModeSwitch();
 
                 } else {
-                    return renderSelectAll();
+                    return <>
+                        {renderSelectAll()}
+                        {renderModeSwitch()}
+                    </>;
                 }
-
-            } else {
-                return null;
             }
+            return null;
         }
 
         const metaInfoHelpClickHandler = () => {
@@ -271,10 +267,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const renderExtendedInfo = () => {
-            const srch = List.find(item => !!item.extendedInfo, props.attrObj.values);
-            if (srch) {
-                return <ExtendedInfoBox data={srch.extendedInfo} ident={srch.ident}
+            if (props.attrObj.type === 'text' || props.attrObj.type === 'full') {
+                const srch = List.find(item => !!item.extendedInfo, props.attrObj.values);
+                if (srch) {
+                    return <ExtendedInfoBox data={srch.extendedInfo} ident={srch.ident}
                                 attrName={props.attrObj.name} />;
+                }
 
             } else {
                 return null;

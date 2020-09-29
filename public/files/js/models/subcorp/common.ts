@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../types/common';
+import { Kontext, TextTypes } from '../../types/common';
 
 export type InputMode = 'gui'|'within';
 
@@ -36,7 +36,7 @@ interface SubmitBase {
 }
 
 export interface CreateSubcorpusArgs extends SubmitBase {
-    text_types:{[sca:string]:Array<string>|Array<number>};
+    text_types:TextTypes.ExportedSelection;
     aligned_corpora:Array<string>;
     form_type:'tt-sel';
 }

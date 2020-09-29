@@ -19,18 +19,16 @@
  */
 
 import * as React from 'react';
-import { Keyboard, List } from 'cnc-tskit';
+import { List } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
 import { Kontext, TextTypes } from '../../types/common';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { CoreViews } from '../../types/coreViews';
 import { Actions, ActionName } from '../../models/textTypes/actions';
-import { AnyTTSelection, WidgetView } from '../../models/textTypes/common';
 import { init as commonViewInit } from './common';
 
 export interface RawInputMultiValueContainerProps {
-    attrObj:AnyTTSelection;
+    attrObj:TextTypes.TextInputAttributeSelection;
     hasExtendedInfo:boolean;
     isLocked:boolean;
     textInputPlaceholder:string;
@@ -45,7 +43,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     // ----------------------------- <AutoCompleteBox /> --------------------------
 
     class AutoCompleteBox extends React.Component<{
-        attrObj:AnyTTSelection;
+        attrObj:TextTypes.TextInputAttributeSelection;
         customAutoCompleteHintClickHandler:(item:TextTypes.AutoCompleteItem)=>void;
     },
     {
@@ -132,7 +130,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     // ----------------------------- <RawInputContainer /> --------------------------
 
     class RawInputContainer extends React.PureComponent<{
-        attrObj:AnyTTSelection;
+        attrObj:TextTypes.TextInputAttributeSelection;
         customInputName:string;
         textInputPlaceholder:string;
         customAutoCompleteHintClickHandler:(item:TextTypes.AutoCompleteItem)=>void;

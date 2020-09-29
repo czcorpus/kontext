@@ -29,6 +29,7 @@ import { DataPoint, ConfIntervals } from '../../../charts/confIntervals';
 import { CTFreqServerArgs } from '../common';
 import { CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities, CTFreqResultDummyResponse, CTFreqResultResponse, CTFreqResultData, isDummyResponse } from './common';
 import { Actions,  ActionName } from '../actions';
+import { TextTypes } from '../../../types/common';
 
 /**
  * A representation of 2D freq table.
@@ -171,7 +172,7 @@ export interface Freq2DTableModelState extends GeneralFreq2DModelState {
 
     highlightedCoord:[number, number]|null;
 
-    selectedTextTypes:{[attr:string]:Array<string>};
+    selectedTextTypes:TextTypes.ExportedSelection;
 
 }
 
