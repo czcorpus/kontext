@@ -187,7 +187,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 case 'years':
                     return <RangeSelector attrName={props.attrObj.name} hasSelectedValues={props.hasSelectedItems} />
                 default:
-                    return <div>Unknown widget: {props.widget}</div>
+                    return <div>Unknown widget: {props.widget.widget}</div>
             }
         }
 
