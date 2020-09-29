@@ -411,6 +411,9 @@ class Subcorpus(Querying):
 
     @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')
     def list_published(self, request):
+        self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+
         min_query_size = 3
         query = request.args.get('query', '')
         offset = int(request.args.get('offset', '0'))
