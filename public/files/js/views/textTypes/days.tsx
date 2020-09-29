@@ -19,16 +19,12 @@
  */
 
 import * as React from 'react';
-import { Keyboard, List, tuple } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext, TextTypes } from '../../types/common';
-import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { CoreViews } from '../../types/coreViews';
+import { Kontext } from '../../types/common';
 import { Actions, ActionName } from '../../models/textTypes/actions';
-import { AnyTTSelection, WidgetView } from '../../models/textTypes/common';
-import { init as commonViewInit } from './common';
-
+import { AnyTTSelection } from '../../models/textTypes/common';
 
 
 function rangeToRegexp(d1:Date, d2:Date):string {
@@ -59,7 +55,9 @@ function rangeToRegexp(d1:Date, d2:Date):string {
     function md2str(v:number):string {
         return (v < 10 ? '0' : '') + v;
     }
-
+    if (Math.abs(d1.getTime() - d2.getTime()) > 100 * 365 * 3600 * 1000) {
+        throw new Error('Only ranges up to 100 years can be selected via the calendars');
+    }
     const toEndOfMonth1:Array<Date> = [];
     let md = new Date(d1);
     while (md.getMonth() === d1.getMonth() && md.getTime() < d2.getTime()) {
@@ -126,42 +124,42 @@ export interface CalendarDaysSelectorProps {
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):React.FC<CalendarDaysSelectorProps> {
 
-    const commonViews = commonViewInit(dispatcher, he);
     const layoutViews = he.getLayoutViews();
 
 
     const CalendarDaysSelector:React.FC<CalendarDaysSelectorProps> = (props) => {
 
+        const now = new Date();
         const [state, setState] = React.useState({
-            fromDate:[0, 0, 0],
-            toDate:[0, 0, 0]
+            fromDate: now,
+            toDate: now
         });
 
-        const handleCalClick = (cal:'from'|'to') => (y:number, m:number, d:number) => {
-            if (cal === 'from') {
-                setState({fromDate: [y, m, d], toDate: state.toDate});
+        const handleCalClick = (cal:'from'|'to') => (d:Date) => {
+            const newState = cal === 'from' ?
+                    {fromDate: d, toDate: state.toDate} :
+                    {fromDate: state.fromDate, toDate: d};
 
-            } else {
-                setState({fromDate: state.fromDate, toDate: [y, m, d]});
-            }
-        };
+            setState({...newState});
 
-        const handleConfirmClick = () => {
             dispatcher.dispatch<Actions.AttributeTextInputChanged>({
                 name: ActionName.AttributeTextInputChanged,
                 payload: {
                     attrName: props.attrObj.name,
-                    value: rangeToRegexp(
-                        new Date(state.fromDate[0], state.fromDate[1], state.fromDate[2]),
-                        new Date(state.toDate[0], state.toDate[1], state.toDate[2]))
+                    value: rangeToRegexp(newState.fromDate, newState.toDate)
                 }
             });
-        }
+        };
 
         return <div className="CalendarDaysSelector">
-            <layoutViews.Calendar onClick={handleCalClick('from')} />
-            <layoutViews.Calendar onClick={handleCalClick('to')} />
-            <button type="button" onClick={handleConfirmClick}>OK</button>
+            <div>
+                <h3>{he.translate('query__tt_calendar_from_date')}</h3>
+                <layoutViews.Calendar currDate={state.fromDate} onClick={handleCalClick('from')} />
+            </div>
+            <div>
+                <h3>{he.translate('query__tt_calendar_to_date')}</h3>
+                <layoutViews.Calendar currDate={state.toDate} onClick={handleCalClick('to')} />
+            </div>
         </div>;
     }
 

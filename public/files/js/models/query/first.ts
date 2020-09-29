@@ -25,7 +25,7 @@ import { Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
-import { Kontext, ViewOptions } from '../../types/common';
+import { Kontext, TextTypes, ViewOptions } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
@@ -63,7 +63,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
-    selectedTextTypes:{[structattr:string]:Array<string>};
+    selectedTextTypes:TextTypes.ServerCheckedValues;
     hasLemma:{[corpname:string]:boolean};
     isAnonymousUser:boolean;
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;

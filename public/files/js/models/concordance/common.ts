@@ -21,7 +21,6 @@
 import { Color, pipe, List } from 'cnc-tskit';
 import { ViewOptions, Kontext } from '../../types/common';
 import { SaveData } from '../../app/navigation';
-import { ConcQueryArgs } from '../query/common';
 
 /**
  * RefsColumn describes a meta-data information

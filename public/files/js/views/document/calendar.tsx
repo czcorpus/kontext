@@ -18,19 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe, tuple } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 import * as React from 'react';
 
 import { Kontext } from '../../types/common';
 import { ImgWithMouseover } from './general';
+import { CoreViews } from '../../types/coreViews';
 
 
-export interface CalendarProps {
-    onClick:(year:number, month:number, day:number)=>void;
-}
 
-
-export function init(he:Kontext.ComponentHelpers):React.FC<CalendarProps> {
+export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Props> {
 
     const dateMonthToString = (m:number):string => {
         const map = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -40,17 +37,25 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CalendarProps> {
     // -------------------- <Row /> --------------------------------------------------
 
     const Row:React.FC<{
-        days:Array<Date>
+        days:Array<Date>;
+        current:Date;
         onClick:(d:Date)=>void;
 
     }> = (props) => {
+
+        const isCurrentDay = (d:Date):boolean =>
+                d.getFullYear() === props.current.getFullYear() &&
+                d.getMonth() === props.current.getMonth() &&
+                d.getDate() === props.current.getDate();
+
         return (
             <tr>
                 {pipe(
                     props.days,
                     List.slice(0, 7),
                     List.map((v, i) => (
-                        <td key={v ? `d:${v.getTime()}` : `d:${i}`}>
+                        <td key={v ? `d:${v.getTime()}` : `d:${i}`}
+                                className={isCurrentDay(v) ? 'current' : null}>
                             <a onClick={() => props.onClick(v)}>{v ? v.getDate() : '?'}</a>
                         </td>
                     ))
@@ -72,15 +77,13 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CalendarProps> {
     // -------------------- <Calendar /> --------------------------------------------------
 
     const Calendar:React.FC<{
-        onClick:(year:number, month:number, day:number)=>void;
+        onClick:(date:Date)=>void;
+        currDate?:Date;
 
     }> = (props) => {
 
-        const now = new Date();
-        const [currState, updateState] = React.useState({
-            month: now.getMonth(),
-            year: now.getFullYear()
-        });
+        const [currDate, updateState] = React.useState(
+            props.currDate ? props.currDate : new Date());
 
         const getMonthDays = (year:number, month:number):Array<Date> => {
             const monthStart = new Date(year, month, 1, 0, 0, 0);
@@ -113,24 +116,25 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CalendarProps> {
             return ans;
         }
 
-        const calData = groupDays(getMonthDays(currState.year, currState.month));
+        const calData = groupDays(getMonthDays(currDate.getFullYear(), currDate.getMonth()));
 
         const handleClick = (d:Date) => {
-            props.onClick(d.getFullYear(), d.getMonth() + 1, d.getDate());
+            updateState(d);
+            props.onClick(d);
         };
 
         const handlePrevClick = () => {
-            updateState({
-                month: currState.month > 0 ? currState.month - 1 : 11,
-                year: currState.month > 0 ? currState.year : currState.year - 1,
-            })
+            updateState(currDate.getMonth() > 0 ?
+                new Date(currDate.getFullYear(), currDate.getMonth() - 1, 1) :
+                new Date(currDate.getFullYear() - 1, 11, 1)
+            );
         }
 
         const handleNextClick = () => {
-            updateState({
-                month: currState.month < 11 ? currState.month + 1 : 0,
-                year: currState.month < 11 ? currState.year : currState.year + 1,
-            })
+            updateState(currDate.getMonth() < 11 ?
+                new Date(currDate.getFullYear(), currDate.getMonth() + 1, 1) :
+                new Date(currDate.getFullYear() + 1, 0, 1)
+            );
         }
 
         return (
@@ -144,7 +148,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CalendarProps> {
                                     clickHandler={handlePrevClick} htmlClass="prev-month-change" />
                             </td>
                             <td colSpan={5} className="curr-date">
-                                {dateMonthToString(currState.month)} {currState.year}
+                                {dateMonthToString(currDate.getMonth())} {currDate.getFullYear()}
                             </td>
                             <td>
                                 <ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
@@ -156,7 +160,8 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CalendarProps> {
                     </thead>
                     <tbody>
                         {List.map(
-                            v => <Row key={`row:${v[0].getTime()}`} days={v} onClick={handleClick} />,
+                            v => <Row key={`row:${v[0].getTime()}`} days={v}
+                                        current={currDate} onClick={handleClick} />,
                             calData
                         )}
                     </tbody>

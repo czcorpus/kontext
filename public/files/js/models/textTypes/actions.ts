@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { TextTypes } from '../../types/common';
-import { SelectionFilterMap, AnyTTSelection, SelectionFilterValue } from './common';
+import { SelectionFilterMap, AnyTTSelection } from './common';
 
 
 export enum ActionName {

@@ -261,6 +261,8 @@
         "query__tt_click_to_see_attr_info": "Kliknij, żeby ôbejzdrzeć informacyje ô atrybucie (ôtwiyrŏ w nowym ôknie)",
         "query__tt_minimize_all_lists": "Minimize all the lists",
         "query__tt_maximize_all_lists": "Show all the lists",
+        "query__tt_calendar_from_date": "From",
+        "query__tt_calendar_to_date": "To",
         "query__span_from": "ôd",
         "query__span_to": "do",
         "query__include_kwic": "Użyj tyż KWIC",

@@ -261,6 +261,8 @@
         "query__tt_click_to_see_attr_info": "Klikněte pro zobrazení informací o atributu (otevírá se do nového okna)",
         "query__tt_minimize_all_lists": "Minimalizovat všechny seznamy",
         "query__tt_maximize_all_lists": "Zobrazit všechny seznamy",
+        "query__tt_calendar_from_date": "Od",
+        "query__tt_calendar_to_date": "Do",
         "query__span_from": "od",
         "query__span_to": "do",
         "query__include_kwic": "včetně KWIC",
