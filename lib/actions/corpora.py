@@ -48,7 +48,7 @@ class Corpora(Kontext):
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_list_corpora(self, request):
         with plugins.runtime.CORPARCH as cp:
-            return cp.search(plugin_api=self._plugin_api, query=request.args['query'],
+            return cp.search(plugin_api=self._plugin_api, query=request.args.get('query', None),
                              offset=request.args.get('offset', None), limit=request.args.get('limit', None),
                              filter_dict=request.args)
 
