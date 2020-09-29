@@ -28,7 +28,7 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { IPluginApi } from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
 import { SelectedTextTypes, importInitialData, InitialData, SelectionFilterMap,
-    IntervalChar, AnyTTSelection, WidgetView} from './common';
+    IntervalChar, WidgetView} from './common';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
@@ -38,7 +38,7 @@ import { Actions as GlobalActions, ActionName as GlobalActionName }
 
 export interface TextTypesModelState {
 
-    attributes:Array<AnyTTSelection>;
+    attributes:Array<TextTypes.AnyTTSelection>;
 
     /**
      * A text type attribute which serves as a title (possibly non-unique)
@@ -57,7 +57,7 @@ export interface TextTypesModelState {
      * A list of selection snapshots generated when values are filtered out.
      *  At least one item (initial state) is always present.
      */
-    selectionHistory:Array<Array<AnyTTSelection>>;
+    selectionHistory:Array<Array<TextTypes.AnyTTSelection>>;
 
     /**
      * Select-all request flags
@@ -122,7 +122,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 selectAll: pipe(
                     attributes,
                     List.map(
-                        (item:AnyTTSelection) => tuple(item.name, false)
+                        (item:TextTypes.AnyTTSelection) => tuple(item.name, false)
                     ),
                     Dict.fromEntries()
                 ),
@@ -221,22 +221,24 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     if (attrIdx > -1) {
                         const ident = action.payload.ident;
                         const attr = state.attributes[attrIdx];
-                        const srchIdx = attr.values.findIndex(v => v.ident === ident);
-                        if (srchIdx > - 1 && attr.values[srchIdx].numGrouped < 2) {
-                            state.attributes[attrIdx] = TTSelOps.mapValues(
-                                attr,
-                                item => ({
-                                    ...item,
-                                    extendedInfo: undefined
-                                })
-                            );
+                        if (attr.type !== 'regexp') {
+                            const srchIdx = attr.values.findIndex(v => v.ident === ident);
+                            if (srchIdx > - 1 && attr.values[srchIdx].numGrouped < 2) {
+                                state.attributes[attrIdx] = TTSelOps.mapValues(
+                                    attr,
+                                    item => ({
+                                        ...item,
+                                        extendedInfo: undefined
+                                    })
+                                );
 
-                        } else if (srchIdx > -1) {
-                            const message = this.pluginApi.translate(
-                                'query__tt_multiple_items_same_name_{num_items}',
-                                {num_items: attr.values[srchIdx].numGrouped}
-                            );
-                            this.setExtendedInfo(state, attr.name, ident, {__message__: message});
+                            } else if (srchIdx > -1) {
+                                const message = this.pluginApi.translate(
+                                    'query__tt_multiple_items_same_name_{num_items}',
+                                    {num_items: attr.values[srchIdx].numGrouped}
+                                );
+                                this.setExtendedInfo(state, attr.name, ident, {__message__: message});
+                            }
                         }
                     }
                 });
@@ -616,7 +618,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     ):void {
         this._applyRange(state, attrName, fromVal, toVal, strictInterval, keepCurrent)
             .subscribe(
-                (newSelection:AnyTTSelection) => {
+                (newSelection:TextTypes.AnyTTSelection) => {
                     this.emitChange();
                 },
                 (err) => {
@@ -655,7 +657,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         state.hasSelectedItems = false;
     }
 
-    private getAttribute(state:TextTypesModelState, ident:string):AnyTTSelection {
+    private getAttribute(state:TextTypesModelState, ident:string):TextTypes.AnyTTSelection {
         return state.attributes.find((val) => val.name === ident);
     }
 
@@ -666,7 +668,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     replaceAttribute(
         state:TextTypesModelState,
         ident:string,
-        val:AnyTTSelection
+        val:TextTypes.AnyTTSelection
     ):void {
         const attrIdx = this.getAttributeIdx(state, ident);
         if (attrIdx > -1) {
@@ -677,23 +679,23 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
     }
 
-    private _getAttributes(state:TextTypesModelState):Array<AnyTTSelection> {
+    private _getAttributes(state:TextTypesModelState):Array<TextTypes.AnyTTSelection> {
         return state.attributes;
     }
 
-    getInitialAvailableValues():Array<AnyTTSelection> {
+    getInitialAvailableValues():Array<TextTypes.AnyTTSelection> {
         return List.head(this.state.selectionHistory);
     }
 
     /**
      * @deprecated use actions along with model.suspend()
      */
-    exportSelections(lockedOnesOnly:boolean):{[attr:string]:Array<string>} {
+    exportSelections(lockedOnesOnly:boolean):TextTypes.ExportedSelection {
         const ans = {};
-        this.state.attributes.forEach((attrSel:AnyTTSelection) => {
+        this.state.attributes.forEach((attrSel:TextTypes.AnyTTSelection) => {
             if (TTSelOps.hasUserChanges(attrSel)) {
-                if (attrSel.type === 'text' && attrSel.widget === 'days') {
-                    ans[attrSel.name] = [attrSel.textFieldValue];
+                if (attrSel.type === 'regexp' && attrSel.widget === 'days') {
+                    ans[attrSel.name] = attrSel.textFieldValue;
 
                 } else if (this.state.autoCompleteSupport) {
                     ans[attrSel.name !== this.state.bibLabelAttr ?
@@ -981,7 +983,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         toVal:number,
         strictInterval:boolean,
         keepCurrent:boolean
-    ):Observable<AnyTTSelection> {
+    ):Observable<TextTypes.AnyTTSelection> {
 
         if (isNaN(fromVal) && isNaN(toVal)) {
             this.pluginApi.showMessage('warning',
@@ -1028,10 +1030,10 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         return pipe(
             state.attributes,
             List.filter(
-                (item:AnyTTSelection) => TTSelOps.hasUserChanges(item) &&
+                (item:TextTypes.AnyTTSelection) => TTSelOps.hasUserChanges(item) &&
                     (!TTSelOps.isLocked(item) || includeLocked)
             ),
-            List.map((item:AnyTTSelection)=>item.name)
+            List.map((item:TextTypes.AnyTTSelection)=>item.name)
         );
     }
 

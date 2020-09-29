@@ -700,6 +700,23 @@ export namespace TextTypes {
         type:'text';
     }
 
+    export interface RegexpAttributeSelection {
+        attrInfo:AttrInfo;
+        widget:WidgetView;
+        label:string;
+        name:string;
+        textFieldValue:string;
+        isLocked:boolean;
+        type:'regexp';
+    }
+
+
+    export type AnyTTSelection = TextInputAttributeSelection|FullAttributeSelection|
+            RegexpAttributeSelection;
+
+
+    export type ExportedSelection = {[sca:string]:Array<string>|Array<number>|string};
+
     /**
      *
      */
@@ -709,8 +726,8 @@ export namespace TextTypes {
     }
 
     export interface ITextTypesModel<T> extends IModel<T> {
-        exportSelections(lockedOnesOnly:boolean):{[attr:string]:Array<string>};
-        getInitialAvailableValues():Array<FullAttributeSelection|TextInputAttributeSelection>;
+        exportSelections(lockedOnesOnly:boolean):ExportedSelection;
+        getInitialAvailableValues():Array<AnyTTSelection>;
     }
 
     /**
@@ -729,8 +746,6 @@ export namespace TextTypes {
         selected:boolean;
         locked:boolean;
     }
-
-    export type ExportedSelection = {[attr:string]:Array<string>};
 
 }
 

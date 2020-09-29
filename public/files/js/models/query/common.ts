@@ -21,7 +21,7 @@
 import { Dict, List, tuple, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
-import { Kontext, ViewOptions } from '../../types/common';
+import { Kontext, TextTypes, ViewOptions } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
@@ -73,7 +73,7 @@ export interface ConcQueryArgs {
     structs:Array<string>;
     refs:Array<string>;
     fromp:number;
-    text_types:{[sca:string]:Array<string>|Array<number>};
+    text_types:TextTypes.ExportedSelection;
     context:QueryContextArgs;
     type:'concQueryArgs';
 }

@@ -22,9 +22,8 @@ import * as React from 'react';
 import { List, tuple } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import { Kontext, TextTypes } from '../../types/common';
 import { Actions, ActionName } from '../../models/textTypes/actions';
-import { AnyTTSelection } from '../../models/textTypes/common';
 
 
 function rangeToRegexp(d1:Date, d2:Date):string {
@@ -33,7 +32,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         return List.foldl(
             ([,,days], curr) => tuple(
                 curr.getFullYear().toFixed(),
-                md2str(curr.getMonth()),
+                md2str(curr.getMonth() + 1),
                 days.concat([md2str(curr.getDate())])
             ),
             ['', '', []] as [string, string, Array<string>],
@@ -45,7 +44,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         return List.foldl(
             ([,months], curr) => tuple(
                 curr.getFullYear().toFixed(),
-                months.concat([md2str(curr.getMonth())])
+                months.concat([md2str(curr.getMonth() + 1)])
             ),
             ['', []] as [string, Array<string>],
             data
@@ -66,7 +65,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         md.setDate(md.getDate() + 1);
     }
     const toEndOfYear1:Array<Date> = [];
-    while (md.getFullYear() === d1.getFullYear() && md.getTime() < d2.getTime()) {
+    while (md.getFullYear() === d1.getFullYear() && md.getMonth() < d2.getMonth()) {
         toEndOfYear1.push(md);
         md = new Date(md);
         md.setMonth(md.getMonth() + 1);
@@ -84,7 +83,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         md.setMonth(md.getMonth() + 1);
     }
     const toTargetDay:Array<Date> = [];
-    while (md.getDate() <= d2.getDate()) {
+    while (md.getDate() <= d2.getDate() && md.getTime() <= d2.getTime()) {
         toTargetDay.push(md);
         md = new Date(md);
         md.setDate(md.getDate() + 1);
@@ -115,11 +114,12 @@ function rangeToRegexp(d1:Date, d2:Date):string {
     if (!List.empty(comp5[2])) {
         ans.push(`${comp5[0]}-${comp5[1]}-(${comp5[2].join('|')})`);
     }
+
     return ans.join('|');
 }
 
 export interface CalendarDaysSelectorProps {
-    attrObj:AnyTTSelection;
+    attrObj:TextTypes.AnyTTSelection;
 }
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):React.FC<CalendarDaysSelectorProps> {
@@ -130,9 +130,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     const CalendarDaysSelector:React.FC<CalendarDaysSelectorProps> = (props) => {
 
         const now = new Date();
+        const normNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const [state, setState] = React.useState({
-            fromDate: now,
-            toDate: now
+            fromDate: normNow,
+            toDate: normNow
         });
 
         const handleCalClick = (cal:'from'|'to') => (d:Date) => {

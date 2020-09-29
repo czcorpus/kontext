@@ -30,7 +30,6 @@ import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeA
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
 import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
-import { AnyTTSelection } from '../../models/textTypes/common';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
 import { BaseSubcorFormState } from '../../models/subcorp/common';
 
@@ -45,8 +44,8 @@ export interface SubcMixerModelState extends BaseSubcorFormState {
     isVisible:boolean;
     subcIsPublic:boolean;
     numOfErrors:number;
-    ttAttributes:Array<AnyTTSelection>; // basically a copy of text type model attributes
-    ttInitialAvailableValues:Array<AnyTTSelection>;
+    ttAttributes:Array<TextTypes.AnyTTSelection>; // basically a copy of text type model attributes
+    ttInitialAvailableValues:Array<TextTypes.AnyTTSelection>;
     liveattrsSelections:{[key:string]:Array<string>};
 }
 
@@ -390,28 +389,28 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         );
     }
 
-    private getTtAttribute(state:SubcMixerModelState, ident:string):AnyTTSelection {
+    private getTtAttribute(state:SubcMixerModelState, ident:string):TextTypes.AnyTTSelection {
         return state.ttAttributes.find((val) => val.name === ident);
     }
 
     private getAvailableValues(state:SubcMixerModelState):Array<TextTypeAttrVal> {
 
         const getInitialAvailableValues = (attrName:string):Array<TextTypes.AttributeValue> => {
-            const idx = List.findIndex(
+            const srchItem = List.find(
                 item => item.name === attrName,
                 state.ttInitialAvailableValues
             );
-            return idx > -1 ?
-                List.map(item => item, state.ttInitialAvailableValues[idx].values) :
-                [];
+            return srchItem ?
+                List.map(item => item, TTSelOps.getValues(srchItem)) : [];
         };
 
         return pipe(
             state.ttAttributes,
             List.filter(item => TTSelOps.hasUserChanges(item)),
             List.flatMap(item => {
+                const attr = this.getTtAttribute(state, item.name);
                 const tmp = pipe(
-                    this.getTtAttribute(state, item.name).values,
+                    TTSelOps.getValues(item),
                     List.filter(item => item.selected),
                     List.map(item => item.value)
                 );
@@ -471,7 +470,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             return List.foldl(
                 (prev, curr) => prev + curr.availItems,
                 0,
-                item.values
+                TTSelOps.getValues(item)
             );
         }
         return -1;
@@ -514,7 +513,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 if (srch) {
                     const attrVal = List.find(
                         item2 => item2.value == item.attrValue,
-                        srch.values
+                        TTSelOps.getValues(srch)
                     );
                     const total = this.getTtAttrSize(state, item.attrName);
                     return {

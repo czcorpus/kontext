@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../../types/common';
+import { Kontext, TextTypes } from '../../../types/common';
 import { AjaxConcResponse } from '../../concordance/common';
 
 export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
@@ -89,7 +89,7 @@ export interface CTFormProperties extends CTFormInputs {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
     usesAdHocSubcorpus:boolean;
-    selectedTextTypes:{[attr:string]:Array<string>};
+    selectedTextTypes:TextTypes.ExportedSelection;
 }
 
 export const enum FreqQuantities {

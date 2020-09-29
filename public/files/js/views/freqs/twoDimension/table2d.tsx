@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Color, pipe, Maths, Dict } from 'cnc-tskit';
+import { Color, pipe, Maths, Dict, List } from 'cnc-tskit';
 
 import { Kontext, TextTypes } from '../../../types/common';
 import { init as ctFlatResultFactory } from './flatTable';
@@ -864,12 +864,17 @@ export function init(
                         {'\u00a0'}
                         {he.translate('freq__ct_current_adhoc_subc_is')}:
                         {'\u00a0'}
-                        {Object.keys(props.concSelectedTextTypes).map(v => (
-                            <span key={v}>
-                                <strong>{v}</strong>
-                                {' \u2208 {' + props.concSelectedTextTypes[v].map(v => `"${v}"`).join(', ') + '}'}
-                            </span>
-                        ))}
+                        {Object.keys(props.concSelectedTextTypes).map(v => {
+                            const data = props.concSelectedTextTypes[v];
+                            const values = Array.isArray(data) ? data : [data];
+
+                            return (
+                                <span key={v}>
+                                    <strong>{v}</strong>
+                                    {' \u2208 {' + List.map<string|number, string>(v => `"${v}"`, values).join(', ') + '}'}
+                                </span>
+                            );
+                        })}
                     </p>
                 );
             }

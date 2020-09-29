@@ -82,8 +82,13 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
 
     }> = (props) => {
 
+        const normNow = () => {
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        };
+
         const [currDate, updateState] = React.useState(
-            props.currDate ? props.currDate : new Date());
+            props.currDate ? props.currDate : normNow());
 
         const getMonthDays = (year:number, month:number):Array<Date> => {
             const monthStart = new Date(year, month, 1, 0, 0, 0);
