@@ -28,6 +28,7 @@ from werkzeug import Request
 import logging
 
 from controller.kontext import Kontext
+from l10n import corpus_get_conf
 import corplib
 import plugins
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
@@ -122,7 +123,8 @@ class Querying(Kontext):
 
         corpora = self._select_current_aligned_corpora(active_only=True)
         tpl_out['conc_forms_initial_args'] = dict(
-            query=QueryFormArgs(corpora=corpora, persist=False).to_dict(),
+            query=QueryFormArgs(corpora=corpora, persist=False,
+                                default_attr=corpus_get_conf(self.corp, 'DEFAULTATTR')).to_dict(),
             filter=FilterFormArgs(
                 maincorp=getattr(self.args, 'maincorp') if getattr(self.args, 'maincorp') else getattr(self.args, 'corpname'),
                 persist=False

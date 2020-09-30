@@ -166,8 +166,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     matchCaseValues:{[key:string]:boolean}; // corpname -> qmcase
 
-    defaultAttrValues:{[key:string]:string};
-
     pcqPosNegValues:{[key:string]:'pos'|'neg'};
 
     tagBuilderSupport:{[key:string]:boolean};
@@ -430,16 +428,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.matchCaseValues[action.payload.sourceId] = action.payload.value;
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
-            ActionName.QueryInputSetDefaultAttr,
-            action => action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
                 });
             }
         );

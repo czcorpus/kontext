@@ -464,6 +464,7 @@ export class ViewPage {
             structList: this.layoutModel.getConf<Array<string>>('StructList'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
+            currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
             suggestionsVisibility: this.layoutModel.getConf<
                 PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
         });

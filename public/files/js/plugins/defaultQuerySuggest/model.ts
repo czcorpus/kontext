@@ -29,6 +29,7 @@ import { map, tap, concatMap, mergeMap } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { listAttrs1ToExtend, mergeResults } from './frontends';
+import { AnyProviderInfo, supportsRequest } from './providers';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {
@@ -39,18 +40,10 @@ export interface HTTPResponse extends Kontext.AjaxResponse {
     }>;
 }
 
-export interface ProviderInfo {
-    ident:string;
-    rendererId:string;
-    queryTypes:Array<QueryType>;
-    heading:string;
-    onItemClick:PluginInterfaces.QuerySuggest.ItemClickAction;
-}
-
 export interface ModelState {
     isBusy:boolean;
     uiLang:string;
-    providers:Array<ProviderInfo>;
+    providers:Array<AnyProviderInfo>;
     suggestionArgs:{[sourceId:string]:PluginInterfaces.QuerySuggest.SuggestionArgs};
     activeSourceId:string;
     cache:Array<[string, PluginInterfaces.QuerySuggest.SuggestionAnswer]>;
@@ -66,6 +59,13 @@ function listUnion<T>(key:(v:T)=>string,...items:Array<Array<T>>):Array<T> {
     );
 }
 
+function someSupportRequest(infos:Array<AnyProviderInfo>, req:PluginInterfaces.QuerySuggest.SuggestionArgs):boolean {
+    return List.some(info => supportsRequest(info, req), infos);
+}
+
+/**
+ *
+ */
 export class Model extends StatelessModel<ModelState> {
 
     private readonly CACHE_SIZE = 100;
@@ -114,12 +114,16 @@ export class Model extends StatelessModel<ModelState> {
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
             PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
             (state, action) => {
-                state.isBusy = true;
-                state.suggestionArgs[action.payload.sourceId] = {...action.payload};
-                state.activeSourceId = action.payload.sourceId;
+                if (someSupportRequest(state.providers, action.payload)) {
+                    state.isBusy = true;
+                    state.suggestionArgs[action.payload.sourceId] = {...action.payload};
+                    state.activeSourceId = action.payload.sourceId;
+                }
             },
             (state, action, dispatch) => {
-                this.loadSuggestions(state, action.payload, dispatch);
+                if (someSupportRequest(state.providers, action.payload)) {
+                    this.loadSuggestions(state, action.payload, dispatch);
+                }
             }
         );
 
