@@ -153,9 +153,14 @@ export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number,
     }
 }
 
-export type SuggestionsData = {
-    [sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]
-};
+export interface SuggestionsData {
+    [sourceId:string]:{
+        data:Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>;
+        isPartial:boolean;
+        queryPosStart:number;
+        queryPosEnd:number;
+    }
+}
 
 
 export interface QueryFormModelState {
@@ -263,7 +268,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             debounceTime(500)
         ).subscribe(
             ([sourceId,, rawFocusIdx]) => {
-                const srchWord = this.findCursorWord(
+                const [srchWord, srchWordStart, srchWordEnd] = this.findCursorWord(
                     this.state.queries[sourceId],
                     rawFocusIdx
                 );
@@ -277,6 +282,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             ),
                             subcorpus: this.state.currentSubcorp,
                             value: srchWord,
+                            valueStartIdx: srchWordStart,
+                            valueEndIdx: srchWordEnd,
                             valueType: 'unspecified',
                             queryType: this.state.queryTypes[sourceId],
                             posAttr: this.state.defaultAttrValues[sourceId],
@@ -403,17 +410,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     const wordPos =
                         action.payload.onItemClick === 'replace' ?
-                            List.reduce(
-                                ([start, end], value) => {
-                                    return start + value.length + 1 < state.cursorPos ?
-                                        [start + value.length + 1, end + value.length + 1] :
-                                        start === end ?
-                                            [start, end + value.length] :
-                                            [start, end]
-                                },
-                                [0, 0],
-                                state.queries[action.payload.sourceId].split(' ')
-                            ) :
+                            [action.payload.valueStartIdx, action.payload.valueEndIdx] :
                         action.payload.onItemClick === 'insert' ?
                             [state.cursorPos, state.cursorPos] :
                             undefined
@@ -436,6 +433,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         // this is to prevent confusion
                         state.cursorPos = state.queries[action.payload.sourceId].length;
                     }
+                    state.suggestionsVisible[action.payload.sourceId] = false;
                 });
             }
         );
@@ -452,10 +450,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                 } else {
                     this.changeState(state => {
-                        state.querySuggestions[action.payload.sourceId] = tuple(
-                            action.payload.results,
-                            action.payload.isPartial
-                        );
+                        state.querySuggestions[action.payload.sourceId] = {
+                            data: action.payload.results,
+                            isPartial: action.payload.isPartial,
+                            queryPosStart: action.payload.valueStartIdx,
+                            queryPosEnd: action.payload.valueEndIdx
+                        };
                         if (
                             state.suggestionsVisibility ===
                             PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
@@ -496,7 +496,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         );
     }
 
-    private findCursorWord(value:string, focusIdx:number):string {
+    private findCursorWord(value:string, focusIdx:number):[string, number, number] {
         const ans:Array<[string, number, number]> = [];
         let curr:[string, number, number] = ['', 0, 0];
         for (let i = 0; i < value.length; i++) {
@@ -513,12 +513,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         }
         ans.push(curr);
         for (let i = 0; i < ans.length; i++) {
-            const [w, f, t] = ans[i];
+            const [, f, t] = ans[i];
             if (focusIdx >= f && focusIdx <= t) {
-                return w;
+                return ans[i];
             }
         }
-        return '';
+        return ['', 0, 0];
     }
 
     private shouldAskForSuggestion(sourceId:string, srchWord:string):boolean {
@@ -601,8 +601,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         data:SuggestionsData,
         sourceId:string,
         plugin:PluginInterfaces.QuerySuggest.IPlugin
-
     ):boolean {
-        return data[sourceId] && List.some(s => !plugin.isEmptyResponse(s), data[sourceId][0]);
+
+        return data[sourceId] &&
+            List.some(s => !plugin.isEmptyResponse(s), data[sourceId].data);
     }
 }

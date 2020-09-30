@@ -27,7 +27,7 @@ import { init as cqlEditoInit } from './cqlEditor';
 import { WithinBuilderModel, WithinBuilderModelState } from '../../models/query/withinBuilder';
 import { PluginInterfaces } from '../../types/plugins';
 import { Kontext } from '../../types/common';
-import { QueryFormModel, QueryFormModelState, QueryType } from '../../models/query/common';
+import { QueryFormModel, QueryFormModelState, QueryType, SuggestionsData } from '../../models/query/common';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { CQLEditorModel } from '../../models/query/cqleditor/model';
@@ -394,14 +394,14 @@ export function init({
 
     const SuggestionsWidget:React.FC<{
         qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
-        querySuggestions:{[sourceId:string]:[Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>, boolean]};
+        suggestionData:SuggestionsData;
         formType:QueryFormType;
         sourceId:string;
         handleItemClick:(onItemClick:string, value:string) => void;
 
     }> = (props) => {
 
-        const suggestions = props.querySuggestions[props.sourceId][0];
+        const suggestions = props.suggestionData[props.sourceId].data;
         const dynCls = List.every(s => querySuggest.isEmptyResponse(s), suggestions) ?
             ' empty' : '';
 
@@ -413,11 +413,11 @@ export function init({
                     sourceId: props.sourceId
                 }
             });
-        }
+        };
 
         return (
             <div className={`SuggestionsWidget${dynCls}`} tabIndex={-1} onKeyDown={handleKey}>
-            {QueryFormModel.hasSuggestionsFor(props.querySuggestions, props.sourceId, querySuggest) ?
+            {QueryFormModel.hasSuggestionsFor(props.suggestionData, props.sourceId, querySuggest) ?
                 pipe(
                     suggestions,
                     List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
@@ -426,7 +426,7 @@ export function init({
                             <React.Fragment key={`${v.rendererId}${i}`}>
                                 <h2>{v.heading}:</h2>
                                 {props.qsuggPlugin.createElement(v, props.handleItemClick)}
-                                {props.querySuggestions[props.sourceId][1] ?
+                                {props.suggestionData[props.sourceId].isPartial ?
                                     <layoutViews.AjaxLoaderBarImage /> : null}
                             </React.Fragment>
                         ),
@@ -869,7 +869,9 @@ export function init({
                     sourceId: this.props.sourceId,
                     formType: this.props.formType,
                     onItemClick,
-                    value
+                    value,
+                    valueStartIdx: this.props.querySuggestions[this.props.sourceId].queryPosStart,
+                    valueEndIdx: this.props.querySuggestions[this.props.sourceId].queryPosEnd
                 }
             });
             this._queryInputElement.current.focus();
@@ -1013,7 +1015,7 @@ export function init({
                                 querySuggest) ?
                                 <SuggestionsWidget
                                     qsuggPlugin={this.props.qsuggPlugin}
-                                    querySuggestions={this.props.querySuggestions}
+                                    suggestionData={this.props.querySuggestions}
                                     formType={this.props.formType}
                                     sourceId={this.props.sourceId}
                                     handleItemClick={this.handleSuggestionItemClick} />
