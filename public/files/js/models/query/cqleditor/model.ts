@@ -170,7 +170,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         };
         this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
-            ([sourceId, rawAnchorIdx, rawFocusIdx]) => {
+            ([sourceId,,]) => {
                 const currAttr = this.state.focusedAttr[sourceId];
                 if (currAttr && this.state.suggestionsVisibility !==
                     PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
@@ -183,8 +183,6 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             ),
                             subcorpus: null, // TODO
                             value: currAttr.value.replace(/^"(.+)"$/, '$1'),
-                            rawAnchorIdx: rawAnchorIdx,
-                            rawFocusIdx: rawFocusIdx,
                             valueType: 'unspecified',
                             queryType: 'advanced',
                             posAttr: currAttr.type === 'posattr' ? currAttr.name : null,
@@ -434,8 +432,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         const attrs = state.parsedAttrs[sourceId];
         return List.find(
             (v, i) => v.rangeAll[0] <= focus && (
-                focus <= v.rangeAll[1] ||
-                focus > v.rangeAll[1] && i === 0),
+                focus <= v.rangeAll[1]),
             attrs
         );
     }
