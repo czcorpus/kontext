@@ -260,8 +260,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.autoSuggestTrigger.pipe(
             debounceTime(500)
         ).subscribe(
-            ([sourceId, rawAnchorIdx, rawFocusIdx]) => {
-                if (this.shouldAskForSuggestion(sourceId)) {
+            ([sourceId,, rawFocusIdx]) => {
+                const srchWord = this.findCursorWord(
+                    this.state.queries[sourceId],
+                    rawFocusIdx
+                );
+                if (this.shouldAskForSuggestion(sourceId, srchWord)) {
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                         name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                         payload: {
@@ -270,9 +274,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                 [this.pageModel.getCorpusIdent().id]
                             ),
                             subcorpus: this.state.currentSubcorp,
-                            value: this.state.queries[sourceId],
-                            rawAnchorIdx,
-                            rawFocusIdx,
+                            value: srchWord,
                             valueType: 'unspecified',
                             queryType: this.state.queryTypes[sourceId],
                             posAttr: null,
@@ -478,11 +480,36 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         );
     }
 
-    private shouldAskForSuggestion(sourceId:string):boolean {
+    private findCursorWord(value:string, focusIdx:number):string {
+        const ans:Array<[string, number, number]> = [];
+        let curr:[string, number, number] = ['', 0, 0];
+        for (let i = 0; i < value.length; i++) {
+            if (value[i] === ' ') {
+                if (curr) {
+                    ans.push(curr);
+                }
+                curr = [value[i] === ' ' ? '' : value[i], i, i + 1];
+
+            } else {
+                curr[0] += value[i];
+                curr[2] = i + 1;
+            }
+        }
+        ans.push(curr);
+        for (let i = 0; i < ans.length; i++) {
+            const [w, f, t] = ans[i];
+            if (focusIdx >= f && focusIdx <= t) {
+                return w;
+            }
+        }
+        return '';
+    }
+
+    private shouldAskForSuggestion(sourceId:string, srchWord:string):boolean {
         return this.state.queryTypes[sourceId] !== 'advanced'
                         && this.state.suggestionsVisibility !==
                             PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED
-                        && !!this.state.queries[sourceId];
+                        && !!srchWord.trim();
     }
 
     protected validateQuery(query:string, queryType:QueryType):boolean {

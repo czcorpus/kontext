@@ -177,7 +177,8 @@ export class Model extends StatelessModel<ModelState> {
         if (Model.supportsQueryType(state, args.queryType)) {
             this.fetchSuggestions(
                 state,
-                args
+                args,
+                args.value
 
             ).pipe(
                 tap(
@@ -267,51 +268,27 @@ export class Model extends StatelessModel<ModelState> {
         }
     }
 
-    private findCursorWord(args:PluginInterfaces.QuerySuggest.SuggestionArgs):string {
-        const ans:Array<[string, number, number]> = [];
-        let curr:[string, number, number] = ['', 0, 0];
-        for (let i = 0; i < args.value.length; i++) {
-            if (args.value[i] === ' ') {
-                if (curr) {
-                    ans.push(curr);
-                }
-                curr = [args.value[i] === ' ' ? '' : args.value[i], i, i + 1];
-
-            } else {
-                curr[0] += args.value[i];
-                curr[2] = i + 1;
-            }
-        }
-        ans.push(curr);
-        for (let i = 0; i < ans.length; i++) {
-            const [w, f, t] = ans[i];
-            if (args.rawFocusIdx >= f && args.rawFocusIdx <= t) {
-                return w;
-            }
-        }
-        return '';
-    }
-
     private fetchSuggestions(
         state:ModelState,
-        suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs
+        suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs,
+        word:string
 
     ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
         return this.fetchSuggestionsForWord(
             state,
             suggArgs,
-            this.findCursorWord(suggArgs)
+            word
         );
     }
 
     private fetchSuggestionsForWord(
         state:ModelState,
         suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs,
-        srchWord:string
+        word:string
 
     ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
         const cacheIdx = List.findIndex(
-            ([key,]) => key === this.createSuggestionHash(suggArgs, srchWord),
+            ([key,]) => key === this.createSuggestionHash(suggArgs, word),
             state.cache
         );
         if (cacheIdx > -1) {
@@ -335,7 +312,7 @@ export class Model extends StatelessModel<ModelState> {
         args.set('corpname', List.head(suggArgs.corpora));
         args.set('subcorpus', suggArgs.subcorpus);
         args.replace('align', List.tail(suggArgs.corpora));
-        args.set('value', srchWord);
+        args.set('value', word);
         args.set('value_type', suggArgs.valueType);
         args.set('query_type', suggArgs.queryType);
         args.set('p_attr', suggArgs.posAttr);
@@ -358,7 +335,7 @@ export class Model extends StatelessModel<ModelState> {
                         }),
                         data.items
                     ),
-                    parsedWord: srchWord,
+                    parsedWord: word,
                     isPartial: false // yet to be resolved
                 })
             )

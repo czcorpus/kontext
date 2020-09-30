@@ -507,8 +507,6 @@ export namespace PluginInterfaces {
         export interface SuggestionArgs {
             sourceId:string;
             value:string;
-            rawAnchorIdx:number;
-            rawFocusIdx:number;
             valueType:SuggestionValueType;
             queryType:QueryType;
             corpora:Array<string>;
