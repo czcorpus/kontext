@@ -249,8 +249,8 @@ class RuleCharMap {
                                         name: null,
                                         value: this.stripFirstAndLast(this.ruleToSubstring(curr)),
                                         type: 'posattr',
-                                        rangeVal: tuple(curr.from, curr.to),
-                                        rangeAll: tuple(curr.from, curr.to)
+                                        rangeVal: tuple(regexp.from + 1, regexp.to - 1), // +/- 1 <- quotes
+                                        rangeAll: tuple(regexp.from + 1, regexp.to - 1) // +/- 1 <- quotes
                                     }])
                                 } :
                                 {...acc};

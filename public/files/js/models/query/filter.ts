@@ -29,7 +29,7 @@ import { PageModel } from '../../app/page';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
-    FilterServerArgs, QueryType } from './common';
+    FilterServerArgs, QueryType, SuggestionsData } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
@@ -185,12 +185,15 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'simple')]],
             Dict.fromEntries()
         );
-        const querySuggestions = pipe(
+        const querySuggestions:SuggestionsData = pipe(
             [...props.currQueries, ...[tuple<string, Array<unknown>>('__new__', [])]],
             List.map(([k,]) => tuple(
-                k, tuple(
-                    [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
-                    false)
+                k, {
+                    data: [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
+                    isPartial: false,
+                    queryPosStart: 0,
+                    queryPosEnd: 0
+                }
             )),
             Dict.fromEntries()
         );

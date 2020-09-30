@@ -507,6 +507,8 @@ export namespace PluginInterfaces {
         export interface SuggestionArgs {
             sourceId:string;
             value:string;
+            valueStartIdx:number;
+            valueEndIdx:number;
             valueType:SuggestionValueType;
             queryType:QueryType;
             corpora:Array<string>;
@@ -539,10 +541,12 @@ export namespace PluginInterfaces {
             }
 
             export interface ItemClicked extends Action<{
-                onItemClick: string;
-                value: string;
-                sourceId: string;
-                formType: string;
+                onItemClick:string;
+                value:string;
+                valueStartIdx:number;
+                valueEndIdx:number;
+                sourceId:string;
+                formType:string;
             }> {
                 name: ActionName.ItemClicked
             }

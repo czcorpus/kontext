@@ -202,6 +202,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             ),
                             subcorpus: null, // TODO
                             value: srchVal,
+                            valueStartIdx: currAttr.rangeVal[0],
+                            valueEndIdx: currAttr.rangeVal[1],
                             valueType: 'unspecified',
                             queryType: 'advanced',
                             posAttr: currAttr.type === 'posattr' ?
@@ -456,6 +458,20 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             action.payload.corpora
                         );
                     }
+                });
+            }
+        );
+
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.ItemClicked>(
+            PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
+            action => {
+                this.changeState(state => {
+                    this.setRawQuery(
+                        state,
+                        action.payload.sourceId,
+                        action.payload.value,
+                        [action.payload.valueStartIdx, action.payload.valueEndIdx]
+                    );
                 });
             }
         );

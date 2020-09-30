@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
 import { IFullActionControl } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
+import { Observable } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
@@ -31,7 +31,8 @@ import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState,
-    shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType, QueryContextArgs } from './common';
+    shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType, QueryContextArgs,
+    SuggestionsData } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
@@ -225,12 +226,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             List.map(item => tuple(item, props.currQueryTypes[item] || 'simple')),
             Dict.fromEntries()
         );
-        const querySuggestions = pipe(
+        const querySuggestions:SuggestionsData = pipe(
             props.corpora,
             List.map(corp => tuple(corp,
-                tuple(
-                    [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
-                    false)
+                {
+                    data: [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
+                    isPartial: false,
+                    queryPosStart: 0,
+                    queryPosEnd: 0
+                }
             )),
             Dict.fromEntries()
         );
