@@ -92,10 +92,15 @@ class AbstractFrontend(abc.ABC):
         self.headings = conf.get('heading', conf.get('ident'))
         self.renderer = renderer
         self.partial = False
+        self._conf = conf.get('conf', {})
 
     def export_data(self, data: CT, value: str, ui_lang: str):
         ui_lang = ui_lang.replace('_', '-')
         return Response[CT](contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'))
+
+    @property
+    def custom_conf(self):
+        return self._conf
 
 
 class BackendException(Exception):

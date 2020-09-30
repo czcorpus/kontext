@@ -182,6 +182,8 @@ export interface QueryFormModelState {
 
     queryTypes:{[sourceId:string]:QueryType};
 
+    defaultAttrValues:{[key:string]:string};
+
     querySuggestions:SuggestionsData;
 
     tagBuilderSupport:{[sourceId:string]:boolean};
@@ -277,8 +279,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             value: srchWord,
                             valueType: 'unspecified',
                             queryType: this.state.queryTypes[sourceId],
-                            posAttr: null,
-                            // TODO posAttr: [default attribute] if 'simple' type
+                            posAttr: this.state.defaultAttrValues[sourceId],
                             struct: undefined,
                             structAttr: undefined,
                             sourceId
@@ -314,7 +315,22 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         !state.suggestionsVisible[action.payload.sourceId];
                 });
             }
-        )
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
+            ActionName.QueryInputSetDefaultAttr,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
+                });
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    0,
+                    0
+                ));
+            }
+        );
 
         this.addActionSubtypeHandler<Actions.SetActiveInputWidget>(
             ActionName.SetActiveInputWidget,

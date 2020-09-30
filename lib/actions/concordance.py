@@ -355,7 +355,7 @@ class Actions(Querying):
         out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
-            active_only=False), persist=False)
+            active_only=False), persist=False, default_attr=corpus_get_conf(self.corp, 'DEFAULTATTR'))
         # TODO xx reuse selections from last submit
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
@@ -585,7 +585,8 @@ class Actions(Querying):
         # 1) store query forms arguments for later reuse on client-side
         corpora = self._select_current_aligned_corpora(active_only=True)
         corpus_info = self.get_corpus_info(corpora[0])
-        qinfo = QueryFormArgs(corpora=corpora, persist=True)
+        qinfo = QueryFormArgs(corpora=corpora, persist=True,
+                              default_attr=corpus_get_conf(self.corp, 'DEFAULTATTR'))
         qinfo.update_by_user_query(request.json, self._get_tt_bib_mapping(request.json['text_types']))
         self.add_conc_form_args(qinfo)
         # 2) process the query
@@ -1574,7 +1575,7 @@ class Actions(Querying):
         lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
 
         self.add_conc_form_args(QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False),
-                                              persist=False))
+                                              persist=False, default_attr=corpus_get_conf(self.corp, 'DEFAULTATTR')))
         self._attach_query_params(tmp_out)
         self._attach_aligned_query_params(tmp_out)
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, tmp_out)

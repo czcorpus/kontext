@@ -123,8 +123,6 @@ export interface FilterFormModelState extends QueryFormModelState {
 
     matchCaseValues:{[key:string]:boolean};
 
-    defaultAttrValues:{[key:string]:string};
-
     pnFilterValues:{[key:string]:string};
 
     /**
@@ -360,16 +358,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             action => {
                 this.changeState(state => {
                     state.matchCaseValues[action.payload.sourceId] = action.payload.value;
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
-            ActionName.QueryInputSetDefaultAttr,
-            action => action.payload.formType === 'filter',
-            action => {
-                this.changeState(state => {
-                    state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
                 });
             }
         );

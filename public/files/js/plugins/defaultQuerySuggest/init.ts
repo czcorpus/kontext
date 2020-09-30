@@ -24,8 +24,9 @@ import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { init as initView, SuggestionsViews } from './view';
-import { Model, ProviderInfo } from './model';
+import { Model } from './model';
 import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend } from './frontends';
+import { AnyProviderInfo } from './providers';
 
 
 declare var require:any;
@@ -42,13 +43,13 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
     protected readonly model:Model;
 
-    protected readonly providers:Array<ProviderInfo>;
+    protected readonly providers:Array<AnyProviderInfo>;
 
     constructor(
         pluginApi:IPluginApi,
         views:SuggestionsViews,
         model:Model,
-        providers:Array<ProviderInfo>
+        providers:Array<AnyProviderInfo>
     ) {
         this.pluginApi = pluginApi;
         this.views = views;
@@ -123,16 +124,8 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
 const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
     const providers = pipe(
-        pluginApi.getNestedConf<Array<ProviderInfo>>('pluginData', 'query_suggest', 'providers'),
-        List.map(
-            item => ({
-                ident: item.ident,
-                rendererId: item.rendererId,
-                queryTypes: item.queryTypes,
-                heading: item.heading,
-                onItemClick: item.onItemClick
-            })
-        )
+        pluginApi.getNestedConf<Array<AnyProviderInfo>>('pluginData', 'query_suggest', 'providers'),
+        List.map(item => ({...item}))
     );
     const model = new Model(
         pluginApi.dispatcher(),

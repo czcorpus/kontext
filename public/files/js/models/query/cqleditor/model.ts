@@ -48,6 +48,8 @@ export interface CQLEditorModelState {
 
     focusedAttr:{[key:string]:ParsedAttr|undefined};
 
+    defaultAttrValues:{[key:string]:string};
+
     message:{[key:string]:string};
 
     rawAnchorIdx:{[key:string]:number};
@@ -83,6 +85,7 @@ export interface CQLEditorModelInitArgs {
     tagAttr:string;
     isEnabled:boolean;
     currQueries?:{[sourceId:string]:string};
+    currDefaultAttrValues:{[corpname:string]:string};
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
 
@@ -134,8 +137,19 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
     protected readonly autoSuggestTrigger:Subject<[string, number, number]>;
 
 
-    constructor({dispatcher, pageModel, attrList, structAttrList, structList, tagAttr,
-                    isEnabled, currQueries, suggestionsVisibility}:CQLEditorModelInitArgs) {
+    constructor({
+        dispatcher,
+        pageModel,
+        attrList,
+        structAttrList,
+        structList,
+        tagAttr,
+        isEnabled,
+        currQueries,
+        suggestionsVisibility,
+        currDefaultAttrValues
+    }:CQLEditorModelInitArgs) {
+
         const attrHelper = new AttrHelper(attrList, structAttrList, structList, tagAttr);
         const queryData = highlightAllQueries(pageModel, attrHelper, currQueries);
         super(
@@ -152,6 +166,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     List.map(([ident,,attrs]) => tuple(ident, attrs)),
                     Dict.fromEntries()
                 ),
+                defaultAttrValues: {...currDefaultAttrValues},
                 focusedAttr: {},
                 message: {},
                 rawAnchorIdx: {},
@@ -172,7 +187,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
         this.autoSuggestTrigger.pipe(debounceTime(500)).subscribe(
             ([sourceId,,]) => {
                 const currAttr = this.state.focusedAttr[sourceId];
-                if (currAttr && this.state.suggestionsVisibility !==
+                if (!currAttr) {
+                    return;
+                }
+                const srchVal = currAttr.value.trim().replace(/^"(.+)"$/, '$1');
+                if (srchVal && this.state.suggestionsVisibility !==
                     PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED) {
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                         name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
@@ -182,10 +201,11 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                                 [this.pageModel.getCorpusIdent().id]
                             ),
                             subcorpus: null, // TODO
-                            value: currAttr.value.replace(/^"(.+)"$/, '$1'),
+                            value: srchVal,
                             valueType: 'unspecified',
                             queryType: 'advanced',
-                            posAttr: currAttr.type === 'posattr' ? currAttr.name : null,
+                            posAttr: currAttr.type === 'posattr' ?
+                                (currAttr.name || this.state.defaultAttrValues[sourceId]) : null,
                             struct: undefined, // TODO
                             structAttr: undefined, // TODO
                             sourceId
@@ -250,6 +270,20 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                 this.changeState(state => {
                     state.isEnabled = action.payload.value;
                 });
+            }
+        );
+
+        this.addActionHandler<Actions.QueryInputSetDefaultAttr>(
+            ActionName.QueryInputSetDefaultAttr,
+            action => {
+                this.changeState(state => {
+                    state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
+                });
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    this.state.rawAnchorIdx[action.payload.sourceId],
+                    this.state.rawFocusIdx[action.payload.sourceId]
+                ));
             }
         );
 

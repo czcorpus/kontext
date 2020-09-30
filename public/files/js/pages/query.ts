@@ -247,6 +247,7 @@ export class QueryPage {
                 this.layoutModel.getConf<string>('tagAttr') : null,
             isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
             currQueries: queryFormArgs.curr_queries,
+            currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
             suggestionsVisibility: this.layoutModel.getConf<
                 PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
         });
