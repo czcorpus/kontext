@@ -284,7 +284,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             defaultAttrValues: pipe(
                 props.corpora,
-                List.map(item => tuple(item, props.currDefaultAttrValues[item] || 'word')),
+                List.map(item => tuple(
+                    item,
+                    props.currDefaultAttrValues[item] !== undefined ?
+                        props.currDefaultAttrValues[item] :
+                        (queryTypes[item] === 'advanced' ? 'word' : '')
+                )),
                 Dict.fromEntries()
             ),
             queryTypes,
@@ -672,16 +677,21 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             List.map(item => tuple(item, data.currQmcaseValues[item] || false)),
             Dict.fromEntries()
         );
-        state.defaultAttrValues = pipe(
-            state.corpora,
-            List.map(item => tuple(item, data.currDefaultAttrValues[item] || 'word')),
-            Dict.fromEntries()
-        );
         state.queryTypes = pipe(
             state.corpora,
             List.map(item => tuple(item, data.currQueryTypes[item] || 'simple')),
             Dict.fromEntries()
         );
+        state.defaultAttrValues = pipe(
+            state.corpora,
+            List.map(item => tuple(
+                item,
+                data.currDefaultAttrValues[item] !== undefined ?
+                data.currDefaultAttrValues[item] :
+                    (state.queryTypes[item] === 'advanced' ? 'word' : '')
+            )),
+            Dict.fromEntries()
+        ),
         state.pcqPosNegValues = pipe(
             state.corpora,
             List.map(item => tuple(item, data.currPcqPosNegValues[item] || 'pos')),
@@ -765,7 +775,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 state.includeEmptyValues[corpname] = false;
             }
             if (!Dict.hasKey(corpname, state.defaultAttrValues)) {
-                state.defaultAttrValues[corpname] = 'word';
+                state.defaultAttrValues[corpname] = state.queryTypes[corpname] === 'advanced' ?
+                    'word' : '';
             }
             state.supportedWidgets = determineSupportedWidgets(state.corpora, state.queryTypes,
                 state.tagBuilderSupport, state.isAnonymousUser);

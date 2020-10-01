@@ -130,18 +130,18 @@ class QueryFormArgs(ConcFormArgs):
     to be JSON-serializable.
     """
 
-    def __init__(self, corpora: List[str], persist: bool, default_attr: str) -> None:
+    def __init__(self, corpora: List[str], persist: bool) -> None:
         super().__init__(persist)
         self.form_type: str = 'query'
 
         empty_dict: Dict[str, Any] = {c: None for c in corpora}
-        self.curr_query_types = empty_dict.copy()
+        self.curr_query_types = {k: 'simple' for k in corpora}
         self.curr_queries = empty_dict.copy()
         self.curr_pcq_pos_neg_values = empty_dict.copy()
         self.curr_include_empty_values = empty_dict.copy()
         self.curr_lpos_values = empty_dict.copy()
         self.curr_qmcase_values = empty_dict.copy()
-        self.curr_default_attr_values = {k: default_attr for k in corpora}
+        self.curr_default_attr_values = {k: '' for k in corpora}
         self.tag_builder_support = empty_dict.copy()
         self.tagset_docs = empty_dict.copy()
         self.has_lemma = empty_dict.copy()
@@ -367,7 +367,7 @@ def build_conc_form_args(corpora: List[str], data: Dict[str, Any], op_key: str) 
     """
     tp = data['form_type']
     if tp == 'query':
-        return QueryFormArgs(corpora=corpora, persist=False, default_attr=None).updated(data, op_key)
+        return QueryFormArgs(corpora=corpora, persist=False).updated(data, op_key)
     elif tp == 'filter':
         return FilterFormArgs(maincorp=data['maincorp'], persist=False).updated(data, op_key)
     elif tp == 'sort':

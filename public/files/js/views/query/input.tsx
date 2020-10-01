@@ -618,7 +618,7 @@ export function init({
             <span>
                 {he.translate('query__pos')}:{'\u00a0'}
                 <select onChange={handleLposChange} value={props.lposValue}>
-                    <option value="">{he.translate('query__not_specified')}</option>
+                    <option value="">-- {he.translate('query__not_specified')} --</option>
                     {props.wPoSList.map(item => {
                         return <option key={item.v} value={item.v}>{item.n}</option>;
                     })}
@@ -774,16 +774,17 @@ export function init({
 
         if (props.forcedAttr) {
             return (
-                <select disabled={true} title={he.translate('query__implicit_attr_cannot_be_changed')}>
+                <select className="DefaultAttrSelect" disabled={true} title={he.translate('query__implicit_attr_cannot_be_changed')}>
                     <option>{props.forcedAttr}</option>
                 </select>
             );
 
         } else {
             return (
-                <select value={props.defaultAttr} onChange={handleSelectChange}>
+                <select className="DefaultAttrSelect" value={props.defaultAttr} onChange={handleSelectChange}>
+                    <option value="">-- {he.translate('query__not_specified')} --</option>
                     {props.attrList.map(item => {
-                        return <option key={item.n} value={item.n}>{item.label}</option>;
+                        return <option key={item.n} value={item.n || ''}>{item.label}</option>;
                     })}
                 </select>
             );
