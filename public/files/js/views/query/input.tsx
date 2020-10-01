@@ -1026,7 +1026,7 @@ export function init({
                     <fieldset className="query-options">
                         <legend>
                             <span className="form-extension-switch always-expand">
-                                {he.translate('global__options')}
+                                {he.translate('query__specify_options')}
                             </span>
                         </legend>
                         <div className="options">
