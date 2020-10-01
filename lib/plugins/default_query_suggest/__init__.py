@@ -118,11 +118,7 @@ def init_provider(conf, ident):
 
 
 def setup_providers(plg_conf):
-
-    with open(plg_conf['default:providers_conf'], 'rb') as fr:
-        providers_conf = json.load(fr)
-    providers = dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf)
-    return providers
+    return dict((prov['ident'], init_provider(prov, prov['ident'])) for prov in plg_conf.get('providers', []))
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
@@ -132,5 +128,5 @@ def create_instance(settings, corparch):
     settings -- the settings.py module
     db -- a 'db' plugin implementation
     """
-    providers = setup_providers(settings.get('plugins', 'query_suggest'))
-    return DefaultQuerySuggest(providers, corparch)
+    conf = setup_providers(settings.get_plugin_custom_conf(plugins.runtime.QUERY_SUGGEST.name))
+    return DefaultQuerySuggest(conf, corparch)
