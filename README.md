@@ -17,9 +17,7 @@ Please note that due to [Python 2 EOL](https://www.python.org/doc/sunset-python-
 
 KonText is an **advanced corpus query interface** and corpus data integration middleware built around corpus search engine [Manatee-open](http://nlp.fi.muni.cz/trac/noske). The development is maintained by the [Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
 
-## Features
-
-### notable end-user features
+## Notable end-user features
 
 * fully **editable query chain**
     * any operation from a user defined sequence (e.g. query -&gt; filter -&gt; sample -&gt; sorting) can be changed
@@ -51,7 +49,7 @@ KonText is an **advanced corpus query interface** and corpus data integration mi
 * integrability with external data resources (e.g. dictionaries, media libraries)
 
 
-### internal features
+## Internal features
 
 * modern client-side application (written in TypeScript, event stream architecture, React components, extensible)
 * server-side written as a **WSGI application** with fully **decoupled background concordance/frequency/collocation calculation** (using an integrated worker server)
