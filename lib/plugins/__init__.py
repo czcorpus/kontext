@@ -217,7 +217,7 @@ class _PluginFactory(object):
         self._fn = fn
         self._args = args
 
-    def __call__(self, conf):
+    def __call__(self, conf: ModuleType('settings')):
         return self._fn(*(conf,) + self._args)
 
 
