@@ -481,7 +481,7 @@ export namespace PluginInterfaces {
         export interface IPlugin extends BasePlugin {
             createElement<T>(
                 dr:DataAndRenderer<T>,
-                itemClickHandler:(onItemClick:string, value:string)=>void
+                itemClickHandler:(onItemClick:string, value:string, attr:string)=>void
             ):React.ReactElement;
             isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
             listCurrentProviders():Array<string>;
@@ -509,6 +509,8 @@ export namespace PluginInterfaces {
             value:string;
             valueStartIdx:number;
             valueEndIdx:number;
+            attrStartIdx?:number;
+            attrEndIdx?:number;
             valueType:SuggestionValueType;
             queryType:QueryType;
             corpora:Array<string>;
@@ -545,6 +547,9 @@ export namespace PluginInterfaces {
                 value:string;
                 valueStartIdx:number;
                 valueEndIdx:number;
+                attrStartIdx?:number;
+                attrEndIdx?:number;
+                attr:string;
                 sourceId:string;
                 formType:string;
             }> {
@@ -554,12 +559,13 @@ export namespace PluginInterfaces {
         }
 
         export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
-            React.SFC<Kontext.GeneralProps>;
+            React.FC<Kontext.GeneralProps>;
 
         export interface DataAndRenderer<T> {
             rendererId:string;
             contents:T;
             heading:string;
+            isShortened:boolean;
         }
 
         export type Factory = (pluginApi:IPluginApi)=>IPlugin;

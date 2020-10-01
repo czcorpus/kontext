@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import { Kontext } from './common';
 
 
 export namespace CoreViews {
@@ -70,7 +71,7 @@ export namespace CoreViews {
              */
             onAreaClick?:()=>void;
 
-            status?:string;
+            status?:Kontext.UserMessageTypes;
 
             /**
              * an optional inline CSS
@@ -286,7 +287,7 @@ export namespace CoreViews {
     export namespace StatusIcon {
 
         export interface Props {
-            status:string;
+            status:Kontext.UserMessageTypes;
             htmlClass?:string;
             inline?:boolean;
         }

@@ -63,7 +63,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
     createElement<T>(
         dr:PluginInterfaces.QuerySuggest.DataAndRenderer<T>,
-        itemClickHandler:(onItemClick, value)=>void
+        itemClickHandler:(onItemClick:string, value:string, attr:string)=>void
     ):React.ReactElement {
 
         const onItemClick = List.find(
@@ -75,15 +75,16 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
             return createElement(this.views.basic, {
                 data: dr.contents,
                 itemClickHandler: onItemClick ?
-                    value => itemClickHandler(onItemClick, value) :
+                    (value) => itemClickHandler(onItemClick, value, null) : // TODO attr should not be null
                     null
             });
 
         } else if (isPosAttrPairRelFrontend(dr)) {
             return createElement(this.views.posAttrPairRel, {
                 ...dr.contents,
+                isShortened: dr.isShortened,
                 itemClickHandler: onItemClick ?
-                    value => itemClickHandler(onItemClick, value) :
+                    (value, attr) => itemClickHandler(onItemClick, value, attr) :
                     null
             });
 
@@ -139,6 +140,7 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
         },
         pluginApi
     );
+
     return new DefaultQuerySuggest(
         pluginApi,
         initView(pluginApi.dispatcher(), model, pluginApi.getComponentHelpers()),

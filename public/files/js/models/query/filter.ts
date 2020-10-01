@@ -191,8 +191,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 k, {
                     data: [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
                     isPartial: false,
-                    queryPosStart: 0,
-                    queryPosEnd: 0
+                    valuePosStart: 0,
+                    valuePosEnd: 0
                 }
             )),
             Dict.fromEntries()

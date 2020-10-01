@@ -62,6 +62,7 @@ export interface ParsedAttr {
     value:string;
     type:'posattr'|'struct'|'structattr';
     rangeVal:[number, number];
+    rangeAttr:[number, number]|null; // if null then simplified form is expected (e.g. "foo")
     rangeAll:[number, number];
 }
 
@@ -250,7 +251,8 @@ class RuleCharMap {
                                         value: this.stripFirstAndLast(this.ruleToSubstring(curr)),
                                         type: 'posattr',
                                         rangeVal: tuple(regexp.from + 1, regexp.to - 1), // +/- 1 <- quotes
-                                        rangeAll: tuple(regexp.from + 1, regexp.to - 1) // +/- 1 <- quotes
+                                        rangeAll: tuple(regexp.from + 1, regexp.to - 1), // +/- 1 <- quotes
+                                        rangeAttr: null
                                     }])
                                 } :
                                 {...acc};
@@ -269,6 +271,7 @@ class RuleCharMap {
                                         value: this.ruleToSubstring(curr),
                                         type: 'posattr',
                                         rangeVal: tuple(curr.from, curr.to),
+                                        rangeAttr: tuple(acc.lastAttName.from, acc.lastAttName.to),
                                         rangeAll: tuple(acc.lastAttName.from, curr.to)
                                     }])
                                 } :

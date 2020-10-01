@@ -25,7 +25,7 @@ import { MessageModel, MessageModelState } from '../models/common/layout';
 
 
 export interface MessageViewProps {
-    issueReportingView:React.SFC<{}>|React.ComponentClass<{}>;
+    issueReportingView:React.FC<{}>|React.ComponentClass<{}>;
     widgetProps:any;
     anonymousUser:boolean;
     lastUsedCorpus:{corpname:string; human_corpname:string};
@@ -42,8 +42,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ---------------------- <Message /> ------------------------------------
 
-    const Message:React.SFC<{
-        status:string;
+    const Message:React.FC<{
+        status:Kontext.UserMessageTypes;
         text:string;
 
     }> = (props) => {
@@ -59,7 +59,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ---------------------- <MessagePageHelp /> ------------------------------------
 
-    const MessagePageHelp:React.SFC<MessageViewProps & MessageModelState> = (props) => {
+    const MessagePageHelp:React.FC<MessageViewProps & MessageModelState> = (props) => {
 
         const handleCorporaClick = () => {
             window.location.href = he.createActionLink('corpora/corplist');

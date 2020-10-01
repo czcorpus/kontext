@@ -397,7 +397,7 @@ export function init({
         suggestionData:SuggestionsData;
         formType:QueryFormType;
         sourceId:string;
-        handleItemClick:(onItemClick:string, value:string) => void;
+        handleItemClick:(onItemClick:string, value:string, attr:string) => void;
 
     }> = (props) => {
 
@@ -862,7 +862,7 @@ export function init({
             });
         }
 
-        handleSuggestionItemClick(onItemClick:string, value:string):void {
+        handleSuggestionItemClick(onItemClick:string, value:string, attr:string):void {
             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
                 name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
                 payload: {
@@ -870,8 +870,11 @@ export function init({
                     formType: this.props.formType,
                     onItemClick,
                     value,
-                    valueStartIdx: this.props.querySuggestions[this.props.sourceId].queryPosStart,
-                    valueEndIdx: this.props.querySuggestions[this.props.sourceId].queryPosEnd
+                    valueStartIdx: this.props.querySuggestions[this.props.sourceId].valuePosStart,
+                    valueEndIdx: this.props.querySuggestions[this.props.sourceId].valuePosEnd,
+                    attrStartIdx: this.props.querySuggestions[this.props.sourceId].attrPosStart,
+                    attrEndIdx: this.props.querySuggestions[this.props.sourceId].attrPosEnd,
+                    attr
                 }
             });
             this._queryInputElement.current.focus();
@@ -1026,7 +1029,7 @@ export function init({
                     <fieldset className="query-options">
                         <legend>
                             <span className="form-extension-switch always-expand">
-                                {he.translate('global__options')}
+                                {he.translate('query__specify_options')}
                             </span>
                         </legend>
                         <div className="options">

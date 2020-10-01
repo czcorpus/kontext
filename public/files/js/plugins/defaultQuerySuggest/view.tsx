@@ -51,19 +51,22 @@ export interface UnsupportedRendererProps {
 export interface PosAttrPairRelRendererProps {
     attrs:[string, string];
     data:{[attr1:string]:Array<string>};
-    itemClickHandler:(value)=>void;
+    isShortened:boolean;
+    itemClickHandler:(value:string, attr:string)=>void;
 }
 
 
 export interface SuggestionsViews {
-    [KnownRenderers.BASIC]:React.SFC<BasicRendererProps>;
-    [KnownRenderers.ERROR]:React.SFC<ErrorRendererProps>;
-    [KnownRenderers.UNSUPPORTED]:React.SFC<UnsupportedRendererProps>;
-    [KnownRenderers.POS_ATTR_PAIR_REL]:React.SFC<PosAttrPairRelRendererProps>;
+    [KnownRenderers.BASIC]:React.FC<BasicRendererProps>;
+    [KnownRenderers.ERROR]:React.FC<ErrorRendererProps>;
+    [KnownRenderers.UNSUPPORTED]:React.FC<UnsupportedRendererProps>;
+    [KnownRenderers.POS_ATTR_PAIR_REL]:React.FC<PosAttrPairRelRendererProps>;
 }
 
 
 export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers):SuggestionsViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // ------------- <UnsupportedRenderer /> -------------------------------
 
@@ -131,12 +134,12 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                     <tr className={index > 0 ? 'separ' : null}>
                                         <th className="attr1" rowSpan={List.size(attrs2)}>{
                                             props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler(attr1)}>{attr1}</a> :
+                                            <a onClick={e => props.itemClickHandler(attr1, props.attrs[0])}>{attr1}</a> :
                                             attr1
                                         }</th>
                                         <td>{
                                             props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler(List.head(attrs2))}>{List.head(attrs2)}</a> :
+                                            <a onClick={e => props.itemClickHandler(List.head(attrs2), props.attrs[1])}>{List.head(attrs2)}</a> :
                                             List.head(attrs2)
                                         }</td>
                                     </tr>
@@ -150,7 +153,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                                     {attr2 === null && i === List.size(attrs2) - 2 ?
                                                     <span title={he.translate('global__shortened')}>{'\u2026'}</span> :
                                                     (props.itemClickHandler ?
-                                                        <a onClick={e => props.itemClickHandler(attr2)}>{attr2}</a> :
+                                                        <a onClick={e => props.itemClickHandler(attr2, props.attrs[1])}>{attr2}</a> :
                                                         attr2
                                                     )
                                                     }
@@ -165,6 +168,13 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                 )}
                 </tbody>
             </table>
+            {props.isShortened ?
+                <div className="note">
+                    <layoutViews.StatusIcon status="warning" />
+                    {he.translate('defaultTD__shortened_notice')}
+                </div> :
+                null
+            }
         </div>
     };
 

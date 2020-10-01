@@ -214,7 +214,7 @@ export namespace Kontext {
 
     export interface UserNotification {
         messageId:string;
-        messageType:string;
+        messageType:Kontext.UserMessageTypes;
         messageText:string;
         ttl:number;
         timeFadeout:number;
