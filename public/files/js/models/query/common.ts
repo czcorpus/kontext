@@ -432,6 +432,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         // TODO on refocus on the input cursor is on the end
                         // this is to prevent confusion
                         state.cursorPos = state.queries[action.payload.sourceId].length;
+
+                        state.defaultAttrValues[action.payload.sourceId] = action.payload.attr;
                     }
                     state.suggestionsVisible[action.payload.sourceId] = false;
                 });

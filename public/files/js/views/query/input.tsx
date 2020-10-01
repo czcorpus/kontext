@@ -397,7 +397,7 @@ export function init({
         suggestionData:SuggestionsData;
         formType:QueryFormType;
         sourceId:string;
-        handleItemClick:(onItemClick:string, value:string) => void;
+        handleItemClick:(onItemClick:string, value:string, attr:string) => void;
 
     }> = (props) => {
 
@@ -862,7 +862,7 @@ export function init({
             });
         }
 
-        handleSuggestionItemClick(onItemClick:string, value:string):void {
+        handleSuggestionItemClick(onItemClick:string, value:string, attr:string):void {
             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
                 name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
                 payload: {
@@ -871,7 +871,8 @@ export function init({
                     onItemClick,
                     value,
                     valueStartIdx: this.props.querySuggestions[this.props.sourceId].queryPosStart,
-                    valueEndIdx: this.props.querySuggestions[this.props.sourceId].queryPosEnd
+                    valueEndIdx: this.props.querySuggestions[this.props.sourceId].queryPosEnd,
+                    attr: attr
                 }
             });
             this._queryInputElement.current.focus();

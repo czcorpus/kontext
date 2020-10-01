@@ -481,7 +481,7 @@ export namespace PluginInterfaces {
         export interface IPlugin extends BasePlugin {
             createElement<T>(
                 dr:DataAndRenderer<T>,
-                itemClickHandler:(onItemClick:string, value:string)=>void
+                itemClickHandler:(onItemClick:string, value:string, attr:string)=>void
             ):React.ReactElement;
             isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
             listCurrentProviders():Array<string>;
@@ -545,6 +545,7 @@ export namespace PluginInterfaces {
                 value:string;
                 valueStartIdx:number;
                 valueEndIdx:number;
+                attr:string;
                 sourceId:string;
                 formType:string;
             }> {
