@@ -230,6 +230,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ),
             defaultAttrValues: pipe(
                 props.currDefaultAttrValues,
+                List.map(([,item]) => tuple(
+                    item,
+                    item !== undefined ?
+                        item :
+                        queryTypes[item] === 'advanced' ? 'word' : ''
+                )),
                 Dict.fromEntries()
             ),
             pnFilterValues: pipe(

@@ -48,7 +48,7 @@ export function supportsRequest(info:AnyProviderInfo, req:PluginInterfaces.Query
         case 'basic':
             return true;
         case 'posAttrPairRel':
-            return info.conf.attr1 === req.posAttr || info.conf.attr2 === req.posAttr;
+            return info.conf.attr1 === req.posAttr || info.conf.attr2 === req.posAttr || !req.posAttr;
         default:
             return false;
     }

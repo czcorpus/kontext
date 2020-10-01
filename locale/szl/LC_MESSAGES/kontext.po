@@ -446,4 +446,10 @@ msgid "List of published subcorpora"
 msgstr "Lista ôpublikowanych podkorpusōw"
 
 msgid "Invalid page number"
-msgstr "Špatné číslo stránky"
+msgstr "Invalid page number"
+
+msgid "View on GitHub"
+msgstr "View on GitHub"
+
+msgid "unspecified"
+msgstr "unspecified"
