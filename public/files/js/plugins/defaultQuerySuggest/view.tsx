@@ -51,19 +51,22 @@ export interface UnsupportedRendererProps {
 export interface PosAttrPairRelRendererProps {
     attrs:[string, string];
     data:{[attr1:string]:Array<string>};
+    isShortened:boolean;
     itemClickHandler:(value)=>void;
 }
 
 
 export interface SuggestionsViews {
-    [KnownRenderers.BASIC]:React.SFC<BasicRendererProps>;
-    [KnownRenderers.ERROR]:React.SFC<ErrorRendererProps>;
-    [KnownRenderers.UNSUPPORTED]:React.SFC<UnsupportedRendererProps>;
-    [KnownRenderers.POS_ATTR_PAIR_REL]:React.SFC<PosAttrPairRelRendererProps>;
+    [KnownRenderers.BASIC]:React.FC<BasicRendererProps>;
+    [KnownRenderers.ERROR]:React.FC<ErrorRendererProps>;
+    [KnownRenderers.UNSUPPORTED]:React.FC<UnsupportedRendererProps>;
+    [KnownRenderers.POS_ATTR_PAIR_REL]:React.FC<PosAttrPairRelRendererProps>;
 }
 
 
 export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers):SuggestionsViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // ------------- <UnsupportedRenderer /> -------------------------------
 
@@ -165,6 +168,13 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                 )}
                 </tbody>
             </table>
+            {props.isShortened ?
+                <div className="note">
+                    <layoutViews.StatusIcon status="warning" />
+                    {he.translate('defaultTD__shortened_notice')}
+                </div> :
+                null
+            }
         </div>
     };
 

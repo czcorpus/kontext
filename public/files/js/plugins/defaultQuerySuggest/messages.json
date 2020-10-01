@@ -1,16 +1,23 @@
 {
     "en-US": {
-       "defaultTD__unsupported_renderer": "Required renderer module not found",
-       "defaultTD__original_data": "Data",
-       "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source",
-       "defaultTD__plug_in_error_symbol_alt": "Plug-in error"
+        "defaultTD__unsupported_renderer": "Required renderer module not found",
+        "defaultTD__original_data": "Data",
+        "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source",
+        "defaultTD__plug_in_error_symbol_alt": "Plug-in error",
+        "defaultTD__shortened_notice": "The list is shortened due to large number of variants"
     },
     "cs-CZ": {
         "defaultTD__unsupported_renderer": "Požadovaný zobrazovací modul nebyl nalezen",
         "defaultTD__original_data": "Data",
         "defaultTD__failed_to_fetch_external_information": "Nepodařilo se načíst informaci ze zdroje třetí strany",
-        "defaultTD__plug_in_error_symbol_alt": "Chyba plug-inu"
+        "defaultTD__plug_in_error_symbol_alt": "Chyba plug-inu",
+        "defaultTD__shortened_notice": "Výpis je zkrácen kvůli velkému množství variant"
     },
     "szl": {
+        "defaultTD__unsupported_renderer": "Required renderer module not found",
+        "defaultTD__original_data": "Data",
+        "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source",
+        "defaultTD__plug_in_error_symbol_alt": "Plug-in error",
+        "defaultTD__shortened_notice": "The list is shortened due to large number of variants"
     }
 }

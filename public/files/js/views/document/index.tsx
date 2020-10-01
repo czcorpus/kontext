@@ -50,7 +50,6 @@ const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    modelProvider:Kontext.LayoutModel, // TODO remove
     messageModel:MessageModel
 
 ):CoreViews.Runtime {

@@ -28,7 +28,7 @@ import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
 import { map, tap, concatMap, mergeMap } from 'rxjs/operators';
 import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { listAttrs1ToExtend, mergeResults } from './frontends';
+import { cutLongResult, listAttrs1ToExtend, mergeResults } from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
 
 
@@ -50,7 +50,7 @@ export interface ModelState {
 }
 
 
-function listUnion<T>(key:(v:T)=>string,...items:Array<Array<T>>):Array<T> {
+function listUnion<T>(key:(v:T)=>string, items:Array<Array<T>>):Array<T> {
     return pipe(
         items,
         List.flatMap(v => v),
@@ -198,7 +198,10 @@ export class Model extends StatelessModel<ModelState> {
                             name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                             payload: {
                                 ...args,
-                                results: data.results,
+                                results: List.map(
+                                    cutLongResult,
+                                    data.results
+                                ),
                                 parsedWord: data.parsedWord,
                                 isPartial
                             }
@@ -211,12 +214,14 @@ export class Model extends StatelessModel<ModelState> {
                         List.map(
                             item => listAttrs1ToExtend(item)
                         ),
-                        v => listUnion(id, ...v),
+                        v => listUnion(id, v),
                         List.map(v => tuple(data, v))
                     ))
                 ),
                 mergeMap(
-                    ([firstData, item]) => this.fetchSuggestionsForWord(state, args, item).pipe(
+                    ([firstData, item]) => this.fetchSuggestionsForWord(
+                        state, args, item
+                    ).pipe(
                         map(
                             resp => tuple(firstData, resp)
                         )
@@ -230,7 +235,9 @@ export class Model extends StatelessModel<ModelState> {
                             firstData.results,
                             List.zip(secondData.results),
                             List.map(
-                                ([values1, values2]) => mergeResults(values1, values2)
+                                ([values1, values2]) => cutLongResult(
+                                    mergeResults(values1, values2)
+                                )
                             )
                         ),
                         parsedWord: firstData.parsedWord,
@@ -335,7 +342,8 @@ export class Model extends StatelessModel<ModelState> {
                         item => ({
                             rendererId: item.renderer,
                             contents: item.contents,
-                            heading: item.heading
+                            heading: item.heading,
+                            isShortened: false
                         }),
                         data.items
                     ),

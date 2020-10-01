@@ -554,12 +554,13 @@ export namespace PluginInterfaces {
         }
 
         export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
-            React.SFC<Kontext.GeneralProps>;
+            React.FC<Kontext.GeneralProps>;
 
         export interface DataAndRenderer<T> {
             rendererId:string;
             contents:T;
             heading:string;
+            isShortened:boolean;
         }
 
         export type Factory = (pluginApi:IPluginApi)=>IPlugin;

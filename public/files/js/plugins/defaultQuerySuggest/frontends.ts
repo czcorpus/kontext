@@ -21,6 +21,7 @@
 
 import { PluginInterfaces } from '../../types/plugins';
 import { Dict, List, pipe } from 'cnc-tskit';
+import { attachColorsToIds } from '../../models/concordance/common';
 
 
 export interface BasicFrontend extends
@@ -87,6 +88,35 @@ export function listAttrs1ToExtend<T>(data:PluginInterfaces.QuerySuggest.DataAnd
     return [];
 }
 
+// ----------------------
+
+export function cutLongResult<T>(
+    data:PluginInterfaces.QuerySuggest.DataAndRenderer<T>
+):PluginInterfaces.QuerySuggest.DataAndRenderer<unknown> {
+
+    if (isPosAttrPairRelFrontend(data)) {
+        const newData = pipe(
+            data.contents.data,
+            Dict.toEntries(),
+            List.sortedBy(([,v]) => List.size(v)),
+            List.reversed(),
+            List.filter((v, i) => i < 3),
+            Dict.fromEntries()
+        );
+        return {
+            rendererId: data.rendererId,
+            heading: data.heading,
+            contents: {
+                attrs: data.contents.attrs,
+                data: newData
+            },
+            isShortened: Dict.size(newData) < Dict.size(data.contents.data)
+        };
+
+    }
+    return data;
+}
+
 
 export function mergeResults<T>(
     data1:PluginInterfaces.QuerySuggest.DataAndRenderer<T>,
@@ -107,7 +137,8 @@ export function mergeResults<T>(
                             data1.contents.data[attr1]
                     )
                 )
-            }
+            },
+            isShortened: data1.isShortened || data2.isShortened
         }
 
     } else {

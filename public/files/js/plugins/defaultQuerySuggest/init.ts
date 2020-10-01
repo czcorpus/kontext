@@ -82,6 +82,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         } else if (isPosAttrPairRelFrontend(dr)) {
             return createElement(this.views.posAttrPairRel, {
                 ...dr.contents,
+                isShortened: dr.isShortened,
                 itemClickHandler: onItemClick ?
                     value => itemClickHandler(onItemClick, value) :
                     null
@@ -139,6 +140,7 @@ const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
         },
         pluginApi
     );
+
     return new DefaultQuerySuggest(
         pluginApi,
         initView(pluginApi.dispatcher(), model, pluginApi.getComponentHelpers()),

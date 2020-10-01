@@ -25,7 +25,7 @@ import { Observable } from 'rxjs';
 import { List, HTTP, tuple, pipe } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
-import { Kontext, ViewOptions } from '../types/common';
+import { Kontext } from '../types/common';
 import { CoreViews } from '../types/coreViews';
 import { init as documentViewsFactory } from '../views/document';
 import { init as commonViewsFactory, CommonViews } from '../views/common';
@@ -56,7 +56,6 @@ import querySuggestPlugin from 'plugins/querySuggest/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
-import { concatMap } from 'rxjs/operators';
 
 
 export enum DownloadType {
@@ -728,7 +727,15 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.pluginApi(),
                 this.getConf<boolean>('popupServerMessages')
             );
+
+            this.layoutViews = documentViewsFactory(
+                this.dispatcher,
+                this.getComponentHelpers(),
+                this.messageModel
+            );
+
             this.userInfoModel = new UserInfo(this.dispatcher, this);
+
             this.qsuggPlugin = querySuggestPlugin(
                 this.pluginApi()
             );
@@ -754,13 +761,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.dispatcher,
                 this,
                 this.getConf<boolean>('anonymousUser')
-            );
-
-            this.layoutViews = documentViewsFactory(
-                this.dispatcher,
-                this.getComponentHelpers(),
-                this.getModels(),
-                this.messageModel
             );
 
             this.commonViews = commonViewsFactory(this.getComponentHelpers());
