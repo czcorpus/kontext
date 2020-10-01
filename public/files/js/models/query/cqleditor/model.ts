@@ -204,6 +204,8 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             value: srchVal,
                             valueStartIdx: currAttr.rangeVal[0],
                             valueEndIdx: currAttr.rangeVal[1],
+                            attrStartIdx: currAttr.rangeAttr ? currAttr.rangeAttr[0] : undefined,
+                            attrEndIdx: currAttr.rangeAttr ? currAttr.rangeAttr[1] : undefined,
                             valueType: 'unspecified',
                             queryType: 'advanced',
                             posAttr: currAttr.type === 'posattr' ?
@@ -472,6 +474,18 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                         action.payload.value,
                         [action.payload.valueStartIdx, action.payload.valueEndIdx]
                     );
+                    if (action.payload.attrStartIdx !== undefined
+                            && action.payload.attrEndIdx !== undefined) {
+                        this.setRawQuery(
+                            state,
+                            action.payload.sourceId,
+                            action.payload.attr,
+                            [action.payload.attrStartIdx, action.payload.attrEndIdx]
+                        );
+
+                    } else {
+                        state.defaultAttrValues[action.payload.sourceId] = action.payload.attr;
+                    }
                 });
             }
         );

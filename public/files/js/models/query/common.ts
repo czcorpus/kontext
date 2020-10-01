@@ -157,8 +157,10 @@ export interface SuggestionsData {
     [sourceId:string]:{
         data:Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>;
         isPartial:boolean;
-        queryPosStart:number;
-        queryPosEnd:number;
+        valuePosStart:number;
+        valuePosEnd:number;
+        attrPosStart?:number;
+        attrPosEnd?:number;
     }
 }
 
@@ -455,8 +457,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         state.querySuggestions[action.payload.sourceId] = {
                             data: action.payload.results,
                             isPartial: action.payload.isPartial,
-                            queryPosStart: action.payload.valueStartIdx,
-                            queryPosEnd: action.payload.valueEndIdx
+                            valuePosStart: action.payload.valueStartIdx,
+                            valuePosEnd: action.payload.valueEndIdx,
+                            attrPosStart: action.payload.attrStartIdx,
+                            attrPosEnd: action.payload.attrEndIdx
                         };
                         if (
                             state.suggestionsVisibility ===

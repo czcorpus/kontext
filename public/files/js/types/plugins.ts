@@ -509,6 +509,8 @@ export namespace PluginInterfaces {
             value:string;
             valueStartIdx:number;
             valueEndIdx:number;
+            attrStartIdx?:number;
+            attrEndIdx?:number;
             valueType:SuggestionValueType;
             queryType:QueryType;
             corpora:Array<string>;
@@ -545,6 +547,8 @@ export namespace PluginInterfaces {
                 value:string;
                 valueStartIdx:number;
                 valueEndIdx:number;
+                attrStartIdx?:number;
+                attrEndIdx?:number;
                 attr:string;
                 sourceId:string;
                 formType:string;

@@ -870,9 +870,11 @@ export function init({
                     formType: this.props.formType,
                     onItemClick,
                     value,
-                    valueStartIdx: this.props.querySuggestions[this.props.sourceId].queryPosStart,
-                    valueEndIdx: this.props.querySuggestions[this.props.sourceId].queryPosEnd,
-                    attr: attr
+                    valueStartIdx: this.props.querySuggestions[this.props.sourceId].valuePosStart,
+                    valueEndIdx: this.props.querySuggestions[this.props.sourceId].valuePosEnd,
+                    attrStartIdx: this.props.querySuggestions[this.props.sourceId].attrPosStart,
+                    attrEndIdx: this.props.querySuggestions[this.props.sourceId].attrPosEnd,
+                    attr
                 }
             });
             this._queryInputElement.current.focus();
