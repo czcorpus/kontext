@@ -161,8 +161,21 @@ def set(section, key, value):
     _conf[section][key] = value
 
 
+def get_plugin_custom_conf(plg_name) -> Dict[str, Any]:
+    """
+    Load an optional plug-in configuration stored in a file
+    specified by a JSON path in a respective "conf_path" element.
+
+    In case there is no such configuration, None is returned.
+    """
+    pconf = get('plugins', plg_name)
+    if pconf is None:
+        raise ValueError('Plug-in {} does not exist'.format(plg_name))
+    return pconf.get('__conf__')
+
+
 def custom_prefix(elm):
-    return '' if 'extension-by' not in elm.attrib else '%s:' % elm.attrib['extension-by']
+    return '' if 'extension-by' not in elm.attrib else '{}:'.format(elm.attrib['extension-by'])
 
 
 def parse_config_section(section):
@@ -191,7 +204,7 @@ def parse_config_section(section):
         if item.tag is etree.Comment:
             continue
         else:
-            item_id = '%s%s' % (custom_prefix(item), item.tag)
+            item_id = f'{custom_prefix(item)}{item.tag}'
             if len(item.getchildren()) == 0:
                 ans[item_id] = item.text
                 meta[item_id] = dict(item.attrib)
@@ -225,12 +238,15 @@ def parse_config(path):
     for section in root:
         if section.tag in SECTIONS:
             if section.tag != 'plugins':
-                section_id = '%s%s' % (custom_prefix(section), section.tag)
+                section_id = f'{custom_prefix(section)}{section.tag}'
                 _conf[section_id], _meta[section_id] = parse_config_section(section)
             else:
                 for item in section:
                     _conf['plugins'][item.tag], _meta['plugins'][item.tag] = parse_config_section(
                         item)
+                    if 'conf_path' in _conf['plugins'][item.tag]:
+                        with open(_conf['plugins'][item.tag]['conf_path']) as fr:
+                            _conf['plugins'][item.tag]['__conf__'] = json.load(fr)
 
 
 def _load_help_links():
