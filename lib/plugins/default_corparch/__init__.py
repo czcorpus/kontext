@@ -527,7 +527,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def _get_interval_attrs(self, root):
         interval_attrs = {}
         for k in root.findall('./interval_attrs/item'):
-            interval_attrs[k.text.strip()] = k.attrib['widget']
+            interval_attrs[k.text.strip()] = k.attrib.get('widget', None)
         return list(interval_attrs.items())
 
     def get_label_color(self, label_id):
