@@ -181,28 +181,24 @@ class TextTypeCollector(object):
         """
         scas = [(a, self._access_fn(self._src_obj, a))
                 for a in self._attr_producer_fn(self._src_obj)]
-        structs = {}
+        structs = collections.defaultdict(list)
         for sa, v in scas:
-            if type(v) in (str, str) and '|' in v:
-                v = v.split('|')
             s, a = sa.split('.')
             if type(v) is list:
                 expr_items = []
                 for v1 in v:
-                    expr_items.append('%s="%s"' % (a, l10n.escape(v1)))
+                    expr_items.append(f'{a}="{l10n.escape(v1)}"')
                 if len(expr_items) > 0:
-                    query = '(%s)' % ' | '.join(expr_items)
+                    query = f'({" | ".join(expr_items)})'
                 else:
                     query = None
             else:
-                query = '%s="%s"' % (a, l10n.escape(v))
+                query = f'{a}="{v}"'
 
             if query is not None:  # TODO: is the following encoding change always OK?
-                if s in structs:
-                    structs[s].append(query)
-                else:
-                    structs[s] = [query]
-        return [(sname, ' & '.join(subquery)) for sname, subquery in list(structs.items())]
+                structs[s].append(query)
+
+        return [(sname, ' & '.join(subquery)) for sname, subquery in structs.items()]
 
 
 class TextTypesException(Exception):
