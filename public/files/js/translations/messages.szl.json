@@ -387,6 +387,8 @@
         "query__chain_no_op_msg": "No change in the concordance parameters - showing the original result",
         "query__suggestions_available": "Query suggestions",
         "query__specify_options": "Specify parameters",
+        "query__no_result_found_{attrs}": "None of the implicit attributes [{attrs}] applied to the query gives any result. Please try a different attribute or change the query.",
+        "query__no_result_found": "No result found.",
         "qhistory__attached_text_types": "Typy tekstu",
         "qhistory__curr_corp_only_label": "zawiyrŏ prawie używany korpus",
         "qhistory__query_type_sel": "zawiyrŏ typ zapytaniŏ",

@@ -232,9 +232,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 props.currDefaultAttrValues,
                 List.map(([,item]) => tuple(
                     item,
-                    item !== undefined ?
-                        item :
-                        queryTypes[item] === 'advanced' ? 'word' : ''
+                    item !== undefined ? item : 'word'
                 )),
                 Dict.fromEntries()
             ),
@@ -304,7 +302,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ),
             suggestionsVisibility: props.suggestionsVisibility,
             isBusy: false,
-            cursorPos: 0
+            cursorPos: 0,
+            simpleQueryAttrSeq: []
         });
         this.syncInitialArgs = syncInitialArgs;
 
