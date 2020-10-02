@@ -71,8 +71,8 @@ class StaticAuth(AbstractRemoteAuth):
     def get_user_info(self, plugin_api):
         return dict(id=plugin_api.session['user']['id'], user='apiuser', fullname='API user')
 
-    def _validate_key(self, k):
-        return hashlib.sha256(k.encode()).hexdigest() in self._api_keys
+    def _hash_key(self, k):
+        return hashlib.sha256(k.encode()).hexdigest()
 
     def _get_api_key(self, plugin_api):
         if self._api_key_cookie_name:
@@ -85,10 +85,10 @@ class StaticAuth(AbstractRemoteAuth):
     def revalidate(self, plugin_api):
         curr_user_id = plugin_api.session.get('user', {'id': None})['id']
         api_key = self._get_api_key(plugin_api)
-        if api_key and self._validate_key(api_key):
+        hash_key = self._hash_key(api_key)
+        if api_key and hash_key in self._api_keys:
             if self.is_anonymous(curr_user_id):
                 plugin_api.session.clear()
-            hash_key = hashlib.sha256(api_key.encode()).hexdigest()
             plugin_api.session['user'] = dict(
                 id=self._api_keys[hash_key], user='api_user', fullname='API user')
         else:
@@ -105,6 +105,6 @@ def create_instance(conf):
     plugin_conf = conf.get('plugins', plugins.runtime.AUTH.name)
     custom_conf = conf.get_plugin_custom_conf(plugins.runtime.AUTH.name)
     return StaticAuth(anonymous_id=int(plugin_conf['anonymous_user_id']),
-                      api_key_cookie_name=plugin_conf.get('default:api_key_cookie_name'),
+                      api_key_cookie_name=custom_conf.get('api_key_cookie_name', None),
                       api_key_http_header=custom_conf['api_key_http_header'],
                       zones=custom_conf['zones'])

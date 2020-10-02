@@ -1,0 +1,15 @@
+{
+    "api_key_cookie_name": null,
+    "api_key_http_header": "X-Api-Key",
+    "zones": [
+        {
+            "api_key": "2c70e12b7a0646f92279f427c7b38e7334d8e5389cff167a1dc30e73f826b683",
+            "user_id": 2,
+            "corpora": ["corp1", "corp2"]
+        }, {
+            "api_key": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "user_id": 3,
+            "corpora": ["corp3", "corp4"]
+        }
+    ]
+}
