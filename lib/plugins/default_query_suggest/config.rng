@@ -11,14 +11,10 @@
             <element name="js_module">
                 <value>defaultQuerySuggest</value>
             </element>
-            <element name="providers_conf">
+            <element name="conf_path">
                 <a:documentation>
-                    Please see default_token_connect for the description
-                    as it uses the same format
+                    A custom JSON specifying plug-in configuration
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
         </element>
