@@ -527,7 +527,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def _get_interval_attrs(self, root):
         interval_attrs = {}
         for k in root.findall('./interval_attrs/item'):
-            interval_attrs[k.text.strip()] = k.attrib['widget']
+            interval_attrs[k.text.strip()] = k.attrib.get('widget', None)
         return list(interval_attrs.items())
 
     def get_label_color(self, label_id):
@@ -596,6 +596,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if token_connect_elm is not None:
             ans.token_connect.providers = [(p.text, import_bool(p.attrib.get('is_kwic_view', '0')))
                                            for p in token_connect_elm.findall('provider')]
+
+        simple_query_attr_seq_elm = node.find('simple_query_attr_seq')
+        if simple_query_attr_seq_elm is not None:
+            ans.simple_query_attr_seq = [p.text for p in simple_query_attr_seq_elm.findall('attribute')]
 
         query_suggest_elm = node.find('query_suggest')
         if query_suggest_elm is not None:

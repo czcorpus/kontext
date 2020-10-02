@@ -597,9 +597,11 @@ class Actions(Querying):
                 self.acknowledge_auto_generated_conc_op(
                     len(self.args.q) - 1, ShuffleFormArgs(persist=True))
 
-            get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                     fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.asnc,
-                     save=self.args.save, samplesize=corpus_info.sample_size)
+            conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.asnc,
+                            save=self.args.save, samplesize=corpus_info.sample_size)
+            ans['size'] = conc.size()
+            ans['finished'] = conc.finished()
             self._status = 201
         except ConcError as e:
             self.add_system_message('warning', str(e))

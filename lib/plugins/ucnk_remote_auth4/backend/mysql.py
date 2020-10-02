@@ -417,6 +417,13 @@ class Backend(DatabaseBackend):
                        'JOIN corpora AS c ON ucp.corpus_id = c.id', (user_id, ))
         return [(r['corpus_id'], r['variant']) for r in cursor.fetchall()]
 
+    def load_corpus_tagsets(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT corpus_name, pos_attr, feat_attr, tagset_type, tagset_name '
+                       'FROM kontext_corpus_taghelper '
+                       'WHERE corpus_name = %s', (corpus_id,))
+        return cursor.fetchall()
+
     def load_interval_attrs(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT interval_struct, interval_attr, widget '
@@ -424,9 +431,8 @@ class Backend(DatabaseBackend):
                        'WHERE corpus_name = %s', (corpus_id,))
         return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) for r in cursor.fetchall()]
 
-    def load_corpus_tagsets(self, corpus_id):
+    def load_simple_query_attr_seq(self, corpus_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT corpus_name, pos_attr, feat_attr, tagset_type, tagset_name '
-                       'FROM kontext_corpus_taghelper '
-                       'WHERE corpus_name = %s', (corpus_id,))
-        return cursor.fetchall()
+        cursor.execute('SELECT pos_attr FROM kontext_simple_query_attr_seq WHERE corpus_name = %s ORDER BY idx',
+                       (corpus_id,))
+        return [r['pos_attr'] for r in cursor.fetchall()]

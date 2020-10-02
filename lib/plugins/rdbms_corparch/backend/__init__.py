@@ -201,6 +201,12 @@ class DatabaseBackend(object):
     def load_tckc_providers(self, corpus_id: str) -> List[Dict[str, Any]]:
         raise NotImplementedError()
 
+    def get_permitted_corpora(self, user_id) -> List[Dict[str, Any]]:
+        raise NotImplementedError()
+
+    def load_corpus_tagsets(self, corpus_id) -> List[Dict[str, Any]]:
+        raise NotImplementedError()
+
     def load_interval_attrs(self, corpus_id):
         """
         Load structural attributes selectable via
@@ -209,6 +215,9 @@ class DatabaseBackend(object):
         value selection widget in the text types panel.
         """
         return []
+
+    def load_simple_query_attr_seq(self, corpus_id) -> List[str]:
+        raise NotImplementedError()
 
 
 class DatabaseWritableBackend(DatabaseBackend):

@@ -158,6 +158,14 @@ CREATE TABLE registry_conf (
     CONSTRAINT registry_conf_wsattr_id_fkey FOREIGN KEY (corpus_id, wsattr) REFERENCES corpus_posattr(corpus_id, name)
 );
 
+CREATE TABLE kontext_simple_query_attr_seq (
+    corpus_id TEXT NOT NULL,
+    posattr_name TEXT,
+    idx INT NOT NULL DEFAULT 0,
+    CONSTRAINT kontext_simple_query_attr_seq_pkey PRIMARY KEY(corpus_id, posattr_name, idx),
+    CONSTRAINT kontext_simple_query_attr_seq_corpus_fkey FOREIGN KEY (corpus_id, posattr_name) REFERENCES corpus_posattr(corpus_id, name)
+);
+
 /* --------------------- VARIABLE (CUSTOMIZABLE) PART OF THE MAIN REGISTRY FILE ------------ */
 
 CREATE TABLE registry_variable (

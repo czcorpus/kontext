@@ -662,6 +662,7 @@ export function init({
         defaultAttr:string;
         forcedAttr:string;
         attrList:Array<Kontext.AttrItem>;
+        simpleQueryAttrSeq:Array<string>;
         sourceId:string;
         formType:QueryFormType;
         label:string;
@@ -672,6 +673,7 @@ export function init({
             <DefaultAttrSelect defaultAttr={props.defaultAttr}
                 forcedAttr={props.forcedAttr}
                 attrList={props.attrList}
+                simpleQueryAttrSeq={props.simpleQueryAttrSeq}
                 sourceId={props.sourceId}
                 formType={props.formType} />{'\u00a0'}
     </span>
@@ -757,6 +759,7 @@ export function init({
         sourceId:string;
         forcedAttr:string;
         defaultAttr:string;
+        simpleQueryAttrSeq:Array<string>;
         attrList:Array<Kontext.AttrItem>;
 
     }> = (props) => {
@@ -781,8 +784,10 @@ export function init({
 
         } else {
             return (
-                <select className="DefaultAttrSelect" value={props.defaultAttr} onChange={handleSelectChange}>
-                    <option value="">-- {he.translate('query__not_specified')} --</option>
+                <select className="DefaultAttrSelect" value={props.defaultAttr || ''} onChange={handleSelectChange}>
+                    {!List.empty(props.simpleQueryAttrSeq) ?
+                        <option value="">-- {he.translate('query__not_specified')} --</option> :
+                        null}
                     {props.attrList.map(item => {
                         return <option key={item.n} value={item.n || ''}>{item.label}</option>;
                     })}
@@ -946,6 +951,7 @@ export function init({
                                         defaultAttr={this.props.defaultAttr}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
+                                        simpleQueryAttrSeq={this.props.simpleQueryAttrSeq}
                                         formType={this.props.formType} />
                                 </div>
                                 <div className="option">
@@ -980,6 +986,7 @@ export function init({
                                         defaultAttr={this.props.defaultAttr}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
+                                        simpleQueryAttrSeq={this.props.simpleQueryAttrSeq}
                                         formType={this.props.formType} />
                                 </div>
                             </div>

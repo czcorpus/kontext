@@ -247,3 +247,9 @@ class Backend(DatabaseBackend):
                        'FROM kontext_interval_attr '
                        'WHERE corpus_name = ?', (corpus_id,))
         return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) for r in cursor.fetchall()]
+
+    def load_simple_query_attr_seq(self, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT pos_attr FROM kontext_simple_query_attr_seq WHERE corpus_name = ? ORDER BY idx',
+                       (corpus_id,))
+        return [r['pos_attr'] for r in cursor.fetchall()]

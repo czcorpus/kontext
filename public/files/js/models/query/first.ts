@@ -21,8 +21,8 @@
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
 import { IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
-import { tap, map, concatMap } from 'rxjs/operators';
+import { EmptyError, Observable, of as rxOf } from 'rxjs';
+import { tap, map, concatMap, first, catchError } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
 import { Kontext, TextTypes, ViewOptions } from '../../types/common';
@@ -68,6 +68,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     hasLemma:{[corpname:string]:boolean};
     isAnonymousUser:boolean;
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+    simpleQueryAttrSeq:Array<string>;
 }
 
 export interface QueryInputSetQueryProps {
@@ -286,9 +287,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 props.corpora,
                 List.map(item => tuple(
                     item,
-                    props.currDefaultAttrValues[item] !== undefined ?
+                    props.currDefaultAttrValues[item] ?
                         props.currDefaultAttrValues[item] :
-                        (queryTypes[item] === 'advanced' ? 'word' : '')
+                        (queryTypes[item] === 'advanced' || List.empty(props.simpleQueryAttrSeq) ? 'word' : '')
                 )),
                 Dict.fromEntries()
             ),
@@ -334,7 +335,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             suggestionsVisibility: props.suggestionsVisibility,
             isBusy: false,
-            cursorPos: 0
+            cursorPos: 0,
+            simpleQueryAttrSeq: props.simpleQueryAttrSeq
         });
         this.setUserValues(this.state, props);
 
@@ -482,7 +484,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         });
                         window.location.href = this.pageModel.createActionUrl(
                             this.state.currentAction,
-                            Dict.toEntries(this.createSubmitArgs(wAction.payload.data))
+                            Dict.toEntries(this.createSubmitArgs(wAction.payload.data, 0))
                         );
                     }
                 );
@@ -516,12 +518,34 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     )
 
                 ).subscribe(
-                    (data:ConcQueryResponse) => {
-                        window.location.href = this.createViewUrl(
-                            data.conc_persistence_op_id,
-                            data.conc_args,
-                            false
-                        );
+                    (data:ConcQueryResponse|null) => {
+                        if (data === null) {
+                            if (this.state.defaultAttrValues[List.head(this.state.corpora)]) {
+                                this.pageModel.showMessage(
+                                    'error',
+                                    this.pageModel.translate('query__no_result_found')
+                                );
+
+                            } else {
+                                this.pageModel.showMessage(
+                                    'error',
+                                    this.pageModel.translate(
+                                        'query__no_result_found_{attrs}',
+                                        {attrs: this.state.simpleQueryAttrSeq.join(', ')}
+                                    )
+                                );
+                            }
+                            this.changeState(state => {
+                                state.isBusy = false;
+                            });
+
+                        } else {
+                            window.location.href = this.createViewUrl(
+                                data.conc_persistence_op_id,
+                                data.conc_args,
+                                false
+                            );
+                        }
                     },
                     (err) => {
                         console.log('error: ', err);
@@ -686,9 +710,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             state.corpora,
             List.map(item => tuple(
                 item,
-                data.currDefaultAttrValues[item] !== undefined ?
-                data.currDefaultAttrValues[item] :
-                    (state.queryTypes[item] === 'advanced' ? 'word' : '')
+                data.currDefaultAttrValues[item]?
+                    data.currDefaultAttrValues[item] :
+                    (state.queryTypes[item] === 'advanced' || List.empty(state.simpleQueryAttrSeq) ? 'word' : '')
             )),
             Dict.fromEntries()
         ),
@@ -790,8 +814,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         List.removeValue(corpname, state.corpora);
     }
 
-    createSubmitArgs(contextFormArgs:QueryContextArgs):ConcQueryArgs {
-        const primaryCorpus = this.state.corpora[0];
+    createSubmitArgs(contextFormArgs:QueryContextArgs, attrTryIdx:number):ConcQueryArgs {
+        const primaryCorpus = List.head(this.state.corpora);
         const currArgs = this.pageModel.exportConcArgs();
         const args:ConcQueryArgs = {
             type:'concQueryArgs',
@@ -818,14 +842,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
 
         args.queries = List.map(
-            c => ({
+            (c, i) => ({
                 corpname: c,
                 query: this.state.queries[c] ? this.state.queries[c].trim().normalize() : '',
                 qtype: this.state.queryTypes[c],
                 qmcase: this.state.matchCaseValues[c],
                 pcq_pos_neg: this.state.pcqPosNegValues[c],
                 include_empty: this.state.includeEmptyValues[c],
-                default_attr: this.state.defaultAttrValues[c]
+                default_attr: this.state.defaultAttrValues[c] || i > 0 ?
+                    this.state.defaultAttrValues[c] : this.state.simpleQueryAttrSeq[attrTryIdx]
             }),
             this.state.corpora
         );
@@ -848,14 +873,32 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     submitQuery(contextFormArgs:QueryContextArgs):Observable<ConcQueryResponse|null> {
-        return this.pageModel.ajax$<ConcQueryResponse>(
-            HTTP.Method.POST,
-            this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
-            this.createSubmitArgs(contextFormArgs),
-            {
-                contentType: 'application/json'
-            }
-        );
+
+        return rxOf(...List.repeat(i => i, Math.max(1, this.state.simpleQueryAttrSeq.length))).pipe(
+            concatMap(
+                (attrIdx) => this.pageModel.ajax$<ConcQueryResponse>(
+                    HTTP.Method.POST,
+                    this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
+                    this.createSubmitArgs(contextFormArgs, attrIdx),
+                    {
+                        contentType: 'application/json'
+                    }
+                )
+            ),
+            first(
+                ans => ans.finished !== true || ans.size > 0
+            ),
+            catchError(
+                err => {
+                    if (err instanceof EmptyError) {
+                        return rxOf(null);
+
+                    } else {
+                        throw err;
+                    }
+                }
+            )
+        )
     }
 
 }

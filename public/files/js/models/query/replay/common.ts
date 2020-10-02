@@ -20,7 +20,6 @@
 
 import { Kontext } from '../../../types/common';
 import { AjaxResponse } from '../../../types/ajaxResponses';
-import { List } from 'cnc-tskit';
 
 
 export interface QueryOverviewResponseRow {

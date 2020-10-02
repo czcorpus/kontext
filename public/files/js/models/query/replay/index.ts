@@ -19,7 +19,7 @@
  */
 
 import { Observable, of as rxOf } from 'rxjs';
-import { concatMap, tap, map, scan, reduce } from 'rxjs/operators';
+import { concatMap, tap, map, reduce } from 'rxjs/operators';
 import { SEDispatcher, IActionDispatcher } from 'kombo';
 import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
 
@@ -458,7 +458,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 ),
                 concatMap(
                     () => {
-                        const args = this.queryModel.createSubmitArgs(queryContext);
+                        const args = this.queryModel.createSubmitArgs(queryContext, 0);
                         const url = this.pageModel.createActionUrl('query_submit', [['format', 'json']]);
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax$<ConcQueryResponse>(

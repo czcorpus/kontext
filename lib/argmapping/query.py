@@ -141,7 +141,7 @@ class QueryFormArgs(ConcFormArgs):
         self.curr_include_empty_values = empty_dict.copy()
         self.curr_lpos_values = empty_dict.copy()
         self.curr_qmcase_values = empty_dict.copy()
-        self.curr_default_attr_values = {k: '' for k in corpora}
+        self.curr_default_attr_values = {k: None for k in corpora}
         self.tag_builder_support = empty_dict.copy()
         self.tagset_docs = empty_dict.copy()
         self.has_lemma = empty_dict.copy()
