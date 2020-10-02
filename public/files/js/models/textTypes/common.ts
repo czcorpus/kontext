@@ -144,40 +144,37 @@ export function importInitialData(data:InitialData,
     );
     if (mergedBlocks.length > 0) {
         return mergedBlocks.map((attrItem:BlockLine) => {
-            if (attrItem.textboxlength) {
-                // TODO restore selected items also here (must load labels first...)
-                if (isRegexpGeneratingWidgetView(attrItem.widget)) {
-                    return {
-                        name: attrItem.name,
-                        label: attrItem.label,
-                        isNumeric: attrItem.numeric,
-                        widget: attrItem.widget,
-                        attrInfo: {
-                            doc: attrItem.attr_doc,
-                            docLabel: attrItem.attr_doc_label
-                        },
-                        textFieldValue: '',
-                        isLocked: false,
-                        type: 'regexp'
-                    };
+            if (isRegexpGeneratingWidgetView(attrItem.widget)) {
+                return {
+                    name: attrItem.name,
+                    label: attrItem.label,
+                    isNumeric: attrItem.numeric,
+                    widget: attrItem.widget,
+                    attrInfo: {
+                        doc: attrItem.attr_doc,
+                        docLabel: attrItem.attr_doc_label
+                    },
+                    textFieldValue: '',
+                    isLocked: false,
+                    type: 'regexp'
+                };
 
-                } else {
-                    return {
-                        name: attrItem.name,
-                        label: attrItem.label,
-                        isNumeric: attrItem.numeric,
-                        isInterval: !!attrItem.is_interval,
-                        widget: attrItem.widget,
-                        attrInfo: {
-                            doc: attrItem.attr_doc,
-                            docLabel: attrItem.attr_doc_label
-                        },
-                        autoCompleteHints: [],
-                        values: [],
-                        textFieldValue: '',
-                        type: 'text'
-                    };
-                }
+            } else if (attrItem.textboxlength) {
+                return {
+                    name: attrItem.name,
+                    label: attrItem.label,
+                    isNumeric: attrItem.numeric,
+                    isInterval: !!attrItem.is_interval,
+                    widget: attrItem.widget,
+                    attrInfo: {
+                        doc: attrItem.attr_doc,
+                        docLabel: attrItem.attr_doc_label
+                    },
+                    autoCompleteHints: [],
+                    values: [],
+                    textFieldValue: '',
+                    type: 'text'
+                };
 
             } else {
                 const values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
