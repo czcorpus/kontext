@@ -888,6 +888,9 @@ class Kontext(Controller):
             settings.get('corpora', 'right_interval_char', None),
         )
         result['righttoleft'] = True if self.corp.get_conf('RIGHTTOLEFT') else False
+        corp_info = self.get_corpus_info(getattr(self.args, 'corpname'))
+        result['bib_conf'] = corp_info.metadata
+        result['simple_query_attr_seq'] = corp_info.simple_query_attr_seq
 
     def _setup_optional_plugins_js(self, result):
         """
@@ -1060,8 +1063,6 @@ class Kontext(Controller):
 
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
-
-        result['bib_conf'] = self.get_corpus_info(getattr(self.args, 'corpname')).metadata
 
         # available languages; used just by UI language switch
         if plugins.runtime.GETLANG.exists:

@@ -597,6 +597,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.token_connect.providers = [(p.text, import_bool(p.attrib.get('is_kwic_view', '0')))
                                            for p in token_connect_elm.findall('provider')]
 
+        simple_query_attr_seq_elm = node.find('simple_query_attr_seq')
+        if simple_query_attr_seq_elm is not None:
+            ans.simple_query_attr_seq = [p.text for p in simple_query_attr_seq_elm.findall('attribute')]
+
         query_suggest_elm = node.find('query_suggest')
         if query_suggest_elm is not None:
             ans.query_suggest.providers = [p.text for p in query_suggest_elm.findall('provider')]

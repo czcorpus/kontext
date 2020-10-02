@@ -227,6 +227,8 @@ export interface ConcQueryResponse extends Kontext.AjaxResponse {
     lines_groups_numbers:Array<number>;
     conc_args:ConcServerArgs;
     query_overview:Array<Kontext.QueryOperation>;
+    finished:boolean;
+    size:number;
 }
 
 /**

@@ -233,7 +233,8 @@ export class QueryPage {
                 tagAttr: this.layoutModel.getConf<string>('tagAttr'),
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
                 suggestionsVisibility: this.layoutModel.getConf<
-                    PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
+                    PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode'),
+                simpleQueryAttrSeq: this.layoutModel.getConf<Array<string>>('SimpleQueryAttrSeq')
             }
         );
 

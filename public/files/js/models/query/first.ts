@@ -21,8 +21,8 @@
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
 import { IFullActionControl } from 'kombo';
-import { Observable } from 'rxjs';
-import { tap, map, concatMap } from 'rxjs/operators';
+import { Observable, of as rxOf } from 'rxjs';
+import { tap, map, concatMap, takeWhile } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
 import { Kontext, TextTypes, ViewOptions } from '../../types/common';
@@ -68,6 +68,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     hasLemma:{[corpname:string]:boolean};
     isAnonymousUser:boolean;
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+    simpleQueryAttrSeq:Array<string>;
 }
 
 export interface QueryInputSetQueryProps {
@@ -196,6 +197,14 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      * (if applicable).
      */
     shuffleForbidden:boolean;
+
+    /**
+     * In case of a simple query, this sequence determines
+     * which attribute is set in case nothing is specified by user.
+     * The client starts with 0-th item and if nothing is found,
+     * 1-th is used etc.
+     */
+    simpleQueryAttrSeq:Array<string>;
 }
 
 
@@ -334,7 +343,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             suggestionsVisibility: props.suggestionsVisibility,
             isBusy: false,
-            cursorPos: 0
+            cursorPos: 0,
+            simpleQueryAttrSeq: props.simpleQueryAttrSeq
         });
         this.setUserValues(this.state, props);
 
@@ -482,7 +492,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         });
                         window.location.href = this.pageModel.createActionUrl(
                             this.state.currentAction,
-                            Dict.toEntries(this.createSubmitArgs(wAction.payload.data))
+                            Dict.toEntries(this.createSubmitArgs(wAction.payload.data, 0))
                         );
                     }
                 );
@@ -790,7 +800,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         List.removeValue(corpname, state.corpora);
     }
 
-    createSubmitArgs(contextFormArgs:QueryContextArgs):ConcQueryArgs {
+    createSubmitArgs(contextFormArgs:QueryContextArgs, attrTryIdx:number):ConcQueryArgs {
         const primaryCorpus = this.state.corpora[0];
         const currArgs = this.pageModel.exportConcArgs();
         const args:ConcQueryArgs = {
@@ -818,14 +828,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
 
         args.queries = List.map(
-            c => ({
+            (c, i) => ({
                 corpname: c,
                 query: this.state.queries[c] ? this.state.queries[c].trim().normalize() : '',
                 qtype: this.state.queryTypes[c],
                 qmcase: this.state.matchCaseValues[c],
                 pcq_pos_neg: this.state.pcqPosNegValues[c],
                 include_empty: this.state.includeEmptyValues[c],
-                default_attr: this.state.defaultAttrValues[c]
+                default_attr: this.state.defaultAttrValues[c] || i > 0 ?
+                    this.state.defaultAttrValues[c] : this.state.simpleQueryAttrSeq[attrTryIdx]
             }),
             this.state.corpora
         );
@@ -848,14 +859,22 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     submitQuery(contextFormArgs:QueryContextArgs):Observable<ConcQueryResponse|null> {
-        return this.pageModel.ajax$<ConcQueryResponse>(
-            HTTP.Method.POST,
-            this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
-            this.createSubmitArgs(contextFormArgs),
-            {
-                contentType: 'application/json'
-            }
-        );
+
+        return rxOf(...List.repeat(i => i, Math.max(1, this.state.simpleQueryAttrSeq.length))).pipe(
+            concatMap(
+                (attrIdx) => this.pageModel.ajax$<ConcQueryResponse>(
+                    HTTP.Method.POST,
+                    this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
+                    this.createSubmitArgs(contextFormArgs, attrIdx),
+                    {
+                        contentType: 'application/json'
+                    }
+                )
+            ),
+            takeWhile(
+                ans => ans.finished === true && ans.size === 0
+            )
+        )
     }
 
 }
