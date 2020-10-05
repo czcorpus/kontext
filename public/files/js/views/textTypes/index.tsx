@@ -213,7 +213,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         );
 
         const renderFooter = () => {
-            if (props.attrObj.type === 'full' && !TTSelOps.isLocked(props.attrObj)) {
+            if (props.attrObj.type === 'full' && !TTSelOps.isLocked(props.attrObj) && props.widget.widget) {
                 if (props.widget.active) {
                     return renderModeSwitch();
 
