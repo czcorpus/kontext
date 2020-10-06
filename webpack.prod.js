@@ -81,5 +81,5 @@ module.exports = (env) => merge(common.wpConf(env), {
 			'process.env.NODE_ENV': JSON.stringify('production')
 		}),
 	],
-	devtool: "source-map"
+	devtool: env && !!env.SOURCE_MAPS ? "source-map" : false
 });
