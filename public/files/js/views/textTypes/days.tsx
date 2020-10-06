@@ -24,6 +24,7 @@ import { IActionDispatcher } from 'kombo';
 
 import { Kontext, TextTypes } from '../../types/common';
 import { Actions, ActionName } from '../../models/textTypes/actions';
+import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
 
 
 function rangeToRegexp(d1:Date, d2:Date):string {
@@ -148,6 +149,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 payload: {
                     attrName: props.attrObj.name,
                     value: rangeToRegexp(newState.fromDate, newState.toDate)
+                }
+            });
+
+            dispatcher.dispatch<TTActions.SelectionChanged>({
+                name: TTActionName.SelectionChanged,
+                payload: {
+                    hasSelectedItems: true,
+                    attributes: []
                 }
             });
         };

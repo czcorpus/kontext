@@ -65,12 +65,12 @@ class AttrArgs(object):
 
         where = []
         sql_values = []
-        for key, values in list(self.data.items()):
+        for key, values in self.data.items():
             key = key.replace('.', '_')
             if key == self._bib_label and self._bib_label != self._autocomplete_attr:
                 key = self._bib_id
             cnf_item = []
-            if type(values) is list or type(values) is tuple:
+            if type(values) in (list, tuple):
                 for value in values:
                     if len(value) == 0 or value[0] != '@':
                         cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(value)))
@@ -82,6 +82,11 @@ class AttrArgs(object):
 
             elif is_range_argument(values):
                 pass  # a range query  TODO
+
+            elif type(values) is str:
+                cnf_item.append(f'{item_prefix}.{key} REGEXP ?')
+                sql_values.append(self.import_value(values))
+
             else:
                 cnf_item.append('ktx_lower(%s.%s) %s ktx_lower(?)' %
                                 (item_prefix, key, cmp_operator(values)))

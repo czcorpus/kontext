@@ -123,6 +123,9 @@ class LiveAttributes(AbstractLiveAttributes):
         user_lang -- user language (e.g. en_US)
         corpname -- corpus id
         """
+        def regexp(y, x, search=re.search):
+            return 1 if search(y, x) else 0
+
         if corpname not in self.databases:
             db_path = self.corparch.get_corpus_info(
                 user_lang, corpname).get('metadata', {}).get('database')
@@ -131,6 +134,8 @@ class LiveAttributes(AbstractLiveAttributes):
                 self.databases[corpname].row_factory = sqlite3.Row
                 self.databases[corpname].create_function(
                     'ktx_lower', 1, lambda x: unidecode(x.lower()))
+                self.databases[corpname].create_function(
+                    'regexp', 2, regexp)
             else:
                 self.databases[corpname] = None
         return self.databases[corpname]

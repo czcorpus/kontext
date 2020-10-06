@@ -79,6 +79,11 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
     }> = (props) => {
 
         const shortenValues = (values:Array<any>, joinChar:string) => {
+            // TODO handle regex string
+            if (typeof(values) === 'string') {
+                return values;
+            }
+
             let ans:Array<string>;
             if (values.length > 5) {
                 ans = values.slice(0, 2);
