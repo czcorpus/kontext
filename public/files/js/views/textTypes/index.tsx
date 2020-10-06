@@ -126,6 +126,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
             } else if (props.attrObj.type === 'regexp') {
                 if (props.widget.widget === 'days') {
+                    if (props.attrObj.isLocked) {
+                        return <p>Selected: {props.attrObj.textFieldValue}</p>
+                    }
                     return <CalendarDaysSelector attrObj={props.attrObj} />;
                 }
                 return null;

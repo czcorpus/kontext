@@ -396,10 +396,21 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 this.changeState(state => {
                     this.getAttributesWithSelectedItems(state, false).forEach(
                         (attrName:string) => {
-                            this.mapItems(state, attrName, (item:TextTypes.AttributeValue) => ({
-                                ...item,
-                                locked: true,
-                            }))
+                            const attrIdx = this.getAttributeIdx(state, attrName);
+                            if (attrIdx > -1) {
+                                if (state.attributes[attrIdx].type === 'regexp') {
+                                    state.attributes[attrIdx]['isLocked'] = true;
+                                
+                                } else {
+                                    state.attributes[attrIdx] = TTSelOps.mapValues(
+                                        state.attributes[attrIdx],
+                                        (item:TextTypes.AttributeValue) => ({
+                                            ...item,
+                                            locked: true,
+                                        })
+                                    );
+                                }
+                            }
                         }
                     );
                 });
