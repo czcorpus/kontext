@@ -49,7 +49,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <StepLoader /> --------------------------
 
-    const StepLoader:React.SFC<{
+    const StepLoader:React.FC<{
         idx:number;
 
     }> = (props) => {
@@ -72,14 +72,14 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <SelectionSteps /> --------------------------
 
-    const SelectionSteps:React.SFC<{
+    const SelectionSteps:React.FC<{
         items:Array<TTSelectionStep|AlignedLangSelectionStep>;
         isLoading:boolean;
 
     }> = (props) => {
 
         const shortenValues = (values:Array<any>, joinChar:string) => {
-            // TODO handle regex string
+
             if (typeof(values) === 'string') {
                 return values;
             }
@@ -107,19 +107,34 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
             );
         };
 
-        const renderTextTypesSel = (item:TTSelectionStep) => {
-            return item.attributes.map((attr, i) => {
-                return (
-                    <span key={i}>
-                        {i > 0 ? ', ' : ''}
-                        <strong>{attr}</strong>
+        const renderTextTypesSel = (item:TTSelectionStep) => List.map(
+            (attrName, i) => {
+                const attr = item.values[attrName];
+                if (attr.type === 'default') {
+                    return (
+                        <span key={i}>
+                            {i > 0 ? ', ' : ''}
+                            <strong>{attrName}</strong>
                             {'\u00a0\u2208\u00a0'}
-                            {'{' + shortenValues(item.values[attr], ', ') + '}'}
+                            {'{' + shortenValues(attr.selections, ', ') + '}'}
                             <br />
-                    </span>
-                );
-            });
-        };
+                        </span>
+                    );
+
+                } else {
+                    return (
+                        <span key={i}>
+                            {i > 0 ? ', ' : ''}
+                            <strong>{attrName}</strong>
+                            {'\u00a0\u2208\u00a0'}
+                            {'{' + attr.decodedValue + '}'}
+                            <br />
+                        </span>
+                    )
+                }
+            },
+            item.attributes
+        );
 
         return (
             <div className="steps">
@@ -151,7 +166,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <RefineButton /> --------------------------
 
-    const RefineButton:React.SFC<{
+    const RefineButton:React.FC<{
         enabled:boolean;
         clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
@@ -171,7 +186,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <UndoButton /> --------------------------
 
-    const UndoButton:React.SFC<{
+    const UndoButton:React.FC<{
         enabled:boolean;
         clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
@@ -190,7 +205,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <ResetButton /> --------------------------
 
-    const ResetButton:React.SFC<{
+    const ResetButton:React.FC<{
         enabled:boolean;
         clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
@@ -210,7 +225,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <LiveAttrsView /> --------------------------
 
-    const LiveAttrsView:React.SFC<LiveAttrsModelState> = (props) => {
+    const LiveAttrsView:React.FC<LiveAttrsModelState> = (props) => {
 
         const handleRefine = () => {
             dispatcher.dispatch<Actions.RefineClicked>({
@@ -260,7 +275,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <AlignedLangItem /> --------------------------
 
-    const AlignedLangItem:React.SFC<{
+    const AlignedLangItem:React.FC<{
         itemIdx:number;
         item:TextTypes.AlignedLanguageItem;
 
@@ -287,7 +302,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
 
     // ----------------------------- <LiveAttrsCustomTT /> --------------------------
 
-    const LiveAttrsCustomTT:React.SFC<LiveAttrsModelState> = (props) => {
+    const LiveAttrsCustomTT:React.FC<LiveAttrsModelState> = (props) => {
 
         const renderHint = () => {
             if (props.manualAlignCorporaMode) {

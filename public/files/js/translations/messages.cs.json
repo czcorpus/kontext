@@ -262,6 +262,7 @@
         "query__tt_maximize_all_lists": "Zobrazit všechny seznamy",
         "query__tt_calendar_from_date": "Od",
         "query__tt_calendar_to_date": "Do",
+        "query__tt_selected": "Vybráno",
         "query__span_from": "od",
         "query__span_to": "do",
         "query__include_kwic": "včetně KWIC",

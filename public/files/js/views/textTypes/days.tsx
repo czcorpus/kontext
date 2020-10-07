@@ -148,7 +148,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 name: ActionName.AttributeTextInputChanged,
                 payload: {
                     attrName: props.attrObj.name,
-                    value: rangeToRegexp(newState.fromDate, newState.toDate)
+                    type: props.attrObj.type,
+                    value: rangeToRegexp(newState.fromDate, newState.toDate),
+                    decodedValue: `${newState.fromDate.toISOString().split('T')[0]}, \u2026, ${newState.toDate.toISOString().split('T')[0]}`
                 }
             });
 

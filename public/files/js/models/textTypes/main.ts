@@ -297,7 +297,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     this.handleAttrTextInputChange(
                         state,
                         action.payload.attrName,
-                        action.payload.value
+                        action.payload.value,
+                        action.payload.decodedValue
                     );
                 });
             }
@@ -400,7 +401,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                             if (attrIdx > -1) {
                                 if (state.attributes[attrIdx].type === 'regexp') {
                                     state.attributes[attrIdx]['isLocked'] = true;
-                                
+
                                 } else {
                                     state.attributes[attrIdx] = TTSelOps.mapValues(
                                         state.attributes[attrIdx],
@@ -569,10 +570,17 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
     }
 
-    private handleAttrTextInputChange(state:TextTypesModelState, attrName:string, value:string) {
+    private handleAttrTextInputChange(
+        state:TextTypesModelState,
+        attrName:string,
+        value:string,
+        decodedValue?:string
+    ) {
+
         const attrIdx = this.getAttributeIdx(state, attrName);
         if (attrIdx) {
-            state.attributes[attrIdx] = TTSelOps.setTextFieldValue(state.attributes[attrIdx], value);
+            state.attributes[attrIdx] = TTSelOps.setTextFieldValue(
+                state.attributes[attrIdx], value, decodedValue);
         }
     }
 
