@@ -355,7 +355,7 @@ export namespace CoreViews {
     export namespace Calendar {
 
         export interface Props {
-            onClick:(date:Date)=>void;
+            onClick:(date:Date|null)=>void;
             currDate?:Date;
         }
 

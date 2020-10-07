@@ -263,6 +263,8 @@
         "query__tt_calendar_from_date": "From",
         "query__tt_calendar_to_date": "To",
         "query__tt_selected": "Selected",
+        "query__tt_no_date_range_selected": "No date range selected.",
+        "query__tt_you_can_unselect_date_range": "To remove selection, click the currently selected day or move do a different month.",
         "query__span_from": "ôd",
         "query__span_to": "do",
         "query__include_kwic": "Użyj tyż KWIC",

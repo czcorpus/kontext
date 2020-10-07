@@ -39,6 +39,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
     const Row:React.FC<{
         days:Array<Date>;
         current:Date;
+        isActive:boolean;
         onClick:(d:Date)=>void;
 
     }> = (props) => {
@@ -48,6 +49,13 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                 d.getMonth() === props.current.getMonth() &&
                 d.getDate() === props.current.getDate();
 
+        const determineClass = (v:Date) => {
+            if (isCurrentDay(v)) {
+                return `current${props.isActive ? ' active' : ''}`;
+            }
+            return null;
+        };
+
         return (
             <tr>
                 {pipe(
@@ -55,7 +63,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                     List.slice(0, 7),
                     List.map((v, i) => (
                         <td key={v ? `d:${v.getTime()}` : `d:${i}`}
-                                className={isCurrentDay(v) ? 'current' : null}>
+                                className={determineClass(v)}>
                             <a onClick={() => props.onClick(v)}>{v ? v.getDate() : '?'}</a>
                         </td>
                     ))
@@ -77,7 +85,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
     // -------------------- <Calendar /> --------------------------------------------------
 
     const Calendar:React.FC<{
-        onClick:(date:Date)=>void;
+        onClick:(date:Date|null)=>void;
         currDate?:Date;
 
     }> = (props) => {
@@ -87,8 +95,10 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
             return new Date(now.getFullYear(), now.getMonth(), now.getDate());
         };
 
-        const [currDate, updateState] = React.useState(
-            props.currDate ? props.currDate : normNow());
+        const [state, updateState] = React.useState({
+            currDate: props.currDate ? props.currDate : normNow(),
+            isSelected: false
+        });
 
         const getMonthDays = (year:number, month:number):Array<Date> => {
             const monthStart = new Date(year, month, 1, 0, 0, 0);
@@ -121,25 +131,38 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
             return ans;
         }
 
-        const calData = groupDays(getMonthDays(currDate.getFullYear(), currDate.getMonth()));
+        const calData = groupDays(getMonthDays(state.currDate.getFullYear(),
+                state.currDate.getMonth()));
 
-        const handleClick = (d:Date) => {
-            updateState(d);
-            props.onClick(d);
+        const datesEqual = (d1:Date, d2:Date) => {
+            return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() &&
+                    d1.getDate() === d2.getDate();
+        };
+
+        const handleClick = (d:Date|null) => {
+            updateState({
+                currDate: d,
+                isSelected: datesEqual(d, state.currDate) ? !state.isSelected : true
+            });
+            props.onClick(datesEqual(d, state.currDate) && state.isSelected ? null : d);
         };
 
         const handlePrevClick = () => {
-            updateState(currDate.getMonth() > 0 ?
-                new Date(currDate.getFullYear(), currDate.getMonth() - 1, 1) :
-                new Date(currDate.getFullYear() - 1, 11, 1)
-            );
+            updateState({
+                currDate: state.currDate.getMonth() > 0 ?
+                    new Date(state.currDate.getFullYear(), state.currDate.getMonth() - 1, 1) :
+                    new Date(state.currDate.getFullYear() - 1, 11, 1),
+                isSelected: false
+            });
         }
 
         const handleNextClick = () => {
-            updateState(currDate.getMonth() < 11 ?
-                new Date(currDate.getFullYear(), currDate.getMonth() + 1, 1) :
-                new Date(currDate.getFullYear() + 1, 0, 1)
-            );
+            updateState({
+                currDate: state.currDate.getMonth() < 11 ?
+                    new Date(state.currDate.getFullYear(), state.currDate.getMonth() + 1, 1) :
+                    new Date(state.currDate.getFullYear() + 1, 0, 1),
+                isSelected: false
+            });
         }
 
         return (
@@ -153,7 +176,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                                     clickHandler={handlePrevClick} htmlClass="prev-month-change" />
                             </td>
                             <td colSpan={5} className="curr-date">
-                                {dateMonthToString(currDate.getMonth())} {currDate.getFullYear()}
+                                {dateMonthToString(state.currDate.getMonth())} {state.currDate.getFullYear()}
                             </td>
                             <td>
                                 <ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
@@ -166,7 +189,8 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                     <tbody>
                         {List.map(
                             v => <Row key={`row:${v[0].getTime()}`} days={v}
-                                        current={currDate} onClick={handleClick} />,
+                                        current={state.currDate} isActive={state.isSelected}
+                                            onClick={handleClick} />,
                             calData
                         )}
                     </tbody>

@@ -130,48 +130,54 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     const CalendarDaysSelector:React.FC<CalendarDaysSelectorProps> = (props) => {
 
-        const now = new Date();
-        const normNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const [state, setState] = React.useState({
-            fromDate: normNow,
-            toDate: normNow
+        const [state, setState] = React.useState<{fromDate:Date|null; toDate: Date|null}>({
+            fromDate: null,
+            toDate: null
         });
 
-        const handleCalClick = (cal:'from'|'to') => (d:Date) => {
+        const handleCalClick = (cal:'from'|'to') => (d:Date|null) => {
             const newState = cal === 'from' ?
                     {fromDate: d, toDate: state.toDate} :
                     {fromDate: state.fromDate, toDate: d};
-
             setState({...newState});
 
-            dispatcher.dispatch<Actions.AttributeTextInputChanged>({
-                name: ActionName.AttributeTextInputChanged,
-                payload: {
-                    attrName: props.attrObj.name,
-                    type: props.attrObj.type,
-                    value: rangeToRegexp(newState.fromDate, newState.toDate),
-                    decodedValue: `${newState.fromDate.toISOString().split('T')[0]}, \u2026, ${newState.toDate.toISOString().split('T')[0]}`
-                }
-            });
+            if (newState.fromDate !== null && newState.toDate !== null) {
+                dispatcher.dispatch<Actions.AttributeTextInputChanged>({
+                    name: ActionName.AttributeTextInputChanged,
+                    payload: {
+                        attrName: props.attrObj.name,
+                        type: props.attrObj.type,
+                        value: rangeToRegexp(newState.fromDate, newState.toDate),
+                        decodedValue: `${newState.fromDate.toISOString().split('T')[0]}, \u2026, ${newState.toDate.toISOString().split('T')[0]}`
+                    }
+                });
 
-            dispatcher.dispatch<TTActions.SelectionChanged>({
-                name: TTActionName.SelectionChanged,
-                payload: {
-                    hasSelectedItems: true,
-                    attributes: []
-                }
-            });
+                dispatcher.dispatch<TTActions.SelectionChanged>({
+                    name: TTActionName.SelectionChanged,
+                    payload: {
+                        hasSelectedItems: true,
+                        attributes: []
+                    }
+                });
+            }
         };
 
         return <div className="CalendarDaysSelector">
-            <div>
-                <h3>{he.translate('query__tt_calendar_from_date')}</h3>
-                <layoutViews.Calendar currDate={state.fromDate} onClick={handleCalClick('from')} />
+            <div className="calendars">
+                <div>
+                    <h3>{he.translate('query__tt_calendar_from_date')}</h3>
+                    <layoutViews.Calendar onClick={handleCalClick('from')} />
+                </div>
+                <div>
+                    <h3>{he.translate('query__tt_calendar_to_date')}</h3>
+                    <layoutViews.Calendar onClick={handleCalClick('to')} />
+                </div>
             </div>
-            <div>
-                <h3>{he.translate('query__tt_calendar_to_date')}</h3>
-                <layoutViews.Calendar currDate={state.toDate} onClick={handleCalClick('to')} />
-            </div>
+            <p className={`info${state.fromDate === null || state.toDate === null ? '' : ' note'}`}>
+                {state.fromDate === null || state.toDate === null ?
+                    he.translate('query__tt_no_date_range_selected') :
+                    '(' + he.translate('query__tt_you_can_unselect_date_range') + ')'}
+            </p>
         </div>;
     }
 

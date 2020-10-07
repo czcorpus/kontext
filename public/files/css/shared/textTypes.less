@@ -226,11 +226,20 @@
             }
 
             .CalendarDaysSelector {
-                display: flex;
-                margin-bottom: 0.7em;
 
-                > div:not(:first-child) {
-                    margin-left: 1em;
+                .calendars {
+                    display: flex;
+                    margin-bottom: 0.7em;
+
+                    > div:not(:first-child) {
+                        margin-left: 1em;
+                    }
+                }
+
+                p.info {
+                    max-width: 25em;
+                    font-size: 0.9em;
+                    padding-right: 1em;
                 }
             }
         }
