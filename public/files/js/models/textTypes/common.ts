@@ -155,6 +155,7 @@ export function importInitialData(data:InitialData,
                         docLabel: attrItem.attr_doc_label
                     },
                     textFieldValue: '',
+                    textFieldDecoded: '',
                     isLocked: false,
                     type: 'regexp'
                 };

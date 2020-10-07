@@ -262,11 +262,23 @@ export namespace TTSelOps {
             );
     }
 
-    export function setTextFieldValue(sel:TextTypes.AnyTTSelection, value:string):TextTypes.AnyTTSelection {
-        if (sel.type === 'text' || sel.type === 'regexp') {
+    export function setTextFieldValue(
+        sel:TextTypes.AnyTTSelection,
+        value:string,
+        valueDecoded?:string
+    ):TextTypes.AnyTTSelection {
+
+        if (sel.type === 'text') {
             return {
                 ...sel,
                 textFieldValue: value
+            };
+
+        } else if (sel.type === 'regexp') {
+            return {
+                ...sel,
+                textFieldValue: value,
+                textFieldDecoded: valueDecoded ? valueDecoded : value
             };
 
         } else {

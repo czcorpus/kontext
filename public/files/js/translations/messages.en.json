@@ -262,6 +262,7 @@
         "query__tt_maximize_all_lists": "Show all the lists",
         "query__tt_calendar_from_date": "From",
         "query__tt_calendar_to_date": "To",
+        "query__tt_selected": "Selected",
         "query__span_from": "From",
         "query__span_to": "To",
         "query__include_kwic": "Include KWIC",

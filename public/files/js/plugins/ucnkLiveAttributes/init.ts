@@ -103,6 +103,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
         pluginApi,
         {
             selectionSteps: [],
+            selectionTypes: {},
             lastRemovedStep: null,
             alignedCorpora: alignedCorpora,
             initialAlignedCorpora: alignedCorpora,

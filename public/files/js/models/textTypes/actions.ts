@@ -120,6 +120,8 @@ export namespace Actions {
     export interface AttributeTextInputChanged extends Action<{
         attrName:string;
         value:string;
+        type:TextTypes.TTSelectionTypes;
+        decodedValue?:string; // human readable alternative (if necessary)
     }> {
         name:ActionName.AttributeTextInputChanged;
     };

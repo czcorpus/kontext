@@ -155,6 +155,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 name: ActionName.AttributeTextInputChanged,
                 payload: {
                     attrName: this.props.attrObj.name,
+                    type: this.props.attrObj.type,
                     value: v
                 }
             });

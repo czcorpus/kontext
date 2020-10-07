@@ -47,11 +47,21 @@ interface ServerBibInfoResponse extends Kontext.AjaxResponse {
     bib_data:Array<[string, string]>;
 }
 
+export interface SelectedValues {
+    selections:Array<string>;
+    type:'default';
+}
+
+export interface EncodedSelection {
+    decodedValue:string;
+    type:'encoded';
+}
+
 export interface TTSelectionStep {
     num:number;
     attributes:Array<string>;
     numPosInfo:number;
-    values:{[key:string]:Array<string>};
+    values:{[key:string]:SelectedValues|EncodedSelection};
 }
 
 export interface AlignedLangSelectionStep {
@@ -72,6 +82,7 @@ export interface LiveAttrsModelState {
     initialAlignedCorpora:Array<TextTypes.AlignedLanguageItem>;
     bibliographyAttribute:string;
     bibliographyIds:Array<string>;
+    selectionTypes:{[attr:string]:[TextTypes.TTSelectionTypes, string]}; // 2nd val = decoded val.
     manualAlignCorporaMode:boolean;
     controlsEnabled:boolean;
     isBusy:boolean;
@@ -275,6 +286,19 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
+        this.addActionHandler<TTActions.AttributeTextInputChanged>(
+            TTActionName.AttributeTextInputChanged,
+            (state, action) => {
+                // we must gather information about selection types involved in refined selection
+                // to be able to present properly rendered selection steps (if some attributes
+                // provide 'decoded value' for better human readability)
+                state.selectionTypes[action.payload.attrName] = tuple(
+                    action.payload.type,
+                    action.payload.decodedValue
+                );''
+            }
+        );
+
         this.addActionHandler<TTActions.AttributeTextInputAutocompleteRequest>(
             TTActionName.AttributeTextInputAutocompleteRequest,
             null,
@@ -428,7 +452,21 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 attributes: newAttrs,
                 values: pipe(
                     newAttrs,
-                    List.map((item) => tuple(item, selections[item])),
+                    List.map(
+                        attr => tuple<string, SelectedValues|EncodedSelection>(
+                            attr,
+                            state.selectionTypes[attr] &&
+                                TextTypes.isEncodedSelectionType(state.selectionTypes[attr][0]) ?
+                            {
+                                decodedValue: state.selectionTypes[attr][1],
+                                type: 'encoded'
+                            } :
+                            {
+                                selections: selections[attr],
+                                type: 'default'
+                            }
+                        )
+                    ),
                     Dict.fromEntries()
                 )
             };

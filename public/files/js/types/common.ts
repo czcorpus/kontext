@@ -676,6 +676,12 @@ export namespace TextTypes {
         docLabel:string;
     }
 
+    export type TTSelectionTypes = 'full'|'text'|'regexp';
+
+    export function isEncodedSelectionType(sel:TTSelectionTypes):boolean {
+        return sel === 'regexp';
+    }
+
     export interface FullAttributeSelection {
         attrInfo:TextTypes.AttrInfo;
         isInterval:boolean;
@@ -706,14 +712,13 @@ export namespace TextTypes {
         label:string;
         name:string;
         textFieldValue:string;
+        textFieldDecoded:string;
         isLocked:boolean;
         type:'regexp';
     }
 
-
     export type AnyTTSelection = TextInputAttributeSelection|FullAttributeSelection|
             RegexpAttributeSelection;
-
 
     export type ExportedSelection = {[sca:string]:Array<string>|Array<number>|string};
 
