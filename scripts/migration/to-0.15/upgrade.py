@@ -12,6 +12,7 @@ except ImportError as ex:
     sys.exit(1)
 import subprocess
 from subprocess import Popen, PIPE
+import argparse
 
 PYLIB_LOCATIONS = (
     '/usr/local/lib/python2.7',
@@ -374,11 +375,19 @@ def install_manatee(path):
     subprocess.check_call('sudo ldconfig', shell=True, cwd=path)
 
 
+def generate_locale(locale):
+    subprocess.check_call(f'sudo locale-gen {locale}', shell=True)
+    subprocess.check_call('sudo update-locale', shell=True)
+
+
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print('The usage is `python3 upgrade.py [path to config.xml]')
-        sys.exit(1)
-    with open(sys.argv[1]) as fr:
+    parser = argparse.ArgumentParser(description='Migration to kontext 0.15')
+    parser.add_argument('conf', type=str, help='Path to config file')
+    parser.add_argument('--locale', dest='locale', type=str, help='Used locale', default='en_US.utf8')
+    args = parser.parse_args()
+
+    generate_locale(args.locale)
+    with open(args.conf) as fr:
         conf = etree.parse(fr)
     project_path = os.path.realpath(os.path.join(os.path.dirname(sys.argv[1]), '..'))
 
