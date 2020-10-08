@@ -154,7 +154,8 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                     new Date(state.currDate.getFullYear() - 1, 11, 1),
                 isSelected: false
             });
-        }
+            props.onClick(null);
+        };
 
         const handleNextClick = () => {
             updateState({
@@ -163,7 +164,8 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                     new Date(state.currDate.getFullYear() + 1, 0, 1),
                 isSelected: false
             });
-        }
+            props.onClick(null);
+        };
 
         return (
             <div className="Calendar">
@@ -171,17 +173,19 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                     <thead>
                         <tr className="controls">
                             <td>
-                                <ImgWithMouseover src={he.createStaticUrl('img/prev-page.svg')}
-                                    alt={he.translate('global__prev_month')}
-                                    clickHandler={handlePrevClick} htmlClass="prev-month-change" />
+                                <a className="prev-month-change" onClick={handlePrevClick}>
+                                    <ImgWithMouseover src={he.createStaticUrl('img/prev-page.svg')}
+                                        alt={he.translate('global__prev_month')} />
+                                </a>
                             </td>
                             <td colSpan={5} className="curr-date">
                                 {dateMonthToString(state.currDate.getMonth())} {state.currDate.getFullYear()}
                             </td>
                             <td>
-                                <ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
-                                    alt={he.translate('global__next_month')}
-                                    clickHandler={handleNextClick} htmlClass="next-month-change" />
+                                <a className="next-month-change" onClick={handleNextClick}>
+                                    <ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
+                                        alt={he.translate('global__next_month')} />
+                                </a>
                             </td>
                         </tr>
                         <Heading />

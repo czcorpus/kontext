@@ -1231,26 +1231,28 @@ p.boxed-par {
 
     .controls {
 
-        .prev-month-change {
+        td {
 
-            border-right-width: 0;
+            padding: 0;
 
-            img {
-                width: 1.1em;
-            }
-        }
+            a.prev-month-change,
+            a.next-month-change {
+                border-right-width: 0;
+                display: flex;
+                justify-content: center;
+                align-content: center;
+                width: 100%;
 
-        .next-month-change {
-
-            border-left-width: 0;
-
-            img {
-                display: block;
-                width: 1.1em;
+                img {
+                    display: block;
+                    width: 60%;
+                    padding: 0.2em;
+                }
             }
         }
 
         .curr-date {
+            padding: 0.1em;
             text-align: center;
         }
     }
