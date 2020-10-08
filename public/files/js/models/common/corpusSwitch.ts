@@ -180,6 +180,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<boolean>('TextDirectionRTL', data.TextDirectionRTL);
                             this.conf.setConf<{[plgName:string]:any}>('pluginData', data.pluginData);
                             this.conf.setConf<string>('DefaultVirtKeyboard', data.DefaultVirtKeyboard);
+                            this.conf.setConf<Array<string>>('SimpleQueryAttrSeq', data.SimpleQueryAttrSeq)
                         }
                     )
 
