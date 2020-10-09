@@ -96,7 +96,7 @@ Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-
 
 ## Notable users
 
-* [Institute of the Czech National Corpus](https://kontext.korpus.cz/query)
+* [Institute of the Czech National Corpus](https://kontext.korpus.cz/)
 * [LINDAT/CLARIAH-CZ](https://ufal.mff.cuni.cz/lindat-kontext)
 * [CLARIN-PL](https://kontext.clarin-pl.eu/)
 * [CLARIN-SI](https://www.clarin.si/kontext/)
