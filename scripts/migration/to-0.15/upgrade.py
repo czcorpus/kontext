@@ -367,6 +367,10 @@ def download_manatee_src(version):
     return ans
 
 
+def install_manatee_deps():
+    subprocess.check_call('sudo apt-get install swig', shell=True, cwd=path)
+
+
 def install_manatee(path):
     subprocess.call('make clean', shell=True, cwd=path)
     subprocess.check_call('./configure PYTHON=python3 --with-pcre', shell=True, cwd=path)
@@ -420,5 +424,6 @@ if __name__ == '__main__':
     remove_old_client_side(project_path)
     build_client_side(project_path)
     m_src = download_manatee_src(MANATEE_VER)
+    install_manatee_deps()
     install_manatee(m_src)
     fix_manatee_location()
