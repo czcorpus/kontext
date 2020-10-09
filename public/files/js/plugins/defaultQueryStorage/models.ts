@@ -224,7 +224,7 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         const args = new MultiDict();
         args.set('corpname', item.corpname);
         args.set('usesubcorp', item.subcorpname);
-        args.set(item.query_type, item.query);
+        args.set('query', item.query);
         args.set('qtype', item.query_type);
         args.replace('align', List.map(v => v.corpname, item.aligned));
         args.set('lpos', item.lpos);
@@ -232,7 +232,7 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         args.set('default_attr', item.default_attr);
         args.set('pcq_pos_neg', item.pcq_pos_neg);
         List.forEach(v => {
-            args.set(`${v.query_type}_${v.corpname}`, v.query);
+            args.set(`query_${v.corpname}`, v.query);
             args.set(`qtype_${v.corpname}`, v.query_type);
             args.set(`lpos_${v.corpname}`, v.lpos);
             args.set(`qmcase_${v.corpname}`, v.qmcase ? '1' : '0');
@@ -242,7 +242,7 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         Dict.forEach((v, k) => {
             args.replace(`sca_${k}`, item.selected_text_types[k]);
         }, item.selected_text_types);
-        window.location.href = this.pluginApi.createActionUrl('first_form', args);
+        window.location.href = this.pluginApi.createActionUrl('query', args);
     }
 
     private performLoadAction():void {

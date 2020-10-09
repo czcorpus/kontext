@@ -356,6 +356,7 @@ class Actions(Querying):
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
             active_only=False), persist=False)
+        qf_args.update_by_request_args(request.args)
         # TODO xx reuse selections from last submit
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
@@ -586,7 +587,8 @@ class Actions(Querying):
         corpora = self._select_current_aligned_corpora(active_only=True)
         corpus_info = self.get_corpus_info(corpora[0])
         qinfo = QueryFormArgs(corpora=corpora, persist=True)
-        qinfo.update_by_user_query(request.json, self._get_tt_bib_mapping(request.json['text_types']))
+        qinfo.update_by_user_query(
+            request.json, self._get_tt_bib_mapping(request.json['text_types']))
         self.add_conc_form_args(qinfo)
         # 2) process the query
         try:
@@ -667,7 +669,8 @@ class Actions(Querying):
             self.args.q.append('x-' + (self.args.maincorp or self.args.corpname))
         else:
             wquery = ''
-            self.args.q.append(f'{ff_args.pnfilter}{ff_args.filfpos} {ff_args.filtpos} {rank} {query}')
+            self.args.q.append(
+                f'{ff_args.pnfilter}{ff_args.filfpos} {ff_args.filtpos} {rank} {query}')
         self._status = 201
         try:
             return self.view()
@@ -1646,7 +1649,8 @@ class Actions(Querying):
             raise UserActionException('Invalid character in attribute/structure name/value')
 
         ans, found, used = corplib.matching_structattr(
-            self.corp, request.args.get('struct'), request.args.get('attr'), request.args.get('attr_val'),
+            self.corp, request.args.get('struct'), request.args.get(
+                'attr'), request.args.get('attr_val'),
             request.args.get('search_attr'))
         if len(ans) == 0:
             self._status = 404
