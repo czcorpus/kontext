@@ -163,6 +163,19 @@ class QueryFormArgs(ConcFormArgs):
         for corp in corpora:
             self._add_corpus_metadata(corp)
 
+    def update_by_request_args(self, args):
+        corp = args['corpname']
+        if 'qtype' in args:
+            self.curr_query_types[corp] = args['qtype']
+        if 'query' in args:
+            self.curr_queries[corp] = args['query']
+        if 'pcq_pos_neg' in args:
+            self.curr_pcq_pos_neg_values[corp] = args['pcq_pos_neg']
+        if 'qmcase' in args:
+            self.curr_qmcase_values[corp] = args['qmcase']
+        if 'default_attr' in args:
+            self.curr_default_attr_values[corp] = args['default_attr']
+
     def update_by_user_query(self, data, bib_mapping):
         for query in data['queries']:
             corp = query['corpname']
