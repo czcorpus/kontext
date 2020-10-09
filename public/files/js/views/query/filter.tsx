@@ -286,9 +286,7 @@ export function init({
                                 sourceId={this.props.filterId}
                                 wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValues[this.props.filterId]}
-                                matchCaseValue={this.props.matchCaseValues[this.props.filterId]}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttrValues[this.props.filterId]}
                                 attrList={this.props.attrList}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
@@ -338,9 +336,7 @@ export function init({
                                 sourceId={this.props.filterId}
                                 wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValues[this.props.filterId]}
-                                matchCaseValue={this.props.matchCaseValues[this.props.filterId]}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttrValues[this.props.filterId]}
                                 attrList={this.props.attrList}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}

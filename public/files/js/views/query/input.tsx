@@ -66,9 +66,7 @@ export interface TRQueryInputFieldProps {
     inputLanguage:string;
     useCQLEditor:boolean;
     forcedAttr:string;
-    defaultAttr:string;
     attrList:Array<Kontext.AttrItem>;
-    matchCaseValue:boolean;
     onEnterKey:()=>void;
     takeFocus?:boolean;
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
@@ -686,6 +684,7 @@ export function init({
         value:boolean;
         formType:QueryFormType;
         sourceId:string;
+        disabled:boolean;
 
     }> = (props) => {
 
@@ -703,7 +702,8 @@ export function init({
             <span>
                 <label>
                     {he.translate('query__simple_q_use_regexp')}:
-                    <input type="checkbox" checked={props.value} onChange={handleClick} />
+                    <input type="checkbox" checked={props.value} onChange={handleClick}
+                        disabled={props.disabled} />
                 </label>
             </span>
         );
@@ -970,27 +970,28 @@ export function init({
                             }
                             <>
                                 <div className={`option${this.props.useRegexp[this.props.sourceId] ? ' disabled' : ''}`}>
-                                    <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
+                                    <MatchCaseSelector matchCaseValue={this.props.matchCaseValues[this.props.sourceId]}
                                         sourceId={this.props.sourceId}
                                         formType={this.props.formType}
                                         disabled={this.props.useRegexp[this.props.sourceId]} />
                                 </div>
-                                <div className="option">
+                                <div className={`option${this.props.matchCaseValues[this.props.sourceId] ? ' disabled' : ''}`}>
                                     <UseRegexpSelector sourceId={this.props.sourceId} formType={this.props.formType}
-                                            value={this.props.useRegexp[this.props.sourceId]} />
+                                            value={this.props.useRegexp[this.props.sourceId]}
+                                            disabled={this.props.matchCaseValues[this.props.sourceId]} />
                                 </div>
                                 <div className="option">
                                     <DefaultAttrSelector
                                         label={he.translate('query__applied_attr')}
                                         sourceId={this.props.sourceId}
-                                        defaultAttr={this.props.defaultAttr}
+                                        defaultAttr={this.props.defaultAttrValues[this.props.sourceId]}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
                                         simpleQueryAttrSeq={this.props.simpleQueryAttrSeq}
                                         formType={this.props.formType} />
                                 </div>
                                 <div className="option">
-                                {Kontext.isWordLikePosAttr(this.props.defaultAttr) ?
+                                {Kontext.isWordLikePosAttr(this.props.defaultAttrValues[this.props.sourceId]) ?
                                     <LposSelector wPoSList={this.props.wPoSList}
                                         lposValue={this.props.lposValue}
                                         sourceId={this.props.sourceId}
@@ -1018,7 +1019,7 @@ export function init({
                                     <DefaultAttrSelector
                                         label={he.translate('query__default_attr')}
                                         sourceId={this.props.sourceId}
-                                        defaultAttr={this.props.defaultAttr}
+                                        defaultAttr={this.props.defaultAttrValues[this.props.sourceId]}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
                                         simpleQueryAttrSeq={this.props.simpleQueryAttrSeq}

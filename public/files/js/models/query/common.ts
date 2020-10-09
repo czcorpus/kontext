@@ -361,6 +361,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     state.matchCaseValues[action.payload.sourceId] = action.payload.value;
+                    if (state.matchCaseValues[action.payload.sourceId]) {
+                        state.useRegexp[action.payload.sourceId] = false;
+                    }
                 });
             }
         );
