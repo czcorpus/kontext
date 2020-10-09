@@ -226,7 +226,7 @@ class KonTextWsgiApp(WsgiApp):
             if not url.endswith('/'):
                 url += '/'
             status = '303 See Other'
-            headers = [('Location', '%squery' % url)]
+            headers = [('Location', f'{url[:-1]}{app_url_prefix}/query')]
             body = ''
         # old-style (CGI version) URLs are redirected to new ones
         elif '/run.cgi/' in environ['REQUEST_URI']:

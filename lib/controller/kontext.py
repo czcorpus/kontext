@@ -33,7 +33,8 @@ import corplib
 import conclib
 from . import exposed
 from .errors import (UserActionException, ForbiddenException,
-                     AlignedCorpusForbiddenException, NotFoundException)
+                     AlignedCorpusForbiddenException, NotFoundException,
+                     ImmediateRedirectException)
 import plugins
 from plugins.abstract.corpora import BrokenCorpusInfo, CorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
@@ -616,7 +617,7 @@ class Kontext(Controller):
                     url_pref = self.get_mapping_url_prefix()
                     if len(url_pref) > 0:
                         url_pref = url_pref[1:]
-                    self.redirect(self.create_url(url_pref + action_name, dict(corpname=corpname)))
+                    raise ImmediateRedirectException(self.create_url(url_pref + action_name, dict(corpname=corpname)))
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
                 for al_corp in form.getlist('align'):

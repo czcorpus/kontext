@@ -122,7 +122,7 @@ class Options(Kontext):
         elif self.args.q:
             self._redirect_to_conc()
         else:
-            self.redirect('/query')
+            self.redirect(self.create_url('query'))
 
     @exposed(access_level=0, return_type='json', http_method='GET', skip_corpus_init=True)
     def viewopts(self, _):
