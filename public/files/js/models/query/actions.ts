@@ -59,6 +59,7 @@ export enum ActionName {
     QueryInputSetLpos = 'QUERY_INPUT_SET_LPOS',
     QueryInputSetMatchCase = 'QUERY_INPUT_SET_MATCH_CASE',
     QueryInputSetDefaultAttr = 'QUERY_INPUT_SET_DEFAULT_ATTR',
+    QueryInputToggleAllowRegexp = 'QUERY_INPUT_TOGGLE_ALLOW_REGEXP',
     QueryInputAddAlignedCorpus = 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
     QueryInputRemoveAlignedCorpus = 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
     FilterInputSetPCQPosNeg = 'QUERY_INPUT_SET_PCQ_POS_NEG',
@@ -340,6 +341,13 @@ export namespace Actions {
         value:string;
     }> {
         name:ActionName.QueryInputSetDefaultAttr;
+    }
+
+    export interface QueryInputToggleAllowRegexp extends Action<{
+        formType:QueryFormType;
+        sourceId:string;
+    }> {
+        name:ActionName.QueryInputToggleAllowRegexp;
     }
 
     export interface QueryInputAddAlignedCorpus extends Action<{

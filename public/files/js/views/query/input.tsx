@@ -633,6 +633,7 @@ export function init({
         formType:QueryFormType;
         sourceId:string;
         matchCaseValue:boolean;
+        disabled:boolean;
 
     }> = (props) => {
 
@@ -648,10 +649,10 @@ export function init({
         };
 
         return (
-            <label>
+            <label title={props.disabled ? he.translate('query__icase_is_now_within_re') : null}>
                 {he.translate('query__match_case')}:{'\u00a0'}
                 <input type="checkbox" name="qmcase" value="1" checked={props.matchCaseValue}
-                    onChange={handleCheckbox} />
+                    onChange={handleCheckbox} disabled={props.disabled} />
             </label>
         );
     };
@@ -677,7 +678,36 @@ export function init({
                 sourceId={props.sourceId}
                 formType={props.formType} />{'\u00a0'}
     </span>
-    )
+    );
+
+    // -------------------- <UseRegexpSelector /> --------------------------
+
+    const UseRegexpSelector:React.FC<{
+        value:boolean;
+        formType:QueryFormType;
+        sourceId:string;
+
+    }> = (props) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch<Actions.QueryInputToggleAllowRegexp>({
+                name: ActionName.QueryInputToggleAllowRegexp,
+                payload: {
+                    formType: props.formType,
+                    sourceId: props.sourceId
+                }
+            });
+        }
+
+        return (
+            <span>
+                <label>
+                    {he.translate('query__simple_q_use_regexp')}:
+                    <input type="checkbox" checked={props.value} onChange={handleClick} />
+                </label>
+            </span>
+        );
+    };
 
     // ------------------- <SingleLineInput /> -----------------------------
 
@@ -939,10 +969,15 @@ export function init({
                                 null
                             }
                             <>
-                                <div className="option">
+                                <div className={`option${this.props.useRegexp[this.props.sourceId] ? ' disabled' : ''}`}>
                                     <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
                                         sourceId={this.props.sourceId}
-                                        formType={this.props.formType} />
+                                        formType={this.props.formType}
+                                        disabled={this.props.useRegexp[this.props.sourceId]} />
+                                </div>
+                                <div className="option">
+                                    <UseRegexpSelector sourceId={this.props.sourceId} formType={this.props.formType}
+                                            value={this.props.useRegexp[this.props.sourceId]} />
                                 </div>
                                 <div className="option">
                                     <DefaultAttrSelector

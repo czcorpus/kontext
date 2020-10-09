@@ -60,6 +60,7 @@ export interface ConcQueryArgs {
         pcq_pos_neg:string;
         include_empty:boolean;
         default_attr:string;
+        use_regexp:boolean;
     }>;
     maincorp:string|null;
     usesubcorp:string|null;
@@ -100,6 +101,8 @@ export interface FilterServerArgs extends ConcServerArgs {
     query:string;
     qmcase:boolean;
     within:boolean;
+    default_attr:string;
+    use_regexp:boolean;
     type:'filterQueryArgs';
 }
 
@@ -191,6 +194,10 @@ export interface QueryFormModelState {
 
     defaultAttrValues:{[key:string]:string};
 
+    useRegexp:{[key:string]:boolean};
+
+    matchCaseValues:{[key:string]:boolean};
+
     querySuggestions:SuggestionsData;
 
     tagBuilderSupport:{[sourceId:string]:boolean};
@@ -254,7 +261,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     protected readonly autoSuggestTrigger:Subject<[string, number, number]>;
 
     // -------
-
 
     constructor(
             dispatcher:IFullActionControl,
@@ -346,6 +352,29 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     0,
                     0
                 ));
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSetMatchCase>(
+            ActionName.QueryInputSetMatchCase,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.matchCaseValues[action.payload.sourceId] = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputToggleAllowRegexp>(
+            ActionName.QueryInputToggleAllowRegexp,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.useRegexp[action.payload.sourceId] = !state.useRegexp[action.payload.sourceId];
+                    if (state.useRegexp[action.payload.sourceId]) {
+                        state.matchCaseValues[action.payload.sourceId] = false;
+                    }
+                });
             }
         );
 

@@ -209,6 +209,7 @@ export class QueryPage {
                 currLposValues: queryFormArgs.curr_lpos_values,
                 currQmcaseValues: queryFormArgs.curr_qmcase_values,
                 currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
+                currUseRegexpValues: queryFormArgs.curr_use_regexp_values,
                 subcorpList: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>(
                     'SubcorpList'
                 ),

@@ -495,7 +495,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     qmcase: true,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
-                    default_attr: formSubmitArgs.wlattr
+                    default_attr: formSubmitArgs.wlattr,
+                    use_regexp: true
                 }
             ],
             text_types: {},
