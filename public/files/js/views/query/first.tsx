@@ -221,9 +221,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 sourceId={primaryCorpname}
                                 wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValues[primaryCorpname]}
-                                matchCaseValue={this.props.matchCaseValues[primaryCorpname]}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttrValues[primaryCorpname]}
                                 attrList={this.props.attrList}
                                 tagHelperView={this.props.tagHelperViews[primaryCorpname]}
                                 queryStorageView={this.props.queryStorageView}
@@ -383,9 +381,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             sourceId={this.props.corpname}
                             wPoSList={this.props.wPoSList}
                             lposValue={this.props.lposValues[this.props.corpname]}
-                            matchCaseValue={this.props.matchCaseValues[this.props.corpname]}
                             forcedAttr={this.props.forcedAttr}
-                            defaultAttr={this.props.defaultAttrValues[this.props.corpname]}
                             attrList={this.props.attrList}
                             tagHelperView={this.props.tagHelperView}
                             queryStorageView={this.props.queryStorageView}

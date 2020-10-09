@@ -145,9 +145,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             widgets={this.props.widgets}
                             wPoSList={this.props.wPoSList}
                             lposValue={this.props.lposValue}
-                            matchCaseValue={this.props.matchCaseValue}
                             forcedAttr={this.props.forcedAttr}
-                            defaultAttr={this.props.defaultAttr}
                             attrList={this.props.attrList}
                             inputLanguage={this.props.inputLanguage}
                             queryStorageView={this.props.queryStorageView}
