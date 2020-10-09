@@ -157,7 +157,8 @@
             <js_module>defaultQueryStorage</js_module>
             <page_num_records>10</page_num_records>
             <ttl_days extension-by="default">10</ttl_days>
-        </query_storage>
+    	</query_storage>
+	<query_suggest />
         <settings_storage>
             <module>default_settings_storage</module>
             <excluded_users extension-by="default">

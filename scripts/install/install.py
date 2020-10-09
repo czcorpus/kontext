@@ -20,7 +20,6 @@ REQUIREMENTS = [
     'pkg-config',
     'swig',
     'nginx',
-    'npm',
     'libltdl7',
     'libpcre3',
     'libicu-dev',
@@ -40,29 +39,37 @@ if __name__ == "__main__":
     argparser.add_argument('--gunicorn', dest='install_gunicorn', action='store_true', default=False, help='Install gunicorn to run web server')
     argparser.add_argument('--patch', dest='patch_path', action='store', default=None, help='Path to UCNK Manatee patch')
     argparser.add_argument('--manatee-version', dest='manatee_version', action='store', default=MANATEE_VER, help='Set Manatee version')
+    argparser.add_argument('--no-safe-http', dest='no_cert_check', action='store_true', default=False, help='Do not verify HTTPS certificates when downloading packages')
     argparser.add_argument('-v', dest='verbose', action='store_true', default=False, help='Verbose mode')
     args = argparser.parse_args()
 
-    stdout = open(os.devnull, 'wb')
-    if args.verbose:
-        stdout = None
+    stdout = None if args.verbose else open(os.devnull, 'wb')
+    stderr = None
+
+    subprocess.call(['systemctl', 'stop', 'celery'])
+    subprocess.call(['systemctl', 'stop', 'gunicorn'])
 
     # install prerequisites
     print('Installing requirements...')
-    subprocess.check_call(['locale-gen', 'en_US.UTF-8'], stdout=stdout)
-    subprocess.check_call(['apt-get', 'update', '-y'], stdout=stdout)
-    subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, stdout=stdout)
-    subprocess.check_call(['python3', '-m', 'pip', 'install', 'pip', '--upgrade'], stdout=stdout)
-    subprocess.check_call(['pip3', 'install', 'simplejson', 'celery', 'signalfd', '-r', 'requirements.txt'], cwd=KONTEXT_PATH, stdout=stdout)
+    try:
+        subprocess.check_call(['locale-gen', 'en_US.UTF-8'], stdout=stdout)
+        subprocess.check_call(['apt-get', 'update', '-y'], stdout=stdout)
+        subprocess.check_call(['apt-get', 'install', '-y'] + REQUIREMENTS, stdout=stdout)
+        subprocess.check_call(['python3', '-m', 'pip', 'install', 'pip', '--upgrade'], stdout=stdout)
+        subprocess.check_call(['pip3 install simplejson \'celery==4.4.*\' signalfd -r requirements.txt'], cwd=KONTEXT_PATH, stdout=stdout, shell=True)
+        subprocess.check_call('curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -', shell=True)
+        subprocess.check_call('sudo apt-get install -y nodejs', shell=True)
+    except Exception as ex:
+        print(f'failed to install dependencies: {ex}')
 
     # import steps here, because some depend on packages installed by this script
     import steps
     # run installation steps
-    steps.SetupManatee(KONTEXT_PATH, stdout).run(args.manatee_version, args.patch_path)
-    steps.SetupKontext(KONTEXT_PATH, stdout).run()
-    steps.SetupDefaultUsers(KONTEXT_PATH, stdout).run()
+    steps.SetupManatee(KONTEXT_PATH, stdout, stderr, args.no_cert_check).run(args.manatee_version, args.patch_path)
+    steps.SetupKontext(KONTEXT_PATH, stdout, stderr).run()
+    steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
     if args.install_gunicorn:
-        steps.SetupGunicorn(KONTEXT_PATH, stdout).run()
+        steps.SetupGunicorn(KONTEXT_PATH, stdout, stderr).run()
 
     # finalize instalation
     print('Initializing celery and nginx services...')
