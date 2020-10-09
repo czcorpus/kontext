@@ -57,9 +57,10 @@ class bcolors:
 class InstallationStep(ABC):
     final_messages: List[str] = []
 
-    def __init__(self, kontext_path: str, stdout: str):
+    def __init__(self, kontext_path: str, stdout: str, stderr: str):
         self.kontext_path = kontext_path
         self.stdout = stdout
+        self.stderr = stderr
 
     @abstractmethod
     def is_done(self) -> bool:
@@ -76,8 +77,23 @@ class InstallationStep(ABC):
     def add_final_message(self, message: str):
         self.final_messages.append(message)
 
+    def cmd(self, args, cwd):
+        return subprocess.check_call(args, cwd=cwd, stdout=self.stdout, stderr=self.stderr)
+
+
+
+def wget_cmd(url, no_cert_check):
+    if no_cert_check:
+        return ['wget', '--no-check-certificate', url, '-N']
+    return ['wget', url, '-N']
+
 
 class SetupManatee(InstallationStep):
+
+    def __init__(self, kontext_path: str, stdout: str, stderr: str, no_cert_check: bool):
+        super().__init__(kontext_path, stdout, stderr)
+        self._ncc = no_cert_check
+
     def is_done(self):
         pass
 
@@ -114,17 +130,17 @@ class SetupManatee(InstallationStep):
         print('Installing manatee...')
         if patch_path is None:
             # install manatee python3 support (must be installed before manatee itself)
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{manatee_version}-1ubuntu1_amd64.deb', '-N'], cwd='/usr/local/bin', stdout=self.stdout)
+            subprocess.check_call(wget_cmd(f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{manatee_version}-1ubuntu1_amd64.deb', self._ncc), cwd='/usr/local/bin', stdout=self.stdout)
             subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{manatee_version}-1ubuntu1_amd64.deb'], cwd='/usr/local/bin', stdout=self.stdout)
             # install manatee from package
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open_{manatee_version}-1ubuntu1_amd64.deb', '-N'], cwd='/usr/local/bin', stdout=self.stdout)
+            subprocess.check_call(wget_cmd(f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open_{manatee_version}-1ubuntu1_amd64.deb', self._ncc), cwd='/usr/local/bin', stdout=self.stdout)
             subprocess.check_call(['dpkg', '-i', f'manatee-open_{manatee_version}-1ubuntu1_amd64.deb'], cwd='/usr/local/bin', stdout=self.stdout)
             # install susanne corpus
-            subprocess.check_call(['wget', f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-susanne_{manatee_version}-1ubuntu1_amd64.deb', '-N'], cwd='/usr/local/bin', stdout=self.stdout)
+            subprocess.check_call(wget_cmd(f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-susanne_{manatee_version}-1ubuntu1_amd64.deb', self._ncc), cwd='/usr/local/bin', stdout=self.stdout)
             subprocess.check_call(['dpkg', '-i', f'manatee-open-susanne_{manatee_version}-1ubuntu1_amd64.deb'], cwd='/usr/local/bin', stdout=self.stdout)
         elif os.path.isfile(os.path.join(self.kontext_path, patch_path)):
             # build manatee from source using patch
-            subprocess.check_call(['wget', f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz', '-N'], cwd='/usr/local/src', stdout=self.stdout)
+            subprocess.check_call(wget_cmd(f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz', self._ncc), cwd='/usr/local/src', stdout=self.stdout)
             subprocess.check_call(['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd='/usr/local/src', stdout=self.stdout)
 
             subprocess.check_call(['cp', os.path.join(self.kontext_path, patch_path), './'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
@@ -150,8 +166,8 @@ class SetupManatee(InstallationStep):
                          os.path.join(lib_path, '_manatee.so'))
 
             # install susanne corpus
-            subprocess.check_call(['wget', 'https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2',
-                                   '-N'], cwd='/usr/local/src', stdout=self.stdout)
+            subprocess.check_call(wget_cmd('https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2', self._ncc), 
+                    cwd='/usr/local/src', stdout=self.stdout)
             subprocess.check_call(['tar', 'xjvf', 'susanne-example-source.tar.bz2'],
                                   cwd='/usr/local/src', stdout=self.stdout)
 
@@ -205,7 +221,7 @@ class SetupKontext(InstallationStep):
         create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
 
         subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout)
-        subprocess.check_call(['make', 'production'], cwd=self.kontext_path, stdout=self.stdout)
+        self.cmd(['make', 'production'], cwd=self.kontext_path)
 
 
 class SetupGunicorn(InstallationStep):
@@ -231,8 +247,8 @@ class SetupGunicorn(InstallationStep):
 
 
 class SetupDefaultUsers(InstallationStep):
-    def __init__(self, kontext_path: str, stdout: str):
-        super().__init__(kontext_path, stdout)
+    def __init__(self, kontext_path: str, stdout: str, stderr: str):
+        super().__init__(kontext_path, stdout, stderr)
         self.redis_client = redis.Redis(host='localhost', port=6379, db=1)
 
     def is_done(self):
