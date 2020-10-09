@@ -675,8 +675,13 @@ export namespace Actions {
      */
     export interface QueryTaghelperPresetPattern extends Action<{
         sourceId:string;
+        formType:QueryFormType;
         pattern:string;
     }> {
         name:ActionName.QueryTaghelperPresetPattern;
     }
+}
+
+export function isSetActiveInputWidgetAction(a:Action):a is Actions.SetActiveInputWidget {
+    return a.name === ActionName.SetActiveInputWidget;
 }

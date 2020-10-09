@@ -33,6 +33,7 @@ export const enum ActionName {
     KVAddFilter = 'TAGHELPER_ADD_FILTER',
     KVRemoveFilter = 'TAGHELPER_REMOVE_FILTER',
     KVGetInitialDataDone = 'TAGHELPER_KV_GET_INITIAL_DATA_DONE',
+    KVGetInitialDataNOP = 'TAGHELPER_KV_GET_INITIAL_DATA_NOP',
     KVGetFilteredDataDone = 'TAGHELPER_KV_GET_FILTERED_DATA_DONE'
 }
 
@@ -125,10 +126,21 @@ export namespace Actions {
         name:ActionName.KVGetInitialDataDone;
     }
 
+    export interface KVGetInitialDataNOP extends Action<{
+        sourceId:string;
+    }> {
+        name: ActionName.KVGetInitialDataNOP;
+    }
+
     export interface KVGetFilteredDataDone extends Action<{
         sourceId:string;
         result:{[key:string]:Array<string>};
     }> {
         name:ActionName.KVGetFilteredDataDone;
     }
+}
+
+
+export function isSetActiveTagAction(a:Action):a is Actions.SetActiveTag {
+    return a.name === ActionName.SetActiveTag;
 }

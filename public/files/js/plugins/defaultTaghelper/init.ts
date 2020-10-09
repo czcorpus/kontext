@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2016 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
@@ -30,6 +30,7 @@ import { init as ppTagsetViewInit} from './positional/views';
 import { init as udTagsetViewInit} from './keyval/views';
 import { ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions, ActionName } from './actions';
+import { TabFrameModel } from './models';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -55,7 +56,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
     }
 
     private addPosTagsetBuilder(
-            deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]>,
+            deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.FC<{}>|React.ComponentClass<{}>]>,
             tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,
             corpname:string
     ):void {
@@ -89,7 +90,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
     }
 
     private addKeyvalTagsetBuilder(
-        deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]>,
+        deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.FC<{}>|React.ComponentClass<{}>]>,
         tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,
         corpname:string
     ):void {
@@ -124,9 +125,12 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         );
     }
 
-    getWidgetView(corpname:string,
-            tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>):PluginInterfaces.TagHelper.View {
-        const deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.SFC<{}>|React.ComponentClass<{}>]> = [];
+    getWidgetView(
+        corpname:string,
+        tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>
+    ):PluginInterfaces.TagHelper.View {
+
+        const deps:Array<[string, StatelessModel<TagBuilderBaseState>, React.FC<{}>|React.ComponentClass<{}>]> = [];
         List.forEach(
             tagsetInfo => {
                 switch (tagsetInfo.type) {
@@ -168,6 +172,12 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
+            new TabFrameModel(
+                this.pluginApi.dispatcher(),
+                {
+                    activeTabs: {}
+                }
+            ),
             pipe(
                 deps,
                 List.map(

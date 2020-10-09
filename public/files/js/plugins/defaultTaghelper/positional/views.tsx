@@ -35,7 +35,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------------------------ <ValueLine /> ----------------------------
 
-    const ValueLine:React.SFC<{
+    const ValueLine:React.FC<{
                 data:{selected:boolean};
                 lineIdx:number;
                 sublineIdx:number;
@@ -73,7 +73,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------------------------ <ValueList /> ----------------------------
 
-    const ValueList:React.SFC<{
+    const ValueList:React.FC<{
                 positionValues:Array<PositionValue>,
                 lineIdx:number;
                 isLocked:boolean;
@@ -118,7 +118,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------------------------ <PositionLine /> ----------------------------
 
-    const PositionLine:React.SFC<{
+    const PositionLine:React.FC<{
                 clickHandler:(lineIdx:number, isActive:boolean)=>void;
                 lineIdx:number;
                 position:PositionOptions;
@@ -158,7 +158,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------------------------ <PositionList /> ----------------------------
 
-    const PositionList:React.SFC<{
+    const PositionList:React.FC<{
         sourceId:string;
         positions:Array<PositionOptions>;
         checkboxHandler:CheckboxHandler;
@@ -186,7 +186,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    const TagBuilder:React.SFC<TagHelperModelState> = (props) => {
+    const TagBuilder:React.FC<TagHelperModelState> = (props) => {
 
         const checkboxHandler = (lineIdx:number, value:string, checked:boolean) => {
             dispatcher.dispatch<Actions.CheckboxChanged>({
