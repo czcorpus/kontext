@@ -98,6 +98,7 @@ Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-
 
 * [Institute of the Czech National Corpus](https://kontext.korpus.cz/query)
 * [LINDAT/CLARIAH-CZ](https://ufal.mff.cuni.cz/lindat-kontext)
-* [Clarin-PL](https://kontext.clarin-pl.eu/)
+* [CLARIN-PL](https://kontext.clarin-pl.eu/)
+* [CLARIN-SI](https://www.clarin.si/kontext/)
 * [Інститут української](https://mova.institute/kontext/first_form)
 * [Serbski Institut](https://www.serbski-institut.de) (API version of KonText)
