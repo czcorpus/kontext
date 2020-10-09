@@ -42,14 +42,15 @@ import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 
 
 export interface QueryFormUserEntries {
-    currQueryTypes:{[corpname:string]:QueryType};
+    currQueryTypes:{[sourceId:string]:QueryType};
     // current queries values (e.g. when restoring a form state)
-    currQueries:{[corpname:string]:string};
-    currPcqPosNegValues:{[corpname:string]:'pos'|'neg'};
-    currDefaultAttrValues:{[corpname:string]:string};
-    currLposValues:{[corpname:string]:string};
-    currQmcaseValues:{[corpname:string]:boolean};
-    currIncludeEmptyValues:{[corpname:string]:boolean};
+    currQueries:{[sourceId:string]:string};
+    currPcqPosNegValues:{[sourceId:string]:'pos'|'neg'};
+    currDefaultAttrValues:{[sourceId:string]:string};
+    currUseRegexpValues:{[sourceId:string]:boolean};
+    currLposValues:{[sourceId:string]:string};
+    currQmcaseValues:{[sourceId:string]:boolean};
+    currIncludeEmptyValues:{[sourceId:string]:boolean};
 }
 
 
@@ -106,6 +107,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
             curr_lpos_values: {},
             curr_qmcase_values: {},
             curr_default_attr_values: {},
+            curr_use_regexp_values: {},
             tag_builder_support: {},
             selected_text_types: {},
             bib_mapping: {},
@@ -165,8 +167,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
     shuffleConcByDefault:boolean;
 
     lposValues:{[key:string]:string}; // corpname -> lpos
-
-    matchCaseValues:{[key:string]:boolean}; // corpname -> qmcase
 
     pcqPosNegValues:{[key:string]:'pos'|'neg'};
 
@@ -291,6 +291,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         props.currDefaultAttrValues[item] :
                         (queryTypes[item] === 'advanced' || List.empty(props.simpleQueryAttrSeq) ? 'word' : '')
                 )),
+                Dict.fromEntries()
+            ),
+            useRegexp: pipe(
+                props.corpora,
+                List.map(item => tuple(item, props.currUseRegexpValues[item] || false)),
                 Dict.fromEntries()
             ),
             queryTypes,
@@ -429,16 +434,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.lposValues[action.payload.sourceId] = action.payload.lpos;
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputSetMatchCase>(
-            ActionName.QueryInputSetMatchCase,
-            action =>  action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    state.matchCaseValues[action.payload.sourceId] = action.payload.value;
                 });
             }
         );
@@ -736,6 +731,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                     currQueryTypes: data.curr_query_types,
                                     currLposValues: data.curr_lpos_values,
                                     currDefaultAttrValues: data.curr_default_attr_values,
+                                    currUseRegexpValues: data.curr_use_regexp_values,
                                     currQmcaseValues: data.curr_qmcase_values,
                                     currPcqPosNegValues: data.curr_pcq_pos_neg_values,
                                     currIncludeEmptyValues: data.curr_include_empty_values
@@ -850,7 +846,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 pcq_pos_neg: this.state.pcqPosNegValues[c],
                 include_empty: this.state.includeEmptyValues[c],
                 default_attr: this.state.defaultAttrValues[c] || i > 0 ?
-                    this.state.defaultAttrValues[c] : this.state.simpleQueryAttrSeq[attrTryIdx]
+                    this.state.defaultAttrValues[c] : this.state.simpleQueryAttrSeq[attrTryIdx],
+                use_regexp: this.state.useRegexp[c]
             }),
             this.state.corpora
         );

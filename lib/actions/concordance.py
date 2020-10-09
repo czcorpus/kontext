@@ -467,9 +467,14 @@ class Actions(Querying):
             query = data.query
             icase = '' if data.qmcase else '(?i)'
             attr = data.default_attr
-        if qtype == 'simple':
 
-            return ' '.join([f'[{attr}="{icase}{part.strip()}"]' for part in query.split(' ')])
+        def mk_query_val(q):
+            if qtype == 'advanced' or data.curr_use_regexp_values[corpus]:
+                return q.strip()
+            return icase + re.escape(q.strip())
+
+        if qtype == 'simple':
+            return ' '.join([f'[{attr}="{mk_query_val(part)}"]' for part in query.split(' ')])
         else:
             return re.sub(r'[\n\r]+', ' ', query).strip()
 

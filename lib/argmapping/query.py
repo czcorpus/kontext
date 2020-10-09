@@ -142,6 +142,7 @@ class QueryFormArgs(ConcFormArgs):
         self.curr_lpos_values = empty_dict.copy()
         self.curr_qmcase_values = empty_dict.copy()
         self.curr_default_attr_values = {k: None for k in corpora}
+        self.curr_use_regexp_values = {k: False for k in corpora}
         self.tag_builder_support = empty_dict.copy()
         self.tagset_docs = empty_dict.copy()
         self.has_lemma = empty_dict.copy()
@@ -185,6 +186,7 @@ class QueryFormArgs(ConcFormArgs):
             self.curr_include_empty_values[corp] = query['include_empty']
             self.curr_qmcase_values[corp] = query['qmcase']
             self.curr_default_attr_values[corp] = query['default_attr']
+            self.curr_use_regexp_values[corp] = query['use_regexp']
         self.bib_mapping = bib_mapping
 
         ctx = data['context']
@@ -239,6 +241,7 @@ class FilterFormArgs(ConcFormArgs):
         self.inclkwic: bool = True
         self.qmcase: bool = False
         self.default_attr: str = 'word'
+        self.use_regexp: bool = False
         self.has_lemma: bool = False
         self.tagset_doc: str = ''
         self.tag_builder_support: bool = False
@@ -256,6 +259,8 @@ class FilterFormArgs(ConcFormArgs):
         self.inclkwic = data['inclkwic']
         self.qmcase = data['qmcase']
         self.within = data['within']
+        self.default_attr = data['default_attr']
+        self.use_regexp = data['use_regexp']
 
     def _add_corpus_metadata(self):
         with plugins.runtime.TAGHELPER as th:

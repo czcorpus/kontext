@@ -119,6 +119,7 @@ export namespace AjaxResponse {
         curr_lpos_values:{[corpname:string]:string};
         curr_qmcase_values:{[corpname:string]:boolean};
         curr_default_attr_values:{[corpname:string]:string};
+        curr_use_regexp_values:{[corpname:string]:boolean};
         curr_include_empty_values:{[corpname:string]:boolean};
         tag_builder_support:{[corpname:string]:boolean};
         selected_text_types:TextTypes.ServerCheckedValues;
@@ -145,6 +146,7 @@ export namespace AjaxResponse {
         inclkwic:boolean;
         qmcase:boolean;
         default_attr_value:string;
+        curr_use_regexp_values:boolean;
         tag_builder_support:boolean;
         lpos:string;
         within:boolean; // used when switching to an aligned corp without specific query (true)

@@ -288,6 +288,8 @@
         "query__implicit_attr_cannot_be_changed": "The implicit attribute cannot be changed here.",
         "query__default_attr": "Default attribute",
         "query__applied_attr": "Applied attribute",
+        "query__simple_q_use_regexp": "Allow regular expressions",
+        "query__icase_is_now_within_re": "To set case insensitivity in the regular expression mode, (?i) query prefix must be used",
         "query__tagset_summary": "tagset summary",
         "query__make_corpus_primary": "Make the corpus primary",
         "query__remove_corpus": "Remove the language",

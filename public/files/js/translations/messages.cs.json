@@ -288,6 +288,8 @@
         "query__implicit_attr_cannot_be_changed": "Implicitní atribut zde nelze změnit.",
         "query__default_attr": "Výchozí atribut",
         "query__applied_attr": "Použitý atribut",
+        "query__simple_q_use_regexp": "Povolit regulární výrazy",
+        "query__icase_is_now_within_re": "V režimu regulárního výrazu je třeba vyjádřit nerozlišování velikosti písmen prefixem (?i)",
         "query__tagset_summary": "popis morf. značek",
         "query__make_corpus_primary": "Udělat z korpusu primární",
         "query__remove_corpus": "Odstranit jazyk",

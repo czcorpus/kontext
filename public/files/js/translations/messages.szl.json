@@ -288,6 +288,8 @@
         "query__implicit_attr_cannot_be_changed": "Skŏzany atrybut niy może być sam zmiyniōny.",
         "query__default_attr": "Wychodny atrybut",
         "query__applied_attr": "Applied attribute",
+        "query__simple_q_use_regexp": "Allow regular expressions",
+        "query__icase_is_now_within_re": "To set case insensitivity in the regular expression mode, (?i) query prefix must be used",
         "query__tagset_summary": "ôpis zbioru tagōw",
         "query__make_corpus_primary": "Nasztaluj korpus za głōwny",
         "query__remove_corpus": "Skasuj jynzyk",

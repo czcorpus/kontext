@@ -20,7 +20,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import { tuple, pipe, Dict, List, HTTP } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
@@ -50,6 +50,7 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     // current queries values (e.g. when restoring a form state)
     currQueries:Array<[string, string]>;
     currDefaultAttrValues:Array<[string, string]>;
+    currUseRegexpValues:Array<[string, boolean]>;
     tagBuilderSupport:Array<[string, boolean]>;
     currLposValues:Array<[string, string]>;
     currQmcaseValues:Array<[string, boolean]>;
@@ -120,8 +121,6 @@ export interface FilterFormModelState extends QueryFormModelState {
     maincorps:{[key:string]:string};
 
     lposValues:{[key:string]:string};
-
-    matchCaseValues:{[key:string]:boolean};
 
     pnFilterValues:{[key:string]:string};
 
@@ -230,9 +229,17 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             ),
             defaultAttrValues: pipe(
                 props.currDefaultAttrValues,
-                List.map(([,item]) => tuple(
-                    item,
+                List.map(([fid, item]) => tuple(
+                    fid,
                     item !== undefined ? item : 'word'
+                )),
+                Dict.fromEntries()
+            ),
+            useRegexp: pipe(
+                props.currUseRegexpValues,
+                List.map(([fid, item]) => tuple(
+                    fid,
+                    item !== undefined ? item : false
                 )),
                 Dict.fromEntries()
             ),
@@ -356,16 +363,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             action => {
                 this.changeState(state => {
                     state.lposValues[action.payload.sourceId] = action.payload.lpos;
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputSetMatchCase>(
-            ActionName.QueryInputSetMatchCase,
-            action => action.payload.formType === 'filter',
-            action => {
-                this.changeState(state => {
-                    state.matchCaseValues[action.payload.sourceId] = action.payload.value;
                 });
             }
         );
@@ -592,6 +589,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             inclkwic: this.state.inclkwicValues[filterId] ? 1 : 0,
             within: this.state.withinArgs[filterId],
             qmcase: this.state.matchCaseValues[filterId],
+            default_attr: this.state.defaultAttrValues[filterId],
+            use_regexp: this.state.useRegexp[filterId],
             ...this.pageModel.getConcArgs(),
             q: '~' + concId
         }
