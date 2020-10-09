@@ -19,7 +19,7 @@
  */
 import * as React from 'react';
 import { IActionDispatcher, StatelessModel, BoundWithProps } from 'kombo';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
@@ -27,18 +27,21 @@ import { TagBuilderBaseState } from './common';
 import { Actions as QueryActions, ActionName as QueryActionName,
         QueryFormType } from '../../models/query/actions';
 import { Actions, ActionName } from './actions';
+import { TabFrameModel, TabFrameModelState } from './models';
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
+    frameModel:TabFrameModel,
     deps:{[key:string]:[StatelessModel<TagBuilderBaseState>,
-            React.SFC<{}>|React.ComponentClass<{}>]}) {
+            React.FC<{}>|React.ComponentClass<{}>]}
+):PluginInterfaces.TagHelper.View {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------------------------ <InsertButton /> ----------------------------
 
-    const InsertButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void}> = (props) => {
+    const InsertButton:React.FC<{onClick:(evt:React.MouseEvent<{}>)=>void}> = (props) => {
         return (
             <button className="util-button" type="button"
                     value="insert" onClick={props.onClick}>
@@ -49,7 +52,7 @@ export function init(
 
     // ------------------------------ <UndoButton /> ----------------------------
 
-    const UndoButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> =
+    const UndoButton:React.FC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> =
     (props) => {
         if (props.enabled) {
             return (
@@ -70,7 +73,7 @@ export function init(
 
     // ------------------------------ <ResetButton /> ----------------------------
 
-    const ResetButton:React.SFC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> =
+    const ResetButton:React.FC<{onClick:(evt:React.MouseEvent<{}>)=>void; enabled:boolean}> =
     (props) => {
         if (props.enabled) {
             return (
@@ -92,7 +95,7 @@ export function init(
 
     // ------------------------------ <TagButtons /> ----------------------------
 
-    const TagButtons:React.SFC<{
+    const TagButtons:React.FC<{
                 range:[number, number];
                 formType:QueryFormType;
                 sourceId:string;
@@ -171,7 +174,7 @@ export function init(
     // ------------------------------ <TagBuilder /> ----------------------------
 
     type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps &
-            {activeView:React.ComponentClass|React.SFC};
+            {activeView:React.ComponentClass|React.FC};
 
     class TagBuilder extends React.PureComponent<ActiveTagBuilderProps & TagBuilderBaseState> {
 
@@ -209,9 +212,32 @@ export function init(
         }
     }
 
+    // -------------------------------------------
+
+    const tagsetTabs = pipe(
+        deps,
+        Dict.keys(),
+        List.map(
+            tagset => ({
+                id: tagset,
+                label: tagset
+            })
+        )
+    );
+
+    const tabbedBoundBuilders = pipe(
+        deps,
+        Dict.toEntries(),
+        List.map(([key, [model, view]]) => tuple(
+            key,
+            view,
+            BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model)
+        ))
+    );
+
     // ---------------- <ActiveTagBuilder /> -----------------------------------
 
-    const ActiveTagBuilder:React.SFC<PluginInterfaces.TagHelper.ViewProps> = (props) => {
+    const ActiveTagBuilder:React.FC<PluginInterfaces.TagHelper.ViewProps & TabFrameModelState> = (props) => {
 
         const handleTabSelection = (value:string) => {
             dispatcher.dispatch<Actions.SetActiveTag>({
@@ -223,32 +249,18 @@ export function init(
             });
         };
 
-        const tagsetTabs = pipe(
-            deps,
-            Dict.keys(),
-            List.map(
-                tagset => ({
-                    id: tagset,
-                    label: tagset
-                })
-            )
-        );
-
         const children = pipe(
-            deps,
-            Dict.toEntries(),
-            List.map(([key, [model, view]]) => {
-                const TagBuilderBound = BoundWithProps<ActiveTagBuilderProps,
-                    TagBuilderBaseState>(TagBuilder, model);
-                return <TagBuilderBound
-                            key={key}
-                            activeView={view}
-                            sourceId={props.sourceId}
-                            formType={props.formType}
-                            range={props.range}
-                            onInsert={props.onInsert}
-                            onEscKey={props.onEscKey} />;
-            })
+            tabbedBoundBuilders,
+            List.map(
+                ([key, view, TabbedWidget]) => <TabbedWidget
+                    key={key}
+                    activeView={view}
+                    sourceId={props.sourceId}
+                    formType={props.formType}
+                    range={props.range}
+                    onInsert={props.onInsert}
+                    onEscKey={props.onEscKey} />
+            )
         );
 
         return (
@@ -257,12 +269,13 @@ export function init(
                 <layoutViews.TabView
                         className="TagsetFormSelector"
                         callback={handleTabSelection}
-                        items={tagsetTabs} >
+                        items={tagsetTabs}
+                        defaultId={props.activeTabs[props.sourceId]} >
                     {children}
                 </layoutViews.TabView>
             </div>
         );
     }
 
-    return ActiveTagBuilder;
+    return BoundWithProps(ActiveTagBuilder, frameModel);
 }

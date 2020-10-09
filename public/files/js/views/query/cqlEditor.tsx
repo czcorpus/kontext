@@ -229,17 +229,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             if (a !== null && evt.ctrlKey) {
                 switch (a.getAttribute('data-type')) {
                     case 'tag':
-                        const leftIdx = Number(a.getAttribute('data-leftIdx'));
-                        const rightIdx = Number(a.getAttribute('data-rightIdx'));
+                        const leftIdx = parseInt(a.getAttribute('data-leftIdx'));
+                        const rightIdx = parseInt(a.getAttribute('data-rightIdx'));
 
-                        dispatcher.dispatch<Actions.QueryTaghelperPresetPattern>({
-                            name: ActionName.QueryTaghelperPresetPattern,
-                            payload: {
-                                sourceId: this.props.sourceId,
-                                pattern: this.props.rawCode[this.props.sourceId].substring(
-                                    leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
-                            }
-                        });
                         dispatcher.dispatch<Actions.SetActiveInputWidget>({
                             name: ActionName.SetActiveInputWidget,
                             payload: {
@@ -250,6 +242,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     leftIdx: leftIdx,
                                     rightIdx: rightIdx
                                 }
+                            }
+                        });
+                        dispatcher.dispatch<Actions.QueryTaghelperPresetPattern>({
+                            name: ActionName.QueryTaghelperPresetPattern,
+                            payload: {
+                                formType: this.props.formType,
+                                sourceId: this.props.sourceId,
+                                pattern: this.props.rawCode[this.props.sourceId].substring(
+                                    leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                             }
                         });
                     break;

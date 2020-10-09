@@ -24,7 +24,7 @@ import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 
 import { IPluginApi } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
-import { Actions, ActionName } from '../actions';
+import { Actions, ActionName, isSetActiveTagAction } from '../actions';
 import { Kontext } from '../../../types/common';
 
 
@@ -160,6 +160,14 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                         },
                         false
                     );
+
+                } else {
+                    dispatch<Actions.KVGetInitialDataNOP>({
+                        name: ActionName.KVGetInitialDataNOP,
+                        payload: {
+                            sourceId: action.payload.sourceId
+                        }
+                    });
                 }
             }
         );
@@ -169,10 +177,10 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
             action => action.payload.sourceId === this.sourceId,
             (state, action) => {
                 if (!action.error) {
+                    state.availableFeatures = action.payload.result;
                     state.allFeatures = action.payload.result;
-                    state.availableFeatures = state.allFeatures;
                     state.showCategory = pipe(
-                        state.allFeatures,
+                        action.payload.result,
                         Dict.keys(),
                         List.sorted((v1, v2) => v1.localeCompare(v2)),
                         List.head()
@@ -181,6 +189,14 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 } else {
                     state.error = action.error;
                 }
+                state.isBusy = false;
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.KVGetInitialDataNOP>(
+            ActionName.KVGetInitialDataNOP,
+            action => action.payload.sourceId === this.sourceId,
+            (state, action) => {
                 state.isBusy = false;
             }
         );
@@ -287,21 +303,6 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                 state.availableFeatures = state.allFeatures;
                 state.canUndo = false;
                 state.generatedQuery = composeQuery(state);
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.SetActiveTag>(
-            ActionName.SetActiveTag,
-            action => action.payload.sourceId === this.sourceId,
-            null,
-            (state, action, dispatch) => {
-                if (this.ident !== action.payload.value) {
-                    this.suspend(
-                        {},
-                        (nextAction, syncObj) => this.ident === nextAction.payload['value'] ?
-                            null : syncObj
-                    ).subscribe(); // TODO is this correct?
-                }
             }
         );
     }

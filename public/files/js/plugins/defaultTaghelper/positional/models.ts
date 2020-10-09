@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,9 +24,9 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 
 import { IPluginApi } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
-import { Actions, ActionName } from '../actions';
+import { Actions, ActionName, isSetActiveTagAction } from '../actions';
 import { Actions as QueryActions,
-    ActionName as QueryActionName } from '../../../models/query/actions';
+    ActionName as QueryActionName, isSetActiveInputWidgetAction } from '../../../models/query/actions';
 
 
 type RawTagValues = Array<Array<[string, string]>>;
@@ -281,22 +283,6 @@ export class TagHelperModel extends StatelessModel<TagHelperModelState> {
                     )
                 );
                 state.positions = List.last(state.data);
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.SetActiveTag>(
-            ActionName.SetActiveTag,
-            action => action.payload.sourceId === this.sourceId,
-            null,
-            (state, action, dispatch) => {
-                if (this.ident !== action.payload.value) {
-                    this.suspend(
-                        {},
-                        (action:Actions.SetActiveTag, syncObj) =>
-                            this.ident === action.payload.value
-                        ? null : syncObj
-                    ).subscribe(); // TODO is this correct ?
-                }
             }
         );
     }

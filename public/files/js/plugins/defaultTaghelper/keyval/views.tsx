@@ -5,10 +5,9 @@ import { List, pipe, Dict } from 'cnc-tskit';
 import { FilterRecord, FeatureSelectProps } from './models';
 import { Kontext } from '../../../types/common';
 import { Actions, ActionName } from '../actions';
-import { Action } from 'rxjs/internal/scheduler/Action';
 
 
-export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.ComponentClass<FeatureSelectProps> {
+export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.FC<FeatureSelectProps> {
 
     // --------------------------- <CategoryDetail /> ------------------------------
 
@@ -129,104 +128,95 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
 
     // ---------------------------- <FeatureSelect /> ---------------------------------
 
-    class FeatureSelect extends React.Component<FeatureSelectProps> {
+    const FeatureSelect:React.FC<FeatureSelectProps> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.handleCheckboxChange = this.handleCheckboxChange.bind(this);
-            this.handleRemoveFilter = this.handleRemoveFilter.bind(this);
-            this.handleCategorySelect = this.handleCategorySelect.bind(this);
-        }
-
-        handleCheckboxChange(event) {
+        const handleCheckboxChange = (event) => {
             if (event.target.checked) {
                 dispatcher.dispatch<Actions.KVAddFilter>({
                     name: ActionName.KVAddFilter,
                     payload: {
-                        sourceId: this.props.sourceId,
+                        sourceId: props.sourceId,
                         name: event.target.name,
                         value: event.target.value
                     }
                 });
 
             } else {
-                this.handleRemoveFilter(event);
+                handleRemoveFilter(event);
             }
-        }
+        };
 
-        handleRemoveFilter(event) {
+        const handleRemoveFilter = (event) => {
             dispatcher.dispatch<Actions.KVRemoveFilter>({
                 name: ActionName.KVRemoveFilter,
                 payload: {
-                    sourceId: this.props.sourceId,
+                    sourceId: props.sourceId,
                     name: event.target.name,
                     value: event.target.value
                 }
             });
         };
 
-        handleCategorySelect(event) {
+        const handleCategorySelect = (event) => {
             dispatcher.dispatch<Actions.KVSelectCategory>({
                 name: ActionName.KVSelectCategory,
                 payload: {
-                    sourceId: this.props.sourceId,
+                    sourceId: props.sourceId,
                     value: event.target.value
                 }
             });
-        }
+        };
 
-        render() {
-            if (this.props.error) {
-                return <div>Error: {this.props.error.message}</div>;
+        if (props.error) {
+            return <div>Error: {props.error.message}</div>;
 
-            } else {
-                const featsWithoutPos = {...this.props.allFeatures};
-                delete featsWithoutPos['POS'];
+        } else {
+            const featsWithoutPos = {...props.allFeatures};
+            delete featsWithoutPos['POS'];
 
-                return(
-                    <div className='FeatureSelect'>
-                        <h4>{ut.translate('taghelper__selected_features_label')}:</h4>
-                        <div className='QueryLine' style={{maxWidth: '39em', minHeight: '4em'}}>
-                            <QueryExpression
-                                filterFeatures={List.last(this.props.filterFeaturesHistory)}
-                                handleRemoveFilter={this.handleRemoveFilter} />
+            return (
+                <div className='FeatureSelect'>
+                    <h4>{ut.translate('taghelper__selected_features_label')}:</h4>
+                    <div className='QueryLine' style={{maxWidth: '39em', minHeight: '4em'}}>
+                        <QueryExpression
+                            filterFeatures={List.last(props.filterFeaturesHistory)}
+                            handleRemoveFilter={handleRemoveFilter} />
+                    </div>
+                    <div style={{display: 'flex', alignItems: 'stretch'}}>
+                        <div className='CategoryDetail' style={{marginRight: '5em'}}>
+                            <h4>{ut.translate('taghelper__part_of_speech_label')}:</h4>
+                            <CategoryDetail
+                                onChangeHandler={(event) => handleCheckboxChange(event)}
+                                filterFeatures={List.last(props.filterFeaturesHistory)}
+                                categoryName="POS"
+                                allValues={props.allFeatures['POS'] || []}
+                                availableValues={props.availableFeatures['POS'] || []} />
                         </div>
-                        <div style={{display: 'flex', alignItems: 'stretch'}}>
-                            <div className='CategoryDetail' style={{marginRight: '5em'}}>
-                                <h4>{ut.translate('taghelper__part_of_speech_label')}:</h4>
-                                <CategoryDetail
-                                    onChangeHandler={(event) => this.handleCheckboxChange(event)}
-                                    filterFeatures={List.last(this.props.filterFeaturesHistory)}
-                                    categoryName="POS"
-                                    allValues={this.props.allFeatures['POS'] || []}
-                                    availableValues={this.props.availableFeatures['POS'] || []} />
-                            </div>
-                            <div>
-                                <h4>{ut.translate('taghelper__features_label')}:</h4>
-                                <div style={{display: 'flex', alignItems: 'flex-start'}}>
-                                    <div className='CategorySelect' style={{marginRight: '2em'}}>
-                                        <CategorySelect
-                                            allFeatures={featsWithoutPos}
-                                            availableFeatures={this.props.availableFeatures}
-                                            onSelectCategoryHandler={this.handleCategorySelect}
-                                            selectedCategory={this.props.showCategory} />
-                                    </div>
-                                    <div className='CategoryDetail'>
-                                        <CategoryDetail
-                                            onChangeHandler={(event) => this.handleCheckboxChange(event)}
-                                            filterFeatures={List.last(this.props.filterFeaturesHistory)}
-                                            categoryName={this.props.showCategory}
-                                            allValues={this.props.allFeatures[this.props.showCategory] || []}
-                                            availableValues={this.props.availableFeatures[this.props.showCategory] || []} />
-                                    </div>
+                        <div>
+                            <h4>{ut.translate('taghelper__features_label')}:</h4>
+                            <div style={{display: 'flex', alignItems: 'flex-start'}}>
+                                <div className='CategorySelect' style={{marginRight: '2em'}}>
+                                    <CategorySelect
+                                        allFeatures={featsWithoutPos}
+                                        availableFeatures={props.availableFeatures}
+                                        onSelectCategoryHandler={handleCategorySelect}
+                                        selectedCategory={props.showCategory} />
+                                </div>
+                                <div className='CategoryDetail'>
+                                    <CategoryDetail
+                                        onChangeHandler={(event) => handleCheckboxChange(event)}
+                                        filterFeatures={List.last(props.filterFeaturesHistory)}
+                                        categoryName={props.showCategory}
+                                        allValues={props.allFeatures[props.showCategory] || []}
+                                        availableValues={props.availableFeatures[props.showCategory] || []} />
                                 </div>
                             </div>
                         </div>
                     </div>
-                );
-            }
+                </div>
+            );
         }
-    }
+    };
 
     return FeatureSelect;
 }

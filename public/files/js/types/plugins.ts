@@ -45,7 +45,7 @@ export interface IPluginApi extends ITranslator {
     userIsAnonymous():boolean;
     dispatcher():IFullActionControl;
     getComponentHelpers():Kontext.ComponentHelpers;
-    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.SFC<T>,
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T>|React.FC<T>,
                             target:HTMLElement, props?:T):void;
     unmountReactComponent(element:HTMLElement):boolean;
     getModels():Kontext.LayoutModel;
@@ -127,7 +127,7 @@ export namespace PluginInterfaces {
             getWidgetView():View;
         }
 
-        export type View = React.ComponentClass<Props>|React.SFC<Props>;
+        export type View = React.ComponentClass<Props>|React.FC<Props>;
 
         export interface Factory {
             (
@@ -215,7 +215,7 @@ export namespace PluginInterfaces {
             onEscKey:()=>void;
         }
 
-        export type View = React.ComponentClass<ViewProps>|React.SFC<ViewProps>;
+        export type View = React.ComponentClass<ViewProps>|React.FC<ViewProps>;
 
         export interface IPlugin extends BasePlugin {
             getWidgetView(corpname:string,
@@ -298,9 +298,9 @@ export namespace PluginInterfaces {
          */
         export interface ICorplistPage {
 
-            getForm():React.ComponentClass|React.SFC<{}>;
+            getForm():React.ComponentClass|React.FC<{}>;
 
-            getList():React.ComponentClass|React.SFC<{}>;
+            getList():React.ComponentClass|React.FC<{}>;
         }
 
         export interface IPlugin extends IUnregistrable, BasePlugin {
@@ -324,9 +324,9 @@ export namespace PluginInterfaces {
 
     export namespace LiveAttributes {
 
-        export type View = React.ComponentClass|React.SFC;
+        export type View = React.ComponentClass|React.FC;
 
-        export type CustomAttribute = React.ComponentClass|React.SFC;
+        export type CustomAttribute = React.ComponentClass|React.FC;
 
         export interface Views {
             LiveAttrsView:View;
@@ -392,7 +392,7 @@ export namespace PluginInterfaces {
 
         export interface IPlugin extends BasePlugin {
 
-            getWidgetView():React.ComponentClass|React.SFC<{}>;
+            getWidgetView():React.ComponentClass|React.FC<{}>;
         }
 
         export interface Factory {
@@ -406,7 +406,7 @@ export namespace PluginInterfaces {
 
     export namespace KwicConnect {
 
-        export type WidgetWiew = React.ComponentClass<{}>|React.SFC<{}>;
+        export type WidgetWiew = React.ComponentClass<{}>|React.FC<{}>;
 
         export interface IPlugin extends BasePlugin {
             getWidgetView():WidgetWiew;
@@ -443,7 +443,7 @@ export namespace PluginInterfaces {
         }
 
         export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
-            React.SFC<Kontext.GeneralProps>;
+            React.FC<Kontext.GeneralProps>;
 
         export interface DataAndRenderer {
             renderer:Renderer;
