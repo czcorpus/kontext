@@ -293,8 +293,13 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 queryTypes,
                 Dict.fromEntries(tagBuilderSupport)
             ),
-            contextFormVisible: false,
-            textTypesFormVisible: false,
+            contextFormVisible: false,    // TODO load from some previous state?
+            textTypesFormVisible: false,  // dtto
+            queryOptionsVisible: pipe(
+                props.filters,
+                List.map(item => tuple(item, true)),
+                Dict.fromEntries()
+            ),    // dtto
             historyVisible: pipe(
                 queries,
                 Dict.keys(),

@@ -76,7 +76,7 @@ export interface QueryFormLiteProps {
 export interface MainViews {
     QueryForm:React.ComponentClass<QueryFormProps>;
     QueryFormLite:React.ComponentClass<QueryFormLiteProps>;
-    QueryHelp:React.SFC<{tagsetDocs:{[corpname:string]:string}}>;
+    QueryHelp:React.FC<{tagsetDocs:{[corpname:string]:string}}>;
 }
 
 
@@ -103,36 +103,11 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
     const layoutViews = he.getLayoutViews();
 
-    // ------------------- <AdvancedFormLegend /> -----------------------------
 
-    interface AdvancedFormLegendProps {
-        formVisible:boolean;
-        title:string;
-        handleClick:()=>void;
-    }
-
-    const AdvancedFormLegend:React.SFC<AdvancedFormLegendProps & TextTypesModelState> = (props) => {
-
-        const htmlClasses = ['form-extension-switch'];
-        htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
-        const hintWhenClosed = props.hasSelectedItems ? he.translate('query__contains_selected_text_types') : null;
-
-        return (
-            <legend>
-                <a className={htmlClasses.join(' ')}
-                        onClick={props.handleClick}>
-                    {props.title}
-                </a>
-                {!props.formVisible && hintWhenClosed ? <span title={hintWhenClosed}>{'\u2713'}</span> : null}
-            </legend>
-        );
-    };
-
-    const BoundAdvancedFormLegend = BoundWithProps<AdvancedFormLegendProps, TextTypesModelState>(AdvancedFormLegend, textTypesModel);
 
     // ------------------- <TextTypesNote /> -----------------------------
 
-    const TextTypesNotes:React.SFC<{
+    const TextTypesNotes:React.FC<{
         description:string; // raw HTML code
 
     }> = (props) => {
@@ -151,7 +126,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // ------------------- <TRCorpusField /> -----------------------------
 
-    const TRCorpusField:React.SFC<{
+    const TRCorpusField:React.FC<{
         corparchWidget:PluginInterfaces.Corparch.WidgetView;
 
     }> = (props) => {
@@ -162,6 +137,16 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
             </div>
         );
     };
+
+    // ------------------ <TextTypesFieldsetHint /> -----------------------
+
+    const TextTypesFieldsetHint:React.FC<TextTypesModelState> = (props) => (
+        props.hasSelectedItems ?
+            <span title={he.translate('query__contains_selected_text_types')}>{'\u2713'}</span> :
+            null
+    );
+
+    const BoundTextTypesFieldsetHint = Bound<TextTypesModelState>(TextTypesFieldsetHint, textTypesModel);
 
 
     // ------------------- <QueryForm /> -----------------------------
@@ -254,31 +239,28 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 onEnterKey={this._handleSubmit} />
                         : null
                     }
-                    <fieldset className="specify-context">
-                        <BoundAdvancedFormLegend
-                                formVisible={this.props.contextFormVisible}
-                                handleClick={this._handleContextFormVisibility}
-                                title={he.translate('query__specify_context')} />
-                        {this.props.contextFormVisible ?
-                            <contextViews.SpecifyContextForm
-                                    lemmaWindowSizes={this.props.lemmaWindowSizes}
-                                    posWindowSizes={this.props.posWindowSizes}
-                                    hasLemmaAttr={this.props.hasLemma[primaryCorpname]}
-                                    wPoSList={this.props.wPoSList} />
-                            : null}
-                    </fieldset>
-                    <fieldset className="specify-text-types">
-                        <BoundAdvancedFormLegend
+                    <inputViews.AdvancedFormFieldset
+                            formVisible={this.props.contextFormVisible}
+                            handleClick={this._handleContextFormVisibility}
+                            htmlClass="specify-context"
+                            title={he.translate('query__specify_context')}>
+                        <contextViews.SpecifyContextForm
+                                lemmaWindowSizes={this.props.lemmaWindowSizes}
+                                posWindowSizes={this.props.posWindowSizes}
+                                hasLemmaAttr={this.props.hasLemma[primaryCorpname]}
+                                wPoSList={this.props.wPoSList} />
+                    </inputViews.AdvancedFormFieldset>
+                    <inputViews.AdvancedFormFieldset
                                 formVisible={this.props.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
-                                title={he.translate('query__specify_tt')} />
-                        {this.props.textTypesFormVisible ?
-                                <ttViews.TextTypesPanel
-                                        LiveAttrsView={this.props.LiveAttrsView}
-                                        LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
-                                : <TextTypesNotes description={this.props.textTypesNotes} />
-                        }
-                    </fieldset>
+                                title={he.translate('query__specify_tt')}
+                                htmlClass="specify-text-types"
+                                closedStateHint={<BoundTextTypesFieldsetHint />}>
+                            <ttViews.TextTypesPanel
+                                    LiveAttrsView={this.props.LiveAttrsView}
+                                    LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
+                            <TextTypesNotes description={this.props.textTypesNotes} />
+                    </inputViews.AdvancedFormFieldset>
                     <div className="buttons">
                         {this.props.isBusy ?
                             <layoutViews.AjaxLoaderBarImage /> :
@@ -294,7 +276,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // -------- <SelectedTextTypesLite /> ---------------------------
 
-    const SelectedTextTypesLite:React.SFC<TextTypesModelState> = (props) => {
+    const SelectedTextTypesLite:React.FC<TextTypesModelState> = (props) => {
         if (props.hasSelectedItems) {
             return (
                 <fieldset className="SelectedTextTypesLite specify-text-types">
@@ -390,21 +372,18 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             useCQLEditor={this.props.useCQLEditor}
                             qsuggPlugin={querySuggest} />
                     </div>
-                    <fieldset className="specify-context">
-                        <BoundAdvancedFormLegend
-                                formVisible={this.props.contextFormVisible}
-                                handleClick={this._handleContextFormVisibility}
-                                title={he.translate('query__specify_context')} />
-                        {this.props.contextFormVisible ?
-                            <contextViews.SpecifyContextForm
-                                    lemmaWindowSizes={this.props.lemmaWindowSizes}
-                                    posWindowSizes={this.props.posWindowSizes}
-                                    hasLemmaAttr={this.props.hasLemma[this.props.corpname]}
-                                    wPoSList={this.props.wPoSList} />
-                            : null}
-                    </fieldset>
+                    <inputViews.AdvancedFormFieldset
+                            formVisible={this.props.contextFormVisible}
+                            handleClick={this._handleContextFormVisibility}
+                            htmlClass="specify-context"
+                            title={he.translate('query__specify_context')}>
+                        <contextViews.SpecifyContextForm
+                                lemmaWindowSizes={this.props.lemmaWindowSizes}
+                                posWindowSizes={this.props.posWindowSizes}
+                                hasLemmaAttr={this.props.hasLemma[this.props.corpname]}
+                                wPoSList={this.props.wPoSList} />
+                    </inputViews.AdvancedFormFieldset>
                     <BoundSelectedTextTypesLite />
-
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
                             {this.props.operationIdx !== undefined ?
@@ -419,7 +398,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // ------------------- <QueryHelp /> -----------------------------
 
-    const QueryHelp:React.SFC<{
+    const QueryHelp:React.FC<{
         tagsetDocs:{[corpname:string]:string};
     }> = (props) => {
 

@@ -220,6 +220,8 @@ export interface QueryFormModelState {
 
     textTypesFormVisible:boolean;
 
+    queryOptionsVisible:{[sourceId:string]:boolean};
+
     historyVisible:{[sourceId:string]:boolean};
 
     suggestionsVisible:{[sourceId:string]:boolean};
@@ -339,6 +341,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 });
             }
         );
+
+        this.addActionSubtypeHandler<Actions.QueryOptionsToggleForm>(
+            ActionName.QueryOptionsToggleForm,
+            action => action.payload.formType === this.state.formType,
+            action => {
+                this.changeState(state => {
+                    state.queryOptionsVisible[action.payload.sourceId] =
+                            !state.queryOptionsVisible[action.payload.sourceId];
+                })
+            }
+        )
 
         this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
             ActionName.QueryInputSetDefaultAttr,

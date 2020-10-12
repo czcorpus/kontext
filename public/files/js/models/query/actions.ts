@@ -45,6 +45,7 @@ export enum ActionName {
     QueryContextFormPrepareArgsDone = 'QUERY_CONTEXT_FORM_PREPARE_ARGS_DONE',
     QueryContextToggleForm = 'QUERY_CONTEXT_TOGGLE_FORM',
     QueryTextTypesToggleForm = 'QUERY_TEXT_TYPES_TOGGLE_FORM',
+    QueryOptionsToggleForm = 'QUERY_OPTIONS_TOGGLE_FORM',
     LoadWithinBuilderData = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
     LoadWithinBuilderDataDone = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA_DONE',
     SetWithinValue = 'QUERY_INPUT_SET_WITHIN_VALUE',
@@ -230,6 +231,13 @@ export namespace Actions {
     export interface QueryTextTypesToggleForm extends Action<{
     }> {
         name:ActionName.QueryTextTypesToggleForm;
+    }
+
+    export interface QueryOptionsToggleForm extends Action<{
+        formType:QueryFormType;
+        sourceId:string;
+    }> {
+        name:ActionName.QueryOptionsToggleForm;
     }
 
     export interface LoadWithinBuilderData extends Action<{

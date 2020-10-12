@@ -17,8 +17,56 @@ form.query-form {
     }
 
     .specify-context,
-    .specify-text-types {
+    .specify-text-types,
+    .query-options {
         margin-top: 0.7em;
+
+        legend a {
+            font-weight: normal;
+        }
+    }
+
+    .specify-context.closed,
+    .specify-text-types.closed,
+    .query-options.closed {
+        border-color: transparent;
+        padding: 0;
+
+        legend {
+            margin-left: 0.95em;
+        }
+    }
+
+    .query-options {
+
+        div.options {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            grid-template-rows: auto;
+            grid-gap: 1em;
+            grid-row-gap: 1.5em;
+
+            div.option {
+                white-space: nowrap;
+                margin-right: 1.3em;
+
+                label {
+
+                    input {
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
+                }
+            }
+
+            div.option.disabled {
+                color: @color-light-text;
+            }
+
+            div.option.custom div.option {
+                grid-column-start: 1;
+            }
+        }
     }
 
     .AlignedCorpBlock table.form {
@@ -127,7 +175,7 @@ form.query-form legend {
 
 a.form-extension-switch {
     display: inline-block;
-    background-position: 0 6pt;
+    background-position: 0 0.4em;
     background-repeat: no-repeat;
     padding-left: 1em;
     margin-left: 0.2em;
@@ -306,40 +354,6 @@ div.query-form-spa {
         li a:hover {
             color: @color-logo-blue;
             text-decoration: underline;
-        }
-    }
-}
-
-.query-options {
-    margin-top: 1.2em;
-    margin-bottom: 1.2em;
-
-    div.options {
-        display: grid;
-        grid-template-columns: auto auto auto;
-        grid-template-rows: auto;
-        grid-gap: 1em;
-        grid-row-gap: 1.5em;
-
-        div.option {
-            white-space: nowrap;
-            margin-right: 1.3em;
-
-            label {
-
-                input {
-                    display: inline-block;
-                    vertical-align: middle;
-                }
-            }
-        }
-
-        div.option.disabled {
-            color: @color-light-text;
-        }
-
-        div.option.custom div.option {
-            grid-column-start: 1;
         }
     }
 }
