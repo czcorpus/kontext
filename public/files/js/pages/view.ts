@@ -89,6 +89,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
+import { TTInitialData } from '../models/textTypes/common';
 
 
 declare var require:any;
@@ -894,15 +895,16 @@ export class ViewPage {
     }
 
     private initTextTypesModel():TextTypesModel {
-        this.queryModels.textTypesModel = new TextTypesModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel.pluginApi(),
-            this.layoutModel.getConf<any>('textTypesData')
-        );
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+        this.queryModels.textTypesModel = new TextTypesModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel.pluginApi(),
+            this.layoutModel.getConf<TTInitialData>('textTypesData')
+        );
+
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
         // the pop-up query form does not display text-types form (yet the values are still
         // applied thanks to this).

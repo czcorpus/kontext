@@ -20,8 +20,6 @@
 
 import { TextTypes } from '../../types/common';
 import { List, pipe } from 'cnc-tskit';
-import { TextTypesDistModel } from '../concordance/ttDistModel';
-import { select } from 'vendor/d3';
 
 
 export type ExtendedInfo = {[key:string]:any}; // TODO type

@@ -656,7 +656,7 @@ export namespace TextTypes {
      *         attr_name_2 => [val2#1, val2#2,...]
      */
     export interface ServerCheckedValues {
-        [key:string]:Array<string>;
+        [key:string]:Array<string>|string;
     }
 
     export interface BibMapping {

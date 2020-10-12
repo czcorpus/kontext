@@ -34,7 +34,6 @@ import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
-import { first } from 'rxjs/operators';
 
 
 export interface InputModuleArgs {

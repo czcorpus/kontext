@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
@@ -219,7 +219,7 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         );
     }
 
-    private openQueryForm(idx:number):void {
+    private openQueryForm(idx:number):void { // TODO this does not work
         const item = List.find(v => v.idx === idx, this.state.data);
         const args = new MultiDict();
         args.set('corpname', item.corpname);
@@ -240,7 +240,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             args.set(`pcq_pos_neg_${v.corpname}`, v.pcq_pos_neg);
         }, item.aligned);
         Dict.forEach((v, k) => {
-            args.replace(`sca_${k}`, item.selected_text_types[k]);
+            const tt = item.selected_text_types[k];
+            args.replace(`sca_${k}`, Array.isArray(tt) ? tt : [tt]);
         }, item.selected_text_types);
         window.location.href = this.pluginApi.createActionUrl('query', args);
     }

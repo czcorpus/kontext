@@ -115,7 +115,7 @@ export type SelectionFilterMap = {[k:string]:Array<SelectionFilterValue>};
  * bib. attr. name to 'shrink_list' argument
  * (see lib/texttypes.py method export_with_norms())
  */
-export interface InitialData {
+export interface TTInitialData {
     Blocks:Array<Block>;
     Normslist:Array<any>;
     bib_attr:string; // bib item label (possibly non-unique)
@@ -135,7 +135,7 @@ const typeIsSelected = (data:SelectedTextTypes, attr:string, v:string):boolean =
     return false;
 }
 
-export function importInitialData(data:InitialData,
+export function importInitialData(data:TTInitialData,
         selectedItems:SelectedTextTypes):Array<TextTypes.AnyTTSelection> {
     const mergedBlocks:Array<BlockLine> = List.foldl(
         (prev, curr) => prev.concat(curr.Line),

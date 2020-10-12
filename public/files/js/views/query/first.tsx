@@ -27,7 +27,7 @@ import { init as inputInit } from './input';
 import { init as alignedInit } from './aligned';
 import { init as contextInit } from './context';
 import { init as ttViewsInit } from '../textTypes';
-import { Kontext } from '../../types/common';
+import { Kontext, TextTypes } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { FirstQueryFormModel, FirstQueryFormModelState } from '../../models/query/first';
 import { UsageTipsModel } from '../../models/usageTips';
@@ -37,6 +37,7 @@ import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../models/query/context';
 import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { ActionName, Actions } from '../../models/query/actions';
+import { TTSelOps } from '../../models/textTypes/selectionOps';
 
 
 export interface MainModuleArgs {
@@ -276,18 +277,62 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // -------- <SelectedTextTypesLite /> ---------------------------
 
+
+    const shortenValues = (values:Array<any>, joinChar:string) => {
+
+        if (typeof(values) === 'string') {
+            return values;
+        }
+
+        let ans:Array<string>;
+        if (values.length > 5) {
+            ans = values.slice(0, 2);
+            ans.push('\u2026');
+            ans = ans.concat(values.slice(values.length - 2, values.length));
+
+        } else {
+            ans = values;
+        }
+        return ans
+            .map(item => item.substr(0, 1) !== '@' ? item : item.substr(1))
+            .join(joinChar);
+    };
+
     const SelectedTextTypesLite:React.FC<TextTypesModelState> = (props) => {
+
+        function renderSelections(sel:TextTypes.AnyTTSelection, i:number) {
+            switch (sel.type) {
+                case 'full':
+                    return <span key={i}>
+                        {i > 0 ? ', ' : ''}
+                        <strong>{sel.name}</strong>
+                        {'\u00a0\u2208\u00a0'}
+                        {'{' + shortenValues(List.map(v => v.value, sel.values), ', ') + '}'}
+                        <br />
+                    </span>;
+                case 'regexp':
+                    return <span key={i}>
+                        {i > 0 ? ', ' : ''}
+                        <strong>{sel.name}</strong>
+                        {'\u00a0\u2208\u00a0'}
+                        {'{' + sel.textFieldDecoded + '}'}
+                        <br />
+                    </span>;
+                case 'text':
+                    return <span key={i}>{sel.textFieldValue}</span>
+            }
+        }
+
         if (props.hasSelectedItems) {
             return (
                 <fieldset className="SelectedTextTypesLite specify-text-types">
                     <legend>{he.translate('query__chosen_texts')}</legend>
                     <ul>
-                        {Object.keys(props.attributes).map(v => (
-                            <li key={v}>
-                                <strong>{v}</strong>
-                                {' \u2208 {' + props.attributes[v].map(v => `"${v}"`).join(', ') + '}'}
-                            </li>
-                        ))}
+                        {pipe(
+                            props.attributes,
+                            List.filter(v => TTSelOps.hasUserChanges(v)),
+                            List.map(renderSelections)
+                        )}
                     </ul>
                     <p className="hint">
                         ({he.translate('query__chosen_texts_cannot_be_changed')})

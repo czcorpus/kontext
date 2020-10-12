@@ -453,19 +453,22 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 values: pipe(
                     newAttrs,
                     List.map(
-                        attr => tuple<string, SelectedValues|EncodedSelection>(
-                            attr,
-                            state.selectionTypes[attr] &&
-                                TextTypes.isEncodedSelectionType(state.selectionTypes[attr][0]) ?
-                            {
-                                decodedValue: state.selectionTypes[attr][1],
-                                type: 'encoded'
-                            } :
-                            {
-                                selections: selections[attr],
-                                type: 'default'
-                            }
-                        )
+                        attr => {
+                            const sels = selections[attr];
+                            return tuple<string, SelectedValues|EncodedSelection>(
+                                attr,
+                                state.selectionTypes[attr] &&
+                                    TextTypes.isEncodedSelectionType(state.selectionTypes[attr][0]) ?
+                                {
+                                    decodedValue: state.selectionTypes[attr][1],
+                                    type: 'encoded'
+                                } :
+                                {
+                                    selections: Array.isArray(sels) ? sels : [sels],
+                                    type: 'default'
+                                }
+                            )
+                        }
                     ),
                     Dict.fromEntries()
                 )

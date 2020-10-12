@@ -46,7 +46,7 @@ export interface SubcMixerModelState extends BaseSubcorFormState {
     numOfErrors:number;
     ttAttributes:Array<TextTypes.AnyTTSelection>; // basically a copy of text type model attributes
     ttInitialAvailableValues:Array<TextTypes.AnyTTSelection>;
-    liveattrsSelections:{[key:string]:Array<string>};
+    liveattrsSelections:{[key:string]:Array<string>|string};
 }
 
 /**

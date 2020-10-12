@@ -21,13 +21,13 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
+import { List, Dict, pipe, tuple, HTTP, Strings } from 'cnc-tskit';
 
 import { TextTypes, Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { IPluginApi } from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
-import { SelectedTextTypes, importInitialData, InitialData, SelectionFilterMap,
+import { SelectedTextTypes, importInitialData, TTInitialData, SelectionFilterMap,
     IntervalChar, WidgetView} from './common';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
@@ -106,7 +106,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     private readonly notifySelectionChange:()=>void; // TODO this is an ungly antipattern;
 
 
-    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, data:InitialData,
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, data:TTInitialData,
             selectedItems?:SelectedTextTypes) {
         const attributes = importInitialData(data, selectedItems || {});
         super(
@@ -473,77 +473,90 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues,
             bibMapping:TextTypes.BibMapping):void {
         this.changeState(state => {
-            Object.keys(checkedItems).forEach(k => {
-                const attrIdx = state.attributes.findIndex(
-                    v => k === state.bibIdAttr ?
-                        v.name === state.bibLabelAttr : v.name === k);
-                if (attrIdx === -1) {
-                    console.warn(`Cannot apply checked value for ${k}`);
-                    return;
-                }
-                let attr = state.attributes[attrIdx];
-                // now we must distinguish 4 cases:
-                // [structattr box is configured as bibliography list] x
-                // [structattr box is a list of items or a text input box]
-                if (attr.name === state.bibLabelAttr) {
-                    if (attr.type === 'text') {
-                        checkedItems[k].forEach(checkedVal => {
-                            attr = TTSelOps.addValue(
-                                attr,
-                                {
-                                    ident: checkedVal,
-                                    value: checkedVal in bibMapping ?
-                                        bibMapping[checkedVal] : checkedVal,
-                                    selected: true,
-                                    locked: false,
-                                    numGrouped: 0
-                                }
-                            );
-                        });
-                        state.attributes[attrIdx] = attr;
+            pipe(
+                checkedItems,
+                Dict.forEach((checkedOfAttr, k) => {
+                    const checkedOfAttrNorm = Array.isArray(checkedOfAttr) ?
+                             checkedOfAttr : [checkedOfAttr];
+                    const attrIdx = state.attributes.findIndex(
+                        v => k === state.bibIdAttr ?
+                            v.name === state.bibLabelAttr : v.name === k);
+                    if (attrIdx === -1) {
+                        console.warn(`Cannot apply checked value for ${k}`);
+                        return;
+                    }
+                    let attr = state.attributes[attrIdx];
+                    // now we must distinguish 4 cases:
+                    // [structattr box is configured as bibliography list] x
+                    // [structattr box is a list of items or a text input box]
+                    if (attr.name === state.bibLabelAttr) {
+                        if (attr.type === 'text') {
+                            checkedOfAttrNorm.forEach(checkedVal => {
+                                attr = TTSelOps.addValue(
+                                    attr,
+                                    {
+                                        ident: checkedVal,
+                                        value: checkedVal in bibMapping ?
+                                            bibMapping[checkedVal] : checkedVal,
+                                        selected: true,
+                                        locked: false,
+                                        numGrouped: 0
+                                    }
+                                );
+                            });
+                            state.attributes[attrIdx] = attr;
+
+                        } else {
+                            state.attributes[attrIdx] =
+                                TTSelOps.mapValues(
+                                    attr,
+                                    item => ({
+                                        ...item,
+                                        value: item.ident in bibMapping ?
+                                            bibMapping[item.ident] : item.value,
+                                        selected: checkedOfAttr.indexOf(item.value) > -1 ? true : false,
+                                        locked: false
+                                    })
+                                );
+                        }
 
                     } else {
-                        state.attributes[attrIdx] =
-                            TTSelOps.mapValues(
+                        if (attr.type === 'text') {
+                            checkedOfAttrNorm.forEach(checkedVal => {
+                                attr = TTSelOps.addValue(
+                                    attr,
+                                    {
+                                        ident: checkedVal,
+                                        value: checkedVal,
+                                        selected: true,
+                                        locked: false,
+                                        numGrouped: 0
+                                    }
+                                );
+                            });
+                            state.attributes[attrIdx] = attr;
+
+                        } else if (attr.type === 'regexp') {
+                            state.attributes[attrIdx] = {
+                                ...attr,
+                                textFieldValue: checkedOfAttrNorm[0],
+                                textFieldDecoded: Strings.shortenText(checkedOfAttrNorm[0], 50, '\u2026')
+                            };
+
+                        } else {
+                            state.attributes[attrIdx] = TTSelOps.mapValues(
                                 attr,
                                 item => ({
                                     ...item,
-                                    value: item.ident in bibMapping ?
-                                        bibMapping[item.ident] : item.value,
-                                    selected: checkedItems[k].indexOf(item.value) > -1 ? true : false,
+                                    selected: checkedOfAttr.indexOf(item.value) > -1 ? true : false,
                                     locked: false
                                 })
                             );
-                    }
-
-                } else {
-                    if (attr.type === 'text') {
-                        checkedItems[k].forEach(checkedVal => {
-                            attr = TTSelOps.addValue(
-                                attr,
-                                {
-                                    ident: checkedVal,
-                                    value: checkedVal,
-                                    selected: true,
-                                    locked: false,
-                                    numGrouped: 0
-                                }
-                            );
-                        });
-                        state.attributes[attrIdx] = attr;
-
-                    } else {
-                        state.attributes[attrIdx] = TTSelOps.mapValues(
-                            attr,
-                            item => ({
-                                ...item,
-                                selected: checkedItems[k].indexOf(item.value) > -1 ? true : false,
-                                locked: false
-                            })
-                        );
+                        }
                     }
                 }
-            });
+            ));
+            state.hasSelectedItems = this.findHasSelectedItems(state);
         });
     }
 
