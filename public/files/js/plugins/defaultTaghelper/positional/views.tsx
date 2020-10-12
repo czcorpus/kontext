@@ -147,11 +147,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                     <span className="pos-num">{props.lineIdx + 1})</span> {props.position['label']}
                     <span className="status-text">[ {getAvailableChildren().length} ]</span>
                 </a>
-                {props.position.isActive ?
-                <ValueList positionValues={getAvailableChildren()}
-                            isLocked={props.position.isLocked}
-                            lineIdx={props.lineIdx}
-                            checkboxHandler={props.checkboxHandler} /> : null }
+                <div className="defaultTaghelper_PositionValuesWrapper">
+                    {props.position.isActive ?
+                    <ValueList positionValues={getAvailableChildren()}
+                                isLocked={props.position.isLocked}
+                                lineIdx={props.lineIdx}
+                                checkboxHandler={props.checkboxHandler} /> : null }
+                </div>
             </li>
         );
     };

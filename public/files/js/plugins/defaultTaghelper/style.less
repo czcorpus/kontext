@@ -12,10 +12,17 @@ ul.defaultTaghelper_PositionList {
 
     .defaultTaghelper_PositionLine {
         margin: 0px;
-        overflow-x: hidden;
-        overflow-y: auto;
         clear: both;
         max-height: 28em;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .defaultTaghelper_PositionValuesWrapper {
+        overflow-x: hidden;
+        overflow-y: auto;
+        flex-grow: 1;
     }
 
     li span.status-text {
