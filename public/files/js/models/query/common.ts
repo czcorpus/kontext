@@ -563,7 +563,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 if (curr) {
                     ans.push(curr);
                 }
-                curr = [value[i] === ' ' ? '' : value[i], i, i + 1];
+                curr = [value[i] === ' ' ? '' : value[i], i + 1, i + 1];
 
             } else {
                 curr[0] += value[i];
