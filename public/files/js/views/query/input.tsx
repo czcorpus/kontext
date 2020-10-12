@@ -52,6 +52,7 @@ export interface InputModuleViews {
     TRQueryInputField:React.ComponentClass<TRQueryInputFieldProps>;
     TRPcqPosNegField:React.FC<TRPcqPosNegFieldProps>;
     TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps>;
+    AdvancedFormFieldset:React.FC<AdvancedFormFieldsetProps>;
 }
 
 
@@ -94,6 +95,14 @@ export interface TRIncludeEmptySelectorProps {
     corpname:string;
 }
 
+export interface AdvancedFormFieldsetProps {
+    formVisible:boolean;
+    title:string;
+    closedStateHint?:React.ReactElement;
+    htmlClass?:string;
+    handleClick:()=>void;
+}
+
 interface SingleLineInputProps {
     sourceId:string;
     refObject:React.RefObject<HTMLInputElement>;
@@ -126,6 +135,31 @@ export function init({
     const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel, cqlEditorModel);
     const layoutViews = he.getLayoutViews();
 
+
+    // ------------------- <AdvancedFormFieldset /> -----------------------------
+
+    const AdvancedFormFieldset:React.FC<AdvancedFormFieldsetProps> = (props) => {
+
+        const htmlClasses = ['form-extension-switch'];
+        htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
+
+        const firstChild = () => Array.isArray(props.children) ? props.children[0] : props.children;
+
+        const secondChild = () => Array.isArray(props.children) ? props.children[1] : null;
+
+        return (
+            <fieldset className={`${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}>
+                <legend>
+                    <a className={htmlClasses.join(' ')}
+                            onClick={props.handleClick}>
+                        {props.title}{props.formVisible ? null : '\u2026'}
+                    </a>
+                    {props.formVisible ? null : props.closedStateHint}
+                </legend>
+                {props.formVisible ? firstChild() : secondChild()}
+            </fieldset>
+        );
+    };
 
     // -------------- <QueryHints /> --------------------------------------------
 
@@ -840,6 +874,7 @@ export function init({
             this.handleReqHistory = this.handleReqHistory.bind(this);
             this.handleInputEscKeyDown = this.handleInputEscKeyDown.bind(this);
             this.handleSuggestionItemClick = this.handleSuggestionItemClick.bind(this);
+            this.handleQueryOptsClick = this.handleQueryOptsClick.bind(this);
         }
 
         _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
@@ -869,6 +904,16 @@ export function init({
             if (!this.props.historyVisible[this.props.sourceId] && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
+        }
+
+        private handleQueryOptsClick() {
+            dispatcher.dispatch<Actions.QueryOptionsToggleForm>({
+                name: ActionName.QueryOptionsToggleForm,
+                payload: {
+                    formType: this.props.formType,
+                    sourceId: this.props.sourceId
+                }
+            });
         }
 
         componentDidMount() {
@@ -1070,27 +1115,28 @@ export function init({
                         }
                         <BoundQueryHints />
                     </div>
-                    <fieldset className="query-options">
-                        <legend>
-                            <span className="form-extension-switch always-expand">
-                                {he.translate('query__specify_options')}
-                            </span>
-                        </legend>
+                    <AdvancedFormFieldset
+                            formVisible={this.props.queryOptionsVisible[this.props.sourceId]}
+                            handleClick={this.handleQueryOptsClick}
+                            htmlClass="query-options"
+                            title={he.translate('query__specify_options')}>
                         <div className="options">
                             {this._renderInputOptions()}
                         </div>
-                    </fieldset>
+                    </AdvancedFormFieldset>
                 </div>
             );
         }
     }
 
-    const BoundTRQueryInputField = BoundWithProps<TRQueryInputFieldProps, QueryFormModelState>(TRQueryInputField, queryModel)
+    const BoundTRQueryInputField = BoundWithProps<TRQueryInputFieldProps, QueryFormModelState>(TRQueryInputField, queryModel);
+
 
     return {
         TRQueryInputField: BoundTRQueryInputField,
         TRPcqPosNegField: TRPcqPosNegField,
-        TRIncludeEmptySelector: TRIncludeEmptySelector
+        TRIncludeEmptySelector: TRIncludeEmptySelector,
+        AdvancedFormFieldset: AdvancedFormFieldset
     };
 
 }

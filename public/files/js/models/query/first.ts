@@ -326,8 +326,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 tagBuilderSupport,
                 props.isAnonymousUser
             ),
-            contextFormVisible: false,
-            textTypesFormVisible: false,
+            contextFormVisible: false,   // TODO load from previous state ?
+            textTypesFormVisible: false, // dtto
+            queryOptionsVisible: pipe(
+                props.corpora,
+                List.map(item => tuple(item, true)),
+                Dict.fromEntries()
+            ),   // dtto
             historyVisible: pipe(
                 props.corpora,
                 List.map(item => tuple(item, false)),
