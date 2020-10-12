@@ -5,52 +5,6 @@ A schema describing default_corparch and ucnk_corparch compatible corpus list.
 <element name="kontext" xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
     <optional>
-        <element name="tagsets">
-            <oneOrMore>
-                <element name="tagset">
-                    <attribute name="ident">
-                        <text/>
-                    </attribute>
-                    <attribute name="num_pos">
-                        <data type="integer"/>
-                    </attribute>
-                    <oneOrMore>
-                        <element name="position">
-                            <attribute name="index">
-                                <data type="integer"/>
-                            </attribute>
-                            <element name="label">
-                                <oneOrMore>
-                                    <element name="desc">
-                                        <attribute name="lang">
-                                            <text/>
-                                        </attribute>
-                                        <text />
-                                    </element>
-                                </oneOrMore>
-                            </element>
-                            <oneOrMore>
-                                <element name="value">
-                                    <attribute name="ident">
-                                        <text/>
-                                    </attribute>
-                                    <oneOrMore>
-                                        <element name="desc">
-                                            <attribute name="lang">
-                                                <text/>
-                                            </attribute>
-                                            <text/>
-                                        </element>
-                                    </oneOrMore>
-                                </element>
-                            </oneOrMore>
-                        </element>
-                    </oneOrMore>
-                </element>
-            </oneOrMore>
-        </element>
-    </optional>
-    <optional>
         <element name="corplist">
             <element name="keywords">
                 <oneOrMore>
@@ -84,9 +38,28 @@ A schema describing default_corparch and ucnk_corparch compatible corpus list.
                             <text/>
                         </attribute>
                         <optional>
-                            <attribute name="tagset">
-                                <text/>
-                            </attribute>
+                            <element name="tagsets">
+                                <oneOrMore>
+                                    <element name="tagset">
+                                        <attribute name="name">
+                                            <text/>
+                                        </attribute>
+                                        <attribute name="type">
+                                            <text/>
+                                        </attribute>
+                                        <optional>
+                                            <attribute name="pos_attr">
+                                                <text/>
+                                            </attribute>
+                                        </optional>
+                                        <optional>
+                                            <attribute name="feat_attr">
+                                                <text/>
+                                            </attribute>
+                                        </optional>
+                                    </element>
+                                </oneOrMore>
+                            </element>
                         </optional>
                         <optional>
                             <attribute name="collator_locale">
