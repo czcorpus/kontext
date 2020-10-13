@@ -9,6 +9,7 @@ KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__fi
 MANATEE_VER='2.167.8'
 
 REQUIREMENTS = [
+    'python2', # reqiuired by the manatee-open package
     'python3-pip',
     'wget',
     'curl',
