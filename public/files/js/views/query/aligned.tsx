@@ -37,6 +37,7 @@ export interface AlignedModuleArgs {
 
 export interface AlignedCorporaProps {
     availableCorpora:Array<{n:string; label:string}>;
+    sectionVisible:boolean;
     alignedCorpora:Array<string>;
     queryTypes:{[key:string]:QueryType};
     supportedWidgets:{[key:string]:Array<string>};
@@ -57,11 +58,12 @@ export interface AlignedCorporaProps {
 }
 
 export interface AlignedViews {
-    AlignedCorpora:React.SFC<AlignedCorporaProps>;
+    AlignedCorpora:React.FC<AlignedCorporaProps>;
 }
 
 export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedViews {
 
+    const layoutViews = he.getLayoutViews();
 
     // ------------------ <AlignedCorpBlock /> -----------------------------
     /*
@@ -153,6 +155,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             onEnterKey={this.props.onEnterKey}
                             tagHelperView={this.props.tagHelperView}
                             qsuggPlugin={null}
+                            isNested={true}
                             customOptions={[
                                 <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
                                     span={2}
@@ -170,7 +173,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
 
     // ------------------ <AlignedCorpora /> -----------------------------
 
-    const AlignedCorpora:React.SFC<AlignedCorporaProps> = (props) => {
+    const AlignedCorpora:React.FC<AlignedCorporaProps> = (props) => {
 
         const handleAddAlignedCorpus = (evt) => {
             dispatcher.dispatch<Actions.QueryInputAddAlignedCorpus>({
@@ -178,6 +181,12 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                 payload: {
                     corpname: evt.target.value
                 }
+            });
+        };
+
+        const handleVisibilityChange = () => {
+            dispatcher.dispatch<Actions.QueryToggleAlignedCorpora>({
+                name: ActionName.QueryToggleAlignedCorpora
             });
         };
 
@@ -191,43 +200,51 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         };
 
         return (
-            <fieldset className="parallel">
-                <legend>
-                    {he.translate('query__aligned_corpora_hd')}
-                </legend>
-                {props.alignedCorpora.map(item => <AlignedCorpBlock
-                        key={item}
-                        label={findCorpusLabel(item)}
-                        corpname={item}
-                        queryType={props.queryTypes[item]}
-                        widgets={props.supportedWidgets[item]}
-                        wPoSList={props.wPoSList}
-                        lposValue={props.lposValues[item]}
-                        matchCaseValue={props.matchCaseValues[item]}
-                        forcedAttr={props.forcedAttr}
-                        defaultAttr={props.defaultAttrValues[item]}
-                        attrList={props.attrList}
-                        tagHelperView={props.tagHelperViews[item]}
-                        pcqPosNegValue={props.pcqPosNegValues[item]}
-                        includeEmptyValue={props.includeEmptyValues[item]}
-                        inputLanguage={props.inputLanguages[item]}
-                        queryStorageView={props.queryStorageView}
-                        hasLemmaAttr={props.hasLemmaAttr[item]}
-                        useCQLEditor={props.useCQLEditor}
-                        onEnterKey={props.onEnterKey} />
-                )}
-                <div id="add-searched-lang-widget">
-                    <select onChange={handleAddAlignedCorpus} value="">
-                        <option value="" disabled={true}>
-                            {`-- ${he.translate('query__add_a_corpus')} --`}</option>
-                        {props.availableCorpora
-                            .filter(item => corpIsUnused(item.n))
-                            .map(item => {
-                                return <option key={item.n} value={item.n}>{item.label}</option>;
-                            })}
-                    </select>
-                </div>
-            </fieldset>
+            <section className={`AlignedCorpora${props.sectionVisible ? '' : ' closed'}`} role="group" aria-labelledby="parallel-corpora-forms">
+                <h2 id="parallel-corpora-forms">
+                    <layoutViews.ExpandButton isExpanded={props.sectionVisible} onClick={handleVisibilityChange} />
+                    <a onClick={handleVisibilityChange}>{he.translate('query__aligned_corpora_hd')}</a>
+                </h2>
+                {props.sectionVisible ?
+                    <>
+                        {List.map(
+                            item => <AlignedCorpBlock
+                                key={item}
+                                label={findCorpusLabel(item)}
+                                corpname={item}
+                                queryType={props.queryTypes[item]}
+                                widgets={props.supportedWidgets[item]}
+                                wPoSList={props.wPoSList}
+                                lposValue={props.lposValues[item]}
+                                matchCaseValue={props.matchCaseValues[item]}
+                                forcedAttr={props.forcedAttr}
+                                defaultAttr={props.defaultAttrValues[item]}
+                                attrList={props.attrList}
+                                tagHelperView={props.tagHelperViews[item]}
+                                pcqPosNegValue={props.pcqPosNegValues[item]}
+                                includeEmptyValue={props.includeEmptyValues[item]}
+                                inputLanguage={props.inputLanguages[item]}
+                                queryStorageView={props.queryStorageView}
+                                hasLemmaAttr={props.hasLemmaAttr[item]}
+                                useCQLEditor={props.useCQLEditor}
+                                onEnterKey={props.onEnterKey} />,
+                            props.alignedCorpora
+                        )}
+                        <div id="add-searched-lang-widget">
+                            <select onChange={handleAddAlignedCorpus} value="">
+                                <option value="" disabled={true}>
+                                    {`-- ${he.translate('query__add_a_corpus')} --`}</option>
+                                {props.availableCorpora
+                                    .filter(item => corpIsUnused(item.n))
+                                    .map(item => {
+                                        return <option key={item.n} value={item.n}>{item.label}</option>;
+                                    })}
+                            </select>
+                        </div>
+                    </> :
+                    null
+                }
+            </section>
         );
     };
 

@@ -197,6 +197,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      * (if applicable).
      */
     shuffleForbidden:boolean;
+
+    alignedCorporaVisible:boolean;
 }
 
 
@@ -346,7 +348,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             suggestionsVisibility: props.suggestionsVisibility,
             isBusy: false,
             cursorPos: 0,
-            simpleQueryAttrSeq: props.simpleQueryAttrSeq
+            simpleQueryAttrSeq: props.simpleQueryAttrSeq,
+            alignedCorporaVisible: false
         });
         this.setUserValues(this.state, props);
 
@@ -439,6 +442,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.lposValues[action.payload.sourceId] = action.payload.lpos;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.QueryToggleAlignedCorpora>(
+            ActionName.QueryToggleAlignedCorpora,
+            action => {
+                this.changeState(state => {
+                    state.alignedCorporaVisible = !state.alignedCorporaVisible;
                 });
             }
         );

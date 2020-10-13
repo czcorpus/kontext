@@ -25,7 +25,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { CoreViews } from '../../types/coreViews';
-import { MessageModel, MessageModelState} from '../../models/common/layout';
+import { MessageModel, MessageModelState } from '../../models/common/layout';
 import { Actions, ActionName } from '../../models/common/actions';
 import { init as calendarInit } from './calendar';
 import { ImgWithMouseover } from './general';
@@ -364,7 +364,9 @@ export function init(
                             {this.props.label}
                         </h2>
                     </div>
-                    {this.props.children}
+                    <div className="contents">
+                        {this.props.children}
+                    </div>
                 </section>
             );
         }
@@ -713,39 +715,51 @@ export function init(
         }
     };
 
-    // ------------------------------------------------------------------------------------
+    // ---------------------------- <PlusButton /> ------------------------------------------
 
     const PlusButton:CoreViews.PlusButton.Component = (props) => {
         const cls = props.htmlClass ? 'PlusButton util-button ' + props.htmlClass : 'PlusButton util-button';
         return <button type="button" className={cls} title={props.mouseOverHint}
                     onClick={props.onClick}>
                     <img src={he.createStaticUrl('img/plus.svg')} />
-                </button>
+                </button>;
     }
+
+    // -------------------------- <ExpandButton /> ----------------------------------------
+
+    const ExpandButton:CoreViews.ExpandButton.Component = (props) => {
+        return (
+            <button type="button" className={`ExpandButton${props.onClick ? '' : ' readonly'}`}
+                    onClick={props.onClick ? () => props.onClick(props.isExpanded) : null}>
+                {props.isExpanded ? <span>-</span> : <span>+</span>}
+            </button>
+        );
+    };
 
 
     // ------------------------------------------------------------------------------------
 
     return {
-        ErrorBoundary: ErrorBoundary,
-        ModalOverlay: ModalOverlay,
-        PopupBox: PopupBox,
-        CloseableFrame: CloseableFrame,
-        InlineHelp: InlineHelp,
-        Abbreviation: Abbreviation,
+        ErrorBoundary,
+        ModalOverlay,
+        PopupBox,
+        CloseableFrame,
+        InlineHelp,
+        Abbreviation,
         Messages: BoundWithProps<CoreViews.Message.Props, MessageModelState>(Messages, messageModel),
-        CorpnameInfoTrigger: CorpnameInfoTrigger,
-        ImgWithHighlight: ImgWithHighlight,
-        ImgWithMouseover: ImgWithMouseover,
-        IssueReportingLink: IssueReportingLink,
-        AjaxLoaderImage: AjaxLoaderImage,
-        AjaxLoaderBarImage: AjaxLoaderBarImage,
-        Shortener: Shortener,
-        StatusIcon: StatusIcon,
-        DelItemIcon: DelItemIcon,
-        ValidatedItem: ValidatedItem,
-        TabView: TabView,
-        PlusButton: PlusButton,
-        Calendar: Calendar
+        CorpnameInfoTrigger,
+        ImgWithHighlight,
+        ImgWithMouseover,
+        IssueReportingLink,
+        AjaxLoaderImage,
+        AjaxLoaderBarImage,
+        Shortener,
+        StatusIcon,
+        DelItemIcon,
+        ValidatedItem,
+        TabView,
+        PlusButton,
+        Calendar,
+        ExpandButton
     };
 }

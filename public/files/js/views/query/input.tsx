@@ -34,6 +34,7 @@ import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
+import { first } from 'rxjs/operators';
 
 
 export interface InputModuleArgs {
@@ -71,6 +72,7 @@ export interface TRQueryInputFieldProps {
     onEnterKey:()=>void;
     takeFocus?:boolean;
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    isNested?:boolean;
     customOptions?:Array<React.ReactElement<{span:number}>>;
 }
 
@@ -96,9 +98,11 @@ export interface TRIncludeEmptySelectorProps {
 }
 
 export interface AdvancedFormFieldsetProps {
+    uniqId:string;
     formVisible:boolean;
     title:string;
     closedStateHint?:React.ReactElement;
+    isNested?:boolean;
     htmlClass?:string;
     handleClick:()=>void;
 }
@@ -140,24 +144,32 @@ export function init({
 
     const AdvancedFormFieldset:React.FC<AdvancedFormFieldsetProps> = (props) => {
 
-        const htmlClasses = ['form-extension-switch'];
+        const htmlClasses = [];
         htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
 
-        const firstChild = () => Array.isArray(props.children) ? props.children[0] : props.children;
+        const contents = () => {
+            if (props.formVisible) {
+                return <div className="contents">{Array.isArray(props.children) ? props.children[0] : props.children}</div>;
 
-        const secondChild = () => Array.isArray(props.children) ? props.children[1] : null;
+            } else {
+                const sec = Array.isArray(props.children) ? props.children[1] : null;
+                if (sec) {
+                    return <div className="contents">{sec}</div>
+                }
+            }
+            return null;
+        }
 
         return (
-            <fieldset className={`${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}>
-                <legend>
-                    <a className={htmlClasses.join(' ')}
-                            onClick={props.handleClick}>
-                        {props.title}{props.formVisible ? null : '\u2026'}
-                    </a>
+            <section className={`AdvancedFormFieldset${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
+                    role="group" aria-labelledby={props.uniqId}>
+                <h2 id={props.uniqId}>
+                    <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
+                        <a onClick={props.handleClick}>{props.title}</a>
                     {props.formVisible ? null : props.closedStateHint}
-                </legend>
-                {props.formVisible ? firstChild() : secondChild()}
-            </fieldset>
+                </h2>
+                {contents()}
+            </section>
         );
     };
 
@@ -1116,10 +1128,12 @@ export function init({
                         <BoundQueryHints />
                     </div>
                     <AdvancedFormFieldset
+                            uniqId="query-options-section"
                             formVisible={this.props.queryOptionsVisible[this.props.sourceId]}
                             handleClick={this.handleQueryOptsClick}
                             htmlClass="query-options"
-                            title={he.translate('query__specify_options')}>
+                            title={he.translate('query__specify_options')}
+                            isNested={this.props.isNested}>
                         <div className="options">
                             {this._renderInputOptions()}
                         </div>
