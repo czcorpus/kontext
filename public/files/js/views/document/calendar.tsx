@@ -74,10 +74,14 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
 
     // -------------------- <Heading /> --------------------------------------------------
 
-    const Heading:React.FC<{}> = (props) => {
+    const Heading:React.FC<{
+        startDay:string;
+    }> = (props) => {
+        const days = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su'];
+        const dayIndex = List.findIndex(v => v === props.startDay, days);
         return <tr>{List.map(
             day =>  <th key={`h:${day}`}>{he.translate(`global__${day}_short`)}</th>,
-            ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
+            List.concat(List.slice(0, dayIndex, days), List.slice(dayIndex, 7, days))
         )}
         </tr>;
     }
@@ -87,6 +91,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
     const Calendar:React.FC<{
         onClick:(date:Date|null)=>void;
         currDate?:Date;
+        startDay?:string;
 
     }> = (props) => {
 
@@ -110,12 +115,19 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                 monthStart.getMonth() + 1,
                 0
             );
+            const startDayId = props.startDay === 'mo' ? 1 :
+                             props.startDay === 'su' ? 0 :
+                             props.startDay === 'sa' ? 6 :
+                             1;
+            const endDayId = startDayId === 0 ? 6 : startDayId - 1;
+            const startFillDays = startDayId > fday ? fday - startDayId + 7 : fday - startDayId;
+            const endFillDays = endDayId < lday ? endDayId - lday + 7 : endDayId - lday;
             return List.repeat(
                 idx => new Date(
                     monthStart.getFullYear(),
                     monthStart.getMonth(),
-                    monthStart.getDate() - fday + 1 + idx
-                ), fday - 1 + daysOfMonth.getDate() + 7 - lday);
+                    monthStart.getDate() - startFillDays + idx
+                ), startFillDays + daysOfMonth.getDate() + endFillDays);
         }
 
         const groupDays = (data:Array<Date>):Array<Array<Date>> => {
@@ -188,7 +200,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                                 </a>
                             </td>
                         </tr>
-                        <Heading />
+                        <Heading startDay={props.startDay ? props.startDay : 'mo'} />
                     </thead>
                     <tbody>
                         {List.map(
