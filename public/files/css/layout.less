@@ -53,10 +53,6 @@ input[type='submit'] {
     padding: 0.2em 0.4em;
 }
 
-section > * {
-    margin: 1em;
-}
-
 section > .no-margin {
     margin: 0;
 }
@@ -1380,6 +1376,31 @@ ul.tabs {
     }
 }
 
+.ExpandButton {
+    margin: 0.2em;
+    display: inline-block;
+    background-color: #FFFFFF;
+    color: @color-logo-blue;
+    border-color: @color-logo-blue;
+    border-width: 0.1em;
+    border-style: solid;
+    border-radius: @input-border-radius;
+    cursor: pointer;
+
+    span {
+        font-weight: bold;
+        display: block;
+        margin: 0 auto;
+        width: 1em;
+    }
+}
+
+.ExpandButton.readonly {
+    cursor: inherit;
+
+    border-color: @color-light-grey;
+    color: @color-light-grey;
+}
 
 @import "./layoutMobile.less";
 @import "~custom-styles/theme.less";

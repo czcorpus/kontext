@@ -222,6 +222,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         <alignedViews.AlignedCorpora
                                 availableCorpora={this.props.availableAlignedCorpora}
                                 alignedCorpora={List.tail(this.props.corpora)}
+                                sectionVisible={this.props.alignedCorporaVisible}
                                 queryTypes={this.props.queryTypes}
                                 supportedWidgets={this.props.supportedWidgets}
                                 wPoSList={this.props.wPoSList}
@@ -241,6 +242,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         : null
                     }
                     <inputViews.AdvancedFormFieldset
+                            uniqId="section-specify-context"
                             formVisible={this.props.contextFormVisible}
                             handleClick={this._handleContextFormVisibility}
                             htmlClass="specify-context"
@@ -252,6 +254,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 wPoSList={this.props.wPoSList} />
                     </inputViews.AdvancedFormFieldset>
                     <inputViews.AdvancedFormFieldset
+                        uniqId="section-specify-text-types"
                                 formVisible={this.props.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
                                 title={he.translate('query__specify_tt')}
@@ -325,23 +328,28 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
         if (props.hasSelectedItems) {
             return (
-                <fieldset className="SelectedTextTypesLite specify-text-types">
-                    <legend>{he.translate('query__chosen_texts')}</legend>
-                    <ul>
-                        {pipe(
-                            props.attributes,
-                            List.filter(v => TTSelOps.hasUserChanges(v)),
-                            List.map(renderSelections)
-                        )}
-                    </ul>
-                    <p className="hint">
-                        ({he.translate('query__chosen_texts_cannot_be_changed')})
-                    </p>
-                </fieldset>
+                <section className="SelectedTextTypesLite specify-text-types">
+                    <h2>
+                        <layoutViews.ExpandButton isExpanded={props.hasSelectedItems} />
+                        <span>{he.translate('query__chosen_texts')}</span>
+                    </h2>
+                    <div className="contents">
+                        <ul>
+                            {pipe(
+                                props.attributes,
+                                List.filter(v => TTSelOps.hasUserChanges(v)),
+                                List.map(renderSelections)
+                            )}
+                        </ul>
+                        <p className="hint">
+                            ({he.translate('query__chosen_texts_cannot_be_changed')})
+                        </p>
+                    </div>
+                </section>
             );
 
         } else {
-            return <fieldset className="SelectedTextTypesLite" />;
+            return <section className="SelectedTextTypesLite" />;
         }
     }
 
@@ -418,6 +426,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             qsuggPlugin={querySuggest} />
                     </div>
                     <inputViews.AdvancedFormFieldset
+                            uniqId="section-specify-context"
                             formVisible={this.props.contextFormVisible}
                             handleClick={this._handleContextFormVisibility}
                             htmlClass="specify-context"

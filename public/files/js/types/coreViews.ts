@@ -362,6 +362,16 @@ export namespace CoreViews {
         export type Component = React.FC<Props>;
     }
 
+    export namespace ExpandButton {
+
+        export interface Props {
+            isExpanded:boolean;
+            onClick?:(isExpanded:boolean)=>void;
+        }
+
+        export type Component = React.FC<Props>;
+    }
+
     // -------------------------------
 
     export interface Runtime {
@@ -385,6 +395,7 @@ export namespace CoreViews {
         TabView:TabView.Component;
         PlusButton:PlusButton.Component;
         Calendar:Calendar.Component;
+        ExpandButton:ExpandButton.Component;
     }
 }
 
