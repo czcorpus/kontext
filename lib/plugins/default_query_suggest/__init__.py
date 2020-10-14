@@ -30,9 +30,13 @@ def fetch_query_suggestions(self: Kontext, request):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
-        ans = plg.find_suggestions(plugin_api=self._plugin_api, corpora=request.args.getlist('corpora'),
-                                   subcorpus=request.args.get('subcorpus'), value=request.args.get('value'),
-                                   value_type=request.args.get('value_type'), query_type=request.args.get('query_type'),
+        ans = plg.find_suggestions(plugin_api=self._plugin_api,
+                                   corpora=request.args.getlist('corpora'),
+                                   subcorpus=request.args.get('subcorpus'),
+                                   value=request.args.get('value'),
+                                   value_type=request.args.get('value_type'),
+                                   value_subformat=request.args.get('value_subformat'),
+                                   query_type=request.args.get('query_type'),
                                    p_attr=request.args.get('p_attr'), struct=request.args.get('struct'),
                                    s_attr=request.args.get('s_attr'))
     return dict(items=ans)
@@ -45,7 +49,7 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
         self._corparch = corparch
 
     def find_suggestions(self, plugin_api: PluginApi, corpora: List[str], subcorpus: str, value: str, value_type: str,
-                         query_type: str, p_attr: str, struct: str, s_attr: str):
+                         value_subformat: str, query_type: str, p_attr: str, struct: str, s_attr: str):
         corpus_info = self._corparch.get_corpus_info(
             plugin_api.user_lang, plugin_api.current_corpus.corpname)
         ans = []
@@ -56,7 +60,8 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
             resp = backend.find_suggestion(user_id=plugin_api.user_id, ui_lang=plugin_api.user_lang,
                                            maincorp=plugin_api.current_corpus, corpora=corpora,
                                            subcorpus=subcorpus, value=value, value_type=value_type,
-                                           query_type=query_type, p_attr=p_attr, struct=struct, s_attr=s_attr)
+                                           value_subformat=value_subformat, query_type=query_type,
+                                           p_attr=p_attr, struct=struct, s_attr=s_attr)
             ans.append(frontend.export_data(resp, value, plugin_api.user_lang).to_dict())
         return ans
 

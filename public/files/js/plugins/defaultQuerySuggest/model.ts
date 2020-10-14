@@ -167,7 +167,8 @@ export class Model extends StatelessModel<ModelState> {
     ):string {
         return Ident.hashCode(
             args.corpora + args.posAttr + args.queryType + args.sourceId +
-            args.struct + args.structAttr + args.subcorpus + srchWord + args.valueType);
+            args.struct + args.structAttr + args.subcorpus + srchWord + args.valueType +
+            args.valueSubformat);
     }
 
 
@@ -313,6 +314,7 @@ export class Model extends StatelessModel<ModelState> {
             align:string;
             value:string;
             value_type:PluginInterfaces.QuerySuggest.SuggestionValueType;
+            value_subformat:PluginInterfaces.QuerySuggest.QueryValueSubformat,
             query_type:string;
             p_attr:string;
             struct:string;
@@ -325,6 +327,7 @@ export class Model extends StatelessModel<ModelState> {
         args.replace('align', List.tail(suggArgs.corpora));
         args.set('value', word);
         args.set('value_type', suggArgs.valueType);
+        args.set('value_subformat', suggArgs.valueSubformat);
         args.set('query_type', suggArgs.queryType);
         args.set('p_attr', suggArgs.posAttr);
         args.set('struct', suggArgs.struct);

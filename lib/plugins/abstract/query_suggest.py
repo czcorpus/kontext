@@ -34,7 +34,8 @@ class AbstractQuerySuggest(abc.ABC):
 
     @abc.abstractmethod
     def find_suggestions(self, plugin_api: PluginApi, corpora: List[str], subcorpus: str,
-                         value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
+                         value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
+                         s_attr: str):
         """
         note: the 'value' argument does not necessarily mean the whole query as e.g. in case of CQL query
         the client may send just a parsed value of a structural attribute and we want to provide a suggestion
@@ -54,7 +55,11 @@ class AbstractBackend(abc.ABC):
 
     @abc.abstractmethod
     def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
-                        value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
+                        value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
+                        s_attr: str):
+        """
+        note: for value_subformat see PluginInterfaces.QuerySuggest.QueryValueSubformat on the client side
+        """
         pass
 
 

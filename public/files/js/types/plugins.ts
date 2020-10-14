@@ -504,6 +504,15 @@ export namespace PluginInterfaces {
             AUTO = 2
         }
 
+        /**
+         * formats are:
+         * regexp: simple query with regexp support enabled
+         * simple: simple query with regexp disabled
+         * simple_ic: simple query with regexp disabled and ignoring case enabled
+         * advanced: CQL query
+         */
+        export type QueryValueSubformat = 'regexp'|'simple'|'simple_ic'|'advanced';
+
         export interface SuggestionArgs {
             sourceId:string;
             value:string;
@@ -512,6 +521,7 @@ export namespace PluginInterfaces {
             attrStartIdx?:number;
             attrEndIdx?:number;
             valueType:SuggestionValueType;
+            valueSubformat:QueryValueSubformat;
             queryType:QueryType;
             corpora:Array<string>;
             subcorpus:string|undefined;
