@@ -102,7 +102,7 @@
         <auth>
             <module>default_auth</module>
             <js_module>defaultAuth</js_module>
-            <anonymous_user_id>1</anonymous_user_id>
+            <anonymous_user_id>0</anonymous_user_id>
             <auth_cookie_name>kontext_session</auth_cookie_name>
             <login_url>/user/login?continue=%s</login_url>
             <logout_url>/user/logout?continue=%s</logout_url>
