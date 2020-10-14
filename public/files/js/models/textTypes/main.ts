@@ -89,6 +89,8 @@ export interface TextTypesModelState {
 
     metaInfoHelpVisible:boolean;
 
+    firstDayOfWeek:'mo'|'su'|'sa';
+
 }
 
 
@@ -145,7 +147,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     Dict.fromEntries(),
                 ),
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),
-                metaInfoHelpVisible: false
+                metaInfoHelpVisible: false,
+                firstDayOfWeek: pluginApi.getConf<'mo'|'su'|'sa'>('firstDayOfWeek')
             }
         );
         this.pluginApi = pluginApi;

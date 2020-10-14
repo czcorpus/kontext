@@ -92,6 +92,7 @@ __conf.currentArgs = {{ Globals.export()|to_json }};
 __conf.concUrlTTLDays = {{ conc_url_ttl_days|to_json }};
 __conf.concExplicitPersistenceUI = {{ explicit_conc_persistence_ui|to_json }};
 __conf.uiLang = {{ uiLang|to_json }};
+__conf.firstDayOfWeek = {{ firstDayOfWeek|to_json }};
 __conf.isDebug = {%if debug %}true{% else %}false{% endif %};
 __conf.alignedCorpora = {{ aligned_corpora|default([], true)|to_json }}
 __conf.availableAlignedCorpora = {{ Aligned|default([], true)|to_json }};

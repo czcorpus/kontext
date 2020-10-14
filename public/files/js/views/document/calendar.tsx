@@ -75,10 +75,10 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
     // -------------------- <Heading /> --------------------------------------------------
 
     const Heading:React.FC<{
-        startDay:string;
+        firstDayOfWeek:'mo'|'su'|'sa';
     }> = (props) => {
         const days = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su'];
-        const dayIndex = List.findIndex(v => v === props.startDay, days);
+        const dayIndex = List.findIndex(v => v === props.firstDayOfWeek, days);
         return <tr>{List.map(
             day =>  <th key={`h:${day}`}>{he.translate(`global__${day}_short`)}</th>,
             List.concat(List.slice(0, dayIndex, days), List.slice(dayIndex, 7, days))
@@ -91,7 +91,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
     const Calendar:React.FC<{
         onClick:(date:Date|null)=>void;
         currDate?:Date;
-        startDay?:string;
+        firstDayOfWeek?:'mo'|'su'|'sa';
 
     }> = (props) => {
 
@@ -115,9 +115,9 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                 monthStart.getMonth() + 1,
                 0
             );
-            const startDayId = props.startDay === 'mo' ? 1 :
-                             props.startDay === 'su' ? 0 :
-                             props.startDay === 'sa' ? 6 :
+            const startDayId = props.firstDayOfWeek === 'mo' ? 1 :
+                             props.firstDayOfWeek === 'su' ? 0 :
+                             props.firstDayOfWeek === 'sa' ? 6 :
                              1;
             const endDayId = startDayId === 0 ? 6 : startDayId - 1;
             const startFillDays = startDayId > fday ? fday - startDayId + 7 : fday - startDayId;
@@ -200,7 +200,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                                 </a>
                             </td>
                         </tr>
-                        <Heading startDay={props.startDay ? props.startDay : 'mo'} />
+                        <Heading firstDayOfWeek={props.firstDayOfWeek ? props.firstDayOfWeek : 'mo'} />
                     </thead>
                     <tbody>
                         {List.map(
