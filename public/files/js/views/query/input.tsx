@@ -34,7 +34,6 @@ import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
-import { first } from 'rxjs/operators';
 
 
 export interface InputModuleArgs {
@@ -102,6 +101,7 @@ export interface AdvancedFormFieldsetProps {
     formVisible:boolean;
     title:string;
     closedStateHint?:React.ReactElement;
+    closedStateDesc?:React.ReactElement;
     isNested?:boolean;
     htmlClass?:string;
     handleClick:()=>void;
@@ -140,25 +140,38 @@ export function init({
     const layoutViews = he.getLayoutViews();
 
 
+    // ------------------- <AdvancedFormFieldsetDesc /> -----------------------------
+
+    const AdvancedFormFieldsetDesc:React.FC<{
+        content:React.ReactElement;
+    }> = (props) => {
+
+        const [opened, setOpened] = React.useState(false);
+
+        const handleClick = () => {
+            setOpened(!opened);
+        }
+
+        return (
+            <span className="AdvancedFormFieldsetDesc">
+                <a onClick={handleClick}><layoutViews.StatusIcon status="info" inline={true} /></a>
+                {opened ?
+                    <layoutViews.PopupBox onCloseClick={handleClick}>
+                        {props.content}
+                    </layoutViews.PopupBox> :
+                    null
+                }
+            </span>
+        );
+    }
+
+
     // ------------------- <AdvancedFormFieldset /> -----------------------------
 
     const AdvancedFormFieldset:React.FC<AdvancedFormFieldsetProps> = (props) => {
 
         const htmlClasses = [];
         htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
-
-        const contents = () => {
-            if (props.formVisible) {
-                return <div className="contents">{Array.isArray(props.children) ? props.children[0] : props.children}</div>;
-
-            } else {
-                const sec = Array.isArray(props.children) ? props.children[1] : null;
-                if (sec) {
-                    return <div className="contents">{sec}</div>
-                }
-            }
-            return null;
-        }
 
         return (
             <section className={`AdvancedFormFieldset${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
@@ -167,8 +180,17 @@ export function init({
                     <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
                         <a onClick={props.handleClick}>{props.title}</a>
                     {props.formVisible ? null : props.closedStateHint}
+                    {props.formVisible || !props.closedStateDesc ?
+                        null :
+                        <AdvancedFormFieldsetDesc content={props.closedStateDesc} />
+                    }
                 </h2>
-                {contents()}
+                {props.formVisible ?
+                    <div className="contents">
+                        {props.children}
+                    </div> :
+                    null
+                }
             </section>
         );
     };
@@ -1102,29 +1124,30 @@ export function init({
                                 this.props.querySuggestions, this.props.sourceId,
                                 querySuggest)} />
                         {this._renderInput()}
-                        {this.props.historyVisible[this.props.sourceId] ?
-                            <HistoryWidget
-                                    queryStorageView={this.props.queryStorageView}
-                                    sourceId={this.props.sourceId}
-                                    onCloseTrigger={this._toggleHistoryWidget}
-                                    formType={this.props.formType}/>
-                            : null
-                        }
-
-                        {
-                            !this.props.historyVisible[this.props.sourceId] &&
-                            this.props.suggestionsVisible[this.props.sourceId] &&
-                            QueryFormModel.hasSuggestionsFor(
-                                this.props.querySuggestions, this.props.sourceId,
-                                querySuggest) ?
-                                <SuggestionsWidget
-                                    qsuggPlugin={this.props.qsuggPlugin}
-                                    suggestionData={this.props.querySuggestions}
-                                    formType={this.props.formType}
-                                    sourceId={this.props.sourceId}
-                                    handleItemClick={this.handleSuggestionItemClick} />
+                        <div style={{position: 'relative'}}>
+                            {this.props.historyVisible[this.props.sourceId] ?
+                                <HistoryWidget
+                                        queryStorageView={this.props.queryStorageView}
+                                        sourceId={this.props.sourceId}
+                                        onCloseTrigger={this._toggleHistoryWidget}
+                                        formType={this.props.formType}/>
                                 : null
-                        }
+                            }
+                            {
+                                !this.props.historyVisible[this.props.sourceId] &&
+                                this.props.suggestionsVisible[this.props.sourceId] &&
+                                QueryFormModel.hasSuggestionsFor(
+                                    this.props.querySuggestions, this.props.sourceId,
+                                    querySuggest) ?
+                                    <SuggestionsWidget
+                                        qsuggPlugin={this.props.qsuggPlugin}
+                                        suggestionData={this.props.querySuggestions}
+                                        formType={this.props.formType}
+                                        sourceId={this.props.sourceId}
+                                        handleItemClick={this.handleSuggestionItemClick} />
+                                    : null
+                            }
+                        </div>
                         <BoundQueryHints />
                     </div>
                     <AdvancedFormFieldset

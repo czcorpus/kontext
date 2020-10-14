@@ -78,6 +78,11 @@ form.query-form {
     .AdvancedFormFieldset.closed,
     .AlignedCorpora.closed {
         padding-bottom: 0;
+
+        .contents {
+            margin: 0;
+            padding: 0;
+        }
     }
 
     .AdvancedFormFieldset:not(.closed):not(.nested),
@@ -147,7 +152,7 @@ form.query-form {
 
         div.options {
             display: grid;
-            grid-template-columns: auto auto auto;
+            grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: auto;
             grid-gap: 1em;
             grid-row-gap: 1.5em;
@@ -165,12 +170,28 @@ form.query-form {
                 }
             }
 
+            div.option:not(:last-of-type) {
+                margin-right: 0;
+            }
+
             div.option.disabled {
                 color: @color-light-text;
             }
 
             div.option.custom div.option {
                 grid-column-start: 1;
+            }
+        }
+    }
+
+    .AdvancedFormFieldsetDesc {
+        a {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 0.7em;
+
+            img {
+                width: 1em;
             }
         }
     }
