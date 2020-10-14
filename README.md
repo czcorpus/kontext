@@ -71,6 +71,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
     * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)
     * [markdown](https://pypi.python.org/pypi/Markdown) library (optional, for formatted corpora references)
     * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
+    * [Babel](http://babel.pocoo.org/en/latest/) library
 * corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske)
     * versions *2.167.8* and newer are supported by KonText 0.15 and newer
     * versions from *2.83.3* to *2.158.8* are supported by KonText 0.13 and older
