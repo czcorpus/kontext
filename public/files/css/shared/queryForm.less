@@ -19,11 +19,13 @@ form.query-form {
         }
     }
 
-    .AlignedCorpBlock table.form {
-        margin: 5px 10px;
-    }
-
     .AlignedCorpBlock {
+
+        margin-left: 2.5em;
+
+        table.form {
+            margin: 5px 10px;
+        }
 
         .heading {
 
@@ -85,14 +87,6 @@ form.query-form {
         }
     }
 
-    .AdvancedFormFieldset:not(.closed):not(.nested),
-    .AlignedCorpora:not(.closed):not(.nested) {
-        border-color: @color-light-frame;
-        border-style: solid;
-        border-width: 0 0 0.2em 0;
-        margin-bottom: 0.9em;
-    }
-
     .AdvancedFormFieldset,
     .AlignedCorpora,
     .SelectedTextTypesLite {
@@ -122,8 +116,12 @@ form.query-form {
         }
 
         .contents {
-            padding-top: 0.7em;
-            padding-left: 1.5em;
+            padding: 0.7em 1.5em;
+;
+            border-radius: 5px;
+            border-color: @color-light-frame;
+            border-width: 0.1em;
+            border-style: solid;
         }
 
 
