@@ -81,7 +81,6 @@ class InstallationStep(ABC):
         return subprocess.check_call(args, cwd=cwd, stdout=self.stdout, stderr=self.stderr)
 
 
-
 def wget_cmd(url, no_cert_check):
     if no_cert_check:
         return ['wget', '--no-check-certificate', url, '-N']
@@ -128,65 +127,65 @@ class SetupManatee(InstallationStep):
 
         # install manatee with ucnk patch
         print('Installing manatee...')
-        if patch_path is None:
-            # install manatee python3 support (must be installed before manatee itself)
-            subprocess.check_call(wget_cmd(f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-python3_{manatee_version}-1ubuntu1_amd64.deb', self._ncc), cwd='/usr/local/bin', stdout=self.stdout)
-            subprocess.check_call(['dpkg', '-i', f'manatee-open-python3_{manatee_version}-1ubuntu1_amd64.deb'], cwd='/usr/local/bin', stdout=self.stdout)
-            # install manatee from package
-            subprocess.check_call(wget_cmd(f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open_{manatee_version}-1ubuntu1_amd64.deb', self._ncc), cwd='/usr/local/bin', stdout=self.stdout)
-            subprocess.check_call(['dpkg', '-i', f'manatee-open_{manatee_version}-1ubuntu1_amd64.deb'], cwd='/usr/local/bin', stdout=self.stdout)
-            # install susanne corpus
-            subprocess.check_call(wget_cmd(f'https://corpora.fi.muni.cz/noske/deb/1804/manatee-open/manatee-open-susanne_{manatee_version}-1ubuntu1_amd64.deb', self._ncc), cwd='/usr/local/bin', stdout=self.stdout)
-            subprocess.check_call(['dpkg', '-i', f'manatee-open-susanne_{manatee_version}-1ubuntu1_amd64.deb'], cwd='/usr/local/bin', stdout=self.stdout)
-        elif os.path.isfile(os.path.join(self.kontext_path, patch_path)):
-            # build manatee from source using patch
-            subprocess.check_call(wget_cmd(f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz', self._ncc), cwd='/usr/local/src', stdout=self.stdout)
-            subprocess.check_call(['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd='/usr/local/src', stdout=self.stdout)
 
-            subprocess.check_call(['cp', os.path.join(self.kontext_path, patch_path), './'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
-            subprocess.check_call(['patch', '-p0', '-i', os.path.basename(patch_path)], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+        # build manatee from source using patch
+        subprocess.check_call(wget_cmd(
+            f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz', self._ncc), cwd='/usr/local/src', stdout=self.stdout)
+        subprocess.check_call(
+            ['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd='/usr/local/src', stdout=self.stdout)
 
-            python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
-            env_variables = os.environ.copy()
-            env_variables['PYTHON'] = python_path
-            subprocess.check_call(['./configure', '--with-pcre'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout, env=env_variables)
-            subprocess.check_call(['make'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
-            subprocess.check_call(['make', 'install'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
-            subprocess.check_call(['ldconfig'], stdout=self.stdout)
+        if patch_path is not None:
+            if os.path.isfile(os.path.join(self.kontext_path, patch_path)):
+                subprocess.check_call(['cp', os.path.join(self.kontext_path, patch_path), './'],
+                                      cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+                subprocess.check_call(['patch', '-p0', '-i', os.path.basename(patch_path)],
+                                      cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+            else:
+                raise FileNotFoundError(
+                    f'Patch file `{os.path.join(self.kontext_path, patch_path)}` not found!')
 
-            lib_path = [path for path in sys.path if path.startswith(
-                '/usr/local/lib/python3') and path.endswith('dist-packages')][0]
-            make_simlink(os.path.join(lib_path, '../site-packages/manatee.py'),
-                         os.path.join(lib_path, 'manatee.py'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.a'),
-                         os.path.join(lib_path, '_manatee.a'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.la'),
-                         os.path.join(lib_path, '_manatee.la'))
-            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.so'),
-                         os.path.join(lib_path, '_manatee.so'))
+        python_path = subprocess.check_output(['which', 'python3']).decode().split()[0]
+        env_variables = os.environ.copy()
+        env_variables['PYTHON'] = python_path
+        subprocess.check_call(['./configure', '--with-pcre'],
+                              cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout, env=env_variables)
+        subprocess.check_call(
+            ['make'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+        subprocess.check_call(
+            ['make', 'install'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
+        subprocess.check_call(['ldconfig'], stdout=self.stdout)
 
-            # install susanne corpus
-            subprocess.check_call(wget_cmd('https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2', self._ncc), 
-                    cwd='/usr/local/src', stdout=self.stdout)
-            subprocess.check_call(['tar', 'xjvf', 'susanne-example-source.tar.bz2'],
-                                  cwd='/usr/local/src', stdout=self.stdout)
+        lib_path = [path for path in sys.path if path.startswith(
+            '/usr/local/lib/python3') and path.endswith('dist-packages')][0]
+        make_simlink(os.path.join(lib_path, '../site-packages/manatee.py'),
+                     os.path.join(lib_path, 'manatee.py'))
+        make_simlink(os.path.join(lib_path, '../site-packages/_manatee.a'),
+                     os.path.join(lib_path, '_manatee.a'))
+        make_simlink(os.path.join(lib_path, '../site-packages/_manatee.la'),
+                     os.path.join(lib_path, '_manatee.la'))
+        make_simlink(os.path.join(lib_path, '../site-packages/_manatee.so'),
+                     os.path.join(lib_path, '_manatee.so'))
 
-            create_directory('/var/lib/manatee/registry')
-            create_directory('/var/lib/manatee/vert')
-            create_directory('/var/lib/manatee/data/susanne')
-            create_directory('/var/local/corpora/user_filter_files')
+        # install susanne corpus
+        subprocess.check_call(wget_cmd('https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2', self._ncc),
+                              cwd='/usr/local/src', stdout=self.stdout)
+        subprocess.check_call(['tar', 'xjvf', 'susanne-example-source.tar.bz2'],
+                              cwd='/usr/local/src', stdout=self.stdout)
 
-            replace_string_in_file('/usr/local/src/susanne-example-source/config',
-                                   'PATH susanne', 'PATH /var/lib/manatee/data/susanne')
-            subprocess.check_call(['cp', './source', '/var/lib/manatee/vert/susanne.vert'],
-                                  cwd='/usr/local/src/susanne-example-source', stdout=self.stdout)
-            subprocess.check_call(['cp', './config', '/var/lib/manatee/registry/susanne'],
-                                  cwd='/usr/local/src/susanne-example-source', stdout=self.stdout)
+        create_directory('/var/lib/manatee/registry')
+        create_directory('/var/lib/manatee/vert')
+        create_directory('/var/lib/manatee/data/susanne')
+        create_directory('/var/local/corpora/user_filter_files')
 
-            subprocess.check_call(['encodevert', '-v', '-c', './config', '-p', '/var/lib/manatee/data/susanne',
-                                   './source'], cwd='/usr/local/src/susanne-example-source', stdout=self.stdout)
-        else:
-            raise FileNotFoundError(f'Patch file `{os.path.join(self.kontext_path, patch_path)}` not found!')
+        replace_string_in_file('/usr/local/src/susanne-example-source/config',
+                               'PATH susanne', 'PATH /var/lib/manatee/data/susanne')
+        subprocess.check_call(['cp', './source', '/var/lib/manatee/vert/susanne.vert'],
+                              cwd='/usr/local/src/susanne-example-source', stdout=self.stdout)
+        subprocess.check_call(['cp', './config', '/var/lib/manatee/registry/susanne'],
+                              cwd='/usr/local/src/susanne-example-source', stdout=self.stdout)
+
+        subprocess.check_call(['encodevert', '-v', '-c', './config', '-p', '/var/lib/manatee/data/susanne',
+                               './source'], cwd='/usr/local/src/susanne-example-source', stdout=self.stdout)
 
 
 class SetupKontext(InstallationStep):
@@ -262,12 +261,14 @@ class SetupDefaultUsers(InstallationStep):
         print('Setting up Kontext users...')
 
         # set up anonymous user in Redis
-        self.redis_client.set('user:0', json.dumps({'id': 0, 'username': 'anonymous', 'firstname': 'Anonymous', 'lastname': None, 'email': None, 'pwd_hash': None}))
+        self.redis_client.set('user:0', json.dumps(
+            {'id': 0, 'username': 'anonymous', 'firstname': 'Anonymous', 'lastname': None, 'email': None, 'pwd_hash': None}))
         self.redis_client.set('corplist:user:0', json.dumps(['susanne']))
 
         # set up kontext user in Redis
         password, password_hash = generate_random_password()
-        self.redis_client.set('user:1', json.dumps({'id': 1, 'username': 'kontext', 'firstname': 'Kontext', 'lastname': 'Test', 'pwd_hash': password_hash, 'email': 'test@example.com'}))
+        self.redis_client.set('user:1', json.dumps(
+            {'id': 1, 'username': 'kontext', 'firstname': 'Kontext', 'lastname': 'Test', 'pwd_hash': password_hash, 'email': 'test@example.com'}))
         self.redis_client.set('corplist:user:1', json.dumps(['susanne']))
         self.redis_client.hset('user_index', 'kontext', '"user:1"')
 
