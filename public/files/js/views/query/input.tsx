@@ -101,7 +101,7 @@ export interface AdvancedFormFieldsetProps {
     formVisible:boolean;
     title:string;
     closedStateHint?:React.ReactElement;
-    closedStateDesc?:React.ReactElement;
+    closedStateDesc?:string; // raw HTML
     isNested?:boolean;
     htmlClass?:string;
     handleClick:()=>void;
@@ -143,7 +143,7 @@ export function init({
     // ------------------- <AdvancedFormFieldsetDesc /> -----------------------------
 
     const AdvancedFormFieldsetDesc:React.FC<{
-        content:React.ReactElement;
+        html:string;
     }> = (props) => {
 
         const [opened, setOpened] = React.useState(false);
@@ -157,14 +157,15 @@ export function init({
                 <a onClick={handleClick}><layoutViews.StatusIcon status="info" inline={true} /></a>
                 {opened ?
                     <layoutViews.PopupBox onCloseClick={handleClick}>
-                        {props.content}
+                        <div className="html-code">
+                            <div dangerouslySetInnerHTML={{__html: props.html}} />
+                        </div>
                     </layoutViews.PopupBox> :
                     null
                 }
             </span>
         );
-    }
-
+    };
 
     // ------------------- <AdvancedFormFieldset /> -----------------------------
 
@@ -182,7 +183,7 @@ export function init({
                     {props.formVisible ? null : props.closedStateHint}
                     {props.formVisible || !props.closedStateDesc ?
                         null :
-                        <AdvancedFormFieldsetDesc content={props.closedStateDesc} />
+                        <AdvancedFormFieldsetDesc html={props.closedStateDesc} />
                     }
                 </h2>
                 {props.formVisible ?
