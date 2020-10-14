@@ -357,7 +357,7 @@ export namespace CoreViews {
         export interface Props {
             onClick:(date:Date|null)=>void;
             currDate?:Date;
-            startDay?:string;
+            firstDayOfWeek?:string;
         }
 
         export type Component = React.FC<Props>;

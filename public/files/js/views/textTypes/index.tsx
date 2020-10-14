@@ -113,6 +113,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         hasExtendedInfo:boolean;
         textInputPlaceholder:string;
         isBusy:boolean;
+        firstDayOfWeek:'mo'|'su'|'sa';
 
     }> = (props) => {
 
@@ -129,7 +130,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     if (props.attrObj.isLocked) {
                         return <p>Selected: {props.attrObj.textFieldDecoded}</p>
                     }
-                    return <CalendarDaysSelector attrObj={props.attrObj} />;
+                    return <CalendarDaysSelector attrObj={props.attrObj} firstDayOfWeek={props.firstDayOfWeek} />;
                 }
                 return null;
 
@@ -179,6 +180,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         metaInfo:TextTypes.AttrSummary;
         textInputPlaceholder:string;
         isBusy:boolean;
+        firstDayOfWeek:'mo'|'su'|'sa';
 
     }> = (props) => {
 
@@ -339,7 +341,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                     isLocked={TTSelOps.isLocked(props.attrObj)}
                                     hasExtendedInfo={props.hasExtendedInfo}
                                     textInputPlaceholder={props.textInputPlaceholder}
-                                    isBusy={props.isBusy}  />
+                                    isBusy={props.isBusy}
+                                    firstDayOfWeek={props.firstDayOfWeek} />
                         </div>
                         <div className="metadata">
                             {renderMetaInfo()}
@@ -409,7 +412,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                         hasExtendedInfo={props.bibIdAttr === attrObj.name}
                                         metaInfo={props.metaInfo[attrObj.name]}
                                         isBusy={props.isBusy}
-                                        textInputPlaceholder={props.textInputPlaceholder} />
+                                        textInputPlaceholder={props.textInputPlaceholder}
+                                        firstDayOfWeek={props.firstDayOfWeek} />
                             </div>;
                             },
                             props.attributes

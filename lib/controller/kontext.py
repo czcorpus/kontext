@@ -27,6 +27,7 @@ import logging
 import inspect
 import os.path
 import time
+import babel
 
 from . import Controller
 import corplib
@@ -617,7 +618,8 @@ class Kontext(Controller):
                     url_pref = self.get_mapping_url_prefix()
                     if len(url_pref) > 0:
                         url_pref = url_pref[1:]
-                    raise ImmediateRedirectException(self.create_url(url_pref + action_name, dict(corpname=corpname)))
+                    raise ImmediateRedirectException(self.create_url(
+                        url_pref + action_name, dict(corpname=corpname)))
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
                 for al_corp in form.getlist('align'):
@@ -687,8 +689,8 @@ class Kontext(Controller):
             self.return_url = self.updated_current_url(args)
         else:
             self.return_url = '%squery?%s' % (self.get_root_url(),
-                                                   '&'.join(['%s=%s' % (k, v)
-                                                             for k, v in list(args.items())]))
+                                              '&'.join(['%s=%s' % (k, v)
+                                                        for k, v in list(args.items())]))
         # by default, each action is public
         access_level = action_metadata['access_level']
         if access_level and self.user_is_anonymous():
@@ -1072,6 +1074,10 @@ class Kontext(Controller):
             result['avail_languages'] = settings.get_full('global', 'translations')
 
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
+        day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
+        result['firstDayOfWeek'] = day_map[
+            babel.Locale(self.ui_lang if self.ui_lang else 'en_US').first_week_day
+        ]
 
         # util functions
         result['to_str'] = lambda s: str(s) if s is not None else ''

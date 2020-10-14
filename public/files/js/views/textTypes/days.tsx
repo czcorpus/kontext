@@ -121,6 +121,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
 
 export interface CalendarDaysSelectorProps {
     attrObj:TextTypes.AnyTTSelection;
+    firstDayOfWeek:'mo'|'su'|'sa';
 }
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):React.FC<CalendarDaysSelectorProps> {
@@ -166,11 +167,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             <div className="calendars">
                 <div>
                     <h3>{he.translate('query__tt_calendar_from_date')}</h3>
-                    <layoutViews.Calendar onClick={handleCalClick('from')} />
+                    <layoutViews.Calendar onClick={handleCalClick('from')} firstDayOfWeek={props.firstDayOfWeek} />
                 </div>
                 <div>
                     <h3>{he.translate('query__tt_calendar_to_date')}</h3>
-                    <layoutViews.Calendar onClick={handleCalClick('to')} />
+                    <layoutViews.Calendar onClick={handleCalClick('to')} firstDayOfWeek={props.firstDayOfWeek} />
                 </div>
             </div>
             <p className={`info${state.fromDate === null || state.toDate === null ? '' : ' note'}`}>
