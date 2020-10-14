@@ -105,26 +105,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     const layoutViews = he.getLayoutViews();
 
 
-
-    // ------------------- <TextTypesNote /> -----------------------------
-
-    const TextTypesNotes:React.FC<{
-        description:string; // raw HTML code
-
-    }> = (props) => {
-
-        if (props.description) {
-            return (
-                <div className="TextTypesNotes">
-                    <div dangerouslySetInnerHTML={{__html: props.description}} />
-                </div>
-            );
-
-        } else {
-            return <span />;
-        }
-    };
-
     // ------------------- <TRCorpusField /> -----------------------------
 
     const TRCorpusField:React.FC<{
@@ -260,7 +240,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 title={he.translate('query__specify_tt')}
                                 htmlClass="specify-text-types"
                                 closedStateHint={<BoundTextTypesFieldsetHint />}
-                                closedStateDesc={<TextTypesNotes description={this.props.textTypesNotes} />}>
+                                closedStateDesc={this.props.textTypesNotes}>
                             <ttViews.TextTypesPanel
                                     LiveAttrsView={this.props.LiveAttrsView}
                                     LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
