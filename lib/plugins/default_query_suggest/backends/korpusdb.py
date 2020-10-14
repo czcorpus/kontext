@@ -29,7 +29,8 @@ class KorpusDBBackend(AbstractBackend):
         self._client = HTTPClient(conf['server'], conf['port'], conf['ssl'])
 
     def find_suggestion(self, ui_lang: str, user_id: int, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
-                        value: str, value_type: str, query_type: str, p_attr: str, struct: str, s_attr: str):
+                        value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
+                        s_attr: str):
         body = {
             'feats': [":form:attr:cnc:w"],
             'sort': [{

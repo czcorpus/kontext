@@ -207,6 +207,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                             attrStartIdx: currAttr.rangeAttr ? currAttr.rangeAttr[0] : undefined,
                             attrEndIdx: currAttr.rangeAttr ? currAttr.rangeAttr[1] : undefined,
                             valueType: 'unspecified',
+                            valueSubformat: 'advanced',
                             queryType: 'advanced',
                             posAttr: currAttr.type === 'posattr' ?
                                 (currAttr.name || this.state.defaultAttrValues[sourceId]) : null,

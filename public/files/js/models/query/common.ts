@@ -303,6 +303,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             valueStartIdx: srchWordStart,
                             valueEndIdx: srchWordEnd,
                             valueType: 'unspecified',
+                            valueSubformat: this.determineSuggValueType(sourceId),
                             queryType: this.state.queryTypes[sourceId],
                             posAttr: this.state.defaultAttrValues[sourceId],
                             struct: undefined,
@@ -553,6 +554,16 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 });
             }
         );
+    }
+
+    private determineSuggValueType(sourceId:string):PluginInterfaces.QuerySuggest.QueryValueSubformat {
+        if (this.state.useRegexp[sourceId]) {
+            return 'regexp';
+
+        } else if (this.state.matchCaseValues[sourceId]) {
+            return 'simple';
+        }
+        return 'simple_ic';
     }
 
     private findCursorWord(value:string, focusIdx:number):[string, number, number] {

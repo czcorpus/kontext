@@ -3,6 +3,8 @@
 form.query-form {
 
     margin: 1.5em;
+    display: flex;
+    flex-direction: column;
 
     .primary-language,
     .AlignedCorpora .AlignedCorpBlock .form {
@@ -12,15 +14,18 @@ form.query-form {
         }
 
         .query {
+            max-width: 60em;
             margin-top: 1.2em;
         }
     }
 
-    .AlignedCorpBlock table.form {
-        margin: 5px 10px;
-    }
-
     .AlignedCorpBlock {
+
+        margin-left: 2.5em;
+
+        table.form {
+            margin: 5px 10px;
+        }
 
         .heading {
 
@@ -72,19 +77,21 @@ form.query-form {
         }
     }
 
-    .AdvancedFormFieldset:not(.closed):not(.nested),
-    .AlignedCorpora:not(.closed):not(.nested) {
-        border-color: @color-light-frame;
-        border-style: solid;
-        border-width: 0 0 0.2em 0;
-        margin-bottom: 0.4em;
+    .AdvancedFormFieldset.closed,
+    .AlignedCorpora.closed {
+        padding-bottom: 0;
+
+        .contents {
+            margin: 0;
+            padding: 0;
+        }
     }
 
     .AdvancedFormFieldset,
     .AlignedCorpora,
     .SelectedTextTypesLite {
 
-        padding: 0.2em 0 1em 0;
+        padding: 0.2em 0 1.6em 0;
 
         h2 {
             margin: 0 0 0.4em 0;
@@ -109,8 +116,12 @@ form.query-form {
         }
 
         .contents {
-            padding-top: 0.7em;
-            padding-left: 1.5em;
+            padding: 0.7em 1.5em;
+;
+            border-radius: 5px;
+            border-color: @color-light-frame;
+            border-width: 0.1em;
+            border-style: solid;
         }
 
 
@@ -139,7 +150,7 @@ form.query-form {
 
         div.options {
             display: grid;
-            grid-template-columns: auto auto auto;
+            grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: auto;
             grid-gap: 1em;
             grid-row-gap: 1.5em;
@@ -157,12 +168,28 @@ form.query-form {
                 }
             }
 
+            div.option:not(:last-of-type) {
+                margin-right: 0;
+            }
+
             div.option.disabled {
                 color: @color-light-text;
             }
 
             div.option.custom div.option {
                 grid-column-start: 1;
+            }
+        }
+    }
+
+    .AdvancedFormFieldsetDesc {
+        a {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 0.7em;
+
+            img {
+                width: 1em;
             }
         }
     }
@@ -201,7 +228,14 @@ div.query-form-spa {
 }
 
 .query-area {
-    background-color: #FFFFFF;
+    background-color: #FAFAFA;
+    display: flex;
+    flex-direction: column;
+
+    border-color: @color-light-frame;
+    border-style: solid;
+    border-width: 0 0 0.2em 0;
+    margin-bottom: 0.4em;
 
     > textarea,
     pre.cql-input,
@@ -235,12 +269,11 @@ div.query-form-spa {
     }
 
     .QueryHints {
-
-        background-color: #FAFAFA;
         white-space: initial;
         padding: 1em 0.3em 0.2em 0.3em;
         color: @color-light-text;
         font-size: 0.8em;
+        max-width: 50em;
 
         > * {
             display: inline;

@@ -259,11 +259,11 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 handleClick={this._handleTextTypesFormVisibility}
                                 title={he.translate('query__specify_tt')}
                                 htmlClass="specify-text-types"
-                                closedStateHint={<BoundTextTypesFieldsetHint />}>
+                                closedStateHint={<BoundTextTypesFieldsetHint />}
+                                closedStateDesc={<TextTypesNotes description={this.props.textTypesNotes} />}>
                             <ttViews.TextTypesPanel
                                     LiveAttrsView={this.props.LiveAttrsView}
                                     LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
-                            <TextTypesNotes description={this.props.textTypesNotes} />
                     </inputViews.AdvancedFormFieldset>
                     <div className="buttons">
                         {this.props.isBusy ?
