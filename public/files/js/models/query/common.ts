@@ -496,6 +496,16 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
+            PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+            action => {
+                this.changeState(state => {
+                    delete state.querySuggestions[action.payload.sourceId];
+                    state.suggestionsVisible[action.payload.sourceId] = false;
+                });
+            }
+        );
+
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
             action => {
