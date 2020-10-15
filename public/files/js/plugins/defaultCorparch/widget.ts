@@ -200,7 +200,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 item => ({id: item[0], label: item[1], color: item[2], selected:false}),
                 corporaLabels
             ),
-            availableSubcorpora: pluginApi.getConf<Array<Kontext.SubcorpListItem>>('SubcorpList') || [],
+            availableSubcorpora: pluginApi.getConf<
+                Array<Kontext.SubcorpListItem>>('SubcorpList') || [],
             focusedRowIdx: -1
         });
         this.pluginApi = pluginApi;
@@ -512,7 +513,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     state,
                     action.payload.keywordId,
                     action.payload.status,
-                    action.payload.attachToCurrent
+                    !action.payload.attachToCurrent
                 );
             }
         );
@@ -677,7 +678,12 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         };
     }
 
-    deserialize(state:CorplistWidgetModelState, data:CorplistWidgetModelCorpusSwitchPreserve, corpora:Array<[string, string]>):void {
+    deserialize(
+        state:CorplistWidgetModelState,
+        data:CorplistWidgetModelCorpusSwitchPreserve,
+        corpora:Array<[string, string]>
+    ):void {
+
         if (data) {
             List.forEach(
                 ([oldCorp, newCorp]) => {
