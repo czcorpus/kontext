@@ -13,7 +13,8 @@ body {
 section {
 
     #topbar-help-mount {
-        display: block;
+        display: flex;
+        align-items: center;
         margin: 0;
         padding: 0;
     }
@@ -1140,8 +1141,21 @@ button.util-button:hover {
 }
 
 
-.hint {
-    color: @color-light-text;
+#modal-overlay .block-help {
+
+    color: @color-dark-green-text;
+
+    h2 {
+        margin-left: 0;
+        font-size: 1.5em;
+    }
+
+    h3 {
+        margin-left: 0;
+        font-size: 1.2em;
+        color: @color-logo-pink;
+        font-weight: normal;
+    }
 }
 
 p.boxed-par {
