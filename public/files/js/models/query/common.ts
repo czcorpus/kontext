@@ -519,7 +519,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     });
 
                 } else if (!Dict.hasKey(action.payload.sourceId, this.state.querySuggestions) ||
-                        this.state.querySuggestions[action.payload.sourceId].timeReq <
+                        this.state.querySuggestions[action.payload.sourceId].timeReq <=
                                 action.payload.timeReq) {
                     this.changeState(state => {
                         state.querySuggestions[action.payload.sourceId] = {
