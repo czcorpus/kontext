@@ -53,9 +53,6 @@ input[type='submit'] {
     padding: 0.2em 0.4em;
 }
 
-section > .no-margin {
-    margin: 0;
-}
 
 fieldset {
     margin: 0;
@@ -164,6 +161,10 @@ a.external {
 
 #content > section.query {
     min-width: auto;
+}
+
+#content > section > *:not(.bar) {
+    margin: 1em;
 }
 
 section.inner {
@@ -795,7 +796,10 @@ header#topbar {
 }
 
 .ktx-pagination {
-    background-color: @color-light-frame;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: @color-light-frame;
+    border-radius: @input-border-radius;
 }
 
 section > .ktx-pagination,
