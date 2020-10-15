@@ -253,7 +253,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             wPoSList: props.wPoSList,
             tagAttr: props.tagAttr,
             useCQLEditor: props.useCQLEditor,
-            currentAction: 'first_form',
+            currentAction: 'query',
             widgetArgs: {},
             corpora,
             availableAlignedCorpora: props.availableAlignedCorpora,
@@ -497,6 +497,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         });
                         window.location.href = this.pageModel.createActionUrl(
                             this.state.currentAction,
+                            this.state.currentAction === 'query' ?
+                            [['corpname', action.payload.corpname]] :
                             Dict.toEntries(this.createSubmitArgs(wAction.payload.data, 0))
                         );
                     }
