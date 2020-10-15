@@ -457,7 +457,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 });
             }
         );
-
     }
 
     private snapshotState(state:TextTypesModelState):void {
@@ -803,7 +802,23 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             i?:number)=>TextTypes.AttributeValue):void {
         const attrIdx = this.getAttributeIdx(state, attrName);
         if (attrIdx > -1) {
-            state.attributes[attrIdx] = TTSelOps.mapValues(state.attributes[attrIdx], mapFn);
+            // in case of raw text input (produced initially due to large num of items)
+            // we have to transform the selection into a 'full' one as mapItems is called
+            // iff there are all the avail. items fetched from server.
+            const srcAttr:TextTypes.AnyTTSelection = state.attributes[attrIdx].type === 'text' ?
+                {
+                    attrInfo: state.attributes[attrIdx].attrInfo,
+                    isInterval: false,
+                    widget: null,
+                    isNumeric: false,
+                    label: state.attributes[attrIdx].label,
+                    name: state.attributes[attrIdx].name,
+                    values: [],
+                    type: 'full'
+                } :
+                state.attributes[attrIdx];
+
+            state.attributes[attrIdx] = TTSelOps.mapValues(srcAttr, mapFn);
         }
     }
 
