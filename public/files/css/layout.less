@@ -13,7 +13,8 @@ body {
 section {
 
     #topbar-help-mount {
-        display: block;
+        display: flex;
+        align-items: center;
         margin: 0;
         padding: 0;
     }
@@ -53,9 +54,6 @@ input[type='submit'] {
     padding: 0.2em 0.4em;
 }
 
-section > .no-margin {
-    margin: 0;
-}
 
 fieldset {
     margin: 0;
@@ -164,6 +162,10 @@ a.external {
 
 #content > section.query {
     min-width: auto;
+}
+
+#content > section > *:not(.bar) {
+    margin: 1em;
 }
 
 section.inner {
@@ -795,7 +797,10 @@ header#topbar {
 }
 
 .ktx-pagination {
-    background-color: @color-light-frame;
+    border-style: solid;
+    border-width: 0.1em;
+    border-color: @color-light-frame;
+    border-radius: @input-border-radius;
 }
 
 section > .ktx-pagination,
@@ -1136,8 +1141,21 @@ button.util-button:hover {
 }
 
 
-.hint {
-    color: @color-light-text;
+#modal-overlay .block-help {
+
+    color: @color-dark-green-text;
+
+    h2 {
+        margin-left: 0;
+        font-size: 1.5em;
+    }
+
+    h3 {
+        margin-left: 0;
+        font-size: 1.2em;
+        color: @color-logo-pink;
+        font-weight: normal;
+    }
 }
 
 p.boxed-par {

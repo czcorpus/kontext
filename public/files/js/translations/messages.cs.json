@@ -282,7 +282,6 @@
         "query__insert_within_link": "Vložit 'within'",
         "query__keyboard_link": "Klávesnice",
         "query__recent_queries_link": "Předchozí dotazy",
-        "query__pos": "Slovní druh",
         "query__not_specified": "Nespecifikováno",
         "query__match_case": "Shoda velikosti písmen",
         "query__implicit_attr_cannot_be_changed": "Implicitní atribut zde nelze změnit.",

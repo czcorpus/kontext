@@ -452,7 +452,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 </a>
                 {visible ?
                     <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
-                        <layoutViews.CloseableFrame onCloseClick={toggleHelp}customClass="hint" label={"query help"}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp}customClass="block-help" label={"query help"}>
                             <div>
                                 <h2>Query types</h2>
                                 <h3>{he.translate('query__qt_simple')}</h3>

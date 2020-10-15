@@ -51,8 +51,6 @@ export namespace Kontext {
 
     export type ResponseFormat = 'plain'|'json'|'template'|'xml';
 
-    export const isWordLikePosAttr = (name:string) => [
-        'word', 'lemma', 'lc', 'lemma_lc'].indexOf(name) > -1;
 
     export interface FormValue<T> {
 
