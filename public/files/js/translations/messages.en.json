@@ -282,7 +282,6 @@
         "query__insert_within_link": "Insert within",
         "query__keyboard_link": "Keyboard",
         "query__recent_queries_link": "Recent queries",
-        "query__pos": "Part of speech",
         "query__not_specified": "Not specified",
         "query__match_case": "Match case",
         "query__implicit_attr_cannot_be_changed": "The implicit attribute cannot be changed here.",

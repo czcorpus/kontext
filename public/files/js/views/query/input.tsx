@@ -660,40 +660,6 @@ export function init({
 
     const BoundQueryToolbox = BoundWithProps<QueryToolboxProps, QueryFormModelState>(QueryToolbox, queryModel);
 
-    // ------------------- <LposSelector /> -----------------------------
-
-    const LposSelector:React.FC<{
-        sourceId:string;
-        formType:QueryFormType;
-        wPoSList:Array<{v:string; n:string}>;
-        lposValue:string;
-
-    }> = (props) => {
-
-        const handleLposChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSetLpos>({
-                name: ActionName.QueryInputSetLpos,
-                payload: {
-                    formType: props.formType,
-                    sourceId: props.sourceId,
-                    lpos: evt.target.value
-                }
-            });
-        };
-
-        return (
-            <span>
-                {he.translate('query__pos')}:{'\u00a0'}
-                <select onChange={handleLposChange} value={props.lposValue}>
-                    <option value="">-- {he.translate('query__not_specified')} --</option>
-                    {props.wPoSList.map(item => {
-                        return <option key={item.v} value={item.v}>{item.n}</option>;
-                    })}
-                </select>
-            </span>
-        );
-    };
-
     // ------------------- <MatchCaseSelector /> -----------------------------
 
     const MatchCaseSelector:React.FC<{
@@ -1069,15 +1035,6 @@ export function init({
                                         attrList={this.props.attrList}
                                         simpleQueryAttrSeq={this.props.simpleQueryAttrSeq}
                                         formType={this.props.formType} />
-                                </div>
-                                <div className="option">
-                                {Kontext.isWordLikePosAttr(this.props.defaultAttrValues[this.props.sourceId]) ?
-                                    <LposSelector wPoSList={this.props.wPoSList}
-                                        lposValue={this.props.lposValue}
-                                        sourceId={this.props.sourceId}
-                                        formType={this.props.formType}  /> :
-                                    null
-                                }
                                 </div>
                             </>
                         </>
