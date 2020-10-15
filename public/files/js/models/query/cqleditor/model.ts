@@ -196,6 +196,7 @@ export class CQLEditorModel extends StatefulModel<CQLEditorModelState> implement
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                         name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                         payload: {
+                            timeReq: new Date().getTime(),
                             corpora: List.concat(
                                 this.pageModel.getConf<Array<string>>('alignedCorpora'),
                                 [this.pageModel.getCorpusIdent().id]
