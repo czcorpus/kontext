@@ -164,6 +164,7 @@ export interface SuggestionsData {
         valuePosEnd:number;
         attrPosStart?:number;
         attrPosEnd?:number;
+        timeReq:number;
     }
 }
 
@@ -294,6 +295,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                         name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                         payload: {
+                            timeReq: new Date().getTime(),
                             corpora: List.concat(
                                 this.pageModel.getConf<Array<string>>('alignedCorpora'),
                                 [this.pageModel.getCorpusIdent().id]
@@ -516,9 +518,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         state.suggestionsVisible[action.payload.sourceId] = false;
                     });
 
-                } else {
+                } else if (!Dict.hasKey(action.payload.sourceId, this.state.querySuggestions) ||
+                        this.state.querySuggestions[action.payload.sourceId].timeReq <
+                                action.payload.timeReq) {
                     this.changeState(state => {
                         state.querySuggestions[action.payload.sourceId] = {
+                            timeReq: action.payload.timeReq,
                             data: action.payload.results,
                             isPartial: action.payload.isPartial,
                             valuePosStart: action.payload.valueStartIdx,

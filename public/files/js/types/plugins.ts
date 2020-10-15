@@ -514,6 +514,7 @@ export namespace PluginInterfaces {
         export type QueryValueSubformat = 'regexp'|'simple'|'simple_ic'|'advanced';
 
         export interface SuggestionArgs {
+            timeReq:number;
             sourceId:string;
             value:string;
             valueStartIdx:number;

@@ -236,7 +236,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     data: [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
                     isPartial: false,
                     valuePosStart: 0,
-                    valuePosEnd: 0
+                    valuePosEnd: 0,
+                    timeReq: new Date().getTime()
                 }
             )),
             Dict.fromEntries()
