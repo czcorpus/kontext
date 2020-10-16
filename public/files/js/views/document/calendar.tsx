@@ -49,6 +49,9 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                 d.getMonth() === props.current.getMonth() &&
                 d.getDate() === props.current.getDate();
 
+        const isCurrentMonth = (d:Date):boolean =>
+                props.current.getMonth() === d.getMonth();
+
         const determineClass = (v:Date) => {
             if (isCurrentDay(v)) {
                 return `current${props.isActive ? ' active' : ''}`;
@@ -64,7 +67,9 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                     List.map((v, i) => (
                         <td key={v ? `d:${v.getTime()}` : `d:${i}`}
                                 className={determineClass(v)}>
-                            <a onClick={() => props.onClick(v)}>{v ? v.getDate() : '?'}</a>
+                            <a onClick={() => props.onClick(v)}
+                                style={isCurrentMonth(v) ? null : {color: 'gray'}}
+                            >{v ? v.getDate() : '?'}</a>
                         </td>
                     ))
                 )}
