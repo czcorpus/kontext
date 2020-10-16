@@ -148,11 +148,9 @@ class QueryFormArgs(ConcFormArgs):
         self.has_lemma = empty_dict.copy()
 
         # context filter
-        self.fc_lemword_window_type = 'both'
         self.fc_lemword_type = 'all'
-        self.fc_lemword_wsize = 5
+        self.fc_lemword_wsize = (5, 5)
         self.fc_lemword = ''
-        self.fc_pos_window_type = 'both'
         self.fc_pos_type = 'all'
         self.fc_pos_wsize = 5
         self.fc_pos = []
@@ -190,11 +188,9 @@ class QueryFormArgs(ConcFormArgs):
         self.bib_mapping = bib_mapping
 
         ctx = data['context']
-        self.fc_lemword_window_type = ctx.get('fc_lemword_window_type', self.fc_lemword_window_type)
         self.fc_lemword_type = ctx.get('fc_lemword_type', self.fc_lemword_type)
         self.fc_lemword_wsize = ctx.get('fc_lemword_wsize', self.fc_lemword_wsize)
         self.fc_lemword = ctx.get('fc_lemword', self.fc_lemword)
-        self.fc_pos_window_type = ctx.get('fc_pos_window_type', self.fc_pos_window_type)
         self.fc_pos_type = ctx.get('fc_pos_type', self.fc_pos_type)
         self.fc_pos_wsize = ctx.get('fc_pos_wsize', self.fc_pos_wsize)
         self.fc_pos = ctx.get('fc_pos', self.fc_pos)

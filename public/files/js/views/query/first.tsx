@@ -228,8 +228,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             htmlClass="specify-context"
                             title={he.translate('query__specify_context')}>
                         <contextViews.SpecifyContextForm
-                                lemmaWindowSizes={this.props.lemmaWindowSizes}
-                                posWindowSizes={this.props.posWindowSizes}
                                 hasLemmaAttr={this.props.hasLemma[primaryCorpname]}
                                 wPoSList={this.props.wPoSList} />
                     </inputViews.AdvancedFormFieldset>
@@ -412,8 +410,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             htmlClass="specify-context"
                             title={he.translate('query__specify_context')}>
                         <contextViews.SpecifyContextForm
-                                lemmaWindowSizes={this.props.lemmaWindowSizes}
-                                posWindowSizes={this.props.posWindowSizes}
                                 hasLemmaAttr={this.props.hasLemma[this.props.corpname]}
                                 wPoSList={this.props.wPoSList} />
                     </inputViews.AdvancedFormFieldset>

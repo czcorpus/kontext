@@ -204,8 +204,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             forcedAttr: '', // TODO
             attrList: [...props.attrList],
             structAttrList: [...props.structAttrList],
-            lemmaWindowSizes: [], // TODO
-            posWindowSizes: [], // TODO
             wPoSList: [], // TODO
             currentAction: 'filter_form',
             queries, // corpname|filter_id -> query

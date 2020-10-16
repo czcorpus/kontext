@@ -20,19 +20,17 @@
 
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions, ActionName } from './actions';
-import { CtxLemwordType, CtxWindowType, QueryContextArgs } from './common';
+import { CtxLemwordType } from './common';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 
 
 
 export interface FormData {
-    fc_lemword_window_type:CtxWindowType;
-    fc_lemword_wsize:string;
+    fc_lemword_wsize:[number, number];
     fc_lemword:string;
     fc_lemword_type:CtxLemwordType;
-    fc_pos_window_type:CtxWindowType;
-    fc_pos_wsize:string;
+    fc_pos_wsize:[number, number];
     fc_pos:Array<string>;
     fc_pos_type:CtxLemwordType;
 }
@@ -49,12 +47,10 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
     constructor(dispatcher:IFullActionControl) {
         super(dispatcher, {
             formData: {
-                fc_lemword_window_type: 'both',
-                fc_lemword_wsize: '1',
+                fc_lemword_wsize: [-1, 1],
                 fc_lemword: '',
                 fc_lemword_type: 'all',
-                fc_pos_window_type: 'left',
-                fc_pos_wsize: '1',
+                fc_pos_wsize: [-1, 1],
                 fc_pos: [],
                 fc_pos_type: 'all'
             }
@@ -75,12 +71,10 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
                     name: ActionName.QueryContextFormPrepareArgsDone,
                     payload: {
                         data: {
-                            fc_lemword_window_type: state.formData.fc_lemword_window_type,
-                            fc_lemword_wsize: parseInt(state.formData.fc_lemword_wsize),
+                            fc_lemword_wsize: state.formData.fc_lemword_wsize,
                             fc_lemword: state.formData.fc_lemword,
                             fc_lemword_type: state.formData.fc_lemword_type,
-                            fc_pos_window_type: state.formData.fc_pos_window_type,
-                            fc_pos_wsize: parseInt(state.formData.fc_pos_wsize),
+                            fc_pos_wsize: state.formData.fc_pos_wsize,
                             fc_pos: state.formData.fc_pos,
                             fc_pos_type: state.formData.fc_pos_type
                         }

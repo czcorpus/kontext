@@ -36,17 +36,13 @@ import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../o
 
 export type QueryType = 'simple'|'advanced';
 
-export type CtxWindowType = 'left'|'both'|'right';
-
 export type CtxLemwordType = 'any'|'all'|'none';
 
 export interface QueryContextArgs {
-    fc_lemword_window_type:CtxWindowType;
-    fc_lemword_wsize:number;
+    fc_lemword_wsize:[number, number];
     fc_lemword:string;
     fc_lemword_type:CtxLemwordType;
-    fc_pos_window_type:CtxWindowType;
-    fc_pos_wsize:number;
+    fc_pos_wsize:[number, number];
     fc_pos:string[];
     fc_pos_type:CtxLemwordType;
 }
@@ -130,8 +126,6 @@ export interface GeneralQueryFormProperties {
     forcedAttr:string;
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
-    lemmaWindowSizes:Array<number>;
-    posWindowSizes:Array<number>;
     wPoSList:Array<{v:string; n:string}>;
     useCQLEditor:boolean;
     tagAttr:string;
@@ -178,10 +172,6 @@ export interface QueryFormModelState {
     attrList:Array<Kontext.AttrItem>;
 
     structAttrList:Array<Kontext.AttrItem>;
-
-    lemmaWindowSizes:Array<number>;
-
-    posWindowSizes:Array<number>;
 
     wPoSList:Array<{v:string; n:string}>;
 
