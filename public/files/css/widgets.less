@@ -1236,5 +1236,81 @@ table.CollMetricsSelection,
     text-decoration: none;
 }
 
+.KwicRangeSelector {
+
+    padding: 0.4em 0;
+
+    .items {
+        display: flex;
+        align-items: center;
+
+        .pos {
+            display: block;
+            border: 1px solid @color-dark-green-text;
+
+            a, span {
+                display: block;
+                padding: 0.3em;
+                text-decoration: none;
+            }
+        }
+
+        .pos:not(.kwic) {
+            width: 1.5em;
+        }
+
+        .pos.kwic {
+            color: @color-logo-pink;
+
+            a {
+                color: @color-logo-pink;
+            }
+        }
+
+        .pos.left-lim {
+            border-radius: 0.3em 0 0 0.3em;
+        }
+
+        .pos:not(.left-lim) {
+            border-left: none;
+        }
+
+        .pos.right-lim {
+            border-radius: 0 0.3em 0.3em 0;
+        }
+
+        .pos.selected a {
+            background-color: @color-logo-pink;
+            color: #FFFFFF;
+        }
+
+        div {
+
+            input.manual-range {
+                border-radius: @input-border-radius;
+                width: 2em;
+                padding-top: 0.2em;
+                padding-bottom: 0.2em;
+            }
+
+            input.manual-range.invalid {
+                border: 1px solid red;
+            }
+
+            input.manual-range.invalid:focus {
+                outline: none;
+                border: 1px solid red;
+            }
+        }
+
+        div.selected {
+            input:not(.invalid) {
+                background-color: @color-logo-pink;
+                color: #FFFFFF;
+            }
+        }
+    }
+}
+
 @import "./layoutMobile.less";
 @import "~custom-styles/theme.less";

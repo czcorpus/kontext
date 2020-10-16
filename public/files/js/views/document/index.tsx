@@ -28,6 +28,7 @@ import { CoreViews } from '../../types/coreViews';
 import { MessageModel, MessageModelState } from '../../models/common/layout';
 import { Actions, ActionName } from '../../models/common/actions';
 import { init as calendarInit } from './calendar';
+import { init as kwicRangeInit } from './kwicRange';
 import { ImgWithMouseover } from './general';
 
 
@@ -55,6 +56,7 @@ export function init(
 ):CoreViews.Runtime {
 
     const Calendar = calendarInit(he);
+    const KwicRangeSelector = kwicRangeInit(he);
 
     // ------------------------------ <ErrorBoundary /> -----------------------------
 
@@ -760,6 +762,7 @@ export function init(
         TabView,
         PlusButton,
         Calendar,
-        ExpandButton
+        ExpandButton,
+        KwicRangeSelector
     };
 }

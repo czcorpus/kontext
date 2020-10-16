@@ -28,14 +28,13 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
 import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
 import { Actions, ActionName } from '../../models/query/actions';
-import { CtxLemwordType, CtxWindowType } from '../../models/query/common';
+import { CtxLemwordType } from '../../models/query/common';
+import { tuple } from 'cnc-tskit';
 
 
 export interface SpecifyContextFormProps {
     hasLemmaAttr:boolean;
-    lemmaWindowSizes:Array<number>;
     wPoSList:Array<{v:string; n:string}>;
-    posWindowSizes:Array<number>;
 }
 
 
@@ -46,6 +45,8 @@ export interface ContextViews {
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             queryContextModel:QueryContextModel):ContextViews {
+
+    const layoutModels = he.getLayoutViews();
 
     // ------------------------------- <AllAnyNoneSelector /> ---------------------
 
@@ -75,93 +76,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ------------------------------- <TRWindowSelector /> ---------------------
-
-    const TRWindowSelector:React.FC<{
-        namePrefix:string;
-        windowTypeSelector:CtxWindowType;
-        windowSizeSelector:string;
-        options:Array<number>;
-
-    }> = (props) => {
-
-        const changeHandler = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
-                payload: {
-                    name: evt.target.name,
-                    value: evt.target.value
-                }
-            });
-        };
-
-        return (
-            <tr>
-                <th>{he.translate('query__window')}:</th>
-                <td>
-                    <select name={`${props.namePrefix}_window_type`}
-                            value={props.windowTypeSelector}
-                            onChange={changeHandler}>
-                        <option value="left">{he.translate('query__left')}</option>
-                        <option value="both">{he.translate('query__both')}</option>
-                        <option value="right">{he.translate('query__right')}</option>
-                    </select>
-                    {'\u00A0'}
-                    <select name={`${props.namePrefix}_wsize`}
-                            value={props.windowSizeSelector}
-                            onChange={changeHandler}>
-                        {props.options.map((item) => {
-                            return <option key={item}>{item}</option>
-                        })}
-                    </select>
-                    {'\u00A0'}
-                    {he.translate('query__window_tokens')}.
-                </td>
-            </tr>
-        );
-    };
-
-    // ------------------------------- <TRLemmaWindowSelector /> ---------------------
-
-    const TRLemmaWindowSelector:React.FC<{
-        options:Array<number>;
-        fc_lemword_window_type:CtxWindowType;
-        fc_lemword_wsize:string;
-
-    }> = (props) => {
-
-        return <TRWindowSelector
-                    options={props.options}
-                    namePrefix="fc_lemword"
-                    windowTypeSelector={props.fc_lemword_window_type}
-                    windowSizeSelector={props.fc_lemword_wsize} />;
-    };
-
-    // ------------------------------- <TRPosWindowSelector /> ---------------------
-
-    const TRPosWindowSelector:React.FC<{
-        options:Array<number>;
-        fc_pos_window_type:CtxWindowType;
-        fc_pos_wsize:string;
-
-    }> = (props) => {
-
-            return <TRWindowSelector
-                        options={props.options}
-                        namePrefix="fc_pos"
-                        windowTypeSelector={props.fc_pos_window_type}
-                        windowSizeSelector={props.fc_pos_wsize} />;
-    };
-
     // ------------------------------- <LemmaFilter /> ---------------------
 
     const LemmaFilter:React.FC<{
         hasLemmaAttr:boolean;
-        fc_lemword_wsize:string;
+        fc_lemword_wsize:[number, number];
         fc_lemword_type:CtxLemwordType;
         fc_lemword:string;
-        fc_lemword_window_type:CtxWindowType;
-        lemmaWindowSizes:Array<number>;
 
     }> = (props) => {
 
@@ -175,26 +96,41 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         };
 
+        const handleRangeChange = (lft:number, rgt:number) => {
+            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
+                name: ActionName.QueryInputSelectContextFormItem,
+                payload: {
+                    name: 'fc_lemword_wsize',
+                    value: tuple(lft, rgt)
+                }
+            });
+        };
+
         return (
             <table className="form">
                 <tbody>
-                    <TRLemmaWindowSelector options={props.lemmaWindowSizes}
-                        fc_lemword_window_type={props.fc_lemword_window_type}
-                        fc_lemword_wsize={props.fc_lemword_wsize} />
                     <tr>
-                        <th>
+                        <td colSpan={3}>
+                            <layoutModels.KwicRangeSelector rangeSize={5} isKwicExcluded={true}
+                                    initialLeft={props.fc_lemword_wsize[0]}
+                                    initialRight={props.fc_lemword_wsize[1]}
+                                    onClick={handleRangeChange} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                         {props.hasLemmaAttr
                             ? he.translate('query__lw_lemmas')
                             : he.translate('query__lw_word_forms')
                         }
-                        </th>
-                        <td>
-                            <input type="text" className="fc_lemword" name="fc_lemword" value={props.fc_lemword}
-                                    onChange={handleInputChange} />
-                            {'\u00A0'}
-                            <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} />
-                            {'\u00A0'}
-                            {he.translate('query__of_these_items')}.
+                        </td>
+                        <td colSpan={2}>
+                        <input type="text" className="fc_lemword" name="fc_lemword" value={props.fc_lemword}
+                                onChange={handleInputChange} />
+                        {'\u00A0'}
+                        <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} />
+                        {'\u00A0'}
+                        {he.translate('query__of_these_items')}.
                         </td>
                     </tr>
                 </tbody>
@@ -205,9 +141,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------------------------- <PoSFilter /> ---------------------
 
     const PoSFilter:React.FC<{
-        posWindowSizes:Array<number>;
-        fc_pos_window_type:CtxWindowType;
-        fc_pos_wsize:string;
+        fc_pos_wsize:[number, number];
         fc_pos:Array<string>;
         wPoSList:Array<{v:string; n:string}>;
         fc_pos_type:CtxLemwordType;
@@ -231,14 +165,29 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         };
 
+        const handleRangeChange = (lft:number, rgt:number) => {
+            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
+                name: ActionName.QueryInputSelectContextFormItem,
+                payload: {
+                    name: 'fc_pos_wsize',
+                    value: tuple(lft, rgt)
+                }
+            });
+        };
+
         return (
             <div className="pos-filter">
                 <h3>{he.translate('query__pos_filter')}</h3>
                 <table className="form">
                     <tbody>
-                        <TRPosWindowSelector options={props.posWindowSizes}
-                            fc_pos_window_type={props.fc_pos_window_type}
-                            fc_pos_wsize={props.fc_pos_wsize} />
+                        <tr>
+                            <td colSpan={3}>
+                            <layoutModels.KwicRangeSelector rangeSize={5} isKwicExcluded={true}
+                                initialLeft={props.fc_pos_wsize[0]}
+                                initialRight={props.fc_pos_wsize[1]}
+                                onClick={handleRangeChange} />
+                            </td>
+                        </tr>
                         <tr>
                             <th>
                                 {he.translate('query__pos_filter')}:<br />
@@ -279,17 +228,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </h3>
                     <LemmaFilter
                         hasLemmaAttr={props.hasLemmaAttr}
-                        lemmaWindowSizes={props.lemmaWindowSizes}
-                        fc_lemword_window_type={props.formData.fc_lemword_window_type}
                         fc_lemword_wsize={props.formData.fc_lemword_wsize}
                         fc_lemword={props.formData.fc_lemword}
                         fc_lemword_type={props.formData.fc_lemword_type}
                     />
                     {props.wPoSList && props.wPoSList.length > 0 ?
                         <PoSFilter
-                            posWindowSizes={props.posWindowSizes}
                             wPoSList={props.wPoSList}
-                            fc_pos_window_type={props.formData.fc_pos_window_type}
                             fc_pos_wsize={props.formData.fc_pos_wsize}
                             fc_pos={props.formData.fc_pos}
                             fc_pos_type={props.formData.fc_pos_type}

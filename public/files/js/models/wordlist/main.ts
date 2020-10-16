@@ -501,12 +501,10 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             ],
             text_types: {},
             context: {
-                fc_lemword_window_type: null,
-                fc_lemword_wsize: 0,
+                fc_lemword_wsize: [0, 0],
                 fc_lemword: null,
                 fc_lemword_type: 'none',
-                fc_pos_window_type: 'both',
-                fc_pos_wsize: 0,
+                fc_pos_wsize: [0, 0],
                 fc_pos: [],
                 fc_pos_type: 'none'
             }

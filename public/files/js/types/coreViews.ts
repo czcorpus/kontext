@@ -373,6 +373,19 @@ export namespace CoreViews {
         export type Component = React.FC<Props>;
     }
 
+    export namespace KwicRangeSelector {
+
+        export interface Props {
+            isKwicExcluded:boolean;
+            rangeSize:number;
+            initialLeft?:number;
+            initialRight?:number;
+            onClick:(lft:number, rgt:number, includesKwic:boolean)=>void;
+        }
+
+        export type Component = React.FC<Props>;
+    }
+
     // -------------------------------
 
     export interface Runtime {
@@ -397,6 +410,7 @@ export namespace CoreViews {
         PlusButton:PlusButton.Component;
         Calendar:Calendar.Component;
         ExpandButton:ExpandButton.Component;
+        KwicRangeSelector:KwicRangeSelector.Component;
     }
 }
 

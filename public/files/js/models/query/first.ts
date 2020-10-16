@@ -248,8 +248,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             forcedAttr: props.forcedAttr,
             attrList: props.attrList,
             structAttrList: props.structAttrList,
-            lemmaWindowSizes: props.lemmaWindowSizes,
-            posWindowSizes: props.posWindowSizes,
             wPoSList: props.wPoSList,
             tagAttr: props.tagAttr,
             useCQLEditor: props.useCQLEditor,

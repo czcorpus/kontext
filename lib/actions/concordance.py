@@ -540,42 +540,16 @@ class Actions(Querying):
             ' '.join(x for x in [qbase + self._compile_query(corpora[0], data), ttquery, par_query] if x)]
 
         ag_op_idx = 1  # an initial index of auto-generated conc. operations
-        if data.fc_lemword_window_type == 'left':
-            ag_op_idx = append_filter(ag_op_idx,
-                                      lemmaattr,
-                                      data.fc_lemword.split(),
-                                      (-data.fc_lemword_wsize, -1, -1),
-                                      data.fc_lemword_type)
-        elif data.fc_lemword_window_type == 'right':
-            ag_op_idx = append_filter(ag_op_idx,
-                                      lemmaattr,
-                                      data.fc_lemword.split(),
-                                      (1, data.fc_lemword_wsize, 1),
-                                      data.fc_lemword_type)
-        elif data.fc_lemword_window_type == 'both':
-            ag_op_idx = append_filter(ag_op_idx,
-                                      lemmaattr,
-                                      data.fc_lemword.split(),
-                                      (-data.fc_lemword_wsize, data.fc_lemword_wsize, 1),
-                                      data.fc_lemword_type)
-        if data.fc_pos_window_type == 'left':
-            append_filter(ag_op_idx,
-                          'tag',
-                          [wposlist.get(t, '') for t in data.fc_pos],
-                          (-data.fc_pos_wsize, -1, -1),
-                          data.fc_pos_type)
-        elif data.fc_pos_window_type == 'right':
-            append_filter(ag_op_idx,
-                          'tag',
-                          [wposlist.get(t, '') for t in data.fc_pos],
-                          (1, data.fc_pos_wsize, 1),
-                          data.fc_pos_type)
-        elif data.fc_pos_window_type == 'both':
-            append_filter(ag_op_idx,
-                          'tag',
-                          [wposlist.get(t, '') for t in data.fc_pos],
-                          (-data.fc_pos_wsize, data.fc_pos_wsize, 1),
-                          data.fc_pos_type)
+        ag_op_idx = append_filter(ag_op_idx,
+                                  lemmaattr,
+                                  data.fc_lemword.split(),
+                                  (data.fc_lemword_wsize[0], data.fc_lemword_wsize[1], 1),
+                                  data.fc_lemword_type)
+        append_filter(ag_op_idx,
+                      'tag',
+                      [wposlist.get(t, '') for t in data.fc_pos],
+                      (data.fc_pos_wsize[0], data.fc_pos_wsize[1], 1),
+                      data.fc_pos_type)
 
         for al_corpname in self.args.align:
             if al_corpname in nopq and not int(data.curr_include_empty_values[al_corpname]):

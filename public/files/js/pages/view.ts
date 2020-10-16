@@ -436,8 +436,6 @@ export class ViewPage {
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
-            posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemma: queryFormArgs.has_lemma,
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
@@ -520,8 +518,6 @@ export class ViewPage {
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
-            posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>(
