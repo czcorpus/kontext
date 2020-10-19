@@ -70,7 +70,7 @@ def find_plugins(conf):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Validates KonText XML configuration files against RelaxNG schemas')
+        description='Validates KonText XML configuration files according to respective RelaxNG schemas')
     parser.add_argument('config_file', metavar='CONF_FILE', type=str,
                         help='a path to a config file to be validated')
     args = parser.parse_args()
