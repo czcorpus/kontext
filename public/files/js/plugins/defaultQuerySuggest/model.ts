@@ -21,7 +21,7 @@
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { Kontext } from '../../types/common';
-import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher, SEDispatcher, Action } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
@@ -30,6 +30,7 @@ import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { cutLongResult, listAttrs1ToExtend, mergeResults } from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
+import { Actions, ActionName } from './actions';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {
@@ -127,33 +128,26 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
-            PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+        this.addActionHandler<Actions.CacheData>(
+            ActionName.CacheData,
             (state, action) => {
-                state.isBusy = false;
-                if (!action.error) {
-                    const cacheIdx = List.findIndex(
-                        ([hash,]) => hash === this.createSuggestionHash(
-                            action.payload, action.payload.parsedWord),
-                        state.cache
-                    );
+                const [cached, cacheIdx] = this.fetchFromCache(
+                    state, action.payload, action.payload.parsedWord);
+                if (cached) {
+                    const item = state.cache.splice(cacheIdx, 1);
+                    state.cache.push(item[0]);
 
-                    if (cacheIdx === -1) {
-                        state.cache.push([
-                            this.createSuggestionHash(action.payload, action.payload.parsedWord),
-                            {
-                                results: action.payload.results,
-                                parsedWord: action.payload.parsedWord,
-                                isPartial: action.payload.isPartial
-                            }
-                        ]);
-                        if (state.cache.length > this.CACHE_SIZE) {
-                            state.cache = List.tail(state.cache);
+                } else {
+                    state.cache.push([
+                        this.createSuggestionHash(action.payload, action.payload.parsedWord),
+                        {
+                            results: action.payload.results,
+                            parsedWord: action.payload.parsedWord,
+                            isPartial: action.payload.isPartial
                         }
-
-                    } else {
-                        const item = state.cache.splice(cacheIdx, 1);
-                        state.cache.push(item[0]);
+                    ]);
+                    if (state.cache.length > this.CACHE_SIZE) {
+                        state.cache = List.tail(state.cache);
                     }
                 }
             }
@@ -183,7 +177,8 @@ export class Model extends StatelessModel<ModelState> {
             this.fetchSuggestions(
                 state,
                 args,
-                args.value
+                args.value,
+                dispatch
 
             ).pipe(
                 tap(
@@ -221,7 +216,7 @@ export class Model extends StatelessModel<ModelState> {
                 ),
                 mergeMap(
                     ([firstData, item]) => this.fetchSuggestionsForWord(
-                        state, args, item
+                        state, args, item, dispatch
                     ).pipe(
                         map(
                             resp => tuple(firstData, resp)
@@ -283,28 +278,43 @@ export class Model extends StatelessModel<ModelState> {
     private fetchSuggestions(
         state:ModelState,
         suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs,
-        word:string
+        word:string,
+        dispatch:SEDispatcher
 
     ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
         return this.fetchSuggestionsForWord(
             state,
             suggArgs,
-            word
+            word,
+            dispatch
         );
     }
 
-    private fetchSuggestionsForWord(
+    private fetchFromCache(
         state:ModelState,
         suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs,
         word:string
-
-    ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
+    ):[PluginInterfaces.QuerySuggest.SuggestionAnswer, number]|undefined {
         const cacheIdx = List.findIndex(
             ([key,]) => key === this.createSuggestionHash(suggArgs, word),
             state.cache
         );
         if (cacheIdx > -1) {
-            return rxOf(state.cache[cacheIdx][1]);
+            return tuple(state.cache[cacheIdx][1], cacheIdx);
+        }
+        return [undefined, -1];
+    }
+
+    private fetchSuggestionsForWord(
+        state:ModelState,
+        suggArgs:PluginInterfaces.QuerySuggest.SuggestionArgs,
+        word:string,
+        dispatch:SEDispatcher
+
+    ):Observable<PluginInterfaces.QuerySuggest.SuggestionAnswer> {
+        const [cached,] = this.fetchFromCache(state, suggArgs, word);
+        if (cached) {
+            return rxOf(cached);
         }
 
         const args = new MultiDict<{
@@ -353,6 +363,17 @@ export class Model extends StatelessModel<ModelState> {
                     parsedWord: word,
                     isPartial: false // yet to be resolved
                 })
+            ),
+            tap(
+                data => {
+                    dispatch<Actions.CacheData>({
+                        name: ActionName.CacheData,
+                        payload: {
+                            ...suggArgs,
+                            ...data
+                        }
+                    })
+                }
             )
         );
     }
