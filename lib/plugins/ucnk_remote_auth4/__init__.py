@@ -141,10 +141,13 @@ class CentralAuth(AbstractRemoteAuth):
         Method also stores the response for CNC toolbar to prevent an extra API call.
         """
         curr_user_id = plugin_api.session.get('user', {'id': None})['id']
-        cookie_sid = plugin_api.cookies.get(self._conf.cookie_sid, '')
-        cookie_at = plugin_api.cookies.get(self._conf.cookie_at, '')
-        cookie_rmme = plugin_api.cookies.get(self._conf.cookie_rmme, 0)
-        cookie_lang = plugin_api.cookies.get(self._conf.cookie_lang, 'en')
+        cookie_sid = plugin_api.cookies[self._conf.cookie_sid].value
+        cookie_at = plugin_api.cookies[
+            self._conf.cookie_at].value if self._conf.cookie_at in plugin_api.cookies else ''
+        cookie_rmme = plugin_api.cookies[
+            self._conf.cookie_rmme].value if self._conf.cookie_rmme in plugin_api.cookies else '0'
+        cookie_lang = plugin_api.cookies[
+            self._conf.cookie_lang].value if self._conf.cookie_lang in plugin_api.cookies else 'en'
         api_args = [
             ('sid', cookie_sid),
             ('at', cookie_at),
