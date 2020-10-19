@@ -58,7 +58,10 @@ class AuthConf(object):
         self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])
         self.toolbar_server_timeout = int(conf.get('plugins', 'auth')[
                                           'ucnk:toolbar_server_timeout'])
-        self.api_cookies = conf.get('plugins', 'auth', {}).get('ucnk:api_cookies', [])
+        self.cookie_sid = conf.get('plugins', 'auth')['ucnk:cookie_sid']
+        self.cookie_at = conf.get('plugins', 'auth')['ucnk:cookie_at']
+        self.cookie_rmme = conf.get('plugins', 'auth')['ucnk:cookie_rmme']
+        self.cookie_lang = conf.get('plugins', 'auth')['ucnk:cookie_lang']
         self.unverified_ssl_cert = bool(int(conf.get('plugins', 'auth', {}).get(
             'ucnk:toolbar_unverified_ssl_cert', '0')))
 
@@ -68,7 +71,7 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db, sessions, conf, toolbar_conf):
+    def __init__(self, db, sessions, conf: AuthConf, toolbar_conf: ToolbarConf):
         """
         arguments:
         db -- a key-value storage plug-in
@@ -138,10 +141,18 @@ class CentralAuth(AbstractRemoteAuth):
         Method also stores the response for CNC toolbar to prevent an extra API call.
         """
         curr_user_id = plugin_api.session.get('user', {'id': None})['id']
-
-        api_args = [(x[0][len('cnc_toolbar_'):], x[1].value) for x in [
-            x for x in list(plugin_api.cookies.items()) if x[0] in self._conf.api_cookies]]
-        api_args.extend([('current',  'kontext'), ('continue', plugin_api.current_url)])
+        cookie_sid = plugin_api.cookies.get(self._conf.cookie_sid, '')
+        cookie_at = plugin_api.cookies.get(self._conf.cookie_at, '')
+        cookie_rmme = plugin_api.cookies.get(self._conf.cookie_rmme, 0)
+        cookie_lang = plugin_api.cookies.get(self._conf.cookie_lang, 'en')
+        api_args = [
+            ('sid', cookie_sid),
+            ('at', cookie_at),
+            ('rmme', cookie_rmme),
+            ('lang', cookie_lang),
+            ('current', 'kontext'),
+            ('continue', plugin_api.current_url)
+        ]
         api_response = self._fetch_toolbar_api_response(api_args)
         response_obj = json.loads(api_response)
         plugin_api.set_shared('toolbar', response_obj)  # toolbar plug-in will access this

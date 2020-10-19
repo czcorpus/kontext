@@ -35,13 +35,21 @@
             <element name="logout_url">
                 <text />
             </element>
-            <element name="api_cookies">
+            <element name="cookie_sid">
                 <ref name="ucnk-custom" />
-                <zeroOrMore>
-                    <element name="item">
-                        <text />
-                    </element>
-                </zeroOrMore>
+                <text />
+            </element>
+            <element name="cookie_at">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="cookie_rmme">
+                <ref name="ucnk-custom" />
+                <text />
+            </element>
+            <element name="cookie_lang">
+                <ref name="ucnk-custom" />
+                <text />
             </element>
             <element name="toolbar_server">
                 <ref name="ucnk-custom" />
