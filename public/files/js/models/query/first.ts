@@ -814,6 +814,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             if (!Dict.hasKey(corpname, state.matchCaseValues)) {
                 state.matchCaseValues[corpname] = false;
             }
+            if (!Dict.hasKey(corpname, state.useRegexp)) {
+                state.useRegexp[corpname] = false;
+            }
             if (!Dict.hasKey(corpname, state.queryTypes)) {
                 state.queryTypes[corpname] = 'simple'; // TODO what about some session-stored stuff?
             }
