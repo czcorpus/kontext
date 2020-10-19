@@ -40,6 +40,7 @@ export enum ActionName {
 export interface CorpusSwitchModelRestorePayload {
     data:{[key:string]:any};
     corpora:Array<[string, string]>;
+    changePrimaryCorpus?:boolean;
 }
 
 export namespace Actions {
@@ -70,6 +71,7 @@ export namespace Actions {
     export interface SwitchCorpus extends Action<{
         corpora:Array<string>;
         subcorpus:string;
+        changePrimaryCorpus?:boolean;
     }> {
         name:ActionName.SwitchCorpus;
     }
