@@ -322,7 +322,7 @@ CREATE TABLE kontext_corpus_taghelper (
     tagset_type ENUM('positional', 'keyval', 'other') NOT NULL,
     tagset_name varchar(63),
     PRIMARY KEY (corpus_name, feat_attr)
-);
+) ENGINE = INNODB CHARSET=utf8;
 ALTER TABLE `kontext_corpus_taghelper` COLLATE 'utf8_general_ci';
 ALTER TABLE kontext_corpus_taghelper ADD CONSTRAINT kontext_corpus_taghelper_pos_attr_id_fkey FOREIGN KEY (corpus_name, pos_attr) REFERENCES corpus_posattr(corpus_name, name);
 ALTER TABLE kontext_corpus_taghelper ADD CONSTRAINT kontext_corpus_taghelper_feat_attr_id_fkey FOREIGN KEY (corpus_name, feat_attr) REFERENCES corpus_posattr(corpus_name, name);
@@ -334,5 +334,5 @@ CREATE TABLE kontext_simple_query_attr_seq (
     pos_attr varchar(63),
     idx INT NOT NULL DEFAULT 0,
     CONSTRAINT kontext_simple_query_attr_seq_pkey PRIMARY KEY(corpus_name, pos_attr, idx)
-);
-ALTER TABLE kontext_simple_query_attr_seq ADD CONSTRAINT kontext_simple_query_attr_seq_corpus_fkey FOREIGN KEY (corpus_name, pos_attr) REFERENCES corpus_posattr(corpus_name, name)
+) ENGINE = INNODB CHARSET=utf8;
+ALTER TABLE kontext_simple_query_attr_seq ADD CONSTRAINT kontext_simple_query_attr_seq_corpus_fkey FOREIGN KEY (corpus_name, pos_attr) REFERENCES corpus_posattr(corpus_name, name);
