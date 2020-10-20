@@ -223,7 +223,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
-            props:QueryFormProperties) {
+            props:QueryFormProperties
+    ) {
+
         const corpora = props.corpora;
         const queryTypes = pipe(
             props.corpora,
@@ -349,7 +351,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             isBusy: false,
             cursorPos: 0,
             simpleQueryAttrSeq: props.simpleQueryAttrSeq,
-            alignedCorporaVisible: false
+            alignedCorporaVisible: List.size(corpora) > 1
         });
         this.setUserValues(this.state, props);
 
@@ -662,45 +664,38 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         };
     }
 
+    private transferFormValues(
+        state:FirstQueryFormModelState,
+        data:FirstQueryFormModelSwitchPreserve,
+        oldCorp:string,
+        newCorp:string,
+        isAligned?:boolean
+    ) {
+        state.queries[newCorp] = data.queries[oldCorp];
+        state.queryTypes[newCorp] = data.queryTypes[oldCorp];
+        state.matchCaseValues[newCorp] = data.matchCaseValues[oldCorp];
+        if (isAligned) {
+            state.includeEmptyValues[newCorp] = data.includeEmptyValues[oldCorp];
+        }
+    }
+
     private deserialize(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
         corpora:Array<[string, string]>,
         changePrimaryCorpus:boolean
     ):void {
-        if (data) {    
-            if (changePrimaryCorpus) {
-                pipe(
-                    corpora,
-                    List.forEach(
-                        ([oldCorp, newCorp], i) => {
-                            state.queries[oldCorp] = data.queries[oldCorp];
-                            state.queryTypes[oldCorp] = data.queryTypes[oldCorp];
-                            state.matchCaseValues[oldCorp] = data.matchCaseValues[oldCorp];
-                            if (i > 0) {
-                                state.includeEmptyValues[oldCorp] = data.includeEmptyValues[oldCorp];
-                            }
-                        }
-                    )
-                );
-                state.alignedCorporaVisible = data.alignedCorporaVisible;
-            
-            } else {
-                pipe(
-                    corpora,
-                    List.forEach(
-                        ([oldCorp, newCorp], i) => {
-                            state.queries[newCorp] = data.queries[oldCorp];
-                            state.queryTypes[newCorp] = data.queryTypes[oldCorp];
-                            state.matchCaseValues[newCorp] = data.matchCaseValues[oldCorp];
-                            if (i > 0) {
-                                state.includeEmptyValues[newCorp] = data.includeEmptyValues[oldCorp];
-                            }
-                        }
-                    )
-                );
-            }
-            
+        if (data) {
+            const transferFn:(oc:string, nc:string, i:number)=>void = changePrimaryCorpus ?
+                (oldCorp, _, i) =>
+                    this.transferFormValues(state, data, oldCorp, oldCorp, i > 0) :
+                (oldCorp, newCorp, _) =>
+                    this.transferFormValues(state, data, oldCorp, newCorp);
+            pipe(
+                corpora,
+                List.forEach(([oldCorp, newCorp], i) => transferFn(oldCorp, newCorp, i))
+            );
+            state.alignedCorporaVisible = data.alignedCorporaVisible;
             state.supportedWidgets = determineSupportedWidgets(
                 state.corpora,
                 state.queryTypes,
@@ -827,14 +822,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 state.includeEmptyValues[corpname] = false;
             }
             if (!Dict.hasKey(corpname, state.defaultAttrValues)) {
-                state.defaultAttrValues[corpname] = state.queryTypes[corpname] === 'advanced' ?
-                    'word' : '';
+                state.defaultAttrValues[corpname] =
+                        state.queryTypes[corpname] === 'advanced' ||
+                            List.empty(state.simpleQueryAttrSeq)  ? 'word' : '';
             }
             state.supportedWidgets = determineSupportedWidgets(state.corpora, state.queryTypes,
                 state.tagBuilderSupport, state.isAnonymousUser);
 
         } else {
-            // TODO error
+            throw new Error(`adding unknown corpus ${corpname}`)
         }
     }
 

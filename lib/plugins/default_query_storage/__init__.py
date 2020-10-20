@@ -112,7 +112,6 @@ class QueryStorage(AbstractQueryStorage):
             ans.update(data)
             form_data = edata['lastop_form']
             main_corp = edata['corpora'][0]
-
             if form_data['form_type'] == 'query':
                 ans['query_type'] = form_data['curr_query_types'][main_corp]
                 ans['query'] = form_data['curr_queries'][main_corp]
@@ -126,12 +125,12 @@ class QueryStorage(AbstractQueryStorage):
                 ans['aligned'] = []
                 for aitem in edata['corpora'][1:]:
                     ans['aligned'].append(dict(corpname=aitem,
-                                               query=form_data['curr_queries'][aitem],
-                                               query_type=form_data['curr_query_types'][aitem],
-                                               default_attr=form_data['curr_default_attr_values'][aitem],
-                                               lpos=form_data['curr_lpos_values'][aitem],
-                                               qmcase=form_data['curr_qmcase_values'][aitem],
-                                               pcq_pos_neg=form_data['curr_pcq_pos_neg_values'][aitem],
+                                               query=form_data['curr_queries'].get(aitem),
+                                               query_type=form_data['curr_query_types'].get(aitem),
+                                               default_attr=form_data['curr_default_attr_values'].get(aitem),
+                                               lpos=form_data['curr_lpos_values'].get(aitem),
+                                               qmcase=form_data['curr_qmcase_values'].get(aitem),
+                                               pcq_pos_neg=form_data['curr_pcq_pos_neg_values'].get(aitem),
                                                include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
             elif form_data['form_type'] == 'filter':
                 ans.update(form_data)

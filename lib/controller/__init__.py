@@ -308,8 +308,6 @@ class Controller(object):
         updated URL
         """
         import urllib.parse
-        import urllib.request
-        import urllib.parse
         import urllib.error
 
         parsed_url = list(urllib.parse.urlparse(self.get_current_url()))
