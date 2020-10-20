@@ -208,6 +208,7 @@ export interface FirstQueryFormModelSwitchPreserve {
     matchCaseValues:{[key:string]:boolean};
     queries:{[key:string]:string};
     includeEmptyValues:{[key:string]:boolean}; // applies only for aligned languages
+    alignedCorporaVisible:boolean;
 }
 
 
@@ -222,7 +223,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
-            props:QueryFormProperties) {
+            props:QueryFormProperties
+    ) {
+
         const corpora = props.corpora;
         const queryTypes = pipe(
             props.corpora,
@@ -348,7 +351,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             isBusy: false,
             cursorPos: 0,
             simpleQueryAttrSeq: props.simpleQueryAttrSeq,
-            alignedCorporaVisible: false
+            alignedCorporaVisible: List.size(corpora) > 1
         });
         this.setUserValues(this.state, props);
 
@@ -484,23 +487,17 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.addActionHandler<Actions.QueryInputMakeCorpusPrimary>(
             ActionName.QueryInputMakeCorpusPrimary,
             action => {
-                this.suspend({}, (action, syncData) => {
-                    return action.name === ActionName.QueryContextFormPrepareArgsDone ?
-                        null : syncData;
-
-                }).subscribe(
-                    (wAction:Actions.QueryContextFormPrepareArgsDone) => {
-                        this.changeState(state => {
-                            this.makeCorpusPrimary(state, action.payload.corpname);
-                        });
-                        window.location.href = this.pageModel.createActionUrl(
-                            this.state.currentAction,
-                            this.state.currentAction === 'query' ?
-                            [['corpname', action.payload.corpname]] :
-                            Dict.toEntries(this.createSubmitArgs(wAction.payload.data, 0))
-                        );
+                const corpora = this.state.corpora.slice()
+                List.removeValue(action.payload.corpname, corpora);
+                corpora.unshift(action.payload.corpname);
+                dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                    name: GlobalActionName.SwitchCorpus,
+                        payload: {
+                        corpora: corpora,
+                        subcorpus: '',
+                        changePrimaryCorpus: true
                     }
-                );
+                });
             }
         );
 
@@ -581,6 +578,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             action.payload.data[this.getRegistrationId()] as
                                 FirstQueryFormModelSwitchPreserve,
                             action.payload.corpora,
+                            action.payload.changePrimaryCorpus
                         );
                     });
                 }
@@ -661,29 +659,43 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             lposValues: {...state.lposValues},
             matchCaseValues: {...state.matchCaseValues},
             queries: {...state.queries},
-            includeEmptyValues: {...state.includeEmptyValues}
+            includeEmptyValues: {...state.includeEmptyValues},
+            alignedCorporaVisible: state.alignedCorporaVisible
         };
+    }
+
+    private transferFormValues(
+        state:FirstQueryFormModelState,
+        data:FirstQueryFormModelSwitchPreserve,
+        oldCorp:string,
+        newCorp:string,
+        isAligned?:boolean
+    ) {
+        state.queries[newCorp] = data.queries[oldCorp];
+        state.queryTypes[newCorp] = data.queryTypes[oldCorp];
+        state.matchCaseValues[newCorp] = data.matchCaseValues[oldCorp];
+        if (isAligned) {
+            state.includeEmptyValues[newCorp] = data.includeEmptyValues[oldCorp];
+        }
     }
 
     private deserialize(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
-        corpora:Array<[string, string]>
+        corpora:Array<[string, string]>,
+        changePrimaryCorpus:boolean
     ):void {
         if (data) {
+            const transferFn:(oc:string, nc:string, i:number)=>void = changePrimaryCorpus ?
+                (oldCorp, _, i) =>
+                    this.transferFormValues(state, data, oldCorp, oldCorp, i > 0) :
+                (oldCorp, newCorp, _) =>
+                    this.transferFormValues(state, data, oldCorp, newCorp);
             pipe(
                 corpora,
-                List.forEach(
-                    ([oldCorp, newCorp], i) => {
-                        state.queries[newCorp] = data.queries[oldCorp];
-                        state.queryTypes[newCorp] = data.queryTypes[oldCorp];
-                        state.matchCaseValues[newCorp] = data.matchCaseValues[oldCorp];
-                        if (i > 0) {
-                            state.includeEmptyValues[newCorp] = data.includeEmptyValues[oldCorp];
-                        }
-                    }
-                )
+                List.forEach(([oldCorp, newCorp], i) => transferFn(oldCorp, newCorp, i))
             );
+            state.alignedCorporaVisible = data.alignedCorporaVisible;
             state.supportedWidgets = determineSupportedWidgets(
                 state.corpora,
                 state.queryTypes,
@@ -784,12 +796,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         )
     }
 
-    private makeCorpusPrimary(state:FirstQueryFormModelState, corpname:string):void {
-        List.removeValue(corpname, state.corpora);
-        state.corpora.unshift(corpname);
-        state.currentSubcorp = '';
-    }
-
     private addAlignedCorpus(state:FirstQueryFormModelState, corpname:string):void {
         if (!List.some(v => v === corpname, state.corpora) &&
                 List.some(x => x.n === corpname, state.availableAlignedCorpora)) {
@@ -803,6 +809,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             if (!Dict.hasKey(corpname, state.matchCaseValues)) {
                 state.matchCaseValues[corpname] = false;
             }
+            if (!Dict.hasKey(corpname, state.useRegexp)) {
+                state.useRegexp[corpname] = false;
+            }
             if (!Dict.hasKey(corpname, state.queryTypes)) {
                 state.queryTypes[corpname] = 'simple'; // TODO what about some session-stored stuff?
             }
@@ -813,14 +822,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 state.includeEmptyValues[corpname] = false;
             }
             if (!Dict.hasKey(corpname, state.defaultAttrValues)) {
-                state.defaultAttrValues[corpname] = state.queryTypes[corpname] === 'advanced' ?
-                    'word' : '';
+                state.defaultAttrValues[corpname] =
+                        state.queryTypes[corpname] === 'advanced' ||
+                            List.empty(state.simpleQueryAttrSeq)  ? 'word' : '';
             }
             state.supportedWidgets = determineSupportedWidgets(state.corpora, state.queryTypes,
                 state.tagBuilderSupport, state.isAnonymousUser);
 
         } else {
-            // TODO error
+            throw new Error(`adding unknown corpus ${corpname}`)
         }
     }
 

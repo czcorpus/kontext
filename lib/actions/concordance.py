@@ -551,10 +551,14 @@ class Actions(Querying):
                       (data.fc_pos_wsize[0], data.fc_pos_wsize[1], 1),
                       data.fc_pos_type)
 
-        for al_corpname in self.args.align:
+        for al_corpname in corpora[1:]:
+            self.args.align.append(al_corpname)
             if al_corpname in nopq and not int(data.curr_include_empty_values[al_corpname]):
                 self.args.q.append('X%s' % al_corpname)
-                self.args.align.append(al_corpname)
+            else:
+                self.args.q.append('x-%s' % al_corpname)
+                self.args.q.append('p0 0 1 []')
+                self.args.q.append('x-%s' % self.args.corpname)
         if len(corpora) > 1:
             self.args.viewmode = 'align'
 
