@@ -208,6 +208,7 @@ export interface FirstQueryFormModelSwitchPreserve {
     matchCaseValues:{[key:string]:boolean};
     queries:{[key:string]:string};
     includeEmptyValues:{[key:string]:boolean}; // applies only for aligned languages
+    alignedCorporaVisible:boolean;
 }
 
 
@@ -484,23 +485,17 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.addActionHandler<Actions.QueryInputMakeCorpusPrimary>(
             ActionName.QueryInputMakeCorpusPrimary,
             action => {
-                this.suspend({}, (action, syncData) => {
-                    return action.name === ActionName.QueryContextFormPrepareArgsDone ?
-                        null : syncData;
-
-                }).subscribe(
-                    (wAction:Actions.QueryContextFormPrepareArgsDone) => {
-                        this.changeState(state => {
-                            this.makeCorpusPrimary(state, action.payload.corpname);
-                        });
-                        window.location.href = this.pageModel.createActionUrl(
-                            this.state.currentAction,
-                            this.state.currentAction === 'query' ?
-                            [['corpname', action.payload.corpname]] :
-                            Dict.toEntries(this.createSubmitArgs(wAction.payload.data, 0))
-                        );
+                const corpora = this.state.corpora.slice()
+                List.removeValue(action.payload.corpname, corpora);
+                corpora.unshift(action.payload.corpname);
+                dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                    name: GlobalActionName.SwitchCorpus,
+                        payload: {
+                        corpora: corpora,
+                        subcorpus: '',
+                        changePrimaryCorpus: true
                     }
-                );
+                });
             }
         );
 
@@ -581,6 +576,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             action.payload.data[this.getRegistrationId()] as
                                 FirstQueryFormModelSwitchPreserve,
                             action.payload.corpora,
+                            action.payload.changePrimaryCorpus
                         );
                     });
                 }
@@ -661,29 +657,50 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             lposValues: {...state.lposValues},
             matchCaseValues: {...state.matchCaseValues},
             queries: {...state.queries},
-            includeEmptyValues: {...state.includeEmptyValues}
+            includeEmptyValues: {...state.includeEmptyValues},
+            alignedCorporaVisible: state.alignedCorporaVisible
         };
     }
 
     private deserialize(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
-        corpora:Array<[string, string]>
+        corpora:Array<[string, string]>,
+        changePrimaryCorpus:boolean
     ):void {
-        if (data) {
-            pipe(
-                corpora,
-                List.forEach(
-                    ([oldCorp, newCorp], i) => {
-                        state.queries[newCorp] = data.queries[oldCorp];
-                        state.queryTypes[newCorp] = data.queryTypes[oldCorp];
-                        state.matchCaseValues[newCorp] = data.matchCaseValues[oldCorp];
-                        if (i > 0) {
-                            state.includeEmptyValues[newCorp] = data.includeEmptyValues[oldCorp];
+        if (data) {    
+            if (changePrimaryCorpus) {
+                pipe(
+                    corpora,
+                    List.forEach(
+                        ([oldCorp, newCorp], i) => {
+                            state.queries[oldCorp] = data.queries[oldCorp];
+                            state.queryTypes[oldCorp] = data.queryTypes[oldCorp];
+                            state.matchCaseValues[oldCorp] = data.matchCaseValues[oldCorp];
+                            if (i > 0) {
+                                state.includeEmptyValues[oldCorp] = data.includeEmptyValues[oldCorp];
+                            }
                         }
-                    }
-                )
-            );
+                    )
+                );
+                state.alignedCorporaVisible = data.alignedCorporaVisible;
+            
+            } else {
+                pipe(
+                    corpora,
+                    List.forEach(
+                        ([oldCorp, newCorp], i) => {
+                            state.queries[newCorp] = data.queries[oldCorp];
+                            state.queryTypes[newCorp] = data.queryTypes[oldCorp];
+                            state.matchCaseValues[newCorp] = data.matchCaseValues[oldCorp];
+                            if (i > 0) {
+                                state.includeEmptyValues[newCorp] = data.includeEmptyValues[oldCorp];
+                            }
+                        }
+                    )
+                );
+            }
+            
             state.supportedWidgets = determineSupportedWidgets(
                 state.corpora,
                 state.queryTypes,
@@ -784,12 +801,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         )
     }
 
-    private makeCorpusPrimary(state:FirstQueryFormModelState, corpname:string):void {
-        List.removeValue(corpname, state.corpora);
-        state.corpora.unshift(corpname);
-        state.currentSubcorp = '';
-    }
-
     private addAlignedCorpus(state:FirstQueryFormModelState, corpname:string):void {
         if (!List.some(v => v === corpname, state.corpora) &&
                 List.some(x => x.n === corpname, state.availableAlignedCorpora)) {
@@ -802,6 +813,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
             if (!Dict.hasKey(corpname, state.matchCaseValues)) {
                 state.matchCaseValues[corpname] = false;
+            }
+            if (!Dict.hasKey(corpname, state.useRegexp)) {
+                state.useRegexp[corpname] = false;
             }
             if (!Dict.hasKey(corpname, state.queryTypes)) {
                 state.queryTypes[corpname] = 'simple'; // TODO what about some session-stored stuff?

@@ -82,7 +82,6 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
                 });
             }
         ).sideEffectAlsoOn(
-            ActionName.QueryInputMakeCorpusPrimary,
             ActionName.BranchQuery
         );
 
