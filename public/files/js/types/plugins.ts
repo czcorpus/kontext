@@ -96,7 +96,7 @@ export namespace PluginInterfaces {
         }
 
         export interface Factory {
-            (pluginApi:IPluginApi):IPlugin;
+            (pluginApi:IPluginApi, initToolbar:boolean):IPlugin;
         }
     }
 

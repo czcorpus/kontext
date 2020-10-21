@@ -70,8 +70,10 @@ export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {
     }
 }
 
-const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi) => {
-    localeInit();
+const create:PluginInterfaces.ApplicationBar.Factory = (pluginApi, initToolbar) => {
+    if (initToolbar) {
+        localeInit();
+    }
     return new LindatAppBar(pluginApi.dispatcher());
 };
 
