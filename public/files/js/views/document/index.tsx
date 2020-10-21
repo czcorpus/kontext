@@ -512,7 +512,7 @@ export function init(
 
     // ------------------------------ <FadeInFrame /> -----------------------------
 
-    const FadeInFrame:React.SFC<CoreViews.FadeInFrame.Props> = (props) => {
+    const FadeInFrame:React.FC<CoreViews.FadeInFrame.Props> = (props) => {
 
         return (
             <div style={{opacity: props.opacity}}>
@@ -523,7 +523,7 @@ export function init(
 
     // ------------------------------ <Messages /> -----------------------------
 
-    const Messages:React.SFC<CoreViews.Messages.Props & MessageModelState> = (props) => (
+    const Messages:React.FC<CoreViews.Messages.Props & MessageModelState> = (props) => (
 
         List.empty(props.messages) ?
             null :
@@ -536,7 +536,7 @@ export function init(
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
-    const CorpnameInfoTrigger:React.SFC<CoreViews.CorpnameInfoTrigger.Props> = (props) => {
+    const CorpnameInfoTrigger:React.FC<CoreViews.CorpnameInfoTrigger.Props> = (props) => {
 
         const handleCorpnameClick = () => {
             dispatcher.dispatch<Actions.OverviewCorpusInfoRequired>({
@@ -605,7 +605,7 @@ export function init(
 
     // ------------------------ <IssueReportingLink /> --------------------------------
 
-    const IssueReportingLink:React.SFC<CoreViews.IssueReportingLink.Props> = (props) => {
+    const IssueReportingLink:React.FC<CoreViews.IssueReportingLink.Props> = (props) => {
         if (props.type === 'static') {
             return (
                 <a href={props.url} target={props.blank_window ? '_blank' : '_self'}
@@ -625,7 +625,7 @@ export function init(
 
     // ------------------------ <AjaxLoaderImage /> --------------------------------
 
-    const AjaxLoaderImage:React.SFC<CoreViews.AjaxLoaderImage.Props> = (props) => {
+    const AjaxLoaderImage:React.FC<CoreViews.AjaxLoaderImage.Props> = (props) => {
         return <img
                     className={props.htmlClass ? props.htmlClass : undefined}
                     src={he.createStaticUrl('img/ajax-loader.gif')}
@@ -635,7 +635,7 @@ export function init(
 
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
 
-    const AjaxLoaderBarImage:React.SFC<CoreViews.AjaxLoaderBarImage.Props> = (props) => {
+    const AjaxLoaderBarImage:React.FC<CoreViews.AjaxLoaderBarImage.Props> = (props) => {
         return <img
                 className={props.htmlClass ? props.htmlClass : undefined}
                 src={he.createStaticUrl('img/ajax-loader-bar.gif')}
@@ -645,7 +645,7 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
-    const Shortener:React.SFC<CoreViews.Shortener.Props> = (props) => {
+    const Shortener:React.FC<CoreViews.Shortener.Props> = (props) => {
         const limit = props.limit ? props.limit : 50;
         return <span title={props.text.length > limit ? props.text : null} className={props.className}>
             {props.text.length > limit ? props.text.substr(0, props.limit) + '\u2026' : props.text}
@@ -654,7 +654,7 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
-    const DelItemIcon:React.SFC<CoreViews.DelItemIcon.Props> = (props) => {
+    const DelItemIcon:React.FC<CoreViews.DelItemIcon.Props> = (props) => {
         return <a className={`DelItemIcon ${props.disabled ? 'disabled' : ''} ${props.className}`}
                         onClick={props.onClick && !props.disabled ? props.onClick : undefined}
                         title={props.title}>

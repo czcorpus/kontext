@@ -78,22 +78,41 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.KwicRangeSe
             return `pos${customClass ? ' ' + customClass : ''}`;
         };
 
-        const validateInput = (input:Kontext.FormValue<string>, rngType:'left'|'right'):Kontext.FormValue<string> => {
+        const validateInput = (
+            input:Kontext.FormValue<string>,
+            rngType:'left'|'right'
+        ):Kontext.FormValue<string> => {
+
             if (input.value === '') {
                 return input;
             }
             const val = parseInt(input.value);
             if (isNaN(val)) {
-                return Kontext.updateFormValue(input, {isInvalid: true});
+                return Kontext.updateFormValue(input, {
+                    isInvalid: true,
+                    errorDesc: he.translate('global__invalid_number_format')
+                });
             }
             if (rngType === 'left') {
                 if (val >= -props.rangeSize || val >= 0) {
-                    return Kontext.updateFormValue(input, {isInvalid: true});
+                    return Kontext.updateFormValue(input, {
+                        isInvalid: true,
+                        errorDesc: he.translate(
+                            'global__number_must_be_less_than_{val}',
+                            {val: -props.rangeSize}
+                        )
+                    });
                 }
             }
             if (rngType === 'right') {
                 if (val <= props.rangeSize || val <= 0) {
-                    return Kontext.updateFormValue(input, {isInvalid: true});
+                    return Kontext.updateFormValue(input, {
+                        isInvalid: true,
+                        errorDesc: he.translate(
+                            'global__number_must_be_greater_than_{val}',
+                            {val: props.rangeSize}
+                        )
+                    });
                 }
             }
             return Kontext.updateFormValue(input, {isInvalid: false});
@@ -132,10 +151,12 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.KwicRangeSe
         return (
             <div className="KwicRangeSelector">
                 <div className="items" onClick={handleClick}>
-                    <div className={`${state.leftRange === parseInt(state.leftInput.value) ? 'selected' : null}`}>
+                    <div className={`${state.leftRange === parseInt(state.leftInput.value) ? 'selected' : null}`}
+                            title={state.leftInput.isInvalid ? state.leftInput.errorDesc : null}>
                         <input className={`manual-range${state.leftInput.isInvalid ? ' invalid' : ''}`}
                             type="text" value={state.leftInput.value}
-                            onChange={handleLeftInputChange} />
+                            onChange={handleLeftInputChange}
+                            onFocus={handleLeftInputChange} />
                     </div>
                     <div>{'\u2026'}</div>
                     {List.repeat(
@@ -167,10 +188,12 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.KwicRangeSe
                         props.rangeSize
                     )}
                     <div>{'\u2026'}</div>
-                    <div className={`${state.rightRange === parseInt(state.rightInput.value) ? 'selected' : null}`}>
+                    <div className={`${state.rightRange === parseInt(state.rightInput.value) ? 'selected' : null}`}
+                            title={state.rightInput.isInvalid ? state.rightInput.errorDesc : null}>
                         <input className={`manual-range${state.rightInput.isInvalid ? ' invalid' : ''}`}
                             type="text" value={state.rightInput.value}
-                            onChange={handleRightInputChange} />
+                            onChange={handleRightInputChange}
+                            onFocus={handleRightInputChange} />
                     </div>
                 </div>
             </div>

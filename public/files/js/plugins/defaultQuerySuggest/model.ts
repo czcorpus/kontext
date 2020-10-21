@@ -21,7 +21,7 @@
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { Kontext } from '../../types/common';
-import { StatelessModel, IActionDispatcher, SEDispatcher, Action } from 'kombo';
+import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
