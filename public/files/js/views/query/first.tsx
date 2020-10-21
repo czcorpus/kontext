@@ -259,24 +259,22 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     // -------- <SelectedTextTypesLite /> ---------------------------
 
 
-    const shortenValues = (values:Array<any>, joinChar:string) => {
+    const shortenValues = (values:Array<React.ReactElement>) => {
 
         if (typeof(values) === 'string') {
             return values;
         }
 
-        let ans:Array<string>;
+        let ans:Array<React.ReactElement>;
         if (values.length > 5) {
             ans = values.slice(0, 2);
-            ans.push('\u2026');
+            ans.push(<span>{'\u2026'}</span>);
             ans = ans.concat(values.slice(values.length - 2, values.length));
 
         } else {
             ans = values;
         }
-        return ans
-            .map(item => item.substr(0, 1) !== '@' ? item : item.substr(1))
-            .join(joinChar);
+        return ans;
     };
 
     const SelectedTextTypesLite:React.FC<TextTypesModelState> = (props) => {
@@ -284,15 +282,21 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         function renderSelections(sel:TextTypes.AnyTTSelection, i:number) {
             switch (sel.type) {
                 case 'full':
-                    return <span key={i}>
+                    const selValues = pipe(
+                        sel.values,
+                        List.filter(v => v.selected),
+                        List.map(v => <span key={v.value} className="attr-val">{v.value}</span>)
+                    );
+                    return <span>
                         {i > 0 ? ', ' : ''}
                         <strong>{sel.name}</strong>
-                        {'\u00a0\u2208\u00a0'}
-                        {'{' + shortenValues(List.map(v => v.value, sel.values), ', ') + '}'}
+                        {'\u00a0\u2208\u00a0{'}
+                        {shortenValues(selValues)}
+                        {'}'}
                         <br />
                     </span>;
                 case 'regexp':
-                    return <span key={i}>
+                    return <span>
                         {i > 0 ? ', ' : ''}
                         <strong>{sel.name}</strong>
                         {'\u00a0\u2208\u00a0'}
@@ -300,7 +304,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         <br />
                     </span>;
                 case 'text':
-                    return <span key={i}>{sel.textFieldValue}</span>
+                    return <span>{sel.textFieldValue}</span>;
             }
         }
 
@@ -315,11 +319,17 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         <ul>
                             {pipe(
                                 props.attributes,
-                                List.filter(v => TTSelOps.hasUserChanges(v)),
-                                List.map(renderSelections)
-                            )}
+                                List.filter(attr => TTSelOps.hasUserChanges(attr)),
+                                List.map(
+                                    (attr, i) => (
+                                        <li key={`${attr.name}:${i}`}>
+                                            {renderSelections(attr, i)}
+                                        </li>
+                                    )
+                                ))
+                            }
                         </ul>
-                        <p className="hint">
+                        <p className="hint note">
                             ({he.translate('query__chosen_texts_cannot_be_changed')})
                         </p>
                     </div>
