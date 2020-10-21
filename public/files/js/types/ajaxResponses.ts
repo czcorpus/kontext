@@ -20,7 +20,7 @@
 
 import {Kontext, TextTypes} from '../types/common';
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../models/concordance/common';
-import { QueryType } from '../models/query/common';
+import { CtxLemwordType, QueryType } from '../models/query/common';
 
 // TODO !! this should be broken and moved into respective modules
 
@@ -126,6 +126,12 @@ export namespace AjaxResponse {
         bib_mapping:TextTypes.BibMapping;
         has_lemma:{[corpname:string]:boolean};
         tagset_docs:{[corpname:string]:string};
+        fc_lemword_type:CtxLemwordType;
+        fc_lemword_wsize:[number, number];
+        fc_lemword:string;
+        fc_pos_type:CtxLemwordType;
+        fc_pos_wsize:[number, number];
+        fc_pos:Array<string>;
     }
 
     export function isQueryFormArgs(args:ConcFormArgs):args is QueryFormArgs {

@@ -221,29 +221,14 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
 
     private openQueryForm(idx:number):void { // TODO this does not work
         const item = List.find(v => v.idx === idx, this.state.data);
-        const args = new MultiDict();
-        args.set('corpname', item.corpname);
-        args.set('usesubcorp', item.subcorpname);
-        args.set('query', item.query);
-        args.set('qtype', item.query_type);
-        args.replace('align', List.map(v => v.corpname, item.aligned));
-        args.set('lpos', item.lpos);
-        args.set('qmcase', item.qmcase ? '1' : '0');
-        args.set('default_attr', item.default_attr);
-        args.set('pcq_pos_neg', item.pcq_pos_neg);
-        List.forEach(v => {
-            args.set(`query_${v.corpname}`, v.query);
-            args.set(`qtype_${v.corpname}`, v.query_type);
-            args.set(`lpos_${v.corpname}`, v.lpos);
-            args.set(`qmcase_${v.corpname}`, v.qmcase ? '1' : '0');
-            args.set(`default_attr_${v.corpname}`, v.default_attr);
-            args.set(`pcq_pos_neg_${v.corpname}`, v.pcq_pos_neg);
-        }, item.aligned);
-        Dict.forEach((v, k) => {
-            const tt = item.selected_text_types[k];
-            args.replace(`sca_${k}`, Array.isArray(tt) ? tt : [tt]);
-        }, item.selected_text_types);
-        window.location.href = this.pluginApi.createActionUrl('query', args);
+        window.location.href = this.pluginApi.createActionUrl(
+            'query',
+            [
+                ['corpname', item.corpname],
+                ['usesubcorp', item.subcorpname],
+                ['qkey', `${item.query_id}:${item.created}`]
+            ]
+        );
     }
 
     private performLoadAction():void {

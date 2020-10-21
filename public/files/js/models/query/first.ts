@@ -112,7 +112,13 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
             selected_text_types: {},
             bib_mapping: {},
             has_lemma: {},
-            tagset_docs:{}
+            tagset_docs: {},
+            fc_lemword_type: 'none',
+            fc_lemword_wsize: [-1, 1],
+            fc_lemword: '',
+            fc_pos_type: 'none',
+            fc_pos_wsize: [-1, 1],
+            fc_pos: []
         };
     }
 };

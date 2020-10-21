@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
 #
@@ -18,6 +18,7 @@ import re
 import logging
 
 import plugins
+from .error import ArgumentMappingError
 
 
 class ConcFormArgs(object):
@@ -149,10 +150,10 @@ class QueryFormArgs(ConcFormArgs):
 
         # context filter
         self.fc_lemword_type = 'all'
-        self.fc_lemword_wsize = (5, 5)
+        self.fc_lemword_wsize = (-5, 5)
         self.fc_lemword = ''
         self.fc_pos_type = 'all'
-        self.fc_pos_wsize = 5
+        self.fc_pos_wsize = (-5, 5)
         self.fc_pos = []
 
         self.selected_text_types: Dict[str, str] = {}
@@ -162,20 +163,34 @@ class QueryFormArgs(ConcFormArgs):
         for corp in corpora:
             self._add_corpus_metadata(corp)
 
-    def update_by_request_args(self, args):
-        corp = args['corpname']
-        if 'qtype' in args:
-            self.curr_query_types[corp] = args['qtype']
-        if 'query' in args:
-            self.curr_queries[corp] = args['query']
-        if 'pcq_pos_neg' in args:
-            self.curr_pcq_pos_neg_values[corp] = args['pcq_pos_neg']
-        if 'qmcase' in args:
-            self.curr_qmcase_values[corp] = args['qmcase']
-        if 'default_attr' in args:
-            self.curr_default_attr_values[corp] = args['default_attr']
+    def update_by_stored_query(self, data):
+        self._test_data_type(data, 'form_type', 'query')
+        self.form_type = data['form_type']
+        self.curr_queries = data['curr_queries']
+        self.curr_query_types = data['curr_query_types']
+        self.curr_pcq_pos_neg_values = data['curr_pcq_pos_neg_values']
+        self.curr_include_empty_values = data['curr_include_empty_values']
+        self.curr_lpos_values = data['curr_lpos_values']
+        self.curr_qmcase_values = data['curr_qmcase_values']
+        self.curr_default_attr_values = data['curr_default_attr_values']
+        self.curr_use_regexp_values = data['curr_use_regexp_values']
+        self.fc_lemword_type = data['fc_lemword_type']
+        self.fc_lemword_wsize = data['fc_lemword_wsize']
+        self.fc_lemword = data['fc_lemword']
+        self.fc_pos_type = data['fc_pos_type']
+        self.fc_pos_wsize = data['fc_pos_wsize']
+        self.fc_pos = data['fc_pos']
+        self.selected_text_types = data['selected_text_types']
+        self.bib_mapping = data['bib_mapping']
+
+    @staticmethod
+    def _test_data_type(data, type_key, type_id):
+        data_type = data.get(type_key)
+        if data_type != type_id:
+            raise ArgumentMappingError(f'Invalid form data type "{data_type}" for a query form mapping.')
 
     def update_by_user_query(self, data, bib_mapping):
+        self._test_data_type(data, 'type', 'concQueryArgs')
         for query in data['queries']:
             corp = query['corpname']
             self.curr_query_types[corp] = query['qtype']

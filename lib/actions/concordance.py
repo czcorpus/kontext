@@ -356,7 +356,10 @@ class Actions(Querying):
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
             active_only=False), persist=False)
-        qf_args.update_by_request_args(request.args)
+        with plugins.runtime.QUERY_STORAGE as qs:
+            qdata = qs.find_by_qkey(request.args.get('qkey'))
+            if qdata is not None:
+                qf_args.update_by_stored_query(qdata.get('lastop_form', {}))
         # TODO xx reuse selections from last submit
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)

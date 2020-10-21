@@ -405,7 +405,10 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel
         );
-        this.queryModels.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
+        this.queryModels.queryContextModel = new QueryContextModel(
+            this.layoutModel.dispatcher,
+            queryFormArgs
+        );
         this.queryModels.saveAsFormModel = new QuerySaveAsFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
