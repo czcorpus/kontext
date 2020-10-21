@@ -324,13 +324,16 @@ export class QueryPage {
                 this.layoutModel.dispatcher,
                 this.layoutModel
             );
-            this.queryContextModel = new QueryContextModel(this.layoutModel.dispatcher);
-            const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
 
+            const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
             const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
                 'ConcFormsArgs'
             );
             const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
+            this.queryContextModel = new QueryContextModel(
+                this.layoutModel.dispatcher,
+                queryFormArgs
+            );
             const ttAns = this.createTTViews(queryFormArgs);
 
             const qsPlugin = queryStoragePlugin(

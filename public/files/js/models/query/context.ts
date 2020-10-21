@@ -23,6 +23,7 @@ import { Actions, ActionName } from './actions';
 import { CtxLemwordType } from './common';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { AjaxResponse } from '../../types/ajaxResponses';
 
 
 
@@ -44,15 +45,15 @@ export interface QueryContextModelState {
 export class QueryContextModel extends StatelessModel<QueryContextModelState>
     implements IUnregistrable {
 
-    constructor(dispatcher:IFullActionControl) {
+    constructor(dispatcher:IFullActionControl, values:AjaxResponse.QueryFormArgs) {
         super(dispatcher, {
             formData: {
-                fc_lemword_wsize: [-1, 1],
-                fc_lemword: '',
-                fc_lemword_type: 'all',
-                fc_pos_wsize: [-1, 1],
-                fc_pos: [],
-                fc_pos_type: 'all'
+                fc_lemword_wsize: values.fc_lemword_wsize,
+                fc_lemword: values.fc_lemword,
+                fc_lemword_type: values.fc_lemword_type,
+                fc_pos_wsize: values.fc_pos_wsize,
+                fc_pos: values.fc_pos,
+                fc_pos_type: values.fc_pos_type
             }
         });
 

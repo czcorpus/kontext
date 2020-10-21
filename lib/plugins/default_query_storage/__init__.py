@@ -219,6 +219,14 @@ class QueryStorage(AbstractQueryStorage):
                 ac['human_corpname'] = corp_cache[ac['corpname']].get_conf('NAME')
         return tmp
 
+    def find_by_qkey(self, query_key):
+        if query_key:
+            items = query_key.split(':')
+            # The timestamp info (the stuff atfter the colon char) is formal here.
+            # The plug-in should work if only a query storage ID is provided too.
+            return self.db.get(f'concordance:{items[0]}')
+        return None
+
     def delete_old_records(self, user_id):
         """
         Deletes records older than ttl_days. Named records are
