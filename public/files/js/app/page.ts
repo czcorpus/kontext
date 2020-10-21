@@ -781,7 +781,11 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.corpViewOptionsModel
             );
             this.asyncTaskChecker.init();
-            this.appBarPlugin = applicationBar(this.pluginApi());
+            
+            const toolbarInitialized = this.getConf('toolbarInitialized') || false;          
+            this.appBarPlugin = applicationBar(this.pluginApi(), !toolbarInitialized);
+            this.setConf('toolbarInitialized', true);
+
             footerBar(this.pluginApi());
 
             const auth:PluginInterfaces.Auth.IPlugin = authPlugin(this.pluginApi());
