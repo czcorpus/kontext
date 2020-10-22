@@ -1420,5 +1420,32 @@ ul.tabs {
     color: @color-light-grey;
 }
 
+
+.ExpandableArea {
+
+    .controls {
+
+        .ExpandButton {
+            margin-right: 0.7em;
+        }
+
+        > a {
+            color: @color-logo-blue;
+            text-decoration: none;
+        }
+
+        > a:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.ExpandableArea.readonly {
+
+    .controls span {
+        color: @color-light-text;
+    }
+}
+
 @import "./layoutMobile.less";
 @import "~custom-styles/theme.less";

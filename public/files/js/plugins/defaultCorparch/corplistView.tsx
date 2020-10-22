@@ -33,19 +33,19 @@ export interface CorplistViews {
 
     CorplistTable:React.ComponentClass<{}, CorplistTableModelState>;
 
-    CorplistHeader:React.SFC<{
+    CorplistHeader:React.FC<{
 
     }>;
 
     FilterForm:React.ComponentClass<{}, CorplistTableModelState>;
 
-    FavStar:React.SFC<{
+    FavStar:React.FC<{
         corpusId:string;
         corpusName:string;
         favId:string;
     }>;
 
-    CorpKeywordLink:React.SFC<{
+    CorpKeywordLink:React.FC<{
         keyword:string;
         label:string;
     }>;
@@ -54,7 +54,7 @@ export interface CorplistViews {
 export interface CorplistViewModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    CorpusInfoBox:React.SFC<CorpusInfoBoxProps>;
+    CorpusInfoBox:React.FC<CorpusInfoBoxProps>;
     listModel:CorplistTableModel;
 }
 
@@ -70,7 +70,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     // -------------------------------- <CorplistHeader /> -----------------
 
 
-    const CorplistHeader:React.SFC<{}> = (props) => {
+    const CorplistHeader:React.FC<{}> = (props) => {
 
         return (
             <tr>
@@ -107,7 +107,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A single dataset row
      */
-    const CorplistRow:React.SFC<{
+    const CorplistRow:React.FC<{
         enableUserActions:boolean;
         row:CorplistItem;
         detailClickHandler:(corpId:string)=>void;
@@ -166,7 +166,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      * Provides a link allowing to load more items with current
      * query and filter settings.
      */
-    const ListExpansion:React.SFC<{
+    const ListExpansion:React.FC<{
         offset:number;
 
     }> = (props) => {
@@ -291,7 +291,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A keyword link from the filter form
      */
-    const KeywordLink:React.SFC<{
+    const KeywordLink:React.FC<{
         keyword:KeywordInfo;
         iconFile?:string;
 
@@ -340,7 +340,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A keyword-like link to reset currently set keywords
      */
-    const ResetLink:React.SFC<{
+    const ResetLink:React.FC<{
 
     }> = (props) => {
 
@@ -363,7 +363,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A form fieldset containing all the available keywords
      */
-    const KeywordsField:React.SFC<{
+    const KeywordsField:React.FC<{
         label:string;
         keywords:Array<KeywordInfo>;
         favouritesOnly:boolean;
@@ -375,34 +375,35 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         };
 
         return (
-            <fieldset className="keywords">
-                <legend>{props.label}</legend>
-                <div className="buttons">
-                    {!props.anonymousUser ?
-                        <KeywordLink
-                            key={'favorites'}
-                            keyword={{
-                                ident: 'favourites',
-                                label: he.translate('defaultCorparch__favourites_filter_label'),
-                                color: 'transparent',
-                                visible: true,
-                                selected: props.favouritesOnly}}
-                            iconFile={he.createStaticUrl('img/starred.svg')} /> :
-                        null
-                    }
-                    {pipe(
-                        props.keywords,
-                        List.filter(v => v.visible),
-                        List.map(
-                            (keyword, i) => <KeywordLink key={i} keyword={keyword} />
-                        )
-                    )}
-                    {hasSelectedKeywords() || props.favouritesOnly ? <ResetLink  /> : null}
-                    <div className="inline-label hint">
-                        ({he.translate('defaultCorparch__hold_ctrl_for_multiple')})
+            <layoutViews.ExpandableArea initialExpanded={true} alwaysExpanded={true} label={props.label}>
+                <fieldset className="keywords">
+                    <div className="buttons">
+                        {!props.anonymousUser ?
+                            <KeywordLink
+                                key={'favorites'}
+                                keyword={{
+                                    ident: 'favourites',
+                                    label: he.translate('defaultCorparch__favourites_filter_label'),
+                                    color: 'transparent',
+                                    visible: true,
+                                    selected: props.favouritesOnly}}
+                                iconFile={he.createStaticUrl('img/starred.svg')} /> :
+                            null
+                        }
+                        {pipe(
+                            props.keywords,
+                            List.filter(v => v.visible),
+                            List.map(
+                                (keyword, i) => <KeywordLink key={i} keyword={keyword} />
+                            )
+                        )}
+                        {hasSelectedKeywords() || props.favouritesOnly ? <ResetLink  /> : null}
+                        <div className="inline-label hint">
+                            ({he.translate('defaultCorparch__hold_ctrl_for_multiple')})
+                        </div>
                     </div>
-                </div>
-            </fieldset>
+                </fieldset>
+            </layoutViews.ExpandableArea>
         );
     };
 
@@ -411,7 +412,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * An input to specify minimum corpus size
      */
-    const MinSizeInput:React.SFC<{
+    const MinSizeInput:React.FC<{
         value:string;
         currFilter:Filters;
 
@@ -434,7 +435,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * An input to specify maximum corpus size
      */
-    const MaxSizeInput:React.SFC<{
+    const MaxSizeInput:React.FC<{
         value:string;
         currFilter:Filters;
 
@@ -497,52 +498,29 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A fieldset containing non-keyword filter inputs.
      */
-    class FilterInputFieldset extends React.Component<{
+    const FilterInputFieldset:React.FC<{
         filters:Filters;
-    },
-    {
-        expanded:boolean;
-    }> {
-
-        constructor(props) {
-            super(props);
-            this._handleLegendClick = this._handleLegendClick.bind(this);
-            this.state = {expanded: false};
-        }
-
-        _handleLegendClick() {
-            const newState = he.cloneState(this.state);
-            newState.expanded = !this.state.expanded;
-            this.setState(newState);
-        }
-
-        render() {
-            return (
-                <div className="advanced-filter">
-                    <layoutViews.ExpandButton isExpanded={this.state.expanded} onClick={this._handleLegendClick}/>
-                    <a onClick={this._handleLegendClick}>{he.translate('defaultCorparch__advanced_filters')}</a>
-                    {
-                        this.state.expanded ?
-                        <fieldset>
-                            <span>{he.translate('defaultCorparch__size_from')}: </span>
-                            <MinSizeInput value={this.props.filters.minSize} currFilter={this.props.filters}  />
-                            <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
-                            <MaxSizeInput value={this.props.filters.maxSize} currFilter={this.props.filters}  />
-                            <div className="hint">
-                                {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
-                            </div>
-                            <p>
-                                <span>
-                                {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
-                                <NameSearchInput value={this.props.filters.name} currFilter={this.props.filters} />
-                            </p>
-                        </fieldset> :
-                        null
-                    }
-                </div>
-            );
-        }
-    }
+    }> = (props) => (
+        <div className="advanced-filter">
+            <layoutViews.ExpandableArea initialExpanded={true}
+                    label={he.translate('defaultCorparch__advanced_filters')}>
+                <fieldset>
+                    <span>{he.translate('defaultCorparch__size_from')}: </span>
+                    <MinSizeInput value={props.filters.minSize} currFilter={props.filters}  />
+                    <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
+                    <MaxSizeInput value={props.filters.maxSize} currFilter={props.filters}  />
+                    <div className="hint">
+                        {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
+                    </div>
+                    <p>
+                        <span>
+                        {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
+                        <NameSearchInput value={props.filters.name} currFilter={props.filters} />
+                    </p>
+                </fieldset>
+            </layoutViews.ExpandableArea>
+        </div>
+    );
 
     // -------------------------------- <FilterForm /> -----------------
 

@@ -373,6 +373,17 @@ export namespace CoreViews {
         export type Component = React.FC<Props>;
     }
 
+    export namespace ExpandableArea {
+
+        export interface Props {
+            initialExpanded:boolean;
+            label:string;
+            alwaysExpanded?:boolean;
+        }
+
+        export type Component = React.FC<Props>;
+    }
+
     export namespace KwicRangeSelector {
 
         export interface Props {
@@ -410,6 +421,7 @@ export namespace CoreViews {
         PlusButton:PlusButton.Component;
         Calendar:Calendar.Component;
         ExpandButton:ExpandButton.Component;
+        ExpandableArea:ExpandableArea.Component;
         KwicRangeSelector:KwicRangeSelector.Component;
     }
 }

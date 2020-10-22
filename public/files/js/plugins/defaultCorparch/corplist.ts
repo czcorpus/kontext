@@ -124,13 +124,11 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             ActionName.LoadDataDone,
             (state, action) => {
                 state.isBusy = false;
-                if (!action.error) {
-                    this.importData(state, action.payload.data);
-                }
-            },
-            (state, action, dispatch) => {
                 if (action.error) {
                     this.pluginApi.showMessage('error', action.error);
+
+                } else {
+                    this.importData(state, action.payload.data);
                 }
             }
         );
@@ -482,17 +480,17 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
         state.nextOffset = inData.nextOffset;
         state.filters = {
-            maxSize: inData.filters.maxSize,
-            minSize: inData.filters.minSize,
-            name: inData.filters.name
+            maxSize: inData.filters.maxSize || '',
+            minSize: inData.filters.minSize || '',
+            name: inData.filters.name || ''
         };
     }
 
     private extendData(state:CorplistTableModelState, data:CorplistDataResponse):void {
         state.filters = {
-            maxSize: data.filters.maxSize,
-            minSize: data.filters.minSize,
-            name: data.filters.name
+            maxSize: data.filters.maxSize || '',
+            minSize: data.filters.minSize || '',
+            name: data.filters.name || ''
         };
         state.nextOffset = data.nextOffset;
         state.rows = state.rows.concat(data.rows);
