@@ -126,38 +126,10 @@ section.corplist {
         }
     }
 
-    fieldset legend {
+    fieldset legend, .advanced-filter a {
         margin-left: 0.7em;
     }
 
-    fieldset.advanced-filter {
-
-        legend {
-            cursor: pointer;
-            background-image: url(../img/collapse.svg);
-            background-repeat: no-repeat;
-            background-position: 0 2pt;
-            padding-left: 15px;
-        }
-
-        legend:hover {
-            text-decoration: underline;
-            background-image: url(../img/collapse_s.svg);
-        }
-    }
-
-    fieldset.advanced-filter.closed {
-        border: none;
-
-        legend {
-            text-decoration: underline;
-            background-image: url(../img/expand.svg);
-        }
-
-        legend:hover {
-            background-image: url(../img/expand_s.svg);
-        }
-    }
 } // -- section.corplist
 
 @import "./layoutMobile.less";

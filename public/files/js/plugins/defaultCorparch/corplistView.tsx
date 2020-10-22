@@ -518,7 +518,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         render() {
             return (
-                <div>
+                <div className="advanced-filter">
                     <layoutViews.ExpandButton isExpanded={this.state.expanded} onClick={this._handleLegendClick}/>
                     <a onClick={this._handleLegendClick}>{he.translate('defaultCorparch__advanced_filters')}</a>
                     {
