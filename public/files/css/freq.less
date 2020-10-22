@@ -231,12 +231,6 @@ div.CTFlatFreqResultView {
     p, ul {
         line-height: normal;
     }
-
-    img.expand-collapse {
-        display: inline-block;
-        padding-right: 0.3em;
-        margin-left: 0.1em;
-    }
 }
 
 div.CTFreqResultView {
@@ -264,45 +258,43 @@ div.CTFreqResultView {
     div.toolbar {
         margin-bottom: 1em;
 
-        > form > fieldset.collapsed {
-            padding: 0 1em 0 1em;
-        }
-
-        > form > fieldset {
-
-            h3:first-child {
-                padding-top: 0;
-                margin-top: 0;
+        .options {
+            a {
+                margin-left: 0.7em;
+                color: @color-logo-blue;
+                text-decoration: none;
             }
-
-            > legend {
-
-                font-weight: bold;
-
-                > a.form-extension-switch {
-                    text-decoration: none;
-                    color: @color-default-text;
-                    background-position-y: 11pt;
-                }
+        
+            a:hover {
+                text-decoration: underline;
             }
-
-            > div > ul.items {
+        
+            ul.items {
                 list-style-type: none;
                 margin: 0;
                 padding: 0;
-
+        
                 > li {
                     padding: 0;
                     margin: 0 1em 0 0;
                     display: inline-block;
-
+        
                     ul.references {
                         list-style-type: circle;
                     }
                 }
             }
-
+        
+            fieldset {
+        
+                h3:first-child {
+                    padding-top: 0;
+                    margin-top: 0;
+                }
+        
+            }
         }
+
     }
 
     sup.hint {

@@ -312,75 +312,30 @@ export function init(
         }
 
         return (
-            <fieldset>
-                <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
-                <ul className="ComboActionsSelector">
-                    {props.canProvideIpm ?
+            <div className="options">
+                <layoutViews.ExpandButton isExpanded={true} />
+                <a>{he.translate('freq__ct_combo_actions_legend')}</a>
+                <fieldset>
+                    <ul className="ComboActionsSelector">
+                        {props.canProvideIpm ?
+                            <li>
+                                <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
+                                    {he.translate('freq__ct_combo_action_ipm_button')}
+                                </button>
+                            </li> : null
+                        }
                         <li>
-                            <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
-                                {he.translate('freq__ct_combo_action_ipm_button')}
+                            <button type="button" className={genClassName('abs')} value="abs" onClick={handleClick}>
+                                {he.translate('freq__ct_combo_action_abs_button')}
                             </button>
-                        </li> : null
-                    }
-                    <li>
-                        <button type="button" className={genClassName('abs')} value="abs" onClick={handleClick}>
-                            {he.translate('freq__ct_combo_action_abs_button')}
-                        </button>
-                    </li>
-                    <li>
-                        <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
-                    </li>
-                </ul>
-            </fieldset>
+                        </li>
+                        <li>
+                            <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
+                        </li>
+                    </ul>
+                </fieldset>
+            </div>
         );
-    };
-
-    // ------------------------- <ExpandActionLegend /> ----------------------
-
-    class ExpandActionLegend extends React.Component<{
-        isExpanded:boolean;
-        onClick:()=>void;
-    }, {
-        isMouseover:boolean;
-
-    }> {
-
-        constructor(props) {
-            super(props);
-            this.handleMouseout = this.handleMouseout.bind(this);
-            this.handleMouseover = this.handleMouseover.bind(this);
-            this.state = {isMouseover: false};
-        }
-
-        private handleMouseover():void {
-            this.setState({isMouseover: true});
-        }
-
-        private handleMouseout():void {
-            this.setState({isMouseover: false});
-        }
-
-        render() {
-            return (
-                <legend>
-                    {this.props.isExpanded ?
-                        <layoutViews.ImgWithHighlight src={he.createStaticUrl('img/sort_desc.svg')}
-                                alt={he.translate('global__click_to_hide')}
-                                htmlClass="expand-collapse"
-                                isHighlighted={this.state.isMouseover} /> :
-                        <layoutViews.ImgWithHighlight src={he.createStaticUrl('img/next-page.svg')}
-                                alt={he.translate('global__click_to_expand')}
-                                htmlClass="expand-collapse"
-                                isHighlighted={this.state.isMouseover} />
-                    }
-                    <a onClick={this.props.onClick} className={this.props.isExpanded ?
-                            'form-extension-switch collapse' : 'form-extension-switch expand'}
-                            onMouseOver={this.handleMouseover} onMouseOut={this.handleMouseout}>
-                        {he.translate('freq__ct_advanced_fieldset_legend')}
-                    </a>
-                </legend>
-            );
-        }
     };
 
     // ------------------------- <FieldsetAdvancedOptions /> ----------------------
@@ -421,10 +376,13 @@ export function init(
 
         render() {
             return (
-                <fieldset className={this.state.visible ? null : 'collapsed'}>
-                    <ExpandActionLegend onClick={this._handleFieldsetClick} isExpanded={this.state.visible} />
+                <div className="options">
+                    <layoutViews.ExpandButton isExpanded={this.state.visible} onClick={this._handleFieldsetClick} />
+                    <a onClick={this._handleFieldsetClick}>
+                        {he.translate('freq__ct_advanced_fieldset_legend')}
+                    </a>
                     {this.state.visible ?
-                        (<div>
+                        <fieldset>
                             <h3>{he.translate('freq__ct_data_parameters_legend')}</h3>
                             <ul className="items">
                                 <li>
@@ -453,10 +411,10 @@ export function init(
                                     <ColorMappingSelector colorMapping={this.props.colorMapping} />
                                 </li>
                             </ul>
-                        </div>) :
+                        </fieldset> :
                         null
                     }
-                </fieldset>
+                </div>
             );
         }
     };
