@@ -738,6 +738,31 @@ export function init(
         );
     };
 
+    // -------------------------- <ExpandableArea /> ---------------------------------
+
+    const ExpandableArea:CoreViews.ExpandableArea.Component = (props) => {
+
+        const [isExpanded, setExpanded] = React.useState(props.initialExpanded);
+
+        const handleClick = () => {
+            setExpanded(!isExpanded);
+        };
+
+        return (
+            <div className={`ExpandableArea${props.alwaysExpanded ? ' readonly' : ''}`}>
+                <div className="controls">
+                    <ExpandButton isExpanded={isExpanded}
+                        onClick={props.alwaysExpanded ? undefined : handleClick} />
+                    {
+                        props.alwaysExpanded ?
+                        <span>{props.label}</span> :
+                        <a onClick={handleClick}>{props.label}</a>
+                    }
+                </div>
+                {isExpanded ? props.children : null}
+            </div>
+        );
+    }
 
     // ------------------------------------------------------------------------------------
 
@@ -763,6 +788,7 @@ export function init(
         PlusButton,
         Calendar,
         ExpandButton,
+        ExpandableArea,
         KwicRangeSelector
     };
 }
