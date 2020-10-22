@@ -312,75 +312,32 @@ export function init(
         }
 
         return (
-            <fieldset>
-                <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
-                <ul className="ComboActionsSelector">
-                    {props.canProvideIpm ?
-                        <li>
-                            <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
-                                {he.translate('freq__ct_combo_action_ipm_button')}
-                            </button>
-                        </li> : null
-                    }
-                    <li>
-                        <button type="button" className={genClassName('abs')} value="abs" onClick={handleClick}>
-                            {he.translate('freq__ct_combo_action_abs_button')}
-                        </button>
-                    </li>
-                    <li>
-                        <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
-                    </li>
-                </ul>
-            </fieldset>
+            <div className="options">
+                <layoutViews.ExpandableArea alwaysExpanded={true}
+                        initialExpanded={true}
+                        label={he.translate('freq__ct_combo_actions_legend')}>
+                    <fieldset>
+                        <ul className="ComboActionsSelector">
+                            {props.canProvideIpm ?
+                                <li>
+                                    <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
+                                        {he.translate('freq__ct_combo_action_ipm_button')}
+                                    </button>
+                                </li> : null
+                            }
+                            <li>
+                                <button type="button" className={genClassName('abs')} value="abs" onClick={handleClick}>
+                                    {he.translate('freq__ct_combo_action_abs_button')}
+                                </button>
+                            </li>
+                            <li>
+                                <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
+                            </li>
+                        </ul>
+                    </fieldset>
+                </layoutViews.ExpandableArea>
+            </div>
         );
-    };
-
-    // ------------------------- <ExpandActionLegend /> ----------------------
-
-    class ExpandActionLegend extends React.Component<{
-        isExpanded:boolean;
-        onClick:()=>void;
-    }, {
-        isMouseover:boolean;
-
-    }> {
-
-        constructor(props) {
-            super(props);
-            this.handleMouseout = this.handleMouseout.bind(this);
-            this.handleMouseover = this.handleMouseover.bind(this);
-            this.state = {isMouseover: false};
-        }
-
-        private handleMouseover():void {
-            this.setState({isMouseover: true});
-        }
-
-        private handleMouseout():void {
-            this.setState({isMouseover: false});
-        }
-
-        render() {
-            return (
-                <legend>
-                    {this.props.isExpanded ?
-                        <layoutViews.ImgWithHighlight src={he.createStaticUrl('img/sort_desc.svg')}
-                                alt={he.translate('global__click_to_hide')}
-                                htmlClass="expand-collapse"
-                                isHighlighted={this.state.isMouseover} /> :
-                        <layoutViews.ImgWithHighlight src={he.createStaticUrl('img/next-page.svg')}
-                                alt={he.translate('global__click_to_expand')}
-                                htmlClass="expand-collapse"
-                                isHighlighted={this.state.isMouseover} />
-                    }
-                    <a onClick={this.props.onClick} className={this.props.isExpanded ?
-                            'form-extension-switch collapse' : 'form-extension-switch expand'}
-                            onMouseOver={this.handleMouseover} onMouseOut={this.handleMouseout}>
-                        {he.translate('freq__ct_advanced_fieldset_legend')}
-                    </a>
-                </legend>
-            );
-        }
     };
 
     // ------------------------- <FieldsetAdvancedOptions /> ----------------------
@@ -399,67 +356,45 @@ export function init(
         sortDim2:string;
     }
 
-    interface FieldsetAdvancedOptionsState {
-        visible:boolean;
-    }
+    // ---------------------------- <FieldsetAdvancedOptions /> --------------------------------
 
-    /**
-     *
-     * @param {*} props
-     */
-    class FieldsetAdvancedOptions extends React.Component<FieldsetAdvancedOptionsProps, FieldsetAdvancedOptionsState> {
-
-        constructor(props) {
-            super(props);
-            this.state = {visible: false};
-            this._handleFieldsetClick = this._handleFieldsetClick.bind(this);
-        }
-
-        _handleFieldsetClick() {
-            this.setState({visible: !this.state.visible});
-        }
-
-        render() {
-            return (
-                <fieldset className={this.state.visible ? null : 'collapsed'}>
-                    <ExpandActionLegend onClick={this._handleFieldsetClick} isExpanded={this.state.visible} />
-                    {this.state.visible ?
-                        (<div>
-                            <h3>{he.translate('freq__ct_data_parameters_legend')}</h3>
-                            <ul className="items">
-                                <li>
-                                    <QuantitySelect value={this.props.displayQuantity} canProvideIpm={this.props.canProvideIpm} />
-                                </li>
-                                <li>
-                                    <ctViewOpts.MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} canProvideIpm={this.props.canProvideIpm} />
-                                </li>
-                                <li>
-                                    <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
-                                </li>
-                                <li>
-                                    <ctViewOpts.AlphaLevelSelect alphaLevel={this.props.alphaLevel} availAlphaLevels={this.props.availAlphaLevels}
-                                            confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} />
-                                </li>
-                            </ul>
-                            <h3>{he.translate('freq__ct_view_parameters_legend')}</h3>
-                            <ul className="items">
-                                <li>
-                                    <TableSortRowsSelect sortAttr={this.props.sortDim1} canProvideIpm={this.props.canProvideIpm} />
-                                </li>
-                                <li>
-                                    <TableSortColsSelect sortAttr={this.props.sortDim2} canProvideIpm={this.props.canProvideIpm} />
-                                </li>
-                                <li>
-                                    <ColorMappingSelector colorMapping={this.props.colorMapping} />
-                                </li>
-                            </ul>
-                        </div>) :
-                        null
-                    }
+    const FieldsetAdvancedOptions:React.FC<FieldsetAdvancedOptionsProps> = (props) => (
+        <div className="options">
+            <layoutViews.ExpandableArea initialExpanded={false}
+                    label={he.translate('freq__ct_advanced_fieldset_legend')}>
+                <fieldset>
+                    <h3>{he.translate('freq__ct_data_parameters_legend')}</h3>
+                    <ul className="items">
+                        <li>
+                            <QuantitySelect value={props.displayQuantity} canProvideIpm={props.canProvideIpm} />
+                        </li>
+                        <li>
+                            <ctViewOpts.MinFreqInput currVal={props.minFreq} freqType={props.minFreqType} canProvideIpm={props.canProvideIpm} />
+                        </li>
+                        <li>
+                            <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
+                        </li>
+                        <li>
+                            <ctViewOpts.AlphaLevelSelect alphaLevel={props.alphaLevel} availAlphaLevels={props.availAlphaLevels}
+                                    confIntervalLeftMinWarn={props.confIntervalLeftMinWarn} />
+                        </li>
+                    </ul>
+                    <h3>{he.translate('freq__ct_view_parameters_legend')}</h3>
+                    <ul className="items">
+                        <li>
+                            <TableSortRowsSelect sortAttr={props.sortDim1} canProvideIpm={props.canProvideIpm} />
+                        </li>
+                        <li>
+                            <TableSortColsSelect sortAttr={props.sortDim2} canProvideIpm={props.canProvideIpm} />
+                        </li>
+                        <li>
+                            <ColorMappingSelector colorMapping={props.colorMapping} />
+                        </li>
+                    </ul>
                 </fieldset>
-            );
-        }
-    };
+            </layoutViews.ExpandableArea>
+        </div>
+    );
 
     // ------------------------ <TbodyCellAttrVals /> -------------------------------------
 
