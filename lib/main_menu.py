@@ -318,7 +318,8 @@ class MenuGenerator(object):
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('usesubcorp', self._args['usesubcorp']),
-                ('align', self._args['align'] if len(self._args['align']) else None))
+                *[('align', v) for v in self._args['align']]
+                if len(self._args['align']) else [('align', None)])
             .mark_indirect()
         )
 
