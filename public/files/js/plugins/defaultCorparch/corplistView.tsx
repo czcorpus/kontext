@@ -517,38 +517,29 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         render() {
-            let fields;
-            let fieldsetClasses;
-
-            if (this.state.expanded) {
-                fieldsetClasses = 'advanced-filter';
-                fields = (
-                    <div>
-                        <span>{he.translate('defaultCorparch__size_from')}: </span>
-                        <MinSizeInput value={this.props.filters.minSize} currFilter={this.props.filters}  />
-                        <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
-                        <MaxSizeInput value={this.props.filters.maxSize} currFilter={this.props.filters}  />
-                        <div className="hint">
-                            {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
-                        </div>
-                        <p>
-                            <span>
-                            {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
-                            <NameSearchInput value={this.props.filters.name} currFilter={this.props.filters} />
-                        </p>
-                    </div>
-                );
-
-            } else {
-                fieldsetClasses = 'advanced-filter closed';
-                fields = null;
-            }
-
             return (
-                <fieldset className={fieldsetClasses}>
-                    <legend onClick={this._handleLegendClick}>{he.translate('defaultCorparch__advanced_filters')}</legend>
-                    {fields}
-                </fieldset>
+                <div>
+                    <layoutViews.ExpandButton isExpanded={this.state.expanded} onClick={this._handleLegendClick}/>
+                    <a onClick={this._handleLegendClick}>{he.translate('defaultCorparch__advanced_filters')}</a>
+                    {
+                        this.state.expanded ?
+                        <fieldset>
+                            <span>{he.translate('defaultCorparch__size_from')}: </span>
+                            <MinSizeInput value={this.props.filters.minSize} currFilter={this.props.filters}  />
+                            <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
+                            <MaxSizeInput value={this.props.filters.maxSize} currFilter={this.props.filters}  />
+                            <div className="hint">
+                                {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
+                            </div>
+                            <p>
+                                <span>
+                                {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
+                                <NameSearchInput value={this.props.filters.name} currFilter={this.props.filters} />
+                            </p>
+                        </fieldset> :
+                        null
+                    }
+                </div>
             );
         }
     }
