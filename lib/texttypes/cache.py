@@ -18,6 +18,10 @@
 # 02110-1301, USA.
 
 import corplib
+import logging
+from plugins.abstract.general_storage import KeyValueStorage
+
+BASE_KEY = 'ttcache'
 
 
 class TextTypesCache(object):
@@ -29,20 +33,35 @@ class TextTypesCache(object):
     """
 
     def __init__(self, db):
-        self._db = db
+        self._db: KeyValueStorage = db
 
     @staticmethod
     def _mk_cache_key(corpname):
         return 'ttcache:%s' % (corpname, )
 
+    @staticmethod
+    def _mk_attr_cache_key(corpname: str, structname: str, subcnorm: str):
+        return f'ttcache:{corpname}:{structname}:{subcnorm}'
+
     def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
-        text_types = self._db.get(self._mk_cache_key(corp.corpname))
+        text_types = self._db.hash_get(BASE_KEY, self._mk_cache_key(corp.corpname))
         if text_types is None:
             text_types = corplib.texttype_values(corp=corp, subcorpattrs=subcorpattrs,
                                                  maxlistsize=maxlistsize, shrink_list=shrink_list,
                                                  collator_locale=collator_locale)
-            self._db.set(self._mk_cache_key(corp.corpname), text_types)
+            self._db.hash_set(BASE_KEY, self._mk_cache_key(corp.corpname), text_types)
         return text_types
 
+    def get_attr_values(self, corpname, structname, subcorm):
+        ans = self._db.hash_get(BASE_KEY, self._mk_attr_cache_key(corpname, structname, subcorm))
+        return ans if ans is not None else {}
+
+    def set_attr_values(self, corpname, structname, subcnorm, data):
+        self._db.hash_set(BASE_KEY, self._mk_attr_cache_key(corpname, structname, subcnorm), data)
+
     def clear(self, corp):
-        self._db.remove(self._mk_cache_key(corp.corpname))
+        self._db.hash_del(BASE_KEY, self._mk_cache_key(corp.corpname))
+
+    def clear_all(self):
+        logging.getLogger(__name__).warning('Clearing all the ttcache records')
+        self._db.remove(BASE_KEY)

@@ -19,6 +19,7 @@
 
 from functools import partial
 import collections
+from .cache import TextTypesCache
 
 
 class StructNormsCalc(object):
@@ -83,7 +84,7 @@ class CachedStructNormsCalc(StructNormsCalc):
     store values.
     """
 
-    def __init__(self, corpus, structname, subcnorm, db):
+    def __init__(self, corpus, structname, subcnorm, tt_cache: TextTypesCache):
         """
         arguments:
         corpus -- manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
@@ -91,21 +92,18 @@ class CachedStructNormsCalc(StructNormsCalc):
         subcnorm -- a type of value to be collected (allowed values: freq, tokens)
         db -- a 'db' plug-in instance
         """
-        super(CachedStructNormsCalc, self).__init__(corpus, structname, subcnorm)
-        self._db = db
+        super().__init__(corpus, structname, subcnorm)
+        self._tt_cache = tt_cache
         mkdict = partial(collections.defaultdict, lambda: {})
         try:
-            self._data = mkdict(self._db.get(self._mk_cache_key(), {}))
-        except IOError:
+            self._data = mkdict(self._tt_cache.get_attr_values(corpus.corpname, structname, subcnorm))
+        except (IOError, TypeError):
             self._data = mkdict()
-
-    def _mk_cache_key(self):
-        return 'ttcache:%s:%s:%s' % (self._corp.corpname, self._structname, self._subcnorm)
 
     def compute_norm(self, attrname, value):
         if attrname not in self._data or value not in self._data[attrname]:
             self._data[attrname][value] = super(
                 CachedStructNormsCalc, self).compute_norm(attrname, value)
-            self._db.set(self._mk_cache_key(), self._data)
+            self._tt_cache.set_attr_values(self._corp.corpname, self._structname, self._subcnorm, self._data)
         return self._data[attrname][value]
 

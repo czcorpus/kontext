@@ -205,6 +205,7 @@ class KonTextWsgiApp(WsgiApp):
                 fn = getattr(p.instance, 'on_soft_reset', None)
                 if callable(fn):
                     fn()
+            self._tt_cache.clear_all()
 
         signal.signal(signal.SIGUSR1, signal_handler)
         self._tt_cache = TextTypesCache(plugins.runtime.DB.instance)

@@ -169,8 +169,7 @@ class TextTypes(object):
             struct_calc = collections.OrderedDict()
             for item in subcorp_attr_list:
                 k = item.split('.')[0]
-                struct_calc[k] = CachedStructNormsCalc(
-                    self._corp, k, subcnorm, db=plugins.runtime.DB.instance)
+                struct_calc[k] = CachedStructNormsCalc(self._corp, k, subcnorm, self._tt_cache)
             cache_ok = True
             for col in reduce(lambda p, c: p + c['Line'], tt, []):
                 if 'textboxlength' not in col:
