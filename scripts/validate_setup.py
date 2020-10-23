@@ -65,7 +65,7 @@ class PathPermissionsInvalid(Exception):
 
     def __str__(self):
         return 'Permissions to {file} failed. Expected: {expect}, actual: {actual}'.format(file=self._path,
-                                                                                           expect=self._actual_perm,
+                                                                                           expect=self._req_perm,
                                                                                            actual=self._actual_perm)
 
 
