@@ -23,7 +23,22 @@ from translation import ugettext as _
 from controller.errors import CorpusForbiddenException, UserActionException
 
 
-class AbstractAuth(abc.ABC):
+class MetaAbstractAuth(abc.ABCMeta):
+    """
+    This meta-class is used to wrap calls for permitted_corpora
+    and normalize all the corpora IDs to lowercase without requiring
+    this from individual plug-ins or different code chunks where
+    the method is called.
+    """
+    def __init__(cls, name, bases, clsdict):
+        super().__init__(name, bases, clsdict)
+        if 'permitted_corpora' in clsdict:
+            def wrapped_perm_corp(self, user_dict):
+                return dict((c.lower(), v) for c, v in clsdict['permitted_corpora'](self, user_dict).items())
+            setattr(cls, 'permitted_corpora', wrapped_perm_corp)
+
+
+class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
     """
     Represents general authentication module.
     Custom implementations should inherit from this.
@@ -64,6 +79,9 @@ class AbstractAuth(abc.ABC):
     def permitted_corpora(self, user_dict: Dict[str, Any]) -> Dict[str, str]:
         """
         Return a dictionary containing corpora IDs user can access.
+        Important note: The AbstractAuth and its meta-class always
+        transform your returned corpora IDs to lowercase to ensure
+        proper corpus ID comparison.
 
         arguments:
         user_dict -- user credentials as returned by validate_user()
