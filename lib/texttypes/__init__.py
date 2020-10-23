@@ -1,4 +1,6 @@
-# Copyright (c) 2016 Institute of the Czech National Corpus
+# Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2016 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -9,143 +11,33 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
 """
 Text types helper functions (collecting checked text types from a respective
 HTML form and transforming them into a query, adding sizes of respective sets
 specified by attributes values).
 """
 
-from functools import partial
 import collections
 import re
 import logging
 from typing import List, Tuple
+from functools import reduce
 
+import manatee
 import l10n
-from argmapping import Args
 from werkzeug.wrappers import Request
-import corplib
 import settings
 import plugins
 from translation import ugettext as _
-from functools import reduce
-
-
-class TextTypesCache(object):
-    """
-    Caches corpus text type information (= available structural attribute values).
-    This can be helpful in case of large corpora with rich metadata. In case
-    there is no caching directory set values are always loaded directly from
-    the corpus.
-    """
-
-    def __init__(self, db):
-        self._db = db
-
-    @staticmethod
-    def _mk_cache_key(corpname):
-        return 'ttcache:%s' % (corpname, )
-
-    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
-        text_types = self._db.get(self._mk_cache_key(corp.corpname))
-        if text_types is None:
-            text_types = corplib.texttype_values(corp=corp, subcorpattrs=subcorpattrs,
-                                                 maxlistsize=maxlistsize, shrink_list=shrink_list,
-                                                 collator_locale=collator_locale)
-            self._db.set(self._mk_cache_key(corp.corpname), text_types)
-        return text_types
-
-    def clear(self, corp):
-        self._db.remove(self._mk_cache_key(corp.corpname))
-
-
-class StructNormsCalc(object):
-    """
-    Adds a size information of texts related to respective attribute values.
-    An instance is always bound to a concrete structure and required value type.
-    """
-
-    def __init__(self, corpus, structname, subcnorm):
-        """
-        arguments:
-        corpus -- manatee.Corpus instance (enriched by KonText
-                  initialization - 'corpname' attribute is required here)
-        structname -- a name of a corpus structure
-        subcnorm -- a type of value to be collected (allowed values: freq, tokens)
-        """
-        self._corp = corpus
-        self._structname = structname
-        self._struct = self._corp.get_struct(structname)
-        self._subcnorm = subcnorm
-        self._normvals = None
-
-    @property
-    def normvals(self):
-        if self._normvals is None:
-            self._normvals = self._calc_normvals()
-        return self._normvals
-
-    def _calc_normvals(self):
-        if self._subcnorm == 'freq':
-            normvals = dict((self._struct.beg(i), 1) for i in range(self._struct.size()))
-        elif self._subcnorm == 'tokens':
-            normvals = dict((self._struct.beg(i), self._struct.end(i) - self._struct.beg(i))
-                            for i in range(self._struct.size()))
-        else:
-            nas = self._struct.get_attr(self._subcnorm).pos2str
-            normvals = dict((self._struct.beg(i), self._safe_int(nas(i)))
-                            for i in range(self._struct.size()))
-        return normvals
-
-    @staticmethod
-    def _safe_int(s):
-        try:
-            return int(s)
-        except ValueError:
-            return 0
-
-    def compute_norm(self, attrname, value):
-        attr = self._struct.get_attr(attrname)
-        valid = attr.str2id(value)
-        r = self._corp.filter_query(self._struct.attr_val(attrname, valid))
-        cnt = 0
-        while not r.end():
-            cnt += self.normvals[r.peek_beg()]
-            r.next()
-        return cnt
-
-
-class CachedStructNormsCalc(StructNormsCalc):
-    """
-    A caching variant of StructNormsCalc. Uses 'db' key=>value plug-in to
-    store values.
-    """
-
-    def __init__(self, corpus, structname, subcnorm, db):
-        """
-        arguments:
-        corpus -- manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
-        structname -- a name of a corpus structure
-        subcnorm -- a type of value to be collected (allowed values: freq, tokens)
-        db -- a 'db' plug-in instance
-        """
-        super(CachedStructNormsCalc, self).__init__(corpus, structname, subcnorm)
-        self._db = db
-        mkdict = partial(collections.defaultdict, lambda: {})
-        try:
-            self._data = mkdict(self._db.get(self._mk_cache_key(), {}))
-        except IOError:
-            self._data = mkdict()
-
-    def _mk_cache_key(self):
-        return 'ttcache:%s:%s:%s' % (self._corp.corpname, self._structname, self._subcnorm)
-
-    def compute_norm(self, attrname, value):
-        if attrname not in self._data or value not in self._data[attrname]:
-            self._data[attrname][value] = super(
-                CachedStructNormsCalc, self).compute_norm(attrname, value)
-            self._db.set(self._mk_cache_key(), self._data)
-        return self._data[attrname][value]
+from controller.plg import PluginApi
+from .cache import TextTypesCache
+from .norms import CachedStructNormsCalc
 
 
 class TextTypeCollector(object):
@@ -207,7 +99,7 @@ class TextTypesException(Exception):
 
 class TextTypes(object):
 
-    def __init__(self, corp, corpname, plugin_api):
+    def __init__(self, corp: manatee.Corpus, corpname: str, tt_cache: TextTypesCache, plugin_api: PluginApi):
         """
         arguments:
         corp -- a manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
@@ -217,7 +109,7 @@ class TextTypes(object):
         self._corp = corp
         self._corpname = corpname
         self._plugin_api = plugin_api
-        self._tt_cache = TextTypesCache(plugins.runtime.DB.instance)
+        self._tt_cache = tt_cache
 
     def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
@@ -277,8 +169,7 @@ class TextTypes(object):
             struct_calc = collections.OrderedDict()
             for item in subcorp_attr_list:
                 k = item.split('.')[0]
-                struct_calc[k] = CachedStructNormsCalc(
-                    self._corp, k, subcnorm, db=plugins.runtime.DB.instance)
+                struct_calc[k] = CachedStructNormsCalc(self._corp, k, subcnorm, self._tt_cache)
             cache_ok = True
             for col in reduce(lambda p, c: p + c['Line'], tt, []):
                 if 'textboxlength' not in col:
@@ -325,15 +216,3 @@ class TextTypes(object):
                                       if x[0] == item['label']), (None, None))
                 item['is_interval'] = int(bool(label))
                 item['widget'] = widget
-
-
-def get_tt(corp, plugin_api):
-    """
-    A convenience factory to create a TextType instance
-
-    arguments:
-    corp -- a manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
-    corpname --
-    plugin_api --
-    """
-    return TextTypes(corp, corp.corpname, plugin_api)

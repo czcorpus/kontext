@@ -805,11 +805,9 @@ class Kontext(Controller):
         """
         if getattr(self.args, 'corpname'):
             try:
-                if not self._curr_corpus or (getattr(self.args, 'usesubcorp') and not hasattr(self._curr_corpus, 'subcname')):
-                    self._curr_corpus = getattr(self.cm, 'get_Corpus')(getattr(self.args, 'corpname'),
-                                                                       subcname=getattr(
-                                                                           self.args, 'usesubcorp'),
-                                                                       corp_variant=self._corpus_variant)
+                if not self._curr_corpus or self.args.usesubcorp and not hasattr(self._curr_corpus, 'subcname'):
+                    self._curr_corpus = self.cm.get_Corpus(self.args.corpname, subcname=self.args.usesubcorp,
+                                                           corp_variant=self._corpus_variant)
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
             except Exception as ex:
@@ -1075,7 +1073,7 @@ class Kontext(Controller):
 
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
         day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
-        result['firstDayOfWeek'] = day_map[
+        result['first_day_of_week'] = day_map[
             babel.Locale(self.ui_lang if self.ui_lang else 'en_US').first_week_day
         ]
 

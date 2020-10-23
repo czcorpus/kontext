@@ -26,9 +26,8 @@ from translation import ugettext as translate
 import plugins
 import l10n
 import corplib
-from texttypes import TextTypeCollector, get_tt
+from texttypes import TextTypeCollector
 import settings
-import argmapping
 import bgcalc
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
@@ -229,7 +228,7 @@ class Subcorpus(Querying):
         subcnorm = request.args.get('subcnorm', 'tokens')
 
         try:
-            tt_sel = get_tt(self.corp, self._plugin_api).export_with_norms(subcnorm=subcnorm)
+            tt_sel = self.tt.export_with_norms(subcnorm=subcnorm)
         except UserActionException as e:
             tt_sel = {'Normslist': [], 'Blocks': []}
             self.add_system_message('warning', e)
