@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from .kontext import Kontext
 
 import settings
-from texttypes import get_tt
+
 
 T = TypeVar('T')
 
@@ -120,7 +120,7 @@ class PluginApi(object):
         subcorpattrs = self.current_corpus.get_conf('SUBCORPATTRS')
         if not subcorpattrs:
             subcorpattrs = self.current_corpus.get_conf('FULLREF')
-        tt = get_tt(self.current_corpus, self).export(subcorpattrs, maxlistsize)
+        tt = self._controller.tt.export(subcorpattrs, maxlistsize)
         for item in tt:
             for tt2 in item['Line']:
                 ans[tt2['name']] = {'type': 'default', 'values': [x['v']

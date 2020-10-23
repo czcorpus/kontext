@@ -33,8 +33,7 @@ from werkzeug.http import parse_accept_header
 from werkzeug.wrappers import Request, Response
 from werkzeug.wrappers.json import JSONMixin
 
-sys.path.insert(0, '%s/../lib' % os.path.dirname(__file__))  # application libraries
-sys.path.insert(0, '%s/..' % os.path.dirname(__file__))   # compiled template modules
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
 CONF_PATH = os.getenv('KONTEXT_CONF', os.path.realpath('%s/../conf/config.xml' % os.path.dirname(__file__)))
 
@@ -44,6 +43,7 @@ import settings
 import translation
 from controller import KonTextCookie
 from initializer import setup_plugins
+from texttypes.cache import TextTypesCache
 
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
@@ -60,6 +60,7 @@ class WsgiApp(object):
         self.setup_logger(settings)
         self._installed_langs = dict([(x.split('_')[0], x)
                                       for x in os.listdir('%s/../locale' % os.path.dirname(__file__))])
+        self._tt_cache = None
 
     def __call__(self, environ, start_response):
         raise NotImplementedError()
@@ -124,8 +125,7 @@ class WsgiApp(object):
             lgs_string = 'en_US'
         return lgs_string
 
-    @staticmethod
-    def load_controller_class(path_info):
+    def create_controller(self, path_info, request, ui_lang):
         """
         Loads appropriate action controller class according to the provided
         path info. Classes selection is based on path_info prefix (e.g. / prefix
@@ -142,22 +142,26 @@ class WsgiApp(object):
         a class matching provided path_info
         """
         if path_info.startswith('/fcs'):
-            from actions.fcs import Actions as ControllerClass
+            from actions.fcs import Actions
+            return Actions(request, ui_lang)
         elif path_info.startswith('/user'):
-            from actions.user import User as ControllerClass
+            from actions.user import User
+            return User(request, ui_lang)
         elif path_info.startswith('/subcorpus'):
-            from actions.subcorpus import Subcorpus as ControllerClass
+            from actions.subcorpus import Subcorpus
+            return Subcorpus(request, ui_lang)
         elif path_info.startswith('/options'):
-            from actions.options import Options as ControllerClass
-        elif path_info.startswith('/admin'):
-            from actions.admin import Admin as ControllerClass
+            from actions.options import Options
+            return Options(request, ui_lang)
         elif path_info.startswith('/corpora'):
-            from actions.corpora import Corpora as ControllerClass
+            from actions.corpora import Corpora
+            return Corpora(request, ui_lang)
         elif path_info.startswith('/wordlist'):
-            from actions.wordlist import Wordlist as ControllerClass
+            from actions.wordlist import Wordlist
+            return Wordlist(request, ui_lang, self._tt_cache)
         else:
-            from actions.concordance import Actions as ControllerClass
-        return ControllerClass
+            from actions.concordance import Actions
+            return Actions(request, ui_lang, self._tt_cache)
 
 
 class MaintenanceWsgiApp(WsgiApp):
@@ -203,6 +207,7 @@ class KonTextWsgiApp(WsgiApp):
                     fn()
 
         signal.signal(signal.SIGUSR1, signal_handler)
+        self._tt_cache = TextTypesCache(plugins.runtime.DB.instance)
 
     def __call__(self, environ, start_response):
         ui_lang = self.get_lang(environ)
@@ -234,8 +239,7 @@ class KonTextWsgiApp(WsgiApp):
             headers = [('Location', environ['REQUEST_URI'].replace('/run.cgi/', '/'))]
             body = ''
         else:
-            controller_class = self.load_controller_class(environ['PATH_INFO'])
-            app = controller_class(request=request, ui_lang=ui_lang)
+            app = self.create_controller(environ['PATH_INFO'], request=request, ui_lang=ui_lang)
             status, headers, sid_is_valid, body = app.run()
         response = Response(response=body, status=status, headers=headers)
         if not sid_is_valid:

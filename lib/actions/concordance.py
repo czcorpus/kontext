@@ -44,7 +44,8 @@ import l10n
 from l10n import corpus_get_conf
 from translation import ugettext as translate
 from argmapping import WidectxArgsMapping
-from texttypes import TextTypeCollector, get_tt
+from texttypes import TextTypeCollector, TextTypes
+from texttypes.cache import TextTypesCache
 from main_menu import MenuGenerator, MainMenu
 from controller.querying import Querying
 import templating
@@ -71,13 +72,15 @@ class Actions(Querying):
     This class specifies all the actions KonText offers to a user via HTTP
     """
 
-    def __init__(self, request, ui_lang):
+    def __init__(self, request, ui_lang, tt_cache: TextTypesCache):
         """
         arguments:
         request -- werkzeug's Request obj.
         ui_lang -- a language code in which current action's result will be presented
         """
         super(Actions, self).__init__(request=request, ui_lang=ui_lang)
+        self._tt_cache = tt_cache
+        self._tt = None  # this will be instantiated lazily
         self.disabled_menu_items = ()
 
     def get_mapping_url_prefix(self):
@@ -176,6 +179,14 @@ class Actions(Querying):
             out['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
                                                    out['query_overview'][0].get('nicearg'))
 
+    @property
+    def tt(self) -> TextTypes:
+        """
+        Provides access to text types of the current corpus
+        """
+        return self._tt if self._tt is not None else TextTypes(
+            self.corp, self.corp.corpname, self._tt_cache, self._plugin_api)
+
     @exposed(vars=('orig_query', ), mutates_conc=True)
     def view(self, _=None):
         """
@@ -271,8 +282,7 @@ class Actions(Querying):
         out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
         # query form data
-        out['text_types_data'] = get_tt(
-            self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        out['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
         self._attach_query_params(out)
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
@@ -346,7 +356,7 @@ class Actions(Querying):
                                           [('align', a) for a in self.args.align]))
 
         out['aligned_corpora'] = self.args.align
-        tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        tt_data = self.tt.export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = tt_data
 
@@ -886,8 +896,7 @@ class Actions(Querying):
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        result['text_types_data'] = get_tt(
-            self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        result['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
         result['quick_save_row_limit'] = self.FREQ_QUICK_SAVE_MAX_LINES
         self._attach_query_params(result)
         self._attach_query_overview(result)
@@ -1033,8 +1042,7 @@ class Actions(Querying):
             coll_form_args=CollFormArgs().update(self.args).to_dict(),
             ctfreq_form_args=CTFreqFormArgs().update(self.args).to_dict()
         )
-        ans['text_types_data'] = get_tt(
-            self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        ans['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
         ans['quick_save_row_limit'] = 0
         self._attach_query_params(ans)
         return ans
@@ -1109,8 +1117,7 @@ class Actions(Querying):
         ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         ans['save_line_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
-        ans['text_types_data'] = get_tt(
-            self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        ans['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
         ans['quick_save_row_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
         ans['savecoll_max_lines'] = self.SAVECOLL_MAX_LINES
         self._attach_query_overview(ans)
@@ -1593,7 +1600,7 @@ class Actions(Querying):
             activePlugins=plg_status['active_plugins'],
             queryOverview=[],
             numQueryOps=0,
-            textTypesData=get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True),
+            textTypesData=self.tt.export_with_norms(ret_nums=True),
             menuData=MenuGenerator(tmp_out, self.args, self._plugin_api).generate(
                 disabled_items=self.disabled_menu_items,
                 save_items=self._save_menu,
