@@ -48,7 +48,6 @@ module.exports = {
             query: mkpath('js/pages/query.ts'),
             freq: mkpath('js/pages/freq.ts'),
             message: mkpath('js/pages/message.ts'),
-            queryHistory: mkpath('js/pages/queryHistory.ts'),
             subcorpForm: mkpath('js/pages/subcorpForm.ts'),
             subcorpList: mkpath('js/pages/subcorpList.ts'),
             pubSubcorpList: mkpath('js/pages/pubSubcorpList.ts'),
