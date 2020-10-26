@@ -100,6 +100,9 @@ export namespace AjaxResponse {
             detail_left_ctx:number;
             detail_right_ctx:number
         };
+        righttoleft:'0'|'1';
+        pos:number;
+        maxdetail:number;
     }
 
     export interface FullRef extends Kontext.AjaxResponse {

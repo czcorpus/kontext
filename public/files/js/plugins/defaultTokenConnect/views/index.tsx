@@ -19,17 +19,18 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {MultiDict} from '../../multidict';
+import { Kontext } from '../../../types/common';
+import { MultiDict } from '../../../multidict';
 import { IActionDispatcher } from 'kombo';
+import { init as ftInit, FormattedTextRendererProps } from './formattedText';
 
 
 export interface Views {
-    RawHtmlRenderer:React.SFC<{data: Array<[string, string]>}>;
-    SimpleTabularRenderer:React.SFC<{data: Array<Array<[string, string]>>}>;
-    DescriptionListRenderer:React.SFC<{data: Array<[string, string]>}>;
-    UnsupportedRenderer:React.SFC<{data: any}>;
-    DataMuseSimilarWords:React.SFC<{
+    RawHtmlRenderer:React.FC<{data: Array<[string, string]>}>;
+    SimpleTabularRenderer:React.FC<{data: Array<Array<[string, string]>>}>;
+    DescriptionListRenderer:React.FC<{data: Array<[string, string]>}>;
+    UnsupportedRenderer:React.FC<{data: any}>;
+    DataMuseSimilarWords:React.FC<{
         corpname:string;
         data:Array<{
             word:string;
@@ -37,15 +38,18 @@ export interface Views {
             tags:Array<string>;
         }>;
     }>;
-    ErrorRenderer:React.SFC<{
+    ErrorRenderer:React.FC<{
         data:{
             error:string;
         }
     }>;
+    FormattedTextRenderer:React.FC<FormattedTextRendererProps>;
 }
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) {
+
+    const FormattedTextRenderer = ftInit(he);
 
     // ------------- <RawHtmlRenderer /> -------------------------------
 
@@ -141,12 +145,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     };
 
     return {
-        RawHtmlRenderer: RawHtmlRenderer,
-        SimpleTabularRenderer: SimpleTabularRenderer,
-        DescriptionListRenderer: DescriptionListRenderer,
-        UnsupportedRenderer: UnsupportedRenderer,
-        DataMuseSimilarWords: DataMuseSimilarWords,
-        ErrorRenderer: ErrorRenderer
+        RawHtmlRenderer,
+        SimpleTabularRenderer,
+        DescriptionListRenderer,
+        UnsupportedRenderer,
+        DataMuseSimilarWords,
+        ErrorRenderer,
+        FormattedTextRenderer
     };
 
 }

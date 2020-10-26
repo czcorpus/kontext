@@ -24,9 +24,9 @@ import { Response as TTDistResponse } from '../../models/concordance/ttDistModel
 import { ActionName as ConcActionName, Actions as ConcActions } from '../../models/concordance/actions';
 import { MultiDict } from '../../multidict';
 import { IConcLinesProvider } from '../../types/concordance';
-import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
-import { concatMap, concat } from 'rxjs/operators';
+import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
+import { Observable, of as rxOf, concat } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
 import { FreqServerArgs } from '../../models/freqs/common';
 import { HTTP, List } from 'cnc-tskit';
 import { ActionName, Actions } from './actions';
@@ -39,7 +39,8 @@ export enum KnownRenderers {
     SIMPLE_TABULAR = 'simple-tabular',
     SIMPLE_DESCRIPTION_LIST = 'simple-description-list',
     MESSAGE = 'custom-message',
-    ERROR = 'error'
+    ERROR = 'error',
+    FORMATTED_TEXT = 'formatted-text'
 }
 
 
@@ -274,28 +275,30 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                     }
 
                     if (procItems.length < kwics.length) {
-                        ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
-                            HTTP.Method.GET,
-                            'get_corpus_kc_providers',
-                            {corpname: state.corpora[0]}
+                        ans = concat(
+                            this.pluginApi.ajax$<AjaxResponseListProviders>(
+                                HTTP.Method.GET,
+                                'get_corpus_kc_providers',
+                                {corpname: state.corpora[0]}
 
-                        ).pipe(
-                            concatMap(
-                                (data) => rxOf(
-                                    List.map(p => ({
-                                        data: [{
-                                            found: false,
-                                            kwic: null,
-                                            contents: this.pluginApi.translate(
-                                                'default_kwic_connect__item_been_ommitted_due_size')
-                                        }],
-                                        heading: p.label,
-                                        note: null,
-                                        renderer: this.rendererMap(KnownRenderers.MESSAGE)
-                                    }), data.providers)
+                            ).pipe(
+                                concatMap(
+                                    (data) => rxOf(
+                                        List.map(p => ({
+                                            data: [{
+                                                found: false,
+                                                kwic: null,
+                                                contents: this.pluginApi.translate(
+                                                    'default_kwic_connect__item_been_ommitted_due_size')
+                                            }],
+                                            heading: p.label,
+                                            note: null,
+                                            renderer: this.rendererMap(KnownRenderers.MESSAGE)
+                                        }), data.providers)
+                                    )
                                 )
                             ),
-                            concat(ans)
+                            ans
                         );
                     }
 

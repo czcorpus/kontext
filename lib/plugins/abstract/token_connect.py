@@ -101,7 +101,8 @@ class AbstractBackend(abc.ABC):
         return self._provider_id
 
     @abc.abstractmethod
-    def fetch(self, corpora: List[str], token_id: int, num_tokens: int, query_args: Dict[str, str], lang: str) -> Tuple[Any, bool]:
+    def fetch(self, corpora: List[str], maincorp: Corpus, token_id: int, num_tokens: int,
+              query_args: Dict[str, str], lang: str) -> Tuple[Any, bool]:
         pass
 
     def set_cache_path(self, path: str):

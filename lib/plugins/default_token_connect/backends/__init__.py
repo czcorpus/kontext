@@ -35,7 +35,7 @@ class SQLite3Backend(AbstractBackend):
         self._query_tpl = conf['query']
 
     @cached
-    def fetch(self, corpora, token_id, num_tokens, query_args, lang):
+    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang):
         cur = self._db.cursor()
         cur.execute(self._query_tpl, (query_args['word'], query_args['lemma']))
         ans = cur.fetchone()
@@ -104,7 +104,7 @@ class HTTPBackend(AbstractBackend):
             return self._conf.get('attrs', [])
 
     @cached
-    def fetch(self, corpora, token_id, num_tokens, query_args, lang):
+    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang):
         connection = self.create_connection()
         try:
             args = dict(

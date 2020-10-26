@@ -29,10 +29,10 @@ from plugins.abstract.token_connect import AbstractFrontend
 class ErrorFrontend(AbstractFrontend):
 
     def __init__(self, conf):
-        super(ErrorFrontend, self).__init__(conf)
+        super().__init__(conf)
 
     def export_data(self, data, status, lang, is_kwic_view):
-        response = super(ErrorFrontend, self).export_data(data, status, lang, is_kwic_view)
+        response = super().export_data(data, status, lang, is_kwic_view)
         response.renderer = 'error'
         response.contents = data
         return response
@@ -41,10 +41,10 @@ class ErrorFrontend(AbstractFrontend):
 class RawHtmlFrontend(AbstractFrontend):
 
     def __init__(self, conf):
-        super(RawHtmlFrontend, self).__init__(conf)
+        super().__init__(conf)
 
     def export_data(self, data, status, lang, is_kwic_view):
-        response = super(RawHtmlFrontend, self).export_data(data, status, lang, is_kwic_view)
+        response = super().export_data(data, status, lang, is_kwic_view)
         response.renderer = 'raw-html'
         response.contents = [('__html', data)]
         return response
@@ -53,10 +53,10 @@ class RawHtmlFrontend(AbstractFrontend):
 class DatamuseFrontend(AbstractFrontend):
 
     def __init__(self, conf):
-        super(DatamuseFrontend, self).__init__(conf)
+        super().__init__(conf)
 
     def export_data(self, data, status, lang, is_kwic_view):
-        response = super(DatamuseFrontend, self).export_data(data, status, lang, is_kwic_view)
+        response = super().export_data(data, status, lang, is_kwic_view)
         response.renderer = 'datamuse-json'
         try:
             response.contents = json.loads(data)
@@ -68,10 +68,22 @@ class DatamuseFrontend(AbstractFrontend):
 class TreqFrontend(AbstractFrontend):
 
     def __init__(self, conf):
-        super(TreqFrontend, self).__init__(conf)
+        super().__init__(conf)
 
     def export_data(self, data, status, lang, is_kwic_view):
-        response = super(TreqFrontend, self).export_data(data, status, lang, is_kwic_view)
+        response = super().export_data(data, status, lang, is_kwic_view)
         response.renderer = 'treq-json'
         response.contents = json.loads(data)
+        return response
+
+
+class FormattedTextFrontend(AbstractFrontend):
+
+    def __init__(self, conf):
+        super().__init__(conf)
+
+    def export_data(self, data, status, lang, is_kwic_view):
+        response = super().export_data(data, status, lang, is_kwic_view)
+        response.renderer = 'formatted-text'
+        response.contents = data
         return response
