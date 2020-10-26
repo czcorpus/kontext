@@ -32,6 +32,7 @@ import { init as commonViewsFactory, CommonViews } from '../views/common';
 import { init as menuViewsFactory } from '../views/menu';
 import { init as overviewAreaViewsFactory } from '../views/overview';
 import { init as viewOptionsFactory } from '../views/options/main';
+import { init as initQueryHistoryViews } from '../views/history/main';
 import { MultiDict } from '../multidict';
 import * as docModels from '../models/common/layout';
 import { UserInfo } from '../models/user/info';
@@ -53,6 +54,7 @@ import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import querySuggestPlugin from 'plugins/querySuggest/init';
+import queryStoragePlugin from 'plugins/queryStorage/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
@@ -761,6 +763,25 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.dispatcher,
                 this,
                 this.getConf<boolean>('anonymousUser')
+            );
+
+            const qsModel = queryStoragePlugin(
+                this.pluginApi(),
+                0, //this.getConf<number>('Offset'),
+                100, //this.getConf<number>('Limit'),
+                10, //this.getConf<number>('PageSize'),
+                [] //this.getConf<Array<Kontext.QueryHistoryItem>>('Data')
+            );
+            const qhViews = initQueryHistoryViews({
+                dispatcher: this.dispatcher,
+                helpers: this.getComponentHelpers(),
+                recentQueriesModel: qsModel.getModel(),
+                mainMenuModel: this.mainMenuModel
+            });
+
+            this.renderReactComponent(
+                qhViews.HistoryContainer,
+                document.getElementById('query-history-mount')
             );
 
             this.commonViews = commonViewsFactory(this.getComponentHelpers());

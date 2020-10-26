@@ -21,7 +21,6 @@
 import * as React from 'react';
 import { Bound, IActionDispatcher, IModel } from 'kombo';
 import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
-import { Subscription } from 'rxjs';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';

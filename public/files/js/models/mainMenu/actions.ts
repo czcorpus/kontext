@@ -45,7 +45,8 @@ export enum ActionName {
     ShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS',
     ShowSaveForm = 'MAIN_MENU_SHOW_SAVE_FORM',
     DirectSave = 'MAIN_MENU_DIRECT_SAVE',
-    ShowSwitchMc = 'MAIN_MENU_SHOW_SWITCHMC'
+    ShowSwitchMc = 'MAIN_MENU_SHOW_SWITCHMC',
+    ShowQueryHistory = 'MAIN_MENU_SHOW_QUERY_HISTORY',
 }
 
 
@@ -170,4 +171,10 @@ export namespace Actions {
     }> {
         name: ActionName.ShowSwitchMc;
     }
+
+    export interface ShowQueryHistory extends Action<{
+    }> {
+        name: ActionName.ShowQueryHistory;
+    }
+
 }

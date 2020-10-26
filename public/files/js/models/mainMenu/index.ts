@@ -235,7 +235,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             ActionName.ShowAttrsViewOptions,
             ActionName.ShowGeneralViewOptions,
             ActionName.ShowCitationInfo,
-            ActionName.ShowKeyShortcuts
+            ActionName.ShowKeyShortcuts,
+            ActionName.ShowQueryHistory
         );
 
         this.addActionHandler<Actions.ShowFilter>(

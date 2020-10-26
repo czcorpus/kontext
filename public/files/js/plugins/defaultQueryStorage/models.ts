@@ -31,6 +31,7 @@ import { List, Dict, HTTP } from 'cnc-tskit';
 import { QueryType } from '../../models/query/common';
 import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
 
 
 
@@ -129,8 +130,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.ToggleQueryHistoryWidget>(
-            QueryActionName.ToggleQueryHistoryWidget,
+        this.addActionHandler<QueryActions.ToggleQueryHistoryWidget|MainMenuActions.ShowQueryHistory>(
+            [QueryActionName.ToggleQueryHistoryWidget, MainMenuActionName.ShowQueryHistory],
             action => {
                 this.changeState(state => {
                     state.isBusy = true

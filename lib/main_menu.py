@@ -324,10 +324,8 @@ class MenuGenerator(object):
         )
 
         self.recent_queries = (
-            HideOnCustomCondItem(MainMenu.NEW_QUERY('history'), te(
-                'Recent queries'), 'user/query_history')
-            .add_args(
-                ('corpname', self._args['corpname']))
+            EventTriggeringItem(MainMenu.VIEW('history'), te('Recent queries'),
+                                'MAIN_MENU_SHOW_QUERY_HISTORY')
             .mark_indirect()
         )
 
