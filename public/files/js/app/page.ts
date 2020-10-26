@@ -32,6 +32,7 @@ import { init as commonViewsFactory, CommonViews } from '../views/common';
 import { init as menuViewsFactory } from '../views/menu';
 import { init as overviewAreaViewsFactory } from '../views/overview';
 import { init as viewOptionsFactory } from '../views/options/main';
+import { init as initQueryHistoryViews } from '../views/history/main';
 import { MultiDict } from '../multidict';
 import * as docModels from '../models/common/layout';
 import { UserInfo } from '../models/user/info';
@@ -53,6 +54,7 @@ import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import querySuggestPlugin from 'plugins/querySuggest/init';
+import queryStoragePlugin from 'plugins/queryStorage/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
@@ -119,6 +121,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     private asyncTaskChecker:AsyncTaskChecker;
 
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+
+    qstorPlugin:PluginInterfaces.QueryStorage.IPlugin;
 
     /**
      * This is intended for React components to make them able register key
@@ -761,6 +765,24 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.dispatcher,
                 this,
                 this.getConf<boolean>('anonymousUser')
+            );
+
+            this.qstorPlugin = queryStoragePlugin(
+                this.pluginApi(),
+                0,
+                this.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records'),
+                this.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records')
+            );
+            const qhViews = initQueryHistoryViews({
+                dispatcher: this.dispatcher,
+                helpers: this.getComponentHelpers(),
+                recentQueriesModel: this.qstorPlugin.getModel(),
+                mainMenuModel: this.mainMenuModel
+            });
+
+            this.renderReactComponent(
+                qhViews.HistoryContainer,
+                document.getElementById('query-history-mount')
             );
 
             this.commonViews = commonViewsFactory(this.getComponentHelpers());

@@ -325,7 +325,6 @@ export class QueryPage {
                 this.layoutModel
             );
 
-            const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
             const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
                 'ConcFormsArgs'
             );
@@ -336,14 +335,7 @@ export class QueryPage {
             );
             const ttAns = this.createTTViews(queryFormArgs);
 
-            const qsPlugin = queryStoragePlugin(
-                this.layoutModel.pluginApi(),
-                0,
-                pageSize,
-                pageSize,
-                []
-            );
-            ttAns.queryStorageView = qsPlugin.getWidgetView();
+            ttAns.queryStorageView = this.layoutModel.qstorPlugin.getWidgetView();
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,

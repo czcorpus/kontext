@@ -55,8 +55,8 @@ export class QueryStoragePlugin implements PluginInterfaces.QueryStorage.IPlugin
 
 }
 
-const create:PluginInterfaces.QueryStorage.Factory = (pluginApi, offset, limit, pageSize, initialData) => {
-    return new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize, initialData));
+const create:PluginInterfaces.QueryStorage.Factory = (pluginApi, offset, limit, pageSize) => {
+    return new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize));
 };
 
 export default create;

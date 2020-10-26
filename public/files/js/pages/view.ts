@@ -1103,13 +1103,6 @@ export class ViewPage {
                 ...this.viewModels
             });
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
-            const queryStoragePlg = queryStoragePlugin(
-                this.layoutModel.pluginApi(),
-                0,
-                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
-                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
-                []
-            );
             this.setupHistoryOnPopState();
             this.initQueryForm();
             this.initFirsthitsForm();
@@ -1117,7 +1110,7 @@ export class ViewPage {
             this.initSortForm();
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);
-            this.initQueryOverviewArea(tagHelperPlg, queryStoragePlg);
+            this.initQueryOverviewArea(tagHelperPlg, this.layoutModel.qstorPlugin);
             this.initAnalysisViews(ttModel);
             this.initKeyShortcuts();
             this.updateHistory();
@@ -1133,7 +1126,7 @@ export class ViewPage {
                 {
                     ttModel,
                     lvprops: lineViewProps,
-                    qs: queryStoragePlg,
+                    qs: this.layoutModel.qstorPlugin,
                     tagh: tagHelperPlg
                 },
                 this.layoutModel.pluginTypeIsActive(PluginName.KWIC_CONNECT) ?

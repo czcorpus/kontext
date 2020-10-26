@@ -267,8 +267,7 @@ export namespace PluginInterfaces {
                 pluginApi:IPluginApi,
                 offset:number,
                 limit:number,
-                pageSize:number,
-                initialData:Array<Kontext.QueryHistoryItem>
+                pageSize:number
             ):IPlugin;
         }
     }

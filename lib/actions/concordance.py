@@ -289,8 +289,6 @@ class Actions(Querying):
         out['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
 
-        out['query_history_page_num_records'] = int(
-            settings.get('plugins', 'query_storage')['page_num_records'])
         out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
             self._plugin_api, self.args.corpname)
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
@@ -375,8 +373,6 @@ class Actions(Querying):
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
-        out['query_history_page_num_records'] = int(
-            settings.get('plugins', 'query_storage')['page_num_records'])
         return out
 
     @exposed(return_type='json')

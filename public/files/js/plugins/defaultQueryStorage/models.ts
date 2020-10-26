@@ -31,6 +31,7 @@ import { List, Dict, HTTP } from 'cnc-tskit';
 import { QueryType } from '../../models/query/common';
 import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
 
 
 
@@ -57,13 +58,12 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         pluginApi:IPluginApi,
         offset:number,
         limit:number,
-        pageSize:number,
-        initialData:Array<Kontext.QueryHistoryItem>
+        pageSize:number
     ) {
         super(
             pluginApi.dispatcher(),
             {
-                data: initialData,
+                data: [],
                 queryType: '',
                 currentCorpusOnly: true,
                 offset,
@@ -129,13 +129,13 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.ToggleQueryHistoryWidget>(
-            QueryActionName.ToggleQueryHistoryWidget,
+        this.addActionHandler<QueryActions.ToggleQueryHistoryWidget|MainMenuActions.ShowQueryHistory>(
+            [QueryActionName.ToggleQueryHistoryWidget, MainMenuActionName.ShowQueryHistory],
             action => {
                 this.changeState(state => {
                     state.isBusy = true
                 });
-                this.performLoadAction();
+                this.performLoadAction(action.name === QueryActionName.ToggleQueryHistoryWidget);
             }
         );
 
@@ -231,8 +231,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         );
     }
 
-    private performLoadAction():void {
-        this.loadData().subscribe(
+    private performLoadAction(widgetMode:boolean=false):void {
+        this.loadData(widgetMode).subscribe(
             () => {
                 this.changeState(state => {
                     state.isBusy = false
@@ -247,15 +247,15 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         );
     }
 
-    private loadData():Observable<any> {
+    private loadData(widgetMode:boolean=false):Observable<any> {
         const args = new MultiDict();
         args.set('offset', this.state.offset);
         args.set('limit', this.state.limit + 1);
         args.set('query_type', this.state.queryType);
-        if (this.state.currentCorpusOnly) {
+        if (widgetMode || this.state.currentCorpusOnly) {
             args.set('corpname', this.pluginApi.getCorpusIdent().id);
         }
-        args.set('archived_only', this.state.archivedOnly ? '1' : '0');
+        args.set('archived_only', !widgetMode && this.state.archivedOnly ? '1' : '0');
         return this.pluginApi.ajax$<AjaxResponse.QueryHistory>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('user/ajax_query_history'),

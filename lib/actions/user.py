@@ -176,30 +176,6 @@ class User(Kontext):
             rows = ()
         return rows
 
-    @exposed(access_level=1)
-    def query_history(self, request):
-        self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
-        num_records = int(settings.get('plugins', 'query_storage').get('page_num_records', 0))
-        # offset=0, limit=100, from_date='', to_date='', query_type='', current_corpus=''
-        offset = int(request.args.get('offset', '0'))
-        pages = 1
-        from_date = request.args.get('from_date')
-        to_date = request.args.get('to_date')
-        query_type = request.args.get('query_type')
-        corpname = self.args.corpname
-        archived_only = bool(int(request.args.get('archived_only', '0')))
-        rows = self._load_query_history(query_type=query_type, corpname=corpname, from_date=from_date,
-                                        to_date=to_date, archived_only=archived_only, offset=offset,
-                                        limit=num_records * pages)
-        return dict(
-            data=rows,
-            from_date=from_date,
-            to_date=to_date,
-            offset=offset,
-            limit=num_records * pages,
-            page_num_records=num_records
-        )
-
     @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def ajax_query_history(self, request):
         offset = int(request.args.get('offset', '0'))
