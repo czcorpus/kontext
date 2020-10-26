@@ -52,6 +52,7 @@ class QueryStorage(AbstractQueryStorage):
         self.db = db
         self._conc_persistence = conc_persistence
         self._auth = auth
+        self._page_num_records = int(conf.get('plugins', 'query_storage')['page_num_records'])
 
     def _current_timestamp(self):
         return int(time.time())
@@ -251,6 +252,9 @@ class QueryStorage(AbstractQueryStorage):
         for item in new_list:
             self.db.list_append(tmp_key, item)
         self.db.rename(tmp_key, data_key)
+
+    def export(self, plugin_api):
+        return {'page_num_records': self._page_num_records}
 
 
 @inject(plugins.runtime.DB, plugins.runtime.CONC_PERSISTENCE, plugins.runtime.AUTH)

@@ -94,7 +94,6 @@ __conf.UseCQLEditor = {% if cql_editor %}true{% else %}false{% endif %};
 __conf.QSVisibilityMode = {{ qs_visibility_mode }};
 __conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
 {#- end query form -#}
-__conf.QueryHistoryPageNumRecords = {{ query_history_page_num_records|to_json }};
 
 {%if running_calc %}
 __conf.numLines = {{ Lines|length }};

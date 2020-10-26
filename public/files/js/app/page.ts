@@ -767,10 +767,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
             const qsModel = queryStoragePlugin(
                 this.pluginApi(),
-                0, //this.getConf<number>('Offset'),
-                100, //this.getConf<number>('Limit'),
-                10, //this.getConf<number>('PageSize'),
-                [] //this.getConf<Array<Kontext.QueryHistoryItem>>('Data')
+                0,
+                this.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records'),
+                this.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records')
             );
             const qhViews = initQueryHistoryViews({
                 dispatcher: this.dispatcher,

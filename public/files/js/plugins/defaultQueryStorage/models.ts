@@ -58,13 +58,12 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         pluginApi:IPluginApi,
         offset:number,
         limit:number,
-        pageSize:number,
-        initialData:Array<Kontext.QueryHistoryItem>
+        pageSize:number
     ) {
         super(
             pluginApi.dispatcher(),
             {
-                data: initialData,
+                data: [],
                 queryType: '',
                 currentCorpusOnly: true,
                 offset,

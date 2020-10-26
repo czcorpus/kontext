@@ -1106,9 +1106,8 @@ export class ViewPage {
             const queryStoragePlg = queryStoragePlugin(
                 this.layoutModel.pluginApi(),
                 0,
-                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
-                this.layoutModel.getConf<number>('QueryHistoryPageNumRecords'),
-                []
+                this.layoutModel.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records'),
+                this.layoutModel.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records')
             );
             this.setupHistoryOnPopState();
             this.initQueryForm();

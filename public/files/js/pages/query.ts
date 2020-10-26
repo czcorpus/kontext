@@ -325,7 +325,7 @@ export class QueryPage {
                 this.layoutModel
             );
 
-            const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
+            const pageSize = this.layoutModel.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records');
             const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
                 'ConcFormsArgs'
             );
@@ -340,8 +340,7 @@ export class QueryPage {
                 this.layoutModel.pluginApi(),
                 0,
                 pageSize,
-                pageSize,
-                []
+                pageSize
             );
             ttAns.queryStorageView = qsPlugin.getWidgetView();
 
