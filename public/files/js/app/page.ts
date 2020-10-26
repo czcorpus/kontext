@@ -122,6 +122,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 
+    qstorPlugin:PluginInterfaces.QueryStorage.IPlugin;
+
     /**
      * This is intended for React components to make them able register key
      * events (e.g. the 'ESC' key). But it is always a preferred approach
@@ -765,7 +767,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.getConf<boolean>('anonymousUser')
             );
 
-            const qsModel = queryStoragePlugin(
+            this.qstorPlugin = queryStoragePlugin(
                 this.pluginApi(),
                 0,
                 this.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records'),
@@ -774,7 +776,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             const qhViews = initQueryHistoryViews({
                 dispatcher: this.dispatcher,
                 helpers: this.getComponentHelpers(),
-                recentQueriesModel: qsModel.getModel(),
+                recentQueriesModel: this.qstorPlugin.getModel(),
                 mainMenuModel: this.mainMenuModel
             });
 
