@@ -626,10 +626,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return mismatch;
     }
 
-    protected addQueryInfix(state:QueryFormModelState, sourceId:string, query:string,
-            insertRange:[number, number]):void {
+    protected addQueryInfix(
+        state:QueryFormModelState,
+        sourceId:string,
+        query:string,
+        insertRange:[number, number]
+    ):void {
         state.queries[sourceId] = state.queries[sourceId].substring(0, insertRange[0]) + query +
                 state.queries[sourceId].substr(insertRange[1]);
+        state.querySuggestions[sourceId].valuePosEnd = insertRange[0] + query.length;
     }
 
     protected testQueryNonEmpty(sourceId:string):Error|null {
