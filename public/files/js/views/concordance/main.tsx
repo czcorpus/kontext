@@ -128,7 +128,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
 
-    const LineSelectionMenu:React.SFC<{
+    const LineSelectionMenu:React.FC<{
         isLocked:boolean;
         canSendEmail:boolean;
         mode:LineSelectionModes;
@@ -271,7 +271,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <ConcSummary /> ---------------------------
 
-    const ConcSummary:React.SFC<{
+    const ConcSummary:React.FC<{
         corpname:string;
         isUnfinishedCalculation:boolean;
         concSize:number;
@@ -318,7 +318,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             } else if (typeof props.ipm === 'number' && !props.canCalculateAdHocIpm) {
                 return <span className={`ipm${props.isUnfinishedCalculation ? ' unfinished' : ''}`}>{he.formatNumber(props.ipm)}</span>;
 
-            } else if (props.adHocIpm) {
+            } else if (props.adHocIpm >= 0) {
                 return <span className={`ipm${props.isUnfinishedCalculation ? ' unfinished' : ''}`}>{he.formatNumber(props.adHocIpm)}</span>;
 
             } else if (props.canCalculateAdHocIpm) {
@@ -481,7 +481,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <AnonymousUserLoginPopup /> ---------------------------
 
-    const AnonymousUserLoginPopup:React.SFC<{
+    const AnonymousUserLoginPopup:React.FC<{
         onCloseClick:()=>void;
 
     }> = (props) => {

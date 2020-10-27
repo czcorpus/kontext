@@ -1516,13 +1516,12 @@ class Actions(Querying):
         if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname):
             # a faster solution based on liveattrs
             with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
-                attr_map = TextTypeCollector(self.corp, request).get_attrmap()
+                attr_map = TextTypeCollector(self.corp, request.json['text_types']).get_attrmap()
                 size = liveatt.get_subc_size(self._plugin_api, self.corp, attr_map)
                 return dict(total=size)
         else:
-            tt_query = TextTypeCollector(self.corp, request).get_query()
-            query = 'aword,[] within %s' % (
-                ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
+            tt_query = TextTypeCollector(self.corp, request.json['text_types']).get_query()
+            query = 'aword,[] within {}'.format(' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
             self.args.q = [query]
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=0, save=self.args.save)
