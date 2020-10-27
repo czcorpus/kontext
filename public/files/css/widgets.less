@@ -30,7 +30,7 @@ section.closeable-frame {
     max-width: 100em;
     max-height: 90%;
 
-    .heading {
+    > .heading {
 
         margin: 0 0 1.7em 0;
         padding: 0.6em 0.8em;
@@ -278,6 +278,16 @@ fieldset.FieldsetOutputOptions {
 
 .RecentQueriesPageList {
 
+    .loader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        img {
+            display: block;
+        }
+    }
+
     .last-row {
         text-align: center;
         padding: 10px 0;
@@ -289,20 +299,25 @@ fieldset.FieldsetOutputOptions {
         margin: 0;
         padding: 0;
 
+        > li:first-of-type {
+            border-width: 1px 0 1px 0;
+        }
+
         > li {
-            margin-left: 0;
-            margin-top: 1em;
+            margin: 0;
+            padding: 0;
             border-color: @color-light-grey;
-            border-width: 1px;
             border-style: solid;
-            border-radius: @border-radius-default;
-            padding: 0.7em;
+            border-width: 0 0 1px 0;
 
             .heading {
                 font-size: 1.1em;
+                display: flex;
+                padding-top: 0.4em;
+                padding-bottom: 0.4em;
 
                 .corpname {
-                    display: inline-block;
+                    flex-grow: 1;
                     margin-right: 1em;
                     color: @color-light-text;
 
@@ -311,63 +326,88 @@ fieldset.FieldsetOutputOptions {
                         font-style: normal;
                     }
                 }
+
+                .date {
+                    color: @color-light-text;
+
+                    strong {
+                        padding-left: 0.4em;
+                    }
+                }
             }
 
-            .saved-name {
-                color: @color-logo-pink;
-                padding-right: 0.7em;
-            }
+            .contents {
 
-            .query-info {
+                display: flex;
 
-                margin-top: 0.3em;
-                margin-bottom: 0.7em;
-                margin-left: 0.7em;
+                .saved-name {
+                    color: @color-logo-pink;
+                    padding-right: 0.7em;
+                }
 
-                .query-line {
+                .query-info {
+                    flex-grow: 1;
 
-                    margin-top: 0.7em;
-                    margin-bottom: 1em;
-                    max-width: 80em;
+                    .query-line {
+                        display: flex;
+                        flex-direction: column;
+                        max-width: 80em;
 
-                    .query {
-                        overflow: hidden;
-                        padding: 0.3em 0.7em 0.3em 0.7em;
-                        font-family: @monospace-font-family;
-                        background-color: transparent;
-                        border: none;
+                        .query {
+                            overflow: hidden;
+                            padding: 0.3em 0.7em 0 0;
+                            font-family: @monospace-font-family;
+                            background-color: transparent;
+                            border: none;
+                            font-size: 1.2em;
+                            color: #920040;
+                        }
+
+                        span.query {
+                            white-space: nowrap;
+                        }
+
+                        pre.query {
+                            display: inline-block;
+                            vertical-align: middle;
+                        }
+
+                        .query-type {
+                            color: @color-light-text;
+                            font-size: 80%;
+                            padding-bottom: 0.7em;
+                        }
                     }
 
-                    span.query {
-                        white-space: nowrap;
-                    }
+                    .text-types-info {
 
-                    pre.query {
-                        display: inline-block;
-                        vertical-align: middle;
-                    }
+                        a.switch {
+                            text-decoration: none;
+                            color: @color-logo-blue;
+                        }
 
-                    .query-type {
-                        color: @color-light-text;
-                        font-size: 80%;
-                        padding-right: 0.3em;
+                        a.switch:hover {
+                            text-decoration: underline;
+                            color: @color-logo-blue-shining;
+                        }
+
+                        ul {
+                            margin: 0.4em 0 0.2em 0;
+                        }
                     }
                 }
 
-                .text-types-info {
+                .actions {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: right;
 
-                    a.switch {
-                        text-decoration: none;
-                        color: @color-logo-blue;
+                    > div {
+                        text-align: right;
                     }
 
-                    a.switch:hover {
-                        text-decoration: underline;
-                        color: @color-logo-blue-shining;
-                    }
-
-                    ul {
-                        margin: 0.4em 0 0.2em 0;
+                    > div:not(:last-child) {
+                        margin-bottom: 0.7em;
                     }
                 }
             }
@@ -386,15 +426,6 @@ fieldset.FieldsetOutputOptions {
 
             a.open-in-form:hover {
                 color: @color-logo-blue-shining;
-            }
-        }
-
-        .date {
-            color: @color-light-text;
-            float: right;
-
-            strong {
-                padding-left: 0.4em;
             }
         }
     }

@@ -36,6 +36,8 @@ export interface HistoryViews {
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             queryHistoryModel:IModel<{}>):HistoryViews {
 
+    const layoutViews = he.getLayoutViews();
+
     const queryTypes:{[k in QueryType]:string} = {
         'simple': he.translate('query__qt_simple'),
         'advanced': he.translate('query__qt_advanced')
@@ -163,8 +165,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
         return (
             <div className="query-line">
-                <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u25BA\u00a0'}</span>
                 <span className="query">{props.query}</span>
+                <span className="query-type">({queryTypes[props.query_type]})</span>
             </div>
         );
     };
@@ -237,12 +239,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <div className="query-info">
                 <div className="query-line">
-                    <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u25BA\u00a0'}</span>
                     {
                         props.query_sh ?
                         <pre className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
                         <span className="query">{props.query}</span>
                     }
+                    <span className="query-type">({queryTypes[props.query_type]})</span>
                 </div>
                 {props.aligned.map(v => <AlignedQueryInfo key={v.corpname}
                             query={v.query} query_type={v.query_type} />)}
@@ -285,10 +287,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         } else {
             if (props.name) {
                 return (
-                    <div>
+                    <div className="SavedNameInfo">
                         {he.translate('query__save_as_saved_as')}:{'\u00a0'}
                         <span className="saved-name">{props.name}</span>
-                        {'\u00a0'}
                         <a className="util-button" onClick={handleDoNotSaveClick}>
                             {he.translate('query__save_as_transient')}
                         </a>
@@ -297,7 +298,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
             } else {
                 return (
-                    <div>
+                    <div className="SavedNameInfo">
                         <a className="util-button" onClick={handleEditClick}>
                             {he.translate('query__save_button')}{'\u2026'}
                         </a>
@@ -389,9 +390,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         return (
             <li>
-                <span className="date">
-                    {he.formatDate(new Date(props.data.created * 1000), 1)}
-                </span>
                 <div className="heading">
                     <strong>
                         {props.data.idx + 1}.
@@ -405,24 +403,33 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         }
                     </span>
                     {props.data.aligned.map(v => <span key={v.corpname} className="corpname"> + {v.human_corpname}</span>)}
+                    <span className="date">
+                        {he.formatDate(new Date(props.data.created * 1000), 1)}
+                    </span>
                 </div>
-                <QueryInfo
-                        query={props.data.query}
-                        query_sh={props.data.query_sh}
-                        query_type={props.data.query_type}
-                        aligned={props.data.aligned}
-                        textTypes={props.data.selected_text_types} />
-                <div className="footer">
-                    <a className="open-in-form util-button" onClick={handleFormClick}>
-                        {he.translate('qhistory__open_in_form')}
-                        {'\u2026'}
-                    </a>
-                    {props.data.query_id ?
-                    <SavedNameInfo name={props.data.name} queryId={props.data.query_id}
-                            hasEditor={props.hasEditor}
-                            editingQueryName={props.editingQueryName} /> :
-                            null /* legacy query history record cannot be archived  */
-                    }
+                <div className="contents">
+                    <QueryInfo
+                            query={props.data.query}
+                            query_sh={props.data.query_sh}
+                            query_type={props.data.query_type}
+                            aligned={props.data.aligned}
+                            textTypes={props.data.selected_text_types} />
+                    <div className="actions">
+                        <div>
+                            <a className="open-in-form util-button" onClick={handleFormClick}>
+                                {he.translate('qhistory__open_in_form')}
+                                {'\u2026'}
+                            </a>
+                        </div>
+                        <div>
+                        {props.data.query_id ?
+                        <SavedNameInfo name={props.data.name} queryId={props.data.query_id}
+                                hasEditor={props.hasEditor}
+                                editingQueryName={props.editingQueryName} /> :
+                                null /* legacy query history record cannot be archived  */
+                        }
+                        </div>
+                    </div>
                 </div>
             </li>
         );
@@ -521,11 +528,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <FilterForm queryType={props.queryType}
                         currentCorpusOnly={props.currentCorpusOnly}
                         archivedOnly={props.archivedOnly} />
-                <DataTable data={props.data} offset={props.offset}
-                        modelIsBusy={props.isBusy}
-                        hasMoreItems={props.hasMoreItems}
-                        editingQueryId={props.editingQueryId}
-                        editingQueryName={props.editingQueryName} />
+                {props.data.length === 0 && props.isBusy ?
+                    <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                    <DataTable data={props.data} offset={props.offset}
+                            modelIsBusy={props.isBusy}
+                            hasMoreItems={props.hasMoreItems}
+                            editingQueryId={props.editingQueryId}
+                            editingQueryName={props.editingQueryName} />
+                }
             </div>
         );
     }
