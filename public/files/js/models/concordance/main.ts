@@ -1005,16 +1005,19 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     private calculateAdHocIpm():Observable<number> {
         const selections = this.ttModel.exportSelections(false);
-        const args = new MultiDict();
-        args.set('corpname', this.state.baseCorpname);
-        for (let p in selections) {
-            const v = selections[p];
-            args.replace(`sca_${p}`, Array.isArray(v) ? v : [v]); // TODO this is completely broken !!!
-        }
         return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('ajax_get_within_max_hits'),
-            args
+            this.layoutModel.createActionUrl(
+                'ajax_get_within_max_hits'
+            ),
+            {
+                ...this.layoutModel.getConcArgs(),
+                type:'adHocIpmArgs',
+                text_types: selections
+            },
+            {
+                contentType: 'application/json'
+            }
 
         ).pipe(
             tap((data) => {
