@@ -79,14 +79,24 @@ class TreeNode {
     }
 }
 
-class AttrMapping {
+interface AttrMapping {
     attr:string;
     map:{[attrValue:string]:string};
+}
 
-    constructor(attr:string, map:{[attrValue:string]:string}) {
-        this.attr = attr;
-        this.map = map;
-    }
+function isAttrMapping(object):object is AttrMapping {
+    return object instanceof Object && 'attr' in object && 'map' in object;
+}
+
+interface ElementConf {
+    element:string;
+    attribute:string;
+}
+
+interface FeatureConf {
+    paragraph?:ElementConf;
+    newLine?:ElementConf;
+    typeface?:ElementConf;
 }
 
 const typefaceMap = {
@@ -99,16 +109,24 @@ const typefaceMap = {
     default: 'default'
 }
 
-const structMapping:{[struct:string]:string|AttrMapping} = {
-    p: 'p',
-    lb: 'br', // children not expected
-    hi: new AttrMapping('rend', typefaceMap)
+function getStructMapping(featureConf:FeatureConf) {
+    const mapping = {};
+    if (featureConf.paragraph) {
+        mapping[featureConf.paragraph.element] = 'p'
+    }
+    if (featureConf.newLine) {
+        mapping[featureConf.newLine.element] = 'br'
+    }
+    if (featureConf.typeface) {
+        mapping[featureConf.typeface.element] = {attr: featureConf.typeface.attribute, map: typefaceMap}
+    }
+    return mapping;
 }
-
 
 export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRendererProps> {
 
     const FormattedTextRenderer:React.FC<FormattedTextRendererProps> = (props) => {
+        const structMapping = getStructMapping(props.data.features);
         const rootNode = new TreeNode('div', [], null);
 
         pipe(
@@ -139,7 +157,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                             const mappedTag = structMapping[tagName];
 
                             if (mappedTag) {
-                                if (mappedTag instanceof AttrMapping) {
+                                if (isAttrMapping(mappedTag)) {
                                     if (activeNode.parent && Dict.hasValue(activeNode.element, mappedTag.map)) {
                                         return activeNode.parent;
                                     }
@@ -166,7 +184,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                         } else {
                             const tagName = /<(\w+).*?>/g.exec(curr.str)[1];
                             let mappedTag = structMapping[tagName];
-                            if (mappedTag instanceof AttrMapping) {
+                            if (isAttrMapping(mappedTag)) {
                                 const re = new RegExp(`${mappedTag.attr}=(\\w+)`);
                                 const attrValue = re.exec(curr.str);
                                 if (attrValue) {
