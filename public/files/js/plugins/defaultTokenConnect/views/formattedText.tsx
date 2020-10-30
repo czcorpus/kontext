@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe } from 'cnc-tskit';
+import { Dict, List, pipe } from 'cnc-tskit';
 import * as React from 'react';
 import { AjaxResponse } from '../../../types/ajaxResponses';
 import { Kontext } from '../../../types/common';
@@ -40,8 +40,52 @@ class TreeNode {
         this.parent = parent;
     }
 
-    addChild(node:TreeNode) {
-        this.children.push(node);
+    addChild(child:TreeNode|string) {
+        this.children.push(child);
+    }
+
+    renderNode(index:number=0) {
+        const renderedChildren = List.map(
+            (v, i) => v instanceof TreeNode ? v.renderNode(i) : v,
+            this.children
+        );
+
+        switch (this.element) {
+            case 'p':
+                return <p key={index}>{renderedChildren}</p>;
+            case 'br':
+                return <br key={index}/>;
+            case 'b':
+                return <b key={index}>{renderedChildren}</b>;
+            case 'i':
+                return <i key={index}>{renderedChildren}</i>;
+            case 'u':
+                return <u key={index}>{renderedChildren}</u>;
+            case '???':  // TODO
+                return <span key={index}>{renderedChildren}</span>;
+            case 'sup':
+                return <sup key={index}>{renderedChildren}</sup>;
+            case 'sub':
+                return <sub key={index}>{renderedChildren}</sub>;
+            case 'mark':
+                return <mark key={index}> {renderedChildren} </mark>;
+            case 'div':
+                return <div key={index}>{renderedChildren}</div>;
+            default:
+                console.warn(`Unknown element type, can not render: ${this.element}`);
+            case 'default':
+                return <span key={index}>{renderedChildren}</span>;
+        }
+    }
+}
+
+class AttrMapping {
+    attr:string;
+    map:{[attrValue:string]:string};
+
+    constructor(attr:string, map:{[attrValue:string]:string}) {
+        this.attr = attr;
+        this.map = map;
     }
 }
 
@@ -49,28 +93,28 @@ const typefaceMap = {
     bold: 'b',
     italic: 'i',
     underline: 'u',
-    overstrike: '???',
+    overstrike: '???', // TODO
     superscript: 'sup',
-    subscript: 'sub'
+    subscript: 'sub',
+    default: 'default'
 }
 
-const mapping = {
+const structMapping:{[struct:string]:string|AttrMapping} = {
     p: 'p',
-    lb: 'br',
-    hi: {
-        attr: 'rend',
-        map: typefaceMap
-    }
+    lb: 'br', // children not expected
+    hi: new AttrMapping('rend', typefaceMap)
 }
 
 
 export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRendererProps> {
 
     const FormattedTextRenderer:React.FC<FormattedTextRendererProps> = (props) => {
-        const root = new TreeNode('root', [], null);
+        const rootNode = new TreeNode('div', [], null);
+
         pipe(
             props.data.content,
-            List.flatMap(
+            // split content by xml tags (only strc classes)
+            List.flatMap<{class:string, str:string}, {class:string, str:string}>(
                 v => {    
                     if (v.class === 'strc') {
                         const matches = v.str.match(/<.+?>/g);
@@ -82,22 +126,25 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                         }
                         return tmp;
                     }
-                    
                     return [v];
                 }
             ),
+            // build element tree from tags
             List.reduce(
                 (activeNode, curr) => {
                     if (curr.class === 'strc') {
                         // handle closing tags
                         if (curr.str.startsWith('<\/')) {
                             const tagName = /<\/(\w+)>/g.exec(curr.str)[1];
-                            const mappedTag = mapping[tagName];
+                            const mappedTag = structMapping[tagName];
 
                             if (mappedTag) {
-                                // ignoring unknown attributed tag
-                                if (mappedTag instanceof Object) {
-                                    return activeNode
+                                if (mappedTag instanceof AttrMapping) {
+                                    if (activeNode.parent && Dict.hasValue(activeNode.element, mappedTag.map)) {
+                                        return activeNode.parent;
+                                    }
+                                    // ignoring unknown attribute closing tag
+                                    return activeNode;
                                 
                                 // handling closing tag
                                 } else if (activeNode.parent && activeNode.element === mappedTag) {
@@ -112,33 +159,36 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                                 }
                             }
                             
-                            console.warn(`Unknown tag/attr: ${curr.str}`);
-                            activeNode.addChild(curr.str);
+                            console.warn(`Undefined tag mapping for ${curr.str}`);
                             return activeNode;
                         
                         // handle opening tags
                         } else {
                             const tagName = /<(\w+).*?>/g.exec(curr.str)[1];
-                            let mappedTag = mapping[tagName];
-                            if (mappedTag instanceof Object) {
-                                const re = new RegExp(`<.*?${mappedTag.attr}="(\w+)">`, 'g');
-                                const attrValue = re.exec(curr.str)[1];
-                                mappedTag = mappedTag.map[attrValue]
+                            let mappedTag = structMapping[tagName];
+                            if (mappedTag instanceof AttrMapping) {
+                                const re = new RegExp(`${mappedTag.attr}=(\\w+)`);
+                                const attrValue = re.exec(curr.str);
+                                if (attrValue) {
+                                    mappedTag = mappedTag.map[attrValue[1]]
+                                
+                                } else {
+                                    console.warn(`Attr '${mappedTag.attr}' not found in '${curr.str}'. Using default element.`);
+                                    mappedTag = mappedTag.map['default'];
+                                }
                             }
 
                             if (mappedTag) {
                                 const lowerNode = new TreeNode(mappedTag, [], activeNode);
                                 activeNode.addChild(lowerNode);
-        
-                                return lowerNode;
+                                return mappedTag === 'br' ? activeNode : lowerNode;
                             }
 
-                            console.warn(`Unknown tag/attr: ${curr.str}`);
-                            activeNode.addChild(curr.str);
+                            console.warn(`Undefined tag mapping for ${curr.str}`);
                             return activeNode;        
                         }
                     
-                    // searched word
+                    // searched word element
                     } else if (curr.class === 'coll') {
                         const wrapper = new TreeNode('mark', [curr.str], activeNode);
                         activeNode.addChild(wrapper);
@@ -150,17 +200,11 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
 
                     return activeNode;    
                 },
-                root
+                rootNode
             )
         );
-
-        console.log(root);        
         
-        return (
-            <div>FORMATTED TEXT ---
-                {List.map(v => v.str, props.data.content)}
-            </div>
-        );
+        return rootNode.renderNode();
     };
 
 
