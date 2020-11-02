@@ -47,7 +47,7 @@ def cached(fn):
     """
 
     @wraps(fn)
-    def wrapper(self, corpora, token_id, num_tokens, query_args, lang):
+    def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang):
         """
         get full path to the cache_db_file using a method defined in the abstract class that reads the value from
         kontext's config.xml; if the cache path is not defined, do not use caching:
@@ -66,7 +66,7 @@ def cached(fn):
                 res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
                 # if no result is found in the cache, call the backend function
                 if res is None:
-                    res = fn(self, corpora, token_id, num_tokens, query_args, lang)
+                    res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang)
                     # if a result is returned by the backend function, encode and zip its data part and store it in
                     # the cache along with the "found" parameter
                     if res:
@@ -86,7 +86,7 @@ def cached(fn):
                 curs.close()
                 # commited automatically via context manager
         else:
-            res = fn(self, corpora, token_id, num_tokens, query_args, lang)
+            res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang)
         return res if res else ('', False)
 
     return wrapper

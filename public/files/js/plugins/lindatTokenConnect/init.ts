@@ -21,8 +21,9 @@
 
 import { DefaultTokenConnectBackend } from '../defaultTokenConnect/init';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { init as initDefaultView, Views as DefaultTokenConnectRenderers } from '../defaultTokenConnect/view';
+import { init as initDefaultView, Views as DefaultTokenConnectRenderers } from '../defaultTokenConnect/views';
 import { init as initLindatView, Views as LindatTokenConnectRenderers } from './view';
+import { KnownRenderers } from '../defaultKwicConnect/model';
 
 declare var require:any;
 require('../defaultTokenConnect/style.less');
@@ -48,13 +49,13 @@ export class LindatTokenConnectBackend extends DefaultTokenConnectBackend {
 
     selectRenderer(typeId:string):PluginInterfaces.TokenConnect.Renderer {
         switch (typeId) {
-            case 'raw-html':
+            case KnownRenderers.RAW_HTML:
                 return this.views.RawHtmlRenderer;
-            case 'simple-tabular':
+            case KnownRenderers.SIMPLE_TABULAR:
                 return this.views.SimpleTabularRenderer;
-            case 'simple-description-list':
+            case KnownRenderers.SIMPLE_DESCRIPTION_LIST:
                 return this.views.DescriptionListRenderer;
-            case 'datamuse-json':
+            case KnownRenderers.DATAMUSE:
                 return this.views.DataMuseSimilarWords;
             case 'vallex-json':
                 return this.lindatViews.VallexJsonRenderer;
@@ -62,6 +63,8 @@ export class LindatTokenConnectBackend extends DefaultTokenConnectBackend {
                 return this.lindatViews.PDTVallexJsonRenderer;
             case 'eng-vallex-json':
                 return this.lindatViews.EngVallexJsonRenderer;
+            case KnownRenderers.FORMATTED_TEXT:
+                    return this.views.FormattedTextRenderer;
             default:
                 return this.views.UnsupportedRenderer;
         }

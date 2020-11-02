@@ -19,12 +19,12 @@
  */
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { init as initView, Views as DefaultTokenConnectRenderers } from './view';
+import { init as initView, Views as DefaultTokenConnectRenderers } from './views';
 import { MultiDict } from '../../multidict';
 import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { HTTP, List } from 'cnc-tskit';
+import { map, tap } from 'rxjs/operators';
+import { HTTP, List, pipe } from 'cnc-tskit';
 
 
 declare var require:any;
@@ -77,13 +77,18 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
             map(
                 (data:PluginInterfaces.TokenConnect.Response) => ({
                     token: data.token,
-                    renders: data.items.map(x => ({
-                        renderer: this.selectRenderer(x.renderer),
-                        isKwicView: x.is_kwic_view,
-                        contents: x.contents,
-                        found: x.found,
-                        heading: x.heading
-                    }))
+                    renders: pipe(
+                        data.items,
+                        List.map(
+                            x => ({
+                                renderer: this.selectRenderer(x.renderer),
+                                isKwicView: x.is_kwic_view,
+                                contents: x.contents,
+                                found: x.found,
+                                heading: x.heading
+                            }),
+                        )
+                    )
                 })
             )
         );
@@ -101,6 +106,8 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
                 return this.views.DataMuseSimilarWords;
             case KnownRenderers.ERROR:
                 return this.views.ErrorRenderer;
+            case KnownRenderers.FORMATTED_TEXT:
+                return this.views.FormattedTextRenderer;
             default:
                 return this.views.UnsupportedRenderer;
         }

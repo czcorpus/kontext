@@ -159,7 +159,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
                         args[s][sa] = v
                     else:
                         args[attr] = v
-                data, status = backend.fetch(corpora, token_id, num_tokens, args, lang)
+                data, status = backend.fetch(corpora, maincorp_obj, token_id, num_tokens, args, lang)
                 ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
             except TypeError as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
