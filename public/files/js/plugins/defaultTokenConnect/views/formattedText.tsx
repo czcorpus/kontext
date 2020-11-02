@@ -68,8 +68,8 @@ class TreeNode {
                 return <i key={index}>{renderedChildren}</i>;
             case 'u':
                 return <u key={index}>{renderedChildren}</u>;
-            case '???':  // TODO
-                return <span key={index}>{renderedChildren}</span>;
+            case 'del':
+                return <del key={index}>{renderedChildren}</del>;
             case 'sup':
                 return <sup key={index}>{renderedChildren}</sup>;
             case 'sub':
@@ -110,7 +110,7 @@ const typefaceMap = {
     bold: 'b',
     italic: 'i',
     underline: 'u',
-    overstrike: '???', // TODO
+    overstrike: 'del',
     superscript: 'sup',
     subscript: 'sub',
     default: 'default'
