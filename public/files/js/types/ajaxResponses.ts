@@ -103,6 +103,7 @@ export namespace AjaxResponse {
         righttoleft:'0'|'1';
         pos:number;
         maxdetail:number;
+        features?:any;
     }
 
     export interface FullRef extends Kontext.AjaxResponse {
