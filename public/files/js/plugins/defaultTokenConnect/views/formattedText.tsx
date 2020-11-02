@@ -45,8 +45,15 @@ class TreeNode {
     }
 
     renderNode(index:number=0) {
-        const renderedChildren = List.map(
-            (v, i) => v instanceof TreeNode ? v.renderNode(i) : v,
+        const renderedChildren = List.flatMap(
+            (v, i) => {
+                const tmp = [];
+                tmp.push(v instanceof TreeNode ? [v.renderNode(i)] : [v]);
+                if (i !== this.children.length - 1) {
+                    tmp.push(' ');
+                }
+                return tmp;
+            },
             this.children
         );
 
@@ -68,7 +75,7 @@ class TreeNode {
             case 'sub':
                 return <sub key={index}>{renderedChildren}</sub>;
             case 'mark':
-                return <mark key={index}> {renderedChildren} </mark>;
+                return <mark key={index}>{renderedChildren}</mark>;
             case 'div':
                 return <div key={index}>{renderedChildren}</div>;
             default:
