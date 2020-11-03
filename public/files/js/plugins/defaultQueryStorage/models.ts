@@ -27,11 +27,11 @@ import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../../models/query/cqleditor/parser';
-import { List, Dict, HTTP } from 'cnc-tskit';
-import { QueryType } from '../../models/query/common';
+import { List, HTTP } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import { QueryType } from '../../models/query/query';
 
 
 

@@ -182,7 +182,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             : null}
                         <div className="query">
                             <inputViews.TRQueryInputField
-                                queryType={this.props.queryTypes[primaryCorpname]}
                                 widgets={this.props.supportedWidgets[primaryCorpname]}
                                 sourceId={primaryCorpname}
                                 wPoSList={this.props.wPoSList}
@@ -203,16 +202,12 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 availableCorpora={this.props.availableAlignedCorpora}
                                 alignedCorpora={List.tail(this.props.corpora)}
                                 sectionVisible={this.props.alignedCorporaVisible}
-                                queryTypes={this.props.queryTypes}
                                 supportedWidgets={this.props.supportedWidgets}
                                 wPoSList={this.props.wPoSList}
+                                queries={this.props.queries}
                                 lposValues={this.props.lposValues}
-                                matchCaseValues={this.props.matchCaseValues}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttrValues={this.props.defaultAttrValues}
                                 attrList={this.props.attrList}
-                                pcqPosNegValues={this.props.pcqPosNegValues}
-                                includeEmptyValues={this.props.includeEmptyValues}
                                 inputLanguages={this.props.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
                                 hasLemmaAttr={this.props.hasLemma}
@@ -399,7 +394,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <div className="form primary-language">
                         <inputViews.TRQueryInputField
-                            queryType={this.props.queryTypes[this.props.corpname]}
                             widgets={this.props.supportedWidgets[this.props.corpname]}
                             sourceId={this.props.corpname}
                             wPoSList={this.props.wPoSList}

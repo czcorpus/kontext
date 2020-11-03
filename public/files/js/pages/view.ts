@@ -76,7 +76,6 @@ import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData }
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
 import { Actions, ActionName } from '../models/concordance/actions';
-import { QueryType } from '../models/query/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
 import { ConcSortModel } from '../models/query/sort/single';
@@ -85,11 +84,11 @@ import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
 import { MultiLevelConcSortModel } from '../models/query/sort/multi';
 import { PluginName } from '../app/plugin';
 import tagHelperPlugin from 'plugins/taghelper/init';
-import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { TTInitialData } from '../models/textTypes/common';
+import { QueryType } from '../models/query/query';
 
 
 declare var require:any;
@@ -509,8 +508,8 @@ export class ViewPage {
             currQueryTypes: fetchArgs<QueryType>(item => item.query_type),
             currQueries: fetchArgs<string>(item => item.query),
             currQmcaseValues: fetchArgs<boolean>(item => item.qmcase),
-            currDefaultAttrValues: fetchArgs<string>(item => item.default_attr_value),
-            currUseRegexpValues: fetchArgs<boolean>(item => item.curr_use_regexp_values),
+            currDefaultAttrValues: fetchArgs<string>(item => item.default_attr),
+            currUseRegexpValues: fetchArgs<boolean>(item => item.use_regexp),
             currLposValues: fetchArgs<string>(item => item.lpos),
             currFilflVlaues: fetchArgs<'f'|'l'>(item => item.filfl),
             currFilfposValues: fetchArgs<string>(item => item.filfpos),

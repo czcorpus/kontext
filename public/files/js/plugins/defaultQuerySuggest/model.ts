@@ -26,11 +26,11 @@ import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
 import { map, tap, concatMap, mergeMap } from 'rxjs/operators';
-import { QueryType } from '../../models/query/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { cutLongResult, listAttrs1ToExtend, mergeResults } from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
 import { Actions, ActionName } from './actions';
+import { QueryType } from '../../models/query/query';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {

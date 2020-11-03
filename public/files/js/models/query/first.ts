@@ -31,14 +31,15 @@ import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState,
-    shouldDownArrowTriggerHistory, ConcQueryArgs, QueryType, QueryContextArgs,
-    SuggestionsData } from './common';
+    shouldDownArrowTriggerHistory, ConcQueryArgs, QueryContextArgs,
+    SuggestionsData, determineSupportedWidgets } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
+import { AdvancedQuery, AnyQuery, parseSimpleQuery, QueryType, SimpleQuery } from './query';
 
 
 export interface QueryFormUserEntries {
@@ -124,35 +125,52 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 };
 
 
-function determineSupportedWidgets(
+function importUserQueries(
     corpora:Array<string>,
-    queryTypes:{[key:string]:QueryType},
-    tagBuilderSupport:{[key:string]:boolean},
-    isAnonymousUser:boolean
+    data:QueryFormUserEntries,
+    curr:{[corpus:string]:AnyQuery},
+    simpleQueryAttrSeq:Array<string>
+):{[corpus:string]:AnyQuery} {
 
-):{[key:string]:Array<string>} {
-
-    const getCorpWidgets = (corpname:string, queryType:QueryType):Array<string> => {
-        const ans = ['keyboard'];
-        if (!isAnonymousUser) {
-            ans.push('history');
-        }
-        if (queryType === 'advanced') {
-            ans.push('within');
-            if (tagBuilderSupport[corpname]) {
-                ans.push('tag');
-            }
-        }
-        return ans;
-    }
     return pipe(
         corpora,
-        List.map(
-            corpname => tuple(
-                corpname,
-                getCorpWidgets(corpname, queryTypes[corpname])
-            )
-        ),
+        List.map(corpus => {
+            const qtype = data.currQueryTypes[corpus] || 'simple';
+            const defaultAttr = data.currDefaultAttrValues[corpus] ?
+                    data.currDefaultAttrValues[corpus] :
+                    (curr[corpus] && curr[corpus].qtype === 'advanced'
+                        || List.empty(simpleQueryAttrSeq) ? 'word' : '');
+
+            if (qtype === 'advanced') {
+                return tuple<string, AdvancedQuery>(
+                    corpus,
+                    {
+                        corpname: corpus,
+                        qtype: 'advanced',
+                        query: data.currQueries[corpus] || '',
+                        pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
+                        include_empty: data.currIncludeEmptyValues[corpus] || false,
+                        default_attr: defaultAttr
+                    }
+                );
+
+            } else {
+                return tuple<string, SimpleQuery>(
+                    corpus,
+                    {
+                        corpname: corpus,
+                        qtype: 'simple',
+                        query: data.currQueries[corpus] || '',
+                        queryParsed: parseSimpleQuery(data.currQueries[corpus], defaultAttr),
+                        qmcase: data.currQmcaseValues[corpus] || false,
+                        use_regexp: data.currUseRegexpValues[corpus] || false,
+                        pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
+                        include_empty: data.currIncludeEmptyValues[corpus] || false,
+                        default_attr: defaultAttr
+                    }
+                );
+            }
+        }),
         Dict.fromEntries()
     );
 }
@@ -182,8 +200,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     hasLemma:{[key:string]:boolean};
 
-    includeEmptyValues:{[key:string]:boolean}; // applies only for aligned languages
-
     /**
      * Text descriptions of text type structure for end user.
      * (applies for the main corpus)
@@ -209,11 +225,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
 
 export interface FirstQueryFormModelSwitchPreserve {
-    queryTypes:{[key:string]:QueryType};
+    queries:{[sourceId:string]:AnyQuery};
     lposValues:{[key:string]:string};
-    matchCaseValues:{[key:string]:boolean};
-    queries:{[key:string]:string};
-    includeEmptyValues:{[key:string]:boolean}; // applies only for aligned languages
     alignedCorporaVisible:boolean;
 }
 
@@ -233,11 +246,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     ) {
 
         const corpora = props.corpora;
-        const queryTypes = pipe(
-            props.corpora,
-            List.map(item => tuple(item, props.currQueryTypes[item] || 'simple')),
-            Dict.fromEntries()
-        );
+        const queries = importUserQueries(corpora, props, {}, props.simpleQueryAttrSeq);
         const querySuggestions:SuggestionsData = pipe(
             props.corpora,
             List.map(corp => tuple(corp,
@@ -251,6 +260,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             )),
             Dict.fromEntries()
         );
+
         const tagBuilderSupport = props.tagBuilderSupport;
         super(dispatcher, pageModel, textTypesModel, queryContextModel, 'first-query-model', {
             formType: Kontext.ConcFormTypes.QUERY,
@@ -270,11 +280,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             isForeignSubcorpus: !!props.isForeignSubcorpus,
             shuffleForbidden: false,
             shuffleConcByDefault: props.shuffleConcByDefault,
-            queries: pipe(
-                props.corpora,
-                List.map(item => tuple(item, props.currQueries[item] || '')),
-                Dict.fromEntries()
-            ),
+            queries,
             downArrowTriggersHistory: pipe(
                 props.corpora,
                 List.map(item => tuple(
@@ -288,36 +294,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 List.map(item => tuple(item, props.currLposValues[item] || '')),
                 Dict.fromEntries()
             ),
-            matchCaseValues: pipe(
-                props.corpora,
-                List.map(item => tuple(item, props.currQmcaseValues[item] || false)),
-                Dict.fromEntries()
-            ),
-            defaultAttrValues: pipe(
-                props.corpora,
-                List.map(item => tuple(
-                    item,
-                    props.currDefaultAttrValues[item] ?
-                        props.currDefaultAttrValues[item] :
-                        (queryTypes[item] === 'advanced' || List.empty(props.simpleQueryAttrSeq) ? 'word' : '')
-                )),
-                Dict.fromEntries()
-            ),
-            useRegexp: pipe(
-                props.corpora,
-                List.map(item => tuple(item, props.currUseRegexpValues[item] || false)),
-                Dict.fromEntries()
-            ),
-            queryTypes,
             querySuggestions,
             pcqPosNegValues: pipe(
                 props.corpora,
                 List.map(item => tuple(item, props.currPcqPosNegValues[item] || 'pos')),
-                Dict.fromEntries()
-            ),
-            includeEmptyValues: pipe(
-                props.corpora,
-                List.map(item => tuple(item, props.currIncludeEmptyValues[item] || false)),
                 Dict.fromEntries()
             ),
             tagBuilderSupport,
@@ -331,8 +311,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ),
             isAnonymousUser: props.isAnonymousUser,
             supportedWidgets: determineSupportedWidgets(
-                corpora,
-                queryTypes,
+                queries,
                 tagBuilderSupport,
                 props.isAnonymousUser
             ),
@@ -359,28 +338,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             simpleQueryAttrSeq: props.simpleQueryAttrSeq,
             alignedCorporaVisible: List.size(corpora) > 1
         });
-        this.setUserValues(this.state, props);
 
         this.addActionHandler<Actions.CQLEditorDisable>(
             ActionName.CQLEditorDisable,
             action => {
-                this.emitChange();
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
-            ActionName.QueryInputSetQType,
-            action => action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    state.queryTypes[action.payload.sourceId] = action.payload.queryType;
-                    state.supportedWidgets = determineSupportedWidgets(
-                        state.corpora,
-                        state.queryTypes,
-                        state.tagBuilderSupport,
-                        state.isAnonymousUser
-                    );
-                })
+                this.emitChange(); // TODO ???!!
             }
         );
 
@@ -419,11 +381,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
-                    state.queries[action.payload.sourceId] = appendQuery(
-                        state.queries[action.payload.sourceId],
+                    state.queries[action.payload.sourceId].query = appendQuery(
+                        state.queries[action.payload.sourceId].query,
                         action.payload.query,
                         action.payload.prependSpace
                     );
+                    // TODO !!! add parsed version
                     if (action.payload.closeWhenDone) {
                         state.activeWidgets[action.payload.sourceId] = null;
                     }
@@ -435,10 +398,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ActionName.QueryInputRemoveLastChar,
             action => {
                 this.changeState(state => {
-                    const currQuery2 = state.queries[action.payload.sourceId];
+                    const currQuery2 = state.queries[action.payload.sourceId].query;
                     if (currQuery2.length > 0) {
-                        state.queries[action.payload.sourceId] =
+                        state.queries[action.payload.sourceId].query =
                             currQuery2.substr(0, currQuery2.length - 1);
+                        // TODO !!! add parsed version
                     }
                 });
             }
@@ -485,7 +449,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ActionName.QueryInputSetIncludeEmpty,
             action => {
                 this.changeState(state => {
-                    state.includeEmptyValues[action.payload.corpname] = action.payload.value;
+                    state.queries[action.payload.corpname].include_empty = action.payload.value;
                 });
             }
         );
@@ -536,7 +500,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 ).subscribe(
                     (data:ConcQueryResponse|null) => {
                         if (data === null) {
-                            if (this.state.defaultAttrValues[List.head(this.state.corpora)]) {
+                            if (this.state.queries[List.head(this.state.corpora)].default_attr) {
                                 this.pageModel.showMessage(
                                     'error',
                                     this.pageModel.translate('query__no_result_found')
@@ -649,7 +613,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     private testPrimaryQueryNonEmpty():Error|null {
-        if (this.state.queries[List.head(this.state.corpora)].length === 0) {
+        if (this.state.queries[List.head(this.state.corpora)].query.length === 0) {
             return new Error(this.pageModel.translate('query__query_must_be_entered'));
         }
         return null;
@@ -661,11 +625,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     private serialize(state:FirstQueryFormModelState):FirstQueryFormModelSwitchPreserve {
         return {
-            queryTypes: {...state.queryTypes},
-            lposValues: {...state.lposValues},
-            matchCaseValues: {...state.matchCaseValues},
             queries: {...state.queries},
-            includeEmptyValues: {...state.includeEmptyValues},
+            lposValues: {...state.lposValues},
             alignedCorporaVisible: state.alignedCorporaVisible
         };
     }
@@ -677,11 +638,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         newCorp:string,
         isAligned?:boolean
     ) {
-        state.queries[newCorp] = data.queries[oldCorp];
-        state.queryTypes[newCorp] = data.queryTypes[oldCorp];
-        state.matchCaseValues[newCorp] = data.matchCaseValues[oldCorp];
-        if (isAligned) {
-            state.includeEmptyValues[newCorp] = data.includeEmptyValues[oldCorp];
+        state.queries[newCorp] = {
+            ...data.queries[oldCorp],
+            corpname: newCorp
+        };
+        if (!isAligned) {
+            state.queries[newCorp].include_empty = false; // this is rather a formal stuff
         }
     }
 
@@ -703,8 +665,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             );
             state.alignedCorporaVisible = data.alignedCorporaVisible;
             state.supportedWidgets = determineSupportedWidgets(
-                state.corpora,
-                state.queryTypes,
+                state.queries,
                 state.tagBuilderSupport,
                 state.isAnonymousUser
             );
@@ -715,53 +676,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return this.state.activeWidgets[sourceId];
     }
 
-
-    private setUserValues(state:FirstQueryFormModelState, data:QueryFormUserEntries):void {
-        state.queries = pipe(
-            state.corpora,
-            List.map(item => tuple(item, data.currQueries[item] || '')),
-            Dict.fromEntries()
-        );
-        state.lposValues = pipe(
-            state.corpora,
-            List.map(item => tuple(item, data.currLposValues[item] || '')),
-            Dict.fromEntries()
-        );
-        state.matchCaseValues = pipe(
-            state.corpora,
-            List.map(item => tuple(item, data.currQmcaseValues[item] || false)),
-            Dict.fromEntries()
-        );
-        state.queryTypes = pipe(
-            state.corpora,
-            List.map(item => tuple(item, data.currQueryTypes[item] || 'simple')),
-            Dict.fromEntries()
-        );
-        state.defaultAttrValues = pipe(
-            state.corpora,
-            List.map(item => tuple(
-                item,
-                data.currDefaultAttrValues[item]?
-                    data.currDefaultAttrValues[item] :
-                    (state.queryTypes[item] === 'advanced' || List.empty(state.simpleQueryAttrSeq) ? 'word' : '')
-            )),
-            Dict.fromEntries()
-        ),
-        state.pcqPosNegValues = pipe(
-            state.corpora,
-            List.map(item => tuple(item, data.currPcqPosNegValues[item] || 'pos')),
-            Dict.fromEntries()
-        );
-    }
-
     syncFrom(src:Observable<AjaxResponse.QueryFormArgs>):Observable<AjaxResponse.QueryFormArgs> {
         return src.pipe(
             tap(
                 (data) => {
                     if (data.form_type === 'query') {
                         this.changeState(state => {
-                            this.setUserValues(
-                                state,
+                            state.queries = importUserQueries(
+                                state.corpora,
                                 {
                                     currQueries: data.curr_queries,
                                     currQueryTypes: data.curr_query_types,
@@ -771,13 +693,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                     currQmcaseValues: data.curr_qmcase_values,
                                     currPcqPosNegValues: data.curr_pcq_pos_neg_values,
                                     currIncludeEmptyValues: data.curr_include_empty_values
-                                }
+                                },
+                                state.queries,
+                                state.simpleQueryAttrSeq
                             );
                             state.tagBuilderSupport = data.tag_builder_support;
                             state.hasLemma = data.has_lemma;
                             state.supportedWidgets = determineSupportedWidgets(
-                                state.corpora,
-                                state.queryTypes,
+                                state.queries,
                                 state.tagBuilderSupport,
                                 state.isAnonymousUser
                             );
@@ -807,33 +730,23 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 List.some(x => x.n === corpname, state.availableAlignedCorpora)) {
             state.corpora.push(corpname);
             if (!Dict.hasKey(corpname, state.queries)) {
-                state.queries[corpname] = '';
+                state.queries[corpname] = {
+                    corpname,
+                    qtype: 'simple',
+                    queryParsed: [],
+                    query: '',
+                    qmcase: false,
+                    pcq_pos_neg: 'pos',
+                    include_empty: false,
+                    default_attr: List.empty(state.simpleQueryAttrSeq)  ? 'word' : '',
+                    use_regexp: false
+                };
             }
-            if (!Dict.hasKey(corpname, state.lposValues)) {
-                state.lposValues[corpname] = '';
-            }
-            if (!Dict.hasKey(corpname, state.matchCaseValues)) {
-                state.matchCaseValues[corpname] = false;
-            }
-            if (!Dict.hasKey(corpname, state.useRegexp)) {
-                state.useRegexp[corpname] = false;
-            }
-            if (!Dict.hasKey(corpname, state.queryTypes)) {
-                state.queryTypes[corpname] = 'simple'; // TODO what about some session-stored stuff?
-            }
-            if (!Dict.hasKey(corpname, state.pcqPosNegValues)) {
-                state.pcqPosNegValues[corpname] = 'pos';
-            }
-            if (!Dict.hasKey(corpname, state.includeEmptyValues)) {
-                state.includeEmptyValues[corpname] = false;
-            }
-            if (!Dict.hasKey(corpname, state.defaultAttrValues)) {
-                state.defaultAttrValues[corpname] =
-                        state.queryTypes[corpname] === 'advanced' ||
-                            List.empty(state.simpleQueryAttrSeq)  ? 'word' : '';
-            }
-            state.supportedWidgets = determineSupportedWidgets(state.corpora, state.queryTypes,
-                state.tagBuilderSupport, state.isAnonymousUser);
+            state.supportedWidgets = determineSupportedWidgets(
+                state.queries,
+                state.tagBuilderSupport,
+                state.isAnonymousUser
+            );
 
         } else {
             throw new Error(`adding unknown corpus ${corpname}`)
@@ -842,6 +755,24 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     private removeAlignedCorpus(state:FirstQueryFormModelState, corpname:string):void {
         List.removeValue(corpname, state.corpora);
+    }
+
+    private exportQuery(query:AnyQuery, defaultAttr?:string):AnyQuery {
+        if (query.qtype === 'advanced') {
+            return {
+                ...query,
+                query: query.query.trim().normalize(),
+                default_attr: defaultAttr ? defaultAttr : query.default_attr
+            }
+
+        } else {
+            return {
+                ...query,
+                query: query.query.trim().normalize(),
+                // TODO !!! parsed version
+                default_attr: defaultAttr ? defaultAttr : query.default_attr
+            }
+        }
     }
 
     createSubmitArgs(contextFormArgs:QueryContextArgs, attrTryIdx:number):ConcQueryArgs {
@@ -872,17 +803,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
 
         args.queries = List.map(
-            (c, i) => ({
-                corpname: c,
-                query: this.state.queries[c] ? this.state.queries[c].trim().normalize() : '',
-                qtype: this.state.queryTypes[c],
-                qmcase: this.state.matchCaseValues[c],
-                pcq_pos_neg: this.state.pcqPosNegValues[c],
-                include_empty: this.state.includeEmptyValues[c],
-                default_attr: this.state.defaultAttrValues[c] || i > 0 ?
-                    this.state.defaultAttrValues[c] : this.state.simpleQueryAttrSeq[attrTryIdx],
-                use_regexp: this.state.useRegexp[c]
-            }),
+            (corpus, i) => {
+                const query = this.state.queries[corpus];
+                return this.exportQuery(
+                    query,
+                    query.default_attr || i > 0 ?
+                        query.default_attr : this.state.simpleQueryAttrSeq[attrTryIdx]
+                );
+            },
             this.state.corpora
         );
 

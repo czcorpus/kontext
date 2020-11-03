@@ -21,7 +21,8 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { WithinBuilderData, QueryType, QueryContextArgs } from './common';
+import { WithinBuilderData, QueryContextArgs } from './common';
+import { QueryType } from './query';
 
 
 export enum ActionName {

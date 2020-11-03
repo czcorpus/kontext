@@ -21,8 +21,8 @@
 import { Kontext} from '../../../types/common';
 import { parse as parseQuery, SyntaxError } from 'cqlParser/parser';
 import { IAttrHelper, NullAttrHelper } from './attrs';
-import { QueryType } from '../common';
 import { List, tuple, pipe } from 'cnc-tskit';
+import { QueryType } from '../query';
 
 /**
  * CharsRule represents a pointer to the original

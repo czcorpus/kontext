@@ -20,7 +20,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { filter, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { tuple, pipe, Dict, List, HTTP } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
@@ -29,13 +29,14 @@ import { PageModel } from '../../app/page';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
-    FilterServerArgs, QueryType, SuggestionsData } from './common';
+    FilterServerArgs, SuggestionsData, determineSupportedWidgets } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginInterfaces } from '../../types/plugins';
 import { TextTypesModel } from '../textTypes/main';
 import { AjaxConcResponse } from '../concordance/common';
+import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery } from './query';
 
 
 /**
@@ -45,26 +46,30 @@ import { AjaxConcResponse } from '../concordance/common';
  */
 export interface FilterFormProperties extends GeneralQueryFormProperties {
     filters:Array<string>;
-    maincorps:Array<[string, string]>;
-    currQueryTypes:Array<[string, QueryType]>;
+    maincorps:{[sourceId:string]:string};
+    currQueryTypes:{[sourceId:string]:QueryType};
     // current queries values (e.g. when restoring a form state)
-    currQueries:Array<[string, string]>;
-    currDefaultAttrValues:Array<[string, string]>;
-    currUseRegexpValues:Array<[string, boolean]>;
-    tagBuilderSupport:Array<[string, boolean]>;
-    currLposValues:Array<[string, string]>;
-    currQmcaseValues:Array<[string, boolean]>;
-    currInclkwicValues:Array<[string, boolean]>;
+    currQueries:{[sourceId:string]:string};
+    currDefaultAttrValues:{[sourceId:string]:string};
+    currUseRegexpValues:{[sourceId:string]:boolean};
+    tagBuilderSupport:{[sourceId:string]:boolean};
+    currLposValues:{[sourceId:string]:string};
+    currQmcaseValues:{[sourceId:string]:boolean};
+    currInclkwicValues:{[sourceId:string]:boolean};
     inputLanguage:string;
-    currPnFilterValues:Array<[string, string]>;
-    currFilflVlaues:Array<[string, 'f'|'l']>;
-    currFilfposValues:Array<[string, string]>;
-    currFiltposValues:Array<[string, string]>;
-    withinArgValues:Array<[string, boolean]>;
-    opLocks:Array<[string, boolean]>;
-    hasLemma:Array<[string, boolean]>;
+    currPnFilterValues:{[sourceId:string]:string};
+    currFilflVlaues:{[sourceId:string]:'f'|'l'};
+    currFilfposValues:{[sourceId:string]:string};
+    currFiltposValues:{[sourceId:string]:string};
+    withinArgValues:{[sourceId:string]:boolean};
+    opLocks:{[sourceId:string]:boolean};
+    hasLemma:{[sourceId:string]:boolean};
     isAnonymousUser:boolean;
     suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+}
+
+export function isFilterFormProperties(v:FilterFormProperties|AjaxResponse.FilterFormArgs):v is FilterFormProperties {
+    return Array.isArray(v['filters']) && typeof v['maincorps'] === 'object';
 }
 
 /**
@@ -76,42 +81,12 @@ export function fetchFilterFormArgs<T extends
     initialArgs:AjaxResponse.FilterFormArgs,
     key:(item:AjaxResponse.FilterFormArgs)=>T
 
-):Array<[string, T]> {
+):{[sourceId:string]:T} {
     return pipe(
         args,
-        Dict.toEntries(),
-        List.filter(([, v]) => v.form_type === Kontext.ConcFormTypes.FILTER),
-        List.map(([formId, args]) => tuple(formId, key(<AjaxResponse.FilterFormArgs>args))),
-        List.concat([tuple('__new__', key(initialArgs))])
-    );
-}
-
-
-function determineSupportedWidgets(
-    queries:{[key:string]:string},
-    queryTypes:{[key:string]:QueryType},
-    tagBuilderSupport:{[key:string]:boolean}
-
-):{[key:string]:Array<string>} {
-
-    const getWidgets = (filterId:string):Array<string> => {
-        switch (queryTypes[filterId]) {
-            case 'simple':
-                return ['keyboard', 'history'];
-            case 'advanced':
-                const ans = ['keyboard', 'history'];
-                if (tagBuilderSupport[filterId]) {
-                    ans.push('tag');
-                }
-                return ans;
-        }
-    }
-
-    return pipe(
-        queries,
-        Dict.keys(),
-        List.map(filterId => tuple(filterId, getWidgets(filterId))),
-        Dict.fromEntries()
+        Dict.filter((v, _) => v.form_type === Kontext.ConcFormTypes.FILTER),
+        Dict.map((args, _) => key(<AjaxResponse.FilterFormArgs>args)),
+        (data) => ({...data, '__new__': key(initialArgs)})
     );
 }
 
@@ -160,6 +135,82 @@ export interface FilterFormModelState extends QueryFormModelState {
 }
 
 /**
+ * Import form values either from a special properties object or from
+ * an Ajax response used e.g. when replaying an operation.
+ */
+function importFormValues(src:FilterFormProperties):{[key:string]:AnyQuery};
+function importFormValues(src:AjaxResponse.FilterFormArgs, sourceId:string):{[key:string]:AnyQuery};
+function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
+    if (isFilterFormProperties(src)) {
+        return pipe(
+            sourceId ? [sourceId] : Dict.keys(src.currQueries),
+            List.map(
+                filter => {
+                    if (src.currQueryTypes[filter] === 'advanced') {
+                        return tuple<string, AdvancedQuery>(
+                            filter,
+                            {
+                                corpname: filter,
+                                qtype: 'advanced',
+                                query: src.currQueries[filter] || '',
+                                pcq_pos_neg: 'pos',
+                                include_empty: false,
+                                default_attr: src.currDefaultAttrValues[filter]
+                            }
+                        );
+
+                    } else {
+                        return tuple<string, SimpleQuery>(
+                            filter,
+                                {
+                                corpname: filter,
+                                qtype: 'simple',
+                                queryParsed: [],
+                                // TODO !!! parsed version
+                                query: src.currQueries[filter] || '',
+                                qmcase: src.currQmcaseValues[filter],
+                                pcq_pos_neg: 'pos',
+                                include_empty: false,
+                                default_attr: src.currDefaultAttrValues[filter],
+                                use_regexp: src.currUseRegexpValues[filter]
+                            }
+                        )
+                    }
+                }
+            ),
+            Dict.fromEntries()
+        );
+
+    } else if (sourceId && AjaxResponse.isFilterFormArgs(src)) {
+        return {
+            [sourceId]: src.query_type === 'advanced' ?
+                {
+                    corpname: sourceId,
+                    qtype: 'advanced',
+                    query: src.query,
+                    pcq_pos_neg: 'pos',
+                    include_empty: false,
+                    default_attr: src.default_attr
+                } :
+                {
+                    corpname: sourceId,
+                    qtype: 'simple',
+                    queryParsed: [], // TODO !!!
+                    query: src.query,
+                    qmcase: src.qmcase,
+                    pcq_pos_neg: 'pos',
+                    include_empty: false,
+                    default_attr: src.default_attr,
+                    use_regexp: src.use_regexp
+                }
+        };
+
+    } else {
+        throw new Error('Failed to initialize filter form - invalid source object');
+    }
+}
+
+/**
  * FilterFormModel handles all the filtsters applied within a query "pipeline".
  * Each filter is identified by its database ID (i.e. a key used by conc_persistence
  * plug-in to store it). Please note that it does not know the order of filters
@@ -176,26 +227,18 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             queryContextModel:QueryContextModel,
             props:FilterFormProperties,
             syncInitialArgs:AjaxResponse.FilterFormArgs) {
-        const queries = pipe(
-            [...props.currQueries, ...[tuple('__new__', '')]],
-            Dict.fromEntries()
-        );
-        const queryTypes = pipe(
-            [...props.currQueryTypes, ...[tuple<string, QueryType>('__new__', 'simple')]],
-            Dict.fromEntries()
-        );
+        const queries:{[sourceId:string]:AnyQuery} = {
+            ...importFormValues(props)
+        };
         const querySuggestions:SuggestionsData = pipe(
-            [...props.currQueries, ...[tuple<string, Array<unknown>>('__new__', [])]],
-            List.map(([k,]) => tuple(
-                k, {
-                    data: [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
-                    isPartial: false,
-                    valuePosStart: 0,
-                    valuePosEnd: 0,
-                    timeReq: new Date().getTime()
-                }
-            )),
-            Dict.fromEntries()
+            {...props.currQueries, '__new__': []},
+            Dict.map(() => ({
+                data: [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
+                isPartial: false,
+                valuePosStart: 0,
+                valuePosEnd: 0,
+                timeReq: new Date().getTime()
+            }))
         );
 
         const tagBuilderSupport = props.tagBuilderSupport;
@@ -210,87 +253,40 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             useCQLEditor: props.useCQLEditor,
             tagAttr: props.tagAttr,
             widgetArgs: {}, // TODO
-            maincorps: Dict.fromEntries(props.maincorps),
+            maincorps: {...props.maincorps},
             downArrowTriggersHistory: pipe(
                 queries,
                 Dict.map(v => false),
             ),
             currentSubcorp: pageModel.getCorpusIdent().usesubcorp,
-            queryTypes,
             querySuggestions,
-            lposValues: pipe(
-                props.currLposValues,
-                Dict.fromEntries()
-            ),
-            matchCaseValues: pipe(
-                props.currQmcaseValues,
-                Dict.fromEntries()
-            ),
-            defaultAttrValues: pipe(
-                props.currDefaultAttrValues,
-                List.map(([fid, item]) => tuple(
-                    fid,
-                    item !== undefined ? item : 'word'
-                )),
-                Dict.fromEntries()
-            ),
-            useRegexp: pipe(
-                props.currUseRegexpValues,
-                List.map(([fid, item]) => tuple(
-                    fid,
-                    item !== undefined ? item : false
-                )),
-                Dict.fromEntries()
-            ),
-            pnFilterValues: pipe(
-                props.currPnFilterValues,
-                Dict.fromEntries()
-            ),
-            filflValues:pipe(
-                props.currFilflVlaues,
-                Dict.fromEntries()
-            ),
+            lposValues: {...props.currLposValues},
+            pnFilterValues: {...props.currPnFilterValues},
+            filflValues: {...props.currFilflVlaues},
             filfposValues: pipe(
                 props.currFilfposValues,
-                List.map(([fid, v]) => tuple(fid, Kontext.newFormValue(v, true))),
-                Dict.fromEntries()
+                Dict.map((v, fid) => Kontext.newFormValue(v, true))
             ),
             filtposValues: pipe(
                 props.currFiltposValues,
-                List.map(([fid, v]) => tuple(fid, Kontext.newFormValue(v, true))),
-                Dict.fromEntries()
+                Dict.map((v, fid) => Kontext.newFormValue(v, true)),
             ),
-            inclkwicValues: pipe(
-                props.currInclkwicValues,
-                Dict.fromEntries()
-            ),
-            tagBuilderSupport: pipe(
-                tagBuilderSupport,
-                Dict.fromEntries()
-            ),
-            opLocks: pipe(
-                props.opLocks,
-                Dict.fromEntries()
-            ),
+            inclkwicValues: {...props.currInclkwicValues},
+            tagBuilderSupport: {...tagBuilderSupport},
+            opLocks: {...props.opLocks},
             activeWidgets: pipe(
                 props.filters,
                 List.map(item => tuple(item, null)),
                 Dict.fromEntries()
             ),
-            withinArgs: pipe(
-                props.withinArgValues,
-                Dict.fromEntries()
-            ),
-            hasLemma: pipe(
-                props.hasLemma,
-                Dict.fromEntries()
-            ),
+            withinArgs: {...props.withinArgValues},
+            hasLemma: {...props.hasLemma},
             inputLanguage: props.inputLanguage,
             isAnonymousUser: props.isAnonymousUser,
             supportedWidgets: determineSupportedWidgets(
                 queries,
-                queryTypes,
-                Dict.fromEntries(tagBuilderSupport)
+                tagBuilderSupport,
+                props.isAnonymousUser
             ),
             contextFormVisible: false,    // TODO load from some previous state?
             textTypesFormVisible: false,  // dtto
@@ -332,31 +328,17 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
-            ActionName.QueryInputSetQType,
-            action => action.payload.formType === 'filter',
-            action => {
-                this.changeState(state => {
-                    state.queryTypes[action.payload.sourceId] = action.payload.queryType;
-                    state.supportedWidgets = determineSupportedWidgets(
-                        state.queries,
-                        state.queryTypes,
-                        state.tagBuilderSupport
-                    );
-                });
-            }
-        );
-
         this.addActionSubtypeHandler<Actions.QueryInputAppendQuery>(
             ActionName.QueryInputAppendQuery,
             action => action.payload.formType === 'filter',
             action => {
                 this.changeState(state => {
-                    state.queries[action.payload.sourceId] = appendQuery(
-                        state.queries[action.payload.sourceId],
+                    state.queries[action.payload.sourceId].query = appendQuery(
+                        state.queries[action.payload.sourceId].query,
                         action.payload.query,
                         action.payload.prependSpace
                     );
+                    // TODO !!! parsed version
                 });
             }
         );
@@ -536,8 +518,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     const filterId = data.op_key;
                     if (data.form_type === Kontext.ConcFormTypes.FILTER) {
                         this.changeState(state => {
-                            state.queries[filterId] = data.query;
-                            state.queryTypes[filterId] = data.query_type;
+                            state.queries = {...state.queries, ...importFormValues(data, filterId)};
                             state.maincorps[filterId] = data.maincorp;
                             state.pnFilterValues[filterId] = data.pnfilter;
                             state.filflValues[filterId] = data.filfl;
@@ -552,8 +533,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 isRequired: true
                             };
                             state.inclkwicValues[filterId] = data.inclkwic;
-                            state.matchCaseValues[filterId] = data.qmcase;
-                            state.defaultAttrValues[filterId] = data.default_attr_value;
                             state.tagBuilderSupport[filterId] = data.tag_builder_support;
                             state.withinArgs[filterId] = data.within;
                             state.lposValues[filterId] = data.lpos;
@@ -561,8 +540,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                             state.opLocks[filterId] = false;
                             state.supportedWidgets = determineSupportedWidgets(
                                 state.queries,
-                                state.queryTypes,
-                                state.tagBuilderSupport
+                                state.tagBuilderSupport,
+                                state.isAnonymousUser
                             );
                         });
 
@@ -582,19 +561,20 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
     }
 
     private createSubmitArgs(filterId:string, concId:string):FilterServerArgs {
+        const query = this.state.queries[filterId];
         return {
             type:'filterQueryArgs',
-            qtype: this.state.queryTypes[filterId],
-            query: this.state.queries[filterId],
+            qtype: query.qtype,
+            query: query.query,
+            default_attr: query.default_attr,
+            qmcase: query.qtype === 'simple' ? query.qmcase : false,
+            use_regexp: query.qtype === 'simple' ? query.use_regexp : false,
             pnfilter: this.state.pnFilterValues[filterId],
             filfl: this.state.filflValues[filterId],
             filfpos: this.state.filfposValues[filterId].value,
             filtpos: this.state.filtposValues[filterId].value,
             inclkwic: this.state.inclkwicValues[filterId] ? 1 : 0,
             within: this.state.withinArgs[filterId],
-            qmcase: this.state.matchCaseValues[filterId],
-            default_attr: this.state.defaultAttrValues[filterId],
-            use_regexp: this.state.useRegexp[filterId],
             ...this.pageModel.getConcArgs(),
             q: '~' + concId
         }

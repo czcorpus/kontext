@@ -281,7 +281,6 @@ export function init({
                     <div className="form">
                         <div className="query">
                             <inputViews.TRQueryInputField
-                                queryType={this.props.queryTypes[this.props.filterId]}
                                 widgets={this.props.supportedWidgets[this.props.filterId]}
                                 sourceId={this.props.filterId}
                                 wPoSList={this.props.wPoSList}
@@ -331,7 +330,6 @@ export function init({
                     <div className="form primary-language">
                         <div>
                             <inputViews.TRQueryInputField
-                                queryType={this.props.queryTypes[this.props.filterId]}
                                 widgets={this.props.supportedWidgets[this.props.filterId]}
                                 sourceId={this.props.filterId}
                                 wPoSList={this.props.wPoSList}

@@ -471,14 +471,16 @@ class Actions(Querying):
             query = data.curr_queries[corpus]
             icase = '' if data.curr_qmcase_values[corpus] else '(?i)'
             attr = data.curr_default_attr_values[corpus]
+            use_regexp = data.curr_use_regexp_values[corpus]
         else:
             qtype = data.query_type
             query = data.query
             icase = '' if data.qmcase else '(?i)'
             attr = data.default_attr
+            use_regexp = data.use_regexp
 
         def mk_query_val(q):
-            if qtype == 'advanced' or data.curr_use_regexp_values[corpus]:
+            if qtype == 'advanced' or use_regexp:
                 return q.strip()
             return icase + re.escape(q.strip())
 
