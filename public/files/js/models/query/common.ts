@@ -32,9 +32,8 @@ import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
+import { advancedToSimpleQuery, AnyQuery, QueryType, simpleToAdvancedQuery } from './query';
 
-
-export type QueryType = 'simple'|'advanced';
 
 export type CtxLemwordType = 'any'|'all'|'none';
 
@@ -48,16 +47,7 @@ export interface QueryContextArgs {
 }
 
 export interface ConcQueryArgs {
-    queries:Array<{
-        corpname:string;
-        qtype:QueryType;
-        query:string;
-        qmcase:boolean;
-        pcq_pos_neg:string;
-        include_empty:boolean;
-        default_attr:string;
-        use_regexp:boolean;
-    }>;
+    queries:Array<AnyQuery>;
     maincorp:string|null;
     usesubcorp:string|null;
     viewmode:'kwic'|'sen'|'align';
@@ -179,15 +169,7 @@ export interface QueryFormModelState {
 
     currentSubcorp:string;
 
-    queries:{[sourceId:string]:string}; // corpname|filter_id -> query
-
-    queryTypes:{[sourceId:string]:QueryType};
-
-    defaultAttrValues:{[key:string]:string};
-
-    useRegexp:{[key:string]:boolean};
-
-    matchCaseValues:{[key:string]:boolean};
+    queries:{[sourceId:string]:AnyQuery}; // corpname|filter_id -> query
 
     querySuggestions:SuggestionsData;
 
@@ -230,7 +212,35 @@ export interface QueryFormModelState {
      * 1-th is used etc.
      */
     simpleQueryAttrSeq:Array<string>;
+}
 
+/**
+ *
+ */
+export function determineSupportedWidgets(
+    queries:{[key:string]:AnyQuery},
+    tagBuilderSupport:{[key:string]:boolean},
+    isAnonymousUser:boolean
+
+):{[key:string]:Array<string>} {
+
+    const getCorpWidgets = (corpname:string, queryType:QueryType):Array<string> => {
+        const ans = ['keyboard'];
+        if (!isAnonymousUser) {
+            ans.push('history');
+        }
+        if (queryType === 'advanced') {
+            ans.push('within');
+            if (tagBuilderSupport[corpname]) {
+                ans.push('tag');
+            }
+        }
+        return ans;
+    }
+    return Dict.map(
+        (query, corpname) => getCorpWidgets(corpname, query.qtype),
+        queries
+    );
 }
 
 /**
@@ -278,7 +288,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         ).subscribe(
             ([sourceId,, rawFocusIdx]) => {
                 const [srchWord, srchWordStart, srchWordEnd] = this.findCursorWord(
-                    this.state.queries[sourceId],
+                    this.state.queries[sourceId].query,
                     rawFocusIdx
                 );
                 if (this.shouldAskForSuggestion(sourceId, srchWord)) {
@@ -296,8 +306,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             valueEndIdx: srchWordEnd,
                             valueType: 'unspecified',
                             valueSubformat: this.determineSuggValueType(sourceId),
-                            queryType: this.state.queryTypes[sourceId],
-                            posAttr: this.state.defaultAttrValues[sourceId],
+                            queryType: this.state.queries[sourceId].qtype,
+                            posAttr: this.state.queries[sourceId].default_attr,
                             struct: undefined,
                             structAttr: undefined,
                             sourceId
@@ -309,6 +319,27 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         name: PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions
                     });
                 }
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
+            ActionName.QueryInputSetQType,
+            action => action.payload.formType === this.formType,
+            action => {
+                this.changeState(state => {
+                    const query = state.queries[action.payload.sourceId];
+                    if (query.qtype === 'advanced' && action.payload.queryType === 'simple') {
+                        state.queries[action.payload.sourceId] = advancedToSimpleQuery(query);
+
+                    } else if (query.qtype === 'simple' && action.payload.queryType === 'advanced') {
+                        state.queries[action.payload.sourceId] = simpleToAdvancedQuery(query);
+                    }
+                    state.supportedWidgets = determineSupportedWidgets(
+                        state.queries,
+                        state.tagBuilderSupport,
+                        state.isAnonymousUser
+                    );
+                })
             }
         );
 
@@ -351,7 +382,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.defaultAttrValues[action.payload.sourceId] = action.payload.value;
+                    state.queries[action.payload.sourceId].default_attr = action.payload.value;
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
@@ -366,9 +397,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.matchCaseValues[action.payload.sourceId] = action.payload.value;
-                    if (state.matchCaseValues[action.payload.sourceId]) {
-                        state.useRegexp[action.payload.sourceId] = false;
+                    const val = state.queries[action.payload.sourceId];
+                    if (val.qtype === 'simple') {
+                        val.qmcase = action.payload.value;
+                        if (val.qmcase) {
+                            val.use_regexp = false;
+                        }
+
+                    } else {
+                        console.error('Invalid query type');
                     }
                 });
             }
@@ -379,9 +416,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.useRegexp[action.payload.sourceId] = !state.useRegexp[action.payload.sourceId];
-                    if (state.useRegexp[action.payload.sourceId]) {
-                        state.matchCaseValues[action.payload.sourceId] = false;
+                    const val = state.queries[action.payload.sourceId];
+                    if (val.qtype === 'simple') {
+                        val.use_regexp = !val.use_regexp;
+                        if (val.use_regexp) {
+                            val.qmcase = false;
+                        }
                     }
                 });
             }
@@ -412,7 +452,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         );
 
                     } else {
-                        state.queries[action.payload.sourceId] = action.payload.query;
+                        state.queries[action.payload.sourceId].query = action.payload.query;
                     }
                     state.downArrowTriggersHistory[action.payload.sourceId] =
                         shouldDownArrowTriggerHistory(
@@ -437,7 +477,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     state.downArrowTriggersHistory[action.payload.sourceId] =
                         shouldDownArrowTriggerHistory(
-                            state.queries[action.payload.sourceId],
+                            state.queries[action.payload.sourceId].query,
                             action.payload.rawAnchorIdx,
                             action.payload.rawFocusIdx
                         );
@@ -479,9 +519,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                         // TODO on refocus on the input cursor is on the end
                         // this is to prevent confusion
-                        state.cursorPos = state.queries[action.payload.sourceId].length;
+                        state.cursorPos = state.queries[action.payload.sourceId].query.length;
 
-                        state.defaultAttrValues[action.payload.sourceId] = action.payload.attr;
+                        state.queries[action.payload.sourceId].default_attr = action.payload.attr;
                     }
                     state.suggestionsVisible[action.payload.sourceId] = false;
                 });
@@ -562,13 +602,19 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     }
 
     private determineSuggValueType(sourceId:string):PluginInterfaces.QuerySuggest.QueryValueSubformat {
-        if (this.state.useRegexp[sourceId]) {
-            return 'regexp';
+        const query = this.state.queries[sourceId];
+        if (query.qtype === 'advanced') {
+            return 'advanced';
 
-        } else if (this.state.matchCaseValues[sourceId]) {
-            return 'simple';
+        } else {
+            if (query.use_regexp) {
+                return 'regexp';
+
+            } else if (query.qmcase) {
+                return 'simple';
+            }
+            return 'simple_ic';
         }
-        return 'simple_ic';
     }
 
     private findCursorWord(value:string, focusIdx:number):[string, number, number] {
@@ -597,7 +643,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     }
 
     private shouldAskForSuggestion(sourceId:string, srchWord:string):boolean {
-        return this.state.queryTypes[sourceId] !== 'advanced'
+        return this.state.queries[sourceId].qtype !== 'advanced'
                         && this.state.suggestionsVisibility !==
                             PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED
                         && !!srchWord.trim();
@@ -632,13 +678,14 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         query:string,
         insertRange:[number, number]
     ):void {
-        state.queries[sourceId] = state.queries[sourceId].substring(0, insertRange[0]) + query +
-                state.queries[sourceId].substr(insertRange[1]);
+        state.queries[sourceId].query = state.queries[sourceId].query.substring(0, insertRange[0]) + query +
+                state.queries[sourceId].query.substr(insertRange[1]);
+        // TODO !!! add parsed version
         state.querySuggestions[sourceId].valuePosEnd = insertRange[0] + query.length;
     }
 
     protected testQueryNonEmpty(sourceId:string):Error|null {
-        if (this.state.queries[sourceId].length > 0) {
+        if (this.state.queries[sourceId].query.length > 0) {
             return null;
 
         } else {
@@ -647,8 +694,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     }
 
     private isPossibleQueryTypeMismatch(sourceId:string):[boolean, QueryType] {
-        const query = this.state.queries[sourceId];
-        const queryType = this.state.queryTypes[sourceId];
+        const query = this.state.queries[sourceId].query;
+        const queryType = this.state.queries[sourceId].qtype;
         return tuple(this.validateQuery(query, queryType), queryType);
     }
 

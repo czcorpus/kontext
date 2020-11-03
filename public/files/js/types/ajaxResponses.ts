@@ -20,7 +20,8 @@
 
 import {Kontext, TextTypes} from '../types/common';
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../models/concordance/common';
-import { CtxLemwordType, QueryType } from '../models/query/common';
+import { CtxLemwordType } from '../models/query/common';
+import { QueryType } from '../models/query/query';
 
 // TODO !! this should be broken and moved into respective modules
 
@@ -155,8 +156,8 @@ export namespace AjaxResponse {
         filtpos:string;
         inclkwic:boolean;
         qmcase:boolean;
-        default_attr_value:string;
-        curr_use_regexp_values:boolean;
+        default_attr:string;
+        use_regexp:boolean;
         tag_builder_support:boolean;
         lpos:string;
         within:boolean; // used when switching to an aligned corp without specific query (true)

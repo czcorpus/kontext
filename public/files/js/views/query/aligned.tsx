@@ -24,9 +24,9 @@ import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { InputModuleViews } from './input';
-import { QueryType } from '../../models/query/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/query/actions';
+import { AnyQuery, QueryType } from '../../models/query/query';
 
 
 export interface AlignedModuleArgs {
@@ -39,16 +39,12 @@ export interface AlignedCorporaProps {
     availableCorpora:Array<{n:string; label:string}>;
     sectionVisible:boolean;
     alignedCorpora:Array<string>;
-    queryTypes:{[key:string]:QueryType};
+    queries:{[key:string]:AnyQuery};
     supportedWidgets:{[key:string]:Array<string>};
     wPoSList:Array<{n:string; v:string}>;
     lposValues:{[key:string]:string};
-    matchCaseValues:{[key:string]:boolean};
     forcedAttr:string;
-    defaultAttrValues:{[key:string]:string};
     attrList:Array<Kontext.AttrItem>;
-    pcqPosNegValues:{[key:string]:string};
-    includeEmptyValues:{[key:string]:boolean};
     inputLanguages:{[key:string]:string};
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     hasLemmaAttr:{[key:string]:boolean};
@@ -79,17 +75,13 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
      */
     class AlignedCorpBlock extends React.Component<{
         corpname:string;
+        queries:{[corpus:string]:AnyQuery};
         label:string;
-        pcqPosNegValue:string;
-        includeEmptyValue:boolean;
-        queryType:QueryType;
         widgets:Array<string>;
         hasLemmaAttr:boolean;
         wPoSList:Array<{n:string; v:string}>;
         lposValue:string;
-        matchCaseValue:boolean;
         forcedAttr:string;
-        defaultAttr:string;
         attrList:Array<Kontext.AttrItem>;
         inputLanguage:string;
         queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
@@ -143,7 +135,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                     <div className="form">
                         <inputViews.TRQueryInputField
                             sourceId={this.props.corpname}
-                            queryType={this.props.queryType}
                             widgets={this.props.widgets}
                             wPoSList={this.props.wPoSList}
                             lposValue={this.props.lposValue}
@@ -159,9 +150,10 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             customOptions={[
                                 <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
                                     span={2}
-                                    value={this.props.pcqPosNegValue}
+                                    value={this.props.queries[this.props.corpname].pcq_pos_neg}
                                     formType={Kontext.ConcFormTypes.QUERY} />,
-                                <inputViews.TRIncludeEmptySelector value={this.props.includeEmptyValue}
+                                <inputViews.TRIncludeEmptySelector
+                                    value={this.props.queries[this.props.corpname].include_empty}
                                     corpname={this.props.corpname}
                                     span={1} />
                             ]} />
@@ -212,17 +204,13 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 key={item}
                                 label={findCorpusLabel(item)}
                                 corpname={item}
-                                queryType={props.queryTypes[item]}
+                                queries={props.queries}
                                 widgets={props.supportedWidgets[item]}
                                 wPoSList={props.wPoSList}
                                 lposValue={props.lposValues[item]}
-                                matchCaseValue={props.matchCaseValues[item]}
                                 forcedAttr={props.forcedAttr}
-                                defaultAttr={props.defaultAttrValues[item]}
                                 attrList={props.attrList}
                                 tagHelperView={props.tagHelperViews[item]}
-                                pcqPosNegValue={props.pcqPosNegValues[item]}
-                                includeEmptyValue={props.includeEmptyValues[item]}
                                 inputLanguage={props.inputLanguages[item]}
                                 queryStorageView={props.queryStorageView}
                                 hasLemmaAttr={props.hasLemmaAttr[item]}

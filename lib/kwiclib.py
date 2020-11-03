@@ -244,7 +244,7 @@ class Kwic(object):
         self.corpus_fullname = corpus_fullname
         self.conc = conc
 
-    def kwicpage(self, args):
+    def kwicpage(self, args: KwicPageArgs):
         """
         Generates template data for page displaying provided concordance
 

@@ -19,7 +19,7 @@
  */
 
 import { Observable } from 'rxjs';
-import { IEventEmitter, ITranslator, IFullActionControl, IModel, Action } from 'kombo';
+import { ITranslator, IFullActionControl, IModel, Action } from 'kombo';
 
 import { Kontext, TextTypes } from '../types/common';
 import { CoreViews } from './coreViews';
@@ -27,7 +27,7 @@ import { IConcLinesProvider } from '../types/concordance';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
-import { QueryType } from '../models/query/common';
+import { QueryType } from '../models/query/query';
 
 /**
  * An interface used by KonText plug-ins to access

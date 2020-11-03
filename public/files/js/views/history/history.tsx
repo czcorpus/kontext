@@ -25,7 +25,7 @@ import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/query/actions';
-import { QueryType } from '../../models/query/common';
+import { QueryType } from '../../models/query/query';
 
 
 export interface HistoryViews {

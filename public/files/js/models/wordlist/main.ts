@@ -492,11 +492,9 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     corpname: formSubmitArgs.corpname,
                     query: this.createPQuery(word, formSubmitArgs.wlattr),
                     qtype: 'advanced',
-                    qmcase: true,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
-                    default_attr: formSubmitArgs.wlattr,
-                    use_regexp: true
+                    default_attr: formSubmitArgs.wlattr
                 }
             ],
             text_types: {},

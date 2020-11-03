@@ -27,13 +27,14 @@ import { init as cqlEditoInit } from './cqlEditor';
 import { WithinBuilderModel, WithinBuilderModelState } from '../../models/query/withinBuilder';
 import { PluginInterfaces } from '../../types/plugins';
 import { Kontext } from '../../types/common';
-import { QueryFormModel, QueryFormModelState, QueryType, SuggestionsData } from '../../models/query/common';
+import { QueryFormModel, QueryFormModelState, SuggestionsData } from '../../models/query/common';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
+import { QueryType } from '../../models/query/query';
 
 
 export interface InputModuleArgs {
@@ -60,7 +61,6 @@ export interface TRQueryInputFieldProps {
     sourceId:string;
     lposValue:string;
     wPoSList:Array<{n:string; v:string}>;
-    queryType:QueryType;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     tagHelperView:PluginInterfaces.TagHelper.View;
     widgets:Array<string>;
@@ -645,7 +645,7 @@ export function init({
                     <ul>
                         <li>
                             <TRQueryTypeField formType={this.props.formType}
-                                queryType={this.props.queryTypes[this.props.sourceId]}
+                                queryType={this.props.queries[this.props.sourceId].qtype}
                                 sourceId={this.props.sourceId} />
                         </li>
                         {List.map(
@@ -809,7 +809,7 @@ export function init({
                             spellCheck={false}
                             ref={props.refObject}
                             onChange={handleInputChange}
-                            value={props.queries[props.sourceId]}
+                            value={props.queries[props.sourceId].query}
                             onKeyDown={handleKeyDown}
                             onKeyUp={handleKeyUp}
                             onClick={handleClick} />;
@@ -963,7 +963,8 @@ export function init({
         }
 
         _renderInput() {
-            switch (this.props.queryType) {
+            const query = this.props.queries[this.props.sourceId];
+            switch (query.qtype) {
                 case 'simple':
                     return <BoundSingleLineInput
                                 sourceId={this.props.sourceId}
@@ -996,7 +997,8 @@ export function init({
 
         _renderInputOptions() {
             const customOpts = this.props.customOptions || [];
-            switch (this.props.queryType) {
+            const query = this.props.queries[this.props.sourceId];
+            switch (query.qtype) {
                 case 'simple':
                     return (
                         <>
@@ -1015,22 +1017,22 @@ export function init({
                                 null
                             }
                             <>
-                                <div className={`option${this.props.useRegexp[this.props.sourceId] ? ' disabled' : ''}`}>
-                                    <MatchCaseSelector matchCaseValue={this.props.matchCaseValues[this.props.sourceId]}
+                                <div className={`option${query.use_regexp ? ' disabled' : ''}`}>
+                                    <MatchCaseSelector matchCaseValue={query.qmcase}
                                         sourceId={this.props.sourceId}
                                         formType={this.props.formType}
-                                        disabled={this.props.useRegexp[this.props.sourceId]} />
+                                        disabled={query.use_regexp} />
                                 </div>
-                                <div className={`option${this.props.matchCaseValues[this.props.sourceId] ? ' disabled' : ''}`}>
+                                <div className={`option${query.qmcase ? ' disabled' : ''}`}>
                                     <UseRegexpSelector sourceId={this.props.sourceId} formType={this.props.formType}
-                                            value={this.props.useRegexp[this.props.sourceId]}
-                                            disabled={this.props.matchCaseValues[this.props.sourceId]} />
+                                            value={query.use_regexp}
+                                            disabled={query.qmcase} />
                                 </div>
                                 <div className="option">
                                     <DefaultAttrSelector
                                         label={he.translate('query__applied_attr')}
                                         sourceId={this.props.sourceId}
-                                        defaultAttr={this.props.defaultAttrValues[this.props.sourceId]}
+                                        defaultAttr={query.default_attr}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
                                         simpleQueryAttrSeq={this.props.simpleQueryAttrSeq}
@@ -1056,7 +1058,7 @@ export function init({
                                     <DefaultAttrSelector
                                         label={he.translate('query__default_attr')}
                                         sourceId={this.props.sourceId}
-                                        defaultAttr={this.props.defaultAttrValues[this.props.sourceId]}
+                                        defaultAttr={query.default_attr}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
                                         simpleQueryAttrSeq={this.props.simpleQueryAttrSeq}

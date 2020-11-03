@@ -116,7 +116,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         render():React.ReactElement<{}> {
             return <textarea className="cql-input" rows={2} cols={60} name="cql"
                                 ref={this.props.inputRef}
-                                value={this.props.queries[this.props.sourceId]}
+                                value={this.props.queries[this.props.sourceId].query}
                                 onChange={this.handleInputChange}
                                 onKeyDown={this.handleKeyDown}
                                 onKeyUp={this.inputKeyUpHandler}
