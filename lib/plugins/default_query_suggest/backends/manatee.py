@@ -74,5 +74,8 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         for item in data:
             attr1, attr2 = tuple([w['n'] for w in item['Word']])[:2]
             rels[attr1].add(attr2.lower())
-        return dict(attrs=(self._conf['attr1'], self._conf['attr2']),
-                    data=dict((k, list(v)) for k, v in rels.items()))
+        return {
+            'attrs': (self._conf['attr1'], self._conf['attr2']),
+            'data': {} if all(len(v) == 1 and value in v for v in rels.values())
+            else {k: list(v) for k, v in rels.items()}
+        }
