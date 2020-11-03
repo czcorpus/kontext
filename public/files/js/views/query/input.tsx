@@ -1018,7 +1018,7 @@ export function init({
                             }
                             <>
                                 <div className={`option${query.use_regexp ? ' disabled' : ''}`}>
-                                    <MatchCaseSelector matchCaseValue={query.qmcase}
+                                    <MatchCaseSelector matchCaseValue={query.qmcase || query.use_regexp}
                                         sourceId={this.props.sourceId}
                                         formType={this.props.formType}
                                         disabled={query.use_regexp} />
