@@ -36,7 +36,7 @@ import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '..
 import { PluginInterfaces } from '../../types/plugins';
 import { TextTypesModel } from '../textTypes/main';
 import { AjaxConcResponse } from '../concordance/common';
-import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery } from './query';
+import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query';
 
 
 /**
@@ -165,8 +165,10 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                                 {
                                 corpname: filter,
                                 qtype: 'simple',
-                                queryParsed: [],
-                                // TODO !!! parsed version
+                                queryParsed: parseSimpleQuery(
+                                    src.currQueries[filter] || '',
+                                    src.currDefaultAttrValues[filter]
+                                ),
                                 query: src.currQueries[filter] || '',
                                 qmcase: src.currQmcaseValues[filter],
                                 pcq_pos_neg: 'pos',
@@ -195,7 +197,10 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                 {
                     corpname: sourceId,
                     qtype: 'simple',
-                    queryParsed: [], // TODO !!!
+                    queryParsed: parseSimpleQuery(
+                        src.query,
+                        src.default_attr
+                    ),
                     query: src.query,
                     qmcase: src.qmcase,
                     pcq_pos_neg: 'pos',
@@ -333,12 +338,15 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             action => action.payload.formType === 'filter',
             action => {
                 this.changeState(state => {
-                    state.queries[action.payload.sourceId].query = appendQuery(
-                        state.queries[action.payload.sourceId].query,
+                    const query = state.queries[action.payload.sourceId];
+                    query.query = appendQuery(
+                        query.query,
                         action.payload.query,
                         action.payload.prependSpace
                     );
-                    // TODO !!! parsed version
+                    if (query.qtype === 'simple') {
+                        query.queryParsed = parseSimpleQuery(query);
+                    }
                 });
             }
         );

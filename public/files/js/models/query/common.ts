@@ -32,7 +32,7 @@ import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
-import { advancedToSimpleQuery, AnyQuery, QueryType, simpleToAdvancedQuery } from './query';
+import { advancedToSimpleQuery, AnyQuery, parseSimpleQuery, QueryType, simpleToAdvancedQuery } from './query';
 
 
 export type CtxLemwordType = 'any'|'all'|'none';
@@ -452,7 +452,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         );
 
                     } else {
-                        state.queries[action.payload.sourceId].query = action.payload.query;
+                        const query = state.queries[action.payload.sourceId];
+                        query.query = action.payload.query;
+                        if (query.qtype === 'simple') {
+                            query.queryParsed = parseSimpleQuery(query);
+                        }
                     }
                     state.downArrowTriggersHistory[action.payload.sourceId] =
                         shouldDownArrowTriggerHistory(
@@ -678,9 +682,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         query:string,
         insertRange:[number, number]
     ):void {
-        state.queries[sourceId].query = state.queries[sourceId].query.substring(0, insertRange[0]) + query +
-                state.queries[sourceId].query.substr(insertRange[1]);
-        // TODO !!! add parsed version
+        const queryObj = state.queries[sourceId];
+        queryObj.query = queryObj.query.substring(0, insertRange[0]) + query +
+                queryObj.query.substr(insertRange[1]);
+        if (queryObj.qtype === 'simple') {
+            queryObj.queryParsed = parseSimpleQuery(queryObj);
+        }
         state.querySuggestions[sourceId].valuePosEnd = insertRange[0] + query.length;
     }
 

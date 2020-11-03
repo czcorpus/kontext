@@ -33,10 +33,25 @@ export interface AdvancedQuery {
     default_attr:string;
 }
 
+export interface ParsedSimpleQueryToken {
+
+    /**
+     * the value represents logical conjunction of
+     * attr1 == val1 & attr2 == val2 & ... & attrN == valN
+     */
+    args:Array<[string, string]>;
+
+    /**
+     * Position of a respective token. In case of an empty
+     * input, [-1, -1] should be used.
+     */
+    position:[number, number];
+}
+
 export interface SimpleQuery {
     corpname:string;
     qtype:'simple';
-    queryParsed:Array<[string, string]>;
+    queryParsed:Array<ParsedSimpleQueryToken>;
     query:string;
     qmcase:boolean;
     pcq_pos_neg:string;
@@ -63,10 +78,7 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
         corpname: q.corpname,
         qtype: 'simple',
         query: q.query,
-        queryParsed: List.map(
-            item => tuple(q.default_attr, item),
-            q.query.split(' ')
-        ),
+        queryParsed: parseSimpleQuery(q.query, q.default_attr),
         qmcase: false,
         pcq_pos_neg: 'pos',
         include_empty: false,
@@ -75,12 +87,32 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
     };
 }
 
-export function parseSimpleQuery(q:string|null, attr:string):Array<[string, string]> {
-    if (!q) {
-        return [tuple(attr, '')];
+export function parseSimpleQuery(q:SimpleQuery):Array<ParsedSimpleQueryToken>;
+export function parseSimpleQuery(q:string|null, attr:string):Array<ParsedSimpleQueryToken>;
+export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string):Array<ParsedSimpleQueryToken> {
+    if (q === null) {
+        return [{args: [tuple(attr, '')], position: [-1, -1]}];
     }
-    return List.map(
-        item => tuple(attr, item),
-        q.split(/\s+/)
-    );
+    const qVal = typeof q === 'string' ? q.trim() : q.query.trim();
+    const attrVal = typeof q === 'string' ? attr : q.default_attr;
+    const ans:Array<ParsedSimpleQueryToken> = [];
+    let currWord = [];
+    let startWord = 0;
+    let i = 0;
+    for (; i < qVal.length; i++) {
+        if (qVal[i] !== ' ') {
+            currWord.push(qVal[i]);
+        }
+        if (qVal[i] === ' ' || i === qVal.length - 1) {
+            if (!List.empty(currWord)) {
+                ans.push({
+                    args: [tuple(attrVal, currWord.join(''))],
+                    position: [startWord, qVal[i] === ' ' ? i-1 : i]
+                });
+            }
+            currWord = [];
+            startWord = i+1;
+        }
+    }
+    return ans;
 }
