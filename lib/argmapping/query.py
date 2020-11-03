@@ -138,6 +138,7 @@ class QueryFormArgs(ConcFormArgs):
         empty_dict: Dict[str, Any] = {c: None for c in corpora}
         self.curr_query_types = {k: 'simple' for k in corpora}
         self.curr_queries = empty_dict.copy()
+        self.curr_parsed_queries = empty_dict.copy()
         self.curr_pcq_pos_neg_values = empty_dict.copy()
         self.curr_include_empty_values = empty_dict.copy()
         self.curr_lpos_values = empty_dict.copy()
@@ -167,6 +168,7 @@ class QueryFormArgs(ConcFormArgs):
         self._test_data_type(data, 'form_type', 'query')
         self.form_type = data['form_type']
         self.curr_queries = data['curr_queries']
+        self.curr_parsed_queries = data['curr_parsed_queries']
         self.curr_query_types = data['curr_query_types']
         self.curr_pcq_pos_neg_values = data['curr_pcq_pos_neg_values']
         self.curr_include_empty_values = data['curr_include_empty_values']
@@ -195,11 +197,12 @@ class QueryFormArgs(ConcFormArgs):
             corp = query['corpname']
             self.curr_query_types[corp] = query['qtype']
             self.curr_queries[corp] = query['query']
+            self.curr_parsed_queries[corp] = query.get('queryParsed', [])
             self.curr_pcq_pos_neg_values[corp] = query['pcq_pos_neg']
             self.curr_include_empty_values[corp] = query['include_empty']
-            self.curr_qmcase_values[corp] = query['qmcase']
+            self.curr_qmcase_values[corp] = query.get('qmcase', False)
             self.curr_default_attr_values[corp] = query['default_attr']
-            self.curr_use_regexp_values[corp] = query['use_regexp']
+            self.curr_use_regexp_values[corp] = query.get('use_regexp', False)
         self.bib_mapping = bib_mapping
 
         ctx = data['context']
@@ -244,6 +247,7 @@ class FilterFormArgs(ConcFormArgs):
         self.form_type: str = 'filter'
         self.query_type: str = 'simple'
         self.query: str = ''
+        self.parsed_query: List[Any] = []
         self.maincorp: str = maincorp
         self.pnfilter: str = 'p'
         self.filfl: str = 'f'
@@ -262,6 +266,7 @@ class FilterFormArgs(ConcFormArgs):
     def update_by_user_query(self, data):
         self.query_type = data['qtype']
         self.query = data['query']
+        self.parsed_query = data.get('queryParsed', [])
         self.pnfilter = data['pnfilter']
         self.filfl = data['filfl']
         self.filfpos = data['filfpos']
@@ -271,7 +276,7 @@ class FilterFormArgs(ConcFormArgs):
         self.qmcase = data['qmcase']
         self.within = data['within']
         self.default_attr = data['default_attr']
-        self.use_regexp = data['use_regexp']
+        self.use_regexp = data.get('use_regexp', False)
 
     def _add_corpus_metadata(self):
         with plugins.runtime.TAGHELPER as th:

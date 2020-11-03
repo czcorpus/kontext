@@ -472,20 +472,34 @@ class Actions(Querying):
             icase = '' if data.curr_qmcase_values[corpus] else '(?i)'
             attr = data.curr_default_attr_values[corpus]
             use_regexp = data.curr_use_regexp_values[corpus]
+            query_parsed = data.curr_parsed_queries[corpus]
         else:
             qtype = data.query_type
             query = data.query
             icase = '' if data.qmcase else '(?i)'
             attr = data.default_attr
             use_regexp = data.use_regexp
+            query_parsed = data.parsed_query
 
         def mk_query_val(q):
             if qtype == 'advanced' or use_regexp:
                 return q.strip()
             return icase + re.escape(q.strip())
 
+        def stringify_parsed_query(q):
+            expr = []
+            for item in q:
+                position = []
+                for attr, val in item['args']:
+                    position.append(f'{attr}="{val}"')
+                expr.append('[' + ' & '.join(position) + ']')
+            return ' '.join(expr)
+
         if qtype == 'simple':
-            return ' '.join([f'[{attr}="{mk_query_val(part)}"]' for part in query.split(' ')])
+            if query_parsed:
+                return stringify_parsed_query(query_parsed)
+            else:
+                return ' '.join([f'[{attr}="{mk_query_val(part)}"]' for part in query.split(' ')])
         else:
             return re.sub(r'[\n\r]+', ' ', query).strip()
 
@@ -547,6 +561,7 @@ class Actions(Querying):
                 par_query += 'within%s %s:%s' % (wnot, al_corpname, pq)
             if not pq or wnot:
                 nopq.append(al_corpname)
+
         self.args.q = [
             ' '.join(x for x in [qbase + self._compile_query(corpora[0], data), ttquery, par_query] if x)]
 

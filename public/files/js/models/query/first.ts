@@ -381,12 +381,16 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
-                    state.queries[action.payload.sourceId].query = appendQuery(
-                        state.queries[action.payload.sourceId].query,
+                    const query = state.queries[action.payload.sourceId];
+                    query.query = appendQuery(
+                        query.query,
                         action.payload.query,
                         action.payload.prependSpace
                     );
-                    // TODO !!! add parsed version
+                    if (query.qtype === 'simple') {
+                        query.queryParsed = parseSimpleQuery(query);
+                    }
+
                     if (action.payload.closeWhenDone) {
                         state.activeWidgets[action.payload.sourceId] = null;
                     }
@@ -398,11 +402,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ActionName.QueryInputRemoveLastChar,
             action => {
                 this.changeState(state => {
-                    const currQuery2 = state.queries[action.payload.sourceId].query;
-                    if (currQuery2.length > 0) {
-                        state.queries[action.payload.sourceId].query =
-                            currQuery2.substr(0, currQuery2.length - 1);
-                        // TODO !!! add parsed version
+                    const query = state.queries[action.payload.sourceId];
+                    if (query.query.length > 0) {
+                        query.query = query.query.substr(0, query.query.length - 1);
+                        if (query.qtype === 'simple') {
+                            query.queryParsed = parseSimpleQuery(query);
+                        }
                     }
                 });
             }
@@ -769,8 +774,18 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             return {
                 ...query,
                 query: query.query.trim().normalize(),
-                // TODO !!! parsed version
-                default_attr: defaultAttr ? defaultAttr : query.default_attr
+                queryParsed: List.map(
+                    item => ({
+                        ...item,
+                        args: item.args.length > 0 && item.args[0][0] ?
+                            item.args :
+                            defaultAttr ?
+                                [tuple(defaultAttr, item.args[0][1])] :
+                                [tuple(query.default_attr, item.args[0][1])]
+                    }),
+                    parseSimpleQuery(query)
+                ),
+                default_attr: defaultAttr
             }
         }
     }
