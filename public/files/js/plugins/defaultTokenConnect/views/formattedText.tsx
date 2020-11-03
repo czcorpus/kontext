@@ -45,8 +45,15 @@ class TreeNode {
     }
 
     renderNode(index:number=0) {
-        const renderedChildren = List.map(
-            (v, i) => v instanceof TreeNode ? v.renderNode(i) : v,
+        const renderedChildren = List.flatMap(
+            (v, i) => {
+                const tmp = [];
+                tmp.push(v instanceof TreeNode ? [v.renderNode(i)] : [v]);
+                if (i !== this.children.length - 1) {
+                    tmp.push(' ');
+                }
+                return tmp;
+            },
             this.children
         );
 
@@ -61,14 +68,14 @@ class TreeNode {
                 return <i key={index}>{renderedChildren}</i>;
             case 'u':
                 return <u key={index}>{renderedChildren}</u>;
-            case '???':  // TODO
-                return <span key={index}>{renderedChildren}</span>;
+            case 'del':
+                return <del key={index}>{renderedChildren}</del>;
             case 'sup':
                 return <sup key={index}>{renderedChildren}</sup>;
             case 'sub':
                 return <sub key={index}>{renderedChildren}</sub>;
             case 'mark':
-                return <mark key={index}> {renderedChildren} </mark>;
+                return <mark key={index}>{renderedChildren}</mark>;
             case 'div':
                 return <div key={index}>{renderedChildren}</div>;
             default:
@@ -103,7 +110,7 @@ const typefaceMap = {
     bold: 'b',
     italic: 'i',
     underline: 'u',
-    overstrike: '???', // TODO
+    overstrike: 'del',
     superscript: 'sup',
     subscript: 'sub',
     default: 'default'
