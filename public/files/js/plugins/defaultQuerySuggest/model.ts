@@ -64,6 +64,17 @@ function someSupportRequest(infos:Array<AnyProviderInfo>, req:PluginInterfaces.Q
     return List.some(info => supportsRequest(info, req), infos);
 }
 
+function isValidQuery(suggestionArgs:PluginInterfaces.QuerySuggest.SuggestionArgs):boolean {
+    if (suggestionArgs.valueSubformat === 'regexp') {
+        try {
+            new RegExp(suggestionArgs.value)
+        } catch(e) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /**
  *
  */
@@ -115,14 +126,14 @@ export class Model extends StatelessModel<ModelState> {
         this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
             PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
             (state, action) => {
-                if (someSupportRequest(state.providers, action.payload)) {
+                if (isValidQuery(action.payload) && someSupportRequest(state.providers, action.payload)) {
                     state.isBusy = true;
                     state.suggestionArgs[action.payload.sourceId] = {...action.payload};
                     state.activeSourceId = action.payload.sourceId;
                 }
             },
             (state, action, dispatch) => {
-                if (someSupportRequest(state.providers, action.payload)) {
+                if (isValidQuery(action.payload) && someSupportRequest(state.providers, action.payload)) {
                     this.loadSuggestions(state, action.payload, dispatch);
                 }
             }
