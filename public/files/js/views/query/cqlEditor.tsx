@@ -23,10 +23,10 @@ import { Kontext } from '../../types/common';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard } from 'cnc-tskit';
 
-import { CQLEditorModel, CQLEditorModelState } from '../../models/query/cqleditor/model';
 import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
+import { ContentEditable } from './contentEditable';
 
 
 export interface CQLEditorProps {
@@ -57,7 +57,7 @@ export interface CQLEditorViews {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            queryModel:QueryFormModel<QueryFormModelState>, editorModel:CQLEditorModel) {
+            queryModel:QueryFormModel<QueryFormModelState>) {
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
@@ -126,7 +126,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------- <CQLEditor /> -----------------------------
 
-    class CQLEditor extends React.PureComponent<CQLEditorProps & CQLEditorModelState> {
+    class CQLEditor extends React.PureComponent<CQLEditorProps & QueryFormModelState> {
+
+        private readonly contentEditable:ContentEditable<HTMLPreElement>;
 
         constructor(props) {
             super(props);
@@ -134,70 +136,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
             this.inputKeyDownHandler = this.inputKeyDownHandler.bind(this);
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
-        }
-
-        private extractText(root:Node) {
-            const ans:Array<[string, Node]> = [];
-            for (let i = 0; i < root.childNodes.length; i += 1) {
-                const elm = root.childNodes[i];
-                switch (elm.nodeType) {
-                    case Node.TEXT_NODE:
-                        ans.push([elm.nodeValue, elm]);
-                    break;
-                    case Node.ELEMENT_NODE:
-                        ans.splice(ans.length, 0, ...this.extractText(elm));
-                    break;
-                }
-            };
-            return ans;
-        }
-
-        private reapplySelection(rawAnchorIdx:number, rawFocusIdx:number) {
-            const sel = window.getSelection();
-            const src = this.extractText(this.props.inputRef.current);
-            let anchorNode = this.props.inputRef.current;
-            let focusNode = this.props.inputRef.current;
-            let currIdx = 0;
-            let anchorIdx = 0;
-            let focusIdx = 0;
-
-            src.forEach(([text, node]) => {
-                const nodeStartIdx = currIdx;
-                const nodeEndIdx = nodeStartIdx + text.length;
-                if (nodeStartIdx <= rawAnchorIdx && rawAnchorIdx <= nodeEndIdx) {
-                    anchorNode = node as HTMLPreElement;
-                    anchorIdx = rawAnchorIdx - nodeStartIdx;
-                }
-                if (nodeStartIdx <= rawFocusIdx && rawFocusIdx <= nodeEndIdx) {
-                    focusNode = node as HTMLPreElement;
-                    focusIdx = rawFocusIdx - nodeStartIdx;
-                }
-                currIdx += text.length;
-            });
-            sel.setBaseAndExtent(anchorNode, anchorIdx, focusNode, focusIdx);
-        }
-
-        private getRawSelection(src:Array<[string, Node]>) {
-            let rawAnchorIdx = 0;
-            let rawFocusIdx = 0;
-            let currIdx = 0;
-            const sel = window.getSelection();
-
-            src.forEach(([text, node]) => {
-                if (node === sel.anchorNode) {
-                    rawAnchorIdx = currIdx + sel.anchorOffset;
-                }
-                if (node === sel.focusNode) {
-                    rawFocusIdx = currIdx + sel.focusOffset;
-                }
-                currIdx += text.length;
-            });
-            return [rawAnchorIdx, rawFocusIdx];
+            this.contentEditable = new ContentEditable<HTMLPreElement>(this.props.inputRef);
         }
 
         private handleInputChange() {
-            const src = this.extractText(this.props.inputRef.current);
-            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+            const src = this.contentEditable.extractText(this.props.inputRef.current);
+            const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection(src);
             const query = src.map(v => v[0]).join('');
 
             dispatcher.dispatch<Actions.QueryInputSetQuery>({
@@ -206,8 +150,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     query: query,
-                    rawAnchorIdx: rawAnchorIdx,
-                    rawFocusIdx: rawFocusIdx,
+                    rawAnchorIdx,
+                    rawFocusIdx,
                     insertRange: null
                 }
             });
@@ -249,7 +193,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             payload: {
                                 formType: this.props.formType,
                                 sourceId: this.props.sourceId,
-                                pattern: this.props.rawCode[this.props.sourceId].substring(
+                                pattern: this.props.queries[this.props.sourceId].query.substring(
                                     leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                             }
                         });
@@ -257,8 +201,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 }
 
             } else {
-                const src = this.extractText(this.props.inputRef.current);
-                const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+                const src = this.contentEditable.extractText(this.props.inputRef.current);
+                const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection(src);
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
                     payload: {
@@ -274,8 +218,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         private inputKeyUpHandler(evt:React.KeyboardEvent) {
             if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
                     evt.keyCode === Keyboard.Code.END) {
-                const src = this.extractText(this.props.inputRef.current);
-                const [anchorIdx, focusIdx] = this.getRawSelection(src);
+                const src = this.contentEditable.extractText(this.props.inputRef.current);
+                const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection(src);
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
                     payload: {
@@ -301,107 +245,39 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private ffKeyDownHandler(evt:KeyboardEvent) {
-            if (evt.keyCode === Keyboard.Code.BACKSPACE || evt.keyCode === Keyboard.Code.DEL) {
-                const src = this.extractText(this.props.inputRef.current);
-                const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
-                const rawSrc = src.map(v => v[0]).join('');
-
-                if (rawAnchorIdx === rawFocusIdx) {
-                    const query = evt.keyCode === Keyboard.Code.BACKSPACE ?
-                            rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
-                            rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1);
+            this.contentEditable.ffKeyDownHandler(
+                evt,
+                (query, rawAnchorIdx, rawFocusIdx, insertRange) => {
 
                     dispatcher.dispatch<Actions.QueryInputSetQuery>({
                         name: ActionName.QueryInputSetQuery,
                         payload: {
                             formType: this.props.formType,
                             sourceId: this.props.sourceId,
-                            query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
-                                rawAnchorIdx - 1 : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
-                                rawFocusIdx - 1 : rawFocusIdx,
-                            insertRange: null
+                            query,
+                            rawAnchorIdx,
+                            rawFocusIdx,
+                            insertRange
                         }
                     });
-
-                } else if (rawAnchorIdx < rawFocusIdx) {
-                    const query = rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx);
-                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                        name: ActionName.QueryInputSetQuery,
+                },
+                (rawAnchorIdx, rawFocusIdx) => {
+                    dispatcher.dispatch<Actions.QueryInputMoveCursor>({
+                        name: ActionName.QueryInputMoveCursor,
                         payload: {
                             formType: this.props.formType,
                             sourceId: this.props.sourceId,
-                            query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
-                                rawAnchorIdx : rawAnchorIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
-                                rawAnchorIdx : rawAnchorIdx,
-                            insertRange: null
-                        }
-                    });
-
-                } else {
-                    const query = rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx);
-                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                        name: ActionName.QueryInputSetQuery,
-                        payload: {
-                            formType: this.props.formType,
-                            sourceId: this.props.sourceId,
-                            query: query,
-                            rawAnchorIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
-                                rawFocusIdx : rawFocusIdx,
-                            rawFocusIdx: evt.keyCode === Keyboard.Code.BACKSPACE ?
-                                rawFocusIdx : rawFocusIdx,
-                            insertRange: null
+                            rawAnchorIdx,
+                            rawFocusIdx
                         }
                     });
                 }
-                evt.preventDefault();
-
-            } else if (evt.keyCode === Keyboard.Code.ENTER && evt.shiftKey) {
-                const src = this.extractText(this.props.inputRef.current);
-                const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
-                const query = src.map(v => v[0]).join('');
-                dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                    name: ActionName.QueryInputSetQuery,
-                    payload: {
-                        formType: this.props.formType,
-                        sourceId: this.props.sourceId,
-                        // We have to add a single whitespace here because otherwise FF cannot
-                        // handle cursor position properly (normally it inserts its custom br
-                        // type=_moz element which is even worse to handle). This is not ideal but
-                        //  by far the most cheap solution.
-                        query: rawFocusIdx === query.length ? '\n ' : '\n',
-                        rawAnchorIdx: rawFocusIdx === query.length ?
-                            rawAnchorIdx + 2 : rawAnchorIdx + 1,
-                        rawFocusIdx: rawFocusIdx === query.length ?
-                            rawFocusIdx + 2 : rawFocusIdx + 1,
-                        insertRange: [rawAnchorIdx, rawFocusIdx]
-                    }
-                });
-                evt.preventDefault();
-
-            } else if (evt.keyCode === Keyboard.Code.END) {
-                const src = this.extractText(this.props.inputRef.current);
-                const [anchorIdx, focusIdx] = this.getRawSelection(src);
-                const query = src.map(v => v[0]).join('');
-                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
-                    name: ActionName.QueryInputMoveCursor,
-                    payload: {
-                        formType: this.props.formType,
-                        sourceId: this.props.sourceId,
-                        rawAnchorIdx: anchorIdx === focusIdx ? query.length : anchorIdx,
-                        rawFocusIdx: query.length
-                    }
-                });
-                evt.preventDefault();
-            }
+            );
         }
 
         componentDidUpdate(prevProps, prevState) {
             if (this.props.rawAnchorIdx !== null && this.props.rawFocusIdx !== null) {
-                this.reapplySelection(
+                this.contentEditable.reapplySelection(
                     this.props.rawAnchorIdx[this.props.sourceId],
                     this.props.rawFocusIdx[this.props.sourceId]
                 );
@@ -416,10 +292,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             if (he.browserInfo.isFirefox()) {
                 this.props.inputRef.current.addEventListener('keydown', this.ffKeyDownHandler);
             }
-
-            dispatcher.dispatch<Actions.CQLEditorInitialize>({
-                name: ActionName.CQLEditorInitialize
-            });
         }
 
         componentWillUnmount() {
@@ -443,10 +315,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onKeyUp={this.inputKeyUpHandler} />
                     <div className="cql-editor-messages">
                         {
-                            this.props.cqlEditorMessage ?
+                            this.props.cqlEditorMessages[this.props.sourceId] ?
                                 <div className="cql-editor-message"
                                     dangerouslySetInnerHTML={
-                                        {__html: this.props.message[this.props.sourceId]}} /> :
+                                        {__html: this.props.cqlEditorMessages[this.props.sourceId]}} /> :
                                 null
                         }
                     </div>
@@ -455,7 +327,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
-    const BoundEditor = BoundWithProps<CQLEditorProps, CQLEditorModelState>(CQLEditor, editorModel);
+    const BoundEditor = BoundWithProps<CQLEditorProps, QueryFormModelState>(CQLEditor, queryModel);
 
     const BoundFallbackEditor = BoundWithProps<CQLEditorFallbackProps,
             QueryFormModelState>(CQLEditorFallback, queryModel);

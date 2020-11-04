@@ -26,7 +26,6 @@ import { AjaxResponse } from '../types/ajaxResponses';
 import { PageModel } from '../app/page';
 import { TextTypesModel } from '../models/textTypes/main';
 import { FirstQueryFormModel } from '../models/query/first';
-import { CQLEditorModel } from '../models/query/cqleditor/model';
 import { WithinBuilderModel } from '../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
 import { QueryContextModel } from '../models/query/context';
@@ -43,7 +42,6 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../mod
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
-import queryStoragePlugin from 'plugins/queryStorage/init';
 
 
 declare var require:any;
@@ -97,8 +95,6 @@ export class QueryPage {
     private layoutModel:PageModel;
 
     private queryModel:FirstQueryFormModel;
-
-    private cqlEditorModel:CQLEditorModel;
 
     private textTypesModel:TextTypesModel;
 
@@ -221,6 +217,7 @@ export class QueryPage {
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                 structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                structList: this.layoutModel.getConf<Array<string>>('StructList'),
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
                 inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>(
                     'InputLanguages'
@@ -236,21 +233,6 @@ export class QueryPage {
                 simpleQueryAttrSeq: this.layoutModel.getConf<Array<string>>('SimpleQueryAttrSeq')
             }
         );
-
-        this.cqlEditorModel = new CQLEditorModel({
-            dispatcher: this.layoutModel.dispatcher,
-            pageModel: this.layoutModel,
-            attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            structList: this.layoutModel.getConf<Array<string>>('StructList'),
-            tagAttr: this.layoutModel.pluginTypeIsActive(PluginName.TAGHELPER) ?
-                this.layoutModel.getConf<string>('tagAttr') : null,
-            isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            currQueries: queryFormArgs.curr_queries,
-            currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-            suggestionsVisibility: this.layoutModel.getConf<
-                PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
-        });
     }
 
     private attachQueryForm(
@@ -269,7 +251,6 @@ export class QueryPage {
             withinBuilderModel: this.withinBuilderModel,
             virtualKeyboardModel: this.virtualKeyboardModel,
             queryContextModel: this.queryContextModel,
-            cqlEditorModel: this.cqlEditorModel,
             querySuggest: this.layoutModel.qsuggPlugin
         });
         this.layoutModel.renderReactComponent(
@@ -380,7 +361,6 @@ export class QueryPage {
                     this.init();
                 },
                 this.queryModel,
-                this.cqlEditorModel,
                 corparchPlg,
                 this.queryHintModel,
                 this.textTypesModel,

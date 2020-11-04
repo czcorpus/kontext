@@ -31,8 +31,7 @@ import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState,
-    shouldDownArrowTriggerHistory, ConcQueryArgs, QueryContextArgs,
-    SuggestionsData, determineSupportedWidgets } from './common';
+    ConcQueryArgs, QueryContextArgs, SuggestionsData, determineSupportedWidgets } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
@@ -228,6 +227,9 @@ export interface FirstQueryFormModelSwitchPreserve {
     queries:{[sourceId:string]:AnyQuery};
     lposValues:{[key:string]:string};
     alignedCorporaVisible:boolean;
+    rawAnchorIdx:{[key:string]:number};
+    rawFocusIdx:{[key:string]:number};
+    cqlEditorMessage:{[key:string]:string};
 }
 
 
@@ -262,89 +264,94 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
 
         const tagBuilderSupport = props.tagBuilderSupport;
-        super(dispatcher, pageModel, textTypesModel, queryContextModel, 'first-query-model', {
-            formType: Kontext.ConcFormTypes.QUERY,
-            forcedAttr: props.forcedAttr,
-            attrList: props.attrList,
-            structAttrList: props.structAttrList,
-            wPoSList: props.wPoSList,
-            tagAttr: props.tagAttr,
-            useCQLEditor: props.useCQLEditor,
-            currentAction: 'query',
-            widgetArgs: {},
-            corpora,
-            availableAlignedCorpora: props.availableAlignedCorpora,
-            subcorpList: props.subcorpList,
-            currentSubcorp: props.currentSubcorp || '',
-            origSubcorpName: props.origSubcorpName || '',
-            isForeignSubcorpus: !!props.isForeignSubcorpus,
-            shuffleForbidden: false,
-            shuffleConcByDefault: props.shuffleConcByDefault,
-            queries,
-            downArrowTriggersHistory: pipe(
-                props.corpora,
-                List.map(item => tuple(
-                    item,
-                    shouldDownArrowTriggerHistory(props.currQueries[item], 0, 0))
-                ),
-                Dict.fromEntries()
-            ),
-            lposValues: pipe(
-                props.corpora,
-                List.map(item => tuple(item, props.currLposValues[item] || '')),
-                Dict.fromEntries()
-            ),
-            querySuggestions,
-            pcqPosNegValues: pipe(
-                props.corpora,
-                List.map(item => tuple(item, props.currPcqPosNegValues[item] || 'pos')),
-                Dict.fromEntries()
-            ),
-            tagBuilderSupport,
-            inputLanguages: props.inputLanguages,
-            hasLemma: props.hasLemma,
-            textTypesNotes: props.textTypesNotes,
-            activeWidgets: pipe(
-                props.corpora,
-                List.map(item => tuple(item, null)),
-                Dict.fromEntries()
-            ),
-            isAnonymousUser: props.isAnonymousUser,
-            supportedWidgets: determineSupportedWidgets(
+        super(
+            dispatcher,
+            pageModel,
+            textTypesModel,
+            queryContextModel,
+            'first-query-model',
+            props, {
+                formType: Kontext.ConcFormTypes.QUERY,
+                forcedAttr: props.forcedAttr,
+                attrList: props.attrList,
+                structAttrList: props.structAttrList,
+                wPoSList: props.wPoSList,
+                tagAttr: props.tagAttr,
+                useCQLEditor: props.useCQLEditor,
+                currentAction: 'query',
+                widgetArgs: {},
+                corpora,
+                availableAlignedCorpora: props.availableAlignedCorpora,
+                subcorpList: props.subcorpList,
+                currentSubcorp: props.currentSubcorp || '',
+                origSubcorpName: props.origSubcorpName || '',
+                isForeignSubcorpus: !!props.isForeignSubcorpus,
+                shuffleForbidden: false,
+                shuffleConcByDefault: props.shuffleConcByDefault,
                 queries,
+                richCode: {},
+                rawAnchorIdx: {},
+                rawFocusIdx: {},
+                parsedAttrs: {},
+                focusedAttr: {},
+                cqlEditorMessages: {},
+                downArrowTriggersHistory: pipe(
+                    props.corpora,
+                    List.map(item => tuple(
+                        item,
+                        false)
+                    ),
+                    Dict.fromEntries()
+                ),
+                lposValues: pipe(
+                    props.corpora,
+                    List.map(item => tuple(item, props.currLposValues[item] || '')),
+                    Dict.fromEntries()
+                ),
+                querySuggestions,
+                pcqPosNegValues: pipe(
+                    props.corpora,
+                    List.map(item => tuple(item, props.currPcqPosNegValues[item] || 'pos')),
+                    Dict.fromEntries()
+                ),
                 tagBuilderSupport,
-                props.isAnonymousUser
-            ),
-            contextFormVisible: false,   // TODO load from previous state ?
-            textTypesFormVisible: false, // dtto
-            queryOptionsVisible: pipe(
-                props.corpora,
-                List.map(item => tuple(item, true)),
-                Dict.fromEntries()
-            ),   // dtto
-            historyVisible: pipe(
-                props.corpora,
-                List.map(item => tuple(item, false)),
-                Dict.fromEntries()
-            ),
-            suggestionsVisible: pipe(
-                props.corpora,
-                List.map(c => tuple(c, false)),
-                Dict.fromEntries()
-            ),
-            suggestionsVisibility: props.suggestionsVisibility,
-            isBusy: false,
-            cursorPos: 0,
-            simpleQueryAttrSeq: props.simpleQueryAttrSeq,
-            alignedCorporaVisible: List.size(corpora) > 1
+                inputLanguages: props.inputLanguages,
+                hasLemma: props.hasLemma,
+                textTypesNotes: props.textTypesNotes,
+                activeWidgets: pipe(
+                    props.corpora,
+                    List.map(item => tuple(item, null)),
+                    Dict.fromEntries()
+                ),
+                isAnonymousUser: props.isAnonymousUser,
+                supportedWidgets: determineSupportedWidgets(
+                    queries,
+                    tagBuilderSupport,
+                    props.isAnonymousUser
+                ),
+                contextFormVisible: false,   // TODO load from previous state ?
+                textTypesFormVisible: false, // dtto
+                queryOptionsVisible: pipe(
+                    props.corpora,
+                    List.map(item => tuple(item, true)),
+                    Dict.fromEntries()
+                ),   // dtto
+                historyVisible: pipe(
+                    props.corpora,
+                    List.map(item => tuple(item, false)),
+                    Dict.fromEntries()
+                ),
+                suggestionsVisible: pipe(
+                    props.corpora,
+                    List.map(c => tuple(c, false)),
+                    Dict.fromEntries()
+                ),
+                suggestionsVisibility: props.suggestionsVisibility,
+                isBusy: false,
+                cursorPos: 0,
+                simpleQueryAttrSeq: props.simpleQueryAttrSeq,
+                alignedCorporaVisible: List.size(corpora) > 1
         });
-
-        this.addActionHandler<Actions.CQLEditorDisable>(
-            ActionName.CQLEditorDisable,
-            action => {
-                this.emitChange(); // TODO ???!!
-            }
-        );
 
         this.addActionHandler<Actions.QueryInputSelectSubcorp>(
             ActionName.QueryInputSelectSubcorp,
@@ -372,43 +379,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             foreignSubcorp: state.isForeignSubcorpus
                         }
                     );
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputAppendQuery>(
-            ActionName.QueryInputAppendQuery,
-            action => action.payload.formType === 'query',
-            action => {
-                this.changeState(state => {
-                    const query = state.queries[action.payload.sourceId];
-                    query.query = appendQuery(
-                        query.query,
-                        action.payload.query,
-                        action.payload.prependSpace
-                    );
-                    if (query.qtype === 'simple') {
-                        query.queryParsed = parseSimpleQuery(query);
-                    }
-
-                    if (action.payload.closeWhenDone) {
-                        state.activeWidgets[action.payload.sourceId] = null;
-                    }
-                });
-            }
-        );
-
-        this.addActionHandler<Actions.QueryInputRemoveLastChar>(
-            ActionName.QueryInputRemoveLastChar,
-            action => {
-                this.changeState(state => {
-                    const query = state.queries[action.payload.sourceId];
-                    if (query.query.length > 0) {
-                        query.query = query.query.substr(0, query.query.length - 1);
-                        if (query.qtype === 'simple') {
-                            query.queryParsed = parseSimpleQuery(query);
-                        }
-                    }
                 });
             }
         );
@@ -467,8 +437,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 corpora.unshift(action.payload.corpname);
                 dispatcher.dispatch<GlobalActions.SwitchCorpus>({
                     name: GlobalActionName.SwitchCorpus,
-                        payload: {
-                        corpora: corpora,
+                    payload: {
+                        corpora,
                         subcorpus: '',
                         changePrimaryCorpus: true
                     }
@@ -632,7 +602,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return {
             queries: {...state.queries},
             lposValues: {...state.lposValues},
-            alignedCorporaVisible: state.alignedCorporaVisible
+            alignedCorporaVisible: state.alignedCorporaVisible,
+            rawAnchorIdx: {...state.rawAnchorIdx},
+            rawFocusIdx: {...state.rawFocusIdx},
+            cqlEditorMessage: {...state.cqlEditorMessages}
         };
     }
 
@@ -647,6 +620,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ...data.queries[oldCorp],
             corpname: newCorp
         };
+        state.rawAnchorIdx[newCorp] = state.rawAnchorIdx[oldCorp];
+        state.rawFocusIdx[newCorp] = state.rawFocusIdx[oldCorp];
+        state.cqlEditorMessages[newCorp] = '';
         if (!isAligned) {
             state.queries[newCorp].include_empty = false; // this is rather a formal stuff
         }

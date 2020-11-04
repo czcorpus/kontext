@@ -28,7 +28,6 @@ import { FirstHitsModelState } from '../../models/query/firstHits';
 import { WithinBuilderModel } from '../../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { FirstHitsModel } from '../../models/query/firstHits';
-import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { PluginInterfaces } from '../../types/plugins';
 import { UsageTipsModel } from '../../models/usageTips';
 import { ActionName, Actions } from '../../models/query/actions';
@@ -83,7 +82,6 @@ interface ViewInitArgs {
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     firstHitsModel:FirstHitsModel;
-    cqlEditorModel:CQLEditorModel;
     querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
@@ -95,7 +93,6 @@ export function init({
         withinBuilderModel,
         virtualKeyboardModel,
         firstHitsModel,
-        cqlEditorModel,
         querySuggest
 }:ViewInitArgs):FilterFormViews {
 
@@ -106,7 +103,6 @@ export function init({
         queryHintModel,
         withinBuilderModel,
         virtualKeyboardModel,
-        cqlEditorModel,
         querySuggest
     });
 
@@ -115,7 +111,7 @@ export function init({
 
     // -------- <HighlightTokenSelector /> -----------------
 
-    const HighlightTokenSelector:React.SFC<{
+    const HighlightTokenSelector:React.FC<{
         filterId:string;
         value:'f'|'l';
 
@@ -146,7 +142,7 @@ export function init({
 
     // ---------------------- <InclKwicCheckbox /> ------------------------
 
-    const InclKWicCheckbox:React.SFC<{
+    const InclKWicCheckbox:React.FC<{
         filterId:string;
         value:boolean;
 
@@ -175,7 +171,7 @@ export function init({
 
     // ---------------------- <RangeSelector /> ---------------------------
 
-    const RangeSelector:React.SFC<{
+    const RangeSelector:React.FC<{
         filterId:string;
         filfposValue:Kontext.FormValue<string>;
         filtposValue:Kontext.FormValue<string>;

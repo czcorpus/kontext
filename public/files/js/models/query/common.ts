@@ -33,6 +33,8 @@ import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
 import { advancedToSimpleQuery, AnyQuery, parseSimpleQuery, QueryType, simpleToAdvancedQuery } from './query';
+import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
+import { AttrHelper } from './cqleditor/attrs';
 
 
 export type CtxLemwordType = 'any'|'all'|'none';
@@ -116,6 +118,7 @@ export interface GeneralQueryFormProperties {
     forcedAttr:string;
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
+    structList:Array<string>;
     wPoSList:Array<{v:string; n:string}>;
     useCQLEditor:boolean;
     tagAttr:string;
@@ -127,17 +130,6 @@ export const appendQuery = (origQuery:string, query:string, prependSpace:boolean
 
 export interface WithinBuilderData extends Kontext.AjaxResponse {
     structattrs:{[attr:string]:Array<string>};
-}
-
-
-export function shouldDownArrowTriggerHistory(query:string, anchorIdx:number,
-            focusIdx:number):boolean {
-    if (anchorIdx === focusIdx) {
-        return (query || '').substr(anchorIdx+1).search(/[\n\r]/) === -1;
-
-    } else {
-        return false;
-    }
 }
 
 export interface SuggestionsData {
@@ -170,6 +162,18 @@ export interface QueryFormModelState {
     currentSubcorp:string;
 
     queries:{[sourceId:string]:AnyQuery}; // corpname|filter_id -> query
+
+    richCode:{[sourceId:string]:string};
+
+    cqlEditorMessages:{[sourceId:string]:string};
+
+    rawAnchorIdx:{[sourceId:string]:number};
+
+    rawFocusIdx:{[sourceId:string]:number};
+
+    parsedAttrs:{[key:string]:Array<ParsedAttr>};
+
+    focusedAttr:{[key:string]:ParsedAttr|undefined};
 
     querySuggestions:SuggestionsData;
 
@@ -263,6 +267,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     // stream of [source ID, rawAnchorIdx, rawFocusIdx]
     protected readonly autoSuggestTrigger:Subject<[string, number, number]>;
 
+    private readonly attrHelper:AttrHelper;
+
     // -------
 
     constructor(
@@ -271,17 +277,21 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
             ident:string,
+            props:GeneralQueryFormProperties,
             initState:T) {
         super(
             dispatcher,
             initState
         );
+        this.hintListener = this.hintListener.bind(this);
         this.pageModel = pageModel;
         this.textTypesModel = textTypesModel;
         this.queryContextModel = queryContextModel;
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
         this.formType = initState.formType;
+        this.attrHelper = new AttrHelper(
+            props.attrList, props.structAttrList, props.structList, props.tagAttr);
         this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.autoSuggestTrigger.pipe(
             debounceTime(500)
@@ -443,28 +453,19 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
-                    if (action.payload.insertRange) {
-                        this.addQueryInfix(
-                            state,
-                            action.payload.sourceId,
-                            action.payload.query,
-                            action.payload.insertRange
-                        );
-
-                    } else {
-                        const query = state.queries[action.payload.sourceId];
-                        query.query = action.payload.query;
-                        if (query.qtype === 'simple') {
-                            query.queryParsed = parseSimpleQuery(query);
-                        }
+                    if (action.payload.rawAnchorIdx !== undefined &&
+                            action.payload.rawFocusIdx !== undefined) {
+                        state.rawAnchorIdx[action.payload.sourceId] = action.payload.rawAnchorIdx ||
+                            action.payload.query.length;
+                        state.rawFocusIdx[action.payload.sourceId] = action.payload.rawFocusIdx ||
+                            action.payload.query.length;
                     }
-                    state.downArrowTriggersHistory[action.payload.sourceId] =
-                        shouldDownArrowTriggerHistory(
-                            action.payload.query,
-                            action.payload.rawAnchorIdx,
-                            action.payload.rawFocusIdx
-                        );
-                    state.cursorPos = action.payload.rawAnchorIdx;
+                    this.setRawQuery(
+                        state,
+                        action.payload.sourceId,
+                        action.payload.query,
+                        action.payload.insertRange
+                    );
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
@@ -474,18 +475,70 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
+        this.addActionSubtypeHandler<Actions.QueryInputAppendQuery>(
+            ActionName.QueryInputAppendQuery,
+            action => action.payload.formType === 'query',
+            action => {
+                this.changeState(state => {
+                    this.setRawQuery(
+                        state,
+                        action.payload.sourceId,
+                        action.payload.query,
+                        tuple(
+                            this.getQueryLength(state, action.payload.sourceId),
+                            this.getQueryLength(state, action.payload.sourceId)
+                        )
+                    );
+                    const queryObj = state.queries[action.payload.sourceId];
+                    if (queryObj.qtype === 'simple') {
+                        queryObj.queryParsed = parseSimpleQuery(queryObj);
+                    }
+
+                    if (action.payload.closeWhenDone) {
+                        state.activeWidgets[action.payload.sourceId] = null;
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.QueryInputRemoveLastChar>(
+            ActionName.QueryInputRemoveLastChar,
+            action => {
+                this.changeState(state => {
+                    const queryLength = this.getQueryLength(state, action.payload.sourceId);
+                    this.setRawQuery(
+                        state,
+                        action.payload.sourceId,
+                        '',
+                        tuple(queryLength - 1, queryLength)
+                    );
+                    this.moveCursorToEnd(state, action.payload.sourceId);
+                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
+                        state, action.payload.sourceId);
+                });
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    this.state.rawAnchorIdx[action.payload.sourceId],
+                    this.state.rawFocusIdx[action.payload.sourceId]
+                ));
+            }
+        );
+
         this.addActionSubtypeHandler<Actions.QueryInputMoveCursor>(
             ActionName.QueryInputMoveCursor,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
+                    state.rawAnchorIdx[action.payload.sourceId] = action.payload.rawAnchorIdx;
+                    state.rawFocusIdx[action.payload.sourceId] = action.payload.rawFocusIdx;
                     state.downArrowTriggersHistory[action.payload.sourceId] =
-                        shouldDownArrowTriggerHistory(
-                            state.queries[action.payload.sourceId].query,
-                            action.payload.rawAnchorIdx,
-                            action.payload.rawFocusIdx
+                        this.shouldDownArrowTriggerHistory(
+                            state,
+                            action.payload.sourceId
                         );
                         state.cursorPos = action.payload.rawAnchorIdx;
+                        state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
+                            state, action.payload.sourceId);
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
@@ -603,6 +656,88 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 });
             }
         );
+    }
+
+    private hintListener(state:QueryFormModelState, sourceId:string, msg:string):void {
+        state.cqlEditorMessages[sourceId] = msg;
+    }
+
+    private shouldDownArrowTriggerHistory(state:QueryFormModelState, sourceId:string):boolean {
+        const q = state.queries[sourceId].query;
+        const anchorIdx = state.rawAnchorIdx[sourceId];
+        const focusIdx = state.rawFocusIdx[sourceId];
+
+        if (anchorIdx === focusIdx) {
+            return q.substr(anchorIdx+1).search(/[\n\r]/) === -1;
+
+        } else {
+            return false;
+        }
+    }
+
+    private findFocusedAttr(state:QueryFormModelState, sourceId:string):ParsedAttr|undefined {
+        const focus = state.rawFocusIdx[sourceId];
+        const attrs = state.parsedAttrs[sourceId];
+        return List.find(
+            (v, i) => v.rangeAll[0] <= focus && (
+                focus <= v.rangeAll[1]),
+            attrs
+        );
+    }
+
+    private moveCursorToPos(state:QueryFormModelState, sourceId:string, posIdx:number):void {
+        state.rawAnchorIdx[sourceId] = posIdx;
+        state.rawFocusIdx[sourceId] = posIdx;
+        state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(
+            state, sourceId);
+    }
+
+    private getQueryLength(state:QueryFormModelState, sourceId:string):number {
+        return state.queries[sourceId].query ? (state.queries[sourceId].query || '').length : 0;
+    }
+
+    private moveCursorToEnd(state:QueryFormModelState, sourceId:string):void {
+        this.moveCursorToPos(state, sourceId, state.queries[sourceId].query.length);
+    }
+
+/**
+     * @param range in case we want to insert a CQL snippet into an existing code;
+     *              if undefined then whole query is replaced
+     */
+    private setRawQuery(
+        state:QueryFormModelState,
+        sourceId:string,
+        query:string,
+        insertRange:[number, number]|null
+
+    ):void {
+        const queryObj = state.queries[sourceId];
+        if (insertRange !== null) {
+            queryObj.query = queryObj.query.substring(0, insertRange[0]) + query +
+                    queryObj.query.substr(insertRange[1]);
+            if (queryObj.qtype === 'simple') {
+                queryObj.queryParsed = parseSimpleQuery(queryObj);
+            }
+            if (state.querySuggestions[sourceId]) {
+                state.querySuggestions[sourceId].valuePosEnd = insertRange[0] + query.length;
+            }
+
+        } else {
+            queryObj.query = query;
+        }
+
+        state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(
+            state, sourceId);
+
+        if (queryObj.qtype === 'advanced') {
+            [state.richCode[sourceId], state.parsedAttrs[sourceId]] = highlightSyntax(
+                queryObj.query,
+                'advanced',
+                this.pageModel.getComponentHelpers(),
+                this.attrHelper,
+                (msg) => this.hintListener(state, sourceId, msg)
+            );
+        }
     }
 
     private determineSuggValueType(sourceId:string):PluginInterfaces.QuerySuggest.QueryValueSubformat {

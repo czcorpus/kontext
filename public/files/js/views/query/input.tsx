@@ -24,29 +24,17 @@ import { Keyboard, List, pipe } from 'cnc-tskit';
 
 import { init as keyboardInit } from './virtualKeyboard';
 import { init as cqlEditoInit } from './cqlEditor';
+import { init as richInputInit } from './richInput';
 import { WithinBuilderModel, WithinBuilderModelState } from '../../models/query/withinBuilder';
 import { PluginInterfaces } from '../../types/plugins';
 import { Kontext } from '../../types/common';
 import { QueryFormModel, QueryFormModelState, SuggestionsData } from '../../models/query/common';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
-import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
 import { QueryType } from '../../models/query/query';
-
-
-export interface InputModuleArgs {
-    dispatcher:IActionDispatcher;
-    he:Kontext.ComponentHelpers;
-    queryModel:QueryFormModel<QueryFormModelState>;
-    queryHintModel:UsageTipsModel;
-    withinBuilderModel:WithinBuilderModel;
-    virtualKeyboardModel:VirtualKeyboardModel;
-    cqlEditorModel:CQLEditorModel;
-    querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
-}
 
 
 export interface InputModuleViews {
@@ -107,15 +95,6 @@ export interface AdvancedFormFieldsetProps {
     handleClick:()=>void;
 }
 
-interface SingleLineInputProps {
-    sourceId:string;
-    refObject:React.RefObject<HTMLInputElement>;
-    hasHistoryWidget:boolean;
-    historyIsVisible:boolean;
-    onReqHistory:()=>void;
-    onEsc:()=>void;
-}
-
 interface QueryToolboxProps {
     sourceId:string;
     widgets:Array<string>;
@@ -125,10 +104,19 @@ interface QueryToolboxProps {
     toggleHistoryWidget:()=>void;
 }
 
+export interface InputModuleArgs {
+    dispatcher:IActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    queryModel:QueryFormModel<QueryFormModelState>;
+    queryHintModel:UsageTipsModel;
+    withinBuilderModel:WithinBuilderModel;
+    virtualKeyboardModel:VirtualKeyboardModel;
+    querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
+}
 
 export function init({
     dispatcher, he, queryModel, queryHintModel, withinBuilderModel,
-    virtualKeyboardModel, cqlEditorModel, querySuggest}:InputModuleArgs):InputModuleViews {
+    virtualKeyboardModel, querySuggest}:InputModuleArgs):InputModuleViews {
 
     const keyboardViews = keyboardInit({
         dispatcher: dispatcher,
@@ -136,7 +124,8 @@ export function init({
         queryModel: queryModel,
         virtualKeyboardModel: virtualKeyboardModel
     });
-    const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel, cqlEditorModel);
+    const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel);
+    const RichInput = richInputInit(dispatcher, he, queryModel);
     const layoutViews = he.getLayoutViews();
 
 
@@ -744,78 +733,7 @@ export function init({
         );
     };
 
-    // ------------------- <SingleLineInput /> -----------------------------
 
-    const SingleLineInput:React.FC<SingleLineInputProps & QueryFormModelState> = (props) => {
-
-        const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                name: ActionName.QueryInputSetQuery,
-                payload: {
-                    formType: props.formType,
-                    sourceId: props.sourceId,
-                    query: evt.target.value,
-                    rawAnchorIdx: props.refObject.current.selectionStart,
-                    rawFocusIdx: props.refObject.current.selectionEnd,
-                    insertRange: null
-                }
-            });
-        };
-
-        const handleKeyDown = (evt) => {
-            if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
-                    props.hasHistoryWidget &&
-                    props.downArrowTriggersHistory[props.sourceId] &&
-                        !props.historyIsVisible) {
-                props.onReqHistory();
-
-            } else if (evt.keyCode === Keyboard.Code.ESC) {
-                props.onEsc();
-            }
-        };
-
-        const handleKeyUp = (evt) => {
-            if ((evt.keyCode === Keyboard.Code.LEFT_ARROW ||
-                    evt.keyCode === Keyboard.Code.HOME ||
-                    evt.keyCode === Keyboard.Code.END ||
-                    evt.keyCode === Keyboard.Code.RIGHT_ARROW) && props.refObject.current) {
-                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
-                    name: ActionName.QueryInputMoveCursor,
-                    payload: {
-                        formType: props.formType,
-                        sourceId: props.sourceId,
-                        rawAnchorIdx: props.refObject.current.selectionStart,
-                        rawFocusIdx: props.refObject.current.selectionEnd
-                    }
-                });
-            }
-        }
-
-        const handleClick = (evt) => {
-            if (props.refObject.current) {
-                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
-                    name: ActionName.QueryInputMoveCursor,
-                    payload: {
-                        formType: props.formType,
-                        sourceId: props.sourceId,
-                        rawAnchorIdx: props.refObject.current.selectionStart,
-                        rawFocusIdx: props.refObject.current.selectionEnd
-                    }
-                });
-            }
-        };
-
-        return <input className="simple-input" type="text"
-                            spellCheck={false}
-                            ref={props.refObject}
-                            onChange={handleInputChange}
-                            value={props.queries[props.sourceId].query}
-                            onKeyDown={handleKeyDown}
-                            onKeyUp={handleKeyUp}
-                            onClick={handleClick} />;
-    }
-
-    const BoundSingleLineInput = BoundWithProps<SingleLineInputProps, QueryFormModelState>(SingleLineInput, queryModel);
 
     // ------------------- <DefaultAttrSelect /> -----------------------------
 
@@ -966,13 +884,14 @@ export function init({
             const query = this.props.queries[this.props.sourceId];
             switch (query.qtype) {
                 case 'simple':
-                    return <BoundSingleLineInput
+                    return <RichInput
                                 sourceId={this.props.sourceId}
-                                refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
+                                refObject={this._queryInputElement as React.RefObject<HTMLSpanElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
                                 historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 onReqHistory={this.handleReqHistory}
-                                onEsc={this.handleInputEscKeyDown} />;
+                                onEsc={this.handleInputEscKeyDown}
+                                takeFocus={this.props.takeFocus} />;
                 case 'advanced':
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor

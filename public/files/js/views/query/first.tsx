@@ -35,7 +35,6 @@ import { TextTypesModel, TextTypesModelState } from '../../models/textTypes/main
 import { WithinBuilderModel } from '../../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../models/query/context';
-import { CQLEditorModel } from '../../models/query/cqleditor/model';
 import { ActionName, Actions } from '../../models/query/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
 
@@ -50,7 +49,6 @@ export interface MainModuleArgs {
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     queryContextModel:QueryContextModel;
-    cqlEditorModel:CQLEditorModel;
     querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
@@ -83,7 +81,7 @@ export interface MainViews {
 
 export function init({dispatcher, he, CorparchWidget, queryModel,
                       textTypesModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
-                      queryContextModel, cqlEditorModel, querySuggest}:MainModuleArgs):MainViews {
+                      queryContextModel, querySuggest}:MainModuleArgs):MainViews {
 
     const inputViews = inputInit({
         dispatcher,
@@ -92,7 +90,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         queryHintModel,
         withinBuilderModel,
         virtualKeyboardModel,
-        cqlEditorModel,
         querySuggest
     });
     const alignedViews = alignedInit({
