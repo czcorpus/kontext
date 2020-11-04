@@ -251,15 +251,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         const queries = importUserQueries(corpora, props, {}, props.simpleQueryAttrSeq);
         const querySuggestions:SuggestionsData = pipe(
             props.corpora,
-            List.map(corp => tuple(corp,
-                {
-                    data: [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
-                    isPartial: false,
-                    valuePosStart: 0,
-                    valuePosEnd: 0,
-                    timeReq: new Date().getTime()
-                }
-            )),
+            List.map(corp => tuple(corp, {})),
             Dict.fromEntries()
         );
 
