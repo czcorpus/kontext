@@ -79,10 +79,6 @@ export enum ActionName {
     SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
     SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
     SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT',
-    CQLEditorInitialize = 'CQL_EDITOR_INITIALIZE',
-    CQLEditorInitializeDone = 'CQL_EDITOR_INITIALIZE_DONE',
-    CQLEditorEnable = 'CQL_EDITOR_ENABLE',
-    CQLEditorDisable = 'CQL_EDITOR_DISABLE',
     SortSetActiveModel = 'SORT_SET_ACTIVE_STORE',
     SortFormSubmit = 'SORT_FORM_SUBMIT',
     SortFormSetSattr = 'SORT_FORM_SET_SATTR',
@@ -467,26 +463,6 @@ export namespace Actions {
         operationId:string;
     }> {
         name:ActionName.SwitchMcFormSubmit;
-    }
-
-    export interface CQLEditorInitialize extends Action<{
-    }> {
-        name:ActionName.CQLEditorInitialize;
-    }
-
-    export interface CQLEditorInitializeDone extends Action<{
-    }> {
-        name:ActionName.CQLEditorInitializeDone;
-    }
-
-    export interface CQLEditorEnable extends Action<{
-    }> {
-        name:ActionName.CQLEditorEnable;
-    }
-
-    export interface CQLEditorDisable extends Action<{
-    }> {
-        name:ActionName.CQLEditorDisable;
     }
 
     export interface SortSetActiveModel extends Action<{

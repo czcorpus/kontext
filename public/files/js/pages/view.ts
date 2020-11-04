@@ -40,7 +40,6 @@ import { ConcordanceModel } from '../models/concordance/main';
 import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs }
     from '../models/query/first';
 import { UsageTipsModel } from '../models/usageTips';
-import { CQLEditorModel } from '../models/query/cqleditor/model';
 import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay';
 import { ActionName as QueryActionName } from '../models/query/actions';
 import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter';
@@ -110,7 +109,6 @@ export class QueryModels {
     switchMcModel:SwitchMainCorpModel;
     saveAsFormModel:QuerySaveAsFormModel;
     firstHitsModel:FirstHitsModel;
-    cqlEditorModel:CQLEditorModel;
 }
 
 interface RenderLinesDeps {
@@ -438,6 +436,7 @@ export class ViewPage {
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structList: this.layoutModel.getConf<Array<string>>('StructList'),
             hasLemma: queryFormArgs.has_lemma,
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
@@ -459,19 +458,6 @@ export class ViewPage {
             queryFormProps
         );
 
-        this.queryModels.cqlEditorModel = new CQLEditorModel({
-            dispatcher: this.layoutModel.dispatcher,
-            pageModel: this.layoutModel,
-            attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            structList: this.layoutModel.getConf<Array<string>>('StructList'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
-            isEnabled: this.layoutModel.getConf<boolean>('UseCQLEditor'),
-            currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
-            suggestionsVisibility: this.layoutModel.getConf<
-                PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode')
-        });
-
         this.queryFormViews = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),
@@ -482,7 +468,6 @@ export class ViewPage {
             withinBuilderModel: this.queryModels.withinBuilderModel,
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             queryContextModel: this.queryModels.queryContextModel,
-            cqlEditorModel: this.queryModels.cqlEditorModel,
             querySuggest: this.layoutModel.qsuggPlugin
         });
     }
@@ -520,6 +505,7 @@ export class ViewPage {
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structList: this.layoutModel.getConf<Array<string>>('StructList'),
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>(
@@ -550,7 +536,6 @@ export class ViewPage {
             withinBuilderModel: this.queryModels.withinBuilderModel,
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             firstHitsModel,
-            cqlEditorModel: this.queryModels.cqlEditorModel,
             querySuggest
         });
     }

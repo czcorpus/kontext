@@ -247,75 +247,88 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         );
 
         const tagBuilderSupport = props.tagBuilderSupport;
-        super(dispatcher, pageModel, textTypesModel, queryContextModel, 'filter-form-model', {
-            formType: Kontext.ConcFormTypes.FILTER,
-            forcedAttr: '', // TODO
-            attrList: [...props.attrList],
-            structAttrList: [...props.structAttrList],
-            wPoSList: [], // TODO
-            currentAction: 'filter_form',
-            queries, // corpname|filter_id -> query
-            useCQLEditor: props.useCQLEditor,
-            tagAttr: props.tagAttr,
-            widgetArgs: {}, // TODO
-            maincorps: {...props.maincorps},
-            downArrowTriggersHistory: pipe(
-                queries,
-                Dict.map(v => false),
-            ),
-            currentSubcorp: pageModel.getCorpusIdent().usesubcorp,
-            querySuggestions,
-            lposValues: {...props.currLposValues},
-            pnFilterValues: {...props.currPnFilterValues},
-            filflValues: {...props.currFilflVlaues},
-            filfposValues: pipe(
-                props.currFilfposValues,
-                Dict.map((v, fid) => Kontext.newFormValue(v, true))
-            ),
-            filtposValues: pipe(
-                props.currFiltposValues,
-                Dict.map((v, fid) => Kontext.newFormValue(v, true)),
-            ),
-            inclkwicValues: {...props.currInclkwicValues},
-            tagBuilderSupport: {...tagBuilderSupport},
-            opLocks: {...props.opLocks},
-            activeWidgets: pipe(
-                props.filters,
-                List.map(item => tuple(item, null)),
-                Dict.fromEntries()
-            ),
-            withinArgs: {...props.withinArgValues},
-            hasLemma: {...props.hasLemma},
-            inputLanguage: props.inputLanguage,
-            isAnonymousUser: props.isAnonymousUser,
-            supportedWidgets: determineSupportedWidgets(
-                queries,
-                tagBuilderSupport,
-                props.isAnonymousUser
-            ),
-            contextFormVisible: false,    // TODO load from some previous state?
-            textTypesFormVisible: false,  // dtto
-            queryOptionsVisible: pipe(
-                props.filters,
-                List.map(item => tuple(item, true)),
-                Dict.fromEntries()
-            ),    // dtto
-            historyVisible: pipe(
-                queries,
-                Dict.keys(),
-                List.map(k => tuple(k, false)),
-                Dict.fromEntries()
-            ),
-            suggestionsVisible: pipe(
-                queries,
-                Dict.keys(),
-                List.map(k => tuple(k, false)),
-                Dict.fromEntries()
-            ),
-            suggestionsVisibility: props.suggestionsVisibility,
-            isBusy: false,
-            cursorPos: 0,
-            simpleQueryAttrSeq: []
+        super(
+            dispatcher,
+            pageModel,
+            textTypesModel,
+            queryContextModel,
+            'filter-form-model',
+            props,
+            {
+                formType: Kontext.ConcFormTypes.FILTER,
+                forcedAttr: '', // TODO
+                attrList: [...props.attrList],
+                structAttrList: [...props.structAttrList],
+                wPoSList: [], // TODO
+                currentAction: 'filter_form',
+                queries, // corpname|filter_id -> query
+                richCode: {},
+                rawAnchorIdx: {},
+                rawFocusIdx: {},
+                parsedAttrs: {},
+                focusedAttr: {},
+                cqlEditorMessages: {},
+                useCQLEditor: props.useCQLEditor,
+                tagAttr: props.tagAttr,
+                widgetArgs: {}, // TODO
+                maincorps: {...props.maincorps},
+                downArrowTriggersHistory: pipe(
+                    queries,
+                    Dict.map(v => false),
+                ),
+                currentSubcorp: pageModel.getCorpusIdent().usesubcorp,
+                querySuggestions,
+                lposValues: {...props.currLposValues},
+                pnFilterValues: {...props.currPnFilterValues},
+                filflValues: {...props.currFilflVlaues},
+                filfposValues: pipe(
+                    props.currFilfposValues,
+                    Dict.map((v, fid) => Kontext.newFormValue(v, true))
+                ),
+                filtposValues: pipe(
+                    props.currFiltposValues,
+                    Dict.map((v, fid) => Kontext.newFormValue(v, true)),
+                ),
+                inclkwicValues: {...props.currInclkwicValues},
+                tagBuilderSupport: {...tagBuilderSupport},
+                opLocks: {...props.opLocks},
+                activeWidgets: pipe(
+                    props.filters,
+                    List.map(item => tuple(item, null)),
+                    Dict.fromEntries()
+                ),
+                withinArgs: {...props.withinArgValues},
+                hasLemma: {...props.hasLemma},
+                inputLanguage: props.inputLanguage,
+                isAnonymousUser: props.isAnonymousUser,
+                supportedWidgets: determineSupportedWidgets(
+                    queries,
+                    tagBuilderSupport,
+                    props.isAnonymousUser
+                ),
+                contextFormVisible: false,    // TODO load from some previous state?
+                textTypesFormVisible: false,  // dtto
+                queryOptionsVisible: pipe(
+                    props.filters,
+                    List.map(item => tuple(item, true)),
+                    Dict.fromEntries()
+                ),    // dtto
+                historyVisible: pipe(
+                    queries,
+                    Dict.keys(),
+                    List.map(k => tuple(k, false)),
+                    Dict.fromEntries()
+                ),
+                suggestionsVisible: pipe(
+                    queries,
+                    Dict.keys(),
+                    List.map(k => tuple(k, false)),
+                    Dict.fromEntries()
+                ),
+                suggestionsVisibility: props.suggestionsVisibility,
+                isBusy: false,
+                cursorPos: 0,
+                simpleQueryAttrSeq: []
         });
         this.syncInitialArgs = syncInitialArgs;
 
@@ -323,31 +336,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             MainMenuActionName.ShowFilter,
             action => {
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
-            }
-        );
-
-        this.addActionHandler<Actions.CQLEditorDisable>(
-            ActionName.CQLEditorDisable,
-            action => {
-                this.emitChange(); // TODO do we need this?
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.QueryInputAppendQuery>(
-            ActionName.QueryInputAppendQuery,
-            action => action.payload.formType === 'filter',
-            action => {
-                this.changeState(state => {
-                    const query = state.queries[action.payload.sourceId];
-                    query.query = appendQuery(
-                        query.query,
-                        action.payload.query,
-                        action.payload.prependSpace
-                    );
-                    if (query.qtype === 'simple') {
-                        query.queryParsed = parseSimpleQuery(query);
-                    }
-                });
             }
         );
 
