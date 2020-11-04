@@ -389,6 +389,7 @@
         "query__contains_selected_text_types": "Některé typy textu jsou vybrány",
         "query__chain_no_op_msg": "Žádná změna v parametrech konkordance - zobrazuji původní výsledek",
         "query__suggestions_available": "Rady k dotazu",
+        "query__query_structure": "Struktura dotazu",
         "query__specify_options": "Upřesnit parametry",
         "query__no_result_found_{attrs}": "Žádný z implicitních atributů [{attrs}] použitých v dotazu neprodukuje výsledek. Zkuste nastavit jiný atribut, případně změňte formulaci dotazu.",
         "query__no_result_found": "Nebyl nalezen žádný výsledek",
