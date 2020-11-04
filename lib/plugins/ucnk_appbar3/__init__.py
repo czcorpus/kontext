@@ -55,7 +55,7 @@ class ApplicationBar3(AbstractApplicationBar):
     @staticmethod
     def _process_scripts(conf):
         scripts = []
-        for k, item in sorted(conf['depends'].items(), key=lambda v: int(v[0])):
+        for k, item in sorted(conf.get('depends', {}).items(), key=lambda v: int(v[0])):
             scripts.append(item['url'])
         scripts.append(conf['main'])
         return scripts
