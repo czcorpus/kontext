@@ -237,13 +237,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         };
         const querySuggestions:SuggestionsData = pipe(
             {...props.currQueries, '__new__': []},
-            Dict.map(() => ({
-                data: [] as Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>,
-                isPartial: false,
-                valuePosStart: 0,
-                valuePosEnd: 0,
-                timeReq: new Date().getTime()
-            }))
+            Dict.map(() => ({}))
         );
 
         const tagBuilderSupport = props.tagBuilderSupport;

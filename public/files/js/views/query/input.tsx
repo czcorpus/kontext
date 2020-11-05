@@ -28,7 +28,7 @@ import { init as richInputInit } from './richInput';
 import { WithinBuilderModel, WithinBuilderModelState } from '../../models/query/withinBuilder';
 import { PluginInterfaces } from '../../types/plugins';
 import { Kontext } from '../../types/common';
-import { QueryFormModel, QueryFormModelState, SuggestionsData } from '../../models/query/common';
+import { QueryFormModel, QueryFormModelState, SuggestionsData, TokenSuggestions } from '../../models/query/common';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
@@ -450,15 +450,15 @@ export function init({
 
     const SuggestionsWidget:React.FC<{
         qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
-        suggestionData:SuggestionsData;
+        data:TokenSuggestions;
         formType:QueryFormType;
         sourceId:string;
-        handleItemClick:(onItemClick:string, value:string, attr:string) => void;
+        word:string;
+        handleItemClick:(onItemClick:string, value:string, origValue:string, attr:string) => void;
 
     }> = (props) => {
 
-        const suggestions = props.suggestionData[props.sourceId].data;
-        const dynCls = List.every(s => querySuggest.isEmptyResponse(s), suggestions) ?
+        const dynCls = List.every(s => querySuggest.isEmptyResponse(s), props.data.data) ?
             ' empty' : '';
 
         const handleKey = () => {
@@ -473,16 +473,23 @@ export function init({
 
         return (
             <div className={`SuggestionsWidget${dynCls}`} tabIndex={-1} onKeyDown={handleKey}>
-            {QueryFormModel.hasSuggestionsFor(props.suggestionData, props.sourceId, querySuggest) ?
+            {props.data ?
                 pipe(
-                    suggestions,
+                    props.data.data,
                     List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
                     List.map(
                         (v, i) => (
                             <React.Fragment key={`${v.rendererId}${i}`}>
                                 <h2>{v.heading}:</h2>
-                                {props.qsuggPlugin.createElement(v, props.handleItemClick)}
-                                {props.suggestionData[props.sourceId].isPartial ?
+                                {props.qsuggPlugin.createElement(
+                                    v,
+                                    (
+                                        onItemClick:string,
+                                        value:string,
+                                        attr:string
+                                    ) => props.handleItemClick(onItemClick, value, props.word, attr)
+                                )}
+                                {props.data.isPartial ?
                                     <layoutViews.AjaxLoaderBarImage /> : null}
                             </React.Fragment>
                         ),
@@ -862,7 +869,7 @@ export function init({
             });
         }
 
-        handleSuggestionItemClick(onItemClick:string, value:string, attr:string):void {
+        handleSuggestionItemClick(onItemClick:string, value:string, origValue:string, attr:string):void {
             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
                 name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
                 payload: {
@@ -870,10 +877,10 @@ export function init({
                     formType: this.props.formType,
                     onItemClick,
                     value,
-                    valueStartIdx: this.props.querySuggestions[this.props.sourceId].valuePosStart,
-                    valueEndIdx: this.props.querySuggestions[this.props.sourceId].valuePosEnd,
-                    attrStartIdx: this.props.querySuggestions[this.props.sourceId].attrPosStart,
-                    attrEndIdx: this.props.querySuggestions[this.props.sourceId].attrPosEnd,
+                    valueStartIdx: this.props.querySuggestions[this.props.sourceId][origValue].valuePosStart,
+                    valueEndIdx: this.props.querySuggestions[this.props.sourceId][origValue].valuePosEnd,
+                    attrStartIdx: this.props.querySuggestions[this.props.sourceId][origValue].attrPosStart,
+                    attrEndIdx: this.props.querySuggestions[this.props.sourceId][origValue].attrPosEnd,
                     attr
                 }
             });
@@ -990,6 +997,13 @@ export function init({
         }
 
         render() {
+            const [currWord, sugg] = QueryFormModel.getCurrWordSuggestion(
+                this.props.queries[this.props.sourceId].query,
+                this.props.rawFocusIdx[this.props.sourceId],
+                this.props.querySuggestions,
+                this.props.sourceId
+            );
+
             return (
                 <div>
                     <div className="query-area">
@@ -999,9 +1013,7 @@ export function init({
                             sourceId={this.props.sourceId}
                             toggleHistoryWidget={this._toggleHistoryWidget}
                             inputLanguage={this.props.inputLanguage}
-                            qsAvailable={QueryFormModel.hasSuggestionsFor(
-                                this.props.querySuggestions, this.props.sourceId,
-                                querySuggest)} />
+                            qsAvailable={!!sugg} />
                         {this._renderInput()}
                         <div style={{position: 'relative'}}>
                             {this.props.historyVisible[this.props.sourceId] ?
@@ -1015,14 +1027,13 @@ export function init({
                             {
                                 !this.props.historyVisible[this.props.sourceId] &&
                                 this.props.suggestionsVisible[this.props.sourceId] &&
-                                QueryFormModel.hasSuggestionsFor(
-                                    this.props.querySuggestions, this.props.sourceId,
-                                    querySuggest) ?
+                                sugg ?
                                     <SuggestionsWidget
                                         qsuggPlugin={this.props.qsuggPlugin}
-                                        suggestionData={this.props.querySuggestions}
+                                        data={sugg}
                                         formType={this.props.formType}
                                         sourceId={this.props.sourceId}
+                                        word={currWord}
                                         handleItemClick={this.handleSuggestionItemClick} />
                                     : null
                             }

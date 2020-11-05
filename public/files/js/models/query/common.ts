@@ -132,16 +132,18 @@ export interface WithinBuilderData extends Kontext.AjaxResponse {
     structattrs:{[attr:string]:Array<string>};
 }
 
+export interface TokenSuggestions {
+    data:Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>;
+    isPartial:boolean;
+    valuePosStart:number;
+    valuePosEnd:number;
+    attrPosStart?:number;
+    attrPosEnd?:number;
+    timeReq:number;
+}
+
 export interface SuggestionsData {
-    [sourceId:string]:{
-        data:Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>;
-        isPartial:boolean;
-        valuePosStart:number;
-        valuePosEnd:number;
-        attrPosStart?:number;
-        attrPosEnd?:number;
-        timeReq:number;
-    }
+    [sourceId:string]:{[word:string]:TokenSuggestions};
 }
 
 
@@ -171,9 +173,9 @@ export interface QueryFormModelState {
 
     rawFocusIdx:{[sourceId:string]:number};
 
-    parsedAttrs:{[key:string]:Array<ParsedAttr>};
+    parsedAttrs:{[sourceId:string]:Array<ParsedAttr>};
 
-    focusedAttr:{[key:string]:ParsedAttr|undefined};
+    focusedAttr:{[sourceId:string]:ParsedAttr|undefined};
 
     querySuggestions:SuggestionsData;
 
@@ -247,6 +249,31 @@ export function determineSupportedWidgets(
     );
 }
 
+function findCursorWord(value:string, focusIdx:number):[string, number, number] {
+    const ans:Array<[string, number, number]> = [];
+    let curr:[string, number, number] = ['', 0, 0];
+    for (let i = 0; i < value.length; i++) {
+        if (value[i] === ' ') {
+            if (curr) {
+                ans.push(curr);
+            }
+            curr = [value[i] === ' ' ? '' : value[i], i + 1, i + 1];
+
+        } else {
+            curr[0] += value[i];
+            curr[2] = i + 1;
+        }
+    }
+    ans.push(curr);
+    for (let i = 0; i < ans.length; i++) {
+        const [, f, t] = ans[i];
+        if (focusIdx >= f && focusIdx <= t) {
+            return ans[i];
+        }
+    }
+    return ['', 0, 0];
+}
+
 /**
  *
  */
@@ -297,7 +324,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             debounceTime(500)
         ).subscribe(
             ([sourceId,, rawFocusIdx]) => {
-                const [srchWord, srchWordStart, srchWordEnd] = this.findCursorWord(
+                const [srchWord, srchWordStart, srchWordEnd] = findCursorWord(
                     this.state.queries[sourceId].query,
                     rawFocusIdx
                 );
@@ -605,26 +632,19 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         state.suggestionsVisible[action.payload.sourceId] = false;
                     });
 
-                } else if (!Dict.hasKey(action.payload.sourceId, this.state.querySuggestions) ||
-                        this.state.querySuggestions[action.payload.sourceId].timeReq <=
-                                action.payload.timeReq) {
+                } else if (this.noValidSuggestion(
+                    this.state,
+                    action.payload.sourceId,
+                    action.payload.value,
+                    action.payload
+                )) {
                     this.changeState(state => {
-                        state.querySuggestions[action.payload.sourceId] = {
-                            timeReq: action.payload.timeReq,
-                            data: action.payload.results,
-                            isPartial: action.payload.isPartial,
-                            valuePosStart: action.payload.valueStartIdx,
-                            valuePosEnd: action.payload.valueEndIdx,
-                            attrPosStart: action.payload.attrStartIdx,
-                            attrPosEnd: action.payload.attrEndIdx
-                        };
-                        if (
-                            state.suggestionsVisibility ===
-                            PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
-                        ) {
-                            state.suggestionsVisible[action.payload.sourceId] = true;
-                            state.historyVisible[action.payload.sourceId] = false;
-                        }
+                        this.addSuggestion(
+                            state,
+                            action.payload.sourceId,
+                            action.payload.value,
+                            action.payload
+                        );
                     });
                 }
             }
@@ -656,6 +676,53 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 });
             }
         );
+    }
+
+    private noValidSuggestion(
+        state:QueryFormModelState,
+        sourceId:string,
+        word:string,
+        data:PluginInterfaces.QuerySuggest.SuggestionArgs & PluginInterfaces.QuerySuggest.SuggestionAnswer
+    ) {
+        return !Dict.hasKey(sourceId, state.querySuggestions) ||
+                !Dict.hasKey(word, state.querySuggestions[sourceId]) ||
+                        state.querySuggestions[sourceId][word].timeReq <= data.timeReq;
+    }
+
+    private noSuggestion(
+        state:QueryFormModelState,
+        sourceId:string,
+        word:string,
+    ):boolean {
+        return !Dict.hasKey(sourceId, state.querySuggestions) ||
+            !Dict.hasKey(word, state.querySuggestions[sourceId]);
+    }
+
+    private addSuggestion(
+        state:QueryFormModelState,
+        sourceId:string,
+        word:string,
+        data:PluginInterfaces.QuerySuggest.SuggestionArgs & PluginInterfaces.QuerySuggest.SuggestionAnswer
+    ):void {
+        if (state.querySuggestions[sourceId] === undefined) {
+            state.querySuggestions[sourceId] = {};
+        }
+        state.querySuggestions[sourceId][word] = {
+            timeReq: data.timeReq,
+            data: data.results,
+            isPartial: data.isPartial,
+            valuePosStart: data.valueStartIdx,
+            valuePosEnd: data.valueEndIdx,
+            attrPosStart: data.attrStartIdx,
+            attrPosEnd: data.attrEndIdx
+        };
+        if (
+            state.suggestionsVisibility ===
+            PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO
+        ) {
+            state.suggestionsVisible[data.sourceId] = true;
+            state.historyVisible[data.sourceId] = false;
+        }
     }
 
     private hintListener(state:QueryFormModelState, sourceId:string, msg:string):void {
@@ -718,8 +785,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             if (queryObj.qtype === 'simple') {
                 queryObj.queryParsed = parseSimpleQuery(queryObj);
             }
-            if (state.querySuggestions[sourceId]) {
-                state.querySuggestions[sourceId].valuePosEnd = insertRange[0] + query.length;
+            if (!this.noSuggestion(state, sourceId, queryObj.query)) {
+                state.querySuggestions[sourceId][queryObj.query].valuePosEnd = insertRange[0] + query.length;
             }
 
         } else {
@@ -754,31 +821,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
             return 'simple_ic';
         }
-    }
-
-    private findCursorWord(value:string, focusIdx:number):[string, number, number] {
-        const ans:Array<[string, number, number]> = [];
-        let curr:[string, number, number] = ['', 0, 0];
-        for (let i = 0; i < value.length; i++) {
-            if (value[i] === ' ') {
-                if (curr) {
-                    ans.push(curr);
-                }
-                curr = [value[i] === ' ' ? '' : value[i], i + 1, i + 1];
-
-            } else {
-                curr[0] += value[i];
-                curr[2] = i + 1;
-            }
-        }
-        ans.push(curr);
-        for (let i = 0; i < ans.length; i++) {
-            const [, f, t] = ans[i];
-            if (focusIdx >= f && focusIdx <= t) {
-                return ans[i];
-            }
-        }
-        return ['', 0, 0];
     }
 
     private shouldAskForSuggestion(sourceId:string, srchWord:string):boolean {
@@ -823,7 +865,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         if (queryObj.qtype === 'simple') {
             queryObj.queryParsed = parseSimpleQuery(queryObj);
         }
-        state.querySuggestions[sourceId].valuePosEnd = insertRange[0] + query.length;
+        if (!this.noSuggestion(state, sourceId, queryObj.query)) {
+            state.querySuggestions[sourceId][queryObj.query].valuePosEnd = insertRange[0] + query.length;
+        }
     }
 
     protected testQueryNonEmpty(sourceId:string):Error|null {
@@ -866,13 +910,21 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return this.ident;
     }
 
-    static hasSuggestionsFor(
+    static getCurrWordSuggestion(
+        query:string,
+        rawFocusIdx:number,
         data:SuggestionsData,
-        sourceId:string,
-        plugin:PluginInterfaces.QuerySuggest.IPlugin
-    ):boolean {
+        sourceId:string
+    ):[string, TokenSuggestions|null] {
 
-        return data[sourceId] &&
-            List.some(s => !plugin.isEmptyResponse(s), data[sourceId].data);
+        const [srchWord, srchWordStart, srchWordEnd] = findCursorWord(
+            query,
+            rawFocusIdx
+        );
+        const sugg = data[sourceId] ? data[sourceId][srchWord] : undefined;
+        if (!sugg) {
+            return [srchWord, null];
+        }
+        return [srchWord, sugg];
     }
 }
