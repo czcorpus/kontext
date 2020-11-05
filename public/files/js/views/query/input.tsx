@@ -34,7 +34,7 @@ import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
-import { QueryType } from '../../models/query/query';
+import { AnyQuery, QueryType } from '../../models/query/query';
 
 
 export interface InputModuleViews {
@@ -500,6 +500,39 @@ export function init({
         );
     };
 
+    // ------------------- <StructureWidget /> -----------------------------
+
+    const StructureWidget:React.FC<{
+        query:AnyQuery;
+        formType:QueryFormType;
+        sourceId:string;
+
+    }> = (props) => {
+
+        const handleKey = () => {
+            dispatcher.dispatch<Actions.ToggleQueryStructureWidget>({
+                name: ActionName.ToggleQueryStructureWidget,
+                payload: {
+                    formType: props.formType,
+                    sourceId: props.sourceId
+                }
+            });
+        };
+
+        let data;
+        if (props.query.qtype === 'simple') {
+            data = List.map((v, i) => <p>{`args${i}: `}[{List.map(u => `${u[0]}="${u[1]}"`, v.args).join(' & ')}]</p>, props.query.queryParsed);
+        } else {
+            data = null;
+        }
+
+        return (
+            <div className={'structure-widget'} tabIndex={-1} onKeyDown={handleKey}>
+                {data}
+            </div>
+        );
+    };
+
     // ------------------- <KeyboardWidget /> --------------------------------
 
     const KeyboardWidget:React.FC<{
@@ -542,6 +575,7 @@ export function init({
             this._handleHistoryWidget = this._handleHistoryWidget.bind(this);
             this._handleCloseWidget = this._handleCloseWidget.bind(this);
             this._handleQuerySuggestWidget = this._handleQuerySuggestWidget.bind(this);
+            this._handleQueryStructureWidget = this._handleQueryStructureWidget.bind(this);
         }
 
         _renderButtons() {
@@ -557,6 +591,9 @@ export function init({
             }
             if (this.props.widgets.indexOf('history') > -1) {
                 ans.push(<a onClick={this._handleHistoryWidget}>{he.translate('query__recent_queries_link')}</a>);
+            }
+            if (this.props.widgets.indexOf('structure') > -1) {
+                ans.push(<a onClick={this._handleQueryStructureWidget}>{he.translate('query__query_structure')}</a>);
             }
             if (this.props.qsAvailable) {
                 ans.push(
@@ -607,6 +644,16 @@ export function init({
         _handleQuerySuggestWidget() {
             dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
                 name: ActionName.ToggleQuerySuggestionWidget,
+                payload: {
+                    sourceId: this.props.sourceId,
+                    formType: this.props.formType
+                }
+            });
+        }
+
+        _handleQueryStructureWidget() {
+            dispatcher.dispatch<Actions.ToggleQueryStructureWidget>({
+                name: ActionName.ToggleQueryStructureWidget,
                 payload: {
                     sourceId: this.props.sourceId,
                     formType: this.props.formType
@@ -1036,6 +1083,14 @@ export function init({
                                         word={currWord}
                                         handleItemClick={this.handleSuggestionItemClick} />
                                     : null
+                            }
+                            {
+                                this.props.queryStructureVisible[this.props.sourceId] ?
+                                <StructureWidget
+                                    query={this.props.queries[this.props.sourceId]}
+                                    formType={this.props.formType} 
+                                    sourceId={this.props.sourceId} /> :
+                                null
                             }
                         </div>
                         <BoundQueryHints />

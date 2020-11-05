@@ -76,6 +76,7 @@ export enum ActionName {
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
     ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
     ToggleQuerySuggestionWidget = 'QUERY_INPUT_TOGGLE_QUERY_SUGGESTION_WIDGET',
+    ToggleQueryStructureWidget = 'QUERY_INPUT_TOGGLE_QUERY_STRUCTURE_WIDGET',
     SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
     SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
     SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT',
@@ -444,6 +445,13 @@ export namespace Actions {
         sourceId:string;
     }> {
         name:ActionName.ToggleQuerySuggestionWidget;
+    }
+
+    export interface ToggleQueryStructureWidget extends Action<{
+        formType:QueryFormType;
+        sourceId:string;
+    }> {
+        name:ActionName.ToggleQueryStructureWidget;
     }
 
     export interface SampleFormSetRlines extends Action<{
