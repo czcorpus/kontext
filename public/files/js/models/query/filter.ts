@@ -313,12 +313,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     List.map(k => tuple(k, false)),
                     Dict.fromEntries()
                 ),
-                queryStructureVisible: pipe(
-                    queries,
-                    Dict.keys(),
-                    List.map(k => tuple(k, false)),
-                    Dict.fromEntries()
-                ),
                 suggestionsVisible: pipe(
                     queries,
                     Dict.keys(),

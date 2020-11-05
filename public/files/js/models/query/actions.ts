@@ -22,7 +22,7 @@ import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { WithinBuilderData, QueryContextArgs } from './common';
-import { QueryType } from './query';
+import { QueryType, SimpleQuery } from './query';
 
 
 export enum ActionName {
@@ -448,8 +448,7 @@ export namespace Actions {
     }
 
     export interface ToggleQueryStructureWidget extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
+        query:SimpleQuery;
     }> {
         name:ActionName.ToggleQueryStructureWidget;
     }

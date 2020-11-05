@@ -102,6 +102,7 @@ interface QueryToolboxProps {
     tagHelperView:PluginInterfaces.TagHelper.View;
     qsAvailable:boolean;
     toggleHistoryWidget:()=>void;
+    toggleStructureWidget:()=>void;
 }
 
 export interface InputModuleArgs {
@@ -500,39 +501,6 @@ export function init({
         );
     };
 
-    // ------------------- <StructureWidget /> -----------------------------
-
-    const StructureWidget:React.FC<{
-        query:AnyQuery;
-        formType:QueryFormType;
-        sourceId:string;
-
-    }> = (props) => {
-
-        const handleKey = () => {
-            dispatcher.dispatch<Actions.ToggleQueryStructureWidget>({
-                name: ActionName.ToggleQueryStructureWidget,
-                payload: {
-                    formType: props.formType,
-                    sourceId: props.sourceId
-                }
-            });
-        };
-
-        let data;
-        if (props.query.qtype === 'simple') {
-            data = List.map((v, i) => <p>{`args${i}: `}[{List.map(u => `${u[0]}="${u[1]}"`, v.args).join(' & ')}]</p>, props.query.queryParsed);
-        } else {
-            data = null;
-        }
-
-        return (
-            <div className={'structure-widget'} tabIndex={-1} onKeyDown={handleKey}>
-                {data}
-            </div>
-        );
-    };
-
     // ------------------- <KeyboardWidget /> --------------------------------
 
     const KeyboardWidget:React.FC<{
@@ -652,13 +620,7 @@ export function init({
         }
 
         _handleQueryStructureWidget() {
-            dispatcher.dispatch<Actions.ToggleQueryStructureWidget>({
-                name: ActionName.ToggleQueryStructureWidget,
-                payload: {
-                    sourceId: this.props.sourceId,
-                    formType: this.props.formType
-                }
-            });
+            this.props.toggleStructureWidget();
         }
 
         _renderWidget() {
@@ -844,6 +806,7 @@ export function init({
             this._queryInputElement = React.createRef();
             this._handleInputChange = this._handleInputChange.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
+            this._toggleStructureWidget = this._toggleStructureWidget.bind(this);
             this.handleReqHistory = this.handleReqHistory.bind(this);
             this.handleInputEscKeyDown = this.handleInputEscKeyDown.bind(this);
             this.handleSuggestionItemClick = this.handleSuggestionItemClick.bind(this);
@@ -877,6 +840,16 @@ export function init({
             if (!this.props.historyVisible[this.props.sourceId] && this._queryInputElement.current) {
                 this._queryInputElement.current.focus();
             }
+        }
+
+        _toggleStructureWidget() {
+            const query = this.props.queries[this.props.sourceId];
+            dispatcher.dispatch<Actions.ToggleQueryStructureWidget>({
+                name: ActionName.ToggleQueryStructureWidget,
+                payload: {
+                    query: query.qtype === 'simple' ? query : null
+                }
+            });
         }
 
         private handleQueryOptsClick() {
@@ -1059,6 +1032,7 @@ export function init({
                             tagHelperView={this.props.tagHelperView}
                             sourceId={this.props.sourceId}
                             toggleHistoryWidget={this._toggleHistoryWidget}
+                            toggleStructureWidget={this._toggleStructureWidget}
                             inputLanguage={this.props.inputLanguage}
                             qsAvailable={!!sugg} />
                         {this._renderInput()}
@@ -1083,14 +1057,6 @@ export function init({
                                         word={currWord}
                                         handleItemClick={this.handleSuggestionItemClick} />
                                     : null
-                            }
-                            {
-                                this.props.queryStructureVisible[this.props.sourceId] ?
-                                <StructureWidget
-                                    query={this.props.queries[this.props.sourceId]}
-                                    formType={this.props.formType} 
-                                    sourceId={this.props.sourceId} /> :
-                                null
                             }
                         </div>
                         <BoundQueryHints />
