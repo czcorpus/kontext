@@ -23,15 +23,15 @@
 import { IFullActionControl } from 'kombo';
 import { EmptyError, Observable, of as rxOf } from 'rxjs';
 import { tap, map, concatMap, first, catchError } from 'rxjs/operators';
-import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
+import { Dict, tuple, List, pipe, HTTP, id } from 'cnc-tskit';
 
 import { Kontext, TextTypes, ViewOptions } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
-import { GeneralQueryFormProperties, QueryFormModel, appendQuery, QueryFormModelState,
-    ConcQueryArgs, QueryContextArgs, SuggestionsData, determineSupportedWidgets } from './common';
+import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
+    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
@@ -39,6 +39,7 @@ import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 import { AdvancedQuery, AnyQuery, parseSimpleQuery, QueryType, SimpleQuery } from './query';
+import { highlightSyntaxStatic } from './cqleditor/parser';
 
 
 export interface QueryFormUserEntries {
@@ -68,7 +69,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     selectedTextTypes:TextTypes.ServerCheckedValues;
     hasLemma:{[corpname:string]:boolean};
     isAnonymousUser:boolean;
-    suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+    suggestionsEnabled:boolean;
     simpleQueryAttrSeq:Array<string>;
 }
 
@@ -141,26 +142,36 @@ function importUserQueries(
                         || List.empty(simpleQueryAttrSeq) ? 'word' : '');
 
             if (qtype === 'advanced') {
+                const query = data.currQueries[corpus] || '';
                 return tuple<string, AdvancedQuery>(
                     corpus,
                     {
                         corpname: corpus,
                         qtype: 'advanced',
-                        query: data.currQueries[corpus] || '',
+                        query,
+                        queryHtml: query,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
-                        default_attr: defaultAttr
+                        default_attr: defaultAttr,
+                        suggestions: null
                     }
                 );
 
             } else {
+                const query = data.currQueries[corpus] || '';
+                const [queryHtml,] = highlightSyntaxStatic(
+                    query,
+                    'advanced',
+                    {translate: id}
+                );
                 return tuple<string, SimpleQuery>(
                     corpus,
                     {
                         corpname: corpus,
                         qtype: 'simple',
-                        query: data.currQueries[corpus] || '',
+                        query,
                         queryParsed: parseSimpleQuery(data.currQueries[corpus], defaultAttr),
+                        queryHtml,
                         qmcase: data.currQmcaseValues[corpus] || false,
                         use_regexp: data.currUseRegexpValues[corpus] || false,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
@@ -249,12 +260,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
         const corpora = props.corpora;
         const queries = importUserQueries(corpora, props, {}, props.simpleQueryAttrSeq);
-        const querySuggestions:SuggestionsData = pipe(
-            props.corpora,
-            List.map(corp => tuple(corp, {})),
-            Dict.fromEntries()
-        );
-
         const tagBuilderSupport = props.tagBuilderSupport;
         super(
             dispatcher,
@@ -281,7 +286,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 shuffleForbidden: false,
                 shuffleConcByDefault: props.shuffleConcByDefault,
                 queries,
-                richCode: {},
                 rawAnchorIdx: {},
                 rawFocusIdx: {},
                 parsedAttrs: {},
@@ -300,7 +304,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     List.map(item => tuple(item, props.currLposValues[item] || '')),
                     Dict.fromEntries()
                 ),
-                querySuggestions,
                 pcqPosNegValues: pipe(
                     props.corpora,
                     List.map(item => tuple(item, props.currPcqPosNegValues[item] || 'pos')),
@@ -343,9 +346,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     List.map(c => tuple(c, false)),
                     Dict.fromEntries()
                 ),
-                suggestionsVisibility: props.suggestionsVisibility,
+                suggestionsEnabled: props.suggestionsEnabled,
                 isBusy: false,
-                cursorPos: 0,
                 simpleQueryAttrSeq: props.simpleQueryAttrSeq,
                 alignedCorporaVisible: List.size(corpora) > 1
         });
@@ -713,6 +715,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     qtype: 'simple',
                     queryParsed: [],
                     query: '',
+                    queryHtml: '',
                     qmcase: false,
                     pcq_pos_neg: 'pos',
                     include_empty: false,

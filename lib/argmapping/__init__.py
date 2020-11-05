@@ -162,7 +162,7 @@ class Args(object):
     structattrs: List[str] = def_attr(attr.Factory(list), persistent=Persistence.PERSISTENT)
 
     cql_editor: int = def_attr(1, persistent=Persistence.PERSISTENT)
-    qs_visibility_mode: int = def_attr(2, persistent=Persistence.PERSISTENT)
+    qs_enabled: int = def_attr(True, persistent=Persistence.PERSISTENT)
 
     flimit: int = def_attr(1)
     freqlevel: int = def_attr(1)

@@ -52,7 +52,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <PosAttributeItem /> ----------------------
 
-    const TDPosAttributeItem:React.SFC<{
+    const TDPosAttributeItem:React.FC<{
         idx:number;
         label:string;
         n:string;
@@ -80,7 +80,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <SelectAll /> ----------------------
 
-    const SelectAll:React.SFC<{
+    const SelectAll:React.FC<{
         isSelected:boolean;
         label?:string;
         onChange:(evt:React.ChangeEvent<{}>)=>void;
@@ -98,7 +98,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <AttributesTweaks /> ----------------------
 
-    const AttributesTweaks:React.SFC<{
+    const AttributesTweaks:React.FC<{
         attrsVmode:ViewOptions.AttrViewMode;
         showConcToolbar:boolean;
 
@@ -155,7 +155,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <AttributesCheckboxes /> ----------------------
 
-    const AttributesCheckboxes:React.SFC<{
+    const AttributesCheckboxes:React.FC<{
         attrList:Array<ViewOptions.AttrDesc>;
         basePosAttr:string;
         baseViewAttr:string;
@@ -224,7 +224,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <GeneralAttrList /> ----------------------
 
-     const AttrList:React.SFC<{
+     const AttrList:React.FC<{
         ident:string;
         items:Array<ViewOptions.StructAttrDesc|ViewOptions.RefAttrDesc>;
         hasSelectAll:boolean;
@@ -254,7 +254,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <StructsAndAttrsCheckboxes /> ----------------------
 
-    const StructsAndAttrsCheckboxes:React.SFC<{
+    const StructsAndAttrsCheckboxes:React.FC<{
         availStructs:Array<ViewOptions.StructDesc>;
         structAttrs:ViewOptions.AvailStructAttrs;
         corpusUsesRTLText:boolean;
@@ -337,7 +337,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <ConcLineRefCheckboxes /> ----------------------
 
-    const ConcLineRefCheckboxes:React.SFC<{
+    const ConcLineRefCheckboxes:React.FC<{
         availRefs:Array<ViewOptions.RefDesc>;
         refAttrs:{[key:string]:Array<ViewOptions.RefAttrDesc>};
         hasSelectAll:boolean;
@@ -407,8 +407,8 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <QueryHints /> ----------------------
 
-    const Extensions:React.SFC<{
-        queryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+    const Extensions:React.FC<{
+        queryHintEnabled:boolean;
         availProviders:Array<string>;
 
     }> = (props) => {
@@ -417,7 +417,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
             dispatcher.dispatch<Actions.ChangeQuerySuggestionMode>({
                 name: ActionName.ChangeQuerySuggestionMode,
                 payload: {
-                    value: parseInt(event.target.value) as PluginInterfaces.QuerySuggest.SuggestionVisibility
+                    value: !props.queryHintEnabled
                 }
             });
         };
@@ -427,35 +427,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                 <div className="Extensions">
                     <fieldset>
                         <legend className="label">{helpers.translate('options__query_suggestions_label')}</legend>
-                        <ul className="switch">
-                            <li>
-                                <label>
-                                    <input type="radio" name="queryHintMode"
-                                        checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
-                                        value={PluginInterfaces.QuerySuggest.SuggestionVisibility.DISABLED}
-                                        onChange={handleSelectChangeFn} />
-                                    <span>{helpers.translate('options__query_suggestions_disabled')}</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label>
-                                    <input type="radio" name="queryHintMode"
-                                        checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
-                                        value={PluginInterfaces.QuerySuggest.SuggestionVisibility.MANUAL}
-                                        onChange={handleSelectChangeFn} />
-                                    <span>{helpers.translate('options__query_suggestions_manual')}</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label>
-                                    <input type="radio" name="queryHintMode"
-                                        checked={props.queryHintMode === PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
-                                        value={PluginInterfaces.QuerySuggest.SuggestionVisibility.AUTO}
-                                        onChange={handleSelectChangeFn} />
-                                    <span>{helpers.translate('options__query_suggestions_auto')}</span>
-                                </label>
-                            </li>
-                        </ul>
+                        <input type="checkbox" checked={props.queryHintEnabled} onChange={handleSelectChangeFn} />
                         <p className="configured-items note">
                             {helpers.translate('options__currently_avail_qs_providers')}:{'\u00a0'}
                             {!List.empty(props.availProviders) ?
@@ -478,7 +450,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <SubmitButtons /> ----------------------
 
-    const SubmitButtons:React.SFC<{
+    const SubmitButtons:React.FC<{
         isWaiting:boolean;
 
     }> = (props) => {
@@ -516,7 +488,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <StructsAndAttrsForm /> ----------------------
 
-    const StructsAndAttrsForm:React.SFC<{
+    const StructsAndAttrsForm:React.FC<{
         hasLoadedData:boolean;
         fixedAttr:string;
         attrList:Array<ViewOptions.AttrDesc>;
@@ -534,7 +506,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
         isWaiting:boolean;
         userIsAnonymous:boolean;
         corpusUsesRTLText:boolean;
-        queryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+        queryHintEnabled:boolean;
         queryHintAvailable:boolean;
         availQSProviders:Array<string>;
 
@@ -586,7 +558,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                                 refAttrs={props.refAttrs}
                                 hasSelectAll={props.hasSelectAllRefs} />
 
-                            <Extensions queryHintMode={props.queryHintMode}
+                            <Extensions queryHintEnabled={props.queryHintEnabled}
                                     availProviders={props.availQSProviders} />
                         </layoutViews.TabView>
 
@@ -615,7 +587,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
 
     // ---------------------------- <StructAttrsViewOptions /> ----------------------
 
-    const StructAttrsViewOptions:React.SFC<StructAttrsViewOptionsProps & CorpusViewOptionsModelState> = (props) => (
+    const StructAttrsViewOptions:React.FC<StructAttrsViewOptionsProps & CorpusViewOptionsModelState> = (props) => (
         <div className="StructAttrsViewOptions">
             <StructsAndAttrsForm
                     fixedAttr={props.fixedAttr}
@@ -635,7 +607,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
                     isWaiting={props.isBusy}
                     userIsAnonymous={props.userIsAnonymous}
                     corpusUsesRTLText={props.corpusUsesRTLText}
-                    queryHintMode={props.qsVisibilityMode}
+                    queryHintEnabled={props.qsEnabled}
                     queryHintAvailable={props.qsPluginAvaiable}
                     availQSProviders={props.qsProviders} />
         </div>

@@ -141,8 +141,24 @@ export function init(
             }
         }
 
+        private findLinkParent(elm:HTMLElement):HTMLElement {
+            let curr = elm;
+            while (curr !== this.props.refObject.current) {
+                if (curr.nodeName === 'A') {
+                    return curr;
+                }
+                curr = curr.parentElement;
+            }
+            return null;
+        }
+
         private handleClick(evt) {
-            if (this.props.refObject.current) {
+            const a = this.findLinkParent(evt.target as HTMLElement);
+            if (a !== null && evt.ctrlKey) {
+                console.log('suggestion-enabled item clicked, tokenIdx = ', parseInt(a.getAttribute('data-tokenIdx')));
+                // TODO !!! open a suggestion box
+
+            } else if (this.props.refObject.current) {
                 const src = this.contentEditable.extractText(this.props.refObject.current);
                 const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection(src);
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
@@ -191,7 +207,7 @@ export function init(
                         onKeyDown={this.handleKeyDown}
                         onKeyUp={this.handleKeyUp}
                         onClick={this.handleClick}
-                        dangerouslySetInnerHTML={{__html: this.props.queries[this.props.sourceId].query}} />
+                        dangerouslySetInnerHTML={{__html: this.props.queries[this.props.sourceId].queryHtml}} />
             );
         }
     }

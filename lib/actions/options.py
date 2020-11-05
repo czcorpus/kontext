@@ -37,7 +37,7 @@ class Options(Kontext):
         self.args.cql_editor = cql_editor
 
     def _set_new_corp_options(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
-                              setstructattrs=(), setqs_visibility_mode=2):
+                              setstructattrs=(), setqs_enabled=True):
         if self.BASE_ATTR not in setattrs:
             setattrs = (self.BASE_ATTR, ) + tuple(setattrs)
         self.args.attrs = ','.join(setattrs)
@@ -45,7 +45,7 @@ class Options(Kontext):
         self.args.refs = ','.join(setrefs)
         self.args.attr_vmode = setattr_vmode
         self.args.structattrs = setstructattrs
-        self.args.qs_visibility_mode = setqs_visibility_mode
+        self.args.qs_enabled = setqs_enabled
 
     @exposed(access_level=0, vars=('concsize', ), return_type='json')
     def viewattrs(self, _):
@@ -75,7 +75,7 @@ class Options(Kontext):
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
         reflist = self.args.refs.split(',') if self.args.refs else []
         structattrs = defaultdict(list)
-        out['qs_visibility_mode'] = self.args.qs_visibility_mode
+        out['qs_enabled'] = self.args.qs_enabled
 
         def ref_is_allowed(r):
             return r and r not in (
@@ -106,15 +106,15 @@ class Options(Kontext):
 
     @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=True, http_method='POST')
     def viewattrsx(self, setattrs=(), setattr_vmode='', setstructs=(), setrefs=(),
-                   setstructattrs=(), setqs_visibility_mode=2):
+                   setstructattrs=(), setqs_enabled=True):
         self._set_new_corp_options(setattrs=setattrs,
                                    setattr_vmode=setattr_vmode,
                                    setstructs=setstructs,
                                    setrefs=setrefs,
                                    setstructattrs=setstructattrs,
-                                   setqs_visibility_mode=setqs_visibility_mode)
+                                   setqs_enabled=setqs_enabled)
         self._save_options(['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr',
-                            'qs_visibility_mode'],
+                            'qs_enabled'],
                            self.args.corpname)
         if self.args.format == 'json':
             return dict(widectx_globals=self._get_mapped_attrs(

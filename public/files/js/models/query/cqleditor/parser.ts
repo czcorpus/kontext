@@ -80,7 +80,7 @@ class RuleCharMap {
 
     private query:string;
 
-    private he:Kontext.ComponentHelpers;
+    private he:Kontext.Translator;
 
     private wrapLongQuery:boolean;
 
@@ -90,7 +90,7 @@ class RuleCharMap {
 
     private onHintChange:(message:string)=>void;
 
-    constructor(query:string, he:Kontext.ComponentHelpers, attrHelper:IAttrHelper,
+    constructor(query:string, he:Kontext.Translator, attrHelper:IAttrHelper,
                 wrapLongQuery:boolean, onHintChange:(message:string)=>void) {
         this.query = query;
         this.data = {};
@@ -516,7 +516,7 @@ const escapeQuery = (v:string):string => {
 interface HSArgs {
     query:string;
     applyRules:Array<string>;
-    he:Kontext.ComponentHelpers;
+    he:Kontext.Translator;
     ignoreErrors:boolean;
     attrHelper:IAttrHelper;
     parserRecoverIdx:number;
@@ -643,7 +643,7 @@ export function highlightSyntax(
 export function highlightSyntaxStatic(
         query:string,
         queryType:QueryType,
-        he:Kontext.ComponentHelpers):[string, Array<ParsedAttr>] {
+        he:Kontext.Translator):[string, Array<ParsedAttr>] {
     return _highlightSyntax({
         query: query,
         applyRules: getApplyRules(queryType),

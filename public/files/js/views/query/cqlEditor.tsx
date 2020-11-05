@@ -310,7 +310,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 className="cql-input"
                                 ref={this.props.inputRef}
                                 dangerouslySetInnerHTML={
-                                    {__html: this.props.richCode[this.props.sourceId] || ''}}
+                                    {__html: this.props.queries[this.props.sourceId].queryHtml || ''}}
                                 onKeyDown={this.inputKeyDownHandler}
                                 onKeyUp={this.inputKeyUpHandler} />
                     <div className="cql-editor-messages">
