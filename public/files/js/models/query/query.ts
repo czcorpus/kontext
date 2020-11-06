@@ -19,21 +19,38 @@
  */
 
 import { List, tuple } from 'cnc-tskit';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 export type QueryType = 'simple'|'advanced';
+
+
+export interface TokenSuggestions {
+    data:Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>;
+    isPartial:boolean;
+    valuePosStart:number;
+    valuePosEnd:number;
+    attrPosStart?:number;
+    attrPosEnd?:number;
+    timeReq:number;
+}
 
 
 export interface AdvancedQuery {
     corpname:string;
     qtype:'advanced';
     query:string;
+    queryHtml:string;
     pcq_pos_neg:string;
     include_empty:boolean;
     default_attr:string;
+    suggestions:TokenSuggestions|null;
 }
 
+
 export interface ParsedSimpleQueryToken {
+
+    value:string;
 
     /**
      * the value represents logical conjunction of
@@ -46,13 +63,17 @@ export interface ParsedSimpleQueryToken {
      * input, [-1, -1] should be used.
      */
     position:[number, number];
+
+    suggestions:TokenSuggestions|null;
 }
+
 
 export interface SimpleQuery {
     corpname:string;
     qtype:'simple';
     queryParsed:Array<ParsedSimpleQueryToken>;
     query:string;
+    queryHtml:string;
     qmcase:boolean;
     pcq_pos_neg:string;
     include_empty:boolean;
@@ -62,14 +83,25 @@ export interface SimpleQuery {
 
 export type AnyQuery = SimpleQuery|AdvancedQuery;
 
+export function findTokenIdxByFocusIdx(q:SimpleQuery, focusIdx:number):number {
+    for (let i = 0; i < q.queryParsed.length; i++) {
+        if (q.queryParsed[i].position[0] <= focusIdx && focusIdx <= q.queryParsed[i].position[1]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 export function simpleToAdvancedQuery(q:SimpleQuery):AdvancedQuery {
     return {
         corpname: q.corpname,
         qtype: 'advanced',
         query: q.query,
+        queryHtml: q.queryHtml,
         pcq_pos_neg: q.pcq_pos_neg,
         include_empty: q.include_empty,
-        default_attr: q.default_attr
+        default_attr: q.default_attr,
+        suggestions: null
     };
 }
 
@@ -79,6 +111,7 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
         qtype: 'simple',
         query: q.query,
         queryParsed: parseSimpleQuery(q.query, q.default_attr),
+        queryHtml: q.queryHtml,
         qmcase: false,
         pcq_pos_neg: 'pos',
         include_empty: false,
@@ -87,32 +120,60 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
     };
 }
 
-export function parseSimpleQuery(q:SimpleQuery):Array<ParsedSimpleQueryToken>;
-export function parseSimpleQuery(q:string|null, attr:string):Array<ParsedSimpleQueryToken>;
-export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string):Array<ParsedSimpleQueryToken> {
-    if (q === null) {
-        return [{args: [tuple(attr, '')], position: [-1, -1]}];
-    }
-    const qVal = typeof q === 'string' ? q.trim() : q.query.trim();
-    const attrVal = typeof q === 'string' ? attr : q.default_attr;
-    const ans:Array<ParsedSimpleQueryToken> = [];
+export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken, idx:number)=>void, onSpace:()=>void):void {
     let currWord = [];
     let startWord = 0;
-    let i = 0;
-    for (; i < qVal.length; i++) {
-        if (qVal[i] !== ' ') {
-            currWord.push(qVal[i]);
+    const isWhitespace = (s:string) => /^\s$/.exec(s) !== null;
+    let tokenIdx = 0;
+    for (let i = 0; i < q.length; i++) {
+        if (!isWhitespace(q[i])) {
+            currWord.push(q[i]);
         }
-        if (qVal[i] === ' ' || i === qVal.length - 1) {
+        if (isWhitespace(q[i]) || i === q.length - 1) {
             if (!List.empty(currWord)) {
-                ans.push({
-                    args: [tuple(attrVal, currWord.join(''))],
-                    position: [startWord, qVal[i] === ' ' ? i-1 : i]
-                });
+                onToken(
+                    {
+                        args: [],
+                        position: [startWord, isWhitespace(q[i]) ? i-1 : i],
+                        value: currWord.join(''),
+                        suggestions: null
+                    },
+                    tokenIdx
+                );
+                tokenIdx++;
             }
             currWord = [];
             startWord = i+1;
         }
+        if (isWhitespace(q[i])) {
+            onSpace();
+        }
     }
+}
+
+export function parseSimpleQuery(q:SimpleQuery):Array<ParsedSimpleQueryToken>;
+export function parseSimpleQuery(q:string|null, attr:string):Array<ParsedSimpleQueryToken>;
+export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string):Array<ParsedSimpleQueryToken> {
+    if (q === null) {
+        return [{
+            args: [tuple(attr, '')],
+            position: [-1, -1],
+            value: '',
+            suggestions: null
+        }];
+    }
+    const qVal = typeof q === 'string' ? q.trim() : q.query.trim();
+    const attrVal = typeof q === 'string' ? attr : q.default_attr;
+    const ans:Array<ParsedSimpleQueryToken> = [];
+    runSimpleQueryParser(
+        qVal,
+        (token) => {
+            ans.push({
+                ...token,
+                args: [tuple(attrVal, token.value)]
+            });
+        },
+        () => undefined
+    );
     return ans;
 }

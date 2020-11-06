@@ -228,8 +228,7 @@ export class QueryPage {
                 useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
                 tagAttr: this.layoutModel.getConf<string>('tagAttr'),
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
-                suggestionsVisibility: this.layoutModel.getConf<
-                    PluginInterfaces.QuerySuggest.SuggestionVisibility>('QSVisibilityMode'),
+                suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
                 simpleQueryAttrSeq: this.layoutModel.getConf<Array<string>>('SimpleQueryAttrSeq')
             }
         );

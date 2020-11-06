@@ -21,15 +21,15 @@
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { tuple, pipe, Dict, List, HTTP } from 'cnc-tskit';
+import { tuple, pipe, Dict, List, HTTP, id } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
-import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState, appendQuery,
-    FilterServerArgs, SuggestionsData, determineSupportedWidgets } from './common';
+import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
+    FilterServerArgs, determineSupportedWidgets } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
@@ -37,6 +37,7 @@ import { PluginInterfaces } from '../../types/plugins';
 import { TextTypesModel } from '../textTypes/main';
 import { AjaxConcResponse } from '../concordance/common';
 import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query';
+import { highlightSyntaxStatic } from './cqleditor/parser';
 
 
 /**
@@ -65,7 +66,6 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     opLocks:{[sourceId:string]:boolean};
     hasLemma:{[sourceId:string]:boolean};
     isAnonymousUser:boolean;
-    suggestionsVisibility:PluginInterfaces.QuerySuggest.SuggestionVisibility;
 }
 
 export function isFilterFormProperties(v:FilterFormProperties|AjaxResponse.FilterFormArgs):v is FilterFormProperties {
@@ -147,19 +147,28 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
             List.map(
                 filter => {
                     if (src.currQueryTypes[filter] === 'advanced') {
+                        const query = src.currQueries[filter] || '';
+                        const [queryHtml,] = highlightSyntaxStatic(
+                            query,
+                            'advanced',
+                            {translate: id}
+                        );
                         return tuple<string, AdvancedQuery>(
                             filter,
                             {
                                 corpname: filter,
                                 qtype: 'advanced',
-                                query: src.currQueries[filter] || '',
+                                query,
+                                queryHtml,
                                 pcq_pos_neg: 'pos',
                                 include_empty: false,
-                                default_attr: src.currDefaultAttrValues[filter]
+                                default_attr: src.currDefaultAttrValues[filter],
+                                suggestions: null
                             }
                         );
 
                     } else {
+                        const query = src.currQueries[filter] || '';
                         return tuple<string, SimpleQuery>(
                             filter,
                                 {
@@ -169,7 +178,8 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                                     src.currQueries[filter] || '',
                                     src.currDefaultAttrValues[filter]
                                 ),
-                                query: src.currQueries[filter] || '',
+                                query,
+                                queryHtml: query,
                                 qmcase: src.currQmcaseValues[filter],
                                 pcq_pos_neg: 'pos',
                                 include_empty: false,
@@ -190,9 +200,11 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                     corpname: sourceId,
                     qtype: 'advanced',
                     query: src.query,
+                    queryHtml: src.query,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
-                    default_attr: src.default_attr
+                    default_attr: src.default_attr,
+                    suggestions: null
                 } :
                 {
                     corpname: sourceId,
@@ -202,6 +214,7 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                         src.default_attr
                     ),
                     query: src.query,
+                    queryHtml: src.query,
                     qmcase: src.qmcase,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
@@ -235,10 +248,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         const queries:{[sourceId:string]:AnyQuery} = {
             ...importFormValues(props)
         };
-        const querySuggestions:SuggestionsData = pipe(
-            {...props.currQueries, '__new__': []},
-            Dict.map(() => ({}))
-        );
 
         const tagBuilderSupport = props.tagBuilderSupport;
         super(
@@ -256,7 +265,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 wPoSList: [], // TODO
                 currentAction: 'filter_form',
                 queries, // corpname|filter_id -> query
-                richCode: {},
                 rawAnchorIdx: {},
                 rawFocusIdx: {},
                 parsedAttrs: {},
@@ -271,7 +279,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     Dict.map(v => false),
                 ),
                 currentSubcorp: pageModel.getCorpusIdent().usesubcorp,
-                querySuggestions,
                 lposValues: {...props.currLposValues},
                 pnFilterValues: {...props.currPnFilterValues},
                 filflValues: {...props.currFilflVlaues},
@@ -325,9 +332,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     List.map(k => tuple(k, false)),
                     Dict.fromEntries()
                 ),
-                suggestionsVisibility: props.suggestionsVisibility,
+                suggestionsEnabled: props.suggestionsEnabled,
                 isBusy: false,
-                cursorPos: 0,
                 simpleQueryAttrSeq: []
         });
         this.syncInitialArgs = syncInitialArgs;

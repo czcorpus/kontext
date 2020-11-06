@@ -28,13 +28,13 @@ import { init as richInputInit } from './richInput';
 import { WithinBuilderModel, WithinBuilderModelState } from '../../models/query/withinBuilder';
 import { PluginInterfaces } from '../../types/plugins';
 import { Kontext } from '../../types/common';
-import { QueryFormModel, QueryFormModelState, SuggestionsData, TokenSuggestions } from '../../models/query/common';
+import { QueryFormModel, QueryFormModelState } from '../../models/query/common';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
-import { AnyQuery, QueryType } from '../../models/query/query';
+import { AnyQuery, QueryType, TokenSuggestions } from '../../models/query/query';
 
 
 export interface InputModuleViews {
@@ -453,8 +453,7 @@ export function init({
         data:TokenSuggestions;
         formType:QueryFormType;
         sourceId:string;
-        word:string;
-        handleItemClick:(onItemClick:string, value:string, origValue:string, attr:string) => void;
+        handleItemClick:(actionType:string, value:string, attr:string) => void;
 
     }> = (props) => {
 
@@ -487,7 +486,7 @@ export function init({
                                         onItemClick:string,
                                         value:string,
                                         attr:string
-                                    ) => props.handleItemClick(onItemClick, value, props.word, attr)
+                                    ) => props.handleItemClick(onItemClick, value, attr)
                                 )}
                                 {props.data.isPartial ?
                                     <layoutViews.AjaxLoaderBarImage /> : null}
@@ -916,18 +915,14 @@ export function init({
             });
         }
 
-        handleSuggestionItemClick(onItemClick:string, value:string, origValue:string, attr:string):void {
+        handleSuggestionItemClick(actionType:'replace'|'insert', value:string, attr:string):void {
             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
                 name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
                 payload: {
                     sourceId: this.props.sourceId,
                     formType: this.props.formType,
-                    onItemClick,
+                    actionType,
                     value,
-                    valueStartIdx: this.props.querySuggestions[this.props.sourceId][origValue].valuePosStart,
-                    valueEndIdx: this.props.querySuggestions[this.props.sourceId][origValue].valuePosEnd,
-                    attrStartIdx: this.props.querySuggestions[this.props.sourceId][origValue].attrPosStart,
-                    attrEndIdx: this.props.querySuggestions[this.props.sourceId][origValue].attrPosEnd,
                     attr
                 }
             });
@@ -1003,7 +998,7 @@ export function init({
                                 </div>
                                 <div className="option">
                                     <DefaultAttrSelector
-                                        label={he.translate('query__applied_attr')}
+                                        label={he.translate('query__default_attr')}
                                         sourceId={this.props.sourceId}
                                         defaultAttr={query.default_attr}
                                         forcedAttr={this.props.forcedAttr}
@@ -1044,11 +1039,10 @@ export function init({
         }
 
         render() {
-            const [currWord, sugg] = QueryFormModel.getCurrWordSuggestion(
-                this.props.queries[this.props.sourceId].query,
-                this.props.rawFocusIdx[this.props.sourceId],
-                this.props.querySuggestions,
-                this.props.sourceId
+
+            const sugg = QueryFormModel.getCurrWordSuggestion(
+                this.props.queries[this.props.sourceId],
+                this.props.rawFocusIdx[this.props.sourceId]
             );
 
             return (
@@ -1080,7 +1074,6 @@ export function init({
                                         data={sugg}
                                         formType={this.props.formType}
                                         sourceId={this.props.sourceId}
-                                        word={currWord}
                                         handleItemClick={this.handleSuggestionItemClick} />
                                     : null
                             }
@@ -1088,7 +1081,7 @@ export function init({
                                 this.props.queryStructureVisible[this.props.sourceId] ?
                                 <StructureWidget
                                     query={this.props.queries[this.props.sourceId]}
-                                    formType={this.props.formType} 
+                                    formType={this.props.formType}
                                     sourceId={this.props.sourceId} /> :
                                 null
                             }

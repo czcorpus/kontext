@@ -191,13 +191,13 @@ export namespace Actions {
         baseViewAttr:string;
         widectxGlobals:Array<[string, string]>;
         attrVmode:ViewOptions.AttrViewMode;
-        qsVisibilityMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+        qsEnabled:boolean;
     }> {
         name:ActionName.SaveSettingsDone;
     }
 
     export interface ChangeQuerySuggestionMode extends Action<{
-        value:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+        value:boolean;
     }> {
         name:ActionName.ChangeQuerySuggestionMode;
     }

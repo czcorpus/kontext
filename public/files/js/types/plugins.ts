@@ -497,12 +497,6 @@ export namespace PluginInterfaces {
 
         export type ItemClickAction = 'replace'|'insert'|null;
 
-        export enum SuggestionVisibility {
-            DISABLED = 0,
-            MANUAL = 1,
-            AUTO = 2
-        }
-
         /**
          * formats are:
          * regexp: simple query with regexp support enabled
@@ -553,12 +547,8 @@ export namespace PluginInterfaces {
             }
 
             export interface ItemClicked extends Action<{
-                onItemClick:string;
+                actionType:'replace'|'insert';
                 value:string;
-                valueStartIdx:number;
-                valueEndIdx:number;
-                attrStartIdx?:number;
-                attrEndIdx?:number;
                 attr:string;
                 sourceId:string;
                 formType:string;

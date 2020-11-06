@@ -234,10 +234,7 @@ export namespace Kontext {
         [P in keyof T]:T[P];
     }
 
-    /**
-     * Convenient functions used by KonText's React components
-     */
-    export interface ComponentHelpers {
+    export interface Translator {
 
         /**
          * Translate a message key (and possible passed placeholder
@@ -245,6 +242,12 @@ export namespace Kontext {
          * JSON file.
          */
         translate(s:string, values?:any):string;
+    }
+
+    /**
+     * Convenient functions used by KonText's React components
+     */
+    export interface ComponentHelpers extends Translator {
 
         /**
          * Create a proper action URL based on normalized format
@@ -582,7 +585,7 @@ export namespace ViewOptions {
         AvailRefs:Array<{n:string; sel:string; label:string}>;
         ShowConcToolbar:boolean;
         BaseViewAttr:string;
-        QueryHintMode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+        QueryHintEnabled:boolean;
     }
 
     export interface LoadOptionsResponse extends Kontext.AjaxResponse {
@@ -596,7 +599,7 @@ export namespace ViewOptions {
         use_conc_toolbar:boolean;
         structattrs:{[attr:string]:Array<string>};
         CurrentAttrs:Array<string>;
-        qs_visibility_mode:PluginInterfaces.QuerySuggest.SuggestionVisibility;
+        qs_enabled:boolean;
     }
 
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
