@@ -454,6 +454,7 @@ export class ViewPage {
             this.layoutModel,
             this.queryModels.textTypesModel,
             this.queryModels.queryContextModel,
+            this.layoutModel.qsuggPlugin,
             queryFormProps
         );
 
@@ -522,6 +523,7 @@ export class ViewPage {
             this.layoutModel,
             this.queryModels.textTypesModel,
             this.queryModels.queryContextModel,
+            querySuggest,
             filterFormProps,
             this.concFormsInitialArgs.filter
         );

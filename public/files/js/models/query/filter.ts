@@ -253,6 +253,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
+            qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
             props:FilterFormProperties,
             syncInitialArgs:AjaxResponse.FilterFormArgs) {
         const queries:{[sourceId:string]:AnyQuery} = {
@@ -265,6 +266,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             pageModel,
             textTypesModel,
             queryContextModel,
+            qsPlugin,
             'filter-form-model',
             props,
             {

@@ -192,6 +192,7 @@ export class QueryPage {
             this.layoutModel,
             this.textTypesModel,
             this.queryContextModel,
+            this.layoutModel.qsuggPlugin,
             {
                 corpora: [this.layoutModel.getCorpusIdent().id].concat(
                     this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),

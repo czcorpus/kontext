@@ -258,6 +258,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
+            qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
             props:QueryFormProperties
     ) {
 
@@ -269,6 +270,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pageModel,
             textTypesModel,
             queryContextModel,
+            qsPlugin,
             'first-query-model',
             props, {
                 formType: Kontext.ConcFormTypes.QUERY,

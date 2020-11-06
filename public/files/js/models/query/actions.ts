@@ -443,7 +443,7 @@ export namespace Actions {
     export interface ToggleQuerySuggestionWidget extends Action<{
         formType:QueryFormType;
         sourceId:string;
-        tokenIdx:number;
+        tokenIdx:number|null;
     }> {
         name:ActionName.ToggleQuerySuggestionWidget;
     }
