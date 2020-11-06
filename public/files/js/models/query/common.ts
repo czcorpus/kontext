@@ -33,11 +33,10 @@ import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
-import { advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx, parseSimpleQuery, QueryType, runSimpleQueryParser, simpleToAdvancedQuery,
+import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx, parseSimpleQuery, QueryType, runSimpleQueryParser, simpleToAdvancedQuery,
     TokenSuggestions } from './query';
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
-import { QueryStructureModel } from './structure';
 
 
 export type CtxLemwordType = 'any'|'all'|'none';
@@ -158,14 +157,6 @@ export interface QueryFormModelState {
     queries:{[sourceId:string]:AnyQuery}; // corpname|filter_id -> query
 
     cqlEditorMessages:{[sourceId:string]:string};
-
-    rawAnchorIdx:{[sourceId:string]:number};
-
-    rawFocusIdx:{[sourceId:string]:number};
-
-    parsedAttrs:{[sourceId:string]:Array<ParsedAttr>};
-
-    focusedAttr:{[sourceId:string]:ParsedAttr|undefined};
 
     tagBuilderSupport:{[sourceId:string]:boolean};
 
@@ -343,7 +334,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                 valueStartIdx: attr.rangeVal[0],
                                 valueEndIdx: attr.rangeVal[1]
                             }),
-                            this.state.parsedAttrs[sourceId]
+                            queryObj.parsedAttrs
                         );
 
                 List.forEach(
@@ -503,9 +494,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     if (action.payload.rawAnchorIdx !== undefined &&
                             action.payload.rawFocusIdx !== undefined) {
-                        state.rawAnchorIdx[action.payload.sourceId] = action.payload.rawAnchorIdx ||
+                        const queryObj = state.queries[action.payload.sourceId];
+                        queryObj.rawAnchorIdx = action.payload.rawAnchorIdx ||
                             action.payload.query.length;
-                        state.rawFocusIdx[action.payload.sourceId] = action.payload.rawFocusIdx ||
+                            queryObj.rawFocusIdx = action.payload.rawFocusIdx ||
                             action.payload.query.length;
                     }
                     this.setRawQuery(
@@ -557,13 +549,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         tuple(queryLength - 1, queryLength)
                     );
                     this.moveCursorToEnd(state, action.payload.sourceId);
-                    state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
-                        state, action.payload.sourceId);
+                    const queryObj = state.queries[action.payload.sourceId];
+                    if (queryObj.qtype === 'advanced') {
+                        queryObj.focusedAttr = this.findFocusedAttr(queryObj);
+                    }
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
-                    this.state.rawAnchorIdx[action.payload.sourceId],
-                    this.state.rawFocusIdx[action.payload.sourceId]
+                    this.state.queries[action.payload.sourceId].rawAnchorIdx,
+                    this.state.queries[action.payload.sourceId].rawFocusIdx
                 ));
             }
         );
@@ -573,15 +567,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
-                    state.rawAnchorIdx[action.payload.sourceId] = action.payload.rawAnchorIdx;
-                    state.rawFocusIdx[action.payload.sourceId] = action.payload.rawFocusIdx;
+                    const queryObj = state.queries[action.payload.sourceId];
+                    queryObj.rawAnchorIdx = action.payload.rawAnchorIdx;
+                    queryObj.rawFocusIdx = action.payload.rawFocusIdx;
                     state.downArrowTriggersHistory[action.payload.sourceId] =
                         this.shouldDownArrowTriggerHistory(
                             state,
                             action.payload.sourceId
                         );
-                        state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
-                            state, action.payload.sourceId);
+                        if (queryObj.qtype === 'advanced') {
+                            queryObj.focusedAttr = this.findFocusedAttr(queryObj);
+                        }
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
@@ -701,7 +697,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                     );
 
                                 } else {
-                                    query.suggestions = null
+                                    query.parsedAttrs = List.map(
+                                        item => ({...item, suggestions: null}),
+                                        query.parsedAttrs
+                                    );
                                 }
                             }
                         )
@@ -728,12 +727,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     private clearSuggestionForPosition(state:QueryFormModelState, sourceId:string, position:number):void {
         const queryObj = state.queries[sourceId];
+        const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
+        if (tokIdx === -1) {
+            throw new Error(`No valid token found at position ${position}`);
+        }
         if (queryObj.qtype === 'simple') {
-            const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
             queryObj.queryParsed[tokIdx].suggestions = null;
 
         } else {
-            queryObj.suggestions = null;
+            queryObj.parsedAttrs[tokIdx].suggestions = null;
         }
     }
 
@@ -744,16 +746,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         data:PluginInterfaces.QuerySuggest.SuggestionArgs & PluginInterfaces.QuerySuggest.SuggestionAnswer
     ) {
         const queryObj = state.queries[sourceId];
+        const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
+        if (tokIdx < 0) {
+            return true;
+        }
         if (queryObj.qtype === 'simple') {
-            const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
-            if (tokIdx < 0) {
-                return true;
-            }
             return queryObj.queryParsed[tokIdx].suggestions === null ||
                  queryObj.queryParsed[tokIdx].suggestions.timeReq <= data.timeReq;
 
         } else {
-            return queryObj.suggestions === null || queryObj.suggestions.timeReq <= data.timeReq;
+            return queryObj.parsedAttrs[tokIdx].suggestions === null ||
+                queryObj.parsedAttrs[tokIdx].suggestions.timeReq <= data.timeReq;
         }
     }
 
@@ -773,11 +776,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             attrPosStart: data.attrStartIdx,
             attrPosEnd: data.attrEndIdx
         };
+        const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
+        if (tokIdx < 0) {
+            throw new Error('Cannot add a suggestion - token not found in the query');
+        }
         if (queryObj.qtype === 'simple') {
-            const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
-            if (tokIdx < 0) {
-                throw new Error('Cannot add a suggestion - token not found in the query');
-            }
             queryObj.queryParsed[tokIdx].suggestions = newSugg;
             const richText = [];
             runSimpleQueryParser(
@@ -798,7 +801,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             queryObj.queryHtml = richText.join('');
 
         } else {
-            queryObj.suggestions = newSugg;
+            queryObj.parsedAttrs[tokIdx].suggestions = newSugg;
         }
     }
 
@@ -807,31 +810,26 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     }
 
     private shouldDownArrowTriggerHistory(state:QueryFormModelState, sourceId:string):boolean {
-        const q = state.queries[sourceId].query;
-        const anchorIdx = state.rawAnchorIdx[sourceId];
-        const focusIdx = state.rawFocusIdx[sourceId];
-
-        if (anchorIdx === focusIdx) {
-            return q.substr(anchorIdx+1).search(/[\n\r]/) === -1;
+        const queryObj = state.queries[sourceId];
+        if (queryObj.rawAnchorIdx === queryObj.rawFocusIdx) {
+            return queryObj.query.substr(queryObj.rawAnchorIdx+1).search(/[\n\r]/) === -1;
 
         } else {
             return false;
         }
     }
 
-    private findFocusedAttr(state:QueryFormModelState, sourceId:string):ParsedAttr|undefined {
-        const focus = state.rawFocusIdx[sourceId];
-        const attrs = state.parsedAttrs[sourceId];
+    private findFocusedAttr(queryObj:AdvancedQuery):ParsedAttr|undefined {
         return List.find(
-            (v, i) => v.rangeAll[0] <= focus && (
-                focus <= v.rangeAll[1]),
-            attrs
+            (v, i) => v.rangeAll[0] <= queryObj.rawFocusIdx && (
+                queryObj.rawFocusIdx <= v.rangeAll[1]),
+            queryObj.parsedAttrs
         );
     }
 
     private moveCursorToPos(state:QueryFormModelState, sourceId:string, posIdx:number):void {
-        state.rawAnchorIdx[sourceId] = posIdx;
-        state.rawFocusIdx[sourceId] = posIdx;
+        state.queries[sourceId].rawAnchorIdx = posIdx;
+        state.queries[sourceId].rawFocusIdx = posIdx;
         state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(
             state, sourceId);
     }
@@ -869,14 +867,14 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             state, sourceId);
 
         if (queryObj.qtype === 'advanced') {
-            [queryObj.queryHtml, state.parsedAttrs[sourceId]] = highlightSyntax(
+            [queryObj.queryHtml, queryObj.parsedAttrs] = highlightSyntax(
                 queryObj.query,
                 'advanced',
                 this.pageModel.getComponentHelpers(),
                 this.attrHelper,
                 (msg) => this.hintListener(state, sourceId, msg)
             );
-            state.focusedAttr[sourceId] = this.findFocusedAttr(state, sourceId);
+            queryObj.focusedAttr = this.findFocusedAttr(queryObj);
 
         } else {
             queryObj.queryParsed = parseSimpleQuery(queryObj);
@@ -999,18 +997,14 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     }
 
     static getCurrWordSuggestion(
-        queryObj:AnyQuery,
-        rawFocusIdx:number
+        queryObj:AnyQuery
     ):TokenSuggestions|null {
-        if (queryObj.qtype === 'simple') {
-            const tokIdx = findTokenIdxByFocusIdx(queryObj, rawFocusIdx);
+        const tokIdx = findTokenIdxByFocusIdx(queryObj, queryObj.rawFocusIdx);
             if (tokIdx < 0) {
                 return null;
             }
-            return queryObj.queryParsed[tokIdx].suggestions;
-
-        } else {
-            return queryObj.suggestions;
-        }
+        return queryObj.qtype === 'simple' ?
+                queryObj.queryParsed[tokIdx].suggestions :
+                queryObj.parsedAttrs[tokIdx].suggestions;
     }
 }

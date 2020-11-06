@@ -18,8 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, tuple } from 'cnc-tskit';
+import { id, List, tuple } from 'cnc-tskit';
 import { PluginInterfaces } from '../../types/plugins';
+import { highlightSyntaxStatic, ParsedAttr } from './cqleditor/parser';
 
 
 export type QueryType = 'simple'|'advanced';
@@ -40,11 +41,14 @@ export interface AdvancedQuery {
     corpname:string;
     qtype:'advanced';
     query:string;
+    parsedAttrs:Array<ParsedAttr>;
+    focusedAttr:ParsedAttr|undefined;
+    rawAnchorIdx:number;
+    rawFocusIdx:number;
     queryHtml:string;
     pcq_pos_neg:string;
     include_empty:boolean;
     default_attr:string;
-    suggestions:TokenSuggestions|null;
 }
 
 
@@ -74,6 +78,8 @@ export interface SimpleQuery {
     queryParsed:Array<ParsedSimpleQueryToken>;
     query:string;
     queryHtml:string;
+    rawAnchorIdx:number;
+    rawFocusIdx:number;
     qmcase:boolean;
     pcq_pos_neg:string;
     include_empty:boolean;
@@ -113,25 +119,38 @@ export type AnyQuerySubmit = SimpleQuerySubmit|AdvancedQuerySubmit;
 
 
 
-export function findTokenIdxByFocusIdx(q:SimpleQuery, focusIdx:number):number {
-    for (let i = 0; i < q.queryParsed.length; i++) {
-        if (q.queryParsed[i].position[0] <= focusIdx && focusIdx <= q.queryParsed[i].position[1]) {
-            return i;
+export function findTokenIdxByFocusIdx(q:AnyQuery, focusIdx:number):number {
+    if (q.qtype === 'simple') {
+        for (let i = 0; i < q.queryParsed.length; i++) {
+            if (q.queryParsed[i].position[0] <= focusIdx && focusIdx <= q.queryParsed[i].position[1]) {
+                return i;
+            }
+        }
+
+    } else {
+        for (let i = 0; i < q.parsedAttrs.length; i++) {
+            if (q.parsedAttrs[i].rangeAll[0] <= focusIdx && focusIdx <= q.parsedAttrs[i].rangeAll[1]) {
+                return i;
+            }
         }
     }
     return -1;
 }
 
 export function simpleToAdvancedQuery(q:SimpleQuery):AdvancedQuery {
+    const [queryHtml, parsedAttrs] = highlightSyntaxStatic(q.query, 'advanced', {translate: id});
     return {
         corpname: q.corpname,
         qtype: 'advanced',
         query: q.query,
-        queryHtml: q.queryHtml,
+        parsedAttrs,
+        focusedAttr: undefined,
+        rawAnchorIdx: q.rawAnchorIdx,
+        rawFocusIdx: q.rawFocusIdx,
+        queryHtml,
         pcq_pos_neg: q.pcq_pos_neg,
         include_empty: q.include_empty,
-        default_attr: q.default_attr,
-        suggestions: null
+        default_attr: q.default_attr
     };
 }
 
@@ -142,6 +161,8 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
         query: q.query,
         queryParsed: parseSimpleQuery(q.query, q.default_attr),
         queryHtml: q.queryHtml,
+        rawAnchorIdx: q.rawAnchorIdx,
+        rawFocusIdx: q.rawFocusIdx,
         qmcase: false,
         pcq_pos_neg: 'pos',
         include_empty: false,

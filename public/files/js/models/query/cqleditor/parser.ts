@@ -22,7 +22,7 @@ import { Kontext} from '../../../types/common';
 import { parse as parseQuery, SyntaxError } from 'cqlParser/parser';
 import { IAttrHelper, NullAttrHelper } from './attrs';
 import { List, tuple, pipe } from 'cnc-tskit';
-import { QueryType } from '../query';
+import { QueryType, TokenSuggestions } from '../query';
 
 /**
  * CharsRule represents a pointer to the original
@@ -64,6 +64,7 @@ export interface ParsedAttr {
     rangeVal:[number, number];
     rangeAttr:[number, number]|null; // if null then simplified form is expected (e.g. "foo")
     rangeAll:[number, number];
+    suggestions:TokenSuggestions|null;
 }
 
 /**
@@ -252,7 +253,8 @@ class RuleCharMap {
                                         type: 'posattr',
                                         rangeVal: tuple(regexp.from + 1, regexp.to - 1), // +/- 1 <- quotes
                                         rangeAll: tuple(regexp.from + 1, regexp.to - 1), // +/- 1 <- quotes
-                                        rangeAttr: null
+                                        rangeAttr: null,
+                                        suggestions: null
                                     }])
                                 } :
                                 {...acc};
@@ -272,7 +274,8 @@ class RuleCharMap {
                                         type: 'posattr',
                                         rangeVal: tuple(curr.from, curr.to),
                                         rangeAttr: tuple(acc.lastAttName.from, acc.lastAttName.to),
-                                        rangeAll: tuple(acc.lastAttName.from, curr.to)
+                                        rangeAll: tuple(acc.lastAttName.from, curr.to),
+                                        suggestions: null
                                     }])
                                 } :
                                 {...acc};
