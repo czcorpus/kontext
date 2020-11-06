@@ -329,7 +329,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 suggestionsVisible: pipe(
                     queries,
                     Dict.keys(),
-                    List.map(k => tuple(k, false)),
+                    List.map(k => tuple(k, null)),
                     Dict.fromEntries()
                 ),
                 suggestionsEnabled: props.suggestionsEnabled,

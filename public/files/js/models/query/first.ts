@@ -337,7 +337,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 ),
                 suggestionsVisible: pipe(
                     props.corpora,
-                    List.map(c => tuple(c, false)),
+                    List.map(c => tuple(c, null)),
                     Dict.fromEntries()
                 ),
                 suggestionsEnabled: props.suggestionsEnabled,

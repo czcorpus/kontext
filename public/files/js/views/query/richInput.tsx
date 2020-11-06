@@ -155,8 +155,15 @@ export function init(
         private handleClick(evt) {
             const a = this.findLinkParent(evt.target as HTMLElement);
             if (a !== null && evt.ctrlKey) {
-                console.log('suggestion-enabled item clicked, tokenIdx = ', parseInt(a.getAttribute('data-tokenIdx')));
-                // TODO !!! open a suggestion box
+                const tokenIdx = parseInt(a.getAttribute('data-tokenIdx'));
+                dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
+                    name: ActionName.ToggleQuerySuggestionWidget,
+                    payload: {
+                        formType: this.props.formType,
+                        sourceId: this.props.sourceId,
+                        tokenIdx: tokenIdx
+                    }
+                });
 
             } else if (this.props.refObject.current) {
                 const src = this.contentEditable.extractText(this.props.refObject.current);
