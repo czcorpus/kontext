@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { tuple } from 'cnc-tskit';
+import { ParsedAttr } from '../../../models/query/cqleditor/parser';
 import { PluginInterfaces, IPluginApi } from '../../../types/plugins';
 
 /**
@@ -33,6 +35,14 @@ export class EmptyQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugin 
 
     isActive():boolean {
         return true;
+    }
+
+    applyClickOnSimpleQuery(query:string, args:Array<[string, string]>, itemId:string):[string, Array<[string, string]>] {
+        return tuple(query, args);
+    }
+
+    applyClickOnAdvancedQuery(query:string, attr:ParsedAttr, itemId:string):[string, ParsedAttr] {
+        return tuple(query, attr);
     }
 
     createElement<T>(dr:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):React.ReactElement {

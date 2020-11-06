@@ -592,20 +592,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
                     if (queryObj.qtype === 'simple') {
-                        if (action.payload.actionType === 'replace') {
-                            console.log('simple & replace');
-
-                        } else {
-                            console.log('simple & insert');
-                        }
+                        this.qsPlugin.applyClickOnSimpleQuery(
+                            queryObj.query,
+                            queryObj.queryParsed[action.payload.tokenIdx].args,
+                            action.payload.value
+                        );
 
                     } else {
-                        if (action.payload.actionType === 'replace') {
-                            console.log('advanced & replace');
-
-                        } else {
-                            console.log('advanced & insert');
-                        }
+                        this.qsPlugin.applyClickOnAdvancedQuery(
+                            queryObj.query,
+                            queryObj.parsedAttrs[action.payload.tokenIdx], // TODO !!! the indexing is likely wrong
+                            action.payload.value);
                     }
                     /*
                     const wordPos =
