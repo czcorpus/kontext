@@ -196,7 +196,7 @@ class QueryFormArgs(ConcFormArgs):
         for query in data['queries']:
             corp = query['corpname']
             self.curr_query_types[corp] = query['qtype']
-            self.curr_queries[corp] = query['query']
+            self.curr_queries[corp] = query.get('query')
             self.curr_parsed_queries[corp] = query.get('queryParsed', [])
             self.curr_pcq_pos_neg_values[corp] = query['pcq_pos_neg']
             self.curr_include_empty_values[corp] = query['include_empty']
@@ -265,7 +265,7 @@ class FilterFormArgs(ConcFormArgs):
 
     def update_by_user_query(self, data):
         self.query_type = data['qtype']
-        self.query = data['query']
+        self.query = data.get('query')
         self.parsed_query = data.get('queryParsed', [])
         self.pnfilter = data['pnfilter']
         self.filfl = data['filfl']

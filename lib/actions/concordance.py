@@ -486,11 +486,11 @@ class Actions(Querying):
                 return q.strip()
             return icase + re.escape(q.strip())
 
-        def stringify_parsed_query(q):
+        def stringify_parsed_query(q: List[List[str]]):
             expr = []
-            for item in q:
+            for token_args in q:
                 position = []
-                for attr, val in item['args']:
+                for attr, val in token_args:
                     position.append(f'{attr}="{val}"')
                 expr.append('[' + ' & '.join(position) + ']')
             return ' '.join(expr)

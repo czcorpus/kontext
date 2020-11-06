@@ -83,6 +83,36 @@ export interface SimpleQuery {
 
 export type AnyQuery = SimpleQuery|AdvancedQuery;
 
+/**
+ * SimpleQuerySubmit is a form of SimpleQuery as submitted to server
+ */
+export interface SimpleQuerySubmit {
+    corpname:string;
+    qtype:'simple';
+    queryParsed:Array<Array<[string, string]>>;
+    qmcase:boolean;
+    pcq_pos_neg:string;
+    include_empty:boolean;
+    default_attr:string;
+    use_regexp:boolean;
+}
+
+/**
+ * AdvancedQuerySubmit is a form of AdvancedQuery as submitted to server
+ */
+export interface AdvancedQuerySubmit {
+    corpname:string;
+    qtype:'advanced';
+    query:string;
+    pcq_pos_neg:string;
+    include_empty:boolean;
+    default_attr:string;
+}
+
+export type AnyQuerySubmit = SimpleQuerySubmit|AdvancedQuerySubmit;
+
+
+
 export function findTokenIdxByFocusIdx(q:SimpleQuery, focusIdx:number):number {
     for (let i = 0; i < q.queryParsed.length; i++) {
         if (q.queryParsed[i].position[0] <= focusIdx && focusIdx <= q.queryParsed[i].position[1]) {

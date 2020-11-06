@@ -38,7 +38,7 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../com
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
-import { AdvancedQuery, AnyQuery, parseSimpleQuery, QueryType, SimpleQuery } from './query';
+import { AdvancedQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, QueryType, SimpleQuery } from './query';
 import { highlightSyntaxStatic } from './cqleditor/parser';
 
 
@@ -733,30 +733,34 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         List.removeValue(corpname, state.corpora);
     }
 
-    private exportQuery(query:AnyQuery, defaultAttr?:string):AnyQuery {
+    private exportQuery(query:AnyQuery, defaultAttr?:string):AnyQuerySubmit {
         if (query.qtype === 'advanced') {
             return {
-                ...query,
+                corpname: query.corpname,
+                qtype: 'advanced',
                 query: query.query.trim().normalize(),
+                pcq_pos_neg: query.pcq_pos_neg,
+                include_empty: query.include_empty,
                 default_attr: defaultAttr ? defaultAttr : query.default_attr
-            }
+            };
 
         } else {
             return {
-                ...query,
-                query: query.query.trim().normalize(),
+                corpname: query.corpname,
+                qtype: 'simple',
                 queryParsed: List.map(
-                    item => ({
-                        ...item,
-                        args: item.args.length > 0 && item.args[0][0] ?
+                    item => item.args.length > 0 && item.args[0][0] ?
                             item.args :
                             defaultAttr ?
                                 [tuple(defaultAttr, item.args[0][1])] :
-                                [tuple(query.default_attr, item.args[0][1])]
-                    }),
-                    parseSimpleQuery(query)
+                                [tuple(query.default_attr, item.args[0][1])],
+                    query.queryParsed
                 ),
-                default_attr: defaultAttr
+                qmcase: query.qmcase,
+                pcq_pos_neg: query.pcq_pos_neg,
+                include_empty: query.include_empty,
+                default_attr: query.default_attr,
+                use_regexp: query.use_regexp
             }
         }
     }
