@@ -388,7 +388,7 @@
         "query__contains_selected_text_types": "Some text types are selected",
         "query__chain_no_op_msg": "No change in the concordance parameters - showing the original result",
         "query__suggestions_available": "Query suggestions",
-        "query__suggestions_for_token_avail": "There is a suggestion/specification for the token available",
+        "query__suggestions_for_token_avail": "Use CTRL + click to customize parameters of this token",
         "query__query_structure": "Query structure",
         "query__specify_options": "Specify parameters",
         "query__no_result_found_{attrs}": "None of the implicit attributes [{attrs}] applied to the query gives any result. Please try a different attribute or change the query.",

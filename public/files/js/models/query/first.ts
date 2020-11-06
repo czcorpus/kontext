@@ -258,6 +258,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pageModel:PageModel,
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
+            qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
             props:QueryFormProperties
     ) {
 
@@ -269,6 +270,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pageModel,
             textTypesModel,
             queryContextModel,
+            qsPlugin,
             'first-query-model',
             props, {
                 formType: Kontext.ConcFormTypes.QUERY,
@@ -337,7 +339,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 ),
                 suggestionsVisible: pipe(
                     props.corpora,
-                    List.map(c => tuple(c, false)),
+                    List.map(c => tuple(c, null)),
                     Dict.fromEntries()
                 ),
                 suggestionsEnabled: props.suggestionsEnabled,
