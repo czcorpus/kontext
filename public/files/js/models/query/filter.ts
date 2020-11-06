@@ -160,10 +160,13 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                                 qtype: 'advanced',
                                 query,
                                 queryHtml,
+                                rawAnchorIdx: 0,
+                                rawFocusIdx: 0,
+                                parsedAttrs: [],
+                                focusedAttr: undefined,
                                 pcq_pos_neg: 'pos',
                                 include_empty: false,
-                                default_attr: src.currDefaultAttrValues[filter],
-                                suggestions: null
+                                default_attr: src.currDefaultAttrValues[filter]
                             }
                         );
 
@@ -180,6 +183,8 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                                 ),
                                 query,
                                 queryHtml: query,
+                                rawAnchorIdx: 0,
+                                rawFocusIdx: 0,
                                 qmcase: src.currQmcaseValues[filter],
                                 pcq_pos_neg: 'pos',
                                 include_empty: false,
@@ -201,10 +206,13 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                     qtype: 'advanced',
                     query: src.query,
                     queryHtml: src.query,
+                    rawAnchorIdx: 0,
+                    rawFocusIdx: 0,
+                    parsedAttrs: [],
+                    focusedAttr: undefined,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
-                    default_attr: src.default_attr,
-                    suggestions: null
+                    default_attr: src.default_attr
                 } :
                 {
                     corpname: sourceId,
@@ -215,6 +223,8 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                     ),
                     query: src.query,
                     queryHtml: src.query,
+                    rawAnchorIdx: 0,
+                    rawFocusIdx: 0,
                     qmcase: src.qmcase,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
@@ -265,10 +275,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 wPoSList: [], // TODO
                 currentAction: 'filter_form',
                 queries, // corpname|filter_id -> query
-                rawAnchorIdx: {},
-                rawFocusIdx: {},
-                parsedAttrs: {},
-                focusedAttr: {},
                 cqlEditorMessages: {},
                 useCQLEditor: props.useCQLEditor,
                 tagAttr: props.tagAttr,

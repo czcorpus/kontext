@@ -1014,8 +1014,7 @@ export function init({
         render() {
 
             const sugg = QueryFormModel.getCurrWordSuggestion(
-                this.props.queries[this.props.sourceId],
-                this.props.rawFocusIdx[this.props.sourceId]
+                this.props.queries[this.props.sourceId]
             );
 
             return (

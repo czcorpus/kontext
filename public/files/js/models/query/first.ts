@@ -150,10 +150,13 @@ function importUserQueries(
                         qtype: 'advanced',
                         query,
                         queryHtml: query,
+                        rawAnchorIdx: 0,
+                        rawFocusIdx: 0,
+                        parsedAttrs: [],
+                        focusedAttr: undefined,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
-                        default_attr: defaultAttr,
-                        suggestions: null
+                        default_attr: defaultAttr
                     }
                 );
 
@@ -172,6 +175,8 @@ function importUserQueries(
                         query,
                         queryParsed: parseSimpleQuery(data.currQueries[corpus], defaultAttr),
                         queryHtml,
+                        rawAnchorIdx: 0,
+                        rawFocusIdx: 0,
                         qmcase: data.currQmcaseValues[corpus] || false,
                         use_regexp: data.currUseRegexpValues[corpus] || false,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
@@ -238,8 +243,6 @@ export interface FirstQueryFormModelSwitchPreserve {
     queries:{[sourceId:string]:AnyQuery};
     lposValues:{[key:string]:string};
     alignedCorporaVisible:boolean;
-    rawAnchorIdx:{[key:string]:number};
-    rawFocusIdx:{[key:string]:number};
     cqlEditorMessage:{[key:string]:string};
 }
 
@@ -286,10 +289,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 shuffleForbidden: false,
                 shuffleConcByDefault: props.shuffleConcByDefault,
                 queries,
-                rawAnchorIdx: {},
-                rawFocusIdx: {},
-                parsedAttrs: {},
-                focusedAttr: {},
                 cqlEditorMessages: {},
                 downArrowTriggersHistory: pipe(
                     props.corpora,
@@ -597,8 +596,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             queries: {...state.queries},
             lposValues: {...state.lposValues},
             alignedCorporaVisible: state.alignedCorporaVisible,
-            rawAnchorIdx: {...state.rawAnchorIdx},
-            rawFocusIdx: {...state.rawFocusIdx},
             cqlEditorMessage: {...state.cqlEditorMessages}
         };
     }
@@ -614,8 +611,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             ...data.queries[oldCorp],
             corpname: newCorp
         };
-        state.rawAnchorIdx[newCorp] = state.rawAnchorIdx[oldCorp];
-        state.rawFocusIdx[newCorp] = state.rawFocusIdx[oldCorp];
         state.cqlEditorMessages[newCorp] = '';
         if (!isAligned) {
             state.queries[newCorp].include_empty = false; // this is rather a formal stuff
@@ -711,6 +706,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     queryParsed: [],
                     query: '',
                     queryHtml: '',
+                    rawAnchorIdx: 0,
+                    rawFocusIdx: 0,
                     qmcase: false,
                     pcq_pos_neg: 'pos',
                     include_empty: false,

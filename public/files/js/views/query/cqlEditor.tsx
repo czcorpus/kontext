@@ -276,10 +276,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidUpdate(prevProps, prevState) {
-            if (this.props.rawAnchorIdx !== null && this.props.rawFocusIdx !== null) {
+            const queryObj = this.props.queries[this.props.sourceId];
+            if (queryObj.rawAnchorIdx !== null && queryObj.rawFocusIdx !== null) {
                 this.contentEditable.reapplySelection(
-                    this.props.rawAnchorIdx[this.props.sourceId],
-                    this.props.rawFocusIdx[this.props.sourceId]
+                    queryObj.rawAnchorIdx,
+                    queryObj.rawFocusIdx
                 );
             }
         }
