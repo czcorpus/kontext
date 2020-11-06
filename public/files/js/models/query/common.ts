@@ -37,6 +37,7 @@ import { advancedToSimpleQuery, AnyQuery, findTokenIdxByFocusIdx, parseSimpleQue
     TokenSuggestions } from './query';
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
+import { QueryStructureModel } from './structure';
 
 
 export type CtxLemwordType = 'any'|'all'|'none';
@@ -193,8 +194,6 @@ export interface QueryFormModelState {
     suggestionsVisible:{[sourceId:string]:boolean};
 
     suggestionsEnabled:boolean;
-
-    queryStructureVisible:{[sourceId:string]:boolean};
 
     isBusy:boolean;
 
@@ -421,17 +420,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     state.suggestionsVisible[action.payload.sourceId] =
                         !state.suggestionsVisible[action.payload.sourceId];
-                });
-            }
-        );
-
-        this.addActionSubtypeHandler<Actions.ToggleQueryStructureWidget>(
-            ActionName.ToggleQueryStructureWidget,
-            action => action.payload.formType === this.state.formType,
-            action => {
-                this.changeState(state => {
-                    state.queryStructureVisible[action.payload.sourceId] =
-                        !state.queryStructureVisible[action.payload.sourceId];
                 });
             }
         );

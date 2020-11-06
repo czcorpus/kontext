@@ -336,11 +336,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     List.map(item => tuple(item, false)),
                     Dict.fromEntries()
                 ),
-                queryStructureVisible: pipe(
-                    props.corpora,
-                    List.map(c => tuple(c, false)),
-                    Dict.fromEntries()
-                ),
                 suggestionsVisible: pipe(
                     props.corpora,
                     List.map(c => tuple(c, false)),
