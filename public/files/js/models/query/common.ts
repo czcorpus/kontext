@@ -191,7 +191,7 @@ export interface QueryFormModelState {
 
     historyVisible:{[sourceId:string]:boolean};
 
-    suggestionsVisible:{[sourceId:string]:boolean};
+    suggestionsVisible:{[sourceId:string]:number};
 
     suggestionsEnabled:boolean;
 
@@ -408,7 +408,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     state.historyVisible[action.payload.sourceId] =
                         !state.historyVisible[action.payload.sourceId];
-                    state.suggestionsVisible[action.payload.sourceId] = false;
+                    state.suggestionsVisible[action.payload.sourceId] = null;
                 });
             }
         );
@@ -418,8 +418,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.suggestionsVisible[action.payload.sourceId] =
-                        !state.suggestionsVisible[action.payload.sourceId];
+                    state.suggestionsVisible[action.payload.sourceId] = action.payload.tokenIdx;
                 });
             }
         );
@@ -583,11 +582,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         state.focusedAttr[action.payload.sourceId] = this.findFocusedAttr(
                             state, action.payload.sourceId);
                 });
-                this.autoSuggestTrigger.next(tuple(
-                    action.payload.sourceId,
-                    action.payload.rawAnchorIdx,
-                    action.payload.rawFocusIdx
-                ));
             }
         );
 
@@ -643,7 +637,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         state.queries[action.payload.sourceId].default_attr = action.payload.attr;
                     }
                     */
-                    state.suggestionsVisible[action.payload.sourceId] = false;
+                    state.suggestionsVisible[action.payload.sourceId] = null;
                 });
             }
         );
@@ -653,7 +647,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     this.clearSuggestionForPosition(state, action.payload.sourceId, action.payload.valueStartIdx);
-                    state.suggestionsVisible[action.payload.sourceId] = false;
+                    state.suggestionsVisible[action.payload.sourceId] = null;
                 });
             }
         );
@@ -665,7 +659,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     this.pageModel.showMessage('error', action.error);
                     this.changeState(state => {
                         this.clearSuggestionForPosition(state, action.payload.sourceId, action.payload.valueStartIdx);
-                        state.suggestionsVisible[action.payload.sourceId] = false;
+                        state.suggestionsVisible[action.payload.sourceId] = null;
                     });
 
                 } else if (this.noValidSuggestion(
@@ -717,7 +711,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     state.suggestionsEnabled = action.payload.qsEnabled;
                     if (!state.suggestionsEnabled) {
                         state.suggestionsVisible = Dict.map(
-                            v => false,
+                            v => null,
                             state.suggestionsVisible
                         );
                     }
@@ -1000,14 +994,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     static getCurrWordSuggestion(
         queryObj:AnyQuery,
-        rawFocusIdx:number
+        tokenIdx:number
     ):TokenSuggestions|null {
         if (queryObj.qtype === 'simple') {
-            const tokIdx = findTokenIdxByFocusIdx(queryObj, rawFocusIdx);
-            if (tokIdx < 0) {
+            if (tokenIdx === null) {
                 return null;
             }
-            return queryObj.queryParsed[tokIdx].suggestions;
+            return queryObj.queryParsed[tokenIdx].suggestions;
 
         } else {
             return queryObj.suggestions;

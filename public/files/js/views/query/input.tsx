@@ -100,7 +100,6 @@ interface QueryToolboxProps {
     widgets:Array<string>;
     inputLanguage:string;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    qsAvailable:boolean;
     toggleHistoryWidget:()=>void;
     toggleStructureWidget:()=>void;
 }
@@ -466,7 +465,8 @@ export function init({
                 name: ActionName.ToggleQuerySuggestionWidget,
                 payload: {
                     formType: props.formType,
-                    sourceId: props.sourceId
+                    sourceId: props.sourceId,
+                    tokenIdx: null
                 }
             });
         };
@@ -541,7 +541,6 @@ export function init({
             this._handleWidgetTrigger = this._handleWidgetTrigger.bind(this);
             this._handleHistoryWidget = this._handleHistoryWidget.bind(this);
             this._handleCloseWidget = this._handleCloseWidget.bind(this);
-            this._handleQuerySuggestWidget = this._handleQuerySuggestWidget.bind(this);
             this._handleQueryStructureWidget = this._handleQueryStructureWidget.bind(this);
         }
 
@@ -561,17 +560,6 @@ export function init({
             }
             if (this.props.widgets.indexOf('structure') > -1) {
                 ans.push(<a onClick={this._handleQueryStructureWidget}>{he.translate('query__query_structure')}</a>);
-            }
-            if (this.props.qsAvailable) {
-                ans.push(
-                    <>
-                        <a onClick={this._handleQuerySuggestWidget}>{he.translate('query__suggestions_available')}</a>
-                        {this.props.suggestionsVisible[this.props.sourceId] ?
-                            null :
-                            <span className="notifications">{'\u25CF'}</span>
-                        }
-                    </>
-                );
             }
             return ans;
         }
@@ -604,16 +592,6 @@ export function init({
                     sourceId: this.props.sourceId,
                     value: null,
                     widgetArgs: this.props.widgetArgs
-                }
-            });
-        }
-
-        _handleQuerySuggestWidget() {
-            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
-                name: ActionName.ToggleQuerySuggestionWidget,
-                payload: {
-                    sourceId: this.props.sourceId,
-                    formType: this.props.formType
                 }
             });
         }
@@ -883,7 +861,8 @@ export function init({
                 name: ActionName.ToggleQuerySuggestionWidget,
                 payload: {
                     formType: this.props.formType,
-                    sourceId: this.props.sourceId
+                    sourceId: this.props.sourceId,
+                    tokenIdx: null
                 }
             });
         }
@@ -1015,7 +994,7 @@ export function init({
 
             const sugg = QueryFormModel.getCurrWordSuggestion(
                 this.props.queries[this.props.sourceId],
-                this.props.rawFocusIdx[this.props.sourceId]
+                this.props.suggestionsVisible[this.props.sourceId]
             );
 
             return (
@@ -1027,8 +1006,7 @@ export function init({
                             sourceId={this.props.sourceId}
                             toggleHistoryWidget={this._toggleHistoryWidget}
                             toggleStructureWidget={this._toggleStructureWidget}
-                            inputLanguage={this.props.inputLanguage}
-                            qsAvailable={!!sugg} />
+                            inputLanguage={this.props.inputLanguage} />
                         {this._renderInput()}
                         <div style={{position: 'relative'}}>
                             {this.props.historyVisible[this.props.sourceId] ?
@@ -1041,7 +1019,7 @@ export function init({
                             }
                             {
                                 !this.props.historyVisible[this.props.sourceId] &&
-                                this.props.suggestionsVisible[this.props.sourceId] &&
+                                this.props.suggestionsVisible[this.props.sourceId] !== null &&
                                 sugg ?
                                     <SuggestionsWidget
                                         qsuggPlugin={this.props.qsuggPlugin}
