@@ -28,6 +28,7 @@ import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
 import { QueryType } from '../models/query/query';
+import { ParsedAttr } from '../models/query/cqleditor/parser';
 
 /**
  * An interface used by KonText plug-ins to access
@@ -480,10 +481,12 @@ export namespace PluginInterfaces {
         export interface IPlugin extends BasePlugin {
             createElement<T>(
                 dr:DataAndRenderer<T>,
-                itemClickHandler:(onItemClick:string, value:string, attr:string)=>void
+                itemClickHandler:(actionType:'replace'|'insert', value:string, attr:string)=>void
             ):React.ReactElement;
             isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
             listCurrentProviders():Array<string>;
+            applyClickOnSimpleQuery(query:string, args:Array<[string, string]>, itemId:string):[string, Array<[string, string]>];
+            applyClickOnAdvancedQuery(query:string, attr:ParsedAttr, itemId:string):[string, ParsedAttr];
         }
 
         export enum ActionName {
@@ -549,7 +552,7 @@ export namespace PluginInterfaces {
             export interface ItemClicked extends Action<{
                 actionType:'replace'|'insert';
                 value:string;
-                attr:string;
+                tokenIdx:number;
                 sourceId:string;
                 formType:string;
             }> {

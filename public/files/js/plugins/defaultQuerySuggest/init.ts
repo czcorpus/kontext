@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe, Dict } from 'cnc-tskit';
+import { List, pipe, Dict, tuple } from 'cnc-tskit';
 import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
@@ -27,6 +27,7 @@ import { init as initView, SuggestionsViews } from './view';
 import { Model } from './model';
 import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend } from './frontends';
 import { AnyProviderInfo } from './providers';
+import { ParsedAttr } from '../../models/query/cqleditor/parser';
 
 
 declare var require:any;
@@ -61,9 +62,19 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         return true;
     }
 
+    applyClickOnSimpleQuery(query:string, args:Array<[string, string]>, itemId:string):[string, Array<[string, string]>] {
+        console.log('Applying simple query extension, args: ', args, ', val: ', itemId);
+        return tuple(query, args);
+    }
+
+    applyClickOnAdvancedQuery(query:string, attr:ParsedAttr, itemId:string):[string, ParsedAttr] {
+        console.log('Applying advanced query extension, attr: ', attr, ', val: ', itemId);
+        return tuple(query, attr);
+    }
+
     createElement<T>(
         dr:PluginInterfaces.QuerySuggest.DataAndRenderer<T>,
-        itemClickHandler:(onItemClick:string, value:string, attr:string)=>void
+        itemClickHandler:(actionType:'replace'|'insert', value:string, attr:string)=>void
     ):React.ReactElement {
 
         const onItemClick = List.find(

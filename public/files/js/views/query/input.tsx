@@ -875,7 +875,7 @@ export function init({
                     formType: this.props.formType,
                     actionType,
                     value,
-                    attr
+                    tokenIdx: this.props.suggestionsVisible[this.props.sourceId]
                 }
             });
             this._queryInputElement.current.focus();
