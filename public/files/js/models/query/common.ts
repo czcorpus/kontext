@@ -33,7 +33,7 @@ import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
-import { advancedToSimpleQuery, AnyQuery, findTokenIdxByFocusIdx, parseSimpleQuery, QueryType, runSimpleQueryParser, simpleToAdvancedQuery,
+import { advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx, parseSimpleQuery, QueryType, runSimpleQueryParser, simpleToAdvancedQuery,
     TokenSuggestions } from './query';
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
@@ -52,7 +52,7 @@ export interface QueryContextArgs {
 }
 
 export interface ConcQueryArgs {
-    queries:Array<AnyQuery>;
+    queries:Array<AnyQuerySubmit>;
     maincorp:string|null;
     usesubcorp:string|null;
     viewmode:'kwic'|'sen'|'align';
