@@ -34,7 +34,8 @@ import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../models/usageTips/actions';
-import { AnyQuery, QueryType, TokenSuggestions } from '../../models/query/query';
+import { QueryType, TokenSuggestions } from '../../models/query/query';
+import { init as queryStructureInit } from '../../views/query/structure';
 
 
 export interface InputModuleViews {
@@ -126,6 +127,7 @@ export function init({
     });
     const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel);
     const RichInput = richInputInit(dispatcher, he, queryModel);
+    const QueryStructure = queryStructureInit({dispatcher, he, queryModel});
     const layoutViews = he.getLayoutViews();
 
 
@@ -608,6 +610,8 @@ export function init({
                     return <KeyboardWidget closeClickHandler={this._handleCloseWidget}
                                 sourceId={this.props.sourceId} inputLanguage={this.props.inputLanguage}
                                 formType={this.props.formType} />;
+                case 'query-structure':
+                    return <QueryStructure sourceId={this.props.sourceId} formType={this.props.formType} />;
                 default:
                     return null;
             }
@@ -755,7 +759,7 @@ export function init({
             return (
                 <select className="DefaultAttrSelect" value={props.defaultAttr || ''} onChange={handleSelectChange}>
                     {!List.empty(props.simpleQueryDefaultAttrs) ?
-                        <option value="">-- {he.translate('query__not_specified')} --</option> :
+                        <option value="">{props.simpleQueryDefaultAttrs.join(' | ')}</option> :
                         null}
                     {props.attrList.map(item => {
                         return <option key={item.n} value={item.n || ''}>{item.label}</option>;
@@ -814,10 +818,11 @@ export function init({
 
         _toggleStructureWidget() {
             const query = this.props.queries[this.props.sourceId];
-            dispatcher.dispatch<Actions.ToggleQueryStructureWidget>({
-                name: ActionName.ToggleQueryStructureWidget,
+            dispatcher.dispatch<Actions.ShowQueryStructureWidget>({
+                name: ActionName.ShowQueryStructureWidget,
                 payload: {
-                    query: query.qtype === 'simple' ? query : null
+                    sourceId: this.props.sourceId,
+                    formType: this.props.formType
                 }
             });
         }

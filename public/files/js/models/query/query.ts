@@ -68,7 +68,7 @@ export interface ParsedSimpleQueryToken {
      * the value represents logical conjunction of
      * attr1 == val1 & attr2 == val2 & ... & attrN == valN
      */
-    args:Array<[string, string]>;
+    args:Array<[string|undefined, string]>;
 
     /**
      * Position of a respective token. In case of an empty
@@ -105,7 +105,7 @@ export type AnyQuery = SimpleQuery|AdvancedQuery;
 export interface SimpleQuerySubmit {
     corpname:string;
     qtype:'simple';
-    queryParsed:Array<Array<[string, string]>>;
+    queryParsed:Array<Array<[string|Array<string>, string]>>;
     qmcase:boolean;
     pcq_pos_neg:string;
     include_empty:boolean;

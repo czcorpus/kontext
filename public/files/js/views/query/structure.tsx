@@ -18,44 +18,72 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List } from "cnc-tskit";
-import { BoundWithProps, IActionDispatcher } from "kombo";
-import * as React from "react";
-import { ActionName, Actions } from "../../models/query/actions";
-import { QueryStructureModel, QueryStructureState } from "../../models/query/structure";
-import { Kontext } from "../../types/common";
+import { List } from 'cnc-tskit';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
+import * as React from 'react';
+import { ActionName, Actions, QueryFormType } from '../../models/query/actions';
+import { QueryFormModel, QueryFormModelState } from '../../models/query/common';
+import { Kontext } from '../../types/common';
 
 export interface InputModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    queryStructureModel:QueryStructureModel;
+    queryModel:QueryFormModel<QueryFormModelState>;
 }
 
-export function init({dispatcher, he, queryStructureModel}:InputModuleArgs) {
+export function init({dispatcher, he, queryModel}:InputModuleArgs) {
 
     const layoutViews = he.getLayoutViews();
 
-    const StructureWidget:React.FC<QueryStructureState> = (props) => {
+    const StructureWidget:React.FC<{sourceId:string; formType:QueryFormType} & QueryFormModelState> = (props) => {
 
         const handleClose = () => {
-            dispatcher.dispatch<Actions.ToggleQueryStructureWidget>({
-                name: ActionName.ToggleQueryStructureWidget,
+            dispatcher.dispatch<Actions.HideQueryStructureWidget>({
+                name: ActionName.HideQueryStructureWidget,
                 payload: {
-                    query: null
+                    sourceId: props.sourceId,
+                    formType: props.formType
                 }
             });
         };
 
-        if (props.query) {
-            return <layoutViews.ModalOverlay onCloseKey={handleClose}>
-                <layoutViews.CloseableFrame onCloseClick={handleClose} label={he.translate('query__query_structure')}>
-                    {List.map((v, i) => <p key={i}>{`args${i}: `}[{List.map(u => `${u[0]}="${u[1]}"`, v.args).join(' & ')}]</p>, props.query.queryParsed)}
-                </layoutViews.CloseableFrame>
-            </layoutViews.ModalOverlay>
+        const handleReset = () => {
+            dispatcher.dispatch<Actions.QueryInputResetQueryExpansion>({
+                name: ActionName.QueryInputResetQueryExpansion,
+                payload: {
+                    sourceId: props.sourceId,
+                    formType: props.formType
+                }
+            })
+        }
+
+        const queryObj = props.queries[props.sourceId];
+
+        if (queryObj.qtype === 'simple') {
+            return (
+                <layoutViews.ModalOverlay onCloseKey={handleClose}>
+                    <layoutViews.CloseableFrame onCloseClick={handleClose} label={he.translate('query__query_structure')}>
+                        <div>
+                            {List.map(
+                                (v, i) => (
+                                    <p key={i}>
+                                        {`args${i}: `}[{List.map(u => `${u[0]}="${u[1]}"`, v.args).join(' & ')}]
+                                    </p>
+                                ),
+                                queryObj.queryParsed
+                            )}
+                            <p>
+                                <button type="button" onClick={handleReset}>{he.translate('global__reset')}</button>
+                            </p>
+                        </div>
+                    </layoutViews.CloseableFrame>
+                </layoutViews.ModalOverlay>
+            );
+
         } else {
             return null;
         }
     };
 
-    return BoundWithProps<{}, QueryStructureState>(StructureWidget, queryStructureModel);
+    return BoundWithProps<{sourceId:string; formType:QueryFormType}, QueryFormModelState>(StructureWidget, queryModel);
 }

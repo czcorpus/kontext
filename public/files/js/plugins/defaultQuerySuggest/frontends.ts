@@ -56,8 +56,9 @@ export function isPosAttrPairRelFrontend(
     return isDataAndRenderer(v) && v['rendererId'] === 'posAttrPairRel';
 }
 
-export function isPosAttrPairRelClickValue(v:any):v is [string, string] {
-    return Array.isArray(v) && typeof v[0] === 'string' && typeof v[1] === 'string' && v.length === 2;
+export function isPosAttrPairRelClickValue(v:any):v is [string, string, string, string] {
+    return Array.isArray(v) && typeof v[0] === 'string' && typeof v[1] === 'string' &&
+            typeof v[2] === 'string' && typeof v[3] === 'string' && v.length === 4;
 }
 
 // -----------------------

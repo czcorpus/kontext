@@ -21,8 +21,8 @@
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
 import { IFullActionControl } from 'kombo';
-import { EmptyError, Observable, of as rxOf } from 'rxjs';
-import { tap, map, concatMap, first, catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { tap, map, concatMap } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP, id } from 'cnc-tskit';
 
 import { Kontext, TextTypes, ViewOptions } from '../../types/common';
@@ -124,11 +124,21 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
     }
 };
 
+function determineDefaultAttr(data:QueryFormUserEntries, sourceId:string, simpleQueryDefaultAttrs:Array<string>):string {
+    const qtype = data.currQueryTypes[sourceId] || 'simple';
+    const defaultAttr = data.currDefaultAttrValues[sourceId];
+    if (defaultAttr) {
+        return defaultAttr;
+    }
+    if (qtype === 'advanced' || List.empty(simpleQueryDefaultAttrs)) {
+        return 'word';
+    }
+    return '';
+}
 
 function importUserQueries(
     corpora:Array<string>,
     data:QueryFormUserEntries,
-    curr:{[corpus:string]:AnyQuery},
     simpleQueryDefaultAttrs:Array<string>
 ):{[corpus:string]:AnyQuery} {
 
@@ -136,10 +146,7 @@ function importUserQueries(
         corpora,
         List.map(corpus => {
             const qtype = data.currQueryTypes[corpus] || 'simple';
-            const defaultAttr = data.currDefaultAttrValues[corpus] ?
-                    data.currDefaultAttrValues[corpus] :
-                    (curr[corpus] && curr[corpus].qtype === 'advanced'
-                        || List.empty(simpleQueryDefaultAttrs) ? 'word' : '');
+            const defaultAttr = determineDefaultAttr(data, corpus, simpleQueryDefaultAttrs);
 
             if (qtype === 'advanced') {
                 const query = data.currQueries[corpus] || '';
@@ -263,7 +270,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     ) {
 
         const corpora = props.corpora;
-        const queries = importUserQueries(corpora, props, {}, props.simpleQueryDefaultAttrs);
+        const queries = importUserQueries(corpora, props, props.simpleQueryDefaultAttrs);
         const tagBuilderSupport = props.tagBuilderSupport;
         super(
             dispatcher,
@@ -470,21 +477,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 ).subscribe(
                     (data:ConcQueryResponse|null) => {
                         if (data === null) {
-                            if (this.state.queries[List.head(this.state.corpora)].default_attr) {
-                                this.pageModel.showMessage(
-                                    'error',
-                                    this.pageModel.translate('query__no_result_found')
-                                );
+                            this.pageModel.showMessage(
+                                'error',
+                                this.pageModel.translate('query__no_result_found')
+                            );
 
-                            } else {
-                                this.pageModel.showMessage(
-                                    'error',
-                                    this.pageModel.translate(
-                                        'query__no_result_found_{attrs}',
-                                        {attrs: this.state.simpleQueryDefaultAttrs.join(', ')}
-                                    )
-                                );
-                            }
                             this.changeState(state => {
                                 state.isBusy = false;
                             });
@@ -666,7 +663,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                     currPcqPosNegValues: data.curr_pcq_pos_neg_values,
                                     currIncludeEmptyValues: data.curr_include_empty_values
                                 },
-                                state.queries,
                                 state.simpleQueryDefaultAttrs
                             );
                             state.tagBuilderSupport = data.tag_builder_support;
@@ -732,7 +728,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         List.removeValue(corpname, state.corpora);
     }
 
-    private exportQuery(query:AnyQuery, defaultAttr?:string):AnyQuerySubmit {
+    private exportQuery(query:AnyQuery, defaultAttr?:string|Array<string>):AnyQuerySubmit {
         if (query.qtype === 'advanced') {
             return {
                 corpname: query.corpname,
@@ -740,7 +736,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 query: query.query.trim().normalize(),
                 pcq_pos_neg: query.pcq_pos_neg,
                 include_empty: query.include_empty,
-                default_attr: defaultAttr ? defaultAttr : query.default_attr
+                default_attr: defaultAttr && !Array.isArray(defaultAttr) ? defaultAttr : query.default_attr
             };
 
         } else {
@@ -764,7 +760,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
     }
 
-    createSubmitArgs(contextFormArgs:QueryContextArgs, attrTryIdx:number):ConcQueryArgs {
+    createSubmitArgs(contextFormArgs:QueryContextArgs):ConcQueryArgs {
         const primaryCorpus = List.head(this.state.corpora);
         const currArgs = this.pageModel.exportConcArgs();
         const args:ConcQueryArgs = {
@@ -796,8 +792,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 const query = this.state.queries[corpus];
                 return this.exportQuery(
                     query,
-                    query.default_attr || i > 0 ?
-                        query.default_attr : this.state.simpleQueryDefaultAttrs[attrTryIdx]
+                    query.default_attr ?
+                        query.default_attr :
+                        this.state.simpleQueryDefaultAttrs
                 );
             },
             this.state.corpora
@@ -822,30 +819,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     submitQuery(contextFormArgs:QueryContextArgs):Observable<ConcQueryResponse|null> {
 
-        return rxOf(...List.repeat(i => i, Math.max(1, this.state.simpleQueryDefaultAttrs.length))).pipe(
-            concatMap(
-                (attrIdx) => this.pageModel.ajax$<ConcQueryResponse>(
-                    HTTP.Method.POST,
-                    this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
-                    this.createSubmitArgs(contextFormArgs, attrIdx),
-                    {
-                        contentType: 'application/json'
-                    }
-                )
-            ),
-            first(
-                ans => ans.finished !== true || ans.size > 0
-            ),
-            catchError(
-                err => {
-                    if (err instanceof EmptyError) {
-                        return rxOf(null);
-
-                    } else {
-                        throw err;
-                    }
-                }
-            )
+        return this.pageModel.ajax$<ConcQueryResponse>(
+            HTTP.Method.POST,
+            this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
+            this.createSubmitArgs(contextFormArgs),
+            {
+                contentType: 'application/json'
+            }
+        ).pipe(
+            map(ans => ans.finished !== true || ans.size > 0 ? ans : null)
         )
     }
 

@@ -55,6 +55,7 @@ export enum ActionName {
     QueryInputSetQType = 'QUERY_INPUT_SELECT_TYPE',
     QueryInputSelectSubcorp = 'QUERY_INPUT_SELECT_SUBCORP',
     QueryInputMoveCursor = 'QUERY_INPUT_MOVE_CURSOR',
+    QueryInputResetQueryExpansion = 'QUERY_INPUT_RESET_QUERY_EXPANSION',
     QueryInputSetQuery = 'QUERY_INPUT_SET_QUERY',
     QueryInputAppendQuery = 'QUERY_INPUT_APPEND_QUERY',
     QueryInputRemoveLastChar = 'QUERY_INPUT_REMOVE_LAST_CHAR',
@@ -76,7 +77,8 @@ export enum ActionName {
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
     ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
     ToggleQuerySuggestionWidget = 'QUERY_INPUT_TOGGLE_QUERY_SUGGESTION_WIDGET',
-    ToggleQueryStructureWidget = 'QUERY_INPUT_TOGGLE_QUERY_STRUCTURE_WIDGET',
+    ShowQueryStructureWidget = 'QUERY_INPUT_SHOW_QUERY_STRUCTURE_WIDGET',
+    HideQueryStructureWidget = 'QUERY_INPUT_HIDE_QUERY_STRUCTURE_WIDGET',
     SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
     SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
     SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT',
@@ -297,6 +299,13 @@ export namespace Actions {
         name:ActionName.QueryInputMoveCursor;
     }
 
+    export interface QueryInputResetQueryExpansion extends Action<{
+        formType:QueryFormType;
+        sourceId:string;
+    }> {
+        name:ActionName.QueryInputResetQueryExpansion;
+    }
+
     export interface QueryInputSetQuery extends Action<{
         formType:QueryFormType;
         sourceId:string;
@@ -448,10 +457,18 @@ export namespace Actions {
         name:ActionName.ToggleQuerySuggestionWidget;
     }
 
-    export interface ToggleQueryStructureWidget extends Action<{
-        query:SimpleQuery;
+    export interface ShowQueryStructureWidget extends Action<{
+        formType:QueryFormType;
+        sourceId:string;
     }> {
-        name:ActionName.ToggleQueryStructureWidget;
+        name:ActionName.ShowQueryStructureWidget;
+    }
+
+    export interface HideQueryStructureWidget extends Action<{
+        formType:QueryFormType;
+        sourceId:string;
+    }> {
+        name:ActionName.HideQueryStructureWidget;
     }
 
     export interface SampleFormSetRlines extends Action<{

@@ -72,13 +72,16 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
         } else if (provInfo.rendererId === KnownRenderers.POS_ATTR_PAIR_REL &&
                 isPosAttrPairRelClickValue(value)) {
-            console.log('apply any query ', query, tokenIdx, providerId, value);
             if (query.qtype === 'simple') {
                 query.queryParsed[tokenIdx].isExtended = true;
-                query.queryParsed[tokenIdx].args.push(value);
+                query.queryParsed[tokenIdx].args.splice(0);
+                query.queryParsed[tokenIdx].args.push(tuple(value[0], value[1]));
+                query.queryParsed[tokenIdx].args.push(tuple(value[2], value[3]));
+                query.queryParsed[tokenIdx].value = value[3];
+                query.query = List.map(v => v.value, query.queryParsed).join(' ');
 
             } else {
-                // TODO
+                // TODO !!!!
             }
 
         } else {
@@ -101,7 +104,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
             return createElement(this.views.posAttrPairRel, {
                 ...dr.contents,
                 isShortened: dr.isShortened,
-                itemClickHandler: (value:[string, string]) => itemClickHandler(dr.providerId, value)
+                itemClickHandler: (value:[string, string, string, string]) => itemClickHandler(dr.providerId, value)
             });
 
         } else if (isErrorFrontend(dr)) {
