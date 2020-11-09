@@ -21,11 +21,11 @@
 
 import { PluginInterfaces } from '../../types/plugins';
 import { Dict, List, pipe } from 'cnc-tskit';
-import { attachColorsToIds } from '../../models/concordance/common';
+import { QuerySuggestion } from '../../models/query/query';
 
 
 export interface BasicFrontend extends
-    PluginInterfaces.QuerySuggest.DataAndRenderer<Array<string>> {
+    QuerySuggestion<Array<string>> {
 }
 
 function isDataAndRenderer(v:any):boolean {
@@ -34,7 +34,7 @@ function isDataAndRenderer(v:any):boolean {
 }
 
 export function isBasicFrontend(
-    v:PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>
+    v:QuerySuggestion<unknown>
 
 ):v is BasicFrontend {
     return isDataAndRenderer(v) && v['rendererId'] === 'basic';
@@ -43,27 +43,31 @@ export function isBasicFrontend(
 // -----------------------
 
 export interface PosAttrPairRelFrontend extends
-        PluginInterfaces.QuerySuggest.DataAndRenderer<{
+        QuerySuggestion<{
             attrs:[string, string];
             data:{[attr1:string]:Array<string>};
         }> {
 }
 
 export function isPosAttrPairRelFrontend(
-    v:PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>
+    v:QuerySuggestion<unknown>
 
 ):v is PosAttrPairRelFrontend {
     return isDataAndRenderer(v) && v['rendererId'] === 'posAttrPairRel';
 }
 
+export function isPosAttrPairRelClickValue(v:any):v is [string, string] {
+    return Array.isArray(v) && typeof v[0] === 'string' && typeof v[1] === 'string' && v.length === 2;
+}
+
 // -----------------------
 
 export interface ErrorFrontend extends
-        PluginInterfaces.QuerySuggest.DataAndRenderer<Error> {
+    QuerySuggestion<Error> {
 }
 
 export function isErrorFrontend(
-    v:PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>
+    v:QuerySuggestion<unknown>
 
 ):v is ErrorFrontend {
     return isDataAndRenderer(v) && v['rendererId'] === 'error';
@@ -71,7 +75,7 @@ export function isErrorFrontend(
 
 // -----------------------
 
-export function listAttrs1ToExtend<T>(data:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):Array<string> {
+export function listAttrs1ToExtend<T>(data:QuerySuggestion<T>):Array<string> {
 
     if (isPosAttrPairRelFrontend(data)) {
         return pipe(
@@ -91,8 +95,8 @@ export function listAttrs1ToExtend<T>(data:PluginInterfaces.QuerySuggest.DataAnd
 // ----------------------
 
 export function cutLongResult<T>(
-    data:PluginInterfaces.QuerySuggest.DataAndRenderer<T>
-):PluginInterfaces.QuerySuggest.DataAndRenderer<unknown> {
+    data:QuerySuggestion<T>
+):QuerySuggestion<unknown> {
 
     if (isPosAttrPairRelFrontend(data)) {
         const newData = pipe(
@@ -105,6 +109,7 @@ export function cutLongResult<T>(
         );
         return {
             rendererId: data.rendererId,
+            providerId: data.providerId,
             heading: data.heading,
             contents: {
                 attrs: data.contents.attrs,
@@ -119,13 +124,17 @@ export function cutLongResult<T>(
 
 
 export function mergeResults<T>(
-    data1:PluginInterfaces.QuerySuggest.DataAndRenderer<T>,
-    data2:PluginInterfaces.QuerySuggest.DataAndRenderer<T>
+    data1:QuerySuggestion<T>,
+    data2:QuerySuggestion<T>
 
-):PluginInterfaces.QuerySuggest.DataAndRenderer<unknown> {
+):QuerySuggestion<unknown> {
     if (isPosAttrPairRelFrontend(data1) && isPosAttrPairRelFrontend(data2)) {
+        if (data1.providerId !== data2.providerId) {
+            throw new Error('cannot merge different provider data');
+        }
         return {
             rendererId: data1.rendererId,
+            providerId: data1.providerId,
             heading: data1.heading,
             contents: {
                 attrs: data1.contents.attrs,
@@ -144,5 +153,4 @@ export function mergeResults<T>(
     } else {
         return data2; // TODO
     }
-
 }

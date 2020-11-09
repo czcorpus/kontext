@@ -453,7 +453,7 @@ export function init({
         data:TokenSuggestions;
         formType:QueryFormType;
         sourceId:string;
-        handleItemClick:(actionType:string, value:string, attr:string) => void;
+        handleItemClick:(providerId:string, value:unknown) => void;
 
     }> = (props) => {
 
@@ -481,14 +481,7 @@ export function init({
                         (v, i) => (
                             <React.Fragment key={`${v.rendererId}${i}`}>
                                 <h2>{v.heading}:</h2>
-                                {props.qsuggPlugin.createElement(
-                                    v,
-                                    (
-                                        onItemClick:string,
-                                        value:string,
-                                        attr:string
-                                    ) => props.handleItemClick(onItemClick, value, attr)
-                                )}
+                                {props.qsuggPlugin.createElement(v, props.handleItemClick)}
                                 {props.data.isPartial ?
                                     <layoutViews.AjaxLoaderBarImage /> : null}
                             </React.Fragment>
@@ -867,13 +860,13 @@ export function init({
             });
         }
 
-        handleSuggestionItemClick(actionType:'replace'|'insert', value:string, attr:string):void {
+        handleSuggestionItemClick(providerId:string, value:unknown):void {
             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
                 name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
                 payload: {
                     sourceId: this.props.sourceId,
                     formType: this.props.formType,
-                    actionType,
+                    providerId,
                     value,
                     tokenIdx: this.props.suggestionsVisible[this.props.sourceId]
                 }

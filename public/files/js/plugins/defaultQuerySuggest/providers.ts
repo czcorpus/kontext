@@ -25,7 +25,6 @@ interface ProviderInfo<T> {
     ident:string;
     queryTypes:Array<QueryType>;
     heading:string;
-    onItemClick:PluginInterfaces.QuerySuggest.ItemClickAction;
     conf:T;
 }
 

@@ -27,7 +27,7 @@ import { IConcLinesProvider } from '../types/concordance';
 import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
-import { QueryType } from '../models/query/query';
+import { AnyQuery, QuerySuggestion, QueryType } from '../models/query/query';
 import { ParsedAttr } from '../models/query/cqleditor/parser';
 
 /**
@@ -480,13 +480,12 @@ export namespace PluginInterfaces {
 
         export interface IPlugin extends BasePlugin {
             createElement<T>(
-                dr:DataAndRenderer<T>,
-                itemClickHandler:(actionType:'replace'|'insert', value:string, attr:string)=>void
+                dr:QuerySuggestion<T>,
+                itemClickHandler:(providerId:string, value:unknown)=>void
             ):React.ReactElement;
-            isEmptyResponse<T>(v:DataAndRenderer<T>):boolean;
+            isEmptyResponse<T>(v:QuerySuggestion<T>):boolean;
             listCurrentProviders():Array<string>;
-            applyClickOnSimpleQuery(query:string, args:Array<[string, string]>, itemId:string):[string, Array<[string, string]>];
-            applyClickOnAdvancedQuery(query:string, attr:ParsedAttr, itemId:string):[string, ParsedAttr];
+            applyClickOnItem(query:AnyQuery, tokenIdx:number, providerId:string, value:unknown):void;
         }
 
         export enum ActionName {
@@ -497,8 +496,6 @@ export namespace PluginInterfaces {
         }
 
         export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';
-
-        export type ItemClickAction = 'replace'|'insert'|null;
 
         /**
          * formats are:
@@ -529,7 +526,7 @@ export namespace PluginInterfaces {
 
         export interface SuggestionAnswer {
             parsedWord:string; // the word actually used to search the suggestion
-            results:Array<DataAndRenderer<unknown>>;
+            results:Array<QuerySuggestion<unknown>>;
             isPartial:boolean;
         }
 
@@ -550,10 +547,10 @@ export namespace PluginInterfaces {
             }
 
             export interface ItemClicked extends Action<{
-                actionType:'replace'|'insert';
-                value:string;
+                value:unknown;
                 tokenIdx:number;
                 sourceId:string;
+                providerId:string;
                 formType:string;
             }> {
                 name: ActionName.ItemClicked
@@ -563,13 +560,6 @@ export namespace PluginInterfaces {
 
         export type Renderer = React.ComponentClass<Kontext.GeneralProps>|
             React.FC<Kontext.GeneralProps>;
-
-        export interface DataAndRenderer<T> {
-            rendererId:string;
-            contents:T;
-            heading:string;
-            isShortened:boolean;
-        }
 
         export type Factory = (pluginApi:IPluginApi)=>IPlugin;
     }

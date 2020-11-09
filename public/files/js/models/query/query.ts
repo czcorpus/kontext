@@ -19,15 +19,23 @@
  */
 
 import { id, List, tuple } from 'cnc-tskit';
-import { PluginInterfaces } from '../../types/plugins';
 import { highlightSyntaxStatic, ParsedAttr } from './cqleditor/parser';
 
 
 export type QueryType = 'simple'|'advanced';
 
 
+export interface QuerySuggestion<T> {
+    rendererId:string;
+    providerId:string;
+    contents:T;
+    heading:string;
+    isShortened:boolean;
+}
+
+
 export interface TokenSuggestions {
-    data:Array<PluginInterfaces.QuerySuggest.DataAndRenderer<unknown>>;
+    data:Array<QuerySuggestion<unknown>>;
     isPartial:boolean;
     valuePosStart:number;
     valuePosEnd:number;
@@ -69,6 +77,8 @@ export interface ParsedSimpleQueryToken {
     position:[number, number];
 
     suggestions:TokenSuggestions|null;
+
+    isExtended:boolean;
 }
 
 
@@ -187,7 +197,8 @@ export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken
                         args: [],
                         position: [startWord, isWhitespace(q[i]) ? i-1 : i],
                         value: currWord.join(''),
-                        suggestions: null
+                        suggestions: null,
+                        isExtended: false
                     },
                     tokenIdx
                 );
@@ -210,7 +221,8 @@ export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string):Array<
             args: [tuple(attr, '')],
             position: [-1, -1],
             value: '',
-            suggestions: null
+            suggestions: null,
+            isExtended: false
         }];
     }
     const qVal = typeof q === 'string' ? q.trim() : q.query.trim();
