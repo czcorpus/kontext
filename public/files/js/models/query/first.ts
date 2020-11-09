@@ -70,7 +70,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     hasLemma:{[corpname:string]:boolean};
     isAnonymousUser:boolean;
     suggestionsEnabled:boolean;
-    simpleQueryAttrSeq:Array<string>;
+    simpleQueryDefaultAttrs:Array<string>;
 }
 
 export interface QueryInputSetQueryProps {
@@ -129,7 +129,7 @@ function importUserQueries(
     corpora:Array<string>,
     data:QueryFormUserEntries,
     curr:{[corpus:string]:AnyQuery},
-    simpleQueryAttrSeq:Array<string>
+    simpleQueryDefaultAttrs:Array<string>
 ):{[corpus:string]:AnyQuery} {
 
     return pipe(
@@ -139,7 +139,7 @@ function importUserQueries(
             const defaultAttr = data.currDefaultAttrValues[corpus] ?
                     data.currDefaultAttrValues[corpus] :
                     (curr[corpus] && curr[corpus].qtype === 'advanced'
-                        || List.empty(simpleQueryAttrSeq) ? 'word' : '');
+                        || List.empty(simpleQueryDefaultAttrs) ? 'word' : '');
 
             if (qtype === 'advanced') {
                 const query = data.currQueries[corpus] || '';
@@ -263,7 +263,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     ) {
 
         const corpora = props.corpora;
-        const queries = importUserQueries(corpora, props, {}, props.simpleQueryAttrSeq);
+        const queries = importUserQueries(corpora, props, {}, props.simpleQueryDefaultAttrs);
         const tagBuilderSupport = props.tagBuilderSupport;
         super(
             dispatcher,
@@ -344,7 +344,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 ),
                 suggestionsEnabled: props.suggestionsEnabled,
                 isBusy: false,
-                simpleQueryAttrSeq: props.simpleQueryAttrSeq,
+                simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 alignedCorporaVisible: List.size(corpora) > 1
         });
 
@@ -481,7 +481,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                     'error',
                                     this.pageModel.translate(
                                         'query__no_result_found_{attrs}',
-                                        {attrs: this.state.simpleQueryAttrSeq.join(', ')}
+                                        {attrs: this.state.simpleQueryDefaultAttrs.join(', ')}
                                     )
                                 );
                             }
@@ -667,7 +667,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                     currIncludeEmptyValues: data.curr_include_empty_values
                                 },
                                 state.queries,
-                                state.simpleQueryAttrSeq
+                                state.simpleQueryDefaultAttrs
                             );
                             state.tagBuilderSupport = data.tag_builder_support;
                             state.hasLemma = data.has_lemma;
@@ -713,7 +713,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     qmcase: false,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
-                    default_attr: List.empty(state.simpleQueryAttrSeq)  ? 'word' : '',
+                    default_attr: List.empty(state.simpleQueryDefaultAttrs)  ? 'word' : '',
                     use_regexp: false
                 };
             }
@@ -797,7 +797,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 return this.exportQuery(
                     query,
                     query.default_attr || i > 0 ?
-                        query.default_attr : this.state.simpleQueryAttrSeq[attrTryIdx]
+                        query.default_attr : this.state.simpleQueryDefaultAttrs[attrTryIdx]
                 );
             },
             this.state.corpora
@@ -822,7 +822,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     submitQuery(contextFormArgs:QueryContextArgs):Observable<ConcQueryResponse|null> {
 
-        return rxOf(...List.repeat(i => i, Math.max(1, this.state.simpleQueryAttrSeq.length))).pipe(
+        return rxOf(...List.repeat(i => i, Math.max(1, this.state.simpleQueryDefaultAttrs.length))).pipe(
             concatMap(
                 (attrIdx) => this.pageModel.ajax$<ConcQueryResponse>(
                     HTTP.Method.POST,

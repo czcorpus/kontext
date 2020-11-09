@@ -216,7 +216,7 @@ class DatabaseBackend(object):
         """
         return []
 
-    def load_simple_query_attr_seq(self, corpus_id) -> List[str]:
+    def load_simple_query_default_attrs(self, corpus_id) -> List[str]:
         raise NotImplementedError()
 
 

@@ -336,7 +336,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 ),
                 suggestionsEnabled: props.suggestionsEnabled,
                 isBusy: false,
-                simpleQueryAttrSeq: []
+                simpleQueryDefaultAttrs: []
         });
         this.syncInitialArgs = syncInitialArgs;
 

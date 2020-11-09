@@ -263,7 +263,7 @@ export namespace AjaxResponse {
         // here it is impossible to determine a detailed type in a reasonable way
         pluginData:{[plgName:string]:any};
         DefaultVirtKeyboard:string;
-        SimpleQueryAttrSeq:Array<string>;
+        SimpleQueryDefaultAttrs:Array<string>;
     }
 }
 
