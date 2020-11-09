@@ -58,8 +58,6 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
-import { QueryStructureModel } from '../models/query/structure';
-import { init as initQueryStructure } from '../views/query/structure';
 
 
 export enum DownloadType {
@@ -787,13 +785,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 document.getElementById('query-history-mount')
             );
 
-            const queryStructureModel = new QueryStructureModel(this.dispatcher, this);
-            const queryStructureView = initQueryStructure({dispatcher: this.dispatcher, he: this.getComponentHelpers(), queryStructureModel})       
-            this.renderReactComponent(
-                queryStructureView,
-                document.getElementById('query-structure-mount')
-            );
-
             this.commonViews = commonViewsFactory(this.getComponentHelpers());
 
             window.onkeydown = (evt) => {
@@ -812,8 +803,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.corpViewOptionsModel
             );
             this.asyncTaskChecker.init();
-            
-            const toolbarInitialized = this.getConf('toolbarInitialized') || false;          
+
+            const toolbarInitialized = this.getConf('toolbarInitialized') || false;
             this.appBarPlugin = applicationBar(this.pluginApi(), !toolbarInitialized);
             this.setConf('toolbarInitialized', true);
 

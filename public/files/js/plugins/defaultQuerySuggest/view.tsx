@@ -52,7 +52,7 @@ export interface PosAttrPairRelRendererProps {
     attrs:[string, string];
     data:{[attr1:string]:Array<string>};
     isShortened:boolean;
-    itemClickHandler:(value:[string, string])=>void;
+    itemClickHandler:(value:[string, string, string, string])=>void;
 }
 
 
@@ -134,12 +134,12 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                     <tr className={index > 0 ? 'separ' : null}>
                                         <th className="attr1" rowSpan={List.size(attrs2)}>{
                                             props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler(tuple(attr1, props.attrs[0]))}>{attr1}</a> :
+                                            <span>{attr1}</span> :
                                             attr1
                                         }</th>
                                         <td>{
                                             props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler(tuple(List.head(attrs2), props.attrs[1]))}>{List.head(attrs2)}</a> :
+                                            <a onClick={e => props.itemClickHandler(tuple(props.attrs[0], attr1, props.attrs[1], List.head(attrs2)))}>{List.head(attrs2)}</a> :
                                             List.head(attrs2)
                                         }</td>
                                     </tr>
@@ -153,7 +153,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                                     {attr2 === null && i === List.size(attrs2) - 2 ?
                                                     <span title={he.translate('global__shortened')}>{'\u2026'}</span> :
                                                     (props.itemClickHandler ?
-                                                        <a onClick={e => props.itemClickHandler(tuple(attr2, props.attrs[1]))}>{attr2}</a> :
+                                                        <a onClick={e => props.itemClickHandler(tuple(props.attrs[0], attr1, props.attrs[1], attr2))}>{attr2}</a> :
                                                         attr2
                                                     )
                                                     }

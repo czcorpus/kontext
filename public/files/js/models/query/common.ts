@@ -34,7 +34,7 @@ import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx,
-    parseSimpleQuery, QueryType, runSimpleQueryParser, simpleToAdvancedQuery, TokenSuggestions } from './query';
+    parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery, TokenSuggestions } from './query';
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
 
@@ -597,37 +597,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         action.payload.providerId,
                         action.payload.value
                     );
-                    /*
-                    const wordPos =
-                        action.payload.actionType === 'replace' ?
-                            [action.payload.valueStartIdx, action.payload.valueEndIdx] :
-                        action.payload.onItemClick === 'insert' ?
-                            [state.cursorPos, state.cursorPos] :
-                            undefined
-                    */
-                   /*
-                    if (wordPos === undefined) {
-                        pageModel.showMessage(
-                            'error',
-                            `Unknown query suggestion click action: "${action.payload.actionType}"`
-                        );
-
-                    } else {
-                        this.addQueryInfix(
-                            state,
-                            action.payload.sourceId,
-                            action.payload.value,
-                            [wordPos[0], wordPos[1]]
-                        );
-
-                        // TODO on refocus on the input cursor is on the end
-                        // this is to prevent confusion
-                        state.rawFocusIdx[action.payload.sourceId] = state.queries[action.payload.sourceId].query.length;
-
-                        state.queries[action.payload.sourceId].default_attr = action.payload.attr;
-                    }
-                    */
                     state.suggestionsVisible[action.payload.sourceId] = null;
+                    this.updateQueryFromParsed(state, action.payload.sourceId);
                 });
             }
         );
@@ -707,6 +678,48 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             v => null,
                             state.suggestionsVisible
                         );
+                    }
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.ShowQueryStructureWidget>(
+            ActionName.ShowQueryStructureWidget,
+            action => action.payload.formType === this.formType,
+            (action) => {
+                this.changeState(state => {
+                    state.activeWidgets[action.payload.sourceId] = 'query-structure';
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.HideQueryStructureWidget>(
+            ActionName.HideQueryStructureWidget,
+            action => action.payload.formType === this.formType,
+            (action) => {
+                this.changeState(state => {
+                    state.activeWidgets[action.payload.sourceId] = null;
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputResetQueryExpansion>(
+            ActionName.QueryInputResetQueryExpansion,
+            action => action.payload.formType === this.formType,
+            (action) => {
+                this.changeState(state => {
+                    state.activeWidgets[action.payload.sourceId] = null;
+                    const queryObj = state.queries[action.payload.sourceId];
+                    if (queryObj.qtype === 'simple') {
+                        queryObj.queryParsed = List.map(
+                            v => ({
+                                ...v,
+                                args: [List.head(v.args)],
+                                isExtended: false
+                            }),
+                            queryObj.queryParsed
+                        );
+                        this.updateQueryFromParsed(state, action.payload.sourceId);
                     }
                 });
             }
@@ -804,6 +817,36 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         } else {
             queryObj.parsedAttrs[tokIdx].suggestions = newSugg;
+        }
+    }
+
+    private updateQueryFromParsed(
+        state:QueryFormModelState,
+        sourceId:string
+    ):void {
+        const queryObj = state.queries[sourceId];
+        if (queryObj.qtype === 'simple') {
+            const richText = [];
+            runSimpleQueryParser(
+                queryObj.query,
+                (token, tokenIdx) => {
+                    if (queryObj.queryParsed[tokenIdx].isExtended) {
+                        richText.push(
+                            `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
+
+                    } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
+                        richText.push(
+                            `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
+
+                    } else {
+                        richText.push(token.value);
+                    }
+                },
+                () => {
+                    richText.push(' ');
+                }
+            );
+            queryObj.queryHtml = richText.join('');
         }
     }
 

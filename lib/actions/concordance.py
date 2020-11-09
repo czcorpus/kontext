@@ -491,7 +491,10 @@ class Actions(Querying):
             for token_args in q:
                 position = []
                 for attr, val in token_args:
-                    position.append(f'{attr}="{val}"')
+                    if type(attr) is str:
+                        position.append(f'{attr}="{mk_query_val(val)}"')
+                    else:
+                        position.append('({})'.format(' | '.join([f'{a2}="{mk_query_val(val)}"' for a2 in attr])))
                 expr.append('[' + ' & '.join(position) + ']')
             return ' '.join(expr)
 
