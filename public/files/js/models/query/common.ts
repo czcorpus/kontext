@@ -194,7 +194,7 @@ export interface QueryFormModelState {
      * The client starts with 0-th item and if nothing is found,
      * 1-th is used etc.
      */
-    simpleQueryAttrSeq:Array<string>;
+    simpleQueryDefaultAttrs:Array<string>;
 }
 
 /**

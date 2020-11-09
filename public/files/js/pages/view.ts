@@ -446,7 +446,7 @@ export class ViewPage {
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
-            simpleQueryAttrSeq: this.layoutModel.getConf<Array<string>>('SimpleQueryAttrSeq')
+            simpleQueryDefaultAttrs: this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel(

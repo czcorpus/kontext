@@ -387,7 +387,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
                     for drow in self._backend.load_ttdesc(row['ttdesc_id']):
                         self._tt_desc_i18n['cs'][row['ttdesc_id']] = drow['text_cs']
                         self._tt_desc_i18n['en'][row['ttdesc_id']] = drow['text_en']
-                corp.simple_query_attr_seq = self._backend.load_simple_query_attr_seq(corpus_id)
+                corp.simple_query_default_attrs = self._backend.load_simple_query_default_attrs(corpus_id)
         return self._corpus_info_cache.get(corpus_id, None)
 
     def get_corpus_info(self, user_lang, corp_name):

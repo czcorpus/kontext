@@ -204,7 +204,7 @@ class CorpusInfo(DictLike):
         self.manatee: ManateeCorpusInfo = ManateeCorpusInfo()
         self.default_view_opts: Dict[str, Any] = {}
         self.query_suggest: QuerySuggest = QuerySuggest()
-        self.simple_query_attr_seq: List[str] = []
+        self.simple_query_default_attrs: List[str] = []
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':

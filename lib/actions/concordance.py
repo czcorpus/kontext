@@ -1631,7 +1631,7 @@ class Actions(Querying):
             TextDirectionRTL=True if self.corp.get_conf('RIGHTTOLEFT') else False,
             structsAndAttrs=self._get_structs_and_attrs(),
             DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
-            SimpleQueryAttrSeq=corpus_info.simple_query_attr_seq
+            SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs
         )
         self._attach_plugin_exports(ans, direct=True)
         self._configure_auth_urls(ans)

@@ -248,8 +248,8 @@ class Backend(DatabaseBackend):
                        'WHERE corpus_name = ?', (corpus_id,))
         return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) for r in cursor.fetchall()]
 
-    def load_simple_query_attr_seq(self, corpus_id):
+    def load_simple_query_default_attrs(self, corpus_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT pos_attr FROM kontext_simple_query_attr_seq WHERE corpus_name = ? ORDER BY idx',
+        cursor.execute('SELECT pos_attr FROM kontext_simple_query_default_attrs WHERE corpus_name = ?',
                        (corpus_id,))
         return [r['pos_attr'] for r in cursor.fetchall()]

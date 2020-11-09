@@ -891,7 +891,7 @@ class Kontext(Controller):
         result['righttoleft'] = True if self.corp.get_conf('RIGHTTOLEFT') else False
         corp_info = self.get_corpus_info(getattr(self.args, 'corpname'))
         result['bib_conf'] = corp_info.metadata
-        result['simple_query_attr_seq'] = corp_info.simple_query_attr_seq
+        result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
 
     def _setup_optional_plugins_js(self, result):
         """
