@@ -591,19 +591,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
-                    if (queryObj.qtype === 'simple') {
-                        this.qsPlugin.applyClickOnSimpleQuery(
-                            queryObj.query,
-                            queryObj.queryParsed[action.payload.tokenIdx].args,
-                            action.payload.value
-                        );
-
-                    } else {
-                        this.qsPlugin.applyClickOnAdvancedQuery(
-                            queryObj.query,
-                            queryObj.parsedAttrs[action.payload.tokenIdx], // TODO !!! the indexing is likely wrong
-                            action.payload.value);
-                    }
+                    this.qsPlugin.applyClickOnItem(
+                        queryObj,
+                        action.payload.tokenIdx,
+                        action.payload.providerId,
+                        action.payload.value
+                    );
                     /*
                     const wordPos =
                         action.payload.actionType === 'replace' ?
@@ -791,7 +784,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             runSimpleQueryParser(
                 queryObj.query,
                 (token, tokenIdx) => {
-                    if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
+                    if (queryObj.queryParsed[tokenIdx].isExtended) {
+                        richText.push(
+                            `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
+
+                    } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
                         richText.push(
                             `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
 

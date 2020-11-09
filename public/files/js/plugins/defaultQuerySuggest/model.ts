@@ -36,6 +36,7 @@ import { QueryType } from '../../models/query/query';
 export interface HTTPResponse extends Kontext.AjaxResponse {
     items:Array<{
         renderer:string;
+        provider:string;
         contents:Array<{}>;
         heading:string;
     }>;
@@ -365,6 +366,7 @@ export class Model extends StatelessModel<ModelState> {
                     results: List.map(
                         item => ({
                             rendererId: item.renderer,
+                            providerId: item.provider,
                             contents: item.contents,
                             heading: item.heading,
                             isShortened: false

@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { tuple } from 'cnc-tskit';
-import { ParsedAttr } from '../../../models/query/cqleditor/parser';
+import { AnyQuery, QuerySuggestion } from '../../../models/query/query';
 import { PluginInterfaces, IPluginApi } from '../../../types/plugins';
 
 /**
@@ -37,15 +36,12 @@ export class EmptyQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugin 
         return true;
     }
 
-    applyClickOnSimpleQuery(query:string, args:Array<[string, string]>, itemId:string):[string, Array<[string, string]>] {
-        return tuple(query, args);
-    }
+    applyClickOnItem(query:AnyQuery, tokenIdx:number, providerId:string, value:unknown):void {}
 
-    applyClickOnAdvancedQuery(query:string, attr:ParsedAttr, itemId:string):[string, ParsedAttr] {
-        return tuple(query, attr);
-    }
-
-    createElement<T>(dr:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):React.ReactElement {
+    createElement<T>(
+        dr:QuerySuggestion<T>,
+        itemClickHandler:(providerId:string, value:unknown)=>void
+    ):React.ReactElement {
         return null;
     }
 
@@ -53,7 +49,7 @@ export class EmptyQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugin 
         return [];
     }
 
-    isEmptyResponse<T>(v:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):boolean {
+    isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {
         return true;
     }
 

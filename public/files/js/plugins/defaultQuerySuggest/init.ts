@@ -23,11 +23,12 @@ import { List, pipe, Dict, tuple } from 'cnc-tskit';
 import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { init as initView, SuggestionsViews } from './view';
+import { init as initView, KnownRenderers, SuggestionsViews } from './view';
 import { Model } from './model';
-import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend } from './frontends';
+import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickValue } from './frontends';
 import { AnyProviderInfo } from './providers';
 import { ParsedAttr } from '../../models/query/cqleditor/parser';
+import { AnyQuery, QuerySuggestion } from '../../models/query/query';
 
 
 declare var require:any;
@@ -62,41 +63,45 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         return true;
     }
 
-    applyClickOnSimpleQuery(query:string, args:Array<[string, string]>, itemId:string):[string, Array<[string, string]>] {
-        console.log('Applying simple query extension, args: ', args, ', val: ', itemId);
-        return tuple(query, args);
-    }
+    applyClickOnItem(query:AnyQuery, tokenIdx:number, providerId:string, value:unknown):void {
+        const provInfo = List.find(p => p.ident === providerId, this.providers);
+        if (!provInfo) {
+            throw new Error(`Cannot find provider ${providerId}`);
+        }
+        if (provInfo.rendererId === KnownRenderers.BASIC && typeof value === 'string') {
 
-    applyClickOnAdvancedQuery(query:string, attr:ParsedAttr, itemId:string):[string, ParsedAttr] {
-        console.log('Applying advanced query extension, attr: ', attr, ', val: ', itemId);
-        return tuple(query, attr);
+        } else if (provInfo.rendererId === KnownRenderers.POS_ATTR_PAIR_REL &&
+                isPosAttrPairRelClickValue(value)) {
+            console.log('apply any query ', query, tokenIdx, providerId, value);
+            if (query.qtype === 'simple') {
+                query.queryParsed[tokenIdx].isExtended = true;
+                query.queryParsed[tokenIdx].args.push(value);
+
+            } else {
+                // TODO
+            }
+
+        } else {
+            throw new Error(`Failed to apply click operation with renderer ${provInfo.rendererId} and data ${value}`);
+        }
     }
 
     createElement<T>(
-        dr:PluginInterfaces.QuerySuggest.DataAndRenderer<T>,
-        itemClickHandler:(actionType:'replace'|'insert', value:string, attr:string)=>void
+        dr:QuerySuggestion<T>,
+        itemClickHandler:(providerId:string, value:unknown)=>void
     ):React.ReactElement {
-
-        const onItemClick = List.find(
-            v => v.rendererId === dr.rendererId,
-            this.providers
-        ).onItemClick;
 
         if (isBasicFrontend(dr)) {
             return createElement(this.views.basic, {
                 data: dr.contents,
-                itemClickHandler: onItemClick ?
-                    (value) => itemClickHandler(onItemClick, value, null) : // TODO attr should not be null
-                    null
+                itemClickHandler: (value:string) => itemClickHandler(dr.providerId, value)
             });
 
         } else if (isPosAttrPairRelFrontend(dr)) {
             return createElement(this.views.posAttrPairRel, {
                 ...dr.contents,
                 isShortened: dr.isShortened,
-                itemClickHandler: onItemClick ?
-                    (value, attr) => itemClickHandler(onItemClick, value, attr) :
-                    null
+                itemClickHandler: (value:[string, string]) => itemClickHandler(dr.providerId, value)
             });
 
         } else if (isErrorFrontend(dr)) {
@@ -114,7 +119,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         );
     }
 
-    isEmptyResponse<T>(v:PluginInterfaces.QuerySuggest.DataAndRenderer<T>):boolean {
+    isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {
         if (v === undefined) {
             return true;
         }

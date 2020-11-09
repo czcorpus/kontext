@@ -72,11 +72,12 @@ class Response(Generic[CT]):
     frontend receives data from a respective backend).
     """
 
-    def __init__(self, contents: CT, renderer: str, heading: str) -> None:
+    def __init__(self, contents: CT, renderer: str, provider: str, heading: str) -> None:
         """
         """
         self.contents: CT = contents
         self.renderer: str = renderer
+        self.provider: str = provider
         self.heading: str = heading
 
     def to_dict(self) -> Dict[str, Any]:
@@ -98,10 +99,12 @@ class AbstractFrontend(abc.ABC):
         self.renderer = renderer
         self.partial = False
         self._conf = conf.get('conf', {})
+        self._provider = conf.get('ident')
 
     def export_data(self, data: CT, value: str, ui_lang: str):
         ui_lang = ui_lang.replace('_', '-')
-        return Response[CT](contents='', renderer=self.renderer, heading=self.headings.get(ui_lang, '--'))
+        return Response[CT](contents='', renderer=self.renderer,
+                            provider=self._provider, heading=self.headings.get(ui_lang, '--'))
 
     @property
     def custom_conf(self):
