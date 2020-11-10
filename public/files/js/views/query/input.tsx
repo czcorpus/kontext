@@ -202,7 +202,7 @@ export function init({
             <div className="QueryHints">
                 <span className="hint">
                     {props.forcedTip ?
-                        List.find(v => v.messageId === props.forcedTip, props.availableTips) :
+                        he.translate(props.forcedTip) :
                         props.currentHints[UsageTipCategory.QUERY]
                     }
                 </span>
@@ -1042,7 +1042,7 @@ export function init({
                                     : null
                             }
                         </div>
-                        <BoundQueryHints forcedTip={hasExpandedTokens ? 'query_tip_06' : undefined} />
+                        <BoundQueryHints forcedTip={hasExpandedTokens ? 'query__tip_06' : undefined} />
                     </div>
                     <AdvancedFormFieldset
                             uniqId="query-options-section"
