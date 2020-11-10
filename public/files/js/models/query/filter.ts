@@ -335,7 +335,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     Dict.fromEntries()
                 ),
                 suggestionsEnabled: props.suggestionsEnabled,
-                suggestionsLoading: false,
+                suggestionsLoading: pipe(
+                    queries,
+                    Dict.keys(),
+                    List.map(k => tuple(k, {})),
+                    Dict.fromEntries()
+                ),
                 isBusy: false,
                 simpleQueryDefaultAttrs: []
         });

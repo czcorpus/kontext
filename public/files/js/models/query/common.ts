@@ -186,7 +186,7 @@ export interface QueryFormModelState {
 
     suggestionsEnabled:boolean;
 
-    suggestionsLoading:boolean;
+    suggestionsLoading:{[sourceId:string]:{[position:number]:boolean}};
 
     isBusy:boolean;
 
@@ -342,6 +342,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             }),
                             queryObj.parsedAttrs
                         );
+
+                this.changeState(state => {
+                    state.suggestionsLoading[sourceId] = {};
+                });
 
                 List.forEach(
                     args => {
@@ -611,7 +615,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     this.clearSuggestionForPosition(state, action.payload.sourceId, action.payload.valueStartIdx);
                     state.suggestionsVisible[action.payload.sourceId] = null;
-                    state.suggestionsLoading = true;
+                    state.suggestionsLoading[action.payload.sourceId][action.payload.valueStartIdx] = true;
                 });
             }
         );
@@ -639,6 +643,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             action.payload.valueStartIdx,
                             action.payload
                         );
+                        state.suggestionsLoading[action.payload.sourceId][action.payload.valueStartIdx] = false;
                     });
                 }
             }
@@ -667,7 +672,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             }
                         )
                     );
-                    state.suggestionsLoading = false;
                 });
             }
         );
@@ -821,11 +825,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         } else {
             queryObj.parsedAttrs[tokIdx].suggestions = newSugg;
-        }
-
-        if (!newSugg.isPartial) {
-            state.suggestionsLoading = false;
-        }        
+        }  
     }
 
     private updateQueryFromParsed(
