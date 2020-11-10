@@ -100,6 +100,7 @@ interface QueryToolboxProps {
     sourceId:string;
     widgets:Array<string>;
     inputLanguage:string;
+    suggestionsLoading:boolean;
     tagHelperView:PluginInterfaces.TagHelper.View;
     toggleHistoryWidget:()=>void;
     toggleStructureWidget:()=>void;
@@ -631,6 +632,11 @@ export function init({
                             (item, i) => <li key={i}>{item}</li>,
                             this._renderButtons()
                         )}
+                        {
+                            this.props.suggestionsLoading ?
+                            <li><layoutViews.AjaxLoaderBarImage/></li> :
+                            null
+                        }
                     </ul>
                 </div>
             );
@@ -1002,7 +1008,8 @@ export function init({
                             sourceId={this.props.sourceId}
                             toggleHistoryWidget={this._toggleHistoryWidget}
                             toggleStructureWidget={this._toggleStructureWidget}
-                            inputLanguage={this.props.inputLanguage} />
+                            inputLanguage={this.props.inputLanguage}
+                            suggestionsLoading={this.props.suggestionsLoading} />
                         {this._renderInput()}
                         <div style={{position: 'relative'}}>
                             {this.props.historyVisible[this.props.sourceId] ?

@@ -186,6 +186,8 @@ export interface QueryFormModelState {
 
     suggestionsEnabled:boolean;
 
+    suggestionsLoading:boolean;
+
     isBusy:boolean;
 
     /**
@@ -609,6 +611,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     this.clearSuggestionForPosition(state, action.payload.sourceId, action.payload.valueStartIdx);
                     state.suggestionsVisible[action.payload.sourceId] = null;
+                    state.suggestionsLoading = true;
                 });
             }
         );
@@ -663,7 +666,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                 }
                             }
                         )
-                    )
+                    );
+                    state.suggestionsLoading = false;
                 });
             }
         );
@@ -818,6 +822,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         } else {
             queryObj.parsedAttrs[tokIdx].suggestions = newSugg;
         }
+
+        if (!newSugg.isPartial) {
+            state.suggestionsLoading = false;
+        }        
     }
 
     private updateQueryFromParsed(
