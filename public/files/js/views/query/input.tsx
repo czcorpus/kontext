@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
-import { Keyboard, List, pipe } from 'cnc-tskit';
+import { Dict, Keyboard, List, pipe } from 'cnc-tskit';
 
 import { init as keyboardInit } from './virtualKeyboard';
 import { init as cqlEditoInit } from './cqlEditor';
@@ -998,6 +998,11 @@ export function init({
             const queryObj = this.props.queries[this.props.sourceId];
             const sugg = queryObj.qtype === 'simple' ?
                 queryObj.queryParsed[this.props.suggestionsVisible[this.props.sourceId]] : undefined;
+            const suggestionsLoading = List.reduce<boolean, boolean>(
+                (acc, cur) => acc || cur,
+                false,
+                Dict.values(this.props.suggestionsLoading[this.props.sourceId])
+            )
 
             return (
                 <div>
@@ -1009,7 +1014,7 @@ export function init({
                             toggleHistoryWidget={this._toggleHistoryWidget}
                             toggleStructureWidget={this._toggleStructureWidget}
                             inputLanguage={this.props.inputLanguage}
-                            suggestionsLoading={this.props.suggestionsLoading} />
+                            suggestionsLoading={suggestionsLoading} />
                         {this._renderInput()}
                         <div style={{position: 'relative'}}>
                             {this.props.historyVisible[this.props.sourceId] ?
