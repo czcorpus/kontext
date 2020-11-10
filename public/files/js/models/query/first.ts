@@ -350,6 +350,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     Dict.fromEntries()
                 ),
                 suggestionsEnabled: props.suggestionsEnabled,
+                suggestionsLoading: false,
                 isBusy: false,
                 simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 alignedCorporaVisible: List.size(corpora) > 1
