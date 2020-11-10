@@ -31,6 +31,7 @@ export interface QuerySuggestion<T> {
     contents:T;
     heading:string;
     isShortened:boolean;
+    isActive:boolean;
 }
 
 

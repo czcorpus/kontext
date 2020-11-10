@@ -1005,7 +1005,8 @@ export function init({
         render() {
             const queryObj = this.props.queries[this.props.sourceId];
             const sugg = queryObj.qtype === 'simple' ?
-                queryObj.queryParsed[this.props.suggestionsVisible[this.props.sourceId]] : undefined;
+                queryObj.queryParsed[this.props.suggestionsVisible[this.props.sourceId]] :
+                queryObj.parsedAttrs[this.props.suggestionsVisible[this.props.sourceId]];
             const suggestionsLoading = List.reduce<boolean, boolean>(
                 (acc, cur) => acc || cur,
                 false,

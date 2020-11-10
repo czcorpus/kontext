@@ -24,8 +24,8 @@ import { Dict, List, pipe } from 'cnc-tskit';
 import { QuerySuggestion } from '../../models/query/query';
 
 
-export interface BasicFrontend extends
-    QuerySuggestion<Array<string>> {
+export interface BasicFrontend extends QuerySuggestion<Array<string>> {
+    isActive:false;
 }
 
 function isDataAndRenderer(v:any):boolean {
@@ -47,6 +47,7 @@ export interface PosAttrPairRelFrontend extends
             attrs:[string, string];
             data:{[attr1:string]:Array<string>};
         }> {
+    isActive:true;
 }
 
 export function isPosAttrPairRelFrontend(
@@ -63,8 +64,8 @@ export function isPosAttrPairRelClickValue(v:any):v is [string, string, string, 
 
 // -----------------------
 
-export interface ErrorFrontend extends
-    QuerySuggestion<Error> {
+export interface ErrorFrontend extends QuerySuggestion<Error> {
+    isActive:false;
 }
 
 export function isErrorFrontend(
@@ -116,7 +117,8 @@ export function cutLongResult<T>(
                 attrs: data.contents.attrs,
                 data: newData
             },
-            isShortened: Dict.size(newData) < Dict.size(data.contents.data)
+            isShortened: Dict.size(newData) < Dict.size(data.contents.data),
+            isActive: true
         };
 
     }
@@ -148,7 +150,8 @@ export function mergeResults<T>(
                     )
                 )
             },
-            isShortened: data1.isShortened || data2.isShortened
+            isShortened: data1.isShortened || data2.isShortened,
+            isActive: true
         }
 
     } else {

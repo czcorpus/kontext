@@ -79,26 +79,36 @@ class RuleCharMap {
 
     private nonTerminals:Array<CharsRule>;
 
-    private query:string;
+    private readonly query:string;
 
-    private he:Kontext.Translator;
+    private readonly he:Kontext.Translator;
 
     private wrapLongQuery:boolean;
 
-    private attrHelper:IAttrHelper;
+    private readonly attrHelper:IAttrHelper;
 
     private posCounter:number;
 
-    private onHintChange:(message:string)=>void;
+    private readonly onHintChange:(message:string)=>void;
 
-    constructor(query:string, he:Kontext.Translator, attrHelper:IAttrHelper,
-                wrapLongQuery:boolean, onHintChange:(message:string)=>void) {
+    private readonly wrapRange:(startIdx:number, endIdx:number)=>[string, string];
+
+    constructor(
+        query:string,
+        he:Kontext.Translator,
+        attrHelper:IAttrHelper,
+        wrapLongQuery:boolean,
+        wrapRange:(startIdx:number, endIdx:number)=>[string, string],
+        onHintChange:(message:string)=>void
+    ) {
+
         this.query = query;
         this.data = {};
         this.nonTerminals = [];
         this.he = he;
         this.attrHelper = attrHelper;
         this.wrapLongQuery = wrapLongQuery;
+        this.wrapRange = wrapRange;
         this.onHintChange = onHintChange;
         this.posCounter = 0;
     }
@@ -303,17 +313,27 @@ class RuleCharMap {
                             }
 
                             const posAttrValueRule = this.findSubRuleSeqIn(['AttName', 'RegExp'], attVal.from, attVal.to);
-                            if (posAttrValueRule.length > 0 && this.attrHelper.isTagAttr(posAttrName)) {
-                                const range = this.convertRange(posAttrValueRule[1].from, posAttrValueRule[1].to, chunks);
-                                inserts[range[0]].push(this.createClickableTag(
-                                    'tag',
-                                    {
-                                        leftIdx: posAttrValueRule[1].from,
-                                        rightIdx: posAttrValueRule[1].to
-                                    },
-                                    this.he.translate('query__click_to_edit_tag')
-                                ));
-                                inserts[range[1]+1].push('</a>');
+                            if (posAttrValueRule.length > 0) {
+                                if (this.attrHelper.isTagAttr(posAttrName)) {
+                                    const range = this.convertRange(posAttrValueRule[1].from, posAttrValueRule[1].to, chunks);
+                                    inserts[range[0]].push(this.createClickableTag(
+                                        'tag',
+                                        {
+                                            leftIdx: posAttrValueRule[1].from,
+                                            rightIdx: posAttrValueRule[1].to
+                                        },
+                                        this.he.translate('query__click_to_edit_tag')
+                                    ));
+                                    inserts[range[1]+1].push('</a>');
+
+                                } else if (this.wrapRange) {
+                                    const range = this.convertRange(posAttrValueRule[1].from, posAttrValueRule[1].to, chunks);
+                                    const [begTag, endTag] = this.wrapRange(posAttrValueRule[1].from + 1, posAttrValueRule[1].to - 1);
+                                    if (begTag && endTag) {
+                                        inserts[range[0]].push(begTag);
+                                        inserts[range[1]+1].push(endTag);
+                                    }
+                                }
                             }
                         });
                     });
@@ -525,13 +545,14 @@ interface HSArgs {
     parserRecoverIdx:number;
     wrapLongQuery:boolean;
     onHintChange:(message:string)=>void;
+    wrapRange:(startIdx:number, endIdx:number)=>[string, string];
 }
 
 
 function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, parserRecoverIdx,
-            wrapLongQuery, onHintChange}:HSArgs):[string, Array<ParsedAttr>] {
+            wrapLongQuery, wrapRange, onHintChange}:HSArgs):[string, Array<ParsedAttr>] {
 
-    const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, onHintChange);
+    const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, wrapRange, onHintChange);
     const stack = new ParserStack(rcMap);
 
     const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):string => {
@@ -592,9 +613,10 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
                 applyRules: srch[1].trim() !== '' ? applyRules.slice(1) : applyRules,
                 he: he,
                 ignoreErrors: true,
-                attrHelper: attrHelper,
+                attrHelper,
                 wrapLongQuery: false,
-                onHintChange: onHintChange,
+                wrapRange,
+                onHintChange,
                 parserRecoverIdx: parserRecoverIdx + 1
             });
 
@@ -629,6 +651,7 @@ export function highlightSyntax(
         queryType:QueryType,
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
+        wrapRange:((startIdx:number, endIdx:number)=>[string, string])|undefined,
         onHintChange:(message:string)=>void):[string, Array<ParsedAttr>] {
 
     return _highlightSyntax({
@@ -638,6 +661,7 @@ export function highlightSyntax(
         ignoreErrors: true,
         attrHelper: attrHelper ? attrHelper : new NullAttrHelper(),
         wrapLongQuery: false,
+        wrapRange,
         onHintChange: onHintChange ? onHintChange : _ => undefined,
         parserRecoverIdx: 0
     });
@@ -654,6 +678,7 @@ export function highlightSyntaxStatic(
         ignoreErrors: true,
         attrHelper: new NullAttrHelper(),
         wrapLongQuery: true,
+        wrapRange: undefined,
         onHintChange: _ => undefined,
         parserRecoverIdx: 0
     });

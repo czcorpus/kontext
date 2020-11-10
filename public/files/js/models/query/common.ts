@@ -608,8 +608,18 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         action.payload.value
                     );
                     state.suggestionsVisible[action.payload.sourceId] = null;
-                    this.updateQueryFromParsed(state, action.payload.sourceId, action.payload.tokenIdx);
+                    if (queryObj.qtype === 'simple') {
+                        this.rehighlightSimpleQuery(queryObj, action.payload.tokenIdx);
+
+                    } else {
+                        this.reparseAdvancedQuery(state, action.payload.sourceId, true);
+                    }
                 });
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    0,
+                    0
+                ));
             }
         );
 
@@ -723,7 +733,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     const queryObj = state.queries[action.payload.sourceId];
                     if (queryObj.qtype === 'simple') {
                         queryObj.queryParsed = parseSimpleQuery(queryObj);
-                        this.updateQueryFromParsed(state, action.payload.sourceId);
+                        this.rehighlightSimpleQuery(queryObj);
                     }
                 });
             }
@@ -765,6 +775,78 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         }
     }
 
+
+    private rehighlightSimpleQuery(
+        queryObj:SimpleQuery,
+        focusTokenIdx?:number
+    ):void {
+        const richText = [];
+        runSimpleQueryParser(
+            queryObj.query,
+            (token, tokenIdx, charIdx) => {
+                if (focusTokenIdx === tokenIdx) {
+                    queryObj.rawFocusIdx = charIdx;
+                    queryObj.rawAnchorIdx = charIdx;
+                }
+
+                if (queryObj.queryParsed[tokenIdx].isExtended) {
+                    richText.push(
+                        `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</a>`);
+
+                } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
+                    richText.push(
+                        `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
+
+                } else {
+                    richText.push(token.value);
+                }
+            },
+            () => {
+                richText.push(`<span>\u00a0</span>`);
+            }
+        );
+        queryObj.queryHtml = richText.join('');
+    }
+
+    private reparseAdvancedQuery(
+        state:QueryFormModelState,
+        sourceId:string,
+        updateCurrAttrs:boolean
+    ):void {
+
+        const queryObj = state.queries[sourceId];
+        let newAttrs:Array<ParsedAttr>;
+        if (queryObj.qtype === 'advanced') {
+            [queryObj.queryHtml, newAttrs] = highlightSyntax(
+                queryObj.query,
+                'advanced',
+                this.pageModel.getComponentHelpers(),
+                this.attrHelper,
+                (startIdx, endIdx) => {
+                    const matchingAttr = updateCurrAttrs ?
+                        undefined :
+                        List.find(
+                            attr => attr.rangeVal[0] === startIdx && attr.rangeVal[1] === endIdx,
+                            queryObj.parsedAttrs
+                        );
+                    if (matchingAttr && matchingAttr.suggestions) {
+                        const activeSugg = List.find(s => s.isActive, matchingAttr.suggestions.data);
+                        return tuple(
+                            `<a class="sugg" data-type="sugg" data-leftIdx="${startIdx}" data-rightIdx="${endIdx}" data-providerId="${activeSugg.providerId}">`, '</a>'
+                        )
+                    }
+                    return tuple(null, null);
+                },
+                (msg) => this.hintListener(state, sourceId, msg)
+            );
+            queryObj.focusedAttr = this.findFocusedAttr(queryObj);
+
+            if (updateCurrAttrs) {
+                queryObj.parsedAttrs = newAttrs;
+            }
+        }
+    }
+
     private someSuggestionIsNonEmpty(suggs:TokenSuggestions|null):boolean {
         if (!suggs) {
             return false;
@@ -797,65 +879,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         }
         if (queryObj.qtype === 'simple') {
             queryObj.queryParsed[tokIdx].suggestions = newSugg;
-            const richText = [];
-            runSimpleQueryParser(
-                queryObj.query,
-                (token, tokenIdx) => {
-                    if (queryObj.queryParsed[tokenIdx].isExtended) {
-                        richText.push(
-                            `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</a>`);
+            this.rehighlightSimpleQuery(queryObj);
 
-                    } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
-                        richText.push(
-                            `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
-
-                    } else {
-                        richText.push(token.value);
-                    }
-                },
-                () => {
-                    richText.push(`<span>\u00a0</span>`);
-                }
-            );
-            queryObj.queryHtml = richText.join('');
-
-        } else {
+        } else if (this.someSuggestionIsNonEmpty(newSugg)) {
             queryObj.parsedAttrs[tokIdx].suggestions = newSugg;
-        }
-    }
-
-    private updateQueryFromParsed(
-        state:QueryFormModelState,
-        sourceId:string,
-        focusTokenIdx?:number
-    ):void {
-        const queryObj = state.queries[sourceId];
-        if (queryObj.qtype === 'simple') {
-            const richText = [];
-            runSimpleQueryParser(
-                queryObj.query,
-                (token, tokenIdx, charIdx) => {
-                    if (focusTokenIdx === tokenIdx) {
-                        queryObj.rawFocusIdx = charIdx;
-                        queryObj.rawAnchorIdx = charIdx;
-                    }
-                    if (queryObj.queryParsed[tokenIdx].isExtended) {
-                        richText.push(
-                            `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
-
-                    } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
-                        richText.push(
-                            `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
-
-                    } else {
-                        richText.push(token.value);
-                    }
-                },
-                () => {
-                    richText.push(' ');
-                }
-            );
-            queryObj.queryHtml = richText.join('');
+            this.reparseAdvancedQuery(state, sourceId, false);
         }
     }
 
@@ -921,14 +949,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             state, sourceId);
 
         if (queryObj.qtype === 'advanced') {
-            [queryObj.queryHtml, queryObj.parsedAttrs] = highlightSyntax(
-                queryObj.query,
-                'advanced',
-                this.pageModel.getComponentHelpers(),
-                this.attrHelper,
-                (msg) => this.hintListener(state, sourceId, msg)
-            );
-            queryObj.focusedAttr = this.findFocusedAttr(queryObj);
+            this.reparseAdvancedQuery(state, sourceId, true);
 
         } else {
             queryObj.queryParsed = parseSimpleQuery(queryObj);
