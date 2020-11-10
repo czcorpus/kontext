@@ -181,7 +181,7 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
     };
 }
 
-export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken, idx:number)=>void, onSpace:()=>void):void {
+export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken, idx:number, charIdx:number)=>void, onSpace:()=>void):void {
     let currWord = [];
     let startWord = 0;
     const isWhitespace = (s:string) => /^\s$/.exec(s) !== null;
@@ -200,7 +200,8 @@ export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken
                         suggestions: null,
                         isExtended: false
                     },
-                    tokenIdx
+                    tokenIdx,
+                    i
                 );
                 tokenIdx++;
             }
@@ -225,7 +226,7 @@ export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string):Array<
             isExtended: false
         }];
     }
-    const qVal = typeof q === 'string' ? q.trim() : q.query.trim();
+    const qVal = typeof q === 'string' ? q : q.query;
     const attrVal = typeof q === 'string' ? attr : q.default_attr;
     const ans:Array<ParsedSimpleQueryToken> = [];
     runSimpleQueryParser(
