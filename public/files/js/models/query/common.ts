@@ -196,7 +196,7 @@ export interface QueryFormModelState {
      * The client starts with 0-th item and if nothing is found,
      * 1-th is used etc.
      */
-    simpleQueryDefaultAttrs:Array<string>;
+    simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>};
 }
 
 /**
@@ -440,7 +440,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.queries[action.payload.sourceId].default_attr = action.payload.value;
+                    const queryObj = state.queries[action.payload.sourceId];
+                    queryObj.default_attr = action.payload.value;
+                    if (queryObj.qtype === 'simple') {
+                        queryObj.queryParsed = parseSimpleQuery(queryObj);
+                    }
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
@@ -604,7 +608,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         action.payload.value
                     );
                     state.suggestionsVisible[action.payload.sourceId] = null;
-                    this.updateQueryFromParsed(state, action.payload.sourceId);
+                    this.updateQueryFromParsed(state, action.payload.sourceId, action.payload.tokenIdx);
                 });
             }
         );
@@ -716,17 +720,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.formType,
             (action) => {
                 this.changeState(state => {
-                    state.activeWidgets[action.payload.sourceId] = null;
                     const queryObj = state.queries[action.payload.sourceId];
                     if (queryObj.qtype === 'simple') {
-                        queryObj.queryParsed = List.map(
-                            v => ({
-                                ...v,
-                                args: [List.head(v.args)],
-                                isExtended: false
-                            }),
-                            queryObj.queryParsed
-                        );
+                        queryObj.queryParsed = parseSimpleQuery(queryObj);
                         this.updateQueryFromParsed(state, action.payload.sourceId);
                     }
                 });
@@ -807,7 +803,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 (token, tokenIdx) => {
                     if (queryObj.queryParsed[tokenIdx].isExtended) {
                         richText.push(
-                            `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
+                            `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</a>`);
 
                     } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
                         richText.push(
@@ -818,26 +814,31 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     }
                 },
                 () => {
-                    richText.push(' ');
+                    richText.push(`<span>\u00a0</span>`);
                 }
             );
             queryObj.queryHtml = richText.join('');
 
         } else {
             queryObj.parsedAttrs[tokIdx].suggestions = newSugg;
-        }  
+        }
     }
 
     private updateQueryFromParsed(
         state:QueryFormModelState,
-        sourceId:string
+        sourceId:string,
+        focusTokenIdx?:number
     ):void {
         const queryObj = state.queries[sourceId];
         if (queryObj.qtype === 'simple') {
             const richText = [];
             runSimpleQueryParser(
                 queryObj.query,
-                (token, tokenIdx) => {
+                (token, tokenIdx, charIdx) => {
+                    if (focusTokenIdx === tokenIdx) {
+                        queryObj.rawFocusIdx = charIdx;
+                        queryObj.rawAnchorIdx = charIdx;
+                    }
                     if (queryObj.queryParsed[tokenIdx].isExtended) {
                         richText.push(
                             `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);

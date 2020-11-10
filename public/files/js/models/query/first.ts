@@ -70,7 +70,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     hasLemma:{[corpname:string]:boolean};
     isAnonymousUser:boolean;
     suggestionsEnabled:boolean;
-    simpleQueryDefaultAttrs:Array<string>;
+    simpleQueryDefaultAttrs:{[corpname:string]:Array<string>};
 }
 
 export interface QueryInputSetQueryProps {
@@ -139,14 +139,14 @@ function determineDefaultAttr(data:QueryFormUserEntries, sourceId:string, simple
 function importUserQueries(
     corpora:Array<string>,
     data:QueryFormUserEntries,
-    simpleQueryDefaultAttrs:Array<string>
+    simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>}
 ):{[corpus:string]:AnyQuery} {
 
     return pipe(
         corpora,
         List.map(corpus => {
             const qtype = data.currQueryTypes[corpus] || 'simple';
-            const defaultAttr = determineDefaultAttr(data, corpus, simpleQueryDefaultAttrs);
+            const defaultAttr = determineDefaultAttr(data, corpus, simpleQueryDefaultAttrs[corpus]);
 
             if (qtype === 'advanced') {
                 const query = data.currQueries[corpus] || '';
@@ -714,7 +714,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     qmcase: false,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
-                    default_attr: List.empty(state.simpleQueryDefaultAttrs)  ? 'word' : '',
+                    default_attr: '',
                     use_regexp: false
                 };
             }
@@ -799,7 +799,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     query,
                     query.default_attr ?
                         query.default_attr :
-                        this.state.simpleQueryDefaultAttrs
+                        this.state.simpleQueryDefaultAttrs[corpus]
                 );
             },
             this.state.corpora

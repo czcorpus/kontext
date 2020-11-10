@@ -230,7 +230,9 @@ export class QueryPage {
                 tagAttr: this.layoutModel.getConf<string>('tagAttr'),
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
                 suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
-                simpleQueryDefaultAttrs: this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')
+                simpleQueryDefaultAttrs: {
+                    [this.layoutModel.getCorpusIdent().id]: this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')
+                }
             }
         );
     }

@@ -342,7 +342,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     Dict.fromEntries()
                 ),
                 isBusy: false,
-                simpleQueryDefaultAttrs: []
+                simpleQueryDefaultAttrs: {}
         });
         this.syncInitialArgs = syncInitialArgs;
 

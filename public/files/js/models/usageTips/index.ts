@@ -33,12 +33,13 @@ export enum UsageTipCategory {
 }
 
 
-const tipsDef = [
+const availableTips = [
     {messageId: 'query__tip_01', category: UsageTipCategory.QUERY},
     {messageId: 'query__tip_02', category: UsageTipCategory.QUERY},
     {messageId: 'query__tip_03', category: UsageTipCategory.QUERY},
     {messageId: 'query__tip_04', category: UsageTipCategory.QUERY},
     {messageId: 'query__tip_05', category: UsageTipCategory.QUERY},
+    {messageId: 'query__tip_06', category: UsageTipCategory.QUERY},
     {messageId: 'concview__tip_01', category: UsageTipCategory.CONCORDANCE},
     {messageId: 'concview__tip_02', category: UsageTipCategory.CONCORDANCE},
     {messageId: 'concview__tip_03', category: UsageTipCategory.CONCORDANCE},
@@ -46,6 +47,7 @@ const tipsDef = [
 ];
 
 export interface UsageTipsState {
+    availableTips:Array<{messageId:string; category:UsageTipCategory}>;
     currentHints:{[key in UsageTipCategory]:string};
     hintsPointers:{[key in UsageTipCategory]:number};
 }
@@ -62,7 +64,7 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
         const pointers = pipe(
             [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY],
             List.map(cat => {
-                const avail = tipsDef.filter(v => v.category === cat);
+                const avail = availableTips.filter(v => v.category === cat);
                 return tuple(cat, Math.round(Math.random() * (avail.length - 1)));
             }),
             Dict.fromEntries()
@@ -74,14 +76,15 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
                 currentHints: pipe(
                     [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY],
                     List.map(cat => {
-                        const avail = tipsDef.filter(v => v.category === cat);
+                        const avail = availableTips.filter(v => v.category === cat);
                         return tuple(
                             cat,
                             avail.length > 0 ? translatorFn(avail[pointers[cat]].messageId) : null
                         );
                     }),
                     Dict.fromEntries()
-                )
+                ),
+                availableTips,
             }
         );
         this.translatorFn = translatorFn;
@@ -121,7 +124,7 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
 
     private setNextHint(state:UsageTipsState, category:UsageTipCategory):void {
         const curr = state.hintsPointers[category];
-        const avail = tipsDef.filter(v => v.category === category);
+        const avail = state.availableTips.filter(v => v.category === category);
         state.hintsPointers[category] = (curr + 1) % avail.length;
         state.currentHints[category] = this.translatorFn(
             avail[state.hintsPointers[category]].messageId);

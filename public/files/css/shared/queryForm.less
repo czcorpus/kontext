@@ -306,15 +306,14 @@ div.query-form-spa {
 
         a.sh-sugg {
             text-decoration: underline;
-            text-decoration-color: @color-logo-green;
+            text-decoration-color: @color-logo-blue-shining;
             text-decoration-thickness: 0.3em;
             color: @color-default-text;
         }
 
         a.sh-modified {
-            text-decoration: underline;
-            text-decoration-color: @color-logo-green;
-            text-decoration-style: double;
+            text-decoration: none;
+            background-color: @color-light-pink;
             color: @color-default-text;
         }
     }
@@ -416,6 +415,15 @@ div.query-form-spa {
         li a:hover {
             color: @color-logo-blue;
             text-decoration: underline;
+        }
+
+        a.highlighted {
+            color: @color-logo-orange;
+            font-weight: normal;
+        }
+
+        a.highlighted::after {
+            content: " \25C0 ";
         }
     }
 }
@@ -521,4 +529,54 @@ table.radio-like-sel {
             color: #fefefe;
         }
     }
+}
+
+.QueryStructureWidget {
+
+    ul.positions {
+        display: flex;
+        flex-direction: row;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        li.position {
+            margin: 0;
+            padding: 0.9em;
+            width: auto;
+            border: 1px solid @color-logo-green;
+            border-radius: 0.5em;
+            text-align: center;
+
+            .attr {
+                font-weight: bold;
+            }
+
+            .value {
+                font-size: 1.3em;
+            }
+
+            .operator {
+                display: inline-block;
+                padding: 0.2em 0.4em;
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
+                color: #FFFFFF;
+                background-color: @color-logo-orange;
+                border-radius: 0.3em;
+                font-size: 0.8em;
+            }
+        }
+
+        li:not(:last-child) {
+            margin-right: 0.9em;
+        }
+    }
+
+    .buttons {
+        button:not(:last-child) {
+            margin-right: 1em;
+        }
+    }
+
 }

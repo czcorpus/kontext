@@ -190,35 +190,33 @@ export function init({
 
     // -------------- <QueryHints /> --------------------------------------------
 
-    class QueryHints extends React.PureComponent<UsageTipsState> {
+    const QueryHints:React.FC<{forcedTip?:string} & UsageTipsState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._clickHandler = this._clickHandler.bind(this);
-        }
-
-        _clickHandler() {
+        const clickHandler = () => {
             dispatcher.dispatch<HintActions.NextQueryHint>({
                 name: HintActionName.NextQueryHint
             });
-        }
+        };
 
-        render() {
-            return (
-                <div className="QueryHints">
-                    <span className="hint">{this.props.currentHints[UsageTipCategory.QUERY]}</span>
-                    <span className="next-hint">
-                        <a onClick={this._clickHandler} title={he.translate('global__next_tip')}>
-                            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
-                                    alt={he.translate('global__next_tip')} />
-                        </a>
-                    </span>
-                </div>
-            );
-        }
-    }
+        return (
+            <div className="QueryHints">
+                <span className="hint">
+                    {props.forcedTip ?
+                        List.find(v => v.messageId === props.forcedTip, props.availableTips) :
+                        props.currentHints[UsageTipCategory.QUERY]
+                    }
+                </span>
+                <span className="next-hint">
+                    <a onClick={clickHandler} title={he.translate('global__next_tip')}>
+                        <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
+                                alt={he.translate('global__next_tip')} />
+                    </a>
+                </span>
+            </div>
+        );
+    };
 
-    const BoundQueryHints = Bound<UsageTipsState>(QueryHints, queryHintModel);
+    const BoundQueryHints = BoundWithProps<{forcedTip?:string}, UsageTipsState>(QueryHints, queryHintModel);
 
 
     // ------------------- <TRQueryTypeField /> -----------------------------
@@ -555,7 +553,11 @@ export function init({
                 ans.push(<a onClick={this._handleHistoryWidget}>{he.translate('query__recent_queries_link')}</a>);
             }
             if (this.props.widgets.indexOf('structure') > -1) {
-                ans.push(<a onClick={this._handleQueryStructureWidget}>{he.translate('query__query_structure')}</a>);
+                const queryObj = this.props.queries[this.props.sourceId];
+                const hasExpandedTokens = queryObj.qtype === 'simple' ?
+                    List.some(t => t.isExtended, queryObj.queryParsed) :
+                    false;
+                ans.push(<a onClick={this._handleQueryStructureWidget} className={hasExpandedTokens ? 'highlighted' : null}>{he.translate('query__query_structure')}</a>);
             }
             return ans;
         }
@@ -612,7 +614,8 @@ export function init({
                                 sourceId={this.props.sourceId} inputLanguage={this.props.inputLanguage}
                                 formType={this.props.formType} />;
                 case 'query-structure':
-                    return <QueryStructure sourceId={this.props.sourceId} formType={this.props.formType} />;
+                    return <QueryStructure sourceId={this.props.sourceId} formType={this.props.formType}
+                                defaultAttribute={this.props.simpleQueryDefaultAttrs[this.props.sourceId]} />;
                 default:
                     return null;
             }
@@ -959,7 +962,7 @@ export function init({
                                         defaultAttr={query.default_attr}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
-                                        simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs}
+                                        simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
                                         formType={this.props.formType} />
                                 </div>
                             </>
@@ -985,7 +988,7 @@ export function init({
                                         defaultAttr={query.default_attr}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
-                                        simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs}
+                                        simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
                                         formType={this.props.formType} />
                                 </div>
                             </div>
@@ -1003,6 +1006,9 @@ export function init({
                 false,
                 Dict.values(this.props.suggestionsLoading[this.props.sourceId])
             )
+            const hasExpandedTokens = queryObj.qtype === 'simple' ?
+                List.some(t => t.isExtended, queryObj.queryParsed) :
+                false;
 
             return (
                 <div>
@@ -1036,7 +1042,7 @@ export function init({
                                     : null
                             }
                         </div>
-                        <BoundQueryHints />
+                        <BoundQueryHints forcedTip={hasExpandedTokens ? 'query_tip_06' : undefined} />
                     </div>
                     <AdvancedFormFieldset
                             uniqId="query-options-section"
