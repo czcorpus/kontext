@@ -257,11 +257,9 @@ export class Model extends StatelessModel<ModelState> {
                             resp => tuple(firstData, resp)
                         )
                     )
-                )
-
-            ).subscribe(
-                ([firstData, secondData]) => {
-                    const data = {
+                ),
+                map(
+                    ([firstData, secondData]) => ({
                         results: pipe(
                             firstData.results,
                             List.zip(secondData.results),
@@ -273,13 +271,18 @@ export class Model extends StatelessModel<ModelState> {
                         ),
                         parsedWord: firstData.parsedWord,
                         isPartial: false
-                    };
-
+                    })
+                )
+            ).subscribe(
+                data => {
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                         payload: {
                             ...args,
-                            ...data
+                            results: List.some(sugg => !suggestionIsTrivial(sugg), data.results) ?
+                                data.results : [],
+                            parsedWord: data.parsedWord,
+                            isPartial: data.isPartial
                         }
                     });
                 },

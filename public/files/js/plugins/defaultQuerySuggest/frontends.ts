@@ -161,12 +161,9 @@ export function mergeResults<T>(
                 data: pipe(
                     data1.contents.data,
                     Dict.map(
-                        (_, attr1) => {
-                            const ans = data2.contents.data[attr1] ?
-                                data2.contents.data[attr1] :
-                                data1.contents.data[attr1];
-                            return ans.length > 1 ? ans : [];
-                        }
+                        (_, attr1) => data2.contents.data[attr1] ?
+                            data2.contents.data[attr1] :
+                            data1.contents.data[attr1]
                     )
                 )
             },
