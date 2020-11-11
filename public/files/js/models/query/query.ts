@@ -105,6 +105,7 @@ export type AnyQuery = SimpleQuery|AdvancedQuery;
 export interface SimpleQuerySubmit {
     corpname:string;
     qtype:'simple';
+    query:string;
     queryParsed:Array<Array<[string|Array<string>, string]>>;
     qmcase:boolean;
     pcq_pos_neg:string;
