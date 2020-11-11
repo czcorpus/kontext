@@ -27,10 +27,12 @@ import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
 import { map, tap, concatMap, mergeMap } from 'rxjs/operators';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { cutLongResult, listAttrs1ToExtend, mergeResults } from './frontends';
+import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend, mergeResults,
+    isErrorFrontend,
+    suggestionIsTrivial} from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
 import { Actions, ActionName } from './actions';
-import { QueryType } from '../../models/query/query';
+import { QuerySuggestion, QueryType } from '../../models/query/query';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {
@@ -75,6 +77,24 @@ function isValidQuery(suggestionArgs:PluginInterfaces.QuerySuggest.SuggestionArg
         }
     }
     return true;
+}
+
+
+export function isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {
+    if (v === undefined) {
+        return true;
+    }
+    const data = v.contents;
+    if (isBasicFrontend(v)) {
+        return List.empty(v.contents);
+
+    } else if (isPosAttrPairRelFrontend(v)) {
+        return Dict.empty(v.contents.data);
+
+    } else if (isErrorFrontend(v)) {
+        return false;
+    }
+    return !!data;
 }
 
 /**
@@ -211,10 +231,8 @@ export class Model extends StatelessModel<ModelState> {
                             name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                             payload: {
                                 ...args,
-                                results: List.map(
-                                    cutLongResult,
-                                    data.results
-                                ),
+                                results: isPartial || List.some(sugg => !suggestionIsTrivial(sugg), data.results) ?
+                                    List.map(cutLongResult, data.results) : [],
                                 parsedWord: data.parsedWord,
                                 isPartial
                             }
