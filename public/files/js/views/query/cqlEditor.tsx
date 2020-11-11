@@ -27,6 +27,8 @@ import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { ContentEditable } from './contentEditable';
+import { PluginInterfaces } from '../../types/plugins';
+import { findTokenIdxByFocusIdx } from '../../models/query/query';
 
 
 export interface CQLEditorProps {
@@ -197,6 +199,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                             }
                         });
+                    break;
+                    case 'sugg': {
+                        const leftIdx = parseInt(a.getAttribute('data-leftIdx'));
+                        const queryObj = this.props.queries[this.props.sourceId];
+                        if (queryObj.qtype === 'advanced') {
+                            const tokenIdx = findTokenIdxByFocusIdx(queryObj, leftIdx);
+                            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
+                                name: ActionName.ToggleQuerySuggestionWidget,
+                                payload: {
+                                    formType: this.props.formType,
+                                    sourceId: this.props.sourceId,
+                                    tokenIdx: tokenIdx
+                                }
+                            });
+                        }
+                    }
                     break;
                 }
 

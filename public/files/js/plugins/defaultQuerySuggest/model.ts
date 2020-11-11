@@ -39,6 +39,7 @@ export interface HTTPResponse extends Kontext.AjaxResponse {
         provider:string;
         contents:Array<{}>;
         heading:string;
+        is_active:boolean;
     }>;
 }
 
@@ -369,7 +370,8 @@ export class Model extends StatelessModel<ModelState> {
                             providerId: item.provider,
                             contents: item.contents,
                             heading: item.heading,
-                            isShortened: false
+                            isShortened: false,
+                            isActive: item.is_active
                         }),
                         data.items
                     ),

@@ -48,6 +48,7 @@ class PosAttrPairRelFrontend(AbstractFrontend):
     def __init__(self, conf):
         super().__init__(conf, 'posAttrPairRel')
         self.on_item_click = conf.get('onItemClick', None)
+        self.is_active = True
 
     def export_data(self, data: Dict[str, Any], value, ui_lang):
         data_norm = data['data']

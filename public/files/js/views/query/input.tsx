@@ -202,7 +202,7 @@ export function init({
             <div className="QueryHints">
                 <span className="hint">
                     {props.forcedTip ?
-                        List.find(v => v.messageId === props.forcedTip, props.availableTips) :
+                        he.translate(props.forcedTip) :
                         props.currentHints[UsageTipCategory.QUERY]
                     }
                 </span>
@@ -687,6 +687,7 @@ export function init({
         simpleQueryDefaultAttrs:Array<string>;
         sourceId:string;
         formType:QueryFormType;
+        queryType:QueryType;
         label:string;
 
     }> = (props) => (
@@ -697,7 +698,8 @@ export function init({
                 attrList={props.attrList}
                 simpleQueryDefaultAttrs={props.simpleQueryDefaultAttrs}
                 sourceId={props.sourceId}
-                formType={props.formType} />{'\u00a0'}
+                formType={props.formType}
+                queryType={props.queryType} />{'\u00a0'}
     </span>
     );
 
@@ -739,6 +741,7 @@ export function init({
     const DefaultAttrSelect:React.FC<{
         formType:QueryFormType;
         sourceId:string;
+        queryType:QueryType;
         forcedAttr:string;
         defaultAttr:string;
         simpleQueryDefaultAttrs:Array<string>;
@@ -767,7 +770,7 @@ export function init({
         } else {
             return (
                 <select className="DefaultAttrSelect" value={props.defaultAttr || ''} onChange={handleSelectChange}>
-                    {!List.empty(props.simpleQueryDefaultAttrs) ?
+                    {!List.empty(props.simpleQueryDefaultAttrs) && props.queryType === 'simple' ?
                         <option value="">{props.simpleQueryDefaultAttrs.join(' | ')}</option> :
                         null}
                     {props.attrList.map(item => {
@@ -963,7 +966,8 @@ export function init({
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
                                         simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
-                                        formType={this.props.formType} />
+                                        formType={this.props.formType}
+                                        queryType={this.props.queries[this.props.sourceId].qtype} />
                                 </div>
                             </>
                         </>
@@ -989,7 +993,8 @@ export function init({
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
                                         simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
-                                        formType={this.props.formType} />
+                                        formType={this.props.formType}
+                                        queryType={this.props.queries[this.props.sourceId].qtype} />
                                 </div>
                             </div>
                         </>
@@ -1000,7 +1005,8 @@ export function init({
         render() {
             const queryObj = this.props.queries[this.props.sourceId];
             const sugg = queryObj.qtype === 'simple' ?
-                queryObj.queryParsed[this.props.suggestionsVisible[this.props.sourceId]] : undefined;
+                queryObj.queryParsed[this.props.suggestionsVisible[this.props.sourceId]] :
+                queryObj.parsedAttrs[this.props.suggestionsVisible[this.props.sourceId]];
             const suggestionsLoading = List.reduce<boolean, boolean>(
                 (acc, cur) => acc || cur,
                 false,
@@ -1042,7 +1048,7 @@ export function init({
                                     : null
                             }
                         </div>
-                        <BoundQueryHints forcedTip={hasExpandedTokens ? 'query_tip_06' : undefined} />
+                        <BoundQueryHints forcedTip={hasExpandedTokens ? 'query__tip_06' : undefined} />
                     </div>
                     <AdvancedFormFieldset
                             uniqId="query-options-section"
