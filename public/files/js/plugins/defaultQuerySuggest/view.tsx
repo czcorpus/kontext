@@ -134,7 +134,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                     <tr className={index > 0 ? 'separ' : null}>
                                         <th className="attr1" rowSpan={List.size(attrs2)}>{
                                             props.itemClickHandler ?
-                                            <span>{attr1}</span> :
+                                            <a onClick={e => props.itemClickHandler(tuple(props.attrs[0], attr1, props.attrs[1], undefined))}>{attr1}</a> :
                                             attr1
                                         }</th>
                                         <td>{
