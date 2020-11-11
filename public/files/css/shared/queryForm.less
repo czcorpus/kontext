@@ -537,34 +537,44 @@ table.radio-like-sel {
         display: flex;
         flex-direction: row;
         list-style-type: none;
-        margin: 0;
+        margin: 1 0 1.5em 0;
         padding: 0;
 
         li.position {
             margin: 0;
-            padding: 0.9em;
             width: auto;
             border: 1px solid @color-logo-green;
-            border-radius: 0.5em;
+            border-radius: 0.3em;
             text-align: center;
 
-            .attr {
-                font-weight: bold;
-            }
-
-            .value {
-                font-size: 1.3em;
-            }
-
-            .operator {
-                display: inline-block;
-                padding: 0.2em 0.4em;
-                margin-top: 0.5em;
-                margin-bottom: 0.5em;
+            h3 {
+                background-color: @color-logo-green;
+                border-radius: 0.3em 0.3em 0 0;
                 color: #FFFFFF;
-                background-color: @color-logo-orange;
-                border-radius: 0.3em;
-                font-size: 0.8em;
+                margin: 0;
+            }
+
+            > div {
+                padding: 0.9em;
+
+                .attr {
+                    font-weight: bold;
+                }
+
+                .value {
+                    font-size: 1.3em;
+                }
+
+                .operator {
+                    display: inline-block;
+                    padding: 0.2em 0.4em;
+                    margin-top: 0.5em;
+                    margin-bottom: 0.5em;
+                    color: #FFFFFF;
+                    background-color: @color-logo-orange;
+                    border-radius: 0.3em;
+                    font-size: 0.8em;
+                }
             }
         }
 
@@ -574,6 +584,9 @@ table.radio-like-sel {
     }
 
     .buttons {
+
+        margin-top: 2em;
+
         button:not(:last-child) {
             margin-right: 1em;
         }

@@ -73,17 +73,20 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
 
         return (
             <li className="position">
-                {pipe(
-                    props.value.args,
-                    List.map(u => mkExpr(u[0], u[1])),
-                    List.join((i) => (
-                        <div key={`op:${i}`}>
-                            <span className="operator">
-                                {he.translate('global__logic_and')}
-                            </span>
-                        </div>
-                    ))
-                )}
+                <h3>{props.value.value}</h3>
+                <div>
+                    {pipe(
+                        props.value.args,
+                        List.map(u => mkExpr(u[0], u[1])),
+                        List.join((i) => (
+                            <div key={`op:${i}`}>
+                                <span className="operator">
+                                    {he.translate('global__logic_and')}
+                                </span>
+                            </div>
+                        ))
+                    )}
+                </div>
             </li>
         )
     };
