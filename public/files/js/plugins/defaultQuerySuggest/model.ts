@@ -156,11 +156,11 @@ export class Model extends StatelessModel<ModelState> {
             },
             (state, action, dispatch) => {
                 if (isValidQuery(action.payload) && someSupportRequest(state.providers, action.payload)) {
-                    this.loadSuggestions(state, action.payload, dispatch);
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsRequested,
                         payload: {...action.payload}
                     });
+                    this.loadSuggestions(state, action.payload, dispatch);
                 }
             }
         );
