@@ -623,8 +623,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
-            PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>(
+            PluginInterfaces.QuerySuggest.ActionName.SuggestionsRequested,
             action => {
                 this.changeState(state => {
                     this.clearSuggestionForPosition(state, action.payload.sourceId, action.payload.valueStartIdx);
