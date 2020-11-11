@@ -1007,11 +1007,10 @@ export function init({
             const sugg = queryObj.qtype === 'simple' ?
                 queryObj.queryParsed[this.props.suggestionsVisible[this.props.sourceId]] :
                 queryObj.parsedAttrs[this.props.suggestionsVisible[this.props.sourceId]];
-            const suggestionsLoading = List.reduce<boolean, boolean>(
-                (acc, cur) => acc || cur,
-                false,
-                Dict.values(this.props.suggestionsLoading[this.props.sourceId])
-            )
+            const suggestionsLoading = !Dict.every(
+                item => item === false,
+                this.props.suggestionsLoading[this.props.sourceId]
+            );
             const hasExpandedTokens = queryObj.qtype === 'simple' ?
                 List.some(t => t.isExtended, queryObj.queryParsed) :
                 false;
