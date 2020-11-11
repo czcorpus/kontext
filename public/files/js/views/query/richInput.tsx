@@ -152,9 +152,9 @@ export function init(
             return null;
         }
 
-        private handleClick(evt) {
+        private handleClick(evt:React.MouseEvent) {
             const a = this.findLinkParent(evt.target as HTMLElement);
-            if (a !== null && evt.ctrlKey) {
+            if (a !== null && (evt.ctrlKey || evt.metaKey)) {
                 const tokenIdx = parseInt(a.getAttribute('data-tokenIdx'));
                 dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
                     name: ActionName.ToggleQuerySuggestionWidget,
