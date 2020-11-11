@@ -19,15 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe, Dict, tuple } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 import { createElement } from 'react';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { init as initView, KnownRenderers, SuggestionsViews } from './view';
-import { Model } from './model';
+import { isEmptyResponse, Model } from './model';
 import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickValue } from './frontends';
 import { AnyProviderInfo } from './providers';
-import { ParsedAttr } from '../../models/query/cqleditor/parser';
 import { AnyQuery, QuerySuggestion } from '../../models/query/query';
 
 
@@ -126,20 +125,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
     }
 
     isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {
-        if (v === undefined) {
-            return true;
-        }
-        const data = v.contents;
-        if (isBasicFrontend(v)) {
-            return List.empty(v.contents);
-
-        } else if (isPosAttrPairRelFrontend(v)) {
-            return Dict.empty(v.contents.data);
-
-        } else if (isErrorFrontend(v)) {
-            return false;
-        }
-        return !!data;
+        return isEmptyResponse(v);
     }
 
 }

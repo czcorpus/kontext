@@ -19,8 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces } from '../../types/plugins';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { QuerySuggestion } from '../../models/query/query';
 
 
@@ -96,6 +95,24 @@ export function listAttrs1ToExtend<T>(data:QuerySuggestion<T>):Array<string> {
 
 // ----------------------
 
+export function suggestionIsTrivial<T>(data:QuerySuggestion<T>):boolean {
+
+    if (isPosAttrPairRelFrontend(data)) {
+        return Dict.size(data.contents.data) === 1 &&
+            pipe(
+                data.contents.data,
+                Dict.toEntries(),
+                List.flatMap(([k, v]) => List.map(v2 => tuple(k, v2), v)),
+                List.every(([k, v]) => k === v)
+            );
+
+    } else {
+        return false;
+    }
+}
+
+// ----------------------
+
 export function cutLongResult<T>(
     data:QuerySuggestion<T>
 ):QuerySuggestion<unknown> {
@@ -144,9 +161,12 @@ export function mergeResults<T>(
                 data: pipe(
                     data1.contents.data,
                     Dict.map(
-                        (_, attr1) => data2.contents.data[attr1] ?
-                            data2.contents.data[attr1] :
-                            data1.contents.data[attr1]
+                        (_, attr1) => {
+                            const ans = data2.contents.data[attr1] ?
+                                data2.contents.data[attr1] :
+                                data1.contents.data[attr1];
+                            return ans.length > 1 ? ans : [];
+                        }
                     )
                 )
             },
