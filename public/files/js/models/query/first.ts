@@ -748,6 +748,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             return {
                 corpname: query.corpname,
                 qtype: 'simple',
+                query: query.query.trim().normalize(),
                 queryParsed: List.map(
                     item => item.args.length > 0 && item.args[0][0] ?
                             item.args :
