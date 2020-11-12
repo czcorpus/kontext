@@ -25,11 +25,21 @@ import { pipe, List, Dict, HTTP, tuple } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
-import { PluginInterfaces } from '../../types/plugins';
 import { PluginName } from '../../app/plugin';
+
+
+interface StructAttrsSubmit {
+    corpname:string;
+    attrs:Array<string>;
+    structs:Array<string>;
+    structattrs:Array<string>;
+    refs:Array<string>;
+    attr_vmode:ViewOptions.AttrViewMode;
+    base_viewattr:string;
+    qs_enabled:boolean;
+}
 
 
 export interface CorpusViewOptionsModelState {
@@ -287,7 +297,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         );
     }
 
-    private serialize(state:CorpusViewOptionsModelState):any {
+    private serialize(state:CorpusViewOptionsModelState, corpname:string):StructAttrsSubmit {
 
         // we have to make sure 'word' is always the first - otherwise
         // we may produce incorrect visible/mouseover attribute configuration.
@@ -303,48 +313,46 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             }
         };
 
-        const ans = {
-            setattrs: pipe(
+        return {
+            corpname,
+            attrs: pipe(
                 state.attrList,
                 List.sorted(attrCmp),
                 List.filter(item => item.selected),
                 List.map(item => item.n)
             ),
-            setstructs: pipe(
+            structs: pipe(
                 state.structList,
                 List.filter(item => item.selected),
                 List.map(item => item.n)
             ),
-            setstructattrs: pipe(
+            structattrs: pipe(
                 state.structAttrs,
                 Dict.map((v, k) => List.filter(x => x.selected, v)),
                 Dict.map((v, k) => List.map(x => `${k}.${x.n}`, v)),
                 Dict.values(),
                 List.flatMap(x => x),
             ),
-            setrefs: pipe(
+            refs: pipe(
                 state.refAttrs,
                 Dict.values(),
                 List.reduce((acc, val) => [...acc, ...val.filter(item => item.selected)], []),
                 List.map(item => item.n)
             ),
-            setattr_vmode: state.attrVmode,
+            attr_vmode: state.attrVmode,
             base_viewattr: state.baseViewAttr,
-            setqs_enabled: state.qsEnabled
+            qs_enabled: state.qsEnabled
         };
-
-        return ans;
     }
 
     private saveSettings(state:CorpusViewOptionsModelState, dispatch:SEDispatcher):void {
-        const corpname = this.layoutModel.getCorpusIdent().id;
-        const urlArgs = new MultiDict([['corpname', corpname], ['format', 'json']]);
-        const formArgs = this.serialize(state);
+        const formArgs = this.serialize(state, this.layoutModel.getCorpusIdent().id);
 
         this.layoutModel.ajax$<ViewOptions.SaveViewAttrsOptionsResponse>(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('options/viewattrsx', urlArgs),
-            formArgs
+            this.layoutModel.createActionUrl('options/viewattrsx'),
+            formArgs,
+            {contentType: 'application/json'}
 
         ).pipe(
             tap(
@@ -355,14 +363,14 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
 
                     } else {
                         this.layoutModel.replaceConcArg(
-                            'ctxattrs', [formArgs['setattrs'].join(',')]);
+                            'ctxattrs', [formArgs.attrs.join(',')]);
                     }
-                    this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
-                    this.layoutModel.replaceConcArg('attr_vmode', [formArgs['setattr_vmode']]);
-                    this.layoutModel.replaceConcArg('base_viewattr', [formArgs['base_viewattr']]);
-                    this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
-                    this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
-                    this.layoutModel.setConf('QSEnabled', [formArgs['setqs_enabled']]);
+                    this.layoutModel.replaceConcArg('attrs', [formArgs.attrs.join(',')]);
+                    this.layoutModel.replaceConcArg('attr_vmode', [formArgs.attr_vmode]);
+                    this.layoutModel.replaceConcArg('base_viewattr', [formArgs.base_viewattr]);
+                    this.layoutModel.replaceConcArg('structs', [formArgs.structs.join(',')]);
+                    this.layoutModel.replaceConcArg('refs', [formArgs.refs.join(',')]);
+                    this.layoutModel.setConf('QSEnabled', [formArgs.qs_enabled]);
                     this.layoutModel.resetMenuActiveItemAndNotify();
                 }
             )

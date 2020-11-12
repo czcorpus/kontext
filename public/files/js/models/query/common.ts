@@ -693,15 +693,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.addActionHandler<CorpOptActions.SaveSettingsDone>(
             CorpOptActionName.SaveSettingsDone,
             action => {
-                this.changeState(state => {
-                    state.suggestionsEnabled = action.payload.qsEnabled;
-                    if (!state.suggestionsEnabled) {
-                        state.suggestionsVisible = Dict.map(
-                            v => null,
-                            state.suggestionsVisible
-                        );
-                    }
-                });
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.suggestionsEnabled = action.payload.qsEnabled;
+                        if (!state.suggestionsEnabled) {
+                            state.suggestionsVisible = Dict.map(
+                                v => null,
+                                state.suggestionsVisible
+                            );
+                        }
+                    });
+                }
             }
         );
 
