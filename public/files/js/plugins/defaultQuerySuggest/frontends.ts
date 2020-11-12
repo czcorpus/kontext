@@ -97,7 +97,6 @@ export function listAttrs1ToExtend<T>(data:QuerySuggestion<T>):Array<string> {
 // ----------------------
 
 export function filterOutTrivialSuggestions<T>(data:QuerySuggestion<T>):QuerySuggestion<unknown> {
-
     if (isPosAttrPairRelFrontend(data)) {
         return {
             ...data,

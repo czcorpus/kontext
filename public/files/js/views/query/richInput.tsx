@@ -72,7 +72,7 @@ export function init(
             this.handleKeyDown = this.handleKeyDown.bind(this);
             this.handleKeyUp = this.handleKeyUp.bind(this);
             this.handleClick = this.handleClick.bind(this);
-            this.handleClick = this.ffKeyDownHandler.bind(this);
+            this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
             this.contentEditable = new ContentEditable<HTMLSpanElement>(props.refObject);
         }
 
