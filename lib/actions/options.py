@@ -118,7 +118,8 @@ class Options(Kontext):
                             'qs_enabled'],
                            self.args.corpname)
         return dict(
-            widectx_globals=self._get_mapped_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts())),
+            widectx_globals=self._get_mapped_attrs(
+                WidectxArgsMapping, dict(structs=self._get_struct_opts())),
             conc_args=self._get_curr_conc_args()
         )
 
@@ -136,10 +137,14 @@ class Options(Kontext):
             cql_editor=self.args.cql_editor
         )
 
-    @exposed(access_level=0, return_type='json', http_method='POST', func_arg_mapped=True, skip_corpus_init=True)
-    def viewoptsx(self, newctxsize=0, ctxunit='', line_numbers=0, cql_editor=0):
-        self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers,
-                               cql_editor=cql_editor)
+    @exposed(access_level=0, return_type='json', http_method='POST', skip_corpus_init=True)
+    def viewoptsx(self, request):
+        self._set_new_viewopts(
+            newctxsize=request.json.get('newctxsize'),
+            ctxunit=request.json.get('ctxunit'),
+            line_numbers=request.json.get('line_numbers'),
+            cql_editor=request.json.get('cql_editor')
+        )
         self._save_options(self.GENERAL_OPTIONS)
         return {}
 
