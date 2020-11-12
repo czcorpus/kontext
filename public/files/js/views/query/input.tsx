@@ -54,7 +54,7 @@ export interface TRQueryInputFieldProps {
     tagHelperView:PluginInterfaces.TagHelper.View;
     widgets:Array<string>;
     inputLanguage:string;
-    useCQLEditor:boolean;
+    useRichQueryEditor:boolean;
     forcedAttr:string;
     attrList:Array<Kontext.AttrItem>;
     onEnterKey:()=>void;
@@ -895,16 +895,18 @@ export function init({
             const query = this.props.queries[this.props.sourceId];
             switch (query.qtype) {
                 case 'simple':
-                    return <RichInput
+                    return this.props.useRichQueryEditor ?
+                        <RichInput
                                 sourceId={this.props.sourceId}
                                 refObject={this._queryInputElement as React.RefObject<HTMLSpanElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
                                 historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
-                                takeFocus={this.props.takeFocus} />;
+                                takeFocus={this.props.takeFocus} /> :
+                        null
                 case 'advanced':
-                    return this.props.useCQLEditor ?
+                    return this.props.useRichQueryEditor ?
                         <cqlEditorViews.CQLEditor
                                 formType={this.props.formType}
                                 sourceId={this.props.sourceId}

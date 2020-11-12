@@ -142,7 +142,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             attrList={this.props.attrList}
                             inputLanguage={this.props.inputLanguage}
                             queryStorageView={this.props.queryStorageView}
-                            useCQLEditor={this.props.useCQLEditor}
+                            useRichQueryEditor={this.props.useCQLEditor}
                             onEnterKey={this.props.onEnterKey}
                             tagHelperView={this.props.tagHelperView}
                             qsuggPlugin={null}

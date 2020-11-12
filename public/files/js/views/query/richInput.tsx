@@ -28,7 +28,7 @@ import { ContentEditable } from './contentEditable';
 import { Keyboard } from 'cnc-tskit';
 
 
-interface SingleLineInputProps {
+interface RichInputProps {
     sourceId:string;
     refObject:React.RefObject<HTMLSpanElement>;
     hasHistoryWidget:boolean;
@@ -43,12 +43,12 @@ export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     queryModel:QueryFormModel<QueryFormModelState>,
-):React.ComponentClass<SingleLineInputProps> {
+):React.ComponentClass<RichInputProps> {
 
 
-    // ------------------- <SingleLineInput /> -----------------------------
+    // ------------------- <RichInput /> -----------------------------
 
-    class SingleLineInput extends React.PureComponent<SingleLineInputProps & QueryFormModelState> {
+    class RichInput extends React.PureComponent<RichInputProps & QueryFormModelState> {
 
         private readonly contentEditable:ContentEditable<HTMLSpanElement>;
 
@@ -220,5 +220,5 @@ export function init(
         }
     }
 
-    return BoundWithProps<SingleLineInputProps, QueryFormModelState>(SingleLineInput, queryModel);
+    return BoundWithProps<RichInputProps, QueryFormModelState>(RichInput, queryModel);
 }

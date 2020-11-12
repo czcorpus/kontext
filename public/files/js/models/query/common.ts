@@ -160,7 +160,7 @@ export interface QueryFormModelState {
 
     tagBuilderSupport:{[sourceId:string]:boolean};
 
-    useCQLEditor:boolean;
+    useRichQueryEditor:boolean;
 
     tagAttr:string;
 

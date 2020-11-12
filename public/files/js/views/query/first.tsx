@@ -189,7 +189,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguages[primaryCorpname]}
                                 onEnterKey={this._handleSubmit}
-                                useCQLEditor={this.props.useCQLEditor}
+                                useRichQueryEditor={this.props.useRichQueryEditor}
                                 takeFocus={true}
                                 qsuggPlugin={querySuggest} />
                         </div>
@@ -208,7 +208,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 inputLanguages={this.props.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
                                 hasLemmaAttr={this.props.hasLemma}
-                                useCQLEditor={this.props.useCQLEditor}
+                                useCQLEditor={this.props.useRichQueryEditor}
                                 tagHelperViews={this.props.tagHelperViews}
                                 onEnterKey={this._handleSubmit} />
                         : null
@@ -401,7 +401,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             queryStorageView={this.props.queryStorageView}
                             inputLanguage={this.props.inputLanguages[this.props.corpname]}
                             onEnterKey={this._handleSubmit}
-                            useCQLEditor={this.props.useCQLEditor}
+                            useRichQueryEditor={this.props.useRichQueryEditor}
                             qsuggPlugin={querySuggest} />
                     </div>
                     <inputViews.AdvancedFormFieldset
