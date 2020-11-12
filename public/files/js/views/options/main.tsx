@@ -51,10 +51,9 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
     const layoutViews = helpers.getLayoutViews();
     const generalOptionsViews = generalViewsInit(dispatcher, helpers, generalOptionsModel);
     const structsAttrsOptionsViews = structsAttrsViewsInit({
-        dispatcher: dispatcher,
-        helpers: helpers,
-        viewOptionsModel: viewOptionsModel,
-        mainMenuModel: mainMenuModel
+        dispatcher,
+        helpers,
+        viewOptionsModel
     });
 
     class OptionsContainer extends React.PureComponent<OptionsContainerProps & MainMenuModelState> {
