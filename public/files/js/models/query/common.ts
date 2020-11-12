@@ -366,7 +366,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                     posAttr: this.state.queries[sourceId].default_attr,
                                     struct: undefined,
                                     structAttr: undefined,
-                                    sourceId
+                                    sourceId,
+                                    formType: this.formType
                                 }
                             });
 
@@ -623,8 +624,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>(
+        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>(
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsRequested,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     this.clearSuggestionForPosition(state, action.payload.sourceId, action.payload.valueStartIdx);
@@ -634,8 +636,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
+        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
             PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+            action => action.payload.formType === this.formType,
             action => {
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
@@ -663,8 +666,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>(
+        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>(
             PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     pipe(
@@ -778,7 +782,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     }
 
 
-    private rehighlightSimpleQuery(
+    protected rehighlightSimpleQuery(
         queryObj:SimpleQuery,
         focusTokenIdx?:number
     ):void {
@@ -810,7 +814,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         queryObj.queryHtml = richText.join('');
     }
 
-    private reparseAdvancedQuery(
+    protected reparseAdvancedQuery(
         state:QueryFormModelState,
         sourceId:string,
         updateCurrAttrs:boolean
