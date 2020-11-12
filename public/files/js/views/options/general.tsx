@@ -185,12 +185,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <tr>
                 <th>
-                    <label htmlFor="use-cql-editor">
-                        {he.translate('options__use_advanced_cql_editor')}:
+                    <label htmlFor="use-rich-editor">
+                        {he.translate('options__use_rich_query_editor')}:
                     </label>
                 </th>
                 <td>
-                    <input id="use-cql-editor" type="checkbox" onChange={handleCheckbox} checked={props.value} />
+                    <input id="use-rich-editor" type="checkbox" onChange={handleCheckbox} checked={props.value} />
                 </td>
             </tr>
         );

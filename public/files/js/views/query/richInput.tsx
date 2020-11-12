@@ -38,12 +38,26 @@ interface RichInputProps {
     onEsc:()=>void;
 }
 
+interface RichInputFallbackProps {
+    sourceId:string;
+    refObject:React.RefObject<HTMLInputElement>;
+    hasHistoryWidget:boolean;
+    historyIsVisible:boolean;
+    takeFocus:boolean;
+    onReqHistory:()=>void;
+    onEsc:()=>void;
+}
+
+interface RichInputViews {
+    RichInput:React.ComponentClass<RichInputProps>;
+    RichInputFallback:React.ComponentClass<RichInputFallbackProps>;
+}
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     queryModel:QueryFormModel<QueryFormModelState>,
-):React.ComponentClass<RichInputProps> {
+):RichInputViews {
 
 
     // ------------------- <RichInput /> -----------------------------
@@ -58,6 +72,7 @@ export function init(
             this.handleKeyDown = this.handleKeyDown.bind(this);
             this.handleKeyUp = this.handleKeyUp.bind(this);
             this.handleClick = this.handleClick.bind(this);
+            this.handleClick = this.ffKeyDownHandler.bind(this);
             this.contentEditable = new ContentEditable<HTMLSpanElement>(props.refObject);
         }
 
@@ -220,5 +235,54 @@ export function init(
         }
     }
 
-    return BoundWithProps<RichInputProps, QueryFormModelState>(RichInput, queryModel);
+    // ------------------- <RichInputFallback /> -----------------------------
+
+    class RichInputFallback extends React.Component<RichInputFallbackProps & QueryFormModelState> {
+
+        constructor(props) {
+            super(props);
+            this.handleInputChange = this.handleInputChange.bind(this);
+            this.handleKeyDown = this.handleKeyDown.bind(this);
+        }
+
+        private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
+            dispatcher.dispatch<Actions.QueryInputSetQuery>({
+                name: ActionName.QueryInputSetQuery,
+                payload: {
+                    formType: this.props.formType,
+                    sourceId: this.props.sourceId,
+                    query: evt.target.value,
+                    rawAnchorIdx: this.props.refObject.current.selectionStart,
+                    rawFocusIdx: this.props.refObject.current.selectionEnd,
+                    insertRange: null
+                }
+            });
+        }
+
+        private handleKeyDown(evt) {
+            if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
+                    this.props.hasHistoryWidget &&
+                    this.props.downArrowTriggersHistory &&
+                    !this.props.historyIsVisible) {
+                this.props.onReqHistory();
+
+            } else if (evt.keyCode === Keyboard.Code.ESC) {
+                this.props.onEsc();
+            }
+        }
+
+        render() {
+            return <input className="simple-input" type="text"
+                    spellCheck={false}
+                    ref={this.props.refObject}
+                    value={this.props.queries[this.props.sourceId].query}
+                    onChange={this.handleInputChange}
+                    onKeyDown={this.handleKeyDown} />;
+        }
+    }
+
+    return {
+        RichInput: BoundWithProps<RichInputProps, QueryFormModelState>(RichInput, queryModel),
+        RichInputFallback: BoundWithProps<RichInputFallbackProps, QueryFormModelState>(RichInputFallback, queryModel)
+    }
 }

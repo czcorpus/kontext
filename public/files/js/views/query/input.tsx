@@ -127,7 +127,7 @@ export function init({
         virtualKeyboardModel: virtualKeyboardModel
     });
     const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel);
-    const RichInput = richInputInit(dispatcher, he, queryModel);
+    const richInputViews = richInputInit(dispatcher, he, queryModel);
     const QueryStructure = queryStructureInit({dispatcher, he, queryModel});
     const layoutViews = he.getLayoutViews();
 
@@ -896,7 +896,7 @@ export function init({
             switch (query.qtype) {
                 case 'simple':
                     return this.props.useRichQueryEditor ?
-                        <RichInput
+                        <richInputViews.RichInput
                                 sourceId={this.props.sourceId}
                                 refObject={this._queryInputElement as React.RefObject<HTMLSpanElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
@@ -904,7 +904,14 @@ export function init({
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
                                 takeFocus={this.props.takeFocus} /> :
-                        null
+                        <richInputViews.RichInputFallback
+                                sourceId={this.props.sourceId}
+                                refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
+                                hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
+                                historyIsVisible={this.props.historyVisible[this.props.sourceId]}
+                                onReqHistory={this.handleReqHistory}
+                                onEsc={this.handleInputEscKeyDown}
+                                takeFocus={this.props.takeFocus} />
                 case 'advanced':
                     return this.props.useRichQueryEditor ?
                         <cqlEditorViews.CQLEditor

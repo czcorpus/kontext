@@ -506,7 +506,7 @@
         "options__conc_show_line_nums": "Show line numbers",
         "options__conc_shuffle_by_default": "Shuffle concordance lines by default",
         "options__conc_no_effect_on_current": "no effect to current concordance",
-        "options__use_advanced_cql_editor": "Use rich query editor",
+        "options__use_rich_query_editor": "Use rich query editor",
         "options__worlist_fieldset_heading": "Word list",
         "options__wordlist_page_size": "Page size (number of lines)",
         "options__freq_fieldset_heading": "Frequency distribution",
