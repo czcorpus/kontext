@@ -533,7 +533,7 @@ export function init({dispatcher, helpers, viewOptionsModel,
             ])
 
             return (
-                <form method={HTTP.Method.POST} className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
+                <form className="StructsAndAttrsForm">
                     <div>
                         <layoutViews.TabView
                             className="FieldsetsTabs"

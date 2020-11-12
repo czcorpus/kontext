@@ -162,7 +162,7 @@ class Args(object):
     structattrs: List[str] = def_attr(attr.Factory(list), persistent=Persistence.PERSISTENT)
 
     cql_editor: int = def_attr(1, persistent=Persistence.PERSISTENT)
-    qs_enabled: int = def_attr(True, persistent=Persistence.PERSISTENT)
+    qs_enabled: bool = def_attr(True, persistent=Persistence.PERSISTENT)
 
     flimit: int = def_attr(1)
     freqlevel: int = def_attr(1)
@@ -262,6 +262,8 @@ class Args(object):
                         setattr(self, key, values)
                     elif isinstance(getattr(self, key), int):
                         setattr(self, key, int(self._upgrade_legacy_value(key, values[-1], in_args)))
+                    elif isinstance(getattr(self, key), bool):
+                        setattr(self, key, bool(int(values[-1])))
                     else:
                         # when mapping to a scalar arg we always take the last
                         # value item but in such case, the length of values should

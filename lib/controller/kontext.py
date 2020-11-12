@@ -522,15 +522,19 @@ class Kontext(Controller):
     def _clear_prev_conc_params(self):
         self._prev_q_data = None
 
-    def _redirect_to_conc(self):
-        """
-        Redirects to the current concordance
-        """
+    def _get_curr_conc_args(self):
         args = self._get_mapped_attrs(ConcArgsMapping)
         if self._q_code:
             args.append(('q', '~%s' % self._q_code))
         else:
             args += [('q', q) for q in getattr(self.args, 'q')]
+        return args
+
+    def _redirect_to_conc(self):
+        """
+        Redirects to the current concordance
+        """
+        args = self._get_curr_conc_args()
         href = werkzeug.urls.Href(self.get_root_url() + 'view')
         self.redirect(href(MultiDict(args)))
 

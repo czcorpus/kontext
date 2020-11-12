@@ -604,6 +604,8 @@ export namespace ViewOptions {
 
     export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
         widectx_globals:Array<[string, string]>;
+        conc_persistence_op_id:string|null;
+        conc_args:Array<[string, string]>;
     }
 
 }
