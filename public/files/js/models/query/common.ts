@@ -647,7 +647,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         state.suggestionsVisible[action.payload.sourceId] = null;
                     });
 
-                } else if (this.noValidSuggestion(
+                } else if (this.isCurrentSuggestionInvalid(
                     this.state,
                     action.payload.sourceId,
                     action.payload.valueStartIdx,
@@ -760,7 +760,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         }
     }
 
-    private noValidSuggestion(
+    private isCurrentSuggestionInvalid(
         state:QueryFormModelState,
         sourceId:string,
         position:number,
