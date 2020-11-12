@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { Dict, List, pipe } from 'cnc-tskit';
 import { QuerySuggestion } from '../../models/query/query';
 
 
@@ -96,19 +96,22 @@ export function listAttrs1ToExtend<T>(data:QuerySuggestion<T>):Array<string> {
 
 // ----------------------
 
-export function suggestionIsTrivial<T>(data:QuerySuggestion<T>):boolean {
+export function filterOutTrivialSuggestions<T>(data:QuerySuggestion<T>):QuerySuggestion<unknown> {
 
     if (isPosAttrPairRelFrontend(data)) {
-        return Dict.size(data.contents.data) === 1 &&
-            pipe(
-                data.contents.data,
-                Dict.toEntries(),
-                List.flatMap(([k, v]) => List.map(v2 => tuple(k, v2), v)),
-                List.every(([k, v]) => k === v)
-            );
+        return {
+            ...data,
+            contents: {
+                attrs: data.contents.attrs,
+                data: Dict.filter(
+                    (v, k) => List.size(v) > 1 || (List.size(v) === 1 && v[0] !== k),
+                    data.contents.data
+                )
+            }
+        };
 
     } else {
-        return false;
+        return data;
     }
 }
 
@@ -162,7 +165,8 @@ export function mergeResults<T>(
                 data: pipe(
                     data1.contents.data,
                     Dict.map(
-                        (_, attr1) => data2.contents.data[attr1] ?
+                        (curr, attr1) => data2.contents.data[attr1] &&
+                                data2.contents.data[attr1].length > List.size(curr) ?
                             data2.contents.data[attr1] :
                             data1.contents.data[attr1]
                     )
