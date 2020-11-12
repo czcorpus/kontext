@@ -458,7 +458,7 @@ export function init({
 
     }> = (props) => {
 
-        const dynCls = List.every(s => querySuggest.isEmptyResponse(s), props.data.data) ?
+        const dynCls = props.data === null || List.every(s => querySuggest.isEmptyResponse(s), props.data.data) ?
             ' empty' : '';
 
         const handleKey = () => {
