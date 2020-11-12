@@ -54,7 +54,7 @@ export interface TRQueryInputFieldProps {
     tagHelperView:PluginInterfaces.TagHelper.View;
     widgets:Array<string>;
     inputLanguage:string;
-    useCQLEditor:boolean;
+    useRichQueryEditor:boolean;
     forcedAttr:string;
     attrList:Array<Kontext.AttrItem>;
     onEnterKey:()=>void;
@@ -127,7 +127,7 @@ export function init({
         virtualKeyboardModel: virtualKeyboardModel
     });
     const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel);
-    const RichInput = richInputInit(dispatcher, he, queryModel);
+    const richInputViews = richInputInit(dispatcher, he, queryModel);
     const QueryStructure = queryStructureInit({dispatcher, he, queryModel});
     const layoutViews = he.getLayoutViews();
 
@@ -895,16 +895,25 @@ export function init({
             const query = this.props.queries[this.props.sourceId];
             switch (query.qtype) {
                 case 'simple':
-                    return <RichInput
+                    return this.props.useRichQueryEditor ?
+                        <richInputViews.RichInput
                                 sourceId={this.props.sourceId}
                                 refObject={this._queryInputElement as React.RefObject<HTMLSpanElement>}
                                 hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
                                 historyIsVisible={this.props.historyVisible[this.props.sourceId]}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
-                                takeFocus={this.props.takeFocus} />;
+                                takeFocus={this.props.takeFocus} /> :
+                        <richInputViews.RichInputFallback
+                                sourceId={this.props.sourceId}
+                                refObject={this._queryInputElement as React.RefObject<HTMLInputElement>}
+                                hasHistoryWidget={this.props.widgets.indexOf('history') > -1}
+                                historyIsVisible={this.props.historyVisible[this.props.sourceId]}
+                                onReqHistory={this.handleReqHistory}
+                                onEsc={this.handleInputEscKeyDown}
+                                takeFocus={this.props.takeFocus} />
                 case 'advanced':
-                    return this.props.useCQLEditor ?
+                    return this.props.useRichQueryEditor ?
                         <cqlEditorViews.CQLEditor
                                 formType={this.props.formType}
                                 sourceId={this.props.sourceId}

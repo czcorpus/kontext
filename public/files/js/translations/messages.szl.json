@@ -506,7 +506,7 @@
         "options__conc_show_line_nums": "Pokŏż numery liniji",
         "options__conc_shuffle_by_default": "Dōmyślnie miyszej linije kōnkordancyje",
         "options__conc_no_effect_on_current": "bez efektu na terŏźnõ kōnkordancyjõ",
-        "options__use_advanced_cql_editor": "Użyj ulepszōnego edytora CQL",
+        "options__use_rich_query_editor": "Użyj ulepszōnego edytora CQL",
         "options__worlist_fieldset_heading": "Lista słōw",
         "options__wordlist_page_size": "Srogość strōny (wielość liniji)",
         "options__freq_fieldset_heading": "Rozkłŏd frekwyncyje",

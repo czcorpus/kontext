@@ -286,7 +286,7 @@ export function init({
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguage}
-                                useCQLEditor={this.props.useCQLEditor}
+                                useRichQueryEditor={this.props.useRichQueryEditor}
                                 onEnterKey={this._handleSubmit}
                                 qsuggPlugin={querySuggest} />
                         </div>
@@ -335,7 +335,7 @@ export function init({
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguage}
-                                useCQLEditor={this.props.useCQLEditor}
+                                useRichQueryEditor={this.props.useRichQueryEditor}
                                 onEnterKey={this._handleSubmit}
                                 takeFocus={false}
                                 qsuggPlugin={querySuggest}
