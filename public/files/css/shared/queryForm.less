@@ -543,19 +543,22 @@ table.radio-like-sel {
         li.position {
             margin: 0;
             width: auto;
-            border: 1px solid @color-logo-green;
-            border-radius: 0.3em;
-            text-align: center;
 
             h3 {
                 background-color: @color-logo-green;
-                border-radius: 0.3em 0.3em 0 0;
+                font-weight: normal;
+                font-size: 1.5em;
                 color: #FFFFFF;
                 margin: 0;
+                padding: 0.2em 0.4em;
             }
 
             > div {
+                margin-top: 0.7em;
                 padding: 0.9em;
+                border: 1px solid @color-logo-green;
+                border-radius: 0.3em;
+                text-align: center;
 
                 .attr {
                     font-weight: bold;
@@ -578,8 +581,16 @@ table.radio-like-sel {
             }
         }
 
-        li:not(:last-child) {
-            margin-right: 0.9em;
+        li.position:not(:last-child) > div {
+            margin-right: 0.4em;
+        }
+
+        li.position:last-child > h3 {
+            border-radius: 0 0.3em 0.3em 0;
+        }
+
+        li.position:first-child > h3 {
+            border-radius: 0.3em 0 0 0.3em;
         }
     }
 

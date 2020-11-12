@@ -141,15 +141,14 @@ function importUserQueries(
     data:QueryFormUserEntries,
     simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>}
 ):{[corpus:string]:AnyQuery} {
-
     return pipe(
         corpora,
         List.map(corpus => {
             const qtype = data.currQueryTypes[corpus] || 'simple';
             const defaultAttr = determineDefaultAttr(data, corpus, simpleQueryDefaultAttrs[corpus]);
+            const query = data.currQueries[corpus] || '';
 
             if (qtype === 'advanced') {
-                const query = data.currQueries[corpus] || '';
                 return tuple<string, AdvancedQuery>(
                     corpus,
                     {
@@ -168,12 +167,6 @@ function importUserQueries(
                 );
 
             } else {
-                const query = data.currQueries[corpus] || '';
-                const [queryHtml,] = highlightSyntaxStatic(
-                    query,
-                    'advanced',
-                    {translate: id}
-                );
                 return tuple<string, SimpleQuery>(
                     corpus,
                     {
@@ -181,7 +174,7 @@ function importUserQueries(
                         qtype: 'simple',
                         query,
                         queryParsed: parseSimpleQuery(data.currQueries[corpus], defaultAttr),
-                        queryHtml,
+                        queryHtml: query,
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
                         qmcase: data.currQmcaseValues[corpus] || false,
@@ -677,6 +670,17 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                 state.tagBuilderSupport,
                                 state.isAnonymousUser
                             );
+                            Dict.forEach(
+                                (queryObj, corpusId) => {
+                                    if (queryObj.qtype === 'advanced') {
+                                        this.reparseAdvancedQuery(state, corpusId, true);
+
+                                    } else {
+                                        this.rehighlightSimpleQuery(queryObj);
+                                    }
+                                },
+                                state.queries
+                            )
                         });
                     }
                 }

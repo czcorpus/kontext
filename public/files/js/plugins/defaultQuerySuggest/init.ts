@@ -80,9 +80,8 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
                     query.queryParsed[tokenIdx].value = value[3];
 
                 } else {
-                    query.queryParsed[tokenIdx].args.push(tuple(value[2], query.queryParsed[tokenIdx].value));
+                    query.queryParsed[tokenIdx].value = value[1];
                 }
-
                 query.query = List.map(v => v.value, query.queryParsed).join(' ');
 
             } else {

@@ -554,7 +554,6 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
 
     const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, wrapRange, onHintChange);
     const stack = new ParserStack(rcMap);
-
     const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):string => {
         if (numParserRecover === 0 && error) {
             const title = he.translate(

@@ -510,6 +510,7 @@ export namespace PluginInterfaces {
         export interface SuggestionArgs {
             timeReq:number;
             sourceId:string;
+            formType:QueryFormType;
             value:string;
             valueStartIdx:number;
             valueEndIdx:number;
@@ -539,7 +540,9 @@ export namespace PluginInterfaces {
                 name: ActionName.AskSuggestions
             }
 
-            export interface ClearSuggestions extends Action<{}> {
+            export interface ClearSuggestions extends Action<{
+                formType:QueryFormType;
+            }> {
                 name: ActionName.ClearSuggestions
             }
 

@@ -26,14 +26,12 @@ import { CorpusViewOptionsModel, CorpusViewOptionsModelState } from '../../model
 import { MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/options/actions';
 import { Actions as OptionsActions, ActionName as OptionsActionName } from '../../models/options/actions';
-import { List, HTTP } from 'cnc-tskit';
-import { PluginInterfaces } from '../../types/plugins';
+import { List } from 'cnc-tskit';
 
 export interface StructsAttrsModuleArgs {
     dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
     viewOptionsModel:CorpusViewOptionsModel;
-    mainMenuModel:IModel<MainMenuModelState>;
 }
 
 export interface StructAttrsViewOptionsProps {
@@ -45,8 +43,7 @@ export interface StructsAttrsViews {
 }
 
 
-export function init({dispatcher, helpers, viewOptionsModel,
-            mainMenuModel}:StructsAttrsModuleArgs):StructsAttrsViews {
+export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleArgs):StructsAttrsViews {
 
     const layoutViews = helpers.getLayoutViews();
 
