@@ -25,11 +25,10 @@ import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
-import { map, tap, concatMap, mergeMap } from 'rxjs/operators';
+import { map, tap, concatMap, mergeMap, scan } from 'rxjs/operators';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend, mergeResults,
-    isErrorFrontend,
-    suggestionIsTrivial} from './frontends';
+    isErrorFrontend, filterOutTrivialSuggestions} from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
 import { Actions, ActionName } from './actions';
 import { QuerySuggestion, QueryType } from '../../models/query/query';
@@ -231,8 +230,11 @@ export class Model extends StatelessModel<ModelState> {
                             name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                             payload: {
                                 ...args,
-                                results: isPartial || List.some(sugg => !suggestionIsTrivial(sugg), data.results) ?
-                                    List.map(cutLongResult, data.results) : [],
+                                results: pipe(
+                                        data.results,
+                                        isPartial ? List.map(v => v) : List.map(filterOutTrivialSuggestions),
+                                        List.map(cutLongResult)
+                                ),
                                 parsedWord: data.parsedWord,
                                 isPartial
                             }
@@ -245,33 +247,29 @@ export class Model extends StatelessModel<ModelState> {
                         List.map(
                             item => listAttrs1ToExtend(item)
                         ),
-                        v => listUnion(id, v),
-                        List.map(v => tuple(data, v))
-                    ))
-                ),
-                mergeMap(
-                    ([firstData, item]) => this.fetchSuggestionsForWord(
-                        state, args, item, dispatch
-                    ).pipe(
-                        map(
-                            resp => tuple(firstData, resp)
+                        v => listUnion(id, v)
+
+                    )).pipe(
+                        mergeMap(
+                            data => this.fetchSuggestionsForWord(state, args, data, dispatch)
+                        ),
+                        scan(
+                            (acc, curr) => ({
+                                results: pipe(
+                                    acc.results,
+                                    List.zip(curr.results),
+                                    List.map(
+                                        ([values1, values2]) => cutLongResult(
+                                            mergeResults(values1, values2)
+                                        )
+                                    )
+                                ),
+                                parsedWord: acc.parsedWord,
+                                isPartial: false
+                            }),
+                            data
                         )
                     )
-                ),
-                map(
-                    ([firstData, secondData]) => ({
-                        results: pipe(
-                            firstData.results,
-                            List.zip(secondData.results),
-                            List.map(
-                                ([values1, values2]) => cutLongResult(
-                                    mergeResults(values1, values2)
-                                )
-                            )
-                        ),
-                        parsedWord: firstData.parsedWord,
-                        isPartial: false
-                    })
                 )
             ).subscribe(
                 data => {
@@ -279,8 +277,7 @@ export class Model extends StatelessModel<ModelState> {
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                         payload: {
                             ...args,
-                            results: List.some(sugg => !suggestionIsTrivial(sugg), data.results) ?
-                                data.results : [],
+                            results: List.map(filterOutTrivialSuggestions, data.results),
                             parsedWord: data.parsedWord,
                             isPartial: data.isPartial
                         }
