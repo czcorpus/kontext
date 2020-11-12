@@ -26,11 +26,22 @@ import { HTTP, List } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
 import { ViewOptsResponse } from './common';
 
+
+interface GeneralOptionsArgsSubmit {
+    pagesize:string;
+    newctxsize:string;
+    ctxunit:string;
+    line_numbers:string;
+    shuffle:string;
+    wlpagesize:string;
+    fmaxitems:string;
+    citemsperpage:string;
+    cql_editor:string;
+}
 
 export interface GeneralViewOptionsModelState {
 
@@ -299,21 +310,27 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         );
     }
 
+    private serialize(state:GeneralViewOptionsModelState):GeneralOptionsArgsSubmit {
+        return {
+            pagesize: state.pageSize.value,
+            newctxsize: state.newCtxSize.value,
+            ctxunit: state.ctxUnit,
+            line_numbers: state.lineNumbers ? '1' : '0',
+            shuffle: state.shuffle ? '1' : '0',
+            wlpagesize: state.wlpagesize.value,
+            fmaxitems: state.fmaxitems.value,
+            citemsperpage: state.citemsperpage.value,
+            cql_editor: state.useCQLEditor ? '1' : '0'
+        };
+    }
+
     private submit(state:GeneralViewOptionsModelState):Observable<Kontext.AjaxResponse> {
-        const args = new MultiDict();
-        args.set('pagesize', state.pageSize.value);
-        args.set('newctxsize', state.newCtxSize.value);
-        args.set('ctxunit', state.ctxUnit);
-        args.set('line_numbers', state.lineNumbers ? '1' : '0');
-        args.set('shuffle', state.shuffle ? '1' : '0');
-        args.set('wlpagesize', state.wlpagesize.value);
-        args.set('fmaxitems', state.fmaxitems.value);
-        args.set('citemsperpage', state.citemsperpage.value);
-        args.set('cql_editor', state.useCQLEditor ? '1' : '0');
+        const args = this.serialize(state);
         return this.layoutModel.ajax$<Kontext.AjaxResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('options/viewoptsx'),
-            args
+            args,
+            {contentType: 'application/json'}
 
         ).pipe(
             tap(d => {
