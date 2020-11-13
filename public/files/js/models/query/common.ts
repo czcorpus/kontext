@@ -808,7 +808,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
 
                 } else {
-                    richText.push(token.value);
+                    richText.push('<span>' + token.value + '</span>');
                 }
             },
             () => {
@@ -1001,6 +1001,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     List.map(item => item.value + item.trailingSpace)
                 ).join('');
             }
+            this.rehighlightSimpleQuery(queryObj);
         }
     }
 
