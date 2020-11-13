@@ -373,7 +373,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                         } else {
                             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>({
-                                name: PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions
+                                name: PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions,
+                                payload: {
+                                    formType: this.formType
+                                }
                             });
                         }
                     },
@@ -942,7 +945,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     ):void {
         const queryObj = state.queries[sourceId];
-        const prevQuery = queryObj.query;
         if (insertRange !== null) {
             queryObj.query = queryObj.query.substring(0, insertRange[0]) + query +
                     queryObj.query.substr(insertRange[1]);
@@ -958,20 +960,42 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             this.reparseAdvancedQuery(state, sourceId, true);
 
         } else {
-            queryObj.queryParsed = parseSimpleQuery(queryObj);
-            /*
-            TODO !!! here we should create a diff and keep unchanged items in queryParsed
-            and drop any suggestions and extended attributes in items dropped
-            console.log('CMP > ',
-                    prevQuery.trim().split(/\s+/),
-                    List.map(v => v.value, queryObj.queryParsed))
-            console.log(
-                diffArrays(
-                    prevQuery.trim().split(/\s+/),
-                    List.map(v => v.value, queryObj.queryParsed)
-                )
+            const newTokens = parseSimpleQuery(queryObj);
+            const diff = diffArrays(
+                List.map(v => v.value, queryObj.queryParsed),
+                List.map(v => v.value, newTokens)
             );
-            */
+            let pos = 0;
+            for (let i = 0; i < diff.length; i++) {
+                if (!diff[i].added && !diff[i].removed) {
+                    List.forEach(
+                        _ => {
+                            pos += 1;
+                        },
+                        diff[i].value
+                    );
+
+                } else if (diff[i].added) {
+                    List.forEach(
+                        _ => {
+                            queryObj.queryParsed.splice(pos, 0, newTokens[pos]);
+                            pos += 1;
+                        },
+                        diff[i].value
+                    );
+
+                } else if (diff[i].removed) {
+                    List.forEach(
+                        _ => {
+                            queryObj.queryParsed.splice(pos, 1);
+                        },
+                        diff[i].value
+                    )
+                }
+            }
+            if (diff.length > 0) {
+                queryObj.query = List.map(item => item.value, queryObj.queryParsed).join(' ');
+            }
         }
     }
 
