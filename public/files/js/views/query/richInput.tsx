@@ -74,6 +74,7 @@ export function init(
             this.handleClick = this.handleClick.bind(this);
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
             this.contentEditable = new ContentEditable<HTMLSpanElement>(props.refObject);
+            this.handlePaste = this.handlePaste.bind(this);
         }
 
 
@@ -138,7 +139,6 @@ export function init(
             }
         }
 
-
         private handleKeyUp(evt) {
             if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
                     evt.keyCode === Keyboard.Code.END) {
@@ -154,6 +154,11 @@ export function init(
                     }
                 });
             }
+        }
+
+        private handlePaste(e) {
+            e.preventDefault();
+            document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
         }
 
         private findLinkParent(elm:HTMLElement):HTMLElement {
@@ -230,6 +235,7 @@ export function init(
                         onKeyDown={this.handleKeyDown}
                         onKeyUp={this.handleKeyUp}
                         onClick={this.handleClick}
+                        onPaste={this.handlePaste}
                         dangerouslySetInnerHTML={{__html: this.props.queries[this.props.sourceId].queryHtml}} />
             );
         }
