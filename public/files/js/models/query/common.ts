@@ -524,6 +524,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         action.payload.insertRange
                     );
                 });
+
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
                     action.payload.rawAnchorIdx,
@@ -970,6 +971,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 if (!diff[i].added && !diff[i].removed) {
                     List.forEach(
                         _ => {
+                            queryObj.queryParsed[pos].trailingSpace = newTokens[pos].trailingSpace;
                             pos += 1;
                         },
                         diff[i].value
@@ -994,7 +996,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 }
             }
             if (diff.length > 0) {
-                queryObj.query = List.map(item => item.value, queryObj.queryParsed).join(' ');
+                queryObj.query = pipe(
+                    queryObj.queryParsed,
+                    List.map(item => item.value + item.trailingSpace)
+                ).join('');
             }
         }
     }

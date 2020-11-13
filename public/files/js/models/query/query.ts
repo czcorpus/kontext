@@ -65,6 +65,8 @@ export interface ParsedSimpleQueryToken {
 
     value:string;
 
+    trailingSpace:string;
+
     /**
      * the value represents logical conjunction of
      * attr1 == val1 & attr2 == val2 & ... & attrN == valN
@@ -200,7 +202,8 @@ export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken
                         position: [startWord, isWhitespace(q[i]) ? i-1 : i],
                         value: currWord.join(''),
                         suggestions: null,
-                        isExtended: false
+                        isExtended: false,
+                        trailingSpace: ''
                     },
                     tokenIdx,
                     i
@@ -225,7 +228,8 @@ export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string):Array<
             position: [-1, -1],
             value: '',
             suggestions: null,
-            isExtended: false
+            isExtended: false,
+            trailingSpace: ''
         }];
     }
     const qVal = typeof q === 'string' ? q : q.query;
@@ -239,7 +243,11 @@ export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string):Array<
                 args: [tuple(attrVal, token.value)]
             });
         },
-        () => undefined
+        () => {
+            if (!List.empty(ans)) {
+                List.last(ans).trailingSpace += ' ';
+            }
+        }
     );
     return ans;
 }
