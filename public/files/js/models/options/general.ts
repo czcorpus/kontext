@@ -24,7 +24,6 @@ import { IFullActionControl, StatelessModel } from 'kombo';
 import { HTTP, List } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
-import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
@@ -32,28 +31,28 @@ import { ViewOptsResponse } from './common';
 
 
 interface GeneralOptionsArgsSubmit {
-    pagesize:string;
-    newctxsize:string;
+    pagesize:number;
+    newctxsize:number;
     ctxunit:string;
     line_numbers:boolean;
     shuffle:boolean;
-    wlpagesize:string;
-    fmaxitems:string;
-    citemsperpage:string;
+    wlpagesize:number;
+    fmaxitems:number;
+    citemsperpage:number;
     rich_query_editor:boolean;
 }
 
 export interface GeneralViewOptionsModelState {
 
-    pageSize:Kontext.FormValue<string>;
+    pageSize:Kontext.FormValue<number>;
 
-    newCtxSize:Kontext.FormValue<string>;
+    newCtxSize:Kontext.FormValue<number>;
 
-    wlpagesize:Kontext.FormValue<string>;
+    wlpagesize:Kontext.FormValue<number>;
 
-    fmaxitems:Kontext.FormValue<string>;
+    fmaxitems:Kontext.FormValue<number>;
 
-    citemsperpage:Kontext.FormValue<string>;
+    citemsperpage:Kontext.FormValue<number>;
 
     ctxUnit:string;
 
@@ -84,15 +83,15 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             dispatcher,
             {
                 userIsAnonymous,
-                pageSize: Kontext.newFormValue('0', true),
-                newCtxSize: Kontext.newFormValue('0', true),
+                pageSize: Kontext.newFormValue(0, true),
+                newCtxSize: Kontext.newFormValue(0, true),
                 ctxUnit: '',
                 lineNumbers: false,
                 shuffle: false,
                 useRichQueryEditor: false,
-                wlpagesize: Kontext.newFormValue('0', true),
-                fmaxitems: Kontext.newFormValue('0', true),
-                citemsperpage: Kontext.newFormValue('0', true),
+                wlpagesize: Kontext.newFormValue(0, true),
+                fmaxitems: Kontext.newFormValue(0, true),
+                citemsperpage: Kontext.newFormValue(0, true),
                 isBusy: false
             }
         );
@@ -130,14 +129,14 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
-                    state.pageSize = {value: `${action.payload.data.pagesize}`, isInvalid: false, isRequired: true};
-                    state.newCtxSize = {value: `${action.payload.data.newctxsize}`, isInvalid: false, isRequired: true};
+                    state.pageSize = {value: action.payload.data.pagesize, isInvalid: false, isRequired: true};
+                    state.newCtxSize = {value: action.payload.data.newctxsize, isInvalid: false, isRequired: true};
                     state.ctxUnit = action.payload.data.ctxunit;
                     state.lineNumbers = action.payload.data.line_numbers;
                     state.shuffle = action.payload.data.shuffle;
-                    state.wlpagesize = {value: `${action.payload.data.wlpagesize}`, isInvalid: false, isRequired: true};
-                    state.fmaxitems = {value: `${action.payload.data.fmaxitems}`, isInvalid: false, isRequired: true};
-                    state.citemsperpage = {value: `${action.payload.data.citemsperpage}`, isInvalid: false, isRequired: true};
+                    state.wlpagesize = {value: action.payload.data.wlpagesize, isInvalid: false, isRequired: true};
+                    state.fmaxitems = {value: action.payload.data.fmaxitems, isInvalid: false, isRequired: true};
+                    state.citemsperpage = {value: action.payload.data.citemsperpage, isInvalid: false, isRequired: true};
                     state.useRichQueryEditor = action.payload.data.rich_query_editor;
                 }
             }
@@ -221,11 +220,11 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                                 name: ActionName.GeneralSubmitDone,
                                 payload: {
                                     showLineNumbers: state.lineNumbers,
-                                    pageSize: parseInt(state.pageSize.value),
-                                    newCtxSize: parseInt(state.newCtxSize.value),
-                                    wlpagesize: parseInt(state.wlpagesize.value),
-                                    fmaxitems: parseInt(state.fmaxitems.value),
-                                    citemsperpage: parseInt(state.citemsperpage.value)
+                                    pageSize: state.pageSize.value,
+                                    newCtxSize: state.newCtxSize.value,
+                                    wlpagesize: state.wlpagesize.value,
+                                    fmaxitems: state.fmaxitems.value,
+                                    citemsperpage: state.citemsperpage.value
                                 }
                             });
                             List.forEach(fn => fn(this), this.submitResponseHandlers);
@@ -250,12 +249,12 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         );
     }
 
-    private testMaxPageSize(v:string):boolean {
-        return parseInt(v) <= GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE;
+    private testMaxPageSize(v:number):boolean {
+        return v <= GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE;
     }
 
-    private testMaxCtxSize(v:string):boolean {
-        return parseInt(v) <= GeneralViewOptionsModel.MAX_CTX_SIZE;
+    private testMaxCtxSize(v:number):boolean {
+        return v <= GeneralViewOptionsModel.MAX_CTX_SIZE;
     }
 
     private hasErrorInputs(state:GeneralViewOptionsModelState):boolean {
@@ -269,11 +268,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         List.forEach(
             val => {
                 if (Kontext.isFormValue(val)) {
-                    if (!validateGzNumber(val.value)) {
-                        val.isInvalid = true;
-                        val.errorDesc = this.layoutModel.translate('global__invalid_number_format');
-
-                    } else if (!this.testMaxPageSize(val.value)) {
+                    if (!this.testMaxPageSize(val.value)) {
                         val.isInvalid = true;
                         val.errorDesc = this.layoutModel.translate('options__max_items_per_page_exceeded_{num}',
                                             {num: GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE});
@@ -334,7 +329,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
 
         ).pipe(
             tap(d => {
-                this.layoutModel.replaceConcArg('pagesize', [state.pageSize.value]);
+                this.layoutModel.replaceConcArg('pagesize', [`${state.pageSize.value}`]);
             })
         );
     }

@@ -21,7 +21,6 @@
 import { Action } from 'kombo';
 import { ViewOptsResponse, GeneralOptionsShared } from './common';
 import { ViewOptions } from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
 
 
 export enum ActionName {
@@ -62,13 +61,13 @@ export namespace Actions {
     }
 
     export interface GeneralSetPageSize extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetPageSize;
     }
 
     export interface GeneralSetContextSize extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetContextSize;
     }
@@ -92,19 +91,19 @@ export namespace Actions {
     }
 
     export interface GeneralSetWlPageSize extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetWlPageSize;
     }
 
     export interface GeneralSetFmaxItems extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetFmaxItems;
     }
 
     export interface GeneralSetCitemsPerPage extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetCitemsPerPage;
     }

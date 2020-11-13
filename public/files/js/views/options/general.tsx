@@ -24,7 +24,6 @@ import { IActionDispatcher, Bound, StatelessModel } from 'kombo';
 import { Kontext } from '../../types/common';
 import { GeneralViewOptionsModelState } from '../../models/options/general';
 import { Actions, ActionName } from '../../models/options/actions';
-import { Action } from 'rxjs/internal/scheduler/Action';
 
 
 export interface GeneralViews {
@@ -39,8 +38,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <TRConcPageSizeInput /> ---------------------
 
-    const TRConcPageSizeInput:React.SFC<{
-        value:Kontext.FormValue<string>;
+    const TRConcPageSizeInput:React.FC<{
+        value:Kontext.FormValue<number>;
 
     }> = (props) => {
 
@@ -60,7 +59,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="text" value={props.value.value}
+                        <input type="number" value={props.value.value} min={0}
                                 onChange={handleInputChange} style={{width: '2em'}} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -70,8 +69,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <FieldsetConcordance /> ---------------------
 
-    const TRKwicContextSize:React.SFC<{
-        value:Kontext.FormValue<string>;
+    const TRKwicContextSize:React.FC<{
+        value:Kontext.FormValue<number>;
 
     }> = (props) => {
 
@@ -91,7 +90,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="text" value={props.value.value}
+                        <input type="number" value={props.value.value} min={0}
                                 onChange={handleInputChange} style={{width: '2em'}} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -101,7 +100,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <TRShowLineNumbers /> ---------------------
 
-    const TRShowLineNumbersCheckbox:React.SFC<{
+    const TRShowLineNumbersCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -132,7 +131,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <TRAlwaysShuffleCheckbox /> ---------------------
 
-    const TRAlwaysShuffleCheckbox:React.SFC<{
+    const TRAlwaysShuffleCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -168,7 +167,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <TRUseRichQueryEditor /> ---------------------
 
-    const TRUseRichQueryEditor:React.SFC<{
+    const TRUseRichQueryEditor:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -198,9 +197,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <FieldsetConcordance /> ---------------------
 
-    const FieldsetConcordance:React.SFC<{
-        pageSize:Kontext.FormValue<string>;
-        newCtxSize:Kontext.FormValue<string>;
+    const FieldsetConcordance:React.FC<{
+        pageSize:Kontext.FormValue<number>;
+        newCtxSize:Kontext.FormValue<number>;
         lineNumbers:boolean;
         shuffle:boolean;
         useRichQueryEditor:boolean;
@@ -226,8 +225,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <TRWordlistNumPagesInput /> ---------------------
 
-    const TRWordlistNumPagesInput:React.SFC<{
-        value:Kontext.FormValue<string>;
+    const TRWordlistNumPagesInput:React.FC<{
+        value:Kontext.FormValue<number>;
 
     }> = (props) => {
 
@@ -247,8 +246,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="text" value={props.value.value} onChange={handleInputChange}
-                                style={{width: '2em'}} />
+                        <input type="number" value={props.value.value} onChange={handleInputChange}
+                                style={{width: '2em'}} min={0} />
                     </layoutViews.ValidatedItem>
                 </td>
             </tr>
@@ -257,8 +256,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <FieldsetWordlist /> ---------------------
 
-    const FieldsetWordlist:React.SFC<{
-        wlPageSize:Kontext.FormValue<string>;
+    const FieldsetWordlist:React.FC<{
+        wlPageSize:Kontext.FormValue<number>;
 
     }> = (props) => {
         return (
@@ -277,8 +276,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <TRFmaxitemsInput /> ---------------------
 
-    const TRFmaxitemsInput:React.SFC<{
-        value:Kontext.FormValue<string>;
+    const TRFmaxitemsInput:React.FC<{
+        value:Kontext.FormValue<number>;
 
     }> = (props) => {
 
@@ -298,8 +297,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="text" value={props.value.value} onChange={handleInputChange}
-                            style={{width: '2em'}} />
+                        <input type="number" value={props.value.value} onChange={handleInputChange}
+                            style={{width: '2em'}} min={0} />
                     </layoutViews.ValidatedItem>
                 </td>
             </tr>
@@ -308,8 +307,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <FieldsetFreqDistrib /> ---------------------
 
-    const FieldsetFreqDistrib:React.SFC<{
-        fmaxItems:Kontext.FormValue<string>;
+    const FieldsetFreqDistrib:React.FC<{
+        fmaxItems:Kontext.FormValue<number>;
 
     }> = (props) => {
         return (
@@ -328,8 +327,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <TRCitemsPerPageInput /> ---------------------
 
-    const TRCitemsPerPageInput:React.SFC<{
-        value:Kontext.FormValue<string>;
+    const TRCitemsPerPageInput:React.FC<{
+        value:Kontext.FormValue<number>;
 
     }> = (props) => {
 
@@ -349,8 +348,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="text" value={props.value.value} onChange={handleInputChange}
-                                style={{width: '2em'}} />
+                        <input type="number" value={props.value.value} onChange={handleInputChange}
+                                style={{width: '2em'}} min={0} />
                     </layoutViews.ValidatedItem>
                 </td>
             </tr>
@@ -359,8 +358,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------- <FieldsetColl /> ---------------------
 
-    const FieldsetColl:React.SFC<{
-        citemsPerPage:Kontext.FormValue<string>;
+    const FieldsetColl:React.FC<{
+        citemsPerPage:Kontext.FormValue<number>;
 
     }> = (props) => {
         return (
@@ -379,7 +378,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // --------------------- <SubmitButton /> -------------------------
 
-    const SubmitButton:React.SFC<{
+    const SubmitButton:React.FC<{
         modelIsBusy:boolean;
 
     }> = (props) => {
