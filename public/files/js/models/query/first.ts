@@ -516,6 +516,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             action.payload.changePrimaryCorpus
                         );
                     });
+                    this.autoSuggestTrigger.next(tuple(List.head(action.payload.corpora)[1], 0, 0));
                 }
             }
         );
@@ -636,6 +637,30 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 state.tagBuilderSupport,
                 state.isAnonymousUser
             );
+            const firstCorp = List.head(state.corpora)
+            const queryObj = state.queries[firstCorp];
+            if (queryObj.qtype === 'simple') {
+                queryObj.queryParsed = List.map(
+                    v => ({
+                        ...v,
+                        args: [tuple(undefined, v.value)],
+                        isExtended: false,
+                        suggestions: null
+                    }),
+                    queryObj.queryParsed
+                );
+                this.rehighlightSimpleQuery(queryObj, 0);
+
+            } else {
+                queryObj.parsedAttrs = List.map(
+                    v => ({
+                        ...v,
+                        suggestions: null
+                    }),
+                    queryObj.parsedAttrs
+                );
+                this.reparseAdvancedQuery(state, firstCorp, true);
+            }
         }
     }
 

@@ -79,7 +79,7 @@ export interface ParsedSimpleQueryToken {
      */
     position:[number, number];
 
-    suggestions:TokenSuggestions|null;
+    suggestions:TokenSuggestions|null; // TODO use undefined instead of null
 
     isExtended:boolean;
 }

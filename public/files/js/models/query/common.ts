@@ -231,31 +231,6 @@ export function determineSupportedWidgets(
     );
 }
 
-function findCursorWord(value:string, focusIdx:number):[string, number, number] {
-    const ans:Array<[string, number, number]> = [];
-    let curr:[string, number, number] = ['', 0, 0];
-    for (let i = 0; i < value.length; i++) {
-        if (value[i] === ' ') {
-            if (curr) {
-                ans.push(curr);
-            }
-            curr = [value[i] === ' ' ? '' : value[i], i + 1, i + 1];
-
-        } else {
-            curr[0] += value[i];
-            curr[2] = i + 1;
-        }
-    }
-    ans.push(curr);
-    for (let i = 0; i < ans.length; i++) {
-        const [, f, t] = ans[i];
-        if (focusIdx >= f && focusIdx <= t) {
-            return ans[i];
-        }
-    }
-    return ['', 0, 0];
-}
-
 interface SuggestionReqArgs {
     value:string;
     attrStartIdx:number;
