@@ -21,7 +21,6 @@
 import { Action } from 'kombo';
 import { ViewOptsResponse, GeneralOptionsShared } from './common';
 import { ViewOptions } from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
 
 
 export enum ActionName {
@@ -30,7 +29,7 @@ export enum ActionName {
     GeneralSetContextSize = 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE',
     GeneralSetLineNums = 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS',
     GeneralSetShuffle = 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE',
-    GeneralSetUseCQLEditor = 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR',
+    GeneralSetUseRichQueryEditor = 'GENERAL_VIEW_OPTIONS_SET_USE_RICH_QUERY_EDITOR',
     GeneralSetWlPageSize = 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE',
     GeneralSetFmaxItems = 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS',
     GeneralSetCitemsPerPage = 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE',
@@ -62,13 +61,13 @@ export namespace Actions {
     }
 
     export interface GeneralSetPageSize extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetPageSize;
     }
 
     export interface GeneralSetContextSize extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetContextSize;
     }
@@ -85,26 +84,26 @@ export namespace Actions {
         name:ActionName.GeneralSetShuffle;
     }
 
-    export interface GeneralSetUseCQLEditor extends Action<{
+    export interface GeneralSetUseRichQueryEditor extends Action<{
         value:boolean;
     }> {
-        name:ActionName.GeneralSetUseCQLEditor;
+        name:ActionName.GeneralSetUseRichQueryEditor;
     }
 
     export interface GeneralSetWlPageSize extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetWlPageSize;
     }
 
     export interface GeneralSetFmaxItems extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetFmaxItems;
     }
 
     export interface GeneralSetCitemsPerPage extends Action<{
-        value:string;
+        value:number;
     }> {
         name:ActionName.GeneralSetCitemsPerPage;
     }

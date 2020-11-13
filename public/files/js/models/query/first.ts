@@ -279,7 +279,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 structAttrList: props.structAttrList,
                 wPoSList: props.wPoSList,
                 tagAttr: props.tagAttr,
-                useRichQueryEditor: props.useCQLEditor,
+                useRichQueryEditor: props.useRichQueryEditor,
                 currentAction: 'query',
                 widgetArgs: {},
                 corpora,

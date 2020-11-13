@@ -267,7 +267,7 @@ class Actions(Querying):
             WidectxArgsMapping, dict(structs=self._get_struct_opts()))
         out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
         out['aligned_corpora'] = self.args.align
-        out['line_numbers'] = bool(int(self.args.line_numbers if self.args.line_numbers else 0))
+        out['line_numbers'] = self.args.line_numbers if self.args.line_numbers else False
         out['speech_segment'] = self.get_speech_segment()
         out['speaker_id_attr'] = corpus_info.speaker_id_attr.split(
             '.') if corpus_info.speaker_id_attr else None
@@ -494,7 +494,8 @@ class Actions(Querying):
                     if type(attr) is str:
                         position.append(f'{attr}="{mk_query_val(val)}"')
                     else:
-                        position.append('({})'.format(' | '.join([f'{a2}="{mk_query_val(val)}"' for a2 in attr])))
+                        position.append('({})'.format(' | '.join(
+                            [f'{a2}="{mk_query_val(val)}"' for a2 in attr])))
                 expr.append('[' + ' & '.join(position) + ']')
             return ' '.join(expr)
 
@@ -1541,7 +1542,8 @@ class Actions(Querying):
                 return dict(total=size)
         else:
             tt_query = TextTypeCollector(self.corp, request.json['text_types']).get_query()
-            query = 'aword,[] within {}'.format(' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
+            query = 'aword,[] within {}'.format(
+                ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
             self.args.q = [query]
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=0, save=self.args.save)

@@ -137,7 +137,7 @@ class Args(object):
     numbering: int = def_attr(0)
     align_kwic: int = def_attr(0)
     stored: str = def_attr('')
-    line_numbers: int = def_attr(0, persistent=Persistence.PERSISTENT)
+    line_numbers: bool = def_attr(False, persistent=Persistence.PERSISTENT)
     # end
 
     # must be an empty string and not None
@@ -161,7 +161,7 @@ class Args(object):
     cup_hl: str = def_attr('q', persistent=Persistence.PERSISTENT)
     structattrs: List[str] = def_attr(attr.Factory(list), persistent=Persistence.PERSISTENT)
 
-    cql_editor: int = def_attr(1, persistent=Persistence.PERSISTENT)
+    rich_query_editor: bool = def_attr(True, persistent=Persistence.PERSISTENT)
     qs_enabled: bool = def_attr(True, persistent=Persistence.PERSISTENT)
 
     flimit: int = def_attr(1)
@@ -230,7 +230,8 @@ class Args(object):
         if key == 'attr_vmode':
             if 'attr_allpos' in src_data:
                 v2 = src_data.getvalue('attr_allpos')
-                logging.getLogger(__name__).warning(f'Upgrading legacy attr_vmode conf: {value} + {v2}')
+                logging.getLogger(__name__).warning(
+                    f'Upgrading legacy attr_vmode conf: {value} + {v2}')
                 if value == 'mixed' and v2 == 'all':
                     return 'visible-kwic'
                 if value == 'multiline' and v2 == 'all':
@@ -241,7 +242,8 @@ class Args(object):
                     return 'mouseover'
                 return 'visible-kwic'
             if value not in ('visible-all', 'visible-kwic', 'visible-multiline', 'mouseover'):
-                logging.getLogger(__name__).warning(f'Invalid attr_vmode {value} - auto-corrected to "visible-kwic".')
+                logging.getLogger(__name__).warning(
+                    f'Invalid attr_vmode {value} - auto-corrected to "visible-kwic".')
                 return 'visible-kwic'
         return value
 
@@ -261,7 +263,8 @@ class Args(object):
                     if isinstance(getattr(self, key), (list, tuple)):
                         setattr(self, key, values)
                     elif isinstance(getattr(self, key), int):
-                        setattr(self, key, int(self._upgrade_legacy_value(key, values[-1], in_args)))
+                        setattr(self, key, int(
+                            self._upgrade_legacy_value(key, values[-1], in_args)))
                     elif isinstance(getattr(self, key), bool):
                         setattr(self, key, bool(int(values[-1])))
                     else:

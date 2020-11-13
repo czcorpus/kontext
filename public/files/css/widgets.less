@@ -495,8 +495,21 @@ fieldset.FieldsetOutputOptions {
             text-transform: capitalize;
         }
 
-        input[type='text'] {
+        input {
             margin-left: 5pt;
+        }
+
+        // hide number input arrows
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
         }
     }
 

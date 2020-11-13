@@ -226,7 +226,7 @@ export class QueryPage {
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
-                useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
+                useRichQueryEditor:this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
                 tagAttr: this.layoutModel.getConf<string>('tagAttr'),
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
                 suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),

@@ -27,14 +27,22 @@ class Options(Kontext):
     def get_mapping_url_prefix(self):
         return '/options/'
 
-    def _set_new_viewopts(self, newctxsize=0, ctxunit='', line_numbers=0, cql_editor=0):
+    def _set_new_viewopts(self, pagesize=0, newctxsize=0, ctxunit='',
+                          line_numbers=False, shuffle=False, wlpagesize=0,
+                          fmaxitems=0, citemsperpage=0, rich_query_editor=False):
+        self.args.pagesize = pagesize
         if ctxunit == '@pos':
             ctxunit = ''
-        if "%s%s" % (newctxsize, ctxunit) != self.args.kwicrightctx:
-            self.args.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
-            self.args.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
+        new_kwicright = f'{newctxsize}{ctxunit}'
+        if new_kwicright != self.args.kwicrightctx:
+            self.args.kwicleftctx = f'-{new_kwicright}'
+            self.args.kwicrightctx = new_kwicright
         self.args.line_numbers = line_numbers
-        self.args.cql_editor = cql_editor
+        self.args.shuffle = int(shuffle)
+        self.args.wlpagesize = wlpagesize
+        self.args.fmaxitems = fmaxitems
+        self.args.citemsperpage = citemsperpage
+        self.args.rich_query_editor = rich_query_editor
 
     def _set_new_corp_options(self, attrs=(), attr_vmode='', structs=(), refs=(),
                               structattrs=(), base_viewattr='word', qs_enabled=True):
@@ -130,20 +138,25 @@ class Options(Kontext):
             newctxsize=self.args.kwicleftctx[1:],
             ctxunit='@pos',
             line_numbers=self.args.line_numbers,
-            shuffle=self.args.shuffle,
+            shuffle=bool(self.args.shuffle),
             wlpagesize=self.args.wlpagesize,
             fmaxitems=self.args.fmaxitems,
             citemsperpage=self.args.citemsperpage,
-            cql_editor=self.args.cql_editor
+            rich_query_editor=self.args.rich_query_editor
         )
 
     @exposed(access_level=0, return_type='json', http_method='POST', skip_corpus_init=True)
     def viewoptsx(self, request):
         self._set_new_viewopts(
+            pagesize=request.json.get('pagesize'),
             newctxsize=request.json.get('newctxsize'),
             ctxunit=request.json.get('ctxunit'),
             line_numbers=request.json.get('line_numbers'),
-            cql_editor=request.json.get('cql_editor')
+            shuffle=request.json.get('shuffle'),
+            wlpagesize=request.json.get('wlpagesize'),
+            fmaxitems=request.json.get('fmaxitems'),
+            citemsperpage=request.json.get('citemsperpage'),
+            rich_query_editor=request.json.get('rich_query_editor')
         )
         self._save_options(self.GENERAL_OPTIONS)
         return {}

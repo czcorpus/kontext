@@ -278,7 +278,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 currentAction: 'filter_form',
                 queries, // corpname|filter_id -> query
                 cqlEditorMessages: {},
-                useRichQueryEditor: props.useCQLEditor,
+                useRichQueryEditor: props.useRichQueryEditor,
                 tagAttr: props.tagAttr,
                 widgetArgs: {}, // TODO
                 maincorps: {...props.maincorps},

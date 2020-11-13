@@ -24,13 +24,13 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
     pagesize:number;
     newctxsize:number;
     ctxunit:string;
-    line_numbers:number;
-    shuffle:number;
+    line_numbers:boolean;
+    shuffle:boolean;
     wlpagesize:number;
     fmaxitems:number;
     citemsperpage:number;
     tt_overview:number;
-    cql_editor:number;
+    rich_query_editor:boolean;
 }
 
 export interface GeneralOptionsShared {
