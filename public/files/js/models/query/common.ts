@@ -122,7 +122,7 @@ export interface GeneralQueryFormProperties {
     structAttrList:Array<Kontext.AttrItem>;
     structList:Array<string>;
     wPoSList:Array<{v:string; n:string}>;
-    useCQLEditor:boolean;
+    useRichQueryEditor:boolean;
     tagAttr:string;
     suggestionsEnabled:boolean;
 }

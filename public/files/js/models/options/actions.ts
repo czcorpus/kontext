@@ -30,7 +30,7 @@ export enum ActionName {
     GeneralSetContextSize = 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE',
     GeneralSetLineNums = 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS',
     GeneralSetShuffle = 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE',
-    GeneralSetUseCQLEditor = 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR',
+    GeneralSetUseRichQueryEditor = 'GENERAL_VIEW_OPTIONS_SET_USE_RICH_QUERY_EDITOR',
     GeneralSetWlPageSize = 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE',
     GeneralSetFmaxItems = 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS',
     GeneralSetCitemsPerPage = 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE',
@@ -85,10 +85,10 @@ export namespace Actions {
         name:ActionName.GeneralSetShuffle;
     }
 
-    export interface GeneralSetUseCQLEditor extends Action<{
+    export interface GeneralSetUseRichQueryEditor extends Action<{
         value:boolean;
     }> {
-        name:ActionName.GeneralSetUseCQLEditor;
+        name:ActionName.GeneralSetUseRichQueryEditor;
     }
 
     export interface GeneralSetWlPageSize extends Action<{

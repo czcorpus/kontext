@@ -35,12 +35,12 @@ interface GeneralOptionsArgsSubmit {
     pagesize:string;
     newctxsize:string;
     ctxunit:string;
-    line_numbers:string;
-    shuffle:string;
+    line_numbers:boolean;
+    shuffle:boolean;
     wlpagesize:string;
     fmaxitems:string;
     citemsperpage:string;
-    cql_editor:string;
+    rich_query_editor:boolean;
 }
 
 export interface GeneralViewOptionsModelState {
@@ -61,7 +61,7 @@ export interface GeneralViewOptionsModelState {
 
     shuffle:boolean;
 
-    useCQLEditor:boolean;
+    useRichQueryEditor:boolean;
 
     isBusy:boolean;
 
@@ -89,7 +89,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 ctxUnit: '',
                 lineNumbers: false,
                 shuffle: false,
-                useCQLEditor: false,
+                useRichQueryEditor: false,
                 wlpagesize: Kontext.newFormValue('0', true),
                 fmaxitems: Kontext.newFormValue('0', true),
                 citemsperpage: Kontext.newFormValue('0', true),
@@ -133,12 +133,12 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                     state.pageSize = {value: `${action.payload.data.pagesize}`, isInvalid: false, isRequired: true};
                     state.newCtxSize = {value: `${action.payload.data.newctxsize}`, isInvalid: false, isRequired: true};
                     state.ctxUnit = action.payload.data.ctxunit;
-                    state.lineNumbers = !!action.payload.data.line_numbers;
-                    state.shuffle = !!action.payload.data.shuffle;
+                    state.lineNumbers = action.payload.data.line_numbers;
+                    state.shuffle = action.payload.data.shuffle;
                     state.wlpagesize = {value: `${action.payload.data.wlpagesize}`, isInvalid: false, isRequired: true};
                     state.fmaxitems = {value: `${action.payload.data.fmaxitems}`, isInvalid: false, isRequired: true};
                     state.citemsperpage = {value: `${action.payload.data.citemsperpage}`, isInvalid: false, isRequired: true};
-                    state.useCQLEditor = !!action.payload.data.cql_editor;
+                    state.useRichQueryEditor = action.payload.data.rich_query_editor;
                 }
             }
         );
@@ -171,10 +171,10 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetUseCQLEditor>(
-            ActionName.GeneralSetUseCQLEditor,
+        this.addActionHandler<Actions.GeneralSetUseRichQueryEditor>(
+            ActionName.GeneralSetUseRichQueryEditor,
             (state, action) => {
-                state.useCQLEditor = action.payload.value;
+                state.useRichQueryEditor = action.payload.value;
             }
         );
 
@@ -315,12 +315,12 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             pagesize: state.pageSize.value,
             newctxsize: state.newCtxSize.value,
             ctxunit: state.ctxUnit,
-            line_numbers: state.lineNumbers ? '1' : '0',
-            shuffle: state.shuffle ? '1' : '0',
+            line_numbers: state.lineNumbers,
+            shuffle: state.shuffle,
             wlpagesize: state.wlpagesize.value,
             fmaxitems: state.fmaxitems.value,
             citemsperpage: state.citemsperpage.value,
-            cql_editor: state.useCQLEditor ? '1' : '0'
+            rich_query_editor: state.useRichQueryEditor
         };
     }
 

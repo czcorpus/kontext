@@ -166,16 +166,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // ------------- <TRUseCQLEditor /> ---------------------
+    // ------------- <TRUseRichQueryEditor /> ---------------------
 
-    const TRUseCQLEditor:React.SFC<{
+    const TRUseRichQueryEditor:React.SFC<{
         value:boolean;
 
     }> = (props) => {
 
         const handleCheckbox = () => {
-            dispatcher.dispatch<Actions.GeneralSetUseCQLEditor>({
-                name: ActionName.GeneralSetUseCQLEditor,
+            dispatcher.dispatch<Actions.GeneralSetUseRichQueryEditor>({
+                name: ActionName.GeneralSetUseRichQueryEditor,
                 payload: {
                     value: !props.value
                 }
@@ -203,7 +203,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         newCtxSize:Kontext.FormValue<string>;
         lineNumbers:boolean;
         shuffle:boolean;
-        useCQLEditor:boolean;
+        useRichQueryEditor:boolean;
 
     }> = (props) => {
         return (
@@ -217,7 +217,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <TRKwicContextSize value={props.newCtxSize} />
                         <TRShowLineNumbersCheckbox value={props.lineNumbers} />
                         <TRAlwaysShuffleCheckbox value={props.shuffle} />
-                        <TRUseCQLEditor value={props.useCQLEditor} />
+                        <TRUseRichQueryEditor value={props.useRichQueryEditor} />
                     </tbody>
                 </table>
             </fieldset>
@@ -420,7 +420,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 newCtxSize={this.props.newCtxSize}
                                 lineNumbers={this.props.lineNumbers}
                                 shuffle={this.props.shuffle}
-                                useCQLEditor={this.props.useCQLEditor} />
+                                useRichQueryEditor={this.props.useRichQueryEditor} />
                         <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
                         <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems} />
                         <FieldsetColl citemsPerPage={this.props.citemsperpage} />

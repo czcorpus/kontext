@@ -208,7 +208,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 inputLanguages={this.props.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
                                 hasLemmaAttr={this.props.hasLemma}
-                                useCQLEditor={this.props.useRichQueryEditor}
+                                useRichQueryEditor={this.props.useRichQueryEditor}
                                 tagHelperViews={this.props.tagHelperViews}
                                 onEnterKey={this._handleSubmit} />
                         : null

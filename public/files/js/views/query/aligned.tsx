@@ -48,7 +48,7 @@ export interface AlignedCorporaProps {
     inputLanguages:{[key:string]:string};
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
     hasLemmaAttr:{[key:string]:boolean};
-    useCQLEditor:boolean;
+    useRichQueryEditor:boolean;
     tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
     onEnterKey:()=>void;
 }
@@ -85,7 +85,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         attrList:Array<Kontext.AttrItem>;
         inputLanguage:string;
         queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
-        useCQLEditor:boolean;
+        useRichQueryEditor:boolean;
         tagHelperView:PluginInterfaces.TagHelper.View;
         onEnterKey:()=>void;
 
@@ -142,7 +142,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             attrList={this.props.attrList}
                             inputLanguage={this.props.inputLanguage}
                             queryStorageView={this.props.queryStorageView}
-                            useRichQueryEditor={this.props.useCQLEditor}
+                            useRichQueryEditor={this.props.useRichQueryEditor}
                             onEnterKey={this.props.onEnterKey}
                             tagHelperView={this.props.tagHelperView}
                             qsuggPlugin={null}
@@ -214,7 +214,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 inputLanguage={props.inputLanguages[item]}
                                 queryStorageView={props.queryStorageView}
                                 hasLemmaAttr={props.hasLemmaAttr[item]}
-                                useCQLEditor={props.useCQLEditor}
+                                useRichQueryEditor={props.useRichQueryEditor}
                                 onEnterKey={props.onEnterKey} />,
                             props.alignedCorpora
                         )}

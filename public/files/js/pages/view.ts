@@ -442,7 +442,7 @@ export class ViewPage {
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
             textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
             selectedTextTypes: queryFormArgs.selected_text_types,
-            useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
+            useRichQueryEditor:this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
@@ -514,7 +514,7 @@ export class ViewPage {
                 'InputLanguages'
             )[this.layoutModel.getCorpusIdent().id],
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
-            useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
+            useRichQueryEditor: this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
             tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled')
