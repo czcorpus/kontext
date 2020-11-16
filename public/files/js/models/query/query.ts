@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { id, List, tuple } from 'cnc-tskit';
+import { id, List, pipe, tuple } from 'cnc-tskit';
 import { highlightSyntaxStatic, ParsedAttr } from './cqleditor/parser';
 
 
@@ -131,6 +131,21 @@ export interface AdvancedQuerySubmit {
 
 export type AnyQuerySubmit = SimpleQuerySubmit|AdvancedQuerySubmit;
 
+
+export function calcCursorEndPosition(q:AnyQuery, tokenIdx):number {
+    if (q.qtype === 'simple') {
+        return pipe(
+            q.queryParsed,
+            List.slice(0, tokenIdx + 1),
+            List.foldl(
+                (acc, curr) => acc + curr.value.length + curr.trailingSpace.length, 0
+            )
+        );
+
+    } else {
+        return 0; // TODO !!!
+    }
+}
 
 
 export function findTokenIdxByFocusIdx(q:AnyQuery, focusIdx:number):number {

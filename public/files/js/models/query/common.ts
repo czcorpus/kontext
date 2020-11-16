@@ -598,7 +598,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     );
                     state.suggestionsVisible[action.payload.sourceId] = null;
                     if (queryObj.qtype === 'simple') {
-                        this.rehighlightSimpleQuery(queryObj, action.payload.tokenIdx);
+                        this.rehighlightSimpleQuery(queryObj);
 
                     } else {
                         this.reparseAdvancedQuery(state, action.payload.sourceId, true);
