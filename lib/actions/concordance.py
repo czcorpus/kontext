@@ -52,6 +52,7 @@ import templating
 import mailing
 import attr
 from conclib.freq import one_level_crit, multi_level_crit
+from strings import re_escape
 
 
 class ConcError(UserActionException):
@@ -484,7 +485,7 @@ class Actions(Querying):
         def mk_query_val(q):
             if qtype == 'advanced' or use_regexp:
                 return q.strip()
-            return icase + re.escape(q.strip())
+            return icase + re_escape(q.strip())
 
         def stringify_parsed_query(q: List[List[str]]):
             expr = []
@@ -611,7 +612,6 @@ class Actions(Querying):
                 self.args.q.append('f')
                 self.acknowledge_auto_generated_conc_op(
                     len(self.args.q) - 1, ShuffleFormArgs(persist=True))
-
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.asnc,
                             save=self.args.save, samplesize=corpus_info.sample_size)

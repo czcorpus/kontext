@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
+import sys
 
 
 def shorten(val, length=8, suffix='...', nice=False):
@@ -34,3 +35,9 @@ def shorten(val, length=8, suffix='...', nice=False):
     else:
         s = val[:length]
     return '%s%s' % (s, suff)
+
+
+def re_escape(s):
+    if sys.version_info[1] <= 6:
+        return re.sub(r'[(){}\[\].*?|^$\\+-]', r'\\\g<0>', s)
+    return re.escape(s)

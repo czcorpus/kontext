@@ -22,6 +22,7 @@ from conclib.freq import multi_level_crit
 from bgcalc import freq_calc
 from plugins.abstract.query_suggest import AbstractBackend
 import manatee
+from strings import re_escape
 
 
 class PosAttrPairRelManateeBackend(AbstractBackend):
@@ -62,7 +63,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
                         value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
                         s_attr: str):
         used_corp = self._corp if self._corp is not None else maincorp
-        value_norm = value if value_subformat in ('regexp', 'advanced') else re.escape(value)
+        value_norm = value if value_subformat in ('regexp', 'advanced') else re_escape(value)
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''
         conc = get_conc(used_corp, user_id,
                         (f'aword,[{self._conf["attr1"]}="{icase}{value_norm}" | {self._conf["attr2"]}="{icase}{value_norm}"]',))
