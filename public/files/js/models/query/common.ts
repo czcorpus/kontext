@@ -38,6 +38,15 @@ import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTok
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
 
+/*
+Some important terms to prevent confusion:
+
+position, focusIdx = position of cursor
+
+tokenIdx = position of a parsed token
+
+*/
+
 
 export type CtxLemwordType = 'any'|'all'|'none';
 
@@ -860,7 +869,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         };
         const tokIdx = findTokenIdxByFocusIdx(queryObj, position);
         if (tokIdx < 0) {
-            throw new Error('Cannot add a suggestion - token not found in the query');
+            return; // the position is gone (user has edited the text meanwile)
+        }
+        const suggTime = this.getSuggestionTime(queryObj, position);
+        if (suggTime > data.timeReq) {
+            return; // an older suggestion (for already rewritten word) has arrived
         }
         if (queryObj.qtype === 'simple') {
             queryObj.queryParsed[tokIdx].suggestions = newSugg;
@@ -869,6 +882,21 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         } else if (this.someSuggestionIsNonEmpty(newSugg)) {
             queryObj.parsedAttrs[tokIdx].suggestions = newSugg;
             this.reparseAdvancedQuery(state, sourceId, false);
+        }
+    }
+
+    private getSuggestionTime(queryObj:AnyQuery, focusIdx:number):number {
+        const tokIdx = findTokenIdxByFocusIdx(queryObj, focusIdx);
+        if (tokIdx < 0) {
+            return -1;
+        }
+        if (queryObj.qtype === 'simple') {
+            return queryObj.queryParsed[tokIdx].suggestions ?
+                    queryObj.queryParsed[tokIdx].suggestions.timeReq : -1;
+
+        } else {
+            return queryObj.parsedAttrs[tokIdx].suggestions ?
+                    queryObj.parsedAttrs[tokIdx].suggestions.timeReq : -1;
         }
     }
 
