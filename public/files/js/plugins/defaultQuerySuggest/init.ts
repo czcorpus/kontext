@@ -27,7 +27,7 @@ import { init as initView, KnownRenderers, SuggestionsViews } from './view';
 import { isEmptyResponse, Model } from './model';
 import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickValue } from './frontends';
 import { AnyProviderInfo } from './providers';
-import { AnyQuery, QuerySuggestion } from '../../models/query/query';
+import { AnyQuery, calcCursorEndPosition, QuerySuggestion } from '../../models/query/query';
 
 
 declare var require:any;
@@ -83,6 +83,8 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
                     query.queryParsed[tokenIdx].value = value[1];
                 }
                 query.query = List.map(v => v.value, query.queryParsed).join(' ');
+                query.rawFocusIdx = calcCursorEndPosition(query, tokenIdx);
+                query.rawAnchorIdx = query.rawFocusIdx;
 
             } else {
                 const attr = query.parsedAttrs[tokenIdx];
