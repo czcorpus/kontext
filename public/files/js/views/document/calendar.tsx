@@ -107,7 +107,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
 
         const [state, updateState] = React.useState({
             currDate: props.currDate ? props.currDate : normNow(),
-            isSelected: false
+            isSelected: !!props.currDate
         });
 
         const getMonthDays = (year:number, month:number):Array<Date> => {

@@ -131,9 +131,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     const CalendarDaysSelector:React.FC<CalendarDaysSelectorProps> = (props) => {
 
+        const initialDates = props.attrObj['textFieldDecoded'].match(/(\d{4}-\d{2}-\d{2})/g);
+        let iFromDate = null;
+        let iToDate = null;
+        if (initialDates && initialDates.length === 2) {
+            iFromDate = new Date(initialDates[0]);
+            iToDate = new Date(initialDates[1]);
+            iFromDate.setDate(iFromDate.getDate() + 1);
+            iToDate.setDate(iToDate.getDate() + 1);
+        }
         const [state, setState] = React.useState<{fromDate:Date|null; toDate: Date|null}>({
-            fromDate: null,
-            toDate: null
+            fromDate: iFromDate,
+            toDate: iToDate
         });
 
         const handleCalClick = (cal:'from'|'to') => (d:Date|null) => {
@@ -167,11 +176,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             <div className="calendars">
                 <div>
                     <h3>{he.translate('query__tt_calendar_from_date')}</h3>
-                    <layoutViews.Calendar onClick={handleCalClick('from')} firstDayOfWeek={props.firstDayOfWeek} />
+                    <layoutViews.Calendar onClick={handleCalClick('from')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.fromDate} />
                 </div>
                 <div>
                     <h3>{he.translate('query__tt_calendar_to_date')}</h3>
-                    <layoutViews.Calendar onClick={handleCalClick('to')} firstDayOfWeek={props.firstDayOfWeek} />
+                    <layoutViews.Calendar onClick={handleCalClick('to')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.toDate}/>
                 </div>
             </div>
             <p className={`info${state.fromDate === null || state.toDate === null ? '' : ' note'}`}>
