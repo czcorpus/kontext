@@ -66,7 +66,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         md.setDate(md.getDate() + 1);
     }
     const toEndOfYear1:Array<Date> = [];
-    while (md.getFullYear() === d1.getFullYear() && md.getMonth() < d2.getMonth()) {
+    while (md.getFullYear() === d1.getFullYear() && (md.getFullYear() === d2.getFullYear() ? md.getMonth() < d2.getMonth() : true)) {
         toEndOfYear1.push(md);
         md = new Date(md);
         md.setMonth(md.getMonth() + 1);
@@ -101,7 +101,10 @@ function rangeToRegexp(d1:Date, d2:Date):string {
 
     const ans = [];
     if (!List.empty(comp1[2])) {
-        ans.push(`${comp1[0]}-${comp1[1]}-(${comp1[2].join('|')})`);
+        ans.push(`${comp1[0]}-${comp1[1]}-${comp1[2][0]}`);
+        if (comp1[2].length > 1) {
+            ans.push(`${comp1[0]}-${comp1[1]}-(${comp1[2].slice(1).join('|')})`);
+        }
     }
     if (!List.empty(comp2[1])) {
         ans.push(`${comp2[0]}-(${comp2[1].join('|')})-..`);
@@ -113,7 +116,10 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         ans.push(`${comp4[0]}-(${comp4[1].join('|')})-..`);
     }
     if (!List.empty(comp5[2])) {
-        ans.push(`${comp5[0]}-${comp5[1]}-(${comp5[2].join('|')})`);
+        if (comp5[2].length > 1) {
+            ans.push(`${comp5[0]}-${comp5[1]}-(${comp5[2].slice(0, comp5[2].length - 1).join('|')})`);
+        }
+        ans.push(`${comp5[0]}-${comp5[1]}-${comp5[2][comp5[2].length - 1]}`);
     }
 
     return ans.join('|');
@@ -121,8 +127,8 @@ function rangeToRegexp(d1:Date, d2:Date):string {
 
 function regexpToRange(regexp:string):[Date, Date] {
     if (regexp) {
-        const fromDate = regexp.match(/\d{4}-\d{2}-\(\d{2}/)[0].replace('(', '');
-        const toDate = regexp.match(/\d{4}-\d{2}-(?!.*\d{4}-\d{2}-)/)[0] + regexp.match(/\d{2}(?=\)$)/)[0];
+        const fromDate = regexp.match(/(?=^)\d{4}-\d{2}-\d{2}/)[0];
+        const toDate = regexp.match(/\d{4}-\d{2}-\d{2}(?=$)/)[0];
 
         return [new Date(fromDate), new Date(toDate)]
     }
