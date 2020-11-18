@@ -119,6 +119,16 @@ function rangeToRegexp(d1:Date, d2:Date):string {
     return ans.join('|');
 }
 
+function regexpToRange(regexp:string):[Date, Date] {
+    if (regexp) {
+        const fromDate = regexp.match(/\d{4}-\d{2}-\(\d{2}/)[0].replace('(', '');
+        const toDate = regexp.match(/\d{4}-\d{2}-(?!.*\d{4}-\d{2}-)/)[0] + regexp.match(/\d{2}(?=\)$)/)[0];
+
+        return [new Date(fromDate), new Date(toDate)]
+    }
+    return [null, null]
+}
+
 export interface CalendarDaysSelectorProps {
     attrObj:TextTypes.AnyTTSelection;
     firstDayOfWeek:'mo'|'su'|'sa';
@@ -130,19 +140,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
 
     const CalendarDaysSelector:React.FC<CalendarDaysSelectorProps> = (props) => {
-
-        const initialDates = props.attrObj['textFieldDecoded'].match(/(\d{4}-\d{2}-\d{2})/g);
-        let iFromDate = null;
-        let iToDate = null;
-        if (initialDates && initialDates.length === 2) {
-            iFromDate = new Date(initialDates[0]);
-            iToDate = new Date(initialDates[1]);
-            iFromDate.setDate(iFromDate.getDate() + 1);
-            iToDate.setDate(iToDate.getDate() + 1);
-        }
+        const [initFromDate, initToDate] = regexpToRange(props.attrObj['textFieldValue']);
         const [state, setState] = React.useState<{fromDate:Date|null; toDate: Date|null}>({
-            fromDate: iFromDate,
-            toDate: iToDate
+            fromDate: initFromDate,
+            toDate: initToDate
         });
 
         const handleCalClick = (cal:'from'|'to') => (d:Date|null) => {
