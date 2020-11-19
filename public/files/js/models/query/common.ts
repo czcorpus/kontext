@@ -29,7 +29,7 @@ import { QueryContextModel } from './context';
 import { parse as parseQuery, ITracer } from 'cqlParser/parser';
 import { ConcServerArgs } from '../concordance/common';
 import { QueryFormType, Actions, ActionName } from './actions';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
@@ -272,6 +272,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     private readonly qsPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 
+    protected readonly qsSubscription:Subscription|undefined;
+
     // -------
 
     constructor(
@@ -298,76 +300,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.attrHelper = new AttrHelper(
             props.attrList, props.structAttrList, props.structList, props.tagAttr);
         this.autoSuggestTrigger = new Subject<[string, number, number]>();
-        this.autoSuggestTrigger.pipe(
-            debounceTime(500)
-        ).subscribe(
-            ([sourceId,, rawFocusIdx]) => {
-                const queryObj = this.state.queries[sourceId];
-                const suggRequests:Array<SuggestionReqArgs> =
-                    queryObj.qtype === 'simple' ?
-                        List.map(
-                            q => ({
-                                value: q.value,
-                                attrStartIdx: undefined,
-                                attrEndIdx: undefined,
-                                valueStartIdx: q.position[0],
-                                valueEndIdx: q.position[1]
-                            }),
-                            queryObj.queryParsed
-                        ) :
-                        List.map(
-                            attr => ({
-                                value: attr.value ?
-                                    attr.value.trim().replace(/^"(.+)"$/, '$1') : '',
-                                attrStartIdx: attr.rangeAttr ? attr.rangeAttr[0] : undefined,
-                                attrEndIdx: attr.rangeAttr ? attr.rangeAttr[1] : undefined,
-                                valueStartIdx: attr.rangeVal[0],
-                                valueEndIdx: attr.rangeVal[1]
-                            }),
-                            queryObj.parsedAttrs
-                        );
-
-                this.changeState(state => {
-                    state.suggestionsLoading[sourceId] = {};
-                });
-
-                List.forEach(
-                    args => {
-                        if (this.shouldAskForSuggestion(args.value)) {
-                            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
-                                name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
-                                payload: {
-                                    ...args,
-                                    timeReq: new Date().getTime(),
-                                    corpora: List.concat(
-                                        this.pageModel.getConf<Array<string>>('alignedCorpora'),
-                                        [this.pageModel.getCorpusIdent().id]
-                                    ),
-                                    subcorpus: this.state.currentSubcorp,
-                                    valueType: 'unspecified',
-                                    valueSubformat: this.determineSuggValueType(sourceId),
-                                    queryType: this.state.queries[sourceId].qtype,
-                                    posAttr: this.state.queries[sourceId].default_attr,
-                                    struct: undefined,
-                                    structAttr: undefined,
-                                    sourceId,
-                                    formType: this.formType
-                                }
-                            });
-
-                        } else {
-                            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>({
-                                name: PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions,
-                                payload: {
-                                    formType: this.formType
-                                }
-                            });
-                        }
-                    },
-                    suggRequests
-                );
-            }
-        );
+        this.qsSubscription = this.qsPlugin.isActive() ?
+                this.subscribeAutoSuggest(dispatcher) : undefined;
 
         this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
             ActionName.QueryInputSetQType,
@@ -730,6 +664,79 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         this.rehighlightSimpleQuery(queryObj);
                     }
                 });
+            }
+        );
+    }
+
+    private subscribeAutoSuggest(dispatcher:IFullActionControl):Subscription {
+        return this.autoSuggestTrigger.pipe(
+            debounceTime(500)
+        ).subscribe(
+            ([sourceId,,]) => {
+                const queryObj = this.state.queries[sourceId];
+                const suggRequests:Array<SuggestionReqArgs> =
+                    queryObj.qtype === 'simple' ?
+                        List.map(
+                            q => ({
+                                value: q.value,
+                                attrStartIdx: undefined,
+                                attrEndIdx: undefined,
+                                valueStartIdx: q.position[0],
+                                valueEndIdx: q.position[1]
+                            }),
+                            queryObj.queryParsed
+                        ) :
+                        List.map(
+                            attr => ({
+                                value: attr.value ?
+                                    attr.value.trim().replace(/^"(.+)"$/, '$1') : '',
+                                attrStartIdx: attr.rangeAttr ? attr.rangeAttr[0] : undefined,
+                                attrEndIdx: attr.rangeAttr ? attr.rangeAttr[1] : undefined,
+                                valueStartIdx: attr.rangeVal[0],
+                                valueEndIdx: attr.rangeVal[1]
+                            }),
+                            queryObj.parsedAttrs
+                        );
+
+                this.changeState(state => {
+                    state.suggestionsLoading[sourceId] = {};
+                });
+
+                List.forEach(
+                    args => {
+                        if (this.shouldAskForSuggestion(args.value)) {
+                            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
+                                name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+                                payload: {
+                                    ...args,
+                                    timeReq: new Date().getTime(),
+                                    corpora: List.concat(
+                                        this.pageModel.getConf<Array<string>>('alignedCorpora'),
+                                        [this.pageModel.getCorpusIdent().id]
+                                    ),
+                                    subcorpus: this.state.currentSubcorp,
+                                    valueType: 'unspecified',
+                                    valueSubformat: this.determineSuggValueType(sourceId),
+                                    queryType: this.state.queries[sourceId].qtype,
+                                    posAttr: this.state.queries[sourceId].default_attr,
+                                    struct: undefined,
+                                    structAttr: undefined,
+                                    sourceId,
+                                    formType: this.formType
+                                }
+                            });
+
+                        } else {
+                            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>({
+                                name: PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions,
+                                payload: {
+                                    formType: this.formType
+                                }
+                            });
+                        }
+                    },
+                    suggRequests
+                );
             }
         );
     }

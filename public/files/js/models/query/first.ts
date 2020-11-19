@@ -23,9 +23,9 @@
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
-import { Dict, tuple, List, pipe, HTTP, id } from 'cnc-tskit';
+import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
-import { Kontext, TextTypes, ViewOptions } from '../../types/common';
+import { Kontext, TextTypes } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
@@ -38,8 +38,8 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../com
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
-import { AdvancedQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, QueryType, SimpleQuery } from './query';
-import { highlightSyntaxStatic } from './cqleditor/parser';
+import { AdvancedQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, QueryType,
+    SimpleQuery } from './query';
 
 
 export interface QueryFormUserEntries {
@@ -524,6 +524,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.addActionHandler<GlobalActions.SwitchCorpus>(
             GlobalActionName.SwitchCorpus,
             action => {
+                if (this.qsSubscription) {
+                    this.qsSubscription.unsubscribe();
+                }
                 dispatcher.dispatch<GlobalActions.SwitchCorpusReady<
                         FirstQueryFormModelSwitchPreserve>>({
                     name: GlobalActionName.SwitchCorpusReady,
@@ -770,7 +773,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 query: query.query.trim().normalize(),
                 pcq_pos_neg: query.pcq_pos_neg,
                 include_empty: query.include_empty,
-                default_attr: defaultAttr && !Array.isArray(defaultAttr) ? defaultAttr : query.default_attr
+                default_attr: defaultAttr && !Array.isArray(defaultAttr) ?
+                    defaultAttr : query.default_attr
             };
 
         } else {
@@ -796,21 +800,24 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
     createSubmitArgs(contextFormArgs:QueryContextArgs):ConcQueryArgs {
+
+        const exportCsVal = (v:string) => typeof v === 'string' ? v.split(',') : [];
+
         const primaryCorpus = List.head(this.state.corpora);
-        const currArgs = this.pageModel.exportConcArgs();
+        const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
             type:'concQueryArgs',
             maincorp: primaryCorpus,
             usesubcorp: this.state.currentSubcorp || null,
             viewmode: 'kwic',
-            pagesize: parseInt(currArgs.head('pagesize')),
-            attrs: currArgs.getList('attrs'),
-            attr_vmode: currArgs.head('attr_vmode') as ViewOptions.AttrViewMode,
-            base_viewattr: currArgs.head('base_viewattr'),
-            ctxattrs: currArgs.getList('ctxattrs'),
-            structs: currArgs.getList('structs'),
-            refs: currArgs.getList('refs'),
-            fromp: parseInt(currArgs.head('fromp') || '0'),
+            pagesize: currArgs.pagesize,
+            attrs: exportCsVal(currArgs.attrs),
+            attr_vmode: currArgs.attr_vmode,
+            base_viewattr: currArgs.base_viewattr,
+            ctxattrs: exportCsVal(currArgs.ctxattrs),
+            structs: exportCsVal(currArgs.structs),
+            refs: exportCsVal(currArgs.refs),
+            fromp: currArgs.fromp || 0,
             shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
             queries: [],
             text_types: this.textTypesModel.exportSelections(false),

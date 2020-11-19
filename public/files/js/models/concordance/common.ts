@@ -148,6 +148,8 @@ export interface ServerPagination {
  * ConcServerArgs defines a set of arguments needed
  * to address a specific concordance (including required
  * structs & attrs to display and pagination).
+ *
+ * Array-like values are encoded as comma-separated strings.
  */
 export interface ConcServerArgs {
     corpname:string;

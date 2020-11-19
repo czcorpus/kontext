@@ -691,6 +691,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         this.corpViewOptionsModel.unregister();
         this.mainMenuModel.unregister();
         this.generalViewOptionsModel.unregister();
+        this.qsuggPlugin.unregister();
     }
 
     registerCorpusSwitchAwareModels(

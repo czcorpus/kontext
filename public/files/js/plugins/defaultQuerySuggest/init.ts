@@ -59,7 +59,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
     }
 
     isActive():boolean {
-        return true;
+        return !List.empty(this.providers);
     }
 
     applyClickOnItem(query:AnyQuery, tokenIdx:number, providerId:string, value:unknown):void {
@@ -133,6 +133,14 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
     isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {
         return isEmptyResponse(v);
+    }
+
+    unregister():void {
+        this.model.unregister();
+    }
+
+    getRegistrationId():string {
+        return 'default-query-suggest-plugin';
     }
 
 }
