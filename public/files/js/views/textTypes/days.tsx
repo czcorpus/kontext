@@ -66,7 +66,7 @@ function rangeToRegexp(d1:Date, d2:Date):string {
         md.setDate(md.getDate() + 1);
     }
     const toEndOfYear1:Array<Date> = [];
-    while (md.getFullYear() === d1.getFullYear() && (md.getFullYear() === d2.getFullYear() ? md.getMonth() < d2.getMonth() : true)) {
+    while (md.getFullYear() === d1.getFullYear() && (d1.getFullYear() === d2.getFullYear() ? md.getMonth() < d2.getMonth() : true)) {
         toEndOfYear1.push(md);
         md = new Date(md);
         md.setMonth(md.getMonth() + 1);
@@ -127,10 +127,13 @@ function rangeToRegexp(d1:Date, d2:Date):string {
 
 function regexpToRange(regexp:string):[Date, Date] {
     if (regexp) {
-        const fromDate = regexp.match(/(?=^)\d{4}-\d{2}-\d{2}/)[0];
-        const toDate = regexp.match(/\d{4}-\d{2}-\d{2}(?=$)/)[0];
-
-        return [new Date(fromDate), new Date(toDate)];
+        const fromDate = regexp.match(/(?=^)\d{4}-\d{2}-\d{2}/);
+        const toDate = regexp.match(/\d{4}-\d{2}-\d{2}(?=$)/);
+        const d1 = new Date(fromDate[0]);
+        const d2 = new Date(toDate[0]);
+        d1.setHours(0);
+        d2.setHours(0);
+        return [d1, d2];
     }
     return [null, null];
 }
