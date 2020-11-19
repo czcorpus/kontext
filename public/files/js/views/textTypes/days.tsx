@@ -130,9 +130,9 @@ function regexpToRange(regexp:string):[Date, Date] {
         const fromDate = regexp.match(/(?=^)\d{4}-\d{2}-\d{2}/)[0];
         const toDate = regexp.match(/\d{4}-\d{2}-\d{2}(?=$)/)[0];
 
-        return [new Date(fromDate), new Date(toDate)]
+        return [new Date(fromDate), new Date(toDate)];
     }
-    return [null, null]
+    return [null, null];
 }
 
 export interface CalendarDaysSelectorProps {
@@ -146,7 +146,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
 
     const CalendarDaysSelector:React.FC<CalendarDaysSelectorProps> = (props) => {
-        const [initFromDate, initToDate] = regexpToRange(props.attrObj['textFieldValue']);
+        const attrObj = props.attrObj;
+        if (attrObj.type !== 'regexp') {
+            throw new Error(`Invalid attribute type for CalendarDaysSelector: ${attrObj.type}`);
+        }
+        const [initFromDate, initToDate] = regexpToRange(attrObj.textFieldValue);
         const [state, setState] = React.useState<{fromDate:Date|null; toDate: Date|null}>({
             fromDate: initFromDate,
             toDate: initToDate
@@ -179,23 +183,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             }
         };
 
-        return <div className="CalendarDaysSelector">
-            <div className="calendars">
-                <div>
-                    <h3>{he.translate('query__tt_calendar_from_date')}</h3>
-                    <layoutViews.Calendar onClick={handleCalClick('from')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.fromDate} />
+        return (
+            <div className="CalendarDaysSelector">
+                <div className="calendars">
+                    <div>
+                        <h3>{he.translate('query__tt_calendar_from_date')}</h3>
+                        <layoutViews.Calendar onClick={handleCalClick('from')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.fromDate} />
+                    </div>
+                    <div>
+                        <h3>{he.translate('query__tt_calendar_to_date')}</h3>
+                        <layoutViews.Calendar onClick={handleCalClick('to')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.toDate}/>
+                    </div>
                 </div>
-                <div>
-                    <h3>{he.translate('query__tt_calendar_to_date')}</h3>
-                    <layoutViews.Calendar onClick={handleCalClick('to')} firstDayOfWeek={props.firstDayOfWeek} currDate={state.toDate}/>
-                </div>
+                <p className={`info${state.fromDate === null || state.toDate === null ? '' : ' note'}`}>
+                    {state.fromDate === null || state.toDate === null ?
+                        he.translate('query__tt_no_date_range_selected') :
+                        '(' + he.translate('query__tt_you_can_unselect_date_range') + ')'}
+                </p>
             </div>
-            <p className={`info${state.fromDate === null || state.toDate === null ? '' : ' note'}`}>
-                {state.fromDate === null || state.toDate === null ?
-                    he.translate('query__tt_no_date_range_selected') :
-                    '(' + he.translate('query__tt_you_can_unselect_date_range') + ')'}
-            </p>
-        </div>;
+        );
     }
 
     return CalendarDaysSelector;
