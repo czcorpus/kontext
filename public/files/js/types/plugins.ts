@@ -478,7 +478,7 @@ export namespace PluginInterfaces {
 
     export namespace QuerySuggest {
 
-        export interface IPlugin extends BasePlugin {
+        export interface IPlugin extends BasePlugin, IUnregistrable {
             createElement<T>(
                 dr:QuerySuggestion<T>,
                 itemClickHandler:(providerId:string, value:unknown)=>void
