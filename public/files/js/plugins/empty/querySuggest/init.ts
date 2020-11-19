@@ -53,6 +53,12 @@ export class EmptyQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugin 
         return true;
     }
 
+    unregister():void {}
+
+    getRegistrationId():string {
+        return 'empty-query-suggest-plugin';
+    }
+
 }
 
 
