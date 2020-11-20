@@ -381,12 +381,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    const val = state.queries[action.payload.sourceId];
-                    if (val.qtype === 'simple') {
-                        val.qmcase = action.payload.value;
-                        if (val.qmcase) {
-                            val.use_regexp = false;
-                        }
+                    const queryObj = state.queries[action.payload.sourceId];
+                    if (queryObj.qtype === 'simple') {
+                        queryObj.qmcase = action.payload.value;
 
                     } else {
                         console.error('Invalid query type');

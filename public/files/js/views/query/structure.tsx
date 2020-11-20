@@ -123,24 +123,32 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                 <layoutViews.ModalOverlay onCloseKey={handleClose}>
                     <layoutViews.CloseableFrame onCloseClick={handleClose} label={he.translate('query__query_structure')}>
                         <div className="QueryStructureWidget">
-                            <ul className="positions">
-                            {List.map(
-                                (v, i) => <ParsedToken key={`${v.value}:${i}`} value={v}
-                                                defaultAttrs={props.defaultAttribute} />,
-                                queryObj.queryParsed
-                            )}
-                            </ul>
-                            <p className="buttons">
-                                {hasExpandedTokens ?
-                                    <button className="util-button" type="button" onClick={handleReset}>
-                                        {he.translate('query__reset_token_expansions')}
-                                    </button> :
-                                    null
-                                }
-                                <button className="util-button" type="button" onClick={handleClose}>
-                                {he.translate('global__close')}
-                                </button>
-                            </p>
+                            {pipe(queryObj.queryParsed, List.filter(v => !!v.value), List.empty()) ?
+                                <div className="empty">
+                                    <layoutViews.StatusIcon status="info" inline={true} />
+                                    {he.translate('query__query_is_empty')}
+                                </div> :
+                                <>
+                                    <ul className="positions">
+                                    {List.map(
+                                        (v, i) => <ParsedToken key={`${v.value}:${i}`} value={v}
+                                                        defaultAttrs={props.defaultAttribute} />,
+                                        queryObj.queryParsed
+                                    )}
+                                    </ul>
+                                    <p className="buttons">
+                                        {hasExpandedTokens ?
+                                            <button className="util-button" type="button" onClick={handleReset}>
+                                                {he.translate('query__reset_token_expansions')}
+                                            </button> :
+                                            null
+                                        }
+                                        <button className="util-button" type="button" onClick={handleClose}>
+                                        {he.translate('global__close')}
+                                        </button>
+                                    </p>
+                                </>
+                            }
                         </div>
                     </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>

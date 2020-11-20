@@ -730,7 +730,6 @@ export function init({
         value:boolean;
         formType:QueryFormType;
         sourceId:string;
-        disabled:boolean;
 
     }> = (props) => {
 
@@ -748,8 +747,7 @@ export function init({
             <span>
                 <label>
                     {he.translate('query__simple_q_use_regexp')}:
-                    <input type="checkbox" checked={props.value} onChange={handleClick}
-                        disabled={props.disabled} />
+                    <input type="checkbox" checked={props.value} onChange={handleClick} />
                 </label>
             </span>
         );
@@ -983,10 +981,9 @@ export function init({
                                         formType={this.props.formType}
                                         disabled={query.use_regexp} />
                                 </div>
-                                <div className={`option${query.qmcase ? ' disabled' : ''}`}>
+                                <div className={"option"}>
                                     <UseRegexpSelector sourceId={this.props.sourceId} formType={this.props.formType}
-                                            value={query.use_regexp}
-                                            disabled={query.qmcase} />
+                                            value={query.use_regexp} />
                                 </div>
                                 <div className="option">
                                     <DefaultAttrSelector

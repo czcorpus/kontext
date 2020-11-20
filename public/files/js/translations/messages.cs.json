@@ -397,6 +397,7 @@
         "query__query_structure": "Interpretace dotazu",
         "query__specify_options": "Upřesnit parametry",
         "query__no_result_found": "Nebyl nalezen žádný výsledek. Zkuste upravit dotaz či jeho parametry.",
+        "query__query_is_empty": "Dotaz je prázdný",
         "qhistory__attached_text_types": "Typy textů",
         "qhistory__curr_corp_only_label": "obsahuje aktuálně používaný korpus",
         "qhistory__query_type_sel": "obsahuje typ dotazu",
