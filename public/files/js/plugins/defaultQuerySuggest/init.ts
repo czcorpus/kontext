@@ -90,7 +90,9 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
             } else {
                 const attr = query.parsedAttrs[tokenIdx];
                 const prefix = query.query.substring(0, attr.rangeAttr[0]);
-                const newChunk = `${value[2]}="${value[3]}"`;
+                const newChunk = value[2] && value[3] ?
+                    `${value[2]}="${value[3]}"` :
+                    `${value[0]}="${value[1]}"`;
                 const postfix = query.query.substring(attr.rangeVal[1] + 1);
                 query.rawFocusIdx = (prefix + newChunk).length;
                 query.rawAnchorIdx = query.rawFocusIdx;
