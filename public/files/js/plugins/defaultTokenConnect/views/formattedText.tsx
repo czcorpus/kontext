@@ -45,15 +45,19 @@ class TreeNode {
     }
 
     renderNode(index:number=0) {
-        const renderedChildren = List.flatMap(
-            (v, i) => {
-                const tmp = [];
-                tmp.push(v instanceof TreeNode ? [v.renderNode(i)] : [v]);
-                if (i !== this.children.length - 1) {
-                    tmp.push(' ');
+        const renderedChildren = List.reduce(
+            (acc, curr, i) => {
+                if (curr instanceof TreeNode && curr.element === 'noSpace') {
+                    return acc.slice(0, -1);
                 }
-                return tmp;
+
+                acc.push(curr instanceof TreeNode ? curr.renderNode(i) : curr);
+                if (i !== this.children.length - 1) {
+                    acc.push(' ');
+                }
+                return acc;
             },
+            [],
             this.children
         );
 
@@ -103,6 +107,7 @@ interface ElementConf {
 interface FeatureConf {
     paragraph?:ElementConf;
     newLine?:ElementConf;
+    removeSpace?:ElementConf;
     typeface?:ElementConf;
 }
 
@@ -119,13 +124,16 @@ const typefaceMap = {
 function getStructMapping(featureConf:FeatureConf) {
     const mapping = {};
     if (featureConf.paragraph) {
-        mapping[featureConf.paragraph.element] = 'p'
+        mapping[featureConf.paragraph.element] = 'p';
+    }
+    if (featureConf.removeSpace) {
+        mapping[featureConf.removeSpace.element] = 'noSpace';
     }
     if (featureConf.newLine) {
-        mapping[featureConf.newLine.element] = 'br'
+        mapping[featureConf.newLine.element] = 'br';
     }
     if (featureConf.typeface) {
-        mapping[featureConf.typeface.element] = {attr: featureConf.typeface.attribute, map: typefaceMap}
+        mapping[featureConf.typeface.element] = {attr: featureConf.typeface.attribute, map: typefaceMap};
     }
     return mapping;
 }
@@ -206,7 +214,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                             if (mappedTag) {
                                 const lowerNode = new TreeNode(mappedTag, [], activeNode);
                                 activeNode.addChild(lowerNode);
-                                return mappedTag === 'br' ? activeNode : lowerNode;
+                                return ['br', 'noSpace'].includes(mappedTag) ? activeNode : lowerNode;
                             }
 
                             console.warn(`Undefined tag mapping for ${curr.str}`);
