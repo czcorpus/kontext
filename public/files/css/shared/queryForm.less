@@ -292,7 +292,7 @@ div.query-form-spa {
 
         .sh-value-clickable {
             text-decoration: none;
-            background-color: rgb(236, 239, 250);
+            background-color: #e1e5f6;
         }
 
         .sh-value-clickable:hover {
@@ -305,15 +305,33 @@ div.query-form-spa {
         font-size: 1.3em;
 
         a.sh-sugg {
-            text-decoration: underline;
+            text-decoration: none;
+            background-color: #e1e5f6;
             text-decoration-color: @color-logo-blue-shining;
             color: @color-default-text;
+            background-image: url('../../img/config-icon.svg');
+            background-repeat: no-repeat;
+            background-position: calc(100% - .2em) 0.2em;
+            background-size: 0.5em;
+            padding-right: 0.9em;
+            padding-left: 0.2em;
+        }
+
+        a.sh-sugg:hover {
+            color: @color-logo-blue;
+            text-decoration: underline;
         }
 
         a.sh-modified {
             text-decoration: none;
             background-color: @color-light-pink;
             color: @color-default-text;
+            background-image: url('../../img/config-icon-orange.svg');
+            background-repeat: no-repeat;
+            background-position: calc(100% - .2em) 0.2em;
+            background-size: 0.5em;
+            padding-right: 0.9em;
+            padding-left: 0.2em;
         }
     }
 
