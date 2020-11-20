@@ -397,6 +397,7 @@
         "query__query_structure": "Query interpretation",
         "query__specify_options": "Specify parameters",
         "query__no_result_found": "No result found. Please try to modify the query or its parameters.",
+        "query__query_is_empty": "The query is empty",
         "qhistory__attached_text_types": "Text types",
         "qhistory__curr_corp_only_label": "contains currently used corpus",
         "qhistory__query_type_sel": "contains query type",
