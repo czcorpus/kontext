@@ -461,6 +461,15 @@ export function init({
         const dynCls = props.data === null || List.every(s => querySuggest.isEmptyResponse(s), props.data.data) ?
             ' empty' : '';
 
+        const ref = React.useRef<HTMLDivElement>();
+
+        React.useLayoutEffect(
+            () => {
+                ref.current.focus();
+            },
+            [ref.current]
+        );
+
         const handleKey = () => {
             dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
                 name: ActionName.ToggleQuerySuggestionWidget,
@@ -472,8 +481,20 @@ export function init({
             });
         };
 
+        const handleBlur = () => {
+            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
+                name: ActionName.ToggleQuerySuggestionWidget,
+                payload: {
+                    formType: props.formType,
+                    sourceId: props.sourceId,
+                    tokenIdx: null
+                }
+            });
+        };
+
         return (
-            <div className={`SuggestionsWidget${dynCls}`} tabIndex={-1} onKeyDown={handleKey}>
+            <div className={`SuggestionsWidget${dynCls}`} tabIndex={0} onKeyDown={handleKey}
+                    onBlur={handleBlur} ref={ref}>
             {props.data ?
                 pipe(
                     props.data.data,

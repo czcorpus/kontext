@@ -102,10 +102,12 @@ export function filterOutTrivialSuggestions<T>(data:QuerySuggestion<T>):QuerySug
             ...data,
             contents: {
                 attrs: data.contents.attrs,
-                data: Dict.filter(
-                    (v, k) => List.size(v) > 1 || (List.size(v) === 1 && v[0] !== k),
-                    data.contents.data
-                )
+                data: Dict.size(data.contents.data) > 1 ?
+                    data.contents.data :
+                    Dict.filter(
+                        (v, k) => List.size(v) > 1 || (List.size(v) === 1 && v[0] !== k),
+                        data.contents.data
+                    )
             }
         };
 
