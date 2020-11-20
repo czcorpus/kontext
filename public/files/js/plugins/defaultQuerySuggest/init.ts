@@ -85,6 +85,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
                 query.query = List.map(v => v.value, query.queryParsed).join(' ');
                 query.rawFocusIdx = calcCursorEndPosition(query, tokenIdx);
                 query.rawAnchorIdx = query.rawFocusIdx;
+                query.qmcase = true;
 
             } else {
                 const attr = query.parsedAttrs[tokenIdx];
