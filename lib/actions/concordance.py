@@ -1210,11 +1210,14 @@ class Actions(Querying):
         p_attrs = self.args.attrs.split(',')
         # prefer 'word' but allow other attr if word is off
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
+        left_ctx = int(request.args.get('detail_left_ctx', 40))
+        right_ctx = int(request.args.get('detail_right_ctx', 40))
         data = conclib.get_detail_context(
-            corp=self.corp, pos=pos, attrs=attrs, structs=self.args.structs, hitlen=self.args.hitlen)
-        if int(getattr(self.args, 'detail_left_ctx', 0)) >= int(data['maxdetail']):
+            corp=self.corp, pos=pos, attrs=attrs, structs=self.args.structs, hitlen=self.args.hitlen,
+            detail_left_ctx=left_ctx, detail_right_ctx=right_ctx)
+        if left_ctx >= int(data['maxdetail']):
             data['expand_left_args'] = None
-        if int(getattr(self.args, 'detail_right_ctx', 0)) >= int(data['maxdetail']):
+        if right_ctx >= int(data['maxdetail']):
             data['expand_right_args'] = None
         data['widectx_globals'] = self._get_mapped_attrs(WidectxArgsMapping,
                                                          dict(structs=self._get_struct_opts()))
