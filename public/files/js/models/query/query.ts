@@ -132,22 +132,6 @@ export interface AdvancedQuerySubmit {
 export type AnyQuerySubmit = SimpleQuerySubmit|AdvancedQuerySubmit;
 
 
-export function calcCursorEndPosition(q:AnyQuery, tokenIdx):number {
-    if (q.qtype === 'simple') {
-        return pipe(
-            q.queryParsed,
-            List.slice(0, tokenIdx + 1),
-            List.foldl(
-                (acc, curr) => acc + curr.value.length + curr.trailingSpace.length, 0
-            )
-        );
-
-    } else {
-        return 0; // TODO !!!
-    }
-}
-
-
 export function findTokenIdxByFocusIdx(q:AnyQuery, focusIdx:number):number {
     if (q.qtype === 'simple') {
         for (let i = 0; i < q.queryParsed.length; i++) {
