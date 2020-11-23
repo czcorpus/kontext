@@ -460,7 +460,7 @@ export namespace PluginInterfaces {
 
         export interface IPlugin extends BasePlugin {
 
-            fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<TCData>;
+            fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number, expand_left?:number, expand_right?:number):Observable<TCData>;
 
             selectRenderer(typeId:string):Renderer;
 

@@ -42,6 +42,7 @@ export enum ActionName {
     RestoreChartItemsLimit = 'CONCORDANCE_RESTORE_CHART_ITEMS_LIMIT',
     ShowKwicDetail = 'CONCORDANCE_SHOW_KWIC_DETAIL',
     ShowTokenDetail = 'CONCORDANCE_SHOW_TOKEN_DETAIL',
+    ExpandTokenDetail = 'CONCORDANCE_EXPAND_TOKEN_DETAIL',
     ShowWholeDocument = 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
     ShowSpeechDetail = 'CONCORDANCE_SHOW_SPEECH_DETAIL',
     ExpandSpeechDetail = 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
@@ -224,6 +225,14 @@ export namespace Actions {
         lineIdx:number;
     }> {
         name:ActionName.ShowTokenDetail;
+    }
+
+    export interface ExpandTokenDetail extends Action<{
+        position:DetailExpandPositions;
+        expand_left_args:number;
+        expand_right_args:number;
+    }> {
+        name:ActionName.ExpandTokenDetail;
     }
 
     export interface ShowWholeDocument extends Action<{

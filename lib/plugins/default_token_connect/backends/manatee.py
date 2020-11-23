@@ -29,7 +29,7 @@ class ManateeWideCtxBackend(AbstractBackend):
         super().__init__(ident)
         self._conf = conf
 
-    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang):
+    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, left_ctx, right_ctx):
         """
         display a hit in a wider context
         """
@@ -42,13 +42,13 @@ class ManateeWideCtxBackend(AbstractBackend):
         # prefer 'word' but allow other attr if word is off
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
         data = conclib.get_detail_context(corp=maincorp, pos=token_id, attrs=attrs, structs=','.join(structs),
-                                          hitlen=num_tokens)
+                                          hitlen=num_tokens, detail_left_ctx=left_ctx, detail_right_ctx=right_ctx)
         logging.getLogger(__name__).debug('data: {}'.format(data))
         logging.getLogger(__name__).debug('corp: {}, data: {}'.format(maincorp, data))
-        # if int(getattr(self.args, 'detail_left_ctx', 0)) >= int(data['maxdetail']):
-        #    data['expand_left_args'] = None
-        # if int(getattr(self.args, 'detail_right_ctx', 0)) >= int(data['maxdetail']):
-        #    data['expand_right_args'] = None
+        if left_ctx >= int(data['maxdetail']):
+            data['expand_left_args'] = None
+        if right_ctx >= int(data['maxdetail']):
+            data['expand_right_args'] = None
         # data['widectx_globals'] = self._get_mapped_attrs(WidectxArgsMapping,
         #                                                 dict(structs=self._get_struct_opts()))
         data['features'] = self._conf['features']

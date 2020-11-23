@@ -112,7 +112,7 @@ class TreqBackend(HTTPBackend):
         return ('http://' + self._conf['server']).encode('utf-8')
 
     @cached
-    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang):
+    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, left_ctx, right_ctx):
         """
         """
         primary_lang = self._lang_from_corpname(corpora[0])
