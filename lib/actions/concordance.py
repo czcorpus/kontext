@@ -1571,8 +1571,11 @@ class Actions(Querying):
         )
 
         attrlist = corpus_get_conf(self.corp, 'ATTRLIST').split(',')
-        tmp_out['AttrList'] = [{'label': corpus_get_conf(
-            self.corp, n + '.LABEL') or n, 'n': n} for n in attrlist if n]
+        tmp_out['AttrList'] = [{
+            'label': corpus_get_conf(self.corp, n + '.LABEL') or n,
+            'n': n,
+            'multisep': corpus_get_conf(self.corp, n + '.MULTISEP')
+        } for n in attrlist if n]
 
         tmp_out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
                                      for n in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(',')
