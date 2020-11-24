@@ -63,14 +63,14 @@ def fetch_token_detail(self, request):
     """
     token_id = int(request.args['token_id'])
     num_tokens = int(request.args['num_tokens'])
-    left_ctx = int(request.args.get('detail_left_ctx', 40))
-    right_ctx = int(request.args.get('detail_right_ctx', 40))
+    context = (int(request.args.get('detail_left_ctx', 40)),
+               int(request.args.get('detail_right_ctx', 40)))
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
         token, resp_data = td.fetch_data(corpus_info.token_connect.providers, self.corp,
                                          [self.corp.corpname] +
                                          self.args.align, token_id, num_tokens, self.ui_lang,
-                                         left_ctx, right_ctx)
+                                         context)
     return dict(token=token, items=[item for item in resp_data])
 
 
@@ -139,7 +139,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
     def cache_path(self):
         return self._cache_path
 
-    def fetch_data(self, providers, maincorp_obj, corpora, token_id, num_tokens, lang, left_ctx, right_ctx):
+    def fetch_data(self, providers, maincorp_obj, corpora, token_id, num_tokens, lang, context=None):
         ans = []
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
@@ -164,7 +164,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
                     else:
                         args[attr] = v
                 data, status = backend.fetch(
-                    corpora, maincorp_obj, token_id, num_tokens, args, lang, left_ctx, right_ctx)
+                    corpora, maincorp_obj, token_id, num_tokens, args, lang, context)
                 ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
             except TypeError as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))

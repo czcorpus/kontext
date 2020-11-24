@@ -102,7 +102,7 @@ class AbstractBackend(abc.ABC):
 
     @abc.abstractmethod
     def fetch(self, corpora: List[str], maincorp: Corpus, token_id: int, num_tokens: int,
-              query_args: Dict[str, str], lang: str) -> Tuple[Any, bool]:
+              query_args: Dict[str, str], lang: str, context: Tuple[int, int] = None) -> Tuple[Any, bool]:
         pass
 
     def set_cache_path(self, path: str):
@@ -198,7 +198,8 @@ class AbstractTokenConnect(CorpusDependentPlugin):
     def map_providers(self, provider_ids: List[str]):
         raise NotImplementedError()
 
-    def fetch_data(self, provider_ids: List[str], maincorp_obj: Corpus, corpora: List[str], token_id: int, num_tokens: int, lang: str, left_ctx: int, right_ctx: int) -> List[Tuple[Any, bool]]:
+    def fetch_data(self, provider_ids: List[str], maincorp_obj: Corpus, corpora: List[str], token_id: int,
+                   num_tokens: int, lang: str, context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.
@@ -211,6 +212,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         token_id -- internal token ID user ask information about
         num_tokens -- how many tokens from the token_id to include in query (multi-word queries); min is 1
         lang -- user interface language (so we know how to localize the returned stuff)
+        context -- optional additional context to be applied (e.g. when using as a KWIC detail)
         """
         raise NotImplementedError()
 

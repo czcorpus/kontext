@@ -64,7 +64,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <RefValue /> ---------------------------
 
-    const RefValue:React.SFC<{
+    const RefValue:React.FC<{
         val:string;
 
     }> = (props) => {
@@ -81,7 +81,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <RefLine /> ---------------------------
 
-    const RefLine:React.SFC<{
+    const RefLine:React.FC<{
         colGroups:Array<{name:string; val:string}>;
 
     }> = (props) => {
@@ -114,7 +114,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <RefDetail /> ---------------------------
 
-    const RefDetail:React.SFC<RefDetailProps & RefsDetailModelState> = (props) => {
+    const RefDetail:React.FC<RefDetailProps & RefsDetailModelState> = (props) => {
 
         const renderContents = () => {
             if (props.isBusy) {
@@ -151,7 +151,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <ExpandConcDetail /> ---------------------------
 
-    const ExpandConcDetail:React.SFC<{
+    const ExpandConcDetail:React.FC<{
         position:DetailExpandPositions;
         isWaiting:boolean;
         clickHandler:()=>void;
@@ -194,7 +194,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <TokenExternalInfo /> ---------------------------
 
-    const TokenExternalInfo:React.SFC<{
+    const TokenExternalInfo:React.FC<{
         tokenConnectIsBusy:boolean;
         tokenConnectData:PluginInterfaces.TokenConnect.TCData;
 
@@ -233,7 +233,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <TokenExternalKWICView /> ---------------------------
 
-    const TokenExternalKWICView:React.SFC<{
+    const TokenExternalKWICView:React.FC<{
         tokenConnectIsBusy:boolean;
         tokenConnectData:Array<PluginInterfaces.TokenConnect.DataAndRenderer>;
         viewMode:string;
@@ -245,13 +245,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
             return props.tokenConnectIsBusy && props.expandingSide === side;
         };
 
-        const expandClickHandler = (position, expand_args) => {
-            dispatcher.dispatch<Actions.ExpandTokenDetail>({
-                name: ActionName.ExpandTokenDetail,
+        const expandClickHandler = (position:DetailExpandPositions) => {
+            dispatcher.dispatch<Actions.ExpandKwicDetail>({
+                name: ActionName.ExpandKwicDetail,
                 payload: {
-                    position: position,
-                    expand_left_args: expand_args.detail_left_ctx,
-                    expand_right_args: expand_args.detail_right_ctx
+                    position: position
                 }
             });
         };
@@ -271,7 +269,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
                         <layoutViews.ErrorBoundary>
                             {data.contents.expand_left_args ?
                                 <ExpandConcDetail position="left" isWaiting={isWaitingExpand('left')}
-                                    clickHandler={() => expandClickHandler('left', data.contents.expand_left_args)} />
+                                    clickHandler={() => expandClickHandler('left')} />
                                 : null
                             }
 
@@ -279,7 +277,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
                             {data.contents.expand_right_args ?
                                 <ExpandConcDetail position="right" isWaiting={isWaitingExpand('right')}
-                                    clickHandler={() => expandClickHandler('right', data.contents.expand_right_args)} />
+                                    clickHandler={() => expandClickHandler('right')} />
                                 : null
                             }
                         </layoutViews.ErrorBoundary>
@@ -293,7 +291,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <KwicDetailView /> ---------------------------
 
-    const KwicDetailView:React.SFC<{
+    const KwicDetailView:React.FC<{
         modelIsBusy:boolean;
         hasExpandLeft:boolean;
         hasExpandRight:boolean;
@@ -355,7 +353,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <DefaultView /> ---------------------------
 
-    const DefaultView:React.SFC<{
+    const DefaultView:React.FC<{
         data:Array<{str:string; class:string}>;
         hasExpandLeft:boolean;
         hasExpandRight:boolean;
@@ -381,7 +379,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <MenuLink /> ---------------------------
 
-    const MenuLink:React.SFC<{
+    const MenuLink:React.FC<{
         active:boolean;
         label:string;
         clickHandler:()=>void;
@@ -406,7 +404,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     // ------------------------- <ConcDetailMenu /> ---------------------------
 
-    const ConcDetailMenu:React.SFC<{
+    const ConcDetailMenu:React.FC<{
         supportsSpeechView:boolean;
         mode:string; // TODO enum
         tcData:Array<PluginInterfaces.TokenConnect.DataAndRenderer>;
@@ -471,7 +469,7 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
                     return <SpeechView />;
                 default:
                     return <TokenExternalKWICView tokenConnectIsBusy={this.props.isBusy}
-                                tokenConnectData={this.props.tokenConnectData.renders} viewMode={this.props.mode} 
+                                tokenConnectData={this.props.tokenConnectData.renders} viewMode={this.props.mode}
                                 expandingSide={this.props.expandingSide} />;
             }
         }

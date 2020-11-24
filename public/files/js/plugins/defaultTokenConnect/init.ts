@@ -62,13 +62,23 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
         return true;
     }
 
-    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number, expand_left?:number, expand_right?:number):Observable<PluginInterfaces.TokenConnect.TCData> {
+    fetchTokenConnect(
+        corpusId:string,
+        tokenId:number,
+        numTokens:number,
+        context?:[number, number]
+    ):Observable<PluginInterfaces.TokenConnect.TCData> {
+
         const args = new MultiDict();
         args.set('corpname', corpusId);
         args.set('token_id', tokenId);
         args.set('num_tokens', numTokens);
-        if (expand_left) {args.set('detail_left_ctx', expand_left)};
-        if (expand_right) {args.set('detail_right_ctx', expand_right)};
+        if (context && context[0]) {
+            args.set('detail_left_ctx', context[0]);
+        };
+        if (context && context[1]) {
+            args.set('detail_right_ctx', context[1]);
+        };
         args.replace('align', this.alignedCorpora);
         return this.pluginApi.ajax$<PluginInterfaces.TokenConnect.Response>(
             HTTP.Method.GET,

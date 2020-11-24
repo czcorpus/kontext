@@ -21,7 +21,7 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf, forkJoin } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { Color, List, pipe, Dict, HTTP } from 'cnc-tskit';
+import { Color, List, pipe, Dict, HTTP, tuple } from 'cnc-tskit';
 
 import { MultiDict } from '../../multidict';
 import { PluginInterfaces } from '../../types/plugins';
@@ -222,22 +222,39 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.addActionHandler<Actions.ExpandKwicDetail>(
             ActionName.ExpandKwicDetail,
             action => {
+
+
                 this.changeState(state => {
                     state.expandingSide = action.payload.position;
+                    state.tokenConnectIsBusy = true;
                     state.isBusy = true;
                 });
-                this.loadConcDetail(
+
+                forkJoin([
+                    this.loadTokenConnect(
+                        this.state.corpusId,
+                        this.state.kwicTokenNum,
+                        1,
+                        this.state.lineIdx,
+                        action.payload.position
+                    ),
+                    this.loadConcDetail(
                         [],
                         action.payload.position
-                ).subscribe(
+                    )
+                ]).subscribe(
                     () => {
                         this.changeState(state => {
                             state.isBusy = false;
+                            state.tokenConnectIsBusy = false;
+                            state.expandingSide = null;
                         });
                     },
                     (err) => {
                         this.changeState(state => {
                             state.isBusy = false;
+                            state.tokenConnectIsBusy = false;
+                            state.expandingSide = null;
                         });
                         this.layoutModel.showMessage('error', err);
                     }
@@ -259,7 +276,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     state.lineIdx = action.payload.lineIdx;
                     state.wholeDocumentLoaded = false;
                 });
-                forkJoin(
+                forkJoin([
                     this.loadConcDetail(
                         [],
                         this.state.expandLeftArgs.length > 1 &&
@@ -269,10 +286,11 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         action.payload.corpusId,
                         action.payload.tokenNumber,
                         action.payload.kwicLength,
-                        action.payload.lineIdx
+                        action.payload.lineIdx,
+                        'reload'
                     )
 
-                ).subscribe(
+                ]).subscribe(
                     () => {
                         this.changeState(state => {
                             state.isBusy = false;
@@ -302,7 +320,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     action.payload.corpusId,
                     action.payload.tokenNumber,
                     1,
-                    action.payload.lineIdx
+                    action.payload.lineIdx,
+                    'reload'
 
                 ).subscribe(
                     () => {
@@ -321,39 +340,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ExpandTokenDetail>(
-            ActionName.ExpandTokenDetail,
-            action => {
-                this.changeState(state => {
-                    state.tokenConnectIsBusy = true;
-                    state.expandingSide = action.payload.position;
-                });
-                this.loadTokenConnect(
-                    this.state.corpusId,
-                    this.state.kwicTokenNum,
-                    1,
-                    this.state.lineIdx,
-                    action.payload.expand_left_args,
-                    action.payload.expand_right_args
-
-                ).subscribe(
-                    () => {
-                        this.changeState(state => {
-                            state.tokenConnectIsBusy = false;
-                            state.expandingSide = null;
-                        });
-                    },
-                    (err) => {
-                        this.changeState(state => {
-                            state.tokenConnectIsBusy = false;
-                            state.expandingSide = null;
-                        });
-                        this.layoutModel.showMessage('error', err);
-                    }
-                );
-
-            }
-        );
 
         this.addActionHandler<Actions.ShowWholeDocument>(
             ActionName.ShowWholeDocument,
@@ -427,8 +413,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     if (action.payload.value === 'default') {
                         this.changeState(state => {
                             state.mode = 'default';
-                            state.expandLeftArgs = Array<ExpandArgs>();
-                            state.expandRightArgs = Array<ExpandArgs>();
                             state.expandingSide = null;
                             state.concDetail = [];
                             state.isBusy = true;
@@ -438,11 +422,9 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     } else if (action.payload.value === 'speech') {
                         this.changeState(state => {
                             state.mode = 'speech';
-                            state.expandLeftArgs = [];
-                            state.expandRightArgs = [];
                             state.speakerColorsAttachments = {};
                             state.expandingSide = null;
-                            state.concDetail = null;
+                            state.concDetail = [];
                             state.isBusy = true;
                         });
                         return this.loadSpeechDetail();
@@ -450,8 +432,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     } else {
                         this.changeState(state => {
                             state.mode = action.payload.value;
-                            state.expandLeftArgs = [];
-                            state.expandRightArgs = [];
                             state.expandingSide = null;
                             state.concDetail = [];
                             state.isBusy = true;
@@ -722,7 +702,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     /**
      *
      */
-    private loadSpeechDetail(expand?:string):Observable<boolean> {
+    private loadSpeechDetail(expand?:'left'|'right'|'reload'):Observable<boolean> {
         const structs = this.layoutModel.exportConcArgs().getList('structs');
         const args = this.state.speechAttrs
                 .map(x => `${this.state.speechOpts.speakerIdAttr[0]}.${x}`)
@@ -743,9 +723,14 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     }
 
     private loadTokenConnect(corpusId:string, tokenNum:number, numTokens:number,
-            lineIdx:number, expand_left_args?:number, expand_right_args?:number):Observable<boolean> {
+            lineIdx:number, expand:'left'|'right'|'reload'):Observable<boolean> {
+        const [expand_left_args, expand_right_args] = this.getExpandArgs(expand);
         return this.tokenConnectPlg.fetchTokenConnect(
-            corpusId, tokenNum, numTokens, expand_left_args, expand_right_args
+            corpusId,
+            tokenNum,
+            numTokens,
+            tuple(expand_left_args, expand_right_args)
+
         ).pipe(
             tap(
                 (data) => {
@@ -763,10 +748,29 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         );
     }
 
+    private getExpandArgs(expand:'left'|'right'|'reload'):[number, number]|[undefined, undefined] {
+        switch(expand) {
+            case 'left':
+                return List.get(-1, this.state.expandLeftArgs);
+            case 'right':
+                return List.get(-1, this.state.expandRightArgs);
+            case 'reload':
+                if (this.state.expandLeftArgs.length > 1 &&
+                        this.state.expandRightArgs.length > 1) {
+                    return tuple(
+                        List.get(-1, this.state.expandRightArgs)[0],
+                        List.get(-1, this.state.expandLeftArgs)[1]
+                    );
+                }
+            default:
+                return tuple(undefined, undefined);
+        }
+    }
+
     /**
      *
      */
-    private loadConcDetail(structs:Array<string>, expand?:string):Observable<boolean> {
+    private loadConcDetail(structs:Array<string>, expand?:'left'|'right'|'reload'):Observable<boolean> {
 
         const args = new MultiDict(this.state.wideCtxGlobals);
         args.set('corpname', this.state.corpusId); // just for sure (is should be already in args)
@@ -783,26 +787,9 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             args.set('structs', (args.head('structs') || '').split(',').concat(structs).join(','));
         }
 
-        if (expand === 'left') {
-            const [lft, rgt] = List.get(-1, this.state.expandLeftArgs);
-            args.set('detail_left_ctx', lft);
-            args.set('detail_right_ctx', rgt);
-
-        } else if (expand === 'right') {
-            const [lft, rgt] = List.get(-1, this.state.expandRightArgs);
-            args.set('detail_left_ctx', lft);
-            args.set('detail_right_ctx', rgt);
-
-
-        } else if (expand === 'reload' && this.state.expandLeftArgs.length > 1
-                && this.state.expandRightArgs.length > 1) {
-            // Please note that the following lines do not contain any 'left - right'
-            // mismatch as we have to fetch the 'current' state, not the 'next' one and such
-            // info is always on the other side of expansion (expand-left contains
-            // also current right and vice versa)
-            args.set('detail_left_ctx', List.get(-1, this.state.expandRightArgs)[0]);
-            args.set('detail_right_ctx', List.get(-1, this.state.expandLeftArgs)[1]);
-        }
+        const [lft, rgt] = this.getExpandArgs(expand);
+        args.set('detail_left_ctx', lft);
+        args.set('detail_right_ctx', rgt);
 
         return this.layoutModel.ajax$<AjaxResponse.WideCtx>(
             HTTP.Method.GET,
@@ -825,7 +812,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                             ]);
 
                         } else {
-                            state.expandLeftArgs.push(null);
+                            state.expandLeftArgs.push(tuple(undefined, undefined));
                         }
                         if (data.expand_right_args) {
                             state.expandRightArgs.push([
@@ -834,7 +821,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                             ]);
 
                         } else {
-                            state.expandRightArgs.push(null);
+                            state.expandRightArgs.push(tuple(undefined, undefined));
                         }
                     });
                 }
@@ -848,11 +835,15 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     }
 
     static hasExpandLeft(state:ConcDetailModelState):boolean {
-        return !!List.get(-1, state.expandLeftArgs);
+        const [lft, rgt] = List.empty(state.expandLeftArgs) ?
+                [undefined, undefined] : List.get(-1, state.expandLeftArgs);
+        return lft !== undefined && rgt !== undefined;
     }
 
     static hasExpandRight(state:ConcDetailModelState):boolean {
-        return !!List.get(-1, state.expandRightArgs);
+        const [lft, rgt] = List.empty(state.expandLeftArgs) ?
+                [undefined, undefined] : List.get(-1, state.expandRightArgs);
+        return lft !== undefined && rgt !== undefined;
     }
 
     static canDisplayWholeDocument(state:ConcDetailModelState):boolean {

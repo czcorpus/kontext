@@ -25,7 +25,7 @@ from functools import wraps
 from hashlib import md5
 
 
-def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang, left_ctx, right_ctx):
+def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang, context):
     """
     Returns a hashed cache key based on the passed parameters.
     """
@@ -35,7 +35,7 @@ def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query
             args.append((x, sorted([(x2, y2) for x2, y2 in list(y.items())], key=lambda x: x[0])))
         else:
             args.append((x, y))
-    return md5(f'{provider_id}{corpora}{token_id}{num_tokens}{args}{lang}'.encode('utf-8')).hexdigest()
+    return md5(f'{provider_id}{corpora}{token_id}{num_tokens}{args}{lang}{context}'.encode('utf-8')).hexdigest()
 
 
 def cached(fn):
@@ -47,7 +47,7 @@ def cached(fn):
     """
 
     @wraps(fn)
-    def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang):
+    def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context):
         """
         get full path to the cache_db_file using a method defined in the abstract class that reads the value from
         kontext's config.xml; if the cache path is not defined, do not use caching:
@@ -55,7 +55,7 @@ def cached(fn):
         cache_path = self.get_cache_path()
         if cache_path:
             key = mk_token_connect_cache_key(
-                self.provider_id, corpora, token_id, num_tokens, query_args, lang)
+                self.provider_id, corpora, token_id, num_tokens, query_args, lang, context)
             with sqlite3.connect(cache_path) as conn:
                 res = conn.execute('PRAGMA journal_mode=WAL').fetchone()
                 imode = res[0] if res else 'undefined'
@@ -66,7 +66,7 @@ def cached(fn):
                 res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
                 # if no result is found in the cache, call the backend function
                 if res is None:
-                    res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang)
+                    res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context)
                     # if a result is returned by the backend function, encode and zip its data part and store it in
                     # the cache along with the "found" parameter
                     if res:
@@ -86,7 +86,7 @@ def cached(fn):
                 curs.close()
                 # commited automatically via context manager
         else:
-            res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang)
+            res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context)
         return res if res else ('', False)
 
     return wrapper
