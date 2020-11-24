@@ -460,7 +460,18 @@ export namespace PluginInterfaces {
 
         export interface IPlugin extends BasePlugin {
 
-            fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<TCData>;
+            /**
+             * Fetch a detail information about a token with numeric ID equal to tokenId. The
+             * token can be multi-word (numTokens > 1). Also an optional additional context
+             * can be considered (e.g. when using the plug-in as a source for alternative kwic
+             * detail).
+             */
+            fetchTokenConnect(
+                corpusId:string,
+                tokenId:number,
+                numTokens:number,
+                context?:[number, number]
+            ):Observable<TCData>;
 
             selectRenderer(typeId:string):Renderer;
 
