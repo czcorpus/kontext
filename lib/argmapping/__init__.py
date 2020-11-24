@@ -262,11 +262,11 @@ class Args(object):
                 if hasattr(self, key):
                     if isinstance(getattr(self, key), (list, tuple)):
                         setattr(self, key, values)
+                    elif isinstance(getattr(self, key), bool):
+                        setattr(self, key, bool(int(values[-1])))
                     elif isinstance(getattr(self, key), int):
                         setattr(self, key, int(
                             self._upgrade_legacy_value(key, values[-1], in_args)))
-                    elif isinstance(getattr(self, key), bool):
-                        setattr(self, key, bool(int(values[-1])))
                     else:
                         # when mapping to a scalar arg we always take the last
                         # value item but in such case, the length of values should
