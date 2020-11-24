@@ -68,9 +68,11 @@ class Options(Kontext):
             corp = corplib.manatee.Corpus(self.args.maincorp)
         else:
             corp = self.corp
-        out['AttrList'] = [{'label': corp.get_conf(n + '.LABEL') or n, 'n': n}
-                           for n in corp.get_conf('ATTRLIST').split(',')
-                           if n]
+        out['AttrList'] = [{
+            'label': corp.get_conf(n + '.LABEL') or n,
+            'n': n,
+            'multisep': corp.get_conf(n + '.MULTISEP')
+        } for n in corp.get_conf('ATTRLIST').split(',') if n]
         out['fixed_attr'] = 'word'
         out['attr_vmode'] = self.args.attr_vmode
         availstruct = corp.get_conf('STRUCTLIST').split(',')

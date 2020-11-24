@@ -874,8 +874,11 @@ class Kontext(Controller):
         for listname in ['AttrList', 'StructAttrList']:
             if listname in result:
                 continue
-            result[listname] = [{'label': corpus_get_conf(maincorp, n + '.LABEL') or n, 'n': n}
-                                for n in corpus_get_conf(maincorp, listname.upper()).split(',') if n]
+            result[listname] = [{
+                'label': corpus_get_conf(maincorp, n + '.LABEL') or n,
+                'n': n,
+                **({'multisep': corpus_get_conf(maincorp, n + '.MULTISEP')} if listname == 'AttrList' else {})
+            } for n in corpus_get_conf(maincorp, listname.upper()).split(',') if n]
         result['StructList'] = corpus_get_conf(self.corp, 'STRUCTLIST').split(',')
 
         if corpus_get_conf(maincorp, 'FREQTTATTRS'):
