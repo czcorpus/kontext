@@ -439,7 +439,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         action.payload.insertRange
                     );
                 });
-
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
                     action.payload.rawAnchorIdx,
@@ -657,8 +656,18 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
                     if (queryObj.qtype === 'simple') {
-                        queryObj.queryParsed = parseSimpleQuery(queryObj);
+                        queryObj.queryParsed = List.map(
+                            item => ({
+                                    ...item,
+                                    isExtended: false,
+                                    args: [tuple(queryObj.default_attr, item.value)]
+                            }),
+                            queryObj.queryParsed
+                        );
                         this.rehighlightSimpleQuery(queryObj);
+
+                    } else {
+                        throw new Error('Cannot reset query expansion - invalid target query type');
                     }
                 });
             }
@@ -786,7 +795,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     queryObj.rawFocusIdx = charIdx;
                     queryObj.rawAnchorIdx = charIdx;
                 }
-
                 if (queryObj.queryParsed[tokenIdx].isExtended) {
                     richText.push(
                         `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</a>`);
