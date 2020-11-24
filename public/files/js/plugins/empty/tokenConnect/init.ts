@@ -27,7 +27,7 @@ export class EmptyTokenConnectPlugin implements PluginInterfaces.TokenConnect.IP
         return false;
     }
 
-    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<PluginInterfaces.TokenConnect.TCData> {
+    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number, expand_left?:number, expand_right?:number):Observable<PluginInterfaces.TokenConnect.TCData> {
         return rxOf(null);
     }
 

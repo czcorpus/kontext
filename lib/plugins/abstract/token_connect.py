@@ -198,7 +198,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
     def map_providers(self, provider_ids: List[str]):
         raise NotImplementedError()
 
-    def fetch_data(self, provider_ids: List[str], maincorp_obj: Corpus, corpora: List[str], token_id: int, num_tokens: int, lang: str) -> List[Tuple[Any, bool]]:
+    def fetch_data(self, provider_ids: List[str], maincorp_obj: Corpus, corpora: List[str], token_id: int, num_tokens: int, lang: str, left_ctx: int, right_ctx: int) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.

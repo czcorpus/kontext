@@ -321,6 +321,40 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
+        this.addActionHandler<Actions.ExpandTokenDetail>(
+            ActionName.ExpandTokenDetail,
+            action => {
+                this.changeState(state => {
+                    state.tokenConnectIsBusy = true;
+                    state.expandingSide = action.payload.position;
+                });
+                this.loadTokenConnect(
+                    this.state.corpusId,
+                    this.state.kwicTokenNum,
+                    1,
+                    this.state.lineIdx,
+                    action.payload.expand_left_args,
+                    action.payload.expand_right_args
+
+                ).subscribe(
+                    () => {
+                        this.changeState(state => {
+                            state.tokenConnectIsBusy = false;
+                            state.expandingSide = null;
+                        });
+                    },
+                    (err) => {
+                        this.changeState(state => {
+                            state.tokenConnectIsBusy = false;
+                            state.expandingSide = null;
+                        });
+                        this.layoutModel.showMessage('error', err);
+                    }
+                );
+
+            }
+        );
+
         this.addActionHandler<Actions.ShowWholeDocument>(
             ActionName.ShowWholeDocument,
             action => {
@@ -709,9 +743,9 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
     }
 
     private loadTokenConnect(corpusId:string, tokenNum:number, numTokens:number,
-            lineIdx:number):Observable<boolean> {
+            lineIdx:number, expand_left_args?:number, expand_right_args?:number):Observable<boolean> {
         return this.tokenConnectPlg.fetchTokenConnect(
-            corpusId, tokenNum, numTokens
+            corpusId, tokenNum, numTokens, expand_left_args, expand_right_args
         ).pipe(
             tap(
                 (data) => {

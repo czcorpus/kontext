@@ -237,9 +237,26 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
         tokenConnectIsBusy:boolean;
         tokenConnectData:Array<PluginInterfaces.TokenConnect.DataAndRenderer>;
         viewMode:string;
+        expandingSide:DetailExpandPositions;
 
     }> = (props) => {
-        if (props.tokenConnectIsBusy) {
+
+        const isWaitingExpand = (side) => {
+            return props.tokenConnectIsBusy && props.expandingSide === side;
+        };
+
+        const expandClickHandler = (position, expand_args) => {
+            dispatcher.dispatch<Actions.ExpandTokenDetail>({
+                name: ActionName.ExpandTokenDetail,
+                payload: {
+                    position: position,
+                    expand_left_args: expand_args.detail_left_ctx,
+                    expand_right_args: expand_args.detail_right_ctx
+                }
+            });
+        };
+
+        if (props.tokenConnectIsBusy && props.expandingSide === null) {
             return (
                 <div className="token-detail" style={{textAlign: 'center'}}>
                     <layoutViews.AjaxLoaderImage />
@@ -252,7 +269,19 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
                 return (
                     <div className="token-detail">
                         <layoutViews.ErrorBoundary>
+                            {data.contents.expand_left_args ?
+                                <ExpandConcDetail position="left" isWaiting={isWaitingExpand('left')}
+                                    clickHandler={() => expandClickHandler('left', data.contents.expand_left_args)} />
+                                : null
+                            }
+
                             <data.renderer data={data.contents} />
+
+                            {data.contents.expand_right_args ?
+                                <ExpandConcDetail position="right" isWaiting={isWaitingExpand('right')}
+                                    clickHandler={() => expandClickHandler('right', data.contents.expand_right_args)} />
+                                : null
+                            }
                         </layoutViews.ErrorBoundary>
                     </div>
                 );
@@ -442,7 +471,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
                     return <SpeechView />;
                 default:
                     return <TokenExternalKWICView tokenConnectIsBusy={this.props.isBusy}
-                                tokenConnectData={this.props.tokenConnectData.renders} viewMode={this.props.mode}  />;
+                                tokenConnectData={this.props.tokenConnectData.renders} viewMode={this.props.mode} 
+                                expandingSide={this.props.expandingSide} />;
             }
         }
 

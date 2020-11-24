@@ -25,7 +25,7 @@ from functools import wraps
 from hashlib import md5
 
 
-def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang):
+def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang, left_ctx, right_ctx):
     """
     Returns a hashed cache key based on the passed parameters.
     """

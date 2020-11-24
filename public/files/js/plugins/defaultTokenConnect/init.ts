@@ -23,7 +23,7 @@ import { init as initView, Views as DefaultTokenConnectRenderers } from './views
 import { MultiDict } from '../../multidict';
 import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { HTTP, List, pipe } from 'cnc-tskit';
 
 
@@ -62,11 +62,13 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
         return true;
     }
 
-    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number):Observable<PluginInterfaces.TokenConnect.TCData> {
+    fetchTokenConnect(corpusId:string, tokenId:number, numTokens:number, expand_left?:number, expand_right?:number):Observable<PluginInterfaces.TokenConnect.TCData> {
         const args = new MultiDict();
         args.set('corpname', corpusId);
         args.set('token_id', tokenId);
         args.set('num_tokens', numTokens);
+        if (expand_left) {args.set('detail_left_ctx', expand_left)};
+        if (expand_right) {args.set('detail_right_ctx', expand_right)};
         args.replace('align', this.alignedCorpora);
         return this.pluginApi.ajax$<PluginInterfaces.TokenConnect.Response>(
             HTTP.Method.GET,
