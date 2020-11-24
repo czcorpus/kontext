@@ -264,6 +264,7 @@ export namespace AjaxResponse {
         pluginData:{[plgName:string]:any};
         DefaultVirtKeyboard:string;
         SimpleQueryDefaultAttrs:Array<string>;
+        QSEnabled:boolean;
     }
 }
 

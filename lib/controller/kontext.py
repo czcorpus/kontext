@@ -327,11 +327,10 @@ class Kontext(Controller):
         options -- a dictionary containing user settings
         actions -- a custom action to be applied to options (default is None)
         """
-        self.args.map_args_to_attrs(options)
         if callable(actions):
             actions(options)
+        self.args.map_args_to_attrs(options)
         self._setup_user_paths()
-        self.args.__dict__.update(options)
 
     def _apply_corpus_user_settings(self, options, corpname):
         """
