@@ -248,7 +248,7 @@ def calc_freqs_bg(args: FreqCalsArgs):
     return dict(freqs=freqs, conc_size=conc.size())
 
 
-def calculate_freqs(args):
+def calculate_freqs(args: FreqCalsArgs):
     """
     Calculates a frequency distribution based on a defined concordance and frequency-related arguments.
     The class is able to cache the data in a background process/task. This prevents KonText to calculate
