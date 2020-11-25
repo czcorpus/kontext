@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
+import { Kontext } from '../../types/common';
 import * as React from 'react';
-import {FreqDataRowsModel, ResultHeader, ResultItem} from '../../models/freqs/dataRows';
-import {IActionDispatcher} from 'kombo';
+import { FreqDataRowsModel, ResultHeader, ResultItem } from '../../models/freqs/dataRows';
+import { IActionDispatcher } from 'kombo';
 import { Actions, ActionName } from '../../models/freqs/actions';
 import { List } from 'cnc-tskit';
 
@@ -38,8 +38,8 @@ interface ExportedComponents {
 
 export function init(
         dispatcher:IActionDispatcher,
-        he:Kontext.ComponentHelpers,
-        freqDataRowsModel:FreqDataRowsModel):ExportedComponents {
+        he:Kontext.ComponentHelpers
+):ExportedComponents {
 
     // ----------------------- <DataRowPNFilter /> --------------------------------
 

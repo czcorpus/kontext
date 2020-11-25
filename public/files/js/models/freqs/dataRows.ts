@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {FreqResultResponse} from '../../types/ajaxResponses';
-import {PageModel} from '../../app/page';
-import {FreqFormInputs} from './freqForms';
-import {FreqResultsSaveModel} from './save';
-import {MultiDict} from '../../multidict';
+import { FreqResultResponse } from '../../types/ajaxResponses';
+import { PageModel } from '../../app/page';
+import { FreqFormInputs } from './freqForms';
+import { FreqResultsSaveModel } from './save';
+import { MultiDict } from '../../multidict';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { FreqServerArgs } from './common';
@@ -71,7 +71,7 @@ export interface FreqDataRowsModelArgs {
 
 export interface FreqDataRowsModelState {
     data:Array<ResultBlock>;
-    currentPage:string;
+    currentPage:string|null; // null means multi-block output which cannot be paginated
     sortColumn:string
     freqCrit:Array<[string, string]>;
     ftt_include_empty:boolean;
@@ -83,7 +83,7 @@ export interface FreqDataRowsModelState {
 export function importData(pageModel:PageModel, data:Array<FreqResultResponse.Block>, pageSize:number, currentPage:number):Array<ResultBlock> {
     return List.map(item => ({
         Items: List.map((item, i) => ({
-            idx: i + currentPage * pageSize,
+            idx: i + (currentPage - 1) * pageSize,
             Word: List.map(x => x.n, item.Word),
             pfilter: createQuickFilterUrl(pageModel, item.pfilter),
             nfilter: createQuickFilterUrl(pageModel, item.nfilter),
@@ -127,7 +127,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             {
                 data: initialData,
                 freqCrit: freqCrit,
-                currentPage: null,
+                currentPage: initialData.length > 1 ? null : '1',
                 sortColumn: formProps.freq_sort,
                 ftt_include_empty: formProps.ftt_include_empty,
                 flimit: formProps.flimit || '0',
