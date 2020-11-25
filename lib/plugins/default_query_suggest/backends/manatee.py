@@ -15,7 +15,7 @@
 
 from collections import defaultdict
 import re
-from typing import List
+from typing import List, Tuple
 from corplib import CorpusManager
 from conclib.search import get_conc
 from conclib.freq import multi_level_crit
@@ -23,6 +23,7 @@ from bgcalc import freq_calc
 from plugins.abstract.query_suggest import AbstractBackend
 import manatee
 from strings import re_escape
+import logging
 
 
 class PosAttrPairRelManateeBackend(AbstractBackend):
@@ -59,6 +60,20 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
                  for cr in args.fcrit]
         return freqs[0].get('Items', [])
 
+    def _normalize_multivalues(self, attr1: str, attr2: str) -> Tuple[str, str]:
+        multisep1 = self._corp.get_conf(self._conf["attr1"] + '.MULTISEP')
+        multisep2 = self._corp.get_conf(self._conf["attr2"] + '.MULTISEP')
+        if multisep1 and multisep2:
+            attr1_split = attr1.split(multisep1)
+            attr2_split = attr2.split(multisep2)
+            if len(attr1_split) == len(attr2_split):
+                return attr1_split[0], attr2_split[0]
+
+            logging.warn(
+                f'PosAttrPairRelManateeBackend multivalue normalization mismatch - {attr1}...{attr2}')
+
+        return attr1, attr2
+
     def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
                         value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
                         s_attr: str):
@@ -73,7 +88,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         data = self._freq_dist(corp=used_corp, conc=conc, fcrit=fcrit, user_id=user_id)
         rels = defaultdict(lambda: set())
         for item in data:
-            attr1, attr2 = tuple([w['n'] for w in item['Word']])[:2]
+            attr1, attr2 = self._normalize_multivalues(*(tuple([w['n'] for w in item['Word']])[:2]))
             rels[attr1].add(attr2)
         return dict(attrs=(self._conf['attr1'], self._conf['attr2']),
                     data=dict((k, list(v)) for k, v in rels.items()))
