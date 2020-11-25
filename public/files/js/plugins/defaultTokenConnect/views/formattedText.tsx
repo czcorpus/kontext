@@ -53,7 +53,9 @@ class TreeNode {
 
                 acc.push(curr instanceof TreeNode ? curr.renderNode(i) : curr);
                 if (i !== this.children.length - 1) {
-                    acc.push(' ');
+                    if (curr instanceof TreeNode && !['doc', 'text'].includes(curr.element)) {
+                        acc.push(' ');
+                    }
                 }
                 return acc;
             },
@@ -82,9 +84,16 @@ class TreeNode {
                 return <mark key={index}>{renderedChildren}</mark>;
             case 'div':
                 return <div key={index}>{renderedChildren}</div>;
+            case 'doc':
+                return <div key={index} className={index === 0 ? null : "document"}>{renderedChildren}</div>;
+            case 'text':
+                return <div key={index} className={index === 0 ? null : "text"}>{renderedChildren}</div>;
+            case 'span':
+                return <span key={index}>{renderedChildren}</span>;
+            case 'sentence':
+                return <span key={index} className="sentence">{renderedChildren}</span>;
             default:
                 console.warn(`Unknown element type, can not render: ${this.element}`);
-            case 'default':
                 return <span key={index}>{renderedChildren}</span>;
         }
     }
@@ -109,6 +118,9 @@ interface FeatureConf {
     newLine?:ElementConf;
     removeSpace?:ElementConf;
     typeface?:ElementConf;
+    sentence?:ElementConf;
+    text?:ElementConf;
+    document?:ElementConf;
 }
 
 const typefaceMap = {
@@ -118,7 +130,7 @@ const typefaceMap = {
     overstrike: 'del',
     superscript: 'sup',
     subscript: 'sub',
-    default: 'default'
+    default: 'span'
 }
 
 function getStructMapping(featureConf:FeatureConf) {
@@ -135,6 +147,15 @@ function getStructMapping(featureConf:FeatureConf) {
     if (featureConf.typeface) {
         mapping[featureConf.typeface.element] = {attr: featureConf.typeface.attribute, map: typefaceMap};
     }
+    if (featureConf.sentence) {
+        mapping[featureConf.sentence.element] = 'sentence';
+    }
+    if (featureConf.text) {
+        mapping[featureConf.text.element] = 'text';
+    }
+    if (featureConf.document) {
+        mapping[featureConf.document.element] = 'doc';
+    }
     return mapping;
 }
 
@@ -143,7 +164,6 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
     const FormattedTextRenderer:React.FC<FormattedTextRendererProps> = (props) => {
         const structMapping = getStructMapping(props.data.features);
         const rootNode = new TreeNode('div', [], null);
-
         pipe(
             props.data.content,
             // split content by xml tags (only strc classes)
@@ -170,7 +190,6 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                         if (curr.str.startsWith('<\/')) {
                             const tagName = /<\/(\w+)>/g.exec(curr.str)[1];
                             const mappedTag = structMapping[tagName];
-
                             if (mappedTag) {
                                 if (isAttrMapping(mappedTag)) {
                                     if (activeNode.parent && Dict.hasValue(activeNode.element, mappedTag.map)) {

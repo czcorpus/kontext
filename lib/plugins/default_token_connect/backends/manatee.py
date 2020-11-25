@@ -21,6 +21,9 @@ import conclib
 
 
 class ManateeWideCtxBackend(AbstractBackend):
+    # allowed element types in valid hierarchical order
+    ELEMENT_HIERARCHY = ['document', 'text', 'paragraph',
+                         'sentence', 'typeface', 'newLine', 'removeSpace']
 
     def __init__(self, conf, ident):
         super().__init__(ident)
@@ -31,11 +34,18 @@ class ManateeWideCtxBackend(AbstractBackend):
         display a hit in a wider context
         """
         p_attrs = self._conf['attrs']
-        structs = [
-            f'{v["element"]}.{v["attribute"]}'
-            if 'attribute' in v else v['element']
-            for k, v in self._conf['features'].items()
-        ]
+        structs = []
+        for element in self.ELEMENT_HIERARCHY:
+            try:
+                element_conf = self._conf['features'][element]
+            except KeyError:
+                continue
+            structs.append(
+                f'{element_conf["element"]}.{element_conf["attribute"]}'
+                if 'attribute' in element_conf
+                else element_conf['element']
+            )
+
         # prefer 'word' but allow other attr if word is off
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
         left_ctx, right_ctx = context if context is not None else (40, 40)
