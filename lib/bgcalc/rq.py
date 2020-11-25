@@ -71,6 +71,16 @@ class RqConfig(object):
     SCHEDULER_CONF_PATH = None
 
 
+class Control:
+
+    def __init__(self, redis_conn):
+        self._conn = redis_conn
+
+    def revoke(self, task_id):
+        job = Job.fetch(task_id, connection=self._conn)
+        job.cancel()
+
+
 class RqClient:
 
     def __init__(self, conf: RqConfig, prefix: str = ''):
@@ -79,6 +89,7 @@ class RqClient:
         self.prefix = prefix
         self.scheduler = Scheduler(connection=self.redis_conn, queue=self.queue)
         self.scheduler_conf_path = conf.SCHEDULER_CONF_PATH
+        self.control = Control(self.redis_conn)
 
     def init_scheduler(self):
         # remove old scheduled tasks
