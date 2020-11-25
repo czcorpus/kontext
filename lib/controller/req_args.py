@@ -103,8 +103,18 @@ class RequestArgsProxy:
         return curr
 
     def as_dict(self):
+        """
+        Export request data as a dictionary. In case
+        a key represents a multi-value - a list is set
+        as a value, otherwise a string or None is present.
+        """
         ans = {}
         for k in self.keys():
-            v = self.getlist(k)
-            ans[k] = v[-1] if len(v) > 0 else None
+            vals = self.getlist(k)
+            if len(vals) == 0:
+                ans[k] = None
+            elif len(vals) == 1:
+                ans[k] = vals[0]
+            else:
+                ans[k] = vals
         return ans
