@@ -19,30 +19,16 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {Keyboard, List} from 'cnc-tskit';
-import {init as dataRowsInit} from './dataRows';
-import {init as initSaveViews} from './save';
-import {FreqDataRowsModel, ResultBlock, FreqDataRowsModelState} from '../../models/freqs/dataRows';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
+import { Kontext } from '../../types/common';
+import { Keyboard, List } from 'cnc-tskit';
+import { init as dataRowsInit } from './dataRows';
+import { init as initSaveViews } from './save';
+import { FreqDataRowsModel, FreqDataRowsModelState } from '../../models/freqs/dataRows';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions, ActionName } from '../../models/freqs/actions';
 
 // --------------------------- exported types --------------------------------------
 
-interface FreqResultViewProps {
-}
-
-interface FreqResultViewState {
-    blocks:Array<ResultBlock>;
-    minFreqVal:string;
-    currentPage:string;
-    sortColumn:string;
-    hasNextPage:boolean;
-    hasPrevPage:boolean;
-    totalPages:number;
-    saveFormIsActive:boolean;
-    isLoading:boolean;
-}
 
 // ------------------------ factory --------------------------------
 
@@ -51,9 +37,8 @@ export function init(
         he:Kontext.ComponentHelpers,
         freqDataRowsModel:FreqDataRowsModel) {
 
-    const drViews = dataRowsInit(dispatcher, he, freqDataRowsModel);
+    const drViews = dataRowsInit(dispatcher, he);
     const saveViews = initSaveViews(dispatcher, he, freqDataRowsModel.getSaveModel());
-    const layoutViews = he.getLayoutViews();
 
     // ----------------------- <ResultSizeInfo /> -------------------------
 
@@ -62,7 +47,7 @@ export function init(
         totalItems:number;
     }
 
-    const ResultSizeInfo:React.SFC<ResultSizeInfoProps> = (props) => {
+    const ResultSizeInfo:React.FC<ResultSizeInfoProps> = (props) => {
 
         return (
             <p>
@@ -87,7 +72,7 @@ export function init(
         totalPages:number;
     }
 
-    const Paginator:React.SFC<PaginatorProps> = (props) => {
+    const Paginator:React.FC<PaginatorProps> = (props) => {
 
         const handlePageChangeByClick = (curr, step) => {
             dispatcher.dispatch<Actions.ResultSetCurrentPage>({
@@ -150,7 +135,7 @@ export function init(
 
     // ----------------------- <MinFreqInput /> -------------------------
 
-    const MinFreqInput:React.SFC<{
+    const MinFreqInput:React.FC<{
         minFreqVal:string;
 
     }> = (props) => {
@@ -191,7 +176,7 @@ export function init(
         minFreqVal:string;
     }
 
-    const FilterForm:React.SFC<FilterFormProps> = (props) => {
+    const FilterForm:React.FC<FilterFormProps> = (props) => {
 
         const handleApplyClick = (evt) => {
             dispatcher.dispatch<Actions.ResultApplyMinFreq>({
@@ -213,7 +198,7 @@ export function init(
 
     // ----------------------- <FreqResultView /> -------------------------
 
-    class FreqResultView extends React.Component<FreqResultViewProps & FreqDataRowsModelState> {
+    class FreqResultView extends React.Component<FreqDataRowsModelState> {
 
         _handleSaveFormClose() {
             dispatcher.dispatch<Actions.ResultCloseSaveForm>({
@@ -223,11 +208,11 @@ export function init(
         }
 
         hasNextPage(state:FreqDataRowsModelState):boolean {
-            return Number(state.currentPage) < state.data[0].TotalPages;
+            return parseInt(state.currentPage) < state.data[0].TotalPages;
         }
-    
+
         hasPrevPage(state:FreqDataRowsModelState):boolean {
-            return Number(state.currentPage) > 1 && state.data[0].TotalPages > 1;
+            return parseInt(state.currentPage) > 1 && state.data[0].TotalPages > 1;
         }
 
         render() {
