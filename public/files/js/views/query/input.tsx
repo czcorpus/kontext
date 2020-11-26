@@ -470,15 +470,17 @@ export function init({
             [ref.current]
         );
 
-        const handleKey = () => {
-            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
-                name: ActionName.ToggleQuerySuggestionWidget,
-                payload: {
-                    formType: props.formType,
-                    sourceId: props.sourceId,
-                    tokenIdx: null
-                }
-            });
+        const handleKey = (e:React.KeyboardEvent) => {
+            if (e.keyCode === Keyboard.Code.ESC) {
+                dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
+                    name: ActionName.ToggleQuerySuggestionWidget,
+                    payload: {
+                        formType: props.formType,
+                        sourceId: props.sourceId,
+                        tokenIdx: null
+                    }
+                });
+            }
         };
 
         const handleBlur = () => {
