@@ -14,7 +14,6 @@
 # GNU General Public License for more details.
 
 from collections import defaultdict
-import re
 from typing import List, Tuple
 from corplib import CorpusManager
 from conclib.search import get_conc
@@ -32,7 +31,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         super().__init__(ident)
         self._conf = conf
         fixed_corp = conf.get('corpus')
-        self._corp = CorpusManager().get_Corpus(fixed_corp) if fixed_corp else None
+        self._preset_corp = CorpusManager().get_Corpus(fixed_corp) if fixed_corp else None
 
     def _freq_dist(self, corp: manatee.Corpus, conc: manatee.Concordance, fcrit: str, user_id: int):
         args = freq_calc.FreqCalsArgs()
@@ -60,16 +59,16 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
                  for cr in args.fcrit]
         return freqs[0].get('Items', [])
 
-    def _normalize_multivalues(self, attr1: str, attr2: str) -> Tuple[str, str]:
-        multisep1 = self._corp.get_conf(self._conf["attr1"] + '.MULTISEP')
-        multisep2 = self._corp.get_conf(self._conf["attr2"] + '.MULTISEP')
+    def _normalize_multivalues(self, corp: manatee.Corpus, attr1: str, attr2: str) -> Tuple[str, str]:
+        multisep1 = corp.get_conf(self._conf["attr1"] + '.MULTISEP')
+        multisep2 = corp.get_conf(self._conf["attr2"] + '.MULTISEP')
         if multisep1 and multisep2:
             attr1_split = attr1.split(multisep1)
             attr2_split = attr2.split(multisep2)
             if len(attr1_split) == len(attr2_split):
                 return attr1_split[0], attr2_split[0]
 
-            logging.warn(
+            logging.warning(
                 f'PosAttrPairRelManateeBackend multivalue normalization mismatch - {attr1}...{attr2}')
 
         return attr1, attr2
@@ -77,7 +76,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
     def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
                         value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
                         s_attr: str):
-        used_corp = self._corp if self._corp is not None else maincorp
+        used_corp = self._preset_corp if self._preset_corp is not None else maincorp
         value_norm = value if value_subformat in ('regexp', 'advanced') else re_escape(value)
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''
         conc = get_conc(used_corp, user_id,
@@ -88,7 +87,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         data = self._freq_dist(corp=used_corp, conc=conc, fcrit=fcrit, user_id=user_id)
         rels = defaultdict(lambda: set())
         for item in data:
-            attr1, attr2 = self._normalize_multivalues(*(tuple([w['n'] for w in item['Word']])[:2]))
+            attr1, attr2 = self._normalize_multivalues(used_corp, *(tuple([w['n'] for w in item['Word']])[:2]))
             rels[attr1].add(attr2)
         return dict(attrs=(self._conf['attr1'], self._conf['attr2']),
                     data=dict((k, list(v)) for k, v in rels.items()))
