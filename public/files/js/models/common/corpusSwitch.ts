@@ -181,7 +181,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<{[plgName:string]:any}>('pluginData', data.pluginData);
                             this.conf.setConf<string>('DefaultVirtKeyboard', data.DefaultVirtKeyboard);
                             this.conf.setConf<Array<string>>('SimpleQueryDefaultAttrs', data.SimpleQueryDefaultAttrs);
-                            this.conf.setConf<boolean>('suggestionsEnabled', data.QSEnabled);
+                            this.conf.setConf<boolean>('QSEnabled', data.QSEnabled);
                         }
                     )
 
