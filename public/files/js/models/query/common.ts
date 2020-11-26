@@ -401,7 +401,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     if (val.qtype === 'simple') {
                         val.use_regexp = !val.use_regexp;
                         if (val.use_regexp) {
-                            val.qmcase = false;
+                            val.qmcase = true;
                         }
                     }
                 });
