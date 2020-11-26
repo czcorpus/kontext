@@ -70,8 +70,11 @@ function someSupportRequest(infos:Array<AnyProviderInfo>, req:PluginInterfaces.Q
 function isValidQuery(suggestionArgs:PluginInterfaces.QuerySuggest.SuggestionArgs):boolean {
     if (suggestionArgs.valueSubformat === 'regexp') {
         try {
-            new RegExp(suggestionArgs.value)
+            new RegExp(suggestionArgs.value.startsWith('(?i)') ?
+                suggestionArgs.value.substring(4) :
+                suggestionArgs.value);
         } catch(e) {
+            console.warn('Invalid query for suggestion: ', suggestionArgs.value);
             return false;
         }
     }
@@ -140,6 +143,26 @@ export class Model extends StatelessModel<ModelState> {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {
                     this.loadSuggestions(state, currArgs, dispatch);
+                }
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputToggleAllowRegexp>(
+            QueryActionName.QueryInputToggleAllowRegexp,
+            (state, action) => {
+                const currArgs = state.suggestionArgs[action.payload.sourceId];
+                if (currArgs) {
+                    currArgs.valueSubformat = action.payload.value ? 'regexp' : 'simple';
+                }
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputSetMatchCase>(
+            QueryActionName.QueryInputSetMatchCase,
+            (state, action) => {
+                const currArgs = state.suggestionArgs[action.payload.sourceId];
+                if (currArgs) {
+                    currArgs.valueSubformat = action.payload.value ? 'simple_ic' : 'simple';
                 }
             }
         );
