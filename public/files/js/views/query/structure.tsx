@@ -46,17 +46,19 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
 
     const ParsedToken:React.FC<{
         value:ParsedSimpleQueryToken;
+        matchCase:boolean;
         defaultAttrs:Array<string>;
 
     }> = (props) => {
 
         const mkExpr = (attr:string|undefined, val:string) => {
+            const csFlag = props.matchCase ? '' : '(?i)';
             if (!attr) {
                 return pipe(
                     props.defaultAttrs,
                     List.map((attr, i) => (
                         <div key={`item:${attr}:${i}`}>
-                            <span className="attr">{attr}</span>=<span className="value">"{val}"</span>
+                            <span className="attr">{attr}</span>=<span className="value">"{`${csFlag}${val}`}"</span>
                         </div>
                     )),
                     List.join((i) => (
@@ -68,7 +70,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                     ))
                 );
             }
-            return <div key={`item:${attr}:0`}><span className="attr">{attr}</span>=<span className="value">"{val}"</span></div>;
+            return <div key={`item:${attr}:0`}><span className="attr">{attr}</span>=<span className="value">"{`${csFlag}${val}`}"</span></div>;
         }
 
         return (
@@ -132,7 +134,8 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                                     <ul className="positions">
                                     {List.map(
                                         (v, i) => <ParsedToken key={`${v.value}:${i}`} value={v}
-                                                        defaultAttrs={props.defaultAttribute} />,
+                                                        defaultAttrs={props.defaultAttribute}
+                                                        matchCase={queryObj.qmcase} />,
                                         queryObj.queryParsed
                                     )}
                                     </ul>

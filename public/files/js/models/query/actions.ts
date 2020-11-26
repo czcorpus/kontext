@@ -362,6 +362,7 @@ export namespace Actions {
     export interface QueryInputToggleAllowRegexp extends Action<{
         formType:QueryFormType;
         sourceId:string;
+        value:boolean;
     }> {
         name:ActionName.QueryInputToggleAllowRegexp;
     }

@@ -740,7 +740,8 @@ export function init({
                 name: ActionName.QueryInputToggleAllowRegexp,
                 payload: {
                     formType: props.formType,
-                    sourceId: props.sourceId
+                    sourceId: props.sourceId,
+                    value: !props.value
                 }
             });
         }

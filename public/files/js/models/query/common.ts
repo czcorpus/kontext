@@ -389,6 +389,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         console.error('Invalid query type');
                     }
                 });
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    0,
+                    0
+                ));
             }
         );
 
@@ -397,12 +402,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    const val = state.queries[action.payload.sourceId];
-                    if (val.qtype === 'simple') {
-                        val.use_regexp = !val.use_regexp;
-                        if (val.use_regexp) {
-                            val.qmcase = false;
+                    const queryObj = state.queries[action.payload.sourceId];
+                    if (queryObj.qtype === 'simple') {
+                        queryObj.use_regexp = !queryObj.use_regexp;
+                        if (queryObj.use_regexp) {
+                            queryObj.qmcase = true;
                         }
+                        this.autoSuggestTrigger.next(tuple(
+                            action.payload.sourceId,
+                            0,
+                            0
+                        ));
                     }
                 });
             }
