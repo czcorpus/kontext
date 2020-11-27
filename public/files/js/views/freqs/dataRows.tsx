@@ -50,20 +50,22 @@ export function init(
 
     const DataRowPNFilter:React.FC<DataRowPNFilterProps> = (props) => {
 
-        const handlePFilter = () => {
+        const handlePFilter = (e) => {
             dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
                 name: ActionName.ResultApplyQuickFilter,
                 payload: {
-                    url: props.pfilter
+                    url: props.pfilter,
+                    blankWindow: e.ctrlKey
                 }
             });
         };
 
-        const handleNFilter = () => {
+        const handleNFilter = (e) => {
             dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
                 name: ActionName.ResultApplyQuickFilter,
                 payload: {
-                    url: props.nfilter
+                    url: props.nfilter,
+                    blankWindow: e.ctrlKey
                 }
             });
         };

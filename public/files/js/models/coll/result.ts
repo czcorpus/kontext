@@ -231,16 +231,16 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
             },
             (state, action, dispatch) => {
-                this.applyQuickFilter(action.payload.args);
+                this.applyQuickFilter(action.payload.args, action.payload.blankWindow);
             }
         );
     }
 
-    private applyQuickFilter(args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>) {
+    private applyQuickFilter(args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>, blankWindow:boolean) {
         const submitArgs = this.layoutModel.exportConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
         submitArgs.remove('q2');
         args.forEach(item => submitArgs.add(item[0], item[1]));
-        this.layoutModel.setLocationPost(this.layoutModel.createActionUrl('quick_filter', submitArgs.items()), []);
+        this.layoutModel.setLocationPost(this.layoutModel.createActionUrl('quick_filter', submitArgs.items()), [], blankWindow);
     }
 
     private processDataReload(state:CollResultModelState, dispatch:SEDispatcher):void {
