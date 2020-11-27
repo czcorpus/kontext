@@ -123,13 +123,26 @@ export function cutLongResult<T>(
 ):QuerySuggestion<unknown> {
 
     if (isPosAttrPairRelFrontend(data)) {
-        const newData = pipe(
+        const maxAttrs2Len = 10;
+        const maxAttr1Variants = 5;
+
+        const tmpData = pipe(
             data.contents.data,
             Dict.toEntries(),
             List.sortedBy(([,v]) => List.size(v)),
             List.reversed(),
-            List.filter((v, i) => i < 3),
+            List.slice(0, maxAttr1Variants),
             Dict.fromEntries()
+        );
+        const hasLongLemmaList = Dict.size(tmpData) < Dict.size(data.contents.data);
+        const hasLongAttrList = pipe(
+            tmpData,
+            Dict.toEntries(),
+            List.some(([,attrs]) => attrs.length > maxAttrs2Len)
+        );
+        const newData = Dict.map(
+            attrs2 => List.slice(0, maxAttrs2Len, attrs2),
+            tmpData
         );
         return {
             rendererId: data.rendererId,
@@ -139,10 +152,9 @@ export function cutLongResult<T>(
                 attrs: data.contents.attrs,
                 data: newData
             },
-            isShortened: Dict.size(newData) < Dict.size(data.contents.data),
+            isShortened: hasLongAttrList || hasLongLemmaList,
             isActive: true
         };
-
     }
     return data;
 }
