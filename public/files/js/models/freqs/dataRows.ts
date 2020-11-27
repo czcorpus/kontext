@@ -285,7 +285,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             ActionName.ResultApplyQuickFilter,
             null,
             (state, action, dispatch) => {
-                this.pageModel.setLocationPost(action.payload.url, []);
+                this.pageModel.setLocationPost(action.payload.url, [], action.payload.blankWindow);
             }
         );
     }

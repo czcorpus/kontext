@@ -123,6 +123,7 @@ export namespace Actions {
 
     export interface ResultApplyQuickFilter extends Action<{
         url:string;
+        blankWindow:boolean;
     }> {
         name: ActionName.ResultApplyQuickFilter;
     }
