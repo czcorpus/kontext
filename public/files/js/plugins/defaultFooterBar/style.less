@@ -77,3 +77,18 @@ footer.custom-footer {
         color: #009EE0;
     }
 }
+
+@media screen and (max-width: 479px) {
+    footer {
+        .separ {
+            display: none;
+        }
+
+        .actions, .info {
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-items: center;
+            line-height: 1.5em;
+        }
+    }
+}
