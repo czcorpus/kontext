@@ -792,8 +792,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             queryObj.query,
             (token, tokenIdx, charIdx) => {
                 if (focusTokenIdx === tokenIdx) {
-                    queryObj.rawFocusIdx = charIdx;
-                    queryObj.rawAnchorIdx = charIdx;
+                    queryObj.rawFocusIdx = charIdx + 1;
+                    queryObj.rawAnchorIdx = charIdx + 1;
                 }
                 if (queryObj.queryParsed[tokenIdx].isExtended) {
                     richText.push(

@@ -652,7 +652,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     }),
                     queryObj.queryParsed
                 );
-                this.rehighlightSimpleQuery(queryObj, 0);
+                this.rehighlightSimpleQuery(queryObj);
 
             } else {
                 queryObj.parsedAttrs = List.map(
