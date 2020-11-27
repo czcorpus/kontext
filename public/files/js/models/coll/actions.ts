@@ -92,6 +92,7 @@ export namespace Actions {
 
     export interface ResultApplyQuickFilter extends Action<{
         args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
+        blankWindow:boolean;
     }> {
         name:ActionName.ResultApplyQuickFilter;
     }

@@ -56,11 +56,12 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     }> = (props) => {
 
         const handleClick = (args) => {
-            return () => {
+            return (e) => {
                 dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
                     name: ActionName.ResultApplyQuickFilter,
                     payload: {
-                        args: args
+                        args: args,
+                        blankWindow: e.ctrlKey
                     }
                 });
             };
