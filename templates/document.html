@@ -123,7 +123,7 @@ __conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
 </head>
 <body>
 
-
+<div id="viewport">
 {% block AppBar %}
 <div id="common-bar">
 {% if app_bar %} {{ app_bar }} {% endif %}
@@ -220,6 +220,7 @@ __conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
     {% endif %}
 </footer>
 {% endblock %}
+</div>
 
 <script type="text/javascript">
 {%block bodyonload %}{% endblock %}

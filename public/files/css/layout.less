@@ -10,6 +10,16 @@ body {
     height: 100%;
 }
 
+#viewport {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    top: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
 section {
 
     #topbar-help-mount {
@@ -148,6 +158,7 @@ a.external {
     margin: 0;
     overflow: auto;
     padding: 0 2em 2em @ucnk-topbar-left-margin;
+    flex-grow: 2;
 }
 
 #content > section {
