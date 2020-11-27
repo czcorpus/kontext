@@ -240,7 +240,7 @@ export class Model extends StatelessModel<ModelState> {
                 dispatch
 
             ).pipe(
-                tap(
+                map(
                     data => {
                         const isPartial = pipe(
                             data.results,
@@ -249,17 +249,24 @@ export class Model extends StatelessModel<ModelState> {
                             ),
                             List.some(x => !List.empty(x))
                         );
+                        return {
+                            ...data,
+                            results: pipe(
+                                data.results,
+                                isPartial ? List.map(v => v) : List.map(filterOutTrivialSuggestions),
+                                List.map(cutLongResult)
+                            ),
+                            parsedWord: data.parsedWord,
+                        };
+                    }
+                ),
+                tap(
+                    data => {
                         dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                             name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                             payload: {
                                 ...args,
-                                results: pipe(
-                                        data.results,
-                                        isPartial ? List.map(v => v) : List.map(filterOutTrivialSuggestions),
-                                        List.map(cutLongResult)
-                                ),
-                                parsedWord: data.parsedWord,
-                                isPartial
+                                ...data
                             }
                         });
                     }
