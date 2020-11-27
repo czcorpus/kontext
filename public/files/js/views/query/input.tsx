@@ -723,7 +723,7 @@ export function init({
                 sourceId={props.sourceId}
                 formType={props.formType}
                 queryType={props.queryType} />{'\u00a0'}
-    </span>
+        </span>
     );
 
     // -------------------- <UseRegexpSelector /> --------------------------
