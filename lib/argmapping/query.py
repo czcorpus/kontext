@@ -166,7 +166,6 @@ class QueryFormArgs(ConcFormArgs):
 
     def update_by_stored_query(self, data):
         self._test_data_type(data, 'form_type', 'query')
-        self.form_type = data['form_type']
         self.curr_queries = data['curr_queries']
         self.curr_parsed_queries = data['curr_parsed_queries']
         self.curr_query_types = data['curr_query_types']
@@ -184,6 +183,16 @@ class QueryFormArgs(ConcFormArgs):
         self.fc_pos = data['fc_pos']
         self.selected_text_types = data['selected_text_types']
         self.bib_mapping = data['bib_mapping']
+
+    def apply_last_used_opts(self, data: Dict[str, Any], prev_corpora: List[str], curr_corpora: List[str]):
+        self._test_data_type(data, 'form_type', 'query')
+        prev_maincorp = prev_corpora[0]
+        curr_maincorp = curr_corpora[0]
+        self.curr_query_types[curr_maincorp] = data['curr_query_types'][prev_maincorp]
+        self.curr_qmcase_values[curr_maincorp] = data['curr_qmcase_values'][prev_maincorp]
+        self.curr_use_regexp_values[curr_maincorp] = data['curr_use_regexp_values'][prev_maincorp]
+
+
 
     @staticmethod
     def _test_data_type(data, type_key, type_id):

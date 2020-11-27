@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Keyboard } from 'cnc-tskit';
+import { Keyboard, List } from 'cnc-tskit';
 import * as React from 'react';
 
 
@@ -49,26 +49,32 @@ export class ContentEditable<T extends HTMLElement> {
     reapplySelection(rawAnchorIdx:number, rawFocusIdx:number) {
         const sel = window.getSelection();
         const src = this.extractText(this.inputRef.current);
-        let anchorNode = this.inputRef.current;
-        let focusNode = this.inputRef.current;
-        let currIdx = 0;
-        let anchorIdx = 0;
-        let focusIdx = 0;
 
-        src.forEach(([text, node]) => {
-            const nodeStartIdx = currIdx;
-            const nodeEndIdx = nodeStartIdx + text.length;
-            if (nodeStartIdx <= rawAnchorIdx && rawAnchorIdx <= nodeEndIdx) {
-                anchorNode = node as T;
-                anchorIdx = rawAnchorIdx - nodeStartIdx;
-            }
-            if (nodeStartIdx <= rawFocusIdx && rawFocusIdx <= nodeEndIdx) {
-                focusNode = node as T;
-                focusIdx = rawFocusIdx - nodeStartIdx;
-            }
-            currIdx += text.length;
-        });
-        sel.setBaseAndExtent(anchorNode, anchorIdx, focusNode, focusIdx);
+        const ans = List.foldl(
+            (acc, [text, node]) => {
+                const nodeStartIdx = acc.currIdx;
+                const nodeEndIdx = nodeStartIdx + text.length;
+                if (nodeStartIdx <= rawAnchorIdx && rawAnchorIdx <= nodeEndIdx) {
+                    acc.anchorNode = node as T;
+                    acc.anchorIdx = rawAnchorIdx - nodeStartIdx;
+                }
+                if (nodeStartIdx <= rawFocusIdx && rawFocusIdx <= nodeEndIdx) {
+                    acc.focusNode = node as T;
+                    acc.focusIdx = rawFocusIdx - nodeStartIdx;
+                }
+                acc.currIdx += text.length;
+                return acc;
+            },
+            {
+                anchorNode: this.inputRef.current,
+                focusNode: this.inputRef.current,
+                currIdx: 0,
+                anchorIdx: 0,
+                focusIdx: 0
+            },
+            src
+        );
+        sel.setBaseAndExtent(ans.anchorNode, ans.anchorIdx, ans.focusNode, ans.focusIdx);
     }
 
     getRawSelection(src:Array<[string, Node]>) {

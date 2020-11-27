@@ -13,7 +13,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, cast
+from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, cast, Callable
 from main_menu import AbstractMenuItem
 from argmapping.query import ConcFormArgs
 from manatee import Corpus
@@ -201,6 +201,7 @@ class Kontext(Controller):
         # data of the previous operation are stored here
         self._prev_q_data: Optional[Dict[str, Any]] = None
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
+        self.on_conc_store: Callable[[str], None] = lambda s: None
 
     def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
@@ -723,6 +724,7 @@ class Kontext(Controller):
                 next_query_key = self._store_conc_params()
             else:
                 next_query_key = self._prev_q_data.get('id', None) if self._prev_q_data else None
+            self.on_conc_store(next_query_key)
             self._update_output_with_conc_params(next_query_key, result)
 
         # log user request

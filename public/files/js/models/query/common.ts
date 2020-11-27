@@ -510,6 +510,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
+                    if (queryObj.rawAnchorIdx === action.payload.rawAnchorIdx ||
+                            queryObj.rawFocusIdx === action.payload.rawFocusIdx) {
+                        return;
+                    }
                     queryObj.rawAnchorIdx = action.payload.rawAnchorIdx;
                     queryObj.rawFocusIdx = action.payload.rawFocusIdx;
                     state.downArrowTriggersHistory[action.payload.sourceId] =

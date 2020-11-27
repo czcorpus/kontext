@@ -826,7 +826,8 @@ class Controller(object):
             ans.append(('Set-Cookie', cookie.OutputString()))
         return ans
 
-    def output_result(self, methodname: str, template: str, result: Union[Callable, Dict[str, Any], str, bytes], action_metadata: Dict[str, Any], return_type: str) -> Union[str, bytes]:
+    def output_result(self, methodname: str, template: str, result: Union[Callable, Dict[str, Any], str, bytes],
+                      action_metadata: Dict[str, Any], return_type: str) -> Union[str, bytes]:
         """
         Renders a response body out of a provided data resource along with which can
         required target data type.
@@ -837,8 +838,8 @@ class Controller(object):
         3) str or bytes
         """
         if callable(result):
-            return result()
-        elif return_type == 'json':
+            result = result()
+        if return_type == 'json':
             try:
                 return json.dumps(result)
             except Exception as e:
