@@ -200,9 +200,12 @@ export function init(
             }
         }
 
-        componentDidUpdate(prevProps, prevState) {
+        componentDidUpdate(prevProps:RichInputProps & QueryFormModelState, _:unknown) {
+            const prevQueryObj = prevProps.queries[this.props.sourceId];
             const queryObj = this.props.queries[this.props.sourceId];
-            if (queryObj.rawAnchorIdx !== null && queryObj.rawFocusIdx !== null) {
+            if (prevQueryObj.rawAnchorIdx !== queryObj.rawAnchorIdx ||
+                        prevQueryObj.rawFocusIdx !== queryObj.rawFocusIdx ||
+                        prevQueryObj.query !== queryObj.query) {
                 this.contentEditable.reapplySelection(
                     queryObj.rawAnchorIdx,
                     queryObj.rawFocusIdx

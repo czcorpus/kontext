@@ -363,9 +363,15 @@ class Actions(Querying):
         out['text_types_notes'] = corp_info.metadata.desc
         out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
+        last_op = self.session_get('last_submitted_op')
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
             active_only=False), persist=False)
         with plugins.runtime.QUERY_STORAGE as qs:
+            qdata = qs.find_by_qkey(last_op)
+            if qdata is not None:
+                qf_args.apply_last_used_opts(
+                    qdata.get('lastop_form', {}), qdata.get('corpora', []),
+                    [self.args.corpname] + self.args.align)
             qdata = qs.find_by_qkey(request.args.get('qkey'))
             if qdata is not None:
                 qf_args.update_by_stored_query(qdata.get('lastop_form', {}))
@@ -595,6 +601,10 @@ class Actions(Querying):
 
     @exposed(mutates_conc=True, http_method=('POST',), return_type='json')
     def query_submit(self, request):
+
+        def store_last_op(conc_id: str):
+            self._session['last_submitted_op'] = conc_id
+
         self._clear_prev_conc_params()
         ans = {}
         # 1) store query forms arguments for later reuse on client-side
@@ -617,6 +627,7 @@ class Actions(Querying):
                             save=self.args.save, samplesize=corpus_info.sample_size)
             ans['size'] = conc.size()
             ans['finished'] = conc.finished()
+            self.on_conc_store = store_last_op
             self._status = 201
         except ConcError as e:
             self.add_system_message('warning', str(e))
