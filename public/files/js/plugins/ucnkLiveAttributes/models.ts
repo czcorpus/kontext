@@ -19,14 +19,13 @@
  */
 
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
-import { Observable, of as rxOf } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { concatMap, map } from 'rxjs/operators';
 import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 
 import { TextTypes, Kontext } from '../../types/common';
-import { IPluginApi } from '../../types/plugins';
-import { SelectionFilterMap, SelectedTextTypes } from '../../models/textTypes/common';
-import { Actions, ActionName } from './actions';
+import { IPluginApi, PluginInterfaces } from '../../types/plugins';
+import { SelectionFilterMap } from '../../models/textTypes/common';
 import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
@@ -110,20 +109,21 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     private readonly controlsAlignedCorpora:boolean;
 
-    private readonly getTtSelection:(lockedOnesOnly:boolean)=>TextTypes.ServerCheckedValues;
-
     /**
      */
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialState:LiveAttrsModelState,
-            controlsAlignedCorpora:boolean,
-            getTtSelection:(lockedOnesOnly:boolean)=>{[attr:string]:Array<string>}) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        pluginApi:IPluginApi,
+        initialState:LiveAttrsModelState,
+        controlsAlignedCorpora:boolean
+    ) {
+
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.controlsAlignedCorpora = controlsAlignedCorpora;
-        this.getTtSelection = getTtSelection;
 
-        this.addActionHandler<Actions.RefineClicked>(
-            ActionName.RefineClicked,
+        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
+            PluginInterfaces.LiveAttributes.ActionName.RefineClicked,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -131,9 +131,19 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 dispatch<TTActions.LockSelected>({
                     name: TTActionName.LockSelected
                 });
-                const selections = this.getTtSelection(false);
-                this.loadFilteredData(state, selections).subscribe(
-                    (data) => {
+
+                this.suspend({}, (action, syncData) => {
+                    return action.name === PluginInterfaces.LiveAttributes.ActionName.RefineReady ?
+                        null : syncData;
+
+                }).pipe(
+                    concatMap(
+                        (action:PluginInterfaces.LiveAttributes.Actions.RefineReady) =>
+                            this.loadFilteredData(state, action.payload.selections)
+
+                    )
+                ).subscribe(
+                    ([selections, data]) => {
                         const filterData = this.importFilter(data.attr_values, dispatch);
                         dispatch<TTActions.FilterWholeSelection>({
                             name: TTActionName.FilterWholeSelection,
@@ -177,8 +187,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<Actions.ResetClicked>(
-            ActionName.ResetClicked,
+        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.ResetClicked>(
+            PluginInterfaces.LiveAttributes.ActionName.ResetClicked,
             (state, action) => {
                 if (window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'))) {
                     this.reset(state);
@@ -191,8 +201,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<Actions.UndoClicked>(
-            ActionName.UndoClicked,
+        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.UndoClicked>(
+            PluginInterfaces.LiveAttributes.ActionName.UndoClicked,
             (state, action) => {
                 state.lastRemovedStep = List.last(state.selectionSteps);
                 state.selectionSteps.pop();
@@ -220,15 +230,15 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<Actions.ToggleMinimizeAlignedLangList>(
-            ActionName.ToggleMinimizeAlignedLangList,
+        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList>(
+            PluginInterfaces.LiveAttributes.ActionName.ToggleMinimizeAlignedLangList,
             (state, action) => {
                 state.isTTListMinimized = !state.isTTListMinimized;
             }
         );
 
-        this.addActionHandler<Actions.AlignedCorpChanged>(
-            ActionName.AlignedCorpChanged,
+        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
+            PluginInterfaces.LiveAttributes.ActionName.AlignedCorpChanged,
             (state, action) => {
                 const item = state.alignedCorpora[action.payload.idx];
                 if (item) {
@@ -303,11 +313,51 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             TTActionName.AttributeTextInputAutocompleteRequest,
             null,
             (state, action, dispatch) => {
-                this.loadAutoComplete(
-                    state,
-                    action.payload.attrName,
-                    action.payload.value,
-                    dispatch
+                if (action.payload.value.length <= 2) {
+                    return;
+                }
+                this.suspend({}, (action, syncData) => {
+                    if (action.name === TTActionName.AttributeTextInputAutocompleteReady) {
+                        return null;
+                    }
+                    return syncData;
+                }).pipe(
+                    concatMap(
+                        (action:TTActions.AttributeTextInputAutocompleteReady) => this.loadAutocompleteHint(
+                            state,
+                            action.payload.value,
+                            action.payload.attrName,
+                            action.payload.selections
+                        )
+                    )
+                ).subscribe(
+                    (resp) => {
+                        const filterData = this.importFilter(resp.attr_values, dispatch);
+                        const values = resp.attr_values[action.payload.attrName];
+                        if (Array.isArray(values)) {
+                            dispatch<TTActions.AttributeTextInputAutocompleteRequestDone>({
+                                name: TTActionName.AttributeTextInputAutocompleteRequestDone,
+                                payload: {
+                                    attrName: action.payload.attrName,
+                                    filterData: filterData,
+                                    autoCompleteData: List.map(
+                                        v => ({ident: v[1], label: v[2]}),
+                                        values
+                                    )
+                                }
+                            });
+
+                        } else {
+                            dispatch<TTActions.AttributeTextInputAutocompleteRequestDone>({
+                                name: TTActionName.AttributeTextInputAutocompleteRequestDone,
+                                error: new Error('Did not recieve list of items but a summary instead')
+                            });
+                        }
+                    },
+                    (err) => {
+                        console.error(err);
+                        this.pluginApi.showMessage('error', err);
+                    }
                 );
             }
         );
@@ -345,8 +395,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<Actions.AlignedCorpChanged>(
-            ActionName.AlignedCorpChanged,
+        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
+            PluginInterfaces.LiveAttributes.ActionName.AlignedCorpChanged,
             null,
             (state, action, dispatch) => {
                 dispatch<SubcActions.FormSetAlignedCorpora>({
@@ -421,7 +471,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         state.bibliographyIds = [];
     }
 
-    private updateSelectionSteps(state:LiveAttrsModelState, selections:TextTypes.ServerCheckedValues, poscount:number):void {
+    private updateSelectionSteps(
+        state:LiveAttrsModelState,
+        selections:TextTypes.ExportedSelection,
+        poscount:number
+    ):void {
+
         const newAttrs = this.getUnusedAttributes(state, selections);
         const selectedAligned = state.alignedCorpora.filter(item=>item.selected);
 
@@ -494,7 +549,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
      * yet present here in selectionSteps. These are
      * expected to compose the latest selection step.
      */
-    private getUnusedAttributes(state:LiveAttrsModelState, selections:TextTypes.ServerCheckedValues):Array<string> {
+    private getUnusedAttributes(
+            state:LiveAttrsModelState, selections:TextTypes.ExportedSelection):Array<string> {
         const used = List.flatMap(
             val => val.attributes,
             state.selectionSteps
@@ -564,7 +620,11 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         );
     }
 
-    private loadFilteredData(state:LiveAttrsModelState, selections:TextTypes.ServerCheckedValues):Observable<ServerRefineResponse> {
+    private loadFilteredData(
+        state:LiveAttrsModelState,
+        selections:TextTypes.ExportedSelection
+    ):Observable<[TextTypes.ExportedSelection, ServerRefineResponse]> {
+
         const aligned = pipe(
             state.alignedCorpora,
             List.filter(item=>item.selected),
@@ -587,23 +647,32 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             fixedAttrVals[k] = resp.attr_values[k];
                         }
                     });
-                    return {
-                        error: resp.error,
-                        messages: resp.messages,
-                        aligned: resp.aligned,
-                        poscount: resp.poscount,
-                        attr_values: fixedAttrVals
-                    };
+                    return tuple(
+                        selections,
+                        {
+                            error: resp.error,
+                            messages: resp.messages,
+                            aligned: resp.aligned,
+                            poscount: resp.poscount,
+                            attr_values: fixedAttrVals
+                        }
+                    )
                 }
             )
         )
     }
 
-    private loadAutocompleteHint(state:LiveAttrsModelState, pattern:string, patternAttr:string, selections:SelectedTextTypes):Observable<ServerRefineResponse> {
+    private loadAutocompleteHint(
+        state:LiveAttrsModelState,
+        pattern:string,
+        patternAttr:string,
+        selections:TextTypes.ExportedSelection
+    ):Observable<ServerRefineResponse> {
+
         const aligned = pipe(
             state.alignedCorpora,
-            List.filter(item=>item.selected),
-            List.map(item=>item.value)
+            List.filter(item => item.selected),
+            List.map(item => item.value)
         );
         return this.pluginApi.ajax$(
             HTTP.Method.POST,
@@ -616,39 +685,5 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 aligned: JSON.stringify(aligned)
             }
         );
-    }
-
-    private loadAutoComplete(state:LiveAttrsModelState, attrName:string, value:string, dispatch:SEDispatcher):void {
-        if (value.length > 2) {
-            this.loadAutocompleteHint(state, value, attrName, this.getTtSelection(true)).subscribe(
-                (resp) => {
-                    const filterData = this.importFilter(resp.attr_values, dispatch);
-                    const values = resp.attr_values[attrName];
-                    if (Array.isArray(values)) {
-                        dispatch<TTActions.AttributeTextInputAutocompleteRequestDone>({
-                            name: TTActionName.AttributeTextInputAutocompleteRequestDone,
-                            payload: {
-                                attrName: attrName,
-                                filterData: filterData,
-                                autoCompleteData: values.map((v) => ({ident: v[1], label: v[2]}))
-                            }
-                        });
-
-                    } else {
-                        dispatch<TTActions.AttributeTextInputAutocompleteRequestDone>({
-                            name: TTActionName.AttributeTextInputAutocompleteRequestDone,
-                            error: new Error('Did not recieve list of items but a summary instead')
-                        });
-                    }
-                },
-                (err) => {
-                    console.error(err);
-                    this.pluginApi.showMessage('error', err);
-                }
-            );
-
-        } else {
-            rxOf(null);
-        }
     }
 }

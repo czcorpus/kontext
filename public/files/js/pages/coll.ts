@@ -118,7 +118,7 @@ export class CollPage {
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
             usesAdHocSubcorpus: tt.usesAdHocSubcorpus(),
-            selectedTextTypes: tt.exportSelections(false)
+            selectedTextTypes: tt.UNSAFE_exportSelections(false)
         };
 
 

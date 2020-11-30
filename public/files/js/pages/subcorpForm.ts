@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 
-import { Kontext } from '../types/common';
+import { Kontext, TextTypes } from '../types/common';
 import { PluginInterfaces } from '../types/plugins';
 import { PageModel } from '../app/page';
 import { init as subcorpViewsInit } from '../views/subcorp/forms';
@@ -35,7 +35,6 @@ import { KontextPage } from '../app/main';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
-import { SelectedTextTypes } from '../models/textTypes/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 
 declare var require:any;
@@ -97,7 +96,7 @@ export class SubcorpForm {
         );
     }
 
-    private createTextTypesComponents(selectedTextTypes:SelectedTextTypes):TTInitData {
+    private createTextTypesComponents(selectedTextTypes:TextTypes.ExportedSelection):TTInitData {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
@@ -184,7 +183,7 @@ export class SubcorpForm {
     init():void {
         this.layoutModel.init(true, [], () => {
             const ttComponent = this.createTextTypesComponents(
-                this.layoutModel.getConf<SelectedTextTypes>('SelectedTextTypes')
+                this.layoutModel.getConf<TextTypes.ExportedSelection>('SelectedTextTypes')
             );
             this.subcorpSel = new NonQueryCorpusSelectionModel({
                 layoutModel: this.layoutModel,

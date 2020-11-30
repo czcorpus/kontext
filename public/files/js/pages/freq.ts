@@ -128,7 +128,7 @@ class FreqPage {
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
             usesAdHocSubcorpus: adhocSubcDetector.usesAdHocSubcorpus(),
-            selectedTextTypes: adhocSubcDetector.exportSelections(false)
+            selectedTextTypes: adhocSubcDetector.UNSAFE_exportSelections(false)
         };
 
         this.cTFreqFormModel = new Freq2DFormModel(

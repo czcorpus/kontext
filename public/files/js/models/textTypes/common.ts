@@ -123,12 +123,7 @@ export interface TTInitialData {
 }
 
 
-export interface SelectedTextTypes {
-    [key:string]:Array<string>|string;
-}
-
-
-const typeIsSelected = (data:SelectedTextTypes, attr:string, v:string):boolean => {
+const typeIsSelected = (data:TextTypes.ExportedSelection, attr:string, v:string):boolean => {
     if (data.hasOwnProperty(attr)) {
         return data[attr].indexOf(v) > -1;
     }
@@ -136,7 +131,7 @@ const typeIsSelected = (data:SelectedTextTypes, attr:string, v:string):boolean =
 }
 
 export function importInitialData(data:TTInitialData,
-        selectedItems:SelectedTextTypes):Array<TextTypes.AnyTTSelection> {
+        selectedItems:TextTypes.ExportedSelection):Array<TextTypes.AnyTTSelection> {
     const mergedBlocks:Array<BlockLine> = List.foldl(
         (prev, curr) => prev.concat(curr.Line),
         [] as Array<BlockLine>,

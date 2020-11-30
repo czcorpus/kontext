@@ -127,7 +127,7 @@ export namespace AjaxResponse {
         curr_use_regexp_values:{[corpname:string]:boolean};
         curr_include_empty_values:{[corpname:string]:boolean};
         tag_builder_support:{[corpname:string]:boolean};
-        selected_text_types:TextTypes.ServerCheckedValues;
+        selected_text_types:TextTypes.ExportedSelection;
         bib_mapping:TextTypes.BibMapping;
         has_lemma:{[corpname:string]:boolean};
         tagset_docs:{[corpname:string]:string};

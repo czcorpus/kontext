@@ -328,6 +328,52 @@ export namespace PluginInterfaces {
 
         export type CustomAttribute = React.ComponentClass|React.FC;
 
+
+        export enum ActionName {
+            RefineClicked = 'LIVE_ATTRIBUTES_REFINE_CLICKED',
+            RefineReady = 'LIVE_ATTRIBUTES_REFINE_READY',
+            ResetClicked = 'LIVE_ATTRIBUTES_RESET_CLICKED',
+            UndoClicked = 'LIVE_ATTRIBUTES_UNDO_CLICKED',
+            ToggleMinimizeAlignedLangList = 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST',
+            AlignedCorpChanged = 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED',
+
+        }
+
+        export namespace Actions {
+
+            export interface RefineClicked extends Action<{
+            }> {
+                name:ActionName.RefineClicked;
+            }
+
+            export interface RefineReady extends Action<{
+                selections:TextTypes.ExportedSelection;
+            }> {
+                name:ActionName.RefineReady;
+            }
+
+            export interface ResetClicked extends Action<{
+            }> {
+                name:ActionName.ResetClicked;
+            }
+
+            export interface UndoClicked extends Action<{
+            }> {
+                name:ActionName.UndoClicked;
+            }
+
+            export interface ToggleMinimizeAlignedLangList extends Action<{
+            }> {
+                name:ActionName.ToggleMinimizeAlignedLangList;
+            }
+
+            export interface AlignedCorpChanged extends Action<{
+                idx:number;
+            }> {
+                name:ActionName.AlignedCorpChanged;
+            }
+        }
+
         export interface Views {
             LiveAttrsView:View;
             LiveAttrsCustomTT:CustomAttribute;

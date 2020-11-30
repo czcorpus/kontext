@@ -36,6 +36,7 @@ export enum ActionName {
     AttributeTextInputChanged = 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED',
     AttributeAutoCompleteReset = 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET',
     AttributeTextInputAutocompleteRequest = 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST',
+    AttributeTextInputAutocompleteReady = 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_READY',
     AttributeTextInputAutocompleteRequestDone = 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST_DONE',
     MinimizeAll = 'TT_MINIMIZE_ALL',
     MaximizeAll = 'TT_MAXIMIZE_ALL',
@@ -140,6 +141,15 @@ export namespace Actions {
     };
 
 
+    export interface AttributeTextInputAutocompleteReady extends Action<{
+        attrName:string;
+        value:string;
+        selections:TextTypes.ExportedSelection;
+    }> {
+        name:ActionName.AttributeTextInputAutocompleteReady;
+    };
+
+
     export interface AttributeTextInputAutocompleteRequestDone extends Action<{
         attrName:string;
         autoCompleteData:Array<TextTypes.AutoCompleteItem>;
@@ -183,7 +193,7 @@ export namespace Actions {
     export interface FilterWholeSelection extends Action<{
         poscount:number;
         filterData:SelectionFilterMap;
-        selectedTypes:TextTypes.ServerCheckedValues;
+        selectedTypes:TextTypes.ExportedSelection;
         bibAttrValsAreListed:boolean;
     }> {
         name:ActionName.FilterWholeSelection;
