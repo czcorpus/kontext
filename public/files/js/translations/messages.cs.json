@@ -716,6 +716,7 @@
         "user__password_has_been_updated": "Heslo bylo aktualizováno",
         "user__firstname": "Jméno",
         "user__lastname": "Příjmení",
+        "user__affiliation": "Organizace",
         "user__email": "E-mail",
         "user__username": "Uživatelské jméno",
         "user__password": "Heslo",

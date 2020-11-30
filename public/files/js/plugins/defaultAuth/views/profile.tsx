@@ -44,6 +44,10 @@ export interface UserProfileViews {
         onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
         value:Kontext.FormValue<string>;
     }>;
+    TrUserAffiliationInput:React.SFC<{
+        onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
+        value:Kontext.FormValue<string>;
+    }>;
     TrUserEmailInput:React.SFC<{
         onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
         value:Kontext.FormValue<string>;
@@ -218,6 +222,22 @@ export function init(
         </tr>;
     };
 
+    // ----------------------- <TrUserAffiliationInput /> ------------------------
+
+    const TrUserAffiliationInput:UserProfileViews['TrUserAffiliationInput'] = (props) => {
+        return <tr>
+            <th>
+                {he.translate('user__affiliation')}:
+            </th>
+            <td>
+                <layoutViews.ValidatedItem invalid={props.value.isInvalid} errorDesc={props.value.errorDesc}>
+                    <input type="text" readOnly={!props.onChange} value={props.value.value}
+                            style={{width: '20em'}} onChange={props.onChange} />
+                </layoutViews.ValidatedItem>
+            </td>
+        </tr>;
+    };
+
     // ----------------------- <TrUserEmailInput /> ------------------------
 
     const TrUserEmailInput:UserProfileViews['TrUserEmailInput'] = (props) => {
@@ -270,6 +290,7 @@ export function init(
                                 <tbody>
                                     <TrUserFirstNameInput value={this.state.firstName} />
                                     <TrUserLastNameInput value={this.state.lastName} />
+                                    <TrUserAffiliationInput value={this.state.affiliation} />
                                     <TrUserEmailInput value={this.state.email} />
                                 </tbody>
                             </table>
@@ -290,6 +311,7 @@ export function init(
         TRNewPasswdInput2: TRNewPasswdInput2,
         TrUserFirstNameInput: TrUserFirstNameInput,
         TrUserLastNameInput: TrUserLastNameInput,
+        TrUserAffiliationInput: TrUserAffiliationInput,
         TrUserEmailInput: TrUserEmailInput
     };
 }

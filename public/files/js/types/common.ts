@@ -118,6 +118,7 @@ export namespace Kontext {
         id:number;
         firstname:string;
         lastname:string;
+        affiliation:string;
         email:string;
         username:string;
         active:boolean;

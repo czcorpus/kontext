@@ -34,6 +34,7 @@ export enum ActionName {
     CheckUsernameDone = 'USER_PROFILE_CHECK_USERNAME_DONE',
     SetFirstname = 'USER_PROFILE_SET_FIRSTNAME',
     SetLastname = 'USER_PROFILE_SET_LASTNAME',
+    SetAffiliation = 'USER_PROFILE_SET_AFFILIATION',
     SetEmail = 'USER_PROFILE_SET_EMAIL',
     SubmitSignUp = 'USER_PROFILE_SUBMIT_SIGN_UP',
     SubmitSignUpDone = 'USER_PROFILE_SUBMIT_SIGN_UP_DONE',
@@ -101,6 +102,12 @@ export namespace Actions {
         value:string;
     }> {
         name:ActionName.SetLastname;
+    }
+
+    export interface SetAffiliation extends Action<{
+        value: string;
+    }> {
+        name: ActionName.SetAffiliation;
     }
 
     export interface SetEmail extends Action<{

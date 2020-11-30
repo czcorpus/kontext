@@ -98,6 +98,7 @@ class User(Kontext):
                 username=request.form['username'],
                 firstname=request.form['firstname'],
                 lastname=request.form['lastname'],
+                affiliation=request.form['affiliation'],
                 email=request.form['email'],
                 password=request.form['password'],
                 password2=request.form['password2']
