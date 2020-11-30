@@ -115,8 +115,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             isTTListMinimized: false,
             isEnabled: isEnabled
         },
-        controlsAlignedCorpora,
-        textTypesModel.exportSelections.bind(textTypesModel)
+        controlsAlignedCorpora
     );
 
     let numSelectionSteps = 0;

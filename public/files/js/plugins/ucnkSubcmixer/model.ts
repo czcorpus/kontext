@@ -46,7 +46,7 @@ export interface SubcMixerModelState extends BaseSubcorFormState {
     numOfErrors:number;
     ttAttributes:Array<TextTypes.AnyTTSelection>; // basically a copy of text type model attributes
     ttInitialAvailableValues:Array<TextTypes.AnyTTSelection>;
-    liveattrsSelections:{[key:string]:Array<string>|string};
+    liveattrsSelections:TextTypes.ExportedSelection;
 }
 
 /**
@@ -120,7 +120,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         this.addActionHandler<TTActions.FilterWholeSelection>(
             TTActionName.FilterWholeSelection,
             (state, action) => {
-                const newSelections:TextTypes.ServerCheckedValues = action.payload.selectedTypes;
+                const newSelections:TextTypes.ExportedSelection = action.payload.selectedTypes;
                 state.liveattrsSelections = {
                     ...state.liveattrsSelections,
                     ...newSelections,

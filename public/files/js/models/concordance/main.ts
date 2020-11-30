@@ -1004,7 +1004,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
     }
 
     private calculateAdHocIpm():Observable<number> {
-        const selections = this.ttModel.exportSelections(false);
+        const selections = this.ttModel.UNSAFE_exportSelections(false);
         return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(

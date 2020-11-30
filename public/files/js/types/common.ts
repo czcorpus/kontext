@@ -464,7 +464,7 @@ export namespace Kontext {
          * (IDs) are not the ones displayed to user (Titles)
          * - see bib_mapping in this interface.
          */
-        selected_text_types:TextTypes.ServerCheckedValues;
+        selected_text_types:TextTypes.ExportedSelection;
 
         /**
          * Mappings from unique bib_id (e.g. "the_great_gatsby_fsf_01")
@@ -651,17 +651,6 @@ export namespace TextTypes {
         label: string;
     }
 
-    /**
-     * A map of selected attribute values as
-     * obtained from server.
-     *
-     * format: attr_name_1 => [val1#1, val1#2,...],
-     *         attr_name_2 => [val2#1, val2#2,...]
-     */
-    export interface ServerCheckedValues {
-        [key:string]:Array<string>|string;
-    }
-
     export interface BibMapping {
         [bibId:string]:string;
     }
@@ -723,18 +712,18 @@ export namespace TextTypes {
     export type AnyTTSelection = TextInputAttributeSelection|FullAttributeSelection|
             RegexpAttributeSelection;
 
-    export type ExportedSelection = {[sca:string]:Array<string>|Array<number>|string};
+    export type ExportedSelection = {[sca:string]:Array<string>|string};
 
     /**
      *
      */
     export interface IAdHocSubcorpusDetector {
         usesAdHocSubcorpus():boolean;
-        exportSelections(lockedOnesOnly:boolean):ExportedSelection;
+        UNSAFE_exportSelections(lockedOnesOnly:boolean):ExportedSelection;
     }
 
     export interface ITextTypesModel<T> extends IModel<T> {
-        exportSelections(lockedOnesOnly:boolean):ExportedSelection;
+        UNSAFE_exportSelections(lockedOnesOnly:boolean):ExportedSelection;
         getInitialAvailableValues():Array<AnyTTSelection>;
     }
 

@@ -105,7 +105,7 @@ export namespace TTSelOps {
             return sel;
 
         } else {
-            let values;
+            let values:Array<TextTypes.AttributeValue>;
             if (!List.empty(sel.values)) {
                 values = List.filter(
                     (item:TextTypes.AttributeValue) => items.indexOf(item.ident) > -1,
@@ -118,6 +118,8 @@ export namespace TTSelOps {
                         value: item,
                         selected: false,
                         locked: false,
+                        ident: item, // TODO is this correct? (ident vs label problem)
+                        numGrouped: 0
                     }),
                     items
                 );

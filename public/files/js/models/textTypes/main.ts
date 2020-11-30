@@ -25,10 +25,10 @@ import { List, Dict, pipe, tuple, HTTP, Strings } from 'cnc-tskit';
 
 import { TextTypes, Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { IPluginApi } from '../../types/plugins';
+import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
-import { SelectedTextTypes, importInitialData, TTInitialData, SelectionFilterMap,
-    IntervalChar, WidgetView} from './common';
+import { importInitialData, TTInitialData, SelectionFilterMap, IntervalChar,
+    WidgetView } from './common';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
@@ -109,7 +109,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
 
 
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, data:TTInitialData,
-            selectedItems?:SelectedTextTypes) {
+            selectedItems?:TextTypes.ExportedSelection  ) {
         const attributes = importInitialData(data, selectedItems || {});
         super(
             dispatcher,
@@ -322,6 +322,32 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 this.changeState(state => {
                     state.isBusy = true;
                 });
+                setTimeout(() => {
+                    dispatcher.dispatch<Actions.AttributeTextInputAutocompleteReady>({
+                        name: ActionName.AttributeTextInputAutocompleteReady,
+                        payload: {
+                            ...action.payload,
+                            selections: this.exportSelections(false)
+                        }
+                    })
+                });
+            }
+        );
+
+        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
+            PluginInterfaces.LiveAttributes.ActionName.RefineClicked,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
+                setTimeout(() => {
+                    dispatcher.dispatch<PluginInterfaces.LiveAttributes.Actions.RefineReady>({
+                        name: PluginInterfaces.LiveAttributes.ActionName.RefineReady,
+                        payload: {
+                            selections: this.exportSelections(false)
+                        }
+                    });
+                });
             }
         );
 
@@ -398,7 +424,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ActionName.LockSelected,
             action => {
                 this.changeState(state => {
-                    this.getAttributesWithSelectedItems(state, false).forEach(
+                    List.forEach(
                         (attrName:string) => {
                             const attrIdx = this.getAttributeIdx(state, attrName);
                             if (attrIdx > -1) {
@@ -415,7 +441,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                     );
                                 }
                             }
-                        }
+                        },
+                        this.getAttributesWithSelectedItems(state, false)
                     );
                 });
             }
@@ -472,7 +499,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         });
     }
 
-    applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues,
+    applyCheckedItems(checkedItems:TextTypes.ExportedSelection,
             bibMapping:TextTypes.BibMapping):void {
         this.changeState(state => {
             pipe(
@@ -724,7 +751,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     /**
      * @deprecated use actions along with model.suspend()
      */
-    exportSelections(lockedOnesOnly:boolean):TextTypes.ExportedSelection {
+    UNSAFE_exportSelections(lockedOnesOnly:boolean):TextTypes.ExportedSelection {
+        return this.exportSelections(lockedOnesOnly);
+    }
+
+    private exportSelections(lockedOnesOnly:boolean):TextTypes.ExportedSelection {
         const ans = {};
         this.state.attributes.forEach((attrSel:TextTypes.AnyTTSelection) => {
             if (TTSelOps.hasUserChanges(attrSel)) {
@@ -771,7 +802,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         }
                     }
                 );
-                this.filter(state, k, (item) => item !== null);
+                this.filter(state, k, item => item !== null);
             },
             filterData
         );
@@ -805,15 +836,16 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             // in case of raw text input (produced initially due to large num of items)
             // we have to transform the selection into a 'full' one as mapItems is called
             // iff there are all the avail. items fetched from server.
-            const srcAttr:TextTypes.AnyTTSelection = state.attributes[attrIdx].type === 'text' ?
+            const srchAttr = state.attributes[attrIdx];
+            const srcAttr:TextTypes.AnyTTSelection = srchAttr.type === 'text' ?
                 {
-                    attrInfo: state.attributes[attrIdx].attrInfo,
+                    attrInfo: srchAttr.attrInfo,
                     isInterval: false,
                     widget: null,
                     isNumeric: false,
-                    label: state.attributes[attrIdx].label,
-                    name: state.attributes[attrIdx].name,
-                    values: [],
+                    label: srchAttr.label,
+                    name: srchAttr.name,
+                    values: [...srchAttr.values],
                     type: 'full'
                 } :
                 state.attributes[attrIdx];

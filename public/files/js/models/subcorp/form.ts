@@ -177,7 +177,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
             publish: this.state.isPublic,
             description: this.state.description.value,
             aligned_corpora: List.map(v => v.value, this.state.alignedCorpora),
-            text_types: this.textTypesModel.exportSelections(false),
+            text_types: this.textTypesModel.UNSAFE_exportSelections(false),
             form_type: 'tt-sel'
         };
     }
@@ -247,6 +247,6 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
     }
 
     getTTSelections():TextTypes.ExportedSelection {
-        return this.textTypesModel.exportSelections(false);
+        return this.textTypesModel.UNSAFE_exportSelections(false);
     }
 }

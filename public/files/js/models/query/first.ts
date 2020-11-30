@@ -66,7 +66,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
-    selectedTextTypes:TextTypes.ServerCheckedValues;
+    selectedTextTypes:TextTypes.ExportedSelection;
     hasLemma:{[corpname:string]:boolean};
     isAnonymousUser:boolean;
     suggestionsEnabled:boolean;
@@ -820,7 +820,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             fromp: currArgs.fromp || 0,
             shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
             queries: [],
-            text_types: this.textTypesModel.exportSelections(false),
+            text_types: this.textTypesModel.UNSAFE_exportSelections(false),
             context: contextFormArgs
         };
 
