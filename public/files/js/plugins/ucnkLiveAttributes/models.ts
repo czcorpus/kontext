@@ -313,9 +313,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             TTActionName.AttributeTextInputAutocompleteRequest,
             null,
             (state, action, dispatch) => {
-                if (action.payload.value.length <= 2) {
-                    return;
-                }
                 this.suspend({}, (action, syncData) => {
                     if (action.name === TTActionName.AttributeTextInputAutocompleteReady) {
                         return null;

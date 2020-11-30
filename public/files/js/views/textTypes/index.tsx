@@ -319,12 +319,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 <div className="attrib-name">
                     <h3 title={props.attrObj.name !== props.attrObj.label ? props.attrObj.name : null}>
                         {props.attrObj.label}
-                        {
-                        props.isMinimized && TTSelOps.hasUserChanges(props.attrObj) ?
-                        <span title={he.translate('query__contains_selected_text_types')}>{'\u00a0\u2713'}</span> :
-                        null
+                        {props.isMinimized && TTSelOps.hasUserChanges(props.attrObj) ?
+                            <span title={he.translate('query__contains_selected_text_types')}>{'\u00a0\u2713'}</span> :
+                            null
                         }
                         {renderAttrInfo()}
+                        {props.isBusy ? <layoutViews.AjaxLoaderBarImage htmlClass="ajax-loader" /> : null}
                     </h3>
                     <TextTypeAttributeMinIcon isMinimized={props.isMinimized}
                             onClick={handleMinimizeIconFn(props.attrObj.name)} />
@@ -411,7 +411,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                         metaInfoHelpVisible={props.metaInfoHelpVisible}
                                         hasExtendedInfo={props.bibIdAttr === attrObj.name}
                                         metaInfo={props.metaInfo[attrObj.name]}
-                                        isBusy={props.isBusy}
+                                        isBusy={props.busyAttribute === attrObj.name}
                                         textInputPlaceholder={props.textInputPlaceholder}
                                         firstDayOfWeek={props.firstDayOfWeek} />
                             </div>;
