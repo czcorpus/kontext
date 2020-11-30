@@ -74,7 +74,7 @@ export interface TextTypesModelState {
 
     textInputPlaceholder:string;
 
-    isBusy:boolean;
+    busyAttribute:string|undefined;
 
     autoCompleteSupport:boolean;
 
@@ -130,7 +130,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 ),
                 metaInfo: {},
                 textInputPlaceholder: null,
-                isBusy: false,
+                busyAttribute: undefined,
                 minimizedBoxes: pipe(
                     attributes,
                     List.map(v => tuple(v.name, false)),
@@ -219,7 +219,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ActionName.ExtendedInformationRequest,
             action => {
                 this.changeState(state => {
-                    state.isBusy = true;
+                    state.busyAttribute = action.payload.attrName;
                     const attrIdx = this.getAttributeIdx(state, action.payload.attrName);
                     if (attrIdx > -1) {
                         const ident = action.payload.ident;
@@ -252,7 +252,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ActionName.ExtendedInformationRequestDone,
             action => {
                 this.changeState(state => {
-                    state.isBusy = false;
+                    state.busyAttribute = undefined;
                     this.setExtendedInfo(
                         state,
                         action.payload.attrName,
@@ -319,18 +319,20 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler<Actions.AttributeTextInputAutocompleteRequest>(
             ActionName.AttributeTextInputAutocompleteRequest,
             action => {
-                this.changeState(state => {
-                    state.isBusy = true;
-                });
-                setTimeout(() => {
-                    dispatcher.dispatch<Actions.AttributeTextInputAutocompleteReady>({
-                        name: ActionName.AttributeTextInputAutocompleteReady,
-                        payload: {
-                            ...action.payload,
-                            selections: this.exportSelections(false)
-                        }
-                    })
-                });
+                if (action.payload.value.length > 2) {
+                    this.changeState(state => {
+                        state.busyAttribute = action.payload.attrName;
+                    });
+                    setTimeout(() => {
+                        dispatcher.dispatch<Actions.AttributeTextInputAutocompleteReady>({
+                            name: ActionName.AttributeTextInputAutocompleteReady,
+                            payload: {
+                                ...action.payload,
+                                selections: this.exportSelections(false)
+                            }
+                        })
+                    });
+                }
             }
         );
 
@@ -338,7 +340,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             PluginInterfaces.LiveAttributes.ActionName.RefineClicked,
             action => {
                 this.changeState(state => {
-                    state.isBusy = true;
+                    state.busyAttribute = '#'; // # is a pseudo-value to keep model in busy state
                 });
                 setTimeout(() => {
                     dispatcher.dispatch<PluginInterfaces.LiveAttributes.Actions.RefineReady>({
@@ -355,7 +357,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ActionName.AttributeTextInputAutocompleteRequestDone,
             action => {
                 this.changeState(state => {
-                    state.isBusy = false;
+                    state.busyAttribute = undefined;
                     this.setAutoComplete(
                         state,
                         action.payload.attrName,
