@@ -64,6 +64,10 @@ module.exports = (env) => merge(common.wpConf(env), {
         public: 'kontext6.korpus.test',
         publicPath: common.PUBLIC_PATH + '/files/dist/',
         inline: false,
+        sockPath: common.PUBLIC_PATH + '/socket',
+        serveIndex: true,
+        liveReload: false,
+        disableHostCheck: true, // TODO
         before: function(app) {
             // In the devel-server mode, all the css is delivered via Webpack
             // but at the same time our hardcoded <link rel="stylesheet" ... />
@@ -75,5 +79,6 @@ module.exports = (env) => merge(common.wpConf(env), {
             });
           }
     },
-    devtool: "inline-source-map"
+    devtool: "inline-source-map",
+    target: ['web', 'es5']
 });

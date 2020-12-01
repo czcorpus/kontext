@@ -10,4 +10,4 @@ client-production-with-maps :
 client-production-notc :
 	node node_modules/webpack/bin/webpack.js --config webpack.prod.js --env.TS_TRANSPILE_ONLY
 devel-server :
-	node node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.dev.js
+	node node_modules/webpack/bin/webpack.js serve --config webpack.dev.js
