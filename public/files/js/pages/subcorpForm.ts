@@ -102,6 +102,7 @@ export class SubcorpForm {
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
                 textTypesData,
+                false,
                 selectedTextTypes
         );
         const ttViewComponents = ttViewsInit(

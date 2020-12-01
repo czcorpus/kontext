@@ -33,6 +33,7 @@ import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
     from '../common/actions';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../concordance/actions';
 
 
 
@@ -103,6 +104,14 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     implements TextTypes.IAdHocSubcorpusDetector, TextTypes.ITextTypesModel<TextTypesModelState>,
         IUnregistrable {
 
+
+    /**
+     * true value is used on the 'view' page where no additional changes are
+     * allowed in the selected text types. Please note that setting of the
+     * value to true does not prevent
+     */
+    private readonly readonlyMode:boolean;
+
     private readonly pluginApi:IPluginApi;
 
     private readonly notifySelectionChange:()=>void; // TODO this is an ungly antipattern;
@@ -112,9 +121,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         dispatcher:IFullActionControl,
         pluginApi:IPluginApi,
         data:TTInitialData,
+        readonlyMode:boolean,
         selectedItems?:TextTypes.ExportedSelection
     ) {
-
         const attributes = importInitialData(data, selectedItems || {});
         super(
             dispatcher,
@@ -156,6 +165,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 firstDayOfWeek: pluginApi.getConf<'mo'|'su'|'sa'>('firstDayOfWeek')
             }
         );
+        this.readonlyMode = readonlyMode;
         this.pluginApi = pluginApi;
 
         // kind of anti-pattern but for now we have no other choice
@@ -169,8 +179,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             });
         }
 
-        this.addActionHandler<Actions.ValueCheckboxClicked>(
+        this.addActionSubtypeHandler<Actions.ValueCheckboxClicked>(
             ActionName.ValueCheckboxClicked,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     this.changeValueSelection(
@@ -183,8 +194,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.SelectAllClicked>(
+        this.addActionSubtypeHandler<Actions.SelectAllClicked>(
             ActionName.SelectAllClicked,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     this.applySelectAll(state, action.payload.attrName);
@@ -193,8 +205,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.RangeButtonClicked>(
+        this.addActionSubtypeHandler<Actions.RangeButtonClicked>(
             ActionName.RangeButtonClicked,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     this.applyRange(
@@ -210,8 +223,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.ToggleRangeMode>(
+        this.addActionSubtypeHandler<Actions.ToggleRangeMode>(
             ActionName.ToggleRangeMode,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     state.attributeWidgets[action.payload.attrName].active =
@@ -282,8 +296,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.AttributeAutoCompleteHintClicked>(
+        this.addActionSubtypeHandler<Actions.AttributeAutoCompleteHintClicked>(
             ActionName.AttributeAutoCompleteHintClicked,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     const attrIdx = this.getAttributeIdx(state, action.payload.attrName);
@@ -305,8 +320,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.AttributeTextInputChanged>(
+        this.addActionSubtypeHandler<Actions.AttributeTextInputChanged>(
             ActionName.AttributeTextInputChanged,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     this.handleAttrTextInputChange(
@@ -319,8 +335,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.AttributeAutoCompleteReset>(
+        this.addActionSubtypeHandler<Actions.AttributeAutoCompleteReset>(
             ActionName.AttributeAutoCompleteReset,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     this.resetAutoComplete(state, action.payload.attrName);
@@ -328,8 +345,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.AttributeTextInputAutocompleteRequest>(
+        this.addActionSubtypeHandler<Actions.AttributeTextInputAutocompleteRequest>(
             ActionName.AttributeTextInputAutocompleteRequest,
+            _ => !this.readonlyMode,
             action => {
                 if (action.payload.value.length > 2) {
                     this.changeState(state => {
@@ -345,6 +363,20 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         })
                     });
                 }
+            }
+        );
+
+        this.addActionHandler<ConcActions.CalculateIpmForAdHocSubc>(
+            ConcActionName.CalculateIpmForAdHocSubc,
+            action => {
+                setTimeout(() => {
+                    dispatcher.dispatch<ConcActions.CalculateIpmForAdHocSubcReady>({
+                        name: ConcActionName.CalculateIpmForAdHocSubcReady,
+                        payload: {
+                            ttSelection: this.exportSelections(false)
+                        }
+                    });
+                });
             }
         );
 
@@ -365,8 +397,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.AttributeTextInputAutocompleteRequestDone>(
+        this.addActionSubtypeHandler<Actions.AttributeTextInputAutocompleteRequestDone>(
             ActionName.AttributeTextInputAutocompleteRequestDone,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     state.busyAttribute = undefined;
@@ -413,8 +446,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.UndoState>(
+        this.addActionSubtypeHandler<Actions.UndoState>(
             ActionName.UndoState,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     state.selectionHistory.pop();
@@ -424,8 +458,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.ResetState>(
+        this.addActionSubtypeHandler<Actions.ResetState>(
             ActionName.ResetState,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     this.reset(state);
@@ -434,8 +469,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.LockSelected>(
+        this.addActionSubtypeHandler<Actions.LockSelected>(
             ActionName.LockSelected,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     List.forEach(
@@ -462,8 +498,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.FilterWholeSelection>(
+        this.addActionSubtypeHandler<Actions.FilterWholeSelection>(
             ActionName.FilterWholeSelection,
+            _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
                     if (action.error) {
@@ -534,19 +571,22 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     // [structattr box is a list of items or a text input box]
                     if (attr.name === state.bibLabelAttr) {
                         if (attr.type === 'text') {
-                            checkedOfAttrNorm.forEach(checkedVal => {
-                                attr = TTSelOps.addValue(
-                                    attr,
-                                    {
-                                        ident: checkedVal,
-                                        value: checkedVal in bibMapping ?
-                                            bibMapping[checkedVal] : checkedVal,
-                                        selected: true,
-                                        locked: false,
-                                        numGrouped: 0
-                                    }
-                                );
-                            });
+                            List.forEach(
+                                checkedVal => {
+                                    attr = TTSelOps.addValue(
+                                        attr,
+                                        {
+                                            ident: checkedVal,
+                                            value: checkedVal in bibMapping ?
+                                                bibMapping[checkedVal] : checkedVal,
+                                            selected: true,
+                                            locked: false,
+                                            numGrouped: 0
+                                        }
+                                    );
+                                },
+                                checkedOfAttrNorm
+                            );
                             state.attributes[attrIdx] = attr;
 
                         } else {
@@ -565,18 +605,21 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
 
                     } else {
                         if (attr.type === 'text') {
-                            checkedOfAttrNorm.forEach(checkedVal => {
-                                attr = TTSelOps.addValue(
-                                    attr,
-                                    {
-                                        ident: checkedVal,
-                                        value: checkedVal,
-                                        selected: true,
-                                        locked: false,
-                                        numGrouped: 0
-                                    }
-                                );
-                            });
+                            List.forEach(
+                                checkedVal => {
+                                    attr = TTSelOps.addValue(
+                                        attr,
+                                        {
+                                            ident: checkedVal,
+                                            value: checkedVal,
+                                            selected: true,
+                                            locked: false,
+                                            numGrouped: 0
+                                        }
+                                    );
+                                },
+                                checkedOfAttrNorm
+                            );
                             state.attributes[attrIdx] = attr;
 
                         } else if (attr.type === 'regexp') {
@@ -780,13 +823,10 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 if (attrSel.type === 'regexp' && attrSel.widget === 'days') {
                     ans[attrSel.name] = attrSel.textFieldValue;
 
-                } else if (this.state.autoCompleteSupport) {
-                    ans[attrSel.name !== this.state.bibLabelAttr ?
-                        attrSel.name :
-                        this.state.bibIdAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
-
                 } else if (attrSel.type === 'text') {
-                    ans[attrSel.name] = [attrSel.textFieldValue];
+                    const trueAttr = attrSel.name !== this.state.bibLabelAttr ?
+                            attrSel.name : this.state.bibIdAttr;
+                    ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
 
                 } else {
                     ans[attrSel.name] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);

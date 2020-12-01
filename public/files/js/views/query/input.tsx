@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Dict, Keyboard, List, pipe } from 'cnc-tskit';
 
 import { init as keyboardInit } from './virtualKeyboard';

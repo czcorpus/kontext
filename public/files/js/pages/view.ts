@@ -386,12 +386,7 @@ export class ViewPage {
     /**
      *
      */
-    private initQueryForm():void {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
-            'ConcFormsArgs'
-        );
-        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-
+    private initQueryForm(queryFormArgs:AjaxResponse.QueryFormArgsResponse):void {
         this.queryModels.queryHintModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
             this.layoutModel.translate.bind(this.layoutModel)
@@ -887,7 +882,8 @@ export class ViewPage {
         this.queryModels.textTypesModel = new TextTypesModel(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
-            this.layoutModel.getConf<TTInitialData>('textTypesData')
+            this.layoutModel.getConf<TTInitialData>('textTypesData'),
+            true
         );
 
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
@@ -904,9 +900,11 @@ export class ViewPage {
         );
     }
 
-    private initModels(ttModel:TextTypesModel,
-                syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
-                tokenConnect:PluginInterfaces.TokenConnect.IPlugin):ViewConfiguration {
+    private initModels(
+        queryFormArgs:AjaxResponse.QueryFormArgsResponse,
+        syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
+        tokenConnect:PluginInterfaces.TokenConnect.IPlugin
+    ):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
             concSize: this.layoutModel.getConf<number>('ConcSize'),
@@ -987,9 +985,9 @@ export class ViewPage {
                 quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
             }),
             syntaxViewer,
-            ttModel,
             lineViewProps,
-            this.layoutModel.getConf<Array<ServerLineData>>('Lines')
+            this.layoutModel.getConf<Array<ServerLineData>>('Lines'),
+            !Dict.empty(queryFormArgs.selected_text_types)
         );
 
         this.viewModels.syntaxViewModel = syntaxViewer.getModel();
@@ -1077,8 +1075,14 @@ export class ViewPage {
                     }
                 );
             }
+
+            const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+                'ConcFormsArgs'
+            );
+            const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+
             const lineViewProps = this.initModels(
-                ttModel,
+                queryFormArgs,
                 syntaxViewerModel,
                 this.initTokenConnect()
             );
@@ -1090,7 +1094,7 @@ export class ViewPage {
             });
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
             this.setupHistoryOnPopState();
-            this.initQueryForm();
+            this.initQueryForm(queryFormArgs);
             this.initFirsthitsForm();
             this.initFilterForm(this.layoutModel.qsuggPlugin, this.queryModels.firstHitsModel);
             this.initSortForm();
