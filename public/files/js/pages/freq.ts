@@ -336,7 +336,8 @@ class FreqPage {
         const ttModel = new TextTypesModel(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
-            this.layoutModel.getConf<any>('textTypesData')
+            this.layoutModel.getConf<any>('textTypesData'),
+            true
         );
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
         return ttModel;

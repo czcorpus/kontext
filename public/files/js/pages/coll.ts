@@ -289,7 +289,8 @@ export class CollPage {
         return  new TextTypesModel(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
-            this.layoutModel.getConf<any>('textTypesData')
+            this.layoutModel.getConf<any>('textTypesData'),
+            true
         );
     }
 

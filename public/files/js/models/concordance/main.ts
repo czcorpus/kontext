@@ -23,7 +23,7 @@ import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP } from 'cnc-tskit';
 
-import { ViewOptions } from '../../types/common';
+import { TextTypes, ViewOptions } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PluginInterfaces } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
@@ -41,8 +41,6 @@ import { Actions, ActionName, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { SwitchMainCorpServerArgs } from '../query/common';
-import { TextTypesModel } from '../textTypes/main';
-
 
 
 /**
@@ -205,8 +203,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     private readonly audioPlayer:AudioPlayer;
 
-    private readonly ttModel:TextTypesModel;
-
     /**
      * Note: substitutes "isBusy". Also compare with unfinishedCalculation.
      */
@@ -214,10 +210,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     private readonly runBusyTimer:(currTimer:Subscription)=>Subscription;
 
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl,
-            saveModel:ConcSaveModel, syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
-            ttModel:TextTypesModel, lineViewProps:ViewConfiguration,
-            initialData:Array<ServerLineData>) {
+    constructor(
+        layoutModel:PageModel,
+        dispatcher:IFullActionControl,
+        saveModel:ConcSaveModel,
+        syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
+        lineViewProps:ViewConfiguration,
+        initialData:Array<ServerLineData>,
+        providesAdHocIpm:boolean
+    ) {
+
         const viewAttrs = layoutModel.exportConcArgs().head('attrs').split(',');
         super(
             dispatcher,
@@ -233,7 +235,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 origSubcorpName: lineViewProps.origSubCorpName,
                 unfinishedCalculation: lineViewProps.Unfinished,
                 fastAdHocIpm: lineViewProps.FastAdHocIpm,
-                providesAdHocIpm: ttModel.hasSelectedItems(),
+                providesAdHocIpm,
                 concSummary: lineViewProps.concSummary,
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
@@ -263,7 +265,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         );
         this.layoutModel = layoutModel;
         this.saveModel = saveModel;
-        this.ttModel = ttModel;
         this.syntaxViewModel = syntaxViewModel;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
@@ -340,7 +341,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 ActionName.RevisitPage
             ],
             action => {
-                forkJoin(
+                forkJoin([
                     this.suspend({}, (action, syncData) => {
                         return action.name === ActionName.PublishStoredLineSelections ?
                             null : syncData;
@@ -349,7 +350,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                     ),
                     this.changePage(action.payload.action, action.payload.pageNum)
 
-                ).pipe(
+                ]).pipe(
                     tap(([wakePayload, change]) => {
                         this.applyLineSelections(wakePayload);
                     })
@@ -455,7 +456,17 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             action => {
                 this.busyTimer = this.runBusyTimer(this.busyTimer);
                 this.emitChange();
-                this.calculateAdHocIpm().subscribe(
+                this.suspend({}, (action, syncData) => {
+                    return action.name === ActionName.CalculateIpmForAdHocSubcReady ?
+                        null : syncData;
+
+                }).pipe(
+                    concatMap(
+                        (action:Actions.CalculateIpmForAdHocSubcReady) =>
+                                this.calculateAdHocIpm(action.payload.ttSelection)
+                    )
+
+                ).subscribe(
                     (data) => {
                         this.busyTimer = this.stopBusyTimer(this.busyTimer);
                         this.emitChange();
@@ -847,6 +858,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             state.pagination = data.pagination;
             state.unfinishedCalculation = !!data.running_calc;
             state.lineGroupIds = [];
+            state.adHocIpm = -1;
             state.concSummary = {
                 concSize: data.concsize,
                 fullSize: data.fullsize,
@@ -1003,8 +1015,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         }
     }
 
-    private calculateAdHocIpm():Observable<number> {
-        const selections = this.ttModel.UNSAFE_exportSelections(false);
+    private calculateAdHocIpm(ttSelection:TextTypes.ExportedSelection):Observable<number> {
         return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
@@ -1013,7 +1024,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             {
                 ...this.layoutModel.getConcArgs(),
                 type:'adHocIpmArgs',
-                text_types: selections
+                text_types: ttSelection
             },
             {
                 contentType: 'application/json'

@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
     AjaxConcResponse, LineGroupId, RefsColumn } from './common';
 import { SaveData } from '../../app/navigation';
+import { TextTypes } from '../../types/common';
 
 export enum ActionName {
     AddedNewOperation = 'CONCORDANCE_ADDED_NEW_OPERATION',
@@ -34,6 +35,7 @@ export enum ActionName {
     AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
     AsyncCalculationFailed = 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
     CalculateIpmForAdHocSubc = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
+    CalculateIpmForAdHocSubcReady = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC_READY',
     ChangeLangVisibility = 'CONCORDANCE_CHANGE_LANG_VISIBILITY',
     SwitchKwicSentMode = 'CONCORDANCE_SWITCH_KWIC_SENT_MODE',
     DataWaitTimeInc = 'CONCORDANCE_DATA_WAIT_TIME_INC',
@@ -168,6 +170,12 @@ export namespace Actions {
     export interface CalculateIpmForAdHocSubc extends Action<{
     }> {
         name:ActionName.CalculateIpmForAdHocSubc;
+    }
+
+    export interface CalculateIpmForAdHocSubcReady extends Action<{
+        ttSelection:TextTypes.ExportedSelection;
+    }> {
+        name:ActionName.CalculateIpmForAdHocSubcReady;
     }
 
     export interface ChangeLangVisibility extends Action<{

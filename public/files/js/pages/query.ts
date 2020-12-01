@@ -148,7 +148,7 @@ export class QueryPage {
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
                 textTypesData,
-
+                false
         );
         this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
