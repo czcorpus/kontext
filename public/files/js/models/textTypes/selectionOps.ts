@@ -19,7 +19,7 @@
  */
 
 import { TextTypes } from '../../types/common';
-import { List, pipe } from 'cnc-tskit';
+import { id, List, pipe } from 'cnc-tskit';
 
 
 export type ExtendedInfo = {[key:string]:any}; // TODO type
@@ -89,14 +89,17 @@ export namespace TTSelOps {
         if (sel.type === 'regexp') {
             return [sel.textFieldValue];
         }
-        const items = lockedOnesOnly ?
-        sel.values.filter((item:TextTypes.AttributeValue)=>item.locked) :
-        sel.values;
+        const filter = lockedOnesOnly ?
+            List.filter<TextTypes.AttributeValue>(item => item.locked) :
+            List.filter<TextTypes.AttributeValue>(_ => true);
 
         return pipe(
-            items,
-            List.filter((item:TextTypes.AttributeValue) => item.selected === true),
-            List.map((item:TextTypes.AttributeValue) => item.ident)
+            sel.values,
+            filter,
+            List.filter(item => item.selected === true),
+            List.map(item => item.ident),
+            sel.type === 'text' && sel.textFieldValue !== '' ?
+                List.push(sel.textFieldValue) : x => x
         );
     }
 
@@ -147,7 +150,7 @@ export namespace TTSelOps {
                 };
 
             } else {
-                return this;
+                return sel;
             }
 
         } else {

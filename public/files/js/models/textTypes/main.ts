@@ -108,8 +108,13 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     private readonly notifySelectionChange:()=>void; // TODO this is an ungly antipattern;
 
 
-    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi, data:TTInitialData,
-            selectedItems?:TextTypes.ExportedSelection  ) {
+    constructor(
+        dispatcher:IFullActionControl,
+        pluginApi:IPluginApi,
+        data:TTInitialData,
+        selectedItems?:TextTypes.ExportedSelection
+    ) {
+
         const attributes = importInitialData(data, selectedItems || {});
         super(
             dispatcher,
@@ -281,6 +286,13 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             ActionName.AttributeAutoCompleteHintClicked,
             action => {
                 this.changeState(state => {
+                    const attrIdx = this.getAttributeIdx(state, action.payload.attrName);
+                    if (attrIdx > -1) {
+                        const attr = state.attributes[attrIdx];
+                        if (attr.type === 'text') {
+                            attr.textFieldValue = '';
+                        }
+                    }
                     this.setTextInputAttrValue(
                         state,
                         action.payload.attrName,
@@ -751,7 +763,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     }
 
     /**
-     * @deprecated use actions along with model.suspend()
+     * @deprecated There is no guarantee that the state provided by
+     * this method is in sync with the actual action the method is used in.
+     * While this should work in most simple scenarios it can be also a source
+     * of problems in more complex ones and it should be considered as an antipattern.
+     * Please use actions along with model.suspend()
      */
     UNSAFE_exportSelections(lockedOnesOnly:boolean):TextTypes.ExportedSelection {
         return this.exportSelections(lockedOnesOnly);
