@@ -271,22 +271,26 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     const SelectedTextTypesLite:React.FC<TextTypesModelState> = (props) => {
 
+        function renderValues(position:number, name:string, values:Array<TextTypes.AttributeValue>) {
+            const selValues = pipe(
+                values,
+                List.filter(v => v.selected),
+                List.map(v => <span key={v.value} className="attr-val">{v.value}</span>)
+            );
+            return <span>
+                {position > 0 ? ', ' : ''}
+                <strong>{name}</strong>
+                {'\u00a0\u2208\u00a0{'}
+                {List.join(i => <span key={`j${i}`}>, </span>, shortenValues(selValues))}
+                {'}'}
+                <br />
+            </span>;
+        }
+
         function renderSelections(sel:TextTypes.AnyTTSelection, i:number) {
             switch (sel.type) {
                 case 'full':
-                    const selValues = pipe(
-                        sel.values,
-                        List.filter(v => v.selected),
-                        List.map(v => <span key={v.value} className="attr-val">{v.value}</span>)
-                    );
-                    return <span>
-                        {i > 0 ? ', ' : ''}
-                        <strong>{sel.name}</strong>
-                        {'\u00a0\u2208\u00a0{'}
-                        {shortenValues(selValues)}
-                        {'}'}
-                        <br />
-                    </span>;
+                    return renderValues(i, sel.name, sel.values);
                 case 'regexp':
                     return <span>
                         {i > 0 ? ', ' : ''}
@@ -296,6 +300,9 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         <br />
                     </span>;
                 case 'text':
+                    if (!List.empty(sel.values)) {
+                        return renderValues(i, sel.name, sel.values);
+                    }
                     return <span>{sel.textFieldValue}</span>;
             }
         }
