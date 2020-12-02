@@ -65,7 +65,7 @@ section.closeable-frame {
     }
 
     .contents {
-        margin: 1em;
+        margin: 1em 1.4em;
     }
 }
 
@@ -807,6 +807,23 @@ fieldset.FieldsetOutputOptions {
 }
 
 .InlineHelp {
+
+    > span { // => noSuperscript === true
+
+        display: block;
+        height: 100%;
+
+        img {
+            height: 100%;
+            width: 1em;
+            display: block;
+        }
+
+        a {
+            display: block;
+            height: 100%;
+        }
+    }
 
     .tooltip-box {
         font-weight: normal;

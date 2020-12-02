@@ -402,8 +402,8 @@ export function init(
             return (
                 <span className="InlineHelp">
                     {this.props.noSuperscript ?
-                        <span style={{display: 'inline-block', verticalAlign: 'middle'}}>{this._renderLink()}</span> :
-                        <sup style={{display: 'inline-block'}}>{this._renderLink()}</sup>
+                        <span>{this._renderLink()}</span> :
+                        <sup>{this._renderLink()}</sup>
                     }
                     {this.state.helpVisible ?
                             <PopupBox onCloseClick={this._clickHandler}
