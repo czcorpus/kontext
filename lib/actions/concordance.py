@@ -188,7 +188,7 @@ class Actions(Querying):
         return self._tt if self._tt is not None else TextTypes(
             self.corp, self.corp.corpname, self._tt_cache, self._plugin_api)
 
-    @exposed(vars=('orig_query', ), mutates_conc=True)
+    @exposed(vars=('orig_query', ), mutates_conc=False)
     def view(self, _=None):
         """
         KWIC view
@@ -369,9 +369,12 @@ class Actions(Querying):
         with plugins.runtime.QUERY_STORAGE as qs:
             qdata = qs.find_by_qkey(last_op)
             if qdata is not None:
-                qf_args.apply_last_used_opts(
-                    qdata.get('lastop_form', {}), qdata.get('corpora', []),
-                    [self.args.corpname] + self.args.align)
+                try:
+                    qf_args.apply_last_used_opts(
+                        qdata.get('lastop_form', {}), qdata.get('corpora', []),
+                        [self.args.corpname] + self.args.align)
+                except Exception as ex:
+                    logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
             qdata = qs.find_by_qkey(request.args.get('qkey'))
             if qdata is not None:
                 qf_args.update_by_stored_query(qdata.get('lastop_form', {}))
@@ -602,8 +605,8 @@ class Actions(Querying):
     @exposed(mutates_conc=True, http_method=('POST',), return_type='json')
     def query_submit(self, request):
 
-        def store_last_op(conc_id: str):
-            self._session['last_submitted_op'] = conc_id
+        def store_last_op(conc_ids: List[str]):
+            self._session['last_submitted_op'] = conc_ids[0]
 
         self._clear_prev_conc_params()
         ans = {}

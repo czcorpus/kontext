@@ -62,8 +62,8 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                         </div>
                     )),
                     List.join((i) => (
-                        <div key={`op:${i}`}>
-                            <span className="operator">
+                        <div key={`op:${i}`} className="operator">
+                            <span>
                                 {he.translate('global__logic_or')}
                             </span>
                         </div>
@@ -74,22 +74,19 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
         }
 
         return (
-            <li className="position">
-                <h3>{props.value.value}</h3>
-                <div>
-                    {pipe(
-                        props.value.args,
-                        List.map(u => mkExpr(u[0], u[1])),
-                        List.join((i) => (
-                            <div key={`op:${i}`}>
-                                <span className="operator">
-                                    {he.translate('global__logic_and')}
-                                </span>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </li>
+            <td>
+                {pipe(
+                    props.value.args,
+                    List.map(u => mkExpr(u[0], u[1])),
+                    List.join((i) => (
+                        <div key={`op:${i}`}  className="operator">
+                            <span>
+                                {he.translate('global__logic_and')}
+                            </span>
+                        </div>
+                    ))
+                )}
+            </td>
         )
     };
 
@@ -131,14 +128,41 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                                     {he.translate('query__query_is_empty')}
                                 </div> :
                                 <>
-                                    <ul className="positions">
-                                    {List.map(
-                                        (v, i) => <ParsedToken key={`${v.value}:${i}`} value={v}
-                                                        defaultAttrs={props.defaultAttribute}
-                                                        matchCase={queryObj.qmcase} />,
-                                        queryObj.queryParsed
-                                    )}
-                                    </ul>
+                                    <table className="positions">
+                                        <tbody>
+                                            <tr>
+                                                <td colSpan={queryObj.queryParsed.length} className="text">
+                                                    {he.translate('query__interpretation_entered_query')}:
+                                                </td>
+                                            </tr>
+                                            <tr className="token">
+                                                {List.map(
+                                                    (token, i) => (
+                                                        <td key={`${token.value}:${i}`}>
+                                                            {token.value}
+                                                        </td>
+                                                    ),
+                                                    queryObj.queryParsed,
+                                                )}
+                                            </tr>
+                                            <tr>
+                                                <td colSpan={queryObj.queryParsed.length} className="text">
+                                                    {he.translate('query__interpretation_subhead')}:
+                                                </td>
+                                            </tr>
+                                            <tr className="interpretation">
+                                                {List.map(
+                                                    (v, i) => <ParsedToken key={`${v.value}:${i}`} value={v}
+                                                                    defaultAttrs={props.defaultAttribute}
+                                                                    matchCase={queryObj.qmcase} />,
+                                                    queryObj.queryParsed
+                                                )}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p>{he.translate('query__interpretation_note')}</p>
+                                    {hasExpandedTokens ?
+                                        <p>{he.translate('query__interpretation_qs_note')}</p> : null}
                                     <p className="buttons">
                                         {hasExpandedTokens ?
                                             <button className="util-button" type="button" onClick={handleReset}>

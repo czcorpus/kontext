@@ -201,7 +201,7 @@ class Kontext(Controller):
         # data of the previous operation are stored here
         self._prev_q_data: Optional[Dict[str, Any]] = None
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
-        self.on_conc_store: Callable[[str], None] = lambda s: None
+        self.on_conc_store: Callable[[List[str]], None] = lambda s: None
 
     def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
@@ -495,7 +495,7 @@ class Kontext(Controller):
             with plugins.runtime.QUERY_STORAGE as qh:
                 qh.write(user_id=self.session_get('user', 'id'), query_id=query_id)
 
-    def _store_conc_params(self):
+    def _store_conc_params(self) -> List[str]:
         """
         Stores concordance operation if the conc_persistence plugin is installed
         (otherwise nothing is done).
@@ -506,18 +506,18 @@ class Kontext(Controller):
         with plugins.runtime.CONC_PERSISTENCE as cp:
             prev_data = self._prev_q_data if self._prev_q_data is not None else {}
             curr_data = self.get_saveable_conc_data()
-            q_id = cp.store(self.session_get('user', 'id'),
-                            curr_data=curr_data, prev_data=self._prev_q_data)
-            self._save_query_to_history(q_id, curr_data)
+            ans = [cp.store(self.session_get('user', 'id'),
+                            curr_data=curr_data, prev_data=self._prev_q_data)]
+            self._save_query_to_history(ans[0], curr_data)
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
-                prev = dict(id=q_id, lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
+                prev = dict(id=ans[-1], lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
                             user_id=self.session_get('user', 'id'))
                 curr = dict(lines_groups=lines_groups,
                             q=getattr(self.args, 'q')[:q_idx + 1], lastop_form=op.to_dict(),
                             user_id=self.session_get('user', 'id'))
-                q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
-            return q_id
+                ans.append(cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
+            return ans
 
     def _clear_prev_conc_params(self):
         self._prev_q_data = None
@@ -721,11 +721,11 @@ class Kontext(Controller):
         # create and store concordance query key
         if type(result) is dict:
             if action_metadata['mutates_conc']:
-                next_query_key = self._store_conc_params()
+                next_query_keys = self._store_conc_params()
             else:
-                next_query_key = self._prev_q_data.get('id', None) if self._prev_q_data else None
-            self.on_conc_store(next_query_key)
-            self._update_output_with_conc_params(next_query_key, result)
+                next_query_keys = [self._prev_q_data.get('id', None)] if self._prev_q_data else []
+            self.on_conc_store(next_query_keys)
+            self._update_output_with_conc_params(next_query_keys[-1] if len(next_query_keys) else None, result)
 
         # log user request
         log_data = self._create_action_log(self._get_items_by_persistence(Persistence.PERSISTENT), '%s' % methodname,

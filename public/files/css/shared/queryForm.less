@@ -157,6 +157,8 @@ form.query-form {
             div.option {
                 white-space: nowrap;
                 margin-right: 1.3em;
+                display: flex;
+                align-content: center;
 
                 label {
 
@@ -549,68 +551,95 @@ table.radio-like-sel {
 
 .QueryStructureWidget {
 
-    ul.positions {
-        display: flex;
-        flex-direction: row;
-        list-style-type: none;
-        margin: 1 0 1.5em 0;
-        padding: 0;
+    table.positions {
+        border-collapse: separate;
+        border-spacing: 0;
 
-        li.position {
-            margin: 0;
-            width: auto;
+        tr.interpretation {
 
-            h3 {
-                background-color: @color-logo-green;
-                font-weight: normal;
-                font-size: 1.5em;
-                color: #FFFFFF;
-                margin: 0;
-                padding: 0.2em 0.4em;
+            background-color: #FFFFFF;
+
+            td {
+                border-style: solid;
+                border-color: @color-light-frame;
+                border-width: 1px 1px 1px 0;
+                vertical-align: middle;
+
+                > div {
+                    padding: 0.9em 0.3em;
+                    text-align: center;
+
+                    .attr {
+                        font-weight: bold;
+                    }
+
+                    .value {
+                        font-size: 1.3em;
+                    }
+                }
+
+                > .operator {
+
+                    padding: 0;
+
+                    span {
+                        display: inline-block;
+                        padding: 0.2em 0.4em;
+                        margin-top: 0.5em;
+                        margin-bottom: 0.5em;
+                        color: @color-logo-orange;
+                        font-size: 0.9em;
+                        font-weight: bold;
+                    }
+                }
             }
 
-            > div {
-                margin-top: 0.7em;
-                padding: 0.9em;
-                border: 1px solid @color-logo-green;
-                border-radius: 0.3em;
+            td:last-child {
+                border-right-width: 1px;
+                border-radius: 0 5px 5px 0;
+            }
+
+            td:first-child {
+                border-left-width: 1px;
+                border-radius: 5px 0 0 5px;
+            }
+        }
+
+        td.position:last-child {
+
+            border: none;
+
+            div {
+                margin-right: 0.4em;
+            }
+        }
+
+        td.text {
+            padding: 1em 0 1em 0;
+        }
+
+        tr.token {
+
+            background-color: #FFFFFF;
+
+            td {
+                border-style: solid;
+                border-color: @color-light-frame;
+                border-width: 1px 0 1px 0;
+                padding-top: 0.3em;
+                padding-bottom: 0.3em;
                 text-align: center;
-
-                .attr {
-                    font-weight: bold;
-                }
-
-                .value {
-                    font-size: 1.3em;
-                }
-
-                .operator {
-                    display: inline-block;
-                    padding: 0.2em 0.4em;
-                    margin-top: 0.5em;
-                    margin-bottom: 0.5em;
-                    color: #FFFFFF;
-                    background-color: @color-logo-orange;
-                    border-radius: 0.3em;
-                    font-size: 0.8em;
-                }
             }
-        }
 
-        li.position:not(:last-child) > div {
-            margin-right: 0.4em;
-        }
+            td:first-child {
+                border-radius: 5px 0 0 5px;
+                border-width: 1px 0 1px 1px;
+            }
 
-        li.position:last-child > h3 {
-            border-radius: 0 0.3em 0.3em 0;
-        }
-
-        li.position:first-child > h3 {
-            border-radius: 0.3em 0 0 0.3em;
-        }
-
-        li.position:first-child:last-child > h3 {
-            border-radius: 0.3em;
+            td:last-child {
+                border-radius: 0 0.3em 0.3em 0;
+                border-width: 1px 1px 1px 0;
+            }
         }
     }
 
