@@ -22,8 +22,10 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import { tuple, List, pipe, Dict } from 'cnc-tskit';
 
 import { Actions, ActionName } from './actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { PluginInterfaces } from '../../types/plugins';
 
 
 
@@ -51,6 +53,7 @@ export interface UsageTipsState {
     availableTips:Array<{messageId:string; category:UsageTipCategory[]}>;
     currentHints:{[key in UsageTipCategory]:string};
     hintsPointers:{[key in UsageTipCategory]:number};
+    forcedTip:string;
 }
 
 
@@ -86,6 +89,7 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
                     Dict.fromEntries()
                 ),
                 availableTips,
+                forcedTip: null
             }
         );
         this.translatorFn = translatorFn;
@@ -113,7 +117,9 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
 
         this.addActionHandler<GlobalActions.SwitchCorpus>(
             GlobalActionName.SwitchCorpus,
-            null,
+            (state, action) => {
+                state.forcedTip = null;
+            },
             (state, action, dispatch) => {
                 dispatch<GlobalActions.SwitchCorpusReady<{}>>({
                     name: GlobalActionName.SwitchCorpusReady,
@@ -122,6 +128,20 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
                         data: {}
                     }
                 });
+            }
+        );
+
+        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
+            PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+            (state, action) => {
+                state.forcedTip = List.some(v => !Dict.empty(v.contents['data']), action.payload.results) ? this.translatorFn('query__tip_06') : state.forcedTip
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputSetQType>(
+            QueryActionName.QueryInputSetQType,
+            (state, action) => {
+                state.forcedTip = null;
             }
         );
     }
@@ -133,6 +153,7 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
     private setNextHint(state:UsageTipsState, category:UsageTipCategory):void {
         const curr = state.hintsPointers[category];
         const avail = state.availableTips.filter(v => v.category.includes(category));
+        state.forcedTip = null;
         state.hintsPointers[category] = (curr + 1) % avail.length;
         state.currentHints[category] = this.translatorFn(
             avail[state.hintsPointers[category]].messageId);

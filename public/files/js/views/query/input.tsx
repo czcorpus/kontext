@@ -200,8 +200,12 @@ export function init({
 
         return (
             <div className="QueryHints">
-                <span className="hint">
-                    {props.currentHints[props.queryType === 'simple' ? UsageTipCategory.QUERY : UsageTipCategory.CQL_QUERY]}
+                <span className={props.forcedTip ? "hint highlight" : "hint"}>
+                    {
+                        props.forcedTip ?
+                            props.forcedTip :
+                            props.currentHints[props.queryType === 'simple' ? UsageTipCategory.QUERY : UsageTipCategory.CQL_QUERY]
+                    }
                 </span>
                 <span className="next-hint">
                     <a onClick={clickHandler} title={he.translate('global__next_tip')}>
