@@ -141,10 +141,12 @@ function importUserQueries(
     data:QueryFormUserEntries,
     simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>}
 ):{[corpus:string]:AnyQuery} {
+
     return pipe(
         corpora,
+        List.filter(corpus => Dict.hasKey(corpus, data.currQueryTypes)),
         List.map(corpus => {
-            const qtype = data.currQueryTypes[corpus] || 'simple';
+            const qtype = data.currQueryTypes[corpus];
             const defaultAttr = determineDefaultAttr(data, corpus, simpleQueryDefaultAttrs[corpus]);
             const query = data.currQueries[corpus] || '';
 
