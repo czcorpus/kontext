@@ -190,21 +190,18 @@ export function init({
 
     // -------------- <QueryHints /> --------------------------------------------
 
-    const QueryHints:React.FC<{forcedTip?:string} & UsageTipsState> = (props) => {
+    const QueryHints:React.FC<{queryType:QueryType} & UsageTipsState> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch<HintActions.NextQueryHint>({
-                name: HintActionName.NextQueryHint
+            dispatcher.dispatch<HintActions.NextQueryHint|HintActions.NextCqlQueryHint>({
+                name: props.queryType === 'simple' ? HintActionName.NextQueryHint : HintActionName.NextCqlQueryHint
             });
         };
 
         return (
             <div className="QueryHints">
                 <span className="hint">
-                    {props.forcedTip ?
-                        he.translate(props.forcedTip) :
-                        props.currentHints[UsageTipCategory.QUERY]
-                    }
+                    {props.currentHints[props.queryType === 'simple' ? UsageTipCategory.QUERY : UsageTipCategory.CQL_QUERY]}
                 </span>
                 <span className="next-hint">
                     <a onClick={clickHandler} title={he.translate('global__next_tip')}>
@@ -216,7 +213,7 @@ export function init({
         );
     };
 
-    const BoundQueryHints = BoundWithProps<{forcedTip?:string}, UsageTipsState>(QueryHints, queryHintModel);
+    const BoundQueryHints = BoundWithProps<{queryType:QueryType}, UsageTipsState>(QueryHints, queryHintModel);
 
 
     // ------------------- <TRQueryTypeField /> -----------------------------
@@ -1041,9 +1038,6 @@ export function init({
                 item => item === false,
                 this.props.suggestionsLoading[this.props.sourceId]
             );
-            const hasExpandedTokens = queryObj.qtype === 'simple' ?
-                List.some(t => t.isExtended, queryObj.queryParsed) :
-                false;
 
             return (
                 <div>
@@ -1077,7 +1071,7 @@ export function init({
                                     : null
                             }
                         </div>
-                        <BoundQueryHints forcedTip={hasExpandedTokens ? 'query__tip_06' : undefined} />
+                        <BoundQueryHints queryType={queryObj.qtype} />
                     </div>
                     <AdvancedFormFieldset
                             uniqId="query-options-section"

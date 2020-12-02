@@ -29,25 +29,26 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../com
 
 export enum UsageTipCategory {
     QUERY = 'query',
+    CQL_QUERY = 'cql-query',
     CONCORDANCE = 'conc'
 }
 
 
 const availableTips = [
-    {messageId: 'query__tip_01', category: UsageTipCategory.QUERY},
-    {messageId: 'query__tip_02', category: UsageTipCategory.QUERY},
-    {messageId: 'query__tip_03', category: UsageTipCategory.QUERY},
-    {messageId: 'query__tip_04', category: UsageTipCategory.QUERY},
-    {messageId: 'query__tip_05', category: UsageTipCategory.QUERY},
-    {messageId: 'query__tip_06', category: UsageTipCategory.QUERY},
-    {messageId: 'concview__tip_01', category: UsageTipCategory.CONCORDANCE},
-    {messageId: 'concview__tip_02', category: UsageTipCategory.CONCORDANCE},
-    {messageId: 'concview__tip_03', category: UsageTipCategory.CONCORDANCE},
-    {messageId: 'concview__tip_04', category: UsageTipCategory.CONCORDANCE}
+    {messageId: 'query__tip_01', category: [UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY]},
+    {messageId: 'query__tip_02', category: [UsageTipCategory.CQL_QUERY]},
+    {messageId: 'query__tip_03', category: [UsageTipCategory.CQL_QUERY]},
+    {messageId: 'query__tip_04', category: [UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY]},
+    {messageId: 'query__tip_05', category: [UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY]},
+    {messageId: 'query__tip_06', category: [UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY]},
+    {messageId: 'concview__tip_01', category: [UsageTipCategory.CONCORDANCE]},
+    {messageId: 'concview__tip_02', category: [UsageTipCategory.CONCORDANCE]},
+    {messageId: 'concview__tip_03', category: [UsageTipCategory.CONCORDANCE]},
+    {messageId: 'concview__tip_04', category: [UsageTipCategory.CONCORDANCE]}
 ];
 
 export interface UsageTipsState {
-    availableTips:Array<{messageId:string; category:UsageTipCategory}>;
+    availableTips:Array<{messageId:string; category:UsageTipCategory[]}>;
     currentHints:{[key in UsageTipCategory]:string};
     hintsPointers:{[key in UsageTipCategory]:number};
 }
@@ -62,9 +63,9 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
 
     constructor(dispatcher:IActionDispatcher, translatorFn:(s:string)=>string) {
         const pointers = pipe(
-            [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY],
+            [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY],
             List.map(cat => {
-                const avail = availableTips.filter(v => v.category === cat);
+                const avail = availableTips.filter(v => v.category.includes(cat));
                 return tuple(cat, Math.round(Math.random() * (avail.length - 1)));
             }),
             Dict.fromEntries()
@@ -74,9 +75,9 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
             {
                 hintsPointers: pointers,
                 currentHints: pipe(
-                    [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY],
+                    [UsageTipCategory.CONCORDANCE, UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY],
                     List.map(cat => {
-                        const avail = availableTips.filter(v => v.category === cat);
+                        const avail = availableTips.filter(v => v.category.includes(cat));
                         return tuple(
                             cat,
                             avail.length > 0 ? translatorFn(avail[pointers[cat]].messageId) : null
@@ -93,6 +94,13 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
             ActionName.NextQueryHint,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.QUERY);
+            }
+        );
+
+        this.addActionHandler<Actions.NextCqlQueryHint>(
+            ActionName.NextCqlQueryHint,
+            (state, action) => {
+                this.setNextHint(state, UsageTipCategory.CQL_QUERY);
             }
         );
 
@@ -124,7 +132,7 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
 
     private setNextHint(state:UsageTipsState, category:UsageTipCategory):void {
         const curr = state.hintsPointers[category];
-        const avail = state.availableTips.filter(v => v.category === category);
+        const avail = state.availableTips.filter(v => v.category.includes(category));
         state.hintsPointers[category] = (curr + 1) % avail.length;
         state.currentHints[category] = this.translatorFn(
             avail[state.hintsPointers[category]].messageId);
