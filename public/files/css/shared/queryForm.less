@@ -219,6 +219,61 @@ form.query-form {
     .pos-filter {
         margin-top: 1.7em;
     }
+
+
+    .specify-context {
+
+        h3 {
+            font-weight: normal;
+            margin-left: 0;
+            margin-top: 0.7em;
+            margin-bottom: 0.3em;
+            font-size: 1.3em;
+            letter-spacing: 0.06em;
+        }
+
+        h3::before {
+            content: '\2022\00a0';
+        }
+
+        .pos-filter {
+            select.fc_pos {
+                min-width: 15em;
+
+                option {
+                    padding-top: 0.1em;
+                    padding-bottom: 0.1em;
+                }
+            }
+        }
+
+        dl.form {
+
+            dd {
+                display: flex;
+                align-items: center;
+
+                .all-any-none-sel {
+                    display: flex;
+                    flex-direction: row;
+                    height: 100%;
+                }
+            }
+
+            dt:not(:first-of-type) {
+                padding-top: 1em;
+            }
+
+            dt {
+                font-weight: normal;
+                padding-bottom: 0.3em;
+            }
+
+            .fc_lemword {
+                width: 25em;
+            }
+        }
+    }
 }
 
 div.query-form-spa {
