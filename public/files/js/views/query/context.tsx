@@ -107,34 +107,33 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <table className="form">
-                <tbody>
-                    <tr>
-                        <td colSpan={3}>
-                            <layoutModels.KwicRangeSelector rangeSize={5} isKwicExcluded={true}
-                                    initialLeft={props.fc_lemword_wsize[0]}
-                                    initialRight={props.fc_lemword_wsize[1]}
-                                    onClick={handleRangeChange} />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                        {props.hasLemmaAttr
-                            ? he.translate('query__lw_lemmas')
-                            : he.translate('query__lw_word_forms')
-                        }
-                        </td>
-                        <td colSpan={2}>
-                        <input type="text" className="fc_lemword" name="fc_lemword" value={props.fc_lemword}
-                                onChange={handleInputChange} />
-                        {'\u00A0'}
-                        <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} />
-                        {'\u00A0'}
-                        {he.translate('query__of_these_items')}.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <dl className="form">
+                <dt>
+                    {he.translate('query__window')}:
+                </dt>
+                <dd>
+                    <layoutModels.KwicRangeSelector rangeSize={5} isKwicExcluded={true}
+                            initialLeft={props.fc_lemword_wsize[0]}
+                            initialRight={props.fc_lemword_wsize[1]}
+                            onClick={handleRangeChange} />
+                </dd>
+                <dt>
+                    {props.hasLemmaAttr
+                        ? he.translate('query__lw_lemmas')
+                        : he.translate('query__lw_word_forms')
+                    }:
+                </dt>
+                <dd>
+                    <input type="text" className="fc_lemword" name="fc_lemword" value={props.fc_lemword}
+                            onChange={handleInputChange} />
+                    <span>
+                    {'\u00A0'}
+                    <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} />
+                    {'\u00A0'}
+                    {he.translate('query__of_these_items')}
+                    </span>
+                </dd>
+            </dl>
         );
     };
 
@@ -178,40 +177,40 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <div className="pos-filter">
                 <h3>{he.translate('query__pos_filter')}</h3>
-                <table className="form">
-                    <tbody>
-                        <tr>
-                            <td colSpan={3}>
-                            <layoutModels.KwicRangeSelector rangeSize={5} isKwicExcluded={true}
+                <dl className="form">
+                    <dt>
+                        {he.translate('query__window')}:
+                    </dt>
+                    <dd>
+                        <layoutModels.KwicRangeSelector rangeSize={5} isKwicExcluded={true}
                                 initialLeft={props.fc_pos_wsize[0]}
                                 initialRight={props.fc_pos_wsize[1]}
                                 onClick={handleRangeChange} />
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>
-                                {he.translate('query__pos_filter')}:<br />
-                                <span className="note">({he.translate('query__use_ctrl_click_for')})</span>
-                            </th>
-                            <td>
-                                <select title={he.translate('query__select_one_or_more_pos_tags')}
-                                        multiple={true}
-                                        size={4}
-                                        name="fc_pos" value={props.fc_pos}
-                                        onChange={handleMultiSelectChange}>
-                                    {props.wPoSList.map((item, i) => {
-                                        return <option key={i} value={item.n}>{item.n}</option>;
-                                    })}
-                                </select>
-                            </td>
-                            <td>
-                                <AllAnyNoneSelector inputName="fc_pos_type" value={props.fc_pos_type} />
-                                {'\u00A0'}
-                                {he.translate('query__of_these_items')}.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                    </dd>
+                    <dt>
+                        {he.translate('query__pos_filter')}:
+                    </dt>
+                    <dd>
+                        <div>
+                            <select title={he.translate('query__select_one_or_more_pos_tags')}
+                                    multiple={true}
+                                    size={4}
+                                    name="fc_pos" value={props.fc_pos}
+                                    className="fc_pos"
+                                    onChange={handleMultiSelectChange}>
+                                {props.wPoSList.map((item, i) => {
+                                    return <option key={i} value={item.n}>{item.n}</option>;
+                                })}
+                            </select>
+                            <br />
+                            <span className="note">({he.translate('query__use_ctrl_click_for')})</span>
+                        </div>
+                        <div className="all-any-none-sel">
+                            <AllAnyNoneSelector inputName="fc_pos_type" value={props.fc_pos_type} />
+                        </div>
+                        <span>{'\u00A0'}{he.translate('query__of_these_items')}</span>
+                    </dd>
+                </dl>
             </div>
         );
     };

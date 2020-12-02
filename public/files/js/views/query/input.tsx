@@ -690,7 +690,7 @@ export function init({
         };
 
         return (
-            <label title={props.disabled ? he.translate('query__icase_is_now_within_re') : null}>
+            <label>
                 {he.translate('query__match_case')}:{'\u00a0'}
                 <input type="checkbox" name="qmcase" value="1" checked={props.matchCaseValue}
                     onChange={handleCheckbox} disabled={props.disabled} />
