@@ -23,6 +23,7 @@ import { Action } from 'kombo';
 
 export enum ActionName {
     NextQueryHint = 'NEXT_QUERY_HINT',
+    NextCqlQueryHint = 'NEXT_CQL_QUERY_HINT',
     NextConcHint = 'NEXT_CONC_HINT'
 }
 
@@ -31,6 +32,11 @@ export namespace Actions {
     export interface NextQueryHint extends Action<{
     }> {
         name: ActionName.NextQueryHint;
+    }
+
+    export interface NextCqlQueryHint extends Action<{
+    }> {
+        name: ActionName.NextCqlQueryHint;
     }
 
     export interface NextConcHint extends Action<{
