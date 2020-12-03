@@ -385,7 +385,7 @@
         "query__tip_04": "Możesz trzimać Ctrl i kliknōńć wertã tagu, żeby go edytować we interktywnym nŏczyniu",
         "query__tip_05": "In case of aligned corpora, it is faster to search only within texts included in all the searched languages. To find such texts, 'restrict search - refine selection' function can be used.",
         "query__tip_06": "An underscored token in a simple query means there is an additional specification available. Use CTRL/Command + click to activate.",
-        "query__tip_07": "Case sensitivity can be disabled for individual words using a modifier (?i): Václav Havel --> (?i)Václav (?i)Havel",
+        "query__tip_07": "Case sensitivity can be disabled for individual words using the (?i) modifier: Václav Havel --> (?i)Václav (?i)Havel",
         "query__contains_selected_text_types": "Niykere typy tekstu sōm zaznaczōne",
         "query__chain_no_op_msg": "No change in the concordance parameters - showing the original result",
         "query__suggestions_available": "Query suggestions",
