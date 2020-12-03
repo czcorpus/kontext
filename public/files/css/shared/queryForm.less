@@ -15,7 +15,7 @@ form.query-form {
 
         .query {
             max-width: 60em;
-            margin-top: 1.2em;
+            margin-top: 2.7em;
         }
     }
 
@@ -391,7 +391,8 @@ div.query-form-spa {
         }
     }
 
-    .cql-input {
+    pre.cql-input {
+        background-color: inherit;
         font-size: 1.3em;
         min-height: 5em;
         overflow: hidden;
@@ -455,10 +456,9 @@ div.query-form-spa {
         color: @color-light-text;
         display: flex;
         align-items: center;
-        font-size: 85%;
 
         li {
-            margin: 0.1em 0.2em;
+            margin: 0.3em 0.55em;
 
             .notifications {
                 color: @color-logo-pink;
@@ -466,8 +466,11 @@ div.query-form-spa {
             }
         }
 
-        li:before {
-            content: " | ";
+        li:not(:last-child) {
+            border-style: solid;
+            border-color: @color-logo-blue;
+            border-width: 0 1px 0 0;
+            padding-right: 1em;
         }
 
         li:first-child:before {
