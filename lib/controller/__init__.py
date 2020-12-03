@@ -838,8 +838,8 @@ class Controller(object):
         3) str or bytes
         """
         if callable(result):
-            result = result()
-        if return_type == 'json':
+            return result()
+        elif return_type == 'json':
             try:
                 return json.dumps(result)
             except Exception as e:
