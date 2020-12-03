@@ -1331,16 +1331,3 @@ class Kontext(Controller):
     @exposed(skip_corpus_init=True, template='compatibility.html')
     def compatibility(self, req):
         return {}
-
-    @exposed(skip_corpus_init=True, return_type='plain')
-    def ajax_get_help(self, req):
-        help_file = f'index.{req.args["lang"]}.html'
-        help_path = os.path.realpath(os.path.join(
-            os.path.dirname(__file__),
-            '../../public/files/html/help',
-            req.args['section'],
-            help_file
-        ))
-        with open(help_path, 'r') as f:
-            data = f.read()
-        return data

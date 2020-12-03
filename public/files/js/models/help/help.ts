@@ -60,8 +60,8 @@ export class HtmlHelpModel extends StatefulModel<NonQueryCorpusSelectionModelSta
     loadHelp(section:string, lang:string):void {
         this.layoutModel.ajax$<string>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('ajax_get_help'),
-            {section, lang},
+            this.layoutModel.createActionUrl(`files/html/help/${section}/index.${lang}.html`),
+            {}
 
         ).subscribe(
             data => {
