@@ -88,6 +88,7 @@ import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
+import { HtmlHelpModel } from '../models/help/help';
 
 
 declare var require:any;
@@ -109,6 +110,7 @@ export class QueryModels {
     switchMcModel:SwitchMainCorpModel;
     saveAsFormModel:QuerySaveAsFormModel;
     firstHitsModel:FirstHitsModel;
+    queryHelpModel:HtmlHelpModel;
 }
 
 interface RenderLinesDeps {
@@ -408,6 +410,10 @@ export class ViewPage {
             this.layoutModel.getConf<number>('concUrlTTLDays'),
             this.layoutModel.getConf<boolean>('concExplicitPersistenceUI')
         );
+        this.queryModels.queryHelpModel = new HtmlHelpModel(
+            this.layoutModel,
+            this.layoutModel.dispatcher
+        );
 
         const queryFormProps:QueryFormProperties = {
             corpora: this.getActiveCorpora(),
@@ -465,7 +471,8 @@ export class ViewPage {
             withinBuilderModel: this.queryModels.withinBuilderModel,
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             queryContextModel: this.queryModels.queryContextModel,
-            querySuggest: this.layoutModel.qsuggPlugin
+            querySuggest: this.layoutModel.qsuggPlugin,
+            queryHelpModel:this.queryModels.queryHelpModel
         });
     }
 

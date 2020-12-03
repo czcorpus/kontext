@@ -37,6 +37,8 @@ import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../models/query/context';
 import { ActionName, Actions } from '../../models/query/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
+import { HtmlHelpModel, HtmlHelpModelState } from '../../models/help/help';
+import { Actions as HelpActions, ActionName as HelpActionName } from '../../models/help/actions';
 
 
 export interface MainModuleArgs {
@@ -50,6 +52,7 @@ export interface MainModuleArgs {
     virtualKeyboardModel:VirtualKeyboardModel;
     queryContextModel:QueryContextModel;
     querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
+    queryHelpModel:HtmlHelpModel;
 }
 
 
@@ -72,16 +75,21 @@ export interface QueryFormLiteProps {
 }
 
 
+export interface QueryHelpProps {
+    tagsetDocs:{[corpname:string]:string};
+}
+
+
 export interface MainViews {
     QueryForm:React.ComponentClass<QueryFormProps>;
     QueryFormLite:React.ComponentClass<QueryFormLiteProps>;
-    QueryHelp:React.FC<{tagsetDocs:{[corpname:string]:string}}>;
+    QueryHelp:React.ComponentClass<QueryHelpProps>;
 }
 
 
 export function init({dispatcher, he, CorparchWidget, queryModel,
                       textTypesModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
-                      queryContextModel, querySuggest}:MainModuleArgs):MainViews {
+                      queryContextModel, querySuggest, queryHelpModel}:MainModuleArgs):MainViews {
 
     const inputViews = inputInit({
         dispatcher,
@@ -436,13 +444,19 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // ------------------- <QueryHelp /> -----------------------------
 
-    const QueryHelp:React.FC<{
-        tagsetDocs:{[corpname:string]:string};
-    }> = (props) => {
+    const QueryHelp:React.FC<QueryHelpProps & HtmlHelpModelState> = (props) => {
 
         const [visible, changeState] = React.useState(false);
 
         const toggleHelp = () => {
+            if (!visible) {
+                dispatcher.dispatch<HelpActions.HelpRequested>({
+                    name: HelpActionName.HelpRequested,
+                    payload: {
+                        section: 'query'
+                    }
+                });
+            };
             changeState(!visible);
         };
 
@@ -456,13 +470,9 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 </a>
                 {visible ?
                     <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
-                        <layoutViews.CloseableFrame onCloseClick={toggleHelp}customClass="block-help" label={"query help"}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} customClass="block-help" label={"query help"}>
                             <div>
-                                <h2>Query types</h2>
-                                <h3>{he.translate('query__qt_simple')}</h3>
-                                <div dangerouslySetInnerHTML={{__html: he.translate('query__type_hint_simple')}} />
-                                <h3>{he.translate('query__qt_advanced')}</h3>
-                                <div dangerouslySetInnerHTML={{__html: he.translate('query__type_hint_advanced')}} />
+                                <div dangerouslySetInnerHTML={{__html: props.rawHtml}}/>
                                 <p><a target="_blank" href={he.getHelpLink('term_cql')}>{he.getHelpLink('term_cql')}</a></p>
                                 <h2>Tagsets</h2>
                                 {Dict.empty(props.tagsetDocs) ?
@@ -491,6 +501,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     return {
         QueryForm: BoundWithProps<QueryFormProps, FirstQueryFormModelState>(QueryForm, queryModel),
         QueryFormLite: BoundWithProps<QueryFormLiteProps, FirstQueryFormModelState>(QueryFormLite, queryModel),
-        QueryHelp: QueryHelp
+        QueryHelp: BoundWithProps<QueryHelpProps, HtmlHelpModelState>(QueryHelp, queryHelpModel)
     };
 }

@@ -28,7 +28,6 @@ export namespace Actions {
 
     export interface HelpRequested extends Action<{
         section:string;
-        lang:string;
     }> {
         name:ActionName.HelpRequested;
     }

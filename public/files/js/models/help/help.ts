@@ -26,12 +26,12 @@ import { Actions, ActionName } from './actions';
 
 
 
-export interface NonQueryCorpusSelectionModelState {
+export interface HtmlHelpModelState {
     isBusy:boolean;
     rawHtml:string;
 }
 
-export class HtmlHelpModel extends StatefulModel<NonQueryCorpusSelectionModelState> {
+export class HtmlHelpModel extends StatefulModel<HtmlHelpModelState> {
 
     private readonly layoutModel:PageModel;
 
@@ -52,16 +52,18 @@ export class HtmlHelpModel extends StatefulModel<NonQueryCorpusSelectionModelSta
                     state.isBusy = true;
                     state.rawHtml = null;
                 });
-                this.loadHelp(action.payload.section, action.payload.lang);
+                this.loadHelp(action.payload.section);
             }
         );
     }
 
-    loadHelp(section:string, lang:string):void {
+    loadHelp(section:string):void {
+        const lang = this.layoutModel.getConf<string>('uiLang').split('-')[0]
         this.layoutModel.ajax$<string>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl(`files/html/help/${section}/index.${lang}.html`),
-            {}
+            {},
+            {responseType: 'text'}
 
         ).subscribe(
             data => {
