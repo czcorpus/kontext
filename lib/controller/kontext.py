@@ -1333,7 +1333,7 @@ class Kontext(Controller):
         return {}
 
     @exposed(skip_corpus_init=True, return_type='plain')
-    def get_help(self, req):
+    def ajax_get_help(self, req):
         help_file = f'index.{req.args["lang"]}.html'
         help_path = os.path.realpath(os.path.join(
             os.path.dirname(__file__),

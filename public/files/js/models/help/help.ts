@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { HTTP } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
@@ -26,6 +27,7 @@ import { Actions, ActionName } from './actions';
 
 
 export interface NonQueryCorpusSelectionModelState {
+    isBusy:boolean;
     rawHtml:string;
 }
 
@@ -37,14 +39,43 @@ export class HtmlHelpModel extends StatefulModel<NonQueryCorpusSelectionModelSta
         super(
             dispatcher,
             {
+                isBusy: false,
                 rawHtml: null
             }
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<Actions.HelpRequest>(
-            ActionName.HelpRequest,
-            action => {}
+        this.addActionHandler<Actions.HelpRequested>(
+            ActionName.HelpRequested,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.rawHtml = null;
+                });
+                this.loadHelp(action.payload.section, action.payload.lang);
+            }
+        );
+    }
+
+    loadHelp(section:string, lang:string):void {
+        this.layoutModel.ajax$<string>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl('ajax_get_help'),
+            {section, lang},
+
+        ).subscribe(
+            data => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    state.rawHtml = data;
+                });
+            },
+            (err) => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                });
+                this.layoutModel.showMessage('error', err);
+            }
         );
     }
 }

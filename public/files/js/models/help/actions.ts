@@ -21,15 +21,16 @@
 import { Action } from 'kombo';
 
 export enum ActionName {
-    HelpRequest = 'HELP_REQUEST'
+    HelpRequested = 'HELP_REQUESTED',
 }
 
 export namespace Actions {
 
-    export interface HelpRequest extends Action<{
+    export interface HelpRequested extends Action<{
         section:string;
+        lang:string;
     }> {
-        name:ActionName.HelpRequest;
+        name:ActionName.HelpRequested;
     }
 
 }
