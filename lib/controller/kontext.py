@@ -725,7 +725,8 @@ class Kontext(Controller):
             else:
                 next_query_keys = [self._prev_q_data.get('id', None)] if self._prev_q_data else []
             self.on_conc_store(next_query_keys)
-            self._update_output_with_conc_params(next_query_keys[-1] if len(next_query_keys) else None, result)
+            self._update_output_with_conc_params(
+                next_query_keys[-1] if len(next_query_keys) else None, result)
 
         # log user request
         log_data = self._create_action_log(self._get_items_by_persistence(Persistence.PERSISTENT), '%s' % methodname,
@@ -1330,3 +1331,16 @@ class Kontext(Controller):
     @exposed(skip_corpus_init=True, template='compatibility.html')
     def compatibility(self, req):
         return {}
+
+    @exposed(skip_corpus_init=True, return_type='plain')
+    def ajax_get_help(self, req):
+        help_file = f'index.{req.args["lang"]}.html'
+        help_path = os.path.realpath(os.path.join(
+            os.path.dirname(__file__),
+            '../../public/files/html/help',
+            req.args['section'],
+            help_file
+        ))
+        with open(help_path, 'r') as f:
+            data = f.read()
+        return data
