@@ -368,8 +368,6 @@
         "query__save_button": "Archive",
         "query__set_main_corp_to_label": "Set primary corpus to",
         "query__value_cannot_be_changed": "The value cannot be changed",
-        "query__type_hint_simple": "TODO",
-        "query__type_hint_advanced": "Search for anything that is present in the annotation of the corpus, e.g. <code>[attribute1=&quot;value1&quot; &amp; attribute2=&quot;value2&quot;] [attribute3=&quot;value3&quot;] within &lt;s/&gt;</code> will search for two successive words with the specified attribute values and appearing within a single sentence; attribute values may be regular expressions.",
         "query__used_first_hits_struct": "Used structure",
         "query__structure": "Structure",
         "query__structattr": "Structural attribute",

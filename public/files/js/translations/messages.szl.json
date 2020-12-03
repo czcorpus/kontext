@@ -368,8 +368,6 @@
         "query__save_button": "Archiwizuj",
         "query__set_main_corp_to_label": "Nasztaluj głōwny korpus za",
         "query__value_cannot_be_changed": "Ta werta niy może być zmiyniōnŏ",
-        "query__type_hint_simple": "TODO",
-        "query__type_hint_advanced": "Szukanie wszyjskigo, to je we anotacyji korpusu, bp. <code>[atrybut1=&quot;werta1&quot; &amp; atrybut2=&quot;werta2&quot;] [atrybut3=&quot;werta3&quot;] within &lt;s/&gt;</code> wyszukŏ dwōch słōw we raji ze ôkryślōnymi wertami atrybutōw, co sie pokazujōm we jednym zdaniu; werty atrybutōw mogōm być regularnymi wyrażyniami.",
         "query__used_first_hits_struct": "Użytŏ struktura",
         "query__structure": "Struktura",
         "query__structattr": "Atrybut strukturalny",
