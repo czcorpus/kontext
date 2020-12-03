@@ -42,6 +42,7 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../mod
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
+import { HtmlHelpModel } from '../models/help/help';
 
 
 declare var require:any;
@@ -101,6 +102,8 @@ export class QueryPage {
     private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
 
     private queryHintModel:UsageTipsModel;
+
+    private queryHelpModel:HtmlHelpModel;
 
     private withinBuilderModel:WithinBuilderModel;
 
@@ -253,7 +256,8 @@ export class QueryPage {
             withinBuilderModel: this.withinBuilderModel,
             virtualKeyboardModel: this.virtualKeyboardModel,
             queryContextModel: this.queryContextModel,
-            querySuggest: this.layoutModel.qsuggPlugin
+            querySuggest: this.layoutModel.qsuggPlugin,
+            queryHelpModel: this.queryHelpModel
         });
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
@@ -306,6 +310,11 @@ export class QueryPage {
             this.virtualKeyboardModel = new VirtualKeyboardModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel
+            );
+
+            this.queryHelpModel = new HtmlHelpModel(
+                this.layoutModel,
+                this.layoutModel.dispatcher
             );
 
             const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
