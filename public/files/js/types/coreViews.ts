@@ -366,7 +366,9 @@ export namespace CoreViews {
     export namespace ToggleSwitch {
 
         export interface Props {
-
+            onChange?:(checked?:boolean)=>void;
+            checked?:boolean;
+            label?:string;
         }
 
         export type Component = React.FC<Props>;

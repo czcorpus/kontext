@@ -224,22 +224,21 @@ export function init({
 
     const TRQueryTypeField:React.FC<TRQueryTypeFieldProps> = (props) => {
 
-        const handleSelection = (evt) => {
+        const handleSelection = (checked) => {
             dispatcher.dispatch<Actions.QueryInputSetQType>({
                 name: ActionName.QueryInputSetQType,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
-                    queryType: props.queryType === 'advanced' ? 'simple' : 'advanced'
+                    queryType: checked ? 'simple' : 'advanced'
                 }
             });
         };
 
         return (
             <div className="TRQueryTypeField">
-                <label htmlFor="chck_wsdA3fe">{he.translate('query__qt_advanced')}:</label>
-                <layoutViews.ToggleSwitch />
-                <input id="chck_wsdA3fe" type="checkbox"
+                <layoutViews.ToggleSwitch
+                    label={he.translate('query__qt_advanced')}
                     onChange={handleSelection}
                     checked={props.queryType === 'advanced'} />
             </div>
