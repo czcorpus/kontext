@@ -582,6 +582,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                 && queryObj.queryParsed[currVisible].suggestions) {
                             state.suggestionsVisible[action.payload.sourceId] = null;
                         }
+                    }
                     state.suggestionsLoading[action.payload.sourceId][action.payload.valueStartIdx] = true;
                 });
             }
