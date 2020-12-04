@@ -369,7 +369,7 @@ export namespace CoreViews {
             onChange?:(checked?:boolean)=>void;
             checked?:boolean;
             disabled?:boolean;
-            label?:string;
+            id?:string;
         }
 
         export type Component = React.FC<Props>;
