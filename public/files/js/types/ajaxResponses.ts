@@ -116,10 +116,26 @@ export namespace AjaxResponse {
         op_key:string; // an ID used by conc_persistence
     }
 
+    /**
+     * array of
+     *   tuple (
+     *      arg conjunction
+     *          with items either
+     *              arg1 == val1
+     *          or (arg1a == val1 | arg1b == val1 |...|arg1N == val1)
+     *      true if extended else false
+     *   )
+     */
+    export type SubmitEncodedSimpleTokens = Array<[Array<[string|Array<string>, string]>, boolean]>;
+
+    /**
+     *
+     */
     export interface QueryFormArgs extends ConcFormArgs {
         form_type:Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.LOCKED;
         curr_query_types:{[corpname:string]:QueryType};
         curr_queries:{[corpname:string]:string};
+        curr_parsed_queries:{[corpname:string]:SubmitEncodedSimpleTokens};
         curr_pcq_pos_neg_values:{[corpname:string]:'pos'|'neg'};
         curr_lpos_values:{[corpname:string]:string};
         curr_qmcase_values:{[corpname:string]:boolean};

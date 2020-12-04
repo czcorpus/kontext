@@ -93,8 +93,7 @@ __conf.ConcDashboardModules = {{ conc_dashboard_modules|to_json }};
 __conf.UseRichQueryEditor = {{ rich_query_editor|default(false)|to_json }};
 __conf.QSEnabled = {{ qs_enabled|to_json }};
 __conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
-{#- end query form -#}
-
+__conf.SimpleQueryDefaultAttrs = {{ simple_query_default_attrs|to_json }};
 {%if running_calc %}
 __conf.numLines = {{ Lines|length }};
 __conf.Unfinished = true;

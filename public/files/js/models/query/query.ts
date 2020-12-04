@@ -19,6 +19,7 @@
  */
 
 import { id, List, pipe, tuple } from 'cnc-tskit';
+import { AjaxResponse } from '../../types/ajaxResponses';
 import { highlightSyntaxStatic, ParsedAttr } from './cqleditor/parser';
 
 
@@ -70,8 +71,17 @@ export interface ParsedSimpleQueryToken {
     /**
      * the value represents logical conjunction of
      * attr1 == val1 & attr2 == val2 & ... & attrN == valN
+     *
+     * in case the first element of an item is an array, the interpreation
+     * is as follows: (attr1A == val1 | attr1B == va1 | ...) (this is just a single
+     * item of the top level array.
+     *
+     * in case the first element of an item is undefined we rely on what form model
+     * injects as default attribute (please note that this cannot be applied in case
+     * we return to an existing query as after a time the default attribute(s) can be
+     * different and thus the query wouldn't be replicable)
      */
-    args:Array<[string|undefined, string]>;
+    args:Array<[string|Array<string>|undefined, string]>;
 
     /**
      * Position of a respective token. In case of an empty
@@ -102,6 +112,7 @@ export interface SimpleQuery {
 
 export type AnyQuery = SimpleQuery|AdvancedQuery;
 
+
 /**
  * SimpleQuerySubmit is a form of SimpleQuery as submitted to server
  */
@@ -109,7 +120,7 @@ export interface SimpleQuerySubmit {
     corpname:string;
     qtype:'simple';
     query:string;
-    queryParsed:Array<Array<[string|Array<string>, string]>>;
+    queryParsed:AjaxResponse.SubmitEncodedSimpleTokens;
     qmcase:boolean;
     pcq_pos_neg:string;
     include_empty:boolean;
