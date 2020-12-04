@@ -39,7 +39,8 @@ IMPLICIT_CORPUS = 'ud_fused_test_a'
 class SignUpToken(object):
 
     def __init__(self, value=None, user_data=None, label=None, ttl=300):
-        self.value = value if value is not None else hashlib.sha1(str(uuid.uuid4())).hexdigest()
+        self.value = value if value is not None else hashlib.sha1(
+            uuid.uuid4().bytes).hexdigest()
         self.user = user_data if user_data else {}
         self.label = label
         self.created = int(time.time())
