@@ -29,6 +29,7 @@ import { MessageModel, MessageModelState } from '../../models/common/layout';
 import { Actions, ActionName } from '../../models/common/actions';
 import { init as calendarInit } from './calendar';
 import { init as kwicRangeInit } from './kwicRange';
+import { init as toggleSwitchInit } from './toggle';
 import { ImgWithMouseover } from './general';
 
 
@@ -57,6 +58,7 @@ export function init(
 
     const Calendar = calendarInit(he);
     const KwicRangeSelector = kwicRangeInit(he);
+    const ToggleSwitch = toggleSwitchInit(he);
 
     // ------------------------------ <ErrorBoundary /> -----------------------------
 
@@ -789,6 +791,7 @@ export function init(
         Calendar,
         ExpandButton,
         ExpandableArea,
-        KwicRangeSelector
+        KwicRangeSelector,
+        ToggleSwitch
     };
 }
