@@ -26,6 +26,7 @@ import { QueryFormModel, QueryFormModelState } from '../../models/query/common';
 import { Actions, ActionName } from '../../models/query/actions';
 import { ContentEditable } from './contentEditable';
 import { Keyboard } from 'cnc-tskit';
+import { strictEqualParsedQueries } from '../../models/query/query';
 
 
 interface RichInputProps {
@@ -205,7 +206,8 @@ export function init(
             const queryObj = this.props.queries[this.props.sourceId];
             if (prevQueryObj.rawAnchorIdx !== queryObj.rawAnchorIdx ||
                         prevQueryObj.rawFocusIdx !== queryObj.rawFocusIdx ||
-                        prevQueryObj.query !== queryObj.query) {
+                        prevQueryObj.query !== queryObj.query ||
+                        !strictEqualParsedQueries(prevQueryObj, queryObj)) {
                 this.contentEditable.reapplySelection(
                     queryObj.rawAnchorIdx,
                     queryObj.rawFocusIdx

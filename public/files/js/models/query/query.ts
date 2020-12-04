@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { id, List, pipe, tuple } from 'cnc-tskit';
+import { id, List, tuple } from 'cnc-tskit';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { highlightSyntaxStatic, ParsedAttr } from './cqleditor/parser';
 
@@ -193,6 +193,22 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
         default_attr: q.default_attr,
         use_regexp: true
     };
+}
+
+/**
+ * Test whether parsed query data in both provided queries are strictly equal.
+ * This is mostly used in change detection in React components. In case the
+ * types of q1 and q2 are different (SimpleQuery vs AdvancedQuery) false is
+ * always returned.
+ */
+export function strictEqualParsedQueries(q1:AnyQuery, q2:AnyQuery):boolean {
+    if (q1.qtype === 'simple' && q2.qtype === 'simple') {
+        return q1.queryParsed === q2.queryParsed;
+
+    } else if (q1.qtype === 'advanced' && q2.qtype === 'advanced') {
+        return q1.parsedAttrs === q2.parsedAttrs;
+    }
+    return false;
 }
 
 export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken, idx:number, charIdx:number)=>void, onSpace:()=>void):void {
