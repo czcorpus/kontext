@@ -1324,7 +1324,7 @@ p.boxed-par {
 }
 
 .ToggleSwitch {
-    .label {
+    a.label {
         margin-right: 0.5em;
     }
 
@@ -1352,6 +1352,28 @@ p.boxed-par {
             background-image: url(../img/toggle_off.svg);
         }
     }
+}
+
+.disabled {
+    a.label {
+        color: #B0B0B0;
+    }
+
+    a.label:hover {
+        text-decoration: none;
+        color: #B0B0B0;
+        cursor: default;
+    }
+
+    .toggle-img a {
+        filter: grayscale();
+        filter: opacity(25%);
+    }
+
+    .toggle-img a:hover {
+        cursor: default;
+    }
+
 }
 
 
