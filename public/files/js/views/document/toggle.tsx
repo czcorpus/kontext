@@ -29,21 +29,27 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.ToggleSwitc
 
     const ToggleSwitch:React.FC<CoreViews.ToggleSwitch.Props> = (props) => {
 
-        const [checked, changeState] = React.useState(props.checked === undefined ? false : props.checked);
+        const [state, changeState] = React.useState({
+            checked: props.checked === undefined ? false : props.checked,
+            imgClass: props.checked === undefined ? 'off' : props.checked ? 'on' : 'off'
+        });
         const clickHandler = () => {
-            changeState(!checked);
+            changeState({
+                checked: !state.checked,
+                imgClass: !state.checked ? 'on switch-on' : 'off switch-off'
+            });
             if (props.onChange !== undefined) {
-                props.onChange(checked);
+                props.onChange(state.checked);
             }
         }
 
         return (
-            <span className={"ToggleSwitch" + props.disabled ? " disabled" : ""}
+            <span className={"ToggleSwitch" + (props.disabled ? " disabled" : "")}
                   onClick={props.disabled ? null : clickHandler}>
                 
                 <a className="label">{props.label}</a>
                 <span className="toggle-img">
-                    <a role="checkbox" aria-checked={checked} className={checked ? 'on' : 'off'}/>
+                    <a role="checkbox" aria-checked={state.checked} className={state.imgClass}/>
                 </span>
             </span>
         );
