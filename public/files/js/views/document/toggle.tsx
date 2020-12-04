@@ -38,7 +38,9 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.ToggleSwitc
         }
 
         return (
-            <span className="ToggleSwitch" onClick={clickHandler}>
+            <span className={"ToggleSwitch" + props.disabled ? " disabled" : ""}
+                  onClick={props.disabled ? null : clickHandler}>
+                
                 <a className="label">{props.label}</a>
                 <span className="toggle-img">
                     <a role="checkbox" aria-checked={checked} className={checked ? 'on' : 'off'}/>
