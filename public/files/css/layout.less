@@ -1323,6 +1323,87 @@ p.boxed-par {
     }
 }
 
+.ToggleSwitch {
+    a.label {
+        margin-right: 0.5em;
+    }
+
+    .toggle-img {
+        display: inline-block;
+        vertical-align: middle;
+        width: 1.5em;
+        height: 1em;
+
+        a {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-color: #FFFFFF;
+            background-position-y: 50%;
+        }
+
+        a.on {
+            background-image: url(../img/toggle_on.svg);
+        }
+
+        a.off {
+            background-image: url(../img/toggle_off.svg);
+        }
+
+        a.switch-on {
+            animation: switchingOn 0.1s steps(2, end);
+        }
+
+        a.switch-off {
+            animation: switchingOff 0.1s steps(2, end);
+        }
+
+        @keyframes switchingOn {
+            0%, 50% {
+                background-image: url(../img/switch_off_1.svg);
+            }
+
+            50%, 100% {
+                background-image: url(../img/switch_off_2.svg);
+            }
+        }
+
+        @keyframes switchingOff {
+            0%, 50% {
+                background-image: url(../img/switch_off_2.svg);
+            }
+
+            50%, 100% {
+                background-image: url(../img/switch_off_1.svg);
+            }
+        }
+    }
+}
+
+.disabled {
+    a.label {
+        color: #B0B0B0;
+    }
+
+    a.label:hover {
+        text-decoration: none;
+        color: #B0B0B0;
+        cursor: default;
+    }
+
+    .toggle-img a {
+        filter: grayscale();
+        filter: opacity(25%);
+    }
+
+    .toggle-img a:hover {
+        cursor: default;
+    }
+
+}
+
 
 @keyframes fadein {
 

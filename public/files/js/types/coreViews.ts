@@ -363,6 +363,18 @@ export namespace CoreViews {
         export type Component = React.FC<Props>;
     }
 
+    export namespace ToggleSwitch {
+
+        export interface Props {
+            onChange?:(checked?:boolean)=>void;
+            checked?:boolean;
+            disabled?:boolean;
+            label?:string;
+        }
+
+        export type Component = React.FC<Props>;
+    }
+
     export namespace ExpandButton {
 
         export interface Props {
@@ -423,6 +435,7 @@ export namespace CoreViews {
         ExpandButton:ExpandButton.Component;
         ExpandableArea:ExpandableArea.Component;
         KwicRangeSelector:KwicRangeSelector.Component;
+        ToggleSwitch:ToggleSwitch.Component;
     }
 }
 
