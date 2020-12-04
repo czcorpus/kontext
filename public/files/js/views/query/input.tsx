@@ -238,6 +238,7 @@ export function init({
         return (
             <div className="TRQueryTypeField">
                 <label htmlFor="chck_wsdA3fe">{he.translate('query__qt_advanced')}:</label>
+                <layoutViews.ToggleSwitch />
                 <input id="chck_wsdA3fe" type="checkbox"
                     onChange={handleSelection}
                     checked={props.queryType === 'advanced'} />
