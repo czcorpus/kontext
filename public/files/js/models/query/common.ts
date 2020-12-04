@@ -326,7 +326,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         this.addActionSubtypeHandler<Actions.ToggleQueryHistoryWidget>(
             ActionName.ToggleQueryHistoryWidget,
-            action => action.payload.formType === this.state.formType,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     state.historyVisible[action.payload.sourceId] =
@@ -338,17 +338,30 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         this.addActionSubtypeHandler<Actions.ToggleQuerySuggestionWidget>(
             ActionName.ToggleQuerySuggestionWidget,
-            action => action.payload.formType === this.state.formType,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     state.suggestionsVisible[action.payload.sourceId] = action.payload.tokenIdx;
                 });
+                if (action.payload.tokenIdx !== null) {
+                    const queryObj = this.state.queries[action.payload.sourceId];
+                    if (queryObj.qtype === 'simple') {
+                        const tok = queryObj.queryParsed[action.payload.tokenIdx];
+                        if (tok.isExtended && !tok.suggestions) {
+                            this.autoSuggestTrigger.next(tuple(
+                                action.payload.sourceId,
+                                0,
+                                0
+                            ));
+                        }
+                    }
+                }
             }
         );
 
         this.addActionSubtypeHandler<Actions.QueryOptionsToggleForm>(
             ActionName.QueryOptionsToggleForm,
-            action => action.payload.formType === this.state.formType,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     state.queryOptionsVisible[action.payload.sourceId] =
@@ -359,7 +372,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
             ActionName.QueryInputSetDefaultAttr,
-            action => action.payload.formType === this.state.formType,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
@@ -378,7 +391,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         this.addActionSubtypeHandler<Actions.QueryInputSetMatchCase>(
             ActionName.QueryInputSetMatchCase,
-            action => action.payload.formType === this.state.formType,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
@@ -399,7 +412,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         this.addActionSubtypeHandler<Actions.QueryInputToggleAllowRegexp>(
             ActionName.QueryInputToggleAllowRegexp,
-            action => action.payload.formType === this.state.formType,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
@@ -420,7 +433,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         this.addActionSubtypeHandler<Actions.SetActiveInputWidget>(
             ActionName.SetActiveInputWidget,
-            action => action.payload.formType === this.state.formType,
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     state.activeWidgets[action.payload.sourceId] = action.payload.value;
@@ -562,7 +575,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     this.clearSuggestionForPosition(state, action.payload.sourceId, action.payload.valueStartIdx);
-                    state.suggestionsVisible[action.payload.sourceId] = null;
+                    const currVisible = state.suggestionsVisible[action.payload.sourceId];
+                    if (currVisible !== null) {
+                        const queryObj = state.queries[action.payload.sourceId];
+                        if (queryObj.qtype !== 'simple' || !queryObj.queryParsed[currVisible].isExtended
+                                && queryObj.queryParsed[currVisible].suggestions) {
+                            state.suggestionsVisible[action.payload.sourceId] = null;
+                        }
                     state.suggestionsLoading[action.payload.sourceId][action.payload.valueStartIdx] = true;
                 });
             }
@@ -796,11 +815,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         }
     }
 
-
+    /**
+     * note: returns back the original queryObj mutated by query highlighting
+     */
     protected rehighlightSimpleQuery(
         queryObj:SimpleQuery,
         focusTokenIdx?:number
-    ):void {
+    ):SimpleQuery {
         const richText = [];
         runSimpleQueryParser(
             queryObj.query,
@@ -826,6 +847,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
         queryObj.queryHtml = richText.join('');
+        return queryObj;
     }
 
     protected reparseAdvancedQuery(

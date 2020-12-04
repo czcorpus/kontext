@@ -51,11 +51,11 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
 
     }> = (props) => {
 
-        const mkExpr = (attr:string|undefined, val:string) => {
+        const mkExpr = (attr:string|Array<string>|undefined, val:string) => {
             const csFlag = props.matchCase ? '' : '(?i)';
-            if (!attr) {
+            if (!attr || Array.isArray(attr)) {
                 return pipe(
-                    props.defaultAttrs,
+                    attr ? attr : props.defaultAttrs,
                     List.map((attr, i) => (
                         <div key={`item:${attr}:${i}`}>
                             <span className="attr">{attr}</span>=<span className="value">"{`${csFlag}${val}`}"</span>

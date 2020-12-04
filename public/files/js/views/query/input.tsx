@@ -452,13 +452,12 @@ export function init({
 
     const SuggestionsWidget:React.FC<{
         qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
-        data:TokenSuggestions;
+        data:TokenSuggestions|null;
         formType:QueryFormType;
         sourceId:string;
         handleItemClick:(providerId:string, value:unknown) => void;
 
     }> = (props) => {
-
         const dynCls = props.data === null || List.every(s => querySuggest.isEmptyResponse(s), props.data.data) ?
             ' empty' : '';
 
@@ -512,7 +511,8 @@ export function init({
                             </React.Fragment>
                         ),
                     )
-                ) : null
+                ) :
+                <div className="loader"><layoutViews.AjaxLoaderImage /></div>
             }
             </div>
         );

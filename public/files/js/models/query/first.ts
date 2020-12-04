@@ -46,6 +46,7 @@ export interface QueryFormUserEntries {
     currQueryTypes:{[sourceId:string]:QueryType};
     // current queries values (e.g. when restoring a form state)
     currQueries:{[sourceId:string]:string};
+    currParsedQueries:{[sourceId:string]:AjaxResponse.SubmitEncodedSimpleTokens};
     currPcqPosNegValues:{[sourceId:string]:'pos'|'neg'};
     currDefaultAttrValues:{[sourceId:string]:string};
     currUseRegexpValues:{[sourceId:string]:boolean};
@@ -103,6 +104,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
             op_key: '__new__',
             curr_query_types: {},
             curr_queries: {},
+            curr_parsed_queries: {},
             curr_pcq_pos_neg_values: {},
             curr_include_empty_values: {},
             curr_lpos_values: {},
@@ -175,7 +177,23 @@ function importUserQueries(
                         corpname: corpus,
                         qtype: 'simple',
                         query,
-                        queryParsed: parseSimpleQuery(data.currQueries[corpus], defaultAttr),
+                        queryParsed: pipe(
+                            parseSimpleQuery(data.currQueries[corpus], defaultAttr),
+                            List.map(
+                                (token, tokenIdx) => {
+                                    const parsed = data.currParsedQueries[corpus];
+                                    if (parsed) {
+                                        const [args, isExtended] = data.currParsedQueries[corpus][tokenIdx];
+                                        return {
+                                            ...token,
+                                            args,
+                                            isExtended
+                                        };
+                                    }
+                                    return token;
+                                }
+                            )
+                        ),
                         queryHtml: query,
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
@@ -683,6 +701,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                 state.corpora,
                                 {
                                     currQueries: data.curr_queries,
+                                    currParsedQueries: data.curr_parsed_queries,
                                     currQueryTypes: data.curr_query_types,
                                     currLposValues: data.curr_lpos_values,
                                     currDefaultAttrValues: data.curr_default_attr_values,
@@ -784,13 +803,18 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 corpname: query.corpname,
                 qtype: 'simple',
                 query: query.query.trim().normalize(),
-                queryParsed: List.map(
-                    item => item.args.length > 0 && item.args[0][0] ?
-                            item.args :
-                            defaultAttr ?
-                                [tuple(defaultAttr, item.args[0][1])] :
-                                [tuple(query.default_attr, item.args[0][1])],
-                    query.queryParsed
+                queryParsed: pipe(
+                    query.queryParsed,
+                    List.map(
+                        item => tuple(
+                            item.args.length > 0 && item.args[0][0] ?
+                                item.args :
+                                defaultAttr ?
+                                    [tuple(defaultAttr, item.args[0][1])] :
+                                    [tuple(query.default_attr, item.args[0][1])],
+                            item.isExtended
+                        )
+                    )
                 ),
                 qmcase: query.qmcase,
                 pcq_pos_neg: query.pcq_pos_neg,

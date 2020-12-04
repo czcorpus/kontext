@@ -482,7 +482,7 @@ class Actions(Querying):
             icase = '' if data.curr_qmcase_values[corpus] else '(?i)'
             attr = data.curr_default_attr_values[corpus]
             use_regexp = data.curr_use_regexp_values[corpus]
-            query_parsed = data.curr_parsed_queries[corpus]
+            query_parsed = [x for x, _ in data.curr_parsed_queries[corpus]]
         else:
             qtype = data.query_type
             query = data.query

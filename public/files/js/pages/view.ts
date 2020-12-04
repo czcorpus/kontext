@@ -422,6 +422,7 @@ export class ViewPage {
             ),
             currQueryTypes: queryFormArgs.curr_query_types,
             currQueries: queryFormArgs.curr_queries,
+            currParsedQueries: queryFormArgs.curr_parsed_queries,
             currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
             currIncludeEmptyValues: queryFormArgs.curr_include_empty_values,
             currLposValues: queryFormArgs.curr_lpos_values,
