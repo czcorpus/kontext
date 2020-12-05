@@ -289,14 +289,12 @@ class DefaultAuthHandler(AbstractInternalAuth):
         text += '\n'
         tmp = _(
             'To verify your new account {username} (full name: {firstname} {lastname}) please click the link below')
-        if type(tmp) is str:
-            tmp = tmp.decode('utf-8')
         text += tmp.format(username=username, firstname=firstname, lastname=lastname)
         text += ':\n\n'
         text += plugin_api.create_url('user/sign_up_confirm_email', dict(key=token.value))
         text += '\n\n'
-        text += time.strftime(_('The confirmation link will expire on %m/%d/%Y at %H:%M').encode(
-            'utf-8'), expir_date.timetuple()).decode('utf-8')
+        text += time.strftime(_('The confirmation link will expire on %m/%d/%Y at %H:%M'),
+                              expir_date.timetuple())
         text += '\n\n\n-----------------------------------------------\n'
         text += _('This e-mail has been generated automatically - please do not reply to it.')
         text += '\n'
