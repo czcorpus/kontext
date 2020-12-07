@@ -372,7 +372,12 @@ export namespace CoreViews {
             id?:string;
         }
 
-        export type Component = React.ComponentClass<Props>;
+        export interface State {
+            checked:boolean;
+            imgClass:string;
+        }
+
+        export type Component = React.ComponentClass<Props, State>;
     }
 
     export namespace ExpandButton {

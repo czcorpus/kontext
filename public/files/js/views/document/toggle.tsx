@@ -25,9 +25,9 @@ import { CoreViews } from '../../types/coreViews';
 
 
 
-export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews.ToggleSwitch.Props> {
+export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews.ToggleSwitch.Props, CoreViews.ToggleSwitch.State> {
 
-    class ToggleSwitch extends React.Component<CoreViews.ToggleSwitch.Props, {checked:boolean; imgClass: string;}> {
+    class ToggleSwitch extends React.Component<CoreViews.ToggleSwitch.Props, CoreViews.ToggleSwitch.State> {
 
         constructor(props) {
             super(props)
