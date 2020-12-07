@@ -122,8 +122,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </label>
                 </th>
                 <td>
-                    <input id="show-line-numbers-input" type="checkbox"
-                        onChange={handleInputChange} checked={props.value} />
+                    <layoutViews.ToggleSwitch
+                        id="show-line-numbers-input"
+                        onChange={handleInputChange}
+                        checked={props.value}/>
                 </td>
             </tr>
         );
@@ -158,8 +160,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <input type="hidden" name="shuffle" value="0" />
-                    <input id="always-shuffle" type="checkbox"
-                            onChange={handleInputChange} checked={props.value} />
+                    <layoutViews.ToggleSwitch
+                        id="always-shuffle"
+                        onChange={handleInputChange}
+                        checked={props.value}/>
                 </td>
             </tr>
         );
@@ -189,8 +193,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </label>
                 </th>
                 <td>
-                    <input id="use-rich-editor" type="checkbox" onChange={handleCheckbox} checked={props.value} />
-                </td>
+                    <layoutViews.ToggleSwitch
+                        id="use-rich-editor"
+                        onChange={handleCheckbox}
+                        checked={props.value}/>
+                </td>                
             </tr>
         );
     }

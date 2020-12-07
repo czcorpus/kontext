@@ -241,7 +241,7 @@ export function init({
                 <layoutViews.ToggleSwitch
                     id="chck_wsdA3fe"
                     onChange={handleSelection}
-                    initChecked={props.queryType === 'advanced'} />
+                    checked={props.queryType === 'advanced'} />
             </div>
         );
     };
