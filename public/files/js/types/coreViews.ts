@@ -367,7 +367,7 @@ export namespace CoreViews {
 
         export interface Props {
             onChange?:(checked?:boolean)=>void;
-            checked?:boolean;
+            initChecked?:boolean;
             disabled?:boolean;
             id?:string;
         }

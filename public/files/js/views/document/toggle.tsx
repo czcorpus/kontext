@@ -30,8 +30,8 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.ToggleSwitc
     const ToggleSwitch:React.FC<CoreViews.ToggleSwitch.Props> = (props) => {
 
         const [state, changeState] = React.useState({
-            checked: props.checked === undefined ? false : props.checked,
-            imgClass: props.checked === undefined ? 'off' : props.checked ? 'on' : 'off'
+            checked: props.initChecked === undefined ? false : props.initChecked,
+            imgClass: props.initChecked === undefined ? 'off' : props.initChecked ? 'on' : 'off'
         });
 
         const clickHandler = () => {
