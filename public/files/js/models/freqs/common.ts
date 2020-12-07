@@ -36,3 +36,9 @@ export interface CTFreqServerArgs extends ConcServerArgs {
     ctminfreq:string;
     ctminfreq_type:string;
 }
+
+export interface HistoryState {
+    page:string;
+    flimit:string;
+    sort:string;
+}

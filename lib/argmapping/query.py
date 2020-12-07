@@ -210,7 +210,7 @@ class QueryFormArgs(ConcFormArgs):
             self.curr_pcq_pos_neg_values[corp] = query['pcq_pos_neg']
             self.curr_include_empty_values[corp] = query['include_empty']
             self.curr_qmcase_values[corp] = query.get('qmcase', False)
-            self.curr_default_attr_values[corp] = query['default_attr']
+            self.curr_default_attr_values[corp] = query.get('default_attr')
             self.curr_use_regexp_values[corp] = query.get('use_regexp', False)
         self.bib_mapping = bib_mapping
 
