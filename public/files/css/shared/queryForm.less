@@ -145,7 +145,7 @@ form.query-form {
 
     .AdvancedFormFieldset.query-options {
 
-        margin-top: 1.2em;
+        margin-top: 1.8em;
 
         div.options {
             display: grid;
@@ -294,21 +294,17 @@ div.query-form-spa {
 }
 
 .query-area {
-    background-color: #FAFAFA;
     display: flex;
     flex-direction: column;
-
-    border-color: @color-light-frame;
-    border-style: solid;
-    border-width: 0 0 0.2em 0;
     margin-bottom: 0.4em;
 
     > textarea,
     pre.cql-input,
     > span.simple-input, input.simple-input {
+        background-color: #FAFAFA;
         padding: 0.5em 0.3em 0.3em 0.3em;
         border-style: solid;
-        border-width: 0.1em;
+        border-width: 0.15em;
         border-color: @color-light-frame;
         border-radius: 0.2em;
         display: block;
@@ -318,6 +314,12 @@ div.query-form-spa {
     }
 
     pre.cql-input {
+
+        font-size: 1.3em;
+        min-height: 5em;
+        overflow: hidden;
+        resize: vertical;
+        padding: 0.5em 0.3em 0.3em 0.3em;
 
         .sh-regexp {
             color: #920040;
@@ -358,7 +360,8 @@ div.query-form-spa {
     }
 
     > span.simple-input {
-        font-size: 1.3em;
+        font-size: 1.4em;
+        padding: 0.5em 0.3em 0.5em 0.3em;
 
         a.sh-sugg {
             text-decoration: none;
@@ -391,14 +394,6 @@ div.query-form-spa {
         }
     }
 
-    pre.cql-input {
-        background-color: inherit;
-        font-size: 1.3em;
-        min-height: 5em;
-        overflow: hidden;
-        resize: vertical;
-    }
-
     textarea {
         margin: 0;
         resize: vertical;
@@ -407,10 +402,23 @@ div.query-form-spa {
 
     .QueryHints {
         white-space: initial;
-        padding: 1em 0.3em 0.2em 0.3em;
+        padding: 0.3em 0.7em;
+        margin-top: 0.7em;
+        background-color: #f9f9f9;
+        border-style: solid;
+        border-color: #fefefe;
+        border-width: 0.15em;
+        border-radius: 0.2em;
         color: @color-light-text;
-        font-size: 0.8em;
+        font-size: 0.9em;
         max-width: 50em;
+
+        .tip {
+            text-transform: uppercase;
+            color: @color-logo-blue;
+            font-weight: bold;
+            padding-right: 0.7em;
+        }
 
         .highlight {
             font-weight: bold;
@@ -425,9 +433,8 @@ div.query-form-spa {
         }
 
         .next-hint a {
-            color: @color-light-text;
+            color: @color-logo-blue;
             text-decoration: none;
-            font-weight: bold;
         }
 
         .next-hint a:hover {
