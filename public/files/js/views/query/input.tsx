@@ -200,7 +200,13 @@ export function init({
 
         return (
             <div className="QueryHints">
-                <span className={props.forcedTip ? "hint highlight" : "hint"}>
+                <span className="hint">
+                    <span className="tip">
+                        {props.forcedTip ?
+                            '\u203C\u00a0' + he.translate('global__advice') :
+                            he.translate('global__tip')
+                        }
+                    </span>
                     {
                         props.forcedTip ?
                             props.forcedTip :
@@ -208,10 +214,11 @@ export function init({
                     }
                 </span>
                 <span className="next-hint">
-                    <a onClick={clickHandler} title={he.translate('global__next_tip')}>
-                        <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
-                                alt={he.translate('global__next_tip')} />
+                    (
+                    <a onClick={clickHandler}>
+                        {he.translate('global__next_tip')}
                     </a>
+                    )
                 </span>
             </div>
         );
