@@ -64,6 +64,8 @@ export interface GeneralViewOptionsModelState {
 
     isBusy:boolean;
 
+    loaded:boolean;
+
     userIsAnonymous:boolean;
 }
 
@@ -92,7 +94,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 wlpagesize: Kontext.newFormValue(0, true),
                 fmaxitems: Kontext.newFormValue(0, true),
                 citemsperpage: Kontext.newFormValue(0, true),
-                isBusy: false
+                isBusy: false,
+                loaded: false,
             }
         );
         this.layoutModel = layoutModel;
@@ -102,6 +105,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             MainMenuActionName.ShowGeneralViewOptions,
             (state, action) => {
                 state.isBusy = true;
+                state.loaded = false;
             },
             (state, action, dispatch) => {
                 this.loadData().subscribe(
@@ -129,6 +133,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
+                    state.loaded = true;
                     state.pageSize = {value: action.payload.data.pagesize, isInvalid: false, isRequired: true};
                     state.newCtxSize = {value: action.payload.data.newctxsize, isInvalid: false, isRequired: true};
                     state.ctxUnit = action.payload.data.ctxunit;

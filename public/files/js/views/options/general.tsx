@@ -422,14 +422,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('options__this_applies_for_all_the_corpora')}
                     </p>
                     <form>
-                        <FieldsetConcordance pageSize={this.props.pageSize}
-                                newCtxSize={this.props.newCtxSize}
-                                lineNumbers={this.props.lineNumbers}
-                                shuffle={this.props.shuffle}
-                                useRichQueryEditor={this.props.useRichQueryEditor} />
-                        <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
-                        <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems} />
-                        <FieldsetColl citemsPerPage={this.props.citemsperpage} />
+                        {this.props.loaded ?
+                            <>
+                                <FieldsetConcordance pageSize={this.props.pageSize}
+                                    newCtxSize={this.props.newCtxSize}
+                                    lineNumbers={this.props.lineNumbers}
+                                    shuffle={this.props.shuffle}
+                                    useRichQueryEditor={this.props.useRichQueryEditor} />
+                                <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
+                                <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems} />
+                                <FieldsetColl citemsPerPage={this.props.citemsperpage} />
+                            </> :
+                            <p className='data-loader'>
+                                <img src={he.createStaticUrl('img/ajax-loader.gif')}
+                                    className="ajax-loader"
+                                    alt={he.translate('global__loading')}
+                                    title={he.translate('global__loading')} />
+                            </p>
+                        }
                         {this.props.userIsAnonymous ?
                             <p className="warn">
                                 <layoutViews.StatusIcon status="warning" htmlClass="icon" inline={true} />
