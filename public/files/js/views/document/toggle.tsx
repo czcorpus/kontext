@@ -25,35 +25,50 @@ import { CoreViews } from '../../types/coreViews';
 
 
 
-export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.ToggleSwitch.Props> {
+export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews.ToggleSwitch.Props, CoreViews.ToggleSwitch.State> {
 
-    const ToggleSwitch:React.FC<CoreViews.ToggleSwitch.Props> = (props) => {
+    class ToggleSwitch extends React.Component<CoreViews.ToggleSwitch.Props, CoreViews.ToggleSwitch.State> {
 
-        const [state, changeState] = React.useState({
-            checked: props.initChecked === undefined ? false : props.initChecked,
-            imgClass: props.initChecked === undefined ? 'off' : props.initChecked ? 'on' : 'off'
-        });
+        constructor(props) {
+            super(props)
+            this.state = {
+                checked: this.props.checked === undefined ? false : this.props.checked,
+                imgClass: this.props.checked === undefined ? 'off' : this.props.checked ? 'on' : 'off'
+            }
+            this.clickHandler = this.clickHandler.bind(this);
+        }
 
-        const clickHandler = () => {
-            changeState({
-                checked: !state.checked,
-                imgClass: !state.checked ? 'on switch-on' : 'off switch-off'
+        componentDidUpdate(prevProps) {
+            if (this.props.checked !== prevProps.checked) {
+                this.setState({
+                    checked: this.props.checked,
+                    imgClass: this.props.checked ? 'on switch-on' : 'off switch-off'
+                });
+            }
+          }
+
+        clickHandler() {
+            this.setState({
+                checked: !this.state.checked,
+                imgClass: !this.state.checked ? 'on switch-on' : 'off switch-off'
             });
-            if (props.onChange !== undefined) {
-                props.onChange(state.checked);
+            if (this.props.onChange !== undefined) {
+                this.props.onChange(this.state.checked);
             }
         }
 
-        return (
-            <span className={"ToggleSwitch" + (props.disabled ? " disabled" : "")}
-                  onClick={props.disabled ? null : clickHandler}>
-                
-                <span className="toggle-img">
-                    <input id={props.id} type="checkbox" onClick={clickHandler} disabled={props.disabled}/>
-                    <a role="checkbox" aria-checked={state.checked} className={state.imgClass}/>
+        render() {
+            return (
+                <span className={"ToggleSwitch" + (this.props.disabled ? " disabled" : "")}
+                    onClick={this.props.disabled ? null : this.clickHandler}>
+                    
+                    <span className="toggle-img">
+                        <input id={this.props.id} type="checkbox" onClick={this.clickHandler} disabled={this.props.disabled}/>
+                        <a role="checkbox" aria-checked={this.state.checked} className={this.state.imgClass}/>
+                    </span>
                 </span>
-            </span>
-        );
+            );
+        }
     }
 
     return ToggleSwitch;

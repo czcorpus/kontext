@@ -367,12 +367,17 @@ export namespace CoreViews {
 
         export interface Props {
             onChange?:(checked?:boolean)=>void;
-            initChecked?:boolean;
+            checked?:boolean;
             disabled?:boolean;
             id?:string;
         }
 
-        export type Component = React.FC<Props>;
+        export interface State {
+            checked:boolean;
+            imgClass:string;
+        }
+
+        export type Component = React.ComponentClass<Props, State>;
     }
 
     export namespace ExpandButton {
