@@ -27,12 +27,13 @@ section.closeable-frame {
     background-color: @color-section-bg;
     border-radius: @border-radius-default;
     box-shadow: @portal-box-shadow;
-    max-width: 100em;
+    max-width: 1280px;
     max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
 
     > .heading {
-
-        margin: 0 0 1.7em 0;
         padding: 0.6em 0.8em;
         background-color: @color-light-frame;
         border-radius: 6px 6px 0 0;
@@ -65,7 +66,17 @@ section.closeable-frame {
     }
 
     .contents {
-        margin: 1em 1.4em;
+        flex-grow: 1;
+
+        .padded-contents {
+            padding: 1.7em 1.4em 1em 1.4em;
+        }
+    }
+}
+
+@media screen and (max-width: 1366px) {
+    section.closeable-frame {
+        max-width: 90%;
     }
 }
 

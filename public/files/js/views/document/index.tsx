@@ -343,18 +343,10 @@ export function init(
         }
 
         render() {
-            const style = {
-                width: '1.5em',
-                height: '1.5em',
-                float: 'right',
-                cursor: 'pointer',
-                fontSize: '1em'
-            };
-
             const htmlClass = 'closeable-frame' + (this.props.customClass ? ` ${this.props.customClass}` : '');
 
             return (
-                <section className={htmlClass} style={this.props.scrollable ? {overflowY: 'auto'} : {}}
+                <section className={htmlClass}
                         ref={this.resizeFn}>
                     <div className="heading">
                         <div className="control">
@@ -368,8 +360,10 @@ export function init(
                             {this.props.label}
                         </h2>
                     </div>
-                    <div className="contents">
-                        {this.props.children}
+                    <div className="contents" style={this.props.scrollable ? {overflow: 'auto'} : {}}>
+                        <div className="padded-contents">
+                            {this.props.children}
+                        </div>
                     </div>
                 </section>
             );
