@@ -767,7 +767,7 @@ export function init({
         sourceId:string;
         queryType:QueryType;
         forcedAttr:string;
-        defaultAttr:string;
+        defaultAttr:string|undefined;
         simpleQueryDefaultAttrs:Array<string>;
         attrList:Array<Kontext.AttrItem>;
 
