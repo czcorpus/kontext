@@ -789,8 +789,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     private exportQuery(query:AnyQuery, defaultAttr?:string|Array<string>):AnyQuerySubmit {
         if (query.qtype === 'advanced') {
             return {
-                corpname: query.corpname,
                 qtype: 'advanced',
+                corpname: query.corpname,
                 query: query.query.trim().normalize(),
                 pcq_pos_neg: query.pcq_pos_neg,
                 include_empty: query.include_empty,
@@ -800,8 +800,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
         } else {
             return {
-                corpname: query.corpname,
                 qtype: 'simple',
+                corpname: query.corpname,
                 query: query.query.trim().normalize(),
                 queryParsed: pipe(
                     query.queryParsed,

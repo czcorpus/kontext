@@ -25,12 +25,15 @@ import { SaveData } from '../../app/navigation';
 import { Dimensions, FreqFilterQuantities, AlignTypes, FreqQuantities } from './twoDimension/common';
 import { Maths } from 'cnc-tskit';
 import { ColorMappings } from './twoDimension/table2d';
+import { HistoryState } from './common';
 
 
 export enum ActionName {
     ResultSetMinFreqVal = 'FREQ_RESULT_SET_MIN_FREQ_VAL',
     ResultApplyMinFreq = 'FREQ_RESULT_APPLY_MIN_FREQ',
     ResultDataLoaded = 'FREQ_RESULT_DATA_LOADED',
+    StatePushToHistory = 'FREQ_STATE_PUSH_TO_HISTORY',
+    PopHistory = 'FREQ_POP_HISTORY',
     ResultSortByColumn = 'FREQ_RESULT_SORT_BY_COLUMN',
     ResultSetCurrentPage = 'FREQ_RESULT_SET_CURRENT_PAGE',
     ResultCloseSaveForm = 'FREQ_RESULT_CLOSE_SAVE_FORM',
@@ -93,9 +96,17 @@ export namespace Actions {
 
     export interface ResultDataLoaded extends Action<{
         data:Array<ResultBlock>;
-        resetPage:boolean;
     }> {
         name: ActionName.ResultDataLoaded;
+    }
+
+    export interface StatePushToHistory extends Action<{
+    }> {
+        name: ActionName.StatePushToHistory;
+    }
+
+    export interface PopHistory extends Action<HistoryState> {
+        name: ActionName.PopHistory;
     }
 
     export interface ResultSortByColumn extends Action<{

@@ -23,13 +23,14 @@ import { PageModel } from '../../app/page';
 import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from './save';
 import { MultiDict } from '../../multidict';
-import { IFullActionControl, StatelessModel } from 'kombo';
+import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { FreqServerArgs } from './common';
+import { FreqServerArgs, HistoryState } from './common';
 import { HTTP, List } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
+import { Action } from 'rxjs/internal/scheduler/Action';
 
 
 export interface ResultItem {
@@ -67,6 +68,7 @@ export interface FreqDataRowsModelArgs {
     quickSaveRowLimit:number;
     saveLinkFn:(file:string, url:string)=>void;
     initialData:Array<ResultBlock>;
+    currentPage:number;
 }
 
 export interface FreqDataRowsModelState {
@@ -121,13 +123,13 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     private saveModel:FreqResultsSaveModel;
 
     constructor({dispatcher, pageModel, freqCrit, formProps, saveLinkFn,
-                quickSaveRowLimit, initialData}:FreqDataRowsModelArgs) {
+                quickSaveRowLimit, initialData, currentPage}:FreqDataRowsModelArgs) {
         super(
             dispatcher,
             {
                 data: initialData,
                 freqCrit: freqCrit,
-                currentPage: initialData.length > 1 ? null : '1',
+                currentPage: initialData.length > 1 ? null : `${currentPage}`,
                 sortColumn: formProps.freq_sort,
                 ftt_include_empty: formProps.ftt_include_empty,
                 flimit: formProps.flimit || '0',
@@ -168,25 +170,16 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
         this.addActionHandler<Actions.ResultApplyMinFreq>(
             ActionName.ResultApplyMinFreq,
-            (state, action) => {state.isBusy = true},
+            (state, action) => {
+                state.isBusy = true,
+                state.currentPage = '1';
+            },
             (state, action, dispatch) => {
-                this.loadPage(state).subscribe(
-                    (data) => {
-                        dispatch<Actions.ResultDataLoaded>({
-                            name: ActionName.ResultDataLoaded,
-                            payload: {
-                                data: importData(this.pageModel, data.Blocks, data.fmaxitems, parseInt(state.currentPage)),
-                                resetPage: true
-                            },
-                        });
-                    },
-                    (err) => {
-                        dispatch<Actions.ResultDataLoaded>({
-                            name: ActionName.ResultDataLoaded,
-                            payload: {data: null, resetPage: null},
-                            error: err
-                        });
-                    }
+                this.dispatchLoad(
+                    this.loadPage(state),
+                    state,
+                    dispatch,
+                    true
                 );
             }
         );
@@ -200,12 +193,32 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
                 } else {
                     state.data = action.payload.data;
-                    if (action.payload.resetPage) {
-                        state.currentPage = '1';
-                        this.pushStateToHistory(state);
-                    }
                 }
+            }
+        );
+
+        this.addActionHandler<Actions.StatePushToHistory>(
+            ActionName.StatePushToHistory,
+            (state, action) => {
+                this.pushStateToHistory(state);
+            }
+        );
+
+        this.addActionHandler<Actions.PopHistory>(
+            ActionName.PopHistory,
+            (state, action) => {
+                state.currentPage = action.payload.page;
+                state.flimit = action.payload.flimit;
+                state.sortColumn = action.payload.sort;
             },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.loadPage(state),
+                    state,
+                    dispatch,
+                    false
+                );
+            }
         );
 
         this.addActionHandler<Actions.ResultSortByColumn>(
@@ -215,23 +228,11 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 state.sortColumn = action.payload.value;
             },
             (state, action, dispatch) => {
-                this.loadPage(state).subscribe(
-                    (data) => {
-                        dispatch<Actions.ResultDataLoaded>({
-                            name: ActionName.ResultDataLoaded,
-                            payload: {
-                                data: importData(this.pageModel, data.Blocks, data.fmaxitems, parseInt(state.currentPage)),
-                                resetPage: false
-                            },
-                        });
-                    },
-                    (err) => {
-                        dispatch<Actions.ResultDataLoaded>({
-                            name: ActionName.ResultDataLoaded,
-                            payload: {data: null, resetPage: null},
-                            error: err
-                        });
-                    }
+                this.dispatchLoad(
+                    this.loadPage(state),
+                    state,
+                    dispatch,
+                    true
                 );
             }
         );
@@ -248,23 +249,11 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             },
             (state, action, dispatch) => {
                 if (this.validateNumber(action.payload.value, 1)) {
-                    this.loadPage(state).subscribe(
-                        (data) => {
-                            dispatch<Actions.ResultDataLoaded>({
-                                name: ActionName.ResultDataLoaded,
-                                payload: {
-                                    data: importData(this.pageModel, data.Blocks, data.fmaxitems, parseInt(state.currentPage)),
-                                    resetPage: false
-                                },
-                            });
-                        },
-                        (err) => {
-                            dispatch<Actions.ResultDataLoaded>({
-                                name: ActionName.ResultDataLoaded,
-                                payload: {data: null, resetPage: null},
-                                error: err
-                            });
-                        }
+                    this.dispatchLoad(
+                        this.loadPage(state),
+                        state,
+                        dispatch,
+                        true
                     );
                 }
             }
@@ -290,13 +279,54 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         );
     }
 
+    private dispatchLoad(
+        load:Observable<FreqResultResponse.FreqResultResponse>,
+        state:FreqDataRowsModelState,
+        dispatch:SEDispatcher,
+        pushHistory:boolean
+    ):void {
+
+        load.subscribe(
+            (data) => {
+                dispatch<Actions.ResultDataLoaded>({
+                    name: ActionName.ResultDataLoaded,
+                    payload: {
+                        data: importData(
+                            this.pageModel,
+                            data.Blocks,
+                            data.fmaxitems,
+                            parseInt(state.currentPage)
+                        )
+                    },
+                });
+                if (pushHistory) {
+                    dispatch<Actions.StatePushToHistory>({
+                        name: ActionName.StatePushToHistory
+                    });
+                }
+            },
+            (err) => {
+                dispatch<Actions.ResultDataLoaded>({
+                    name: ActionName.ResultDataLoaded,
+                    payload: {data: null},
+                    error: err
+                });
+            }
+        );
+    }
+
     private pushStateToHistory(state:FreqDataRowsModelState):void {
         const args = this.getSubmitArgs(state);
         args.remove('format');
+        const hstate:HistoryState = {
+            page: state.currentPage,
+            flimit: state.flimit,
+            sort: state.sortColumn
+        };
         this.pageModel.getHistory().pushState(
             'freqs',
             args,
-            {},
+            hstate,
             window.document.title
         );
     }

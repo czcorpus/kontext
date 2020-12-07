@@ -47,6 +47,8 @@ import { List, Dict } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
+import { ActionName as GlobalActionName, Actions as GlobalActions } from '../models/common/actions';
+import { ActionName, Actions } from '../models/freqs/actions';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -289,7 +291,8 @@ class FreqPage {
                         this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
                         this.layoutModel.getConf<number>('FreqItemsPerPage'),
                         1
-                    )
+                    ),
+                    currentPage: this.layoutModel.getConf<number>('CurrentPage')
                 });
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
@@ -345,7 +348,10 @@ class FreqPage {
 
     private setupBackButtonListening():void {
         this.layoutModel.getHistory().setOnPopState((event) => {
-            window.location.reload();
+            this.layoutModel.dispatcher.dispatch<Actions.PopHistory>({
+                name: ActionName.PopHistory,
+                payload: event.state
+            })
         });
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ct': {

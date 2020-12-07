@@ -30,6 +30,7 @@ __conf.CollFormProps = {{ coll_form_args|to_json }};
 {%if freq_type in ('ml', 'tt') %}
 __conf.FreqResultData = {{ Blocks|to_json }};
 __conf.FreqItemsPerPage = {{ fmaxitems|to_json }};
+__conf.CurrentPage = {{ fpage|to_json }};
 __conf.FreqCrit = {{ fcrit|to_json }};
 {% elif freq_type == 'ct' %}
 __conf.CTFreqResultData = {{ data|to_json }};
