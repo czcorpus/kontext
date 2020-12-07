@@ -237,10 +237,11 @@ export function init({
 
         return (
             <div className="TRQueryTypeField">
+                <label htmlFor="chck_wsdA3fe"><a>{he.translate('query__qt_advanced')}</a></label>
                 <layoutViews.ToggleSwitch
-                    label={he.translate('query__qt_advanced')}
+                    id="chck_wsdA3fe"
                     onChange={handleSelection}
-                    checked={props.queryType === 'advanced'} />
+                    initChecked={props.queryType === 'advanced'} />
             </div>
         );
     };

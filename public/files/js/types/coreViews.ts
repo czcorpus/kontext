@@ -367,9 +367,9 @@ export namespace CoreViews {
 
         export interface Props {
             onChange?:(checked?:boolean)=>void;
-            checked?:boolean;
+            initChecked?:boolean;
             disabled?:boolean;
-            label?:string;
+            id?:string;
         }
 
         export type Component = React.FC<Props>;

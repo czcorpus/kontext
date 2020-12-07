@@ -1324,15 +1324,20 @@ p.boxed-par {
 }
 
 .ToggleSwitch {
-    a.label {
-        margin-right: 0.5em;
-    }
 
     .toggle-img {
         display: inline-block;
         vertical-align: middle;
+        margin: 0 0.5em;
         width: 1.5em;
         height: 1em;
+
+        input {
+            position: absolute;
+            visibility: hidden;
+            height: 0;
+            width: 0;
+        }
 
         a {
             display: block;
@@ -1383,15 +1388,6 @@ p.boxed-par {
 }
 
 .disabled {
-    a.label {
-        color: #B0B0B0;
-    }
-
-    a.label:hover {
-        text-decoration: none;
-        color: #B0B0B0;
-        cursor: default;
-    }
 
     .toggle-img a {
         filter: grayscale();
