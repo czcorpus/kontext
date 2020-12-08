@@ -57,18 +57,47 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
             }
         });
 
-        this.DEBUG_onActionMatch((s, a, m) => {
-            console.log('>>> ', a.name, a.payload);
-        })
-
-        /* TODO remove
-        this.addActionHandler<Actions.QueryInputSelectContextFormItem>(
-            ActionName.QueryInputSelectContextFormItem,
+        this.addActionHandler<Actions.QueryContextSetLemwordWsize>(
+            ActionName.QueryContextSetLemwordWsize,
             (state, action) => {
-                state.formData[action.payload.name] = action.payload.value;
+                state.formData.fc_lemword_wsize = action.payload.value;
             }
         );
-        */
+
+        this.addActionHandler<Actions.QueryContextSetLemword>(
+            ActionName.QueryContextSetLemword,
+            (state, action) => {
+                state.formData.fc_lemword = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetLemwordType>(
+            ActionName.QueryContextSetLemwordType,
+            (state, action) => {
+                state.formData.fc_lemword_type = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetPosWsize>(
+            ActionName.QueryContextSetPosWsize,
+            (state, action) => {
+                state.formData.fc_pos_wsize = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetPos>(
+            ActionName.QueryContextSetPos,
+            (state, action) => {
+                state.formData.fc_pos = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetPosType>(
+            ActionName.QueryContextSetPosType,
+            (state, action) => {
+                state.formData.fc_pos_type = action.payload.value;
+            }
+        );
 
         this.addActionHandler<Actions.QuerySubmit>(
             ActionName.QuerySubmit,

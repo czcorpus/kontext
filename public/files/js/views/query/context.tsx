@@ -53,22 +53,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const AllAnyNoneSelector:React.FC<{
         inputName:string;
         value:CtxLemwordType;
+        changeHandler:(evt) => void;
 
     }> = (props) => {
 
-        const changeHandler = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
-                payload: {
-                    name: props.inputName,
-                    value: evt.target.value
-                }
-            });
-        };
-
         return (
             <select name={props.inputName} value={props.value}
-                    onChange={changeHandler}>
+                    onChange={props.changeHandler}>
                 <option value="all">{he.translate('query__aan_selector_all')}</option>
                 <option value="any">{he.translate('query__aan_selector_any')}</option>
                 <option value="none">{he.translate('query__aan_selector_none')}</option>
@@ -87,21 +78,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
+            dispatcher.dispatch<Actions.QueryContextSetLemword>({
+                name: ActionName.QueryContextSetLemword,
                 payload: {
-                    name: evt.target.name,
                     value: evt.target.value
                 }
             });
         };
 
         const handleRangeChange = (lft:number, rgt:number) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
+            dispatcher.dispatch<Actions.QueryContextSetLemwordWsize>({
+                name: ActionName.QueryContextSetLemwordWsize,
                 payload: {
-                    name: 'fc_lemword_wsize',
                     value: tuple(lft, rgt)
+                }
+            });
+        };
+
+        const handleTypeChange = (evt) => {
+            dispatcher.dispatch<Actions.QueryContextSetLemwordType>({
+                name: ActionName.QueryContextSetLemwordType,
+                payload: {
+                    value: evt.target.value
                 }
             });
         };
@@ -128,7 +126,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             onChange={handleInputChange} />
                     <span>
                     {'\u00A0'}
-                    <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} />
+                    <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} changeHandler={handleTypeChange} />
                     {'\u00A0'}
                     {he.translate('query__of_these_items')}
                     </span>
@@ -155,21 +153,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     sel.push(opt.value);
                 }
             }
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
+            dispatcher.dispatch<Actions.QueryContextSetPos>({
+                name: ActionName.QueryContextSetPos,
                 payload: {
-                    name: evt.target.name,
                     value: sel
                 }
             });
         };
 
         const handleRangeChange = (lft:number, rgt:number) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
+            dispatcher.dispatch<Actions.QueryContextSetPosWsize>({
+                name: ActionName.QueryContextSetPosWsize,
                 payload: {
-                    name: 'fc_pos_wsize',
                     value: tuple(lft, rgt)
+                }
+            });
+        };
+
+        const handleTypeChange = (evt) => {
+            dispatcher.dispatch<Actions.QueryContextSetPosType>({
+                name: ActionName.QueryContextSetPosType,
+                payload: {
+                    value: evt.target.value
                 }
             });
         };
@@ -210,7 +215,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <span className="note">({he.translate('query__use_ctrl_click_for')})</span>
                         </div>
                         <div className="all-any-none-sel">
-                            <AllAnyNoneSelector inputName="fc_pos_type" value={props.fc_pos_type} />
+                            <AllAnyNoneSelector inputName="fc_pos_type" value={props.fc_pos_type} changeHandler={handleTypeChange}/>
                         </div>
                         <span>{'\u00A0'}{he.translate('query__of_these_items')}</span>
                     </dd>

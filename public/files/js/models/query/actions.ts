@@ -21,7 +21,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { WithinBuilderData, QueryContextArgs } from './common';
+import { WithinBuilderData, QueryContextArgs, CtxLemwordType } from './common';
 import { QueryType, SimpleQuery } from './query';
 
 
@@ -217,34 +217,39 @@ export namespace Actions {
     }
 
     export interface QueryContextSetLemwordWsize extends Action<{
-
+        value: [number, number];
     }> {
         name: ActionName.QueryContextSetLemwordWsize;
     }
 
     export interface QueryContextSetLemword extends Action<{
+        value: string;
     }> {
         name: ActionName.QueryContextSetLemword;
     }
 
     export interface QueryContextSetLemwordType extends Action<{
+        value: CtxLemwordType;
     }> {
         name: ActionName.QueryContextSetLemwordType;
     }
 
     export interface QueryContextSetPosWsize extends Action<{
+        value: [number, number];
     }> {
         name: ActionName.QueryContextSetPosWsize;
     }
 
     export interface QueryContextSetPos extends Action<{
+        value: Array<string>;
     }> {
         name: ActionName.QueryContextSetPos;
     }
 
-    export interface QueryContextSetLemwordWsize extends Action<{
+    export interface QueryContextSetPosType extends Action<{
+        value: CtxLemwordType;
     }> {
-        name: ActionName.QueryContextSetLemwordWsize;
+        name: ActionName.QueryContextSetPosType;
     }
 
     export interface QueryContextFormPrepareArgsDone extends Action<{
