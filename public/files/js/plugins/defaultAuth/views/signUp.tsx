@@ -41,7 +41,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // --------------- <UsernameAvailFlag /> ----------------------------------------------
 
-    const UsernameAvailFlag:React.SFC<{
+    const UsernameAvailFlag:React.FC<{
         status:boolean;
         isBusy:boolean;
     }> = (props) => {
@@ -49,14 +49,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         const getMsg = () => {
             switch (props.status) {
                 case true:
-                    return <>(
+                    return <>
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
-                        {he.translate('user__username_avail')})
+                        {he.translate('user__username_avail')}
                     </>;
                 case false:
-                    return <>(
+                    return <>
                         <img src={he.createStaticUrl('img/error-icon.svg')} alt={he.translate('global__error_icon')} />
-                        {he.translate('user__username_not_avail')})
+                        {he.translate('user__username_not_avail')}
                     </>;
                 default:
                     return <></>;
@@ -116,7 +116,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <layoutViews.ValidatedItem invalid={this.props.value.isInvalid} errorDesc={this.props.value.errorDesc}>
                             <input type="text" value={this.props.value.value} onChange={this.handleUsernameChange} />
                         </layoutViews.ValidatedItem>
-                        <UsernameAvailFlag status={this.props.usernameAvail} isBusy={this.props.usernameAvailBusy} />
+                        {this.props.value.value !== '' ?
+                            <UsernameAvailFlag status={this.props.usernameAvail} isBusy={this.props.usernameAvailBusy} /> :
+                            null
+                        }
                     </td>
                 </tr>
             );
