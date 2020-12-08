@@ -367,7 +367,7 @@ class FreqPage {
                 this.layoutModel.getHistory().replaceState(
                     'freqct',
                     args,
-                    window.document.title
+                    {}
                 );
             }
             break;
