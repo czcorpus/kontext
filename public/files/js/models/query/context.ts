@@ -24,6 +24,7 @@ import { CtxLemwordType } from './common';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { AjaxResponse } from '../../types/ajaxResponses';
+import { List } from 'cnc-tskit';
 
 
 
@@ -57,10 +58,50 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
             }
         });
 
-        this.addActionHandler<Actions.QueryInputSelectContextFormItem>(
-            ActionName.QueryInputSelectContextFormItem,
+        this.addActionHandler<Actions.QueryContextSetLemwordWsize>(
+            ActionName.QueryContextSetLemwordWsize,
             (state, action) => {
-                state.formData[action.payload.name] = action.payload.value;
+                state.formData.fc_lemword_wsize = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetLemword>(
+            ActionName.QueryContextSetLemword,
+            (state, action) => {
+                state.formData.fc_lemword = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetLemwordType>(
+            ActionName.QueryContextSetLemwordType,
+            (state, action) => {
+                state.formData.fc_lemword_type = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetPosWsize>(
+            ActionName.QueryContextSetPosWsize,
+            (state, action) => {
+                state.formData.fc_pos_wsize = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetPos>(
+            ActionName.QueryContextSetPos,
+            (state, action) => {
+                if (action.payload.checked) {
+                    state.formData.fc_pos = List.addUnique(action.payload.value, state.formData.fc_pos);
+
+                } else {
+                    state.formData.fc_pos = List.removeValue(action.payload.value, state.formData.fc_pos);
+                }                
+            }
+        );
+
+        this.addActionHandler<Actions.QueryContextSetPosType>(
+            ActionName.QueryContextSetPosType,
+            (state, action) => {
+                state.formData.fc_pos_type = action.payload.value;
             }
         );
 

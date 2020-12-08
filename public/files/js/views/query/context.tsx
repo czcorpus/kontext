@@ -29,7 +29,7 @@ import { Kontext } from '../../types/common';
 import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
 import { Actions, ActionName } from '../../models/query/actions';
 import { CtxLemwordType } from '../../models/query/common';
-import { tuple } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
 
 
 export interface SpecifyContextFormProps {
@@ -53,22 +53,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const AllAnyNoneSelector:React.FC<{
         inputName:string;
         value:CtxLemwordType;
+        changeHandler:(evt) => void;
 
     }> = (props) => {
 
-        const changeHandler = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
-                payload: {
-                    name: props.inputName,
-                    value: evt.target.value
-                }
-            });
-        };
-
         return (
             <select name={props.inputName} value={props.value}
-                    onChange={changeHandler}>
+                    onChange={props.changeHandler}>
                 <option value="all">{he.translate('query__aan_selector_all')}</option>
                 <option value="any">{he.translate('query__aan_selector_any')}</option>
                 <option value="none">{he.translate('query__aan_selector_none')}</option>
@@ -87,21 +78,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
+            dispatcher.dispatch<Actions.QueryContextSetLemword>({
+                name: ActionName.QueryContextSetLemword,
                 payload: {
-                    name: evt.target.name,
                     value: evt.target.value
                 }
             });
         };
 
         const handleRangeChange = (lft:number, rgt:number) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
+            dispatcher.dispatch<Actions.QueryContextSetLemwordWsize>({
+                name: ActionName.QueryContextSetLemwordWsize,
                 payload: {
-                    name: 'fc_lemword_wsize',
                     value: tuple(lft, rgt)
+                }
+            });
+        };
+
+        const handleTypeChange = (evt) => {
+            dispatcher.dispatch<Actions.QueryContextSetLemwordType>({
+                name: ActionName.QueryContextSetLemwordType,
+                payload: {
+                    value: evt.target.value
                 }
             });
         };
@@ -128,7 +126,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             onChange={handleInputChange} />
                     <span>
                     {'\u00A0'}
-                    <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} />
+                    <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} changeHandler={handleTypeChange} />
                     {'\u00A0'}
                     {he.translate('query__of_these_items')}
                     </span>
@@ -147,36 +145,41 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
 
-        const handleMultiSelectChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            const sel = [];
-            for (let i = 0; i < evt.target.length; i++) {
-                const opt = evt.target[i] as HTMLOptionElement;
-                if (opt.selected) {
-                    sel.push(opt.value);
-                }
-            }
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
+        const handleSelectChange = (checked, pos) => {
+            dispatcher.dispatch<Actions.QueryContextSetPos>({
+                name: ActionName.QueryContextSetPos,
                 payload: {
-                    name: evt.target.name,
-                    value: sel
+                    checked: checked,
+                    value: pos
                 }
             });
         };
 
         const handleRangeChange = (lft:number, rgt:number) => {
-            dispatcher.dispatch<Actions.QueryInputSelectContextFormItem>({
-                name: ActionName.QueryInputSelectContextFormItem,
+            dispatcher.dispatch<Actions.QueryContextSetPosWsize>({
+                name: ActionName.QueryContextSetPosWsize,
                 payload: {
-                    name: 'fc_pos_wsize',
                     value: tuple(lft, rgt)
+                }
+            });
+        };
+
+        const handleTypeChange = (evt) => {
+            dispatcher.dispatch<Actions.QueryContextSetPosType>({
+                name: ActionName.QueryContextSetPosType,
+                payload: {
+                    value: evt.target.value
                 }
             });
         };
 
         return (
             <div className="pos-filter">
-                <h3>{he.translate('query__pos_filter')}</h3>
+                <h3>
+                    {he.translate('query__pos_filter_hd')}
+                    {'\u00a0'}
+                    <span className="note">({he.translate('query__context_applied_2nd')})</span>
+                </h3>
                 <dl className="form">
                     <dt>
                         {he.translate('query__window')}:
@@ -188,25 +191,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onClick={handleRangeChange} />
                     </dd>
                     <dt>
-                        {he.translate('query__pos_filter')}:
+                        {he.translate('query__pos_list')}:
                     </dt>
                     <dd>
-                        <div>
-                            <select title={he.translate('query__select_one_or_more_pos_tags')}
-                                    multiple={true}
-                                    size={4}
-                                    name="fc_pos" value={props.fc_pos}
-                                    className="fc_pos"
-                                    onChange={handleMultiSelectChange}>
-                                {props.wPoSList.map((item, i) => {
-                                    return <option key={i} value={item.n}>{item.n}</option>;
-                                })}
-                            </select>
-                            <br />
-                            <span className="note">({he.translate('query__use_ctrl_click_for')})</span>
+                        <div className="pos-list">
+                            <ul>
+                                {List.map((item, i) =>
+                                    <li key={i}>
+                                        <span className="scale"><layoutModels.ToggleSwitch id={item.n}
+                                                checked={props.fc_pos.includes(item.n)}
+                                                onChange={checked => handleSelectChange(checked, item.n)} /></span>
+                                        <label htmlFor={item.n}>{item.n}</label>
+                                    </li>,
+                                    props.wPoSList
+                                )}
+                            </ul>
                         </div>
                         <div className="all-any-none-sel">
-                            <AllAnyNoneSelector inputName="fc_pos_type" value={props.fc_pos_type} />
+                            <AllAnyNoneSelector inputName="fc_pos_type" value={props.fc_pos_type} changeHandler={handleTypeChange}/>
                         </div>
                         <span>{'\u00A0'}{he.translate('query__of_these_items')}</span>
                     </dd>
@@ -222,8 +224,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <div>
                     <h3>{props.hasLemmaAttr
-                        ? he.translate('query__lemma_filter')
-                        : he.translate('query__word_form_filter')}
+                        ? he.translate('query__lemma_filter_hd')
+                        : he.translate('query__word_form_filter_hd')}
+                        {'\u00a0'}
+                        <span className="note">({he.translate('query__context_applied_1st')})</span>
                     </h3>
                     <LemmaFilter
                         hasLemmaAttr={props.hasLemmaAttr}

@@ -39,7 +39,7 @@ export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews
         }
 
         componentDidUpdate(prevProps) {
-            if (this.props.checked !== prevProps.checked) {
+            if (this.props.checked !== prevProps.checked && this.state.checked !== this.props.checked) {
                 this.setState({
                     checked: this.props.checked,
                     imgClass: this.props.checked ? 'on switch-on' : 'off switch-off'
@@ -48,13 +48,17 @@ export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews
           }
 
         clickHandler() {
-            this.setState({
-                checked: !this.state.checked,
-                imgClass: !this.state.checked ? 'on switch-on' : 'off switch-off'
-            });
-            if (this.props.onChange !== undefined) {
-                this.props.onChange(this.state.checked);
-            }
+            this.setState(
+                {
+                    checked: !this.state.checked,
+                    imgClass: !this.state.checked ? 'on switch-on' : 'off switch-off'
+                },
+                () => {
+                    if (this.props.onChange !== undefined) {
+                        this.props.onChange(this.state.checked);
+                    }
+                }
+            );
         }
 
         render() {

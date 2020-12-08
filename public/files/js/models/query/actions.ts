@@ -21,7 +21,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { WithinBuilderData, QueryContextArgs } from './common';
+import { WithinBuilderData, QueryContextArgs, CtxLemwordType } from './common';
 import { QueryType, SimpleQuery } from './query';
 
 
@@ -42,7 +42,12 @@ export enum ActionName {
     QueryInputToggleVirtualKeyboardShift = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputUnhitVirtualKeyboardShift = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputToggleVirtualKeyboardCaps = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_CAPS',
-    QueryInputSelectContextFormItem = 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+    QueryContextSetLemwordWsize = 'QUERY_CONTEXT_SET_LEMWORD_WSIZE',
+    QueryContextSetLemword = 'QUERY_CONTEXT_SET_LEMWORD',
+    QueryContextSetLemwordType = 'QUERY_CONTEXT_SET_LEMWORD_TYPE',
+    QueryContextSetPosWsize = 'QUERY_CONTEXT_SET_POS_WSIZE',
+    QueryContextSetPos = 'QUERY_CONTEXT_SET_POS',
+    QueryContextSetPosType = 'QUERY_CONTEXT_SET_POS_TYPE',
     QueryContextFormPrepareArgsDone = 'QUERY_CONTEXT_FORM_PREPARE_ARGS_DONE',
     QueryContextToggleForm = 'QUERY_CONTEXT_TOGGLE_FORM',
     QueryTextTypesToggleForm = 'QUERY_TEXT_TYPES_TOGGLE_FORM',
@@ -211,11 +216,41 @@ export namespace Actions {
         name:ActionName.QueryInputToggleVirtualKeyboardCaps;
     }
 
-    export interface QueryInputSelectContextFormItem extends Action<{
-        name:string;
-        value:any;
+    export interface QueryContextSetLemwordWsize extends Action<{
+        value: [number, number];
     }> {
-        name:ActionName.QueryInputSelectContextFormItem;
+        name: ActionName.QueryContextSetLemwordWsize;
+    }
+
+    export interface QueryContextSetLemword extends Action<{
+        value: string;
+    }> {
+        name: ActionName.QueryContextSetLemword;
+    }
+
+    export interface QueryContextSetLemwordType extends Action<{
+        value: CtxLemwordType;
+    }> {
+        name: ActionName.QueryContextSetLemwordType;
+    }
+
+    export interface QueryContextSetPosWsize extends Action<{
+        value: [number, number];
+    }> {
+        name: ActionName.QueryContextSetPosWsize;
+    }
+
+    export interface QueryContextSetPos extends Action<{
+        checked: boolean;
+        value: string;
+    }> {
+        name: ActionName.QueryContextSetPos;
+    }
+
+    export interface QueryContextSetPosType extends Action<{
+        value: CtxLemwordType;
+    }> {
+        name: ActionName.QueryContextSetPosType;
     }
 
     export interface QueryContextFormPrepareArgsDone extends Action<{

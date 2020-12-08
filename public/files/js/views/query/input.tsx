@@ -237,7 +237,7 @@ export function init({
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
-                    queryType: checked ? 'simple' : 'advanced'
+                    queryType: checked ? 'advanced' : 'simple'
                 }
             });
         };
