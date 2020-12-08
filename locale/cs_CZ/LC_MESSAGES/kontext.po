@@ -175,6 +175,9 @@ msgstr "jméno"
 msgid "password"
 msgstr "heslo"
 
+msgid "User profile"
+msgstr "Uživatelský profil"
+
 msgid "Search in the corpus"
 msgstr "Hledat v korpusu"
 
