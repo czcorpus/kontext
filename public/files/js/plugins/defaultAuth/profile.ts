@@ -317,7 +317,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         this.addActionHandler<Actions.SubmitSignUpDone>(
             ActionName.SubmitSignUpDone,
             (state, action) => {
-                state = this.copyState(state);
+                // state = this.copyState(state);
                 state.isBusy = false;
                 if (action.error) {
                     state.usernameAvail = false;
