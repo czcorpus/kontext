@@ -64,4 +64,5 @@ export interface SubmitFormErrors {
     first_name?:string;
     last_name?:string;
     email?:string;
+    affiliation?:string;
 }

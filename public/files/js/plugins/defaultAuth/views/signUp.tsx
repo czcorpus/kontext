@@ -134,6 +134,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             super(props);
             this.handleFirstNameChange = this.handleFirstNameChange.bind(this);
             this.handleLastNameChange = this.handleLastNameChange.bind(this);
+            this.handleAffiliationChange = this.handleAffiliationChange.bind(this);
             this.handleEmailChange = this.handleEmailChange.bind(this);
             this.handleSignUpButton = this.handleSignUpButton.bind(this);
             this.handleNewRegistration = this.handleNewRegistration.bind(this);
@@ -152,6 +153,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         private handleLastNameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
             dispatcher.dispatch<Actions.SetLastname>({
                 name: ActionName.SetLastname,
+                payload: {
+                    value: evt.target.value
+                }
+            });
+        }
+
+        private handleAffiliationChange(evt:React.ChangeEvent<HTMLInputElement>):void {
+            dispatcher.dispatch<Actions.SetAffiliation>({
+                name: ActionName.SetAffiliation,
                 payload: {
                     value: evt.target.value
                 }
@@ -226,6 +236,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                             usernameAvailBusy={this.props.usernameAvailBusy} />
                                     <profileViews.TrUserFirstNameInput value={this.props.firstName} onChange={this.handleFirstNameChange} />
                                     <profileViews.TrUserLastNameInput value={this.props.lastName} onChange={this.handleLastNameChange} />
+                                    <profileViews.TrUserAffiliationInput value={this.props.affiliation} onChange={this.handleAffiliationChange} />
                                     <profileViews.TrUserEmailInput value={this.props.email} onChange={this.handleEmailChange} />
                                     <profileViews.TRNewPasswdInput value={this.props.newPasswd} isRegistration={true} />
                                     <profileViews.TRNewPasswdInput2 value={this.props.newPasswd2} isRegistration={true} />

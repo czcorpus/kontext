@@ -719,6 +719,7 @@
         "user__password_has_been_updated": "Hasło było zaktualizowane",
         "user__firstname": "Miano",
         "user__lastname": "Nazwisko",
+        "user__affiliation": "Affiliation", "user__affiliation_UNTRANSLATED": true,
         "user__email": "E-mail",
         "user__username": "Miano ôd używŏcza",
         "user__password": "Hasło",

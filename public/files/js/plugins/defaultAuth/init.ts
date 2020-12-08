@@ -141,7 +141,7 @@ export class AuthPlugin implements PluginInterfaces.Auth.IPlugin {
 
 const create:PluginInterfaces.Auth.Factory = (pluginApi) => {
     const userCredentials = pluginApi.getConf<Kontext.UserCredentials>('CredentialsForm') ||
-        {username: '', firstname: '', lastname: '', email: '', active: false};
+        {username: '', firstname: '', lastname: '', affiliation: '', email: '', active: false};
     const plugin = new AuthPlugin(
         new UserProfileModel(
             pluginApi.dispatcher(),
@@ -151,6 +151,7 @@ const create:PluginInterfaces.Auth.Factory = (pluginApi) => {
                 username: userCredentials.username || '',
                 firstname: userCredentials.firstname || '',
                 lastname: userCredentials.lastname || '',
+                affiliation: userCredentials.affiliation || '',
                 email: userCredentials.email || '',
                 active: userCredentials.active || false
             },

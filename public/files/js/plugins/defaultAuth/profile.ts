@@ -38,6 +38,7 @@ export interface UserProfileState {
     usernameAvailBusy:boolean;
     firstName:Kontext.FormValue<string>;
     lastName:Kontext.FormValue<string>;
+    affiliation:Kontext.FormValue<string>;
     email:Kontext.FormValue<string>;
     active:boolean,
     currPasswd:Kontext.FormValue<string>;
@@ -67,6 +68,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 usernameAvailBusy: false,
                 firstName: Kontext.newFormValue(userData.firstname, true),
                 lastName: Kontext.newFormValue(userData.lastname, true),
+                affiliation: Kontext.newFormValue(userData.affiliation, true),
                 email: Kontext.newFormValue(userData.email, true),
                 active: userData.active,
                 currPasswd: Kontext.newFormValue('', true),
@@ -125,6 +127,14 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             (state, action) => {
                 state.lastName = Kontext.updateFormValue(
                     state.lastName, {value: action.payload.value});
+            }
+        );
+
+        this.addActionHandler<Actions.SetAffiliation>(
+            ActionName.SetAffiliation,
+            (state, action) => {
+                state.affiliation = Kontext.updateFormValue(
+                    state.affiliation, {value: action.payload.value});
             }
         );
 
@@ -288,6 +298,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                         username: state.username.value,
                         firstname: state.firstName.value,
                         lastname: state.lastName.value,
+                        affiliation: state.affiliation.value,
                         email: state.email.value,
                         password: state.newPasswd.value,
                         password2: state.newPasswd2.value
@@ -347,6 +358,9 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                     state.email.isInvalid = !!action.payload.errors.email;
                     state.email.errorDesc = action.payload.errors.email;
 
+                    state.affiliation.isInvalid = !!action.payload.errors.affiliation;
+                    state.affiliation.errorDesc = action.payload.errors.affiliation;
+
                 } else {
                     state.isFinished = true;
                 }
@@ -362,6 +376,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 state.newPasswd2 = Kontext.resetFormValue(state.newPasswd2, '');
                 state.firstName = Kontext.resetFormValue(state.firstName, '');
                 state.lastName = Kontext.resetFormValue(state.lastName, '');
+                state.affiliation = Kontext.resetFormValue(state.affiliation, '');
                 state.email = Kontext.resetFormValue(state.email, '');
             }
         );
