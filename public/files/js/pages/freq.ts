@@ -49,6 +49,7 @@ import { CTFormInputs, CTFormProperties, CTFreqResultData,
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
 import { ActionName as GlobalActionName, Actions as GlobalActions } from '../models/common/actions';
 import { ActionName, Actions } from '../models/freqs/actions';
+import { strictEqualParsedQueries } from '../models/query/query';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -348,11 +349,17 @@ class FreqPage {
 
     private setupBackButtonListening():void {
         this.layoutModel.getHistory().setOnPopState((event) => {
-            this.layoutModel.dispatcher.dispatch<Actions.PopHistory>({
-                name: ActionName.PopHistory,
-                payload: event.state
-            })
+            if (event.state) {
+                this.layoutModel.dispatcher.dispatch<Actions.PopHistory>({
+                    name: ActionName.PopHistory,
+                    payload: event.state
+                });
+
+            } else {
+                console.warn('History pop state empty');
+            }
         });
+
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ct': {
                 const args = this.ctFreqModel.getSubmitArgs();
@@ -366,15 +373,18 @@ class FreqPage {
             break;
             case 'tt':
             case 'ml': {
-                /* TODO
-                const args = this.freqResultModel.getSubmitArgs();
+                const state = this.freqResultModel.getState(); // no antipattern here
+                const args = this.freqResultModel.getSubmitArgs(state);
                 args.remove('format');
                 this.layoutModel.getHistory().replaceState(
                     'freqs',
                     args,
-                    window.document.title
+                    {
+                        currentPage: state.currentPage,
+                        flimit: state.flimit,
+                        sortColumn: state.sortColumn
+                    }
                 );
-                */
             }
             break;
         }

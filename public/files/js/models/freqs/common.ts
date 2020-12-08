@@ -38,7 +38,7 @@ export interface CTFreqServerArgs extends ConcServerArgs {
 }
 
 export interface HistoryState {
-    page:string;
+    currentPage:string;
     flimit:string;
-    sort:string;
+    sortColumn:string;
 }
