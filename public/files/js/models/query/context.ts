@@ -57,12 +57,18 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
             }
         });
 
+        this.DEBUG_onActionMatch((s, a, m) => {
+            console.log('>>> ', a.name, a.payload);
+        })
+
+        /* TODO remove
         this.addActionHandler<Actions.QueryInputSelectContextFormItem>(
             ActionName.QueryInputSelectContextFormItem,
             (state, action) => {
                 state.formData[action.payload.name] = action.payload.value;
             }
         );
+        */
 
         this.addActionHandler<Actions.QuerySubmit>(
             ActionName.QuerySubmit,
