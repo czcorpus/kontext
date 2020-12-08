@@ -285,7 +285,10 @@ class DefaultAuthHandler(AbstractInternalAuth):
         return errors
 
     def send_confirmation_mail(self, plugin_api, user_email, username, firstname, lastname, token):
-        expir_date = datetime.datetime.now() + datetime.timedelta(seconds=self._confirmation_token_ttl)
+        expir_date = (
+            datetime.datetime.now().astimezone() +  # system timezone-aware
+            datetime.timedelta(seconds=self._confirmation_token_ttl)
+        )
         text = ''
         text += _('Hello')
         text += ',\n\n'
@@ -299,6 +302,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         text += '\n\n'
         text += time.strftime(_('The confirmation link will expire on %m/%d/%Y at %H:%M'),
                               expir_date.timetuple())
+        text += ' ({0:%Z}, {0:%z})'.format(expir_date)
         text += '\n\n\n-----------------------------------------------\n'
         text += _('This e-mail has been generated automatically - please do not reply to it.')
         text += '\n'
