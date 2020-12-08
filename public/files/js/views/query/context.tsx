@@ -29,7 +29,7 @@ import { Kontext } from '../../types/common';
 import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
 import { Actions, ActionName } from '../../models/query/actions';
 import { CtxLemwordType } from '../../models/query/common';
-import { tuple } from 'cnc-tskit';
+import { List, tuple } from 'cnc-tskit';
 
 
 export interface SpecifyContextFormProps {
@@ -145,18 +145,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
 
-        const handleMultiSelectChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            const sel = [];
-            for (let i = 0; i < evt.target.length; i++) {
-                const opt = evt.target[i] as HTMLOptionElement;
-                if (opt.selected) {
-                    sel.push(opt.value);
-                }
-            }
+        const handleSelectChange = (checked, pos) => {
             dispatcher.dispatch<Actions.QueryContextSetPos>({
                 name: ActionName.QueryContextSetPos,
                 payload: {
-                    value: sel
+                    checked: checked,
+                    value: pos
                 }
             });
         };
@@ -200,19 +194,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('query__pos_list')}:
                     </dt>
                     <dd>
-                        <div>
-                            <select title={he.translate('query__select_one_or_more_pos_tags')}
-                                    multiple={true}
-                                    size={4}
-                                    name="fc_pos" value={props.fc_pos}
-                                    className="fc_pos"
-                                    onChange={handleMultiSelectChange}>
-                                {props.wPoSList.map((item, i) => {
-                                    return <option key={i} value={item.n}>{item.n}</option>;
-                                })}
-                            </select>
-                            <br />
-                            <span className="note">({he.translate('query__use_ctrl_click_for')})</span>
+                        <div className="pos-list">
+                            <ul>
+                                {List.map((item, i) =>
+                                    <li key={i}>
+                                        <span className="scale"><layoutModels.ToggleSwitch id={item.n}
+                                                checked={props.fc_pos.includes(item.n)}
+                                                onChange={checked => handleSelectChange(checked, item.n)} /></span>
+                                        <label htmlFor={item.n}>{item.n}</label>
+                                    </li>,
+                                    props.wPoSList
+                                )}
+                            </ul>
                         </div>
                         <div className="all-any-none-sel">
                             <AllAnyNoneSelector inputName="fc_pos_type" value={props.fc_pos_type} changeHandler={handleTypeChange}/>

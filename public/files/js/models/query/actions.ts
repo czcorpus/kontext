@@ -241,7 +241,8 @@ export namespace Actions {
     }
 
     export interface QueryContextSetPos extends Action<{
-        value: Array<string>;
+        checked: boolean;
+        value: string;
     }> {
         name: ActionName.QueryContextSetPos;
     }

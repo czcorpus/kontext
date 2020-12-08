@@ -24,6 +24,7 @@ import { CtxLemwordType } from './common';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { AjaxResponse } from '../../types/ajaxResponses';
+import { List } from 'cnc-tskit';
 
 
 
@@ -88,7 +89,12 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
         this.addActionHandler<Actions.QueryContextSetPos>(
             ActionName.QueryContextSetPos,
             (state, action) => {
-                state.formData.fc_pos = action.payload.value;
+                if (action.payload.checked) {
+                    state.formData.fc_pos = List.addUnique(action.payload.value, state.formData.fc_pos);
+
+                } else {
+                    state.formData.fc_pos = List.removeValue(action.payload.value, state.formData.fc_pos);
+                }                
             }
         );
 
