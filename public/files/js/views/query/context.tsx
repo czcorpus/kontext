@@ -176,7 +176,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         return (
             <div className="pos-filter">
-                <h3>{he.translate('query__pos_filter')}</h3>
+                <h3>
+                    {he.translate('query__pos_filter_hd')}
+                    {'\u00a0'}
+                    <span className="note">({he.translate('query__context_applied_2nd')})</span>
+                </h3>
                 <dl className="form">
                     <dt>
                         {he.translate('query__window')}:
@@ -188,7 +192,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onClick={handleRangeChange} />
                     </dd>
                     <dt>
-                        {he.translate('query__pos_filter')}:
+                        {he.translate('query__pos_list')}:
                     </dt>
                     <dd>
                         <div>
@@ -222,8 +226,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <div>
                     <h3>{props.hasLemmaAttr
-                        ? he.translate('query__lemma_filter')
-                        : he.translate('query__word_form_filter')}
+                        ? he.translate('query__lemma_filter_hd')
+                        : he.translate('query__word_form_filter_hd')}
+                        {'\u00a0'}
+                        <span className="note">({he.translate('query__context_applied_1st')})</span>
                     </h3>
                     <LemmaFilter
                         hasLemmaAttr={props.hasLemmaAttr}
