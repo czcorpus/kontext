@@ -511,7 +511,7 @@ msgid "To verify your new account {username} (full name: {firstname} {lastname})
 msgstr "Pro ověření vašeho nového účtu {username} (celé jméno: {firstname} {lastname}) prosím klikněte na odkaz níže"
 
 msgid "The confirmation link will expire on %m/%d/%Y at %H:%M"
-msgstr "Platnost potvrzovacího odkazu vyprší %d.%d.%Y v %H:%M"
+msgstr "Platnost potvrzovacího odkazu vyprší %d. %m. %Y v %H:%M"
 
 msgid "This e-mail has been generated automatically - please do not reply to it."
 msgstr "Tento e-mail byl vygenerován automaticky - neodepisujte na něj prosím."

@@ -227,7 +227,7 @@ export function init(
             </th>
             <td>
                 <layoutViews.ValidatedItem invalid={props.value.isInvalid} errorDesc={props.value.errorDesc}>
-                    <input type="text" readOnly={!props.onChange} value={props.value.value}
+                    <input type="email" readOnly={!props.onChange} value={props.value.value}
                             style={{width: '20em'}} onChange={props.onChange} />
                 </layoutViews.ValidatedItem>
             </td>

@@ -21,14 +21,14 @@
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable, of as rxOf, throwError } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
-import { HTTP, Dict } from 'cnc-tskit';
+import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../multidict';
 import { Actions, ActionName } from './actions';
 import { UsernameTestResponse, validationStatusHasErrors, SignUpResponse, ValidationStatus,
-    PasswordSetResponse, newValidationStatus } from './common';
+    PasswordSetResponse, newValidationStatus, SubmitFormErrors } from './common';
 
 
 export interface UserProfileState {
@@ -300,15 +300,24 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                         });
                     },
                     (err) => {
+                        const errors = err.response['error_args'] as
+                            Array<[keyof SubmitFormErrors, SubmitFormErrors[keyof SubmitFormErrors]]>;
                         dispatch<Actions.SubmitSignUpDone>({
                             name: ActionName.SubmitSignUpDone,
                             payload: {
-                                errors: err.response['error_args']
+                                errors: Dict.fromEntries(errors)
                             },
                             error: err
                         });
-                        (err.response['messages'] as Array<[string, string]>).forEach(msg =>
-                            this.pluginApi.showMessage(msg[0], msg[1]));
+                        pipe(
+                            err.response['messages'] as Array<[string, string]>,
+                            List.filter(([, msg]) => !!msg),
+                            List.forEach(
+                                ([mtype, msg]) => {
+                                    this.pluginApi.showMessage(mtype, msg);
+                                }
+                            )
+                        )
                     }
                 );
             }
@@ -317,59 +326,26 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         this.addActionHandler<Actions.SubmitSignUpDone>(
             ActionName.SubmitSignUpDone,
             (state, action) => {
-                // state = this.copyState(state);
                 state.isBusy = false;
                 if (action.error) {
                     state.usernameAvail = false;
-                    const data = action.payload.errors;
-                    if (Dict.hasKey('username', data)) {
-                        state.username.isInvalid = true;
-                        state.username.errorDesc = data['username'];
+                    state.username.isInvalid = !!action.payload.errors.username;
+                    state.username.errorDesc = action.payload.errors.username;
 
-                    } else {
-                        state.username.isInvalid = false;
-                        state.username.errorDesc = undefined;
-                    }
-                    if (Dict.hasKey('password', data)) {
-                        state.newPasswd.isInvalid = true;
-                        state.newPasswd.errorDesc = data['password'];
+                    state.newPasswd.isInvalid = !!action.payload.errors.password;
+                    state.newPasswd.errorDesc = action.payload.errors.password;
 
-                    } else {
-                        state.newPasswd.isInvalid = false;
-                        state.newPasswd.errorDesc = undefined;
-                    }
-                    if (Dict.hasKey('password2', data)) {
-                        state.newPasswd2.isInvalid = true;
-                        state.newPasswd2.errorDesc = data['password2'];
+                    state.newPasswd2.isInvalid = !!action.payload.errors.password2;
+                    state.newPasswd2.errorDesc = action.payload.errors.password2;
 
-                    } else {
-                        state.newPasswd2.isInvalid = false;
-                        state.newPasswd2.errorDesc = undefined;
-                    }
-                    if (Dict.hasKey('first_name', data)) {
-                        state.firstName.isInvalid = true;
-                        state.firstName.errorDesc = data['first_name'];
+                    state.firstName.isInvalid = !!action.payload.errors.first_name;
+                    state.firstName.errorDesc = action.payload.errors.first_name;
 
-                    } else {
-                        state.firstName.isInvalid = false;
-                        state.firstName.errorDesc = undefined;
-                    }
-                    if (Dict.hasKey('last_name', data)) {
-                        state.lastName.isInvalid = true;
-                        state.lastName.errorDesc = data['last_name'];
+                    state.lastName.isInvalid = !!action.payload.errors.last_name;
+                    state.lastName.errorDesc = action.payload.errors.last_name;
 
-                    } else {
-                        state.lastName.isInvalid = false;
-                        state.lastName.errorDesc = undefined;
-                    }
-                    if (Dict.hasKey('email', data)) {
-                        state.email.isInvalid = true;
-                        state.email.errorDesc = data['email'];
-
-                    } else {
-                        state.email.isInvalid = false;
-                        state.email.errorDesc = undefined;
-                    }
+                    state.email.isInvalid = !!action.payload.errors.email;
+                    state.email.errorDesc = action.payload.errors.email;
 
                 } else {
                     state.isFinished = true;

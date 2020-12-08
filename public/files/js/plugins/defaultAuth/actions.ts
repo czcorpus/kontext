@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 
-import { ValidationStatus } from './common';
+import { SubmitFormErrors, ValidationStatus } from './common';
 
 
 export enum ActionName {
@@ -115,7 +115,7 @@ export namespace Actions {
     }
 
     export interface SubmitSignUpDone extends Action<{
-        errors:{[key:string]:string};
+       errors:SubmitFormErrors;
     }> {
         name:ActionName.SubmitSignUpDone;
     }

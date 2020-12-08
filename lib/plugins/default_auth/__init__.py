@@ -35,8 +35,7 @@ from .tools import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
 IMPLICIT_CORPUS = 'ud_fused_test_a'
 
 
-
-class SignUpToken(object):
+class SignUpToken:
 
     def __init__(self, value=None, user_data=None, label=None, ttl=300):
         self.value = value if value is not None else hashlib.sha1(
