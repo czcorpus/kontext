@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { MultiDict } from '../../multidict';
-import { AjaxResponse, CollSaveServerArgs } from './common';
+import { AjaxResponse, CollSaveServerArgs, CollServerArgs, HistoryState } from './common';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 
 export enum ActionName {
@@ -49,7 +49,9 @@ export enum ActionName {
     SaveFormSetIncludeColHeaders = 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
     SaveFormSetIncludeHeading = 'COLL_SAVE_FORM_SET_INCLUDE_HEADING',
     SaveFormSubmit = 'COLL_SAVE_FORM_SUBMIT',
-    SaveFormSubmitDone = 'COLL_SAVE_FORM_SUBMIT_DONE'
+    SaveFormSubmitDone = 'COLL_SAVE_FORM_SUBMIT_DONE',
+    StatePushToHistory = 'COLL_STATE_PUSH_TO_HISTORY',
+    PopHistory = 'COLL_POP_HISTORY',
 }
 
 export namespace Actions {
@@ -205,5 +207,13 @@ export namespace Actions {
     export interface SaveFormSubmitDone extends Action<{
     }> {
         name: ActionName.SaveFormSubmitDone;
+    }
+
+    export interface StatePushToHistory extends Action<MultiDict<CollServerArgs>> {
+        name: ActionName.StatePushToHistory;
+    }
+
+    export interface PopHistory extends Action<HistoryState> {
+        name: ActionName.PopHistory;
     }
 }

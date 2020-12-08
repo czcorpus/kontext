@@ -38,6 +38,7 @@ import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
+import { ActionName, Actions } from '../models/coll/actions';
 
 
 declare var require:any;
@@ -186,7 +187,8 @@ export class CollPage {
             saveLinesLimit: this.layoutModel.getConf<number>('CollSaveLinesLimit'),
             unfinished: !!this.layoutModel.getConf<number>('CollUnfinished'),
             sortFn: this.layoutModel.getConf<CollFormProps>('CollFormProps').csortfn,
-            cattr: this.layoutModel.getConf<CollFormProps>('CollFormProps').cattr
+            cattr: this.layoutModel.getConf<CollFormProps>('CollFormProps').cattr,
+            currPage: this.layoutModel.getConf<number>('CurrentPage'),
         });
 
         this.collResultSaveModel = new CollResultsSaveModel({
@@ -294,6 +296,29 @@ export class CollPage {
         );
     }
 
+    private setupBackButtonListening():void {
+        this.layoutModel.getHistory().setOnPopState((event) => {
+            this.layoutModel.dispatcher.dispatch<Actions.PopHistory>({
+                name: ActionName.PopHistory,
+                payload: event.state
+            })
+        });
+        const state = this.collResultModel.getState(); // no antipattern here
+        const formState = this.collFormModel.getState();
+        const args = this.collResultModel.getSubmitArgs(
+                state, this.collFormModel.getSubmitArgs(formState));
+        args.remove('format');
+        this.layoutModel.getHistory().replaceState(
+            'freqs',
+            args,
+            {
+                currPage: state.currPage,
+                currPageInput: state.currPageInput,
+                sortFn: state.sortFn
+            }
+        );
+    }
+
     init():void {
         this.layoutModel.init(true, [], () => {
             this.subcorpSel = new NonQueryCorpusSelectionModel({
@@ -309,7 +334,7 @@ export class CollPage {
             // we must capture concordance-related actions which lead
             // to specific "pop-up" forms and redirect user back to
             // the 'view' action with additional information (encoded in
-            // the fragment part of the URL) which form should be opened
+            // the fragment part of the URL) specifying which form should be opened
             // once the 'view' page is loaded
             this.layoutModel.dispatcher.registerActionListener(
                 (action) => {
@@ -345,6 +370,7 @@ export class CollPage {
             });
             this.initAnalysisViews();
             this.initQueryOpNavigation();
+            this.setupBackButtonListening();
         });
     }
 }

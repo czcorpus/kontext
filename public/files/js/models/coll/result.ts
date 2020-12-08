@@ -19,7 +19,7 @@
  */
 
 import { StatelessModel, SEDispatcher, IActionDispatcher } from 'kombo';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 
 import { validateGzNumber } from '../../models/base';
@@ -28,7 +28,7 @@ import { CollFormModel } from '../../models/coll/collForm';
 import { MultiDict } from '../../multidict';
 import { Actions, ActionName } from './actions';
 import { HTTP, List } from 'cnc-tskit';
-import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell, AjaxResponse, CollServerArgs } from './common';
+import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell, AjaxResponse, CollServerArgs, HistoryState, CollSaveServerArgs } from './common';
 import { CalcWatchdog } from './calc';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 
@@ -45,6 +45,7 @@ export interface CollResulModelArgs {
     unfinished:boolean;
     sortFn:string;
     cattr:string;
+    currPage:number;
 }
 
 export interface CollResultModelState {
@@ -74,14 +75,14 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
     constructor({
             dispatcher, layoutModel, initialData, resultHeading,
-            pageSize, saveLinesLimit, unfinished, sortFn, cattr}:CollResulModelArgs) {
+            pageSize, saveLinesLimit, unfinished, sortFn, cattr, currPage}:CollResulModelArgs) {
         super(
             dispatcher,
             {
                 data: [...initialData],
                 heading: resultHeading.slice(1),
-                currPageInput: '1',
-                currPage: 1,
+                currPageInput: `${currPage}`,
+                currPage: currPage,
                 isWaiting: false,
                 pageSize: pageSize,
                 hasNextPage: true, // we do not know in advance in case of collocations
@@ -130,7 +131,11 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                 state.isWaiting = true;
             },
             (state, action, dispatch) => {
-                this.processDataReload(state, dispatch);
+                this.dispatchLoad(
+                    this.processDataReload(state),
+                    dispatch,
+                    true
+                );
             }
         )
 
@@ -163,10 +168,14 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             (state, action) => {
                 state.isWaiting = true;
                 state.currPage += 1;
-                state.currPageInput = state.currPageInput + '';
+                state.currPageInput = `${state.currPage}`;
             },
             (state, action, dispatch) => {
-                this.processDataReload(state, dispatch);
+                this.dispatchLoad(
+                    this.processDataReload(state),
+                    dispatch,
+                    true
+                );
             }
         );
 
@@ -175,10 +184,14 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             (state, action) => {
                 state.isWaiting = true;
                 state.currPage -= 1;
-                state.currPageInput = state.currPageInput + '';
+                state.currPageInput = `${state.currPage}`;
             },
             (state, action, dispatch) => {
-                this.processDataReload(state, dispatch);
+                this.dispatchLoad(
+                    this.processDataReload(state),
+                    dispatch,
+                    true
+                );
             }
         );
 
@@ -189,7 +202,11 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                 state.currPage = parseInt(state.currPageInput);
             },
             (state, action, dispatch) => {
-                this.processDataReload(state, dispatch);
+                this.dispatchLoad(
+                    this.processDataReload(state),
+                    dispatch,
+                    true
+                );
             }
         );
 
@@ -221,7 +238,11 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                 state.isWaiting = true;
             },
             (state, action, dispatch) => {
-                this.processDataReload(state, dispatch);
+                this.dispatchLoad(
+                    this.processDataReload(state),
+                    dispatch,
+                    true
+                );
             }
         );
 
@@ -234,6 +255,29 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                 this.applyQuickFilter(action.payload.args, action.payload.blankWindow);
             }
         );
+
+        this.addActionHandler<Actions.StatePushToHistory>(
+            ActionName.StatePushToHistory,
+            (state, action) => {
+                this.pushStateToHistory(state, action.payload);
+            }
+        );
+
+        this.addActionHandler<Actions.PopHistory>(
+            ActionName.PopHistory,
+            (state, action) => {
+                state.currPage = action.payload.currPage;
+                state.currPageInput = `${action.payload.currPage}`
+                state.sortFn = action.payload.sortFn;
+            },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.processDataReload(state),
+                    dispatch,
+                    false
+                );
+            }
+        );
     }
 
     private applyQuickFilter(args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>, blankWindow:boolean) {
@@ -243,8 +287,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         this.layoutModel.setLocationPost(this.layoutModel.createActionUrl('quick_filter', submitArgs.items()), [], blankWindow);
     }
 
-    private processDataReload(state:CollResultModelState, dispatch:SEDispatcher):void {
-        this.suspend({}, (action, syncData) => {
+    private processDataReload(state:CollResultModelState):Observable<[AjaxResponse, MultiDict<CollSaveServerArgs>]> {
+        return this.suspend({}, (action, syncData) => {
             if (action.name === ActionName.FormPrepareSubmitArgsDone) {
                 return null;
             }
@@ -254,12 +298,20 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             concatMap(
                 action => {
                     const payload = (action as Actions.FormPrepareSubmitArgsDone).payload;
-                    return this.loadData(state, payload.args);
+                    return forkJoin([this.loadData(state, payload.args), of(payload.args)]);
                 }
             )
+        );
+    }
 
-        ).subscribe(
-            (data) => {
+    private dispatchLoad(
+        load:Observable<[AjaxResponse, MultiDict<CollSaveServerArgs>]>,
+        dispatch:SEDispatcher,
+        pushHistory:boolean
+    ):void {
+
+        load.subscribe(
+            ([data, args]) => {
                 if (data.Items.length === 0) {
                     this.layoutModel.showMessage('info', this.layoutModel.translate('global__no_more_pages'));
                 }
@@ -269,6 +321,12 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                         response: data
                     }
                 });
+                if (pushHistory) {
+                    dispatch<Actions.StatePushToHistory>({
+                        name: ActionName.StatePushToHistory,
+                        payload: args
+                    });
+                }
             },
             (err) => {
                 dispatch<Actions.ResultPageLoadDone>({
@@ -279,7 +337,21 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         );
     }
 
-    private getSubmitArgs(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):MultiDict<CollServerArgs> {
+    private pushStateToHistory(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):void {
+        formArgs.remove('format');
+        const hstate:HistoryState = {
+            currPage: state.currPage,
+            sortFn: state.sortFn
+        };
+        this.layoutModel.getHistory().pushState(
+            'collx',
+            formArgs,
+            hstate,
+            window.document.title
+        );
+    }
+
+    getSubmitArgs(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):MultiDict<CollServerArgs> {
         formArgs.set('format', 'json');
         formArgs.set('csortfn', state.sortFn);
         formArgs.set('collpage', state.currPage);

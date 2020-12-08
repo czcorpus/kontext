@@ -191,14 +191,16 @@ export function init(
 
         const renderRows = () => {
             if (props.rows.length === 0 || props.rows[0].relbar) {
-                return props.rows.map(item => {
-                    return <DataRow key={item.idx} data={item} />;
-                });
+                return List.map(
+                    item => <DataRow key={`${item.Word}:${item.idx}`} data={item} />,
+                    props.rows
+                );
 
             } else {
-                return props.rows.map(item => {
-                    return <DataRowNoRel key={item.idx} data={item} />;
-                });
+                return List.map(
+                    item => <DataRowNoRel key={`${item.Word}:${item.idx}`} data={item} />,
+                    props.rows
+                );
             }
         };
 
@@ -207,9 +209,11 @@ export function init(
                 <tbody>
                     <tr>
                         <th />
-                        <th>Filter</th>
-                        {props.head.map(item => <TableColHead key={item.n} sortColumn={props.sortColumn}
-                                    data={item} />)}
+                        <th>{he.translate('freq__ct_filter_th')}</th>
+                        {List.map(
+                            (item, i) => <TableColHead key={`${item.n}:${i}`} sortColumn={props.sortColumn} data={item} />,
+                            props.head
+                        )}
                         <th title={getBarChartTitle()} />
                     </tr>
                     {renderRows()}
