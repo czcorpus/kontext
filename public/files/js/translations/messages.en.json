@@ -719,6 +719,7 @@
         "user__password_has_been_updated": "The password has been updated",
         "user__firstname": "First name",
         "user__lastname": "Last name",
+        "user__affiliation": "Affiliation",
         "user__email": "E-mail",
         "user__username": "Username",
         "user__password": "Password",

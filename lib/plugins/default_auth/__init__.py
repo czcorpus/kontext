@@ -323,8 +323,11 @@ class DefaultAuthHandler(AbstractInternalAuth):
                 raise SignUpNeedsUpdateException()
             new_id = self.find_free_user_id()
             self.db.set(mk_user_key(new_id),
-                        dict(id=new_id, username=token.user['username'], firstname=token.user['firstname'],
-                             lastname=token.user['lastname'], email=token.user['email'],
+                        dict(id=new_id, username=token.user['username'],
+                             firstname=token.user['firstname'],
+                             lastname=token.user['lastname'],
+                             affiliation=token.user['affiliation'],
+                             email=token.user['email'],
                              pwd_hash=token.user['password']))
             self.db.hash_set(self.USER_INDEX_KEY, token.user['username'], mk_user_key(new_id))
             self.db.set(self.LAST_USER_ID_KEY, new_id)
