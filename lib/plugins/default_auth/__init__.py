@@ -37,7 +37,7 @@ IMPLICIT_CORPUS = 'ud_fused_test_a'
 
 class SignUpToken:
 
-    def __init__(self, value=None, user_data=None, label=None, ttl=300):
+    def __init__(self, value=None, user_data=None, label=None, ttl=3600):
         self.value = value if value is not None else hashlib.sha1(
             uuid.uuid4().bytes).hexdigest()
         self.user = user_data if user_data else {}
@@ -97,7 +97,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     MIN_USERNAME_LENGTH = 3
 
-    DEFAULT_CONFIRM_TOKEN_TTL = 60
+    DEFAULT_CONFIRM_TOKEN_TTL = 3600  # 1 hour
 
     LAST_USER_ID_KEY = 'last_user_id'
 
@@ -285,7 +285,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         return errors
 
     def send_confirmation_mail(self, plugin_api, user_email, username, firstname, lastname, token):
-        expir_date = datetime.datetime.now() + datetime.timedelta(0, self._confirmation_token_ttl)
+        expir_date = datetime.datetime.now() + datetime.timedelta(seconds=self._confirmation_token_ttl)
         text = ''
         text += _('Hello')
         text += ',\n\n'
