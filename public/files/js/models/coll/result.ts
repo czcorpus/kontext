@@ -266,9 +266,9 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         this.addActionHandler<Actions.PopHistory>(
             ActionName.PopHistory,
             (state, action) => {
-                state.currPage = action.payload.page;
-                state.currPageInput = `${action.payload.page}`
-                state.sortFn = action.payload.sort;
+                state.currPage = action.payload.currPage;
+                state.currPageInput = `${action.payload.currPage}`
+                state.sortFn = action.payload.sortFn;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
@@ -340,8 +340,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
     private pushStateToHistory(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):void {
         formArgs.remove('format');
         const hstate:HistoryState = {
-            page: state.currPage,
-            sort: state.sortFn
+            currPage: state.currPage,
+            sortFn: state.sortFn
         };
         this.layoutModel.getHistory().pushState(
             'collx',
@@ -351,7 +351,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         );
     }
 
-    private getSubmitArgs(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):MultiDict<CollServerArgs> {
+    getSubmitArgs(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):MultiDict<CollServerArgs> {
         formArgs.set('format', 'json');
         formArgs.set('csortfn', state.sortFn);
         formArgs.set('collpage', state.currPage);

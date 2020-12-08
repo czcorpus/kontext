@@ -303,6 +303,20 @@ export class CollPage {
                 payload: event.state
             })
         });
+        const state = this.collResultModel.getState(); // no antipattern here
+        const formState = this.collFormModel.getState();
+        const args = this.collResultModel.getSubmitArgs(
+                state, this.collFormModel.getSubmitArgs(formState));
+        args.remove('format');
+        this.layoutModel.getHistory().replaceState(
+            'freqs',
+            args,
+            {
+                currPage: state.currPage,
+                currPageInput: state.currPageInput,
+                sortFn: state.sortFn
+            }
+        );
     }
 
     init():void {
@@ -320,7 +334,7 @@ export class CollPage {
             // we must capture concordance-related actions which lead
             // to specific "pop-up" forms and redirect user back to
             // the 'view' action with additional information (encoded in
-            // the fragment part of the URL) which form should be opened
+            // the fragment part of the URL) specifying which form should be opened
             // once the 'view' page is loaded
             this.layoutModel.dispatcher.registerActionListener(
                 (action) => {
