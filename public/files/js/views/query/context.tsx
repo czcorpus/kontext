@@ -198,9 +198,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <ul>
                                 {List.map((item, i) =>
                                     <li key={i}>
-                                        <span className="scale"><layoutModels.ToggleSwitch id={item.n}
+                                        <layoutModels.ToggleSwitch id={item.n}
                                                 checked={props.fc_pos.includes(item.n)}
-                                                onChange={checked => handleSelectChange(checked, item.n)} /></span>
+                                                onChange={checked => handleSelectChange(checked, item.n)} />
                                         <label htmlFor={item.n}>{item.n}</label>
                                     </li>,
                                     props.wPoSList
