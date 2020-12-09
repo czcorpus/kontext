@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatelessModel } from 'kombo';
+import { IFullActionControl, StatefulModel, StatelessModel } from 'kombo';
 import { Actions, ActionName } from './actions';
 import { CtxLemwordType } from './common';
 import { IUnregistrable } from '../common/common';
@@ -43,7 +43,7 @@ export interface QueryContextModelState {
 }
 
 
-export class QueryContextModel extends StatelessModel<QueryContextModelState>
+export class QueryContextModel extends StatefulModel<QueryContextModelState>
     implements IUnregistrable {
 
     constructor(dispatcher:IFullActionControl, values:AjaxResponse.QueryFormArgs) {
@@ -60,78 +60,81 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
 
         this.addActionHandler<Actions.QueryContextSetLemwordWsize>(
             ActionName.QueryContextSetLemwordWsize,
-            (state, action) => {
-                state.formData.fc_lemword_wsize = action.payload.value;
+            action => {
+                this.changeState(state => {
+                    state.formData.fc_lemword_wsize = action.payload.value;
+                });
             }
         );
 
         this.addActionHandler<Actions.QueryContextSetLemword>(
             ActionName.QueryContextSetLemword,
-            (state, action) => {
-                state.formData.fc_lemword = action.payload.value;
+            action => {
+                this.changeState(state => {
+                    state.formData.fc_lemword = action.payload.value;
+                });
             }
         );
 
         this.addActionHandler<Actions.QueryContextSetLemwordType>(
             ActionName.QueryContextSetLemwordType,
-            (state, action) => {
-                state.formData.fc_lemword_type = action.payload.value;
+            action => {
+                this.changeState(state => {
+                    state.formData.fc_lemword_type = action.payload.value;
+                });
             }
         );
 
         this.addActionHandler<Actions.QueryContextSetPosWsize>(
             ActionName.QueryContextSetPosWsize,
-            (state, action) => {
-                state.formData.fc_pos_wsize = action.payload.value;
+            action => {
+                this.changeState(state => {
+                    state.formData.fc_pos_wsize = action.payload.value;
+                });
             }
         );
 
         this.addActionHandler<Actions.QueryContextSetPos>(
             ActionName.QueryContextSetPos,
-            (state, action) => {
-                if (action.payload.checked) {
-                    state.formData.fc_pos = List.addUnique(action.payload.value, state.formData.fc_pos);
+            action => {
+                this.changeState(state => {
+                    if (action.payload.checked) {
+                        state.formData.fc_pos = List.addUnique(action.payload.value, state.formData.fc_pos);
 
-                } else {
-                    state.formData.fc_pos = List.removeValue(action.payload.value, state.formData.fc_pos);
-                }                
+                    } else {
+                        state.formData.fc_pos = List.removeValue(action.payload.value, state.formData.fc_pos);
+                    }
+                });
             }
         );
 
         this.addActionHandler<Actions.QueryContextSetPosType>(
             ActionName.QueryContextSetPosType,
-            (state, action) => {
-                state.formData.fc_pos_type = action.payload.value;
+            action => {
+                this.changeState(state => {
+                    state.formData.fc_pos_type = action.payload.value;
+                });
             }
         );
 
         this.addActionHandler<Actions.QuerySubmit>(
             ActionName.QuerySubmit,
-            null,
-            (state, action, dispatch) => {
-                dispatch<Actions.QueryContextFormPrepareArgsDone>({
-                    name: ActionName.QueryContextFormPrepareArgsDone,
-                    payload: {
-                        data: {
-                            fc_lemword_wsize: state.formData.fc_lemword_wsize,
-                            fc_lemword: state.formData.fc_lemword,
-                            fc_lemword_type: state.formData.fc_lemword_type,
-                            fc_pos_wsize: state.formData.fc_pos_wsize,
-                            fc_pos: state.formData.fc_pos,
-                            fc_pos_type: state.formData.fc_pos_type
-                        }
-                    }
-                });
+            action => {
+                this.dispatchSubmitReady(dispatcher);
             }
-        ).sideEffectAlsoOn(
-            ActionName.BranchQuery
+        );
+
+        this.addActionHandler<Actions.BranchQuery>(
+            ActionName.BranchQuery,
+            action => {
+                this.dispatchSubmitReady(dispatcher);
+            }
         );
 
         this.addActionHandler<GlobalActions.SwitchCorpus>(
             GlobalActionName.SwitchCorpus,
-            null,
-            (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+            action => {
+                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<{}>>({
                     name: GlobalActionName.SwitchCorpusReady,
                     payload: {
                         modelId: this.getRegistrationId(),
@@ -140,6 +143,22 @@ export class QueryContextModel extends StatelessModel<QueryContextModelState>
                 });
             }
         );
+    }
+
+    private dispatchSubmitReady(dispatcher:IFullActionControl):void {
+        dispatcher.dispatch<Actions.QueryContextFormPrepareArgsDone>({
+            name: ActionName.QueryContextFormPrepareArgsDone,
+            payload: {
+                data: {
+                    fc_lemword_wsize: this.state.formData.fc_lemword_wsize,
+                    fc_lemword: this.state.formData.fc_lemword,
+                    fc_lemword_type: this.state.formData.fc_lemword_type,
+                    fc_pos_wsize: this.state.formData.fc_pos_wsize,
+                    fc_pos: this.state.formData.fc_pos,
+                    fc_pos_type: this.state.formData.fc_pos_type
+                }
+            }
+        });
     }
 
     getRegistrationId():string {
