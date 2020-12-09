@@ -690,24 +690,21 @@ export function init({
 
     }> = (props) => {
 
-        const handleCheckbox = (evt) => {
+        const handleCheckbox = (checked) => {
             dispatcher.dispatch<Actions.QueryInputSetMatchCase>({
                 name: ActionName.QueryInputSetMatchCase,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
-                    value: !props.matchCaseValue
+                    value: checked
                 }
             });
         };
 
-        return (
-            <label>
-                {he.translate('query__match_case')}:{'\u00a0'}
-                <input type="checkbox" name="qmcase" value="1" checked={props.matchCaseValue}
-                    onChange={handleCheckbox} disabled={props.disabled} />
-            </label>
-        );
+        return <>
+            <label htmlFor="match-case-switch">{he.translate('query__match_case')}:{'\u00a0'}</label>
+            <layoutViews.ToggleSwitch id="match-case-switch" checked={props.matchCaseValue} onChange={handleCheckbox} disabled={props.disabled} />
+        </>;
     };
 
     // -------------------- <DefaultAttrSelector /> ------------------------
@@ -744,23 +741,21 @@ export function init({
 
     }> = (props) => {
 
-        const handleClick = () => {
+        const handleClick = (checked) => {
             dispatcher.dispatch<Actions.QueryInputToggleAllowRegexp>({
                 name: ActionName.QueryInputToggleAllowRegexp,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
-                    value: !props.value
+                    value: checked
                 }
             });
         }
 
         return (
             <span>
-                <label>
-                    {he.translate('query__simple_q_use_regexp')}:
-                    <input type="checkbox" checked={props.value} onChange={handleClick} />
-                </label>
+                <label htmlFor="regexp-switch">{he.translate('query__simple_q_use_regexp')}:</label>
+                <layoutViews.ToggleSwitch id="regexp-switch" checked={props.value} onChange={handleClick}/>
             </span>
         );
     };

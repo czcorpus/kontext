@@ -67,7 +67,7 @@ export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews
                     onClick={this.props.disabled ? null : this.clickHandler}>
                     
                     <span className="toggle-img">
-                        <input id={this.props.id} type="checkbox" onClick={this.clickHandler} disabled={this.props.disabled}/>
+                        <input id={this.props.id} type="checkbox" onClick={this.props.disabled ? null : this.clickHandler}/>
                         <a role="checkbox" aria-checked={this.state.checked} className={this.state.imgClass}/>
                     </span>
                 </span>
