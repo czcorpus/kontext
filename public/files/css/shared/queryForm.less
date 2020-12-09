@@ -147,6 +147,10 @@ form.query-form {
 
         margin-top: 1.8em;
 
+        .ToggleSwitch {
+            font-size: 1.5em;
+        }
+
         div.options {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -232,19 +236,17 @@ form.query-form {
             letter-spacing: 0.06em;
         }
 
-        h3::before {
-            content: '\2022\00a0';
-        }
-
         .pos-filter {
             .pos-list {
                 ul {
+                    padding-left: 0em;
                     list-style-type: none;
                 }
+            }
 
-                span.scale {
-                    font-size: 1.5em;
-                }
+            .ToggleSwitch {
+                font-size: 1.5em;
+                margin-right: 0.4em;
             }
         }
 
@@ -314,6 +316,10 @@ div.query-form-spa {
         min-width: 40em;
     }
 
+    > span.simple-input:focus, input.simple-input:focus {
+        background-color: @color-white-text;
+    }
+
     pre.cql-input {
 
         font-size: 1.3em;
@@ -366,14 +372,14 @@ div.query-form-spa {
 
         a.sh-sugg {
             text-decoration: none;
-            background-color: #e1e5f6;
+            background-color: #CCE8F4;
             text-decoration-color: @color-logo-blue-shining;
             color: @color-default-text;
             background-image: url('../../img/token_highlight.svg');
             background-repeat: no-repeat;
-            background-position: calc(100% - .2em) 0.2em;
-            background-size: 0.3em;
-            padding-right: 0.9em;
+            background-position: calc(100% - .25em) 0.2em;
+            background-size: 0.34em;
+            padding-right: 1em;
             padding-left: 0.2em;
         }
 
@@ -384,13 +390,13 @@ div.query-form-spa {
 
         a.sh-modified {
             text-decoration: none;
-            background-color: @color-light-pink;
+            background-color: #F9CFE6;
             color: @color-default-text;
-            background-image: url('../../img/config-icon-orange.svg');
+            background-image: url('../../img/config-icon-pink.svg');
             background-repeat: no-repeat;
             background-position: calc(100% - .2em) 0.2em;
-            background-size: 0.5em;
-            padding-right: 0.9em;
+            background-size: 0.6em;
+            padding-right: 1em;
             padding-left: 0.2em;
         }
     }
@@ -506,7 +512,7 @@ div.query-form-spa {
         }
 
         a.highlighted {
-            color: @color-logo-orange;
+            color: @color-logo-pink;
             font-weight: normal;
         }
 

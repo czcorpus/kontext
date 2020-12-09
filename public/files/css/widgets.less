@@ -795,9 +795,8 @@ fieldset.FieldsetOutputOptions {
     padding: 0;
 
 
-    input[type="checkbox"] {
+    .ToggleSwitch {
         margin-left: 0.3em;
-
     }
 
     .hint {
@@ -1333,11 +1332,17 @@ table.CollMetricsSelection,
         .pos {
             display: block;
             border: 1px solid @color-dark-green-text;
+            color: @color-default-text;
 
             a, span {
                 display: block;
                 padding: 0.3em;
                 text-decoration: none;
+                color: @color-default-text;
+            }
+
+            a:hover {
+                color: @color-logo-blue;
             }
         }
 
@@ -1346,10 +1351,10 @@ table.CollMetricsSelection,
         }
 
         .pos.kwic {
-            color: @color-logo-green;
+            color: @color-logo-pink;
 
             a {
-                color: @color-logo-green;
+                color: @color-logo-pink;
             }
         }
 
@@ -1366,8 +1371,9 @@ table.CollMetricsSelection,
         }
 
         .pos.selected a {
-            background-color: @color-logo-green;
-            color: #FFFFFF;
+            background-color: @color-logo-blue;
+            color: @color-white-text;
+            font-weight: bold;
         }
 
         div {
@@ -1391,8 +1397,8 @@ table.CollMetricsSelection,
 
         div.selected {
             input:not(.invalid) {
-                background-color: @color-logo-green;
-                color: #FFFFFF;
+                background-color: @color-logo-blue;
+                color: @color-white-text;
             }
         }
     }

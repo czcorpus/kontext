@@ -1116,7 +1116,7 @@ button.util-button.cancel {
 
 a.util-button:hover,
 button.util-button:hover {
-    background-color: @color-light-green;
+    background-color: @color-button-hover;
 }
 
 #error-reporting {
@@ -1332,7 +1332,6 @@ p.boxed-par {
     .toggle-img {
         display: inline-block;
         vertical-align: middle;
-        margin: 0 0.5em;
         width: 1.5em;
         height: 1em;
 
@@ -1455,7 +1454,7 @@ ul.tabs {
 .ExpandButton {
     margin: 0.2em;
     display: inline-block;
-    background-color: #FFFFFF;
+    background-color: @color-button-default;
     color: @color-logo-blue;
     border-color: @color-logo-blue;
     border-width: 0.1em;
@@ -1464,11 +1463,18 @@ ul.tabs {
     cursor: pointer;
 
     span {
+        font-size: 1.5em;
         font-weight: bold;
         display: block;
         margin: 0 auto;
-        width: 1em;
+        width: 0.7em;
+        line-height: 0.7em;
+        height: 0.8em;
     }
+}
+
+.ExpandButton:hover {
+    background-color: @color-button-hover;
 }
 
 .ExpandButton.readonly {

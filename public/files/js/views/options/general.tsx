@@ -121,7 +121,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('options__conc_show_line_nums')}:
                     </label>
                 </th>
-                <td>
+                <td align="center">
                     <layoutViews.ToggleSwitch
                         id="show-line-numbers-input"
                         onChange={handleInputChange}
@@ -158,7 +158,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         ({he.translate('options__conc_no_effect_on_current')})
                     </span>
                 </th>
-                <td>
+                <td align="center">
                     <input type="hidden" name="shuffle" value="0" />
                     <layoutViews.ToggleSwitch
                         id="always-shuffle"
@@ -192,7 +192,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('options__use_rich_query_editor')}:
                     </label>
                 </th>
-                <td>
+                <td align="center">
                     <layoutViews.ToggleSwitch
                         id="use-rich-editor"
                         onChange={handleCheckbox}
