@@ -146,18 +146,21 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
     }
 
     private dispatchSubmitReady(dispatcher:IFullActionControl):void {
-        dispatcher.dispatch<Actions.QueryContextFormPrepareArgsDone>({
-            name: ActionName.QueryContextFormPrepareArgsDone,
-            payload: {
-                data: {
-                    fc_lemword_wsize: this.state.formData.fc_lemword_wsize,
-                    fc_lemword: this.state.formData.fc_lemword,
-                    fc_lemword_type: this.state.formData.fc_lemword_type,
-                    fc_pos_wsize: this.state.formData.fc_pos_wsize,
-                    fc_pos: this.state.formData.fc_pos,
-                    fc_pos_type: this.state.formData.fc_pos_type
+        // TODO waiting for Kombo upgrade - we need a SEDispatcher here
+        setTimeout(() => {
+            dispatcher.dispatch<Actions.QueryContextFormPrepareArgsDone>({
+                name: ActionName.QueryContextFormPrepareArgsDone,
+                payload: {
+                    data: {
+                        fc_lemword_wsize: this.state.formData.fc_lemword_wsize,
+                        fc_lemword: this.state.formData.fc_lemword,
+                        fc_lemword_type: this.state.formData.fc_lemword_type,
+                        fc_pos_wsize: this.state.formData.fc_pos_wsize,
+                        fc_pos: this.state.formData.fc_pos,
+                        fc_pos_type: this.state.formData.fc_pos_type
+                    }
                 }
-            }
+            });
         });
     }
 
