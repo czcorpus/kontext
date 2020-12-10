@@ -311,7 +311,12 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                         });
                     },
                     (err) => {
-                        const errors = err.response['error_args'] as
+                        let _errors = err.response['error_args'];
+                        // served by lib/controller/__init__.py:672 (Controller._create_err_action_args)
+                        // so far; probably should be passed as [] directly
+                        if (typeof _errors === 'object' && Dict.empty(_errors))
+                            _errors = [];
+                        const errors = _errors as
                             Array<[keyof SubmitFormErrors, SubmitFormErrors[keyof SubmitFormErrors]]>;
                         dispatch<Actions.SubmitSignUpDone>({
                             name: ActionName.SubmitSignUpDone,

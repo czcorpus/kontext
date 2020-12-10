@@ -669,6 +669,8 @@ class Controller(object):
         ans = create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
         if return_type == 'json':
             ans.add_forced_arg('error_code', getattr(ex, 'error_code', None))
+            # TODO: cnc-tskit (Dict.fromEntries in plugins/defaultAuth/profile.ts)
+            #       expects this to be like .items(), so maybe [] instead?
             ans.add_forced_arg('error_args', getattr(ex, 'error_args', {}))
         return ans
 
