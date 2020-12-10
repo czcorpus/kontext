@@ -177,8 +177,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             <div className="pos-filter">
                 <h3>
                     {he.translate('query__pos_filter_hd')}
-                    {'\u00a0'}
-                    <span className="note">({he.translate('query__context_applied_2nd')})</span>
                 </h3>
                 <dl className="form">
                     <dt>
@@ -227,7 +225,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         ? he.translate('query__lemma_filter_hd')
                         : he.translate('query__word_form_filter_hd')}
                         {'\u00a0'}
-                        <span className="note">({he.translate('query__context_applied_1st')})</span>
                     </h3>
                     <LemmaFilter
                         hasLemmaAttr={props.hasLemmaAttr}
@@ -235,6 +232,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         fc_lemword={props.formData.fc_lemword}
                         fc_lemword_type={props.formData.fc_lemword_type}
                     />
+                    <hr />
                     {props.wPoSList && props.wPoSList.length > 0 ?
                         <PoSFilter
                             wPoSList={props.wPoSList}
