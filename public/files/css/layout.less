@@ -1273,7 +1273,7 @@ p.boxed-par {
                 border-right-width: 0;
                 display: flex;
                 justify-content: center;
-                align-content: center;
+                align-items: center;
                 width: 100%;
 
                 img {
@@ -1328,6 +1328,12 @@ p.boxed-par {
 }
 
 .ToggleSwitch {
+
+    display: inline-block;
+    vertical-align: middle;
+    width: 1.5em;
+    height: 0.85em;
+
     input {
         position: absolute;
         visibility: hidden;
@@ -1336,18 +1342,18 @@ p.boxed-par {
     }
 
     .toggle-img {
-        display: inline-block;
-        vertical-align: middle;
-        width: 1.5em;
-        height: 1em;
+        display: block;
+        width: 100%;
+        height: 100%;
 
         a {
             display: block;
             width: 100%;
             height: 100%;
+            padding: 2%;
             background-repeat: no-repeat;
             background-size: contain;
-            background-position-y: 50%;
+            background-position-y: 0%;
         }
 
         a.on {
