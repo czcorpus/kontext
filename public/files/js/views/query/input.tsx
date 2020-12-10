@@ -991,15 +991,12 @@ export function init({
                                         sourceId={this.props.sourceId}
                                         formType={this.props.formType}
                                         disabled={query.use_regexp} />
-                                    {query.use_regexp ?
-                                        (
-                                            <layoutViews.InlineHelp noSuperscript={true}
-                                                    customStyle={{maxWidth: '30em'}}>
-                                                {he.translate('query__tip_07')}
-                                            </layoutViews.InlineHelp>
-                                        ) :
-                                        null
-                                    }
+                                    <span style={query.use_regexp ? {} : {visibility: 'hidden'}}>
+                                        <layoutViews.InlineHelp noSuperscript={true}
+                                                customStyle={{maxWidth: '30em'}}>
+                                            {he.translate('query__tip_07')}
+                                        </layoutViews.InlineHelp>
+                                    </span>
                                 </div>
                                 <div className={"option"}>
                                     <UseRegexpSelector sourceId={this.props.sourceId} formType={this.props.formType}
