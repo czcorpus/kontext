@@ -353,14 +353,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     this.changeState(state => {
                         state.busyAttribute = action.payload.attrName;
                     });
-                    setTimeout(() => {
-                        dispatcher.dispatch<Actions.AttributeTextInputAutocompleteReady>({
-                            name: ActionName.AttributeTextInputAutocompleteReady,
-                            payload: {
-                                ...action.payload,
-                                selections: this.exportSelections(false)
-                            }
-                        })
+                    this.dispatchSideEffect<Actions.AttributeTextInputAutocompleteReady>({
+                        name: ActionName.AttributeTextInputAutocompleteReady,
+                        payload: {
+                            ...action.payload,
+                            selections: this.exportSelections(false)
+                        }
                     });
                 }
             }
@@ -369,13 +367,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler<ConcActions.CalculateIpmForAdHocSubc>(
             ConcActionName.CalculateIpmForAdHocSubc,
             action => {
-                setTimeout(() => {
-                    dispatcher.dispatch<ConcActions.CalculateIpmForAdHocSubcReady>({
-                        name: ConcActionName.CalculateIpmForAdHocSubcReady,
-                        payload: {
-                            ttSelection: this.exportSelections(false)
-                        }
-                    });
+                this.dispatchSideEffect<ConcActions.CalculateIpmForAdHocSubcReady>({
+                    name: ConcActionName.CalculateIpmForAdHocSubcReady,
+                    payload: {
+                        ttSelection: this.exportSelections(false)
+                    }
                 });
             }
         );
@@ -386,13 +382,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 this.changeState(state => {
                     state.busyAttribute = '#'; // # is a pseudo-value to keep model in busy state
                 });
-                setTimeout(() => {
-                    dispatcher.dispatch<PluginInterfaces.LiveAttributes.Actions.RefineReady>({
-                        name: PluginInterfaces.LiveAttributes.ActionName.RefineReady,
-                        payload: {
-                            selections: this.exportSelections(false)
-                        }
-                    });
+                this.dispatchSideEffect<PluginInterfaces.LiveAttributes.Actions.RefineReady>({
+                    name: PluginInterfaces.LiveAttributes.ActionName.RefineReady,
+                    payload: {
+                        selections: this.exportSelections(false)
+                    }
                 });
             }
         );
