@@ -120,14 +120,14 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
         this.addActionHandler<Actions.QuerySubmit>(
             ActionName.QuerySubmit,
             action => {
-                this.dispatchSubmitReady(dispatcher);
+                this.dispatchSubmitReady();
             }
         );
 
         this.addActionHandler<Actions.BranchQuery>(
             ActionName.BranchQuery,
             action => {
-                this.dispatchSubmitReady(dispatcher);
+                this.dispatchSubmitReady();
             }
         );
 
@@ -145,22 +145,19 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
         );
     }
 
-    private dispatchSubmitReady(dispatcher:IFullActionControl):void {
-        // TODO waiting for Kombo upgrade - we need a SEDispatcher here
-        setTimeout(() => {
-            dispatcher.dispatch<Actions.QueryContextFormPrepareArgsDone>({
-                name: ActionName.QueryContextFormPrepareArgsDone,
-                payload: {
-                    data: {
-                        fc_lemword_wsize: this.state.formData.fc_lemword_wsize,
-                        fc_lemword: this.state.formData.fc_lemword,
-                        fc_lemword_type: this.state.formData.fc_lemword_type,
-                        fc_pos_wsize: this.state.formData.fc_pos_wsize,
-                        fc_pos: this.state.formData.fc_pos,
-                        fc_pos_type: this.state.formData.fc_pos_type
-                    }
+    private dispatchSubmitReady():void {
+        this.dispatchSideEffect<Actions.QueryContextFormPrepareArgsDone>({
+            name: ActionName.QueryContextFormPrepareArgsDone,
+            payload: {
+                data: {
+                    fc_lemword_wsize: this.state.formData.fc_lemword_wsize,
+                    fc_lemword: this.state.formData.fc_lemword,
+                    fc_lemword_type: this.state.formData.fc_lemword_type,
+                    fc_pos_wsize: this.state.formData.fc_pos_wsize,
+                    fc_pos: this.state.formData.fc_pos,
+                    fc_pos_type: this.state.formData.fc_pos_type
                 }
-            });
+            }
         });
     }
 
