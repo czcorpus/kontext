@@ -244,9 +244,9 @@ export function init({
 
         return (
             <div className="TRQueryTypeField">
-                <label htmlFor="chck_wsdA3fe"><a>{he.translate('query__qt_advanced')}</a></label>
+                <label htmlFor={'query-switch-'+props.sourceId}><a>{he.translate('query__qt_advanced')}</a></label>
                 <layoutViews.ToggleSwitch
-                    id="chck_wsdA3fe"
+                    id={'query-switch-'+props.sourceId}
                     onChange={handleSelection}
                     checked={props.queryType === 'advanced'} />
             </div>
@@ -702,9 +702,9 @@ export function init({
         };
 
         return <span>
-            <label htmlFor="match-case-switch">{he.translate('query__match_case')}</label>
+            <label htmlFor={'match-case-switch-'+props.sourceId}>{he.translate('query__match_case')}</label>
             <layoutViews.ToggleSwitch
-                id="match-case-switch"
+                id={'match-case-switch-'+props.sourceId}
                 checked={props.matchCaseValue}
                 onChange={handleCheckbox}
                 disabled={props.disabled} />
@@ -758,8 +758,8 @@ export function init({
 
         return (
             <span>
-                <label htmlFor="regexp-switch">{he.translate('query__simple_q_use_regexp')}</label>
-                <layoutViews.ToggleSwitch id="regexp-switch" checked={props.value} onChange={handleClick}/>
+                <label htmlFor={'regexp-switch-'+props.sourceId}>{he.translate('query__simple_q_use_regexp')}</label>
+                <layoutViews.ToggleSwitch id={'regexp-switch-'+props.sourceId} checked={props.value} onChange={handleClick}/>
             </span>
         );
     };
