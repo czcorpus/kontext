@@ -491,6 +491,9 @@ class Actions(Querying):
             use_regexp = data.use_regexp
             query_parsed = data.parsed_query
 
+        if query.strip() == '':
+            return None
+
         def mk_query_val(q):
             if qtype == 'advanced' or use_regexp:
                 return q.strip()
@@ -595,10 +598,6 @@ class Actions(Querying):
             self.args.align.append(al_corpname)
             if al_corpname in nopq and not int(data.curr_include_empty_values[al_corpname]):
                 self.args.q.append('X%s' % al_corpname)
-            else:
-                self.args.q.append('x-%s' % al_corpname)
-                self.args.q.append('p0 0 1 []')
-                self.args.q.append('x-%s' % self.args.corpname)
         if len(corpora) > 1:
             self.args.viewmode = 'align'
 
@@ -625,6 +624,7 @@ class Actions(Querying):
                 self.args.q.append('f')
                 self.acknowledge_auto_generated_conc_op(
                     len(self.args.q) - 1, ShuffleFormArgs(persist=True))
+            logging.getLogger(__name__).debug('query: {}'.format(self.args.q))
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.asnc,
                             save=self.args.save, samplesize=corpus_info.sample_size)

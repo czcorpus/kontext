@@ -767,7 +767,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     qmcase: false,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
-                    default_attr: '',
+                    default_attr: 'word',
                     use_regexp: false
                 };
             }
