@@ -306,6 +306,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         componentDidMount() {
             if (this.props.takeFocus && this.props.inputRef.current) {
                 this.props.inputRef.current.focus();
+                const queryObj = this.props.queries[this.props.sourceId];
+                this.contentEditable.reapplySelection(
+                    queryObj.rawAnchorIdx,
+                    queryObj.rawFocusIdx
+                );
             }
 
             if (he.browserInfo.isFirefox()) {

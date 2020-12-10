@@ -25,7 +25,7 @@ import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
-import { map, tap, concatMap, mergeMap, scan } from 'rxjs/operators';
+import { map, tap, concatMap, mergeMap, scan, catchError } from 'rxjs/operators';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend, mergeResults,
     isErrorFrontend, filterOutTrivialSuggestions} from './frontends';
@@ -313,7 +313,7 @@ export class Model extends StatelessModel<ModelState> {
                         }
                     });
                 },
-                err => {
+                error => {
                     dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
                         payload: {
@@ -322,7 +322,7 @@ export class Model extends StatelessModel<ModelState> {
                             parsedWord: '',
                             isPartial: false
                         },
-                        error: err
+                        error
                     });
                 }
             );

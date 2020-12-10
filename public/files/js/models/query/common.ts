@@ -597,6 +597,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     this.changeState(state => {
                         this.clearSuggestionForPosition(state, action.payload.sourceId, action.payload.valueStartIdx);
                         state.suggestionsVisible[action.payload.sourceId] = null;
+                        state.suggestionsLoading[action.payload.sourceId][action.payload.valueStartIdx] = false;
                     });
 
                 } else if (this.isCurrentSuggestionInvalid(
