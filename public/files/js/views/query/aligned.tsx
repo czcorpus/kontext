@@ -26,7 +26,7 @@ import { Kontext } from '../../types/common';
 import { InputModuleViews } from './input';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/query/actions';
-import { AnyQuery, QueryType } from '../../models/query/query';
+import { AnyQuery } from '../../models/query/query';
 
 
 export interface AlignedModuleArgs {
