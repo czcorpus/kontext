@@ -148,7 +148,7 @@ form.query-form {
         margin-top: 1.8em;
 
         .ToggleSwitch {
-            font-size: 1.5em;
+            font-size: 1.3em;
             margin-left: 0.3em;
         }
 
@@ -242,11 +242,15 @@ form.query-form {
                 ul {
                     padding-left: 0em;
                     list-style-type: none;
+                    
+                    li {
+                        margin: 0.2em 0;
+                    }
                 }
             }
 
             .ToggleSwitch {
-                font-size: 1.5em;
+                font-size: 1.3em;
                 margin-right: 0.4em;
             }
         }
@@ -305,10 +309,10 @@ div.query-form-spa {
     > textarea,
     pre.cql-input,
     > span.simple-input, input.simple-input {
-        background-color: #FAFAFA;
+        background-color: @color-white-text;
         padding: 0.5em 0.3em 0.3em 0.3em;
         border-style: solid;
-        border-width: 0.15em;
+        border-width: 0.05em;
         border-color: @color-light-frame;
         border-radius: 0.2em;
         display: block;
@@ -317,10 +321,11 @@ div.query-form-spa {
         min-width: 40em;
     }
 
-    > textarea:focus,
-    pre.cql-input:focus,
+    > textarea:hover, > textarea:focus,
+    pre.cql-input:hover, pre.cql-input:focus,
+    > span.simple-input:hover, input.simple-input:hover,
     > span.simple-input:focus, input.simple-input:focus {
-        background-color: @color-white-text;
+        box-shadow: 0 0 0 0.05em @color-light-frame;
     }
 
     pre.cql-input {
@@ -422,6 +427,7 @@ div.query-form-spa {
         color: @color-light-text;
         font-size: 0.9em;
         max-width: 50em;
+        line-height: 1.5;
 
         .tip {
             text-transform: uppercase;
