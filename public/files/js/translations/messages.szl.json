@@ -239,8 +239,6 @@
         "query__word_form_filter_hd": "Word forms in context",
         "query__pos_filter_hd": "PoS in context",
         "query__pos_list": "PoS list",
-        "query__context_applied_1st": "applied 1st",
-        "query__context_applied_2nd": "applied 2nd",
         "query__window": "Context range",
         "query__window_tokens": "symbole",
         "query__lw_lemmas": "List of space-separated lemmas",

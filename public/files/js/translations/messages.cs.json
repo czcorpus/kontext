@@ -239,8 +239,6 @@
         "query__word_form_filter_hd": "Slovní tvary v kontextu",
         "query__pos_filter_hd": "Slovní druhy v kontextu",
         "query__pos_list": "PoS list",
-        "query__context_applied_1st": "applied 1st",
-        "query__context_applied_2nd": "applied 2nd",
         "query__window": "Rozsah kontextu",
         "query__window_tokens": "tokenů",
         "query__lw_lemmas": "Seznam lemmat oddělených mezerami",
