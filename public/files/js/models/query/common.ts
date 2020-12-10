@@ -418,9 +418,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     const queryObj = state.queries[action.payload.sourceId];
                     if (queryObj.qtype === 'simple') {
                         queryObj.use_regexp = !queryObj.use_regexp;
-                        if (queryObj.use_regexp) {
-                            queryObj.qmcase = true;
-                        }
+                        queryObj.qmcase = queryObj.use_regexp;
                         this.autoSuggestTrigger.next(tuple(
                             action.payload.sourceId,
                             0,
@@ -1063,15 +1061,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         if (query.qtype === 'advanced') {
             return 'advanced';
 
-        } else {
-            if (query.use_regexp) {
-                return 'regexp';
-
-            } else if (query.qmcase) {
-                return 'simple';
-            }
-            return 'simple_ic';
+        } else if (query.use_regexp) {
+            return 'regexp';
         }
+        return 'simple_ic';
     }
 
     private shouldAskForSuggestion(srchWord:string):boolean {

@@ -152,7 +152,7 @@ export class Model extends StatelessModel<ModelState> {
             (state, action) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {
-                    currArgs.valueSubformat = action.payload.value ? 'regexp' : 'simple';
+                    currArgs.valueSubformat = action.payload.value ? 'regexp' : 'simple_ic';
                 }
             }
         );
@@ -162,7 +162,7 @@ export class Model extends StatelessModel<ModelState> {
             (state, action) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {
-                    currArgs.valueSubformat = action.payload.value ? 'simple_ic' : 'simple';
+                    currArgs.valueSubformat = 'simple_ic';
                 }
             }
         );

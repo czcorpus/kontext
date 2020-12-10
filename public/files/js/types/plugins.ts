@@ -558,7 +558,8 @@ export namespace PluginInterfaces {
         /**
          * formats are:
          * regexp: simple query with regexp support enabled
-         * simple: simple query with regexp disabled
+         * simple: simple query with regexp disabled and case sensitive
+         *   - this mode probably won't be needed (TODO)
          * simple_ic: simple query with regexp disabled and ignoring case enabled
          * advanced: CQL query
          */
