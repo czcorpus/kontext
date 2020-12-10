@@ -1328,19 +1328,18 @@ p.boxed-par {
 }
 
 .ToggleSwitch {
+    input {
+        position: absolute;
+        visibility: hidden;
+        height: 0;
+        width: 0;
+    }
 
     .toggle-img {
         display: inline-block;
         vertical-align: middle;
         width: 1.5em;
         height: 1em;
-
-        input {
-            position: absolute;
-            visibility: hidden;
-            height: 0;
-            width: 0;
-        }
 
         a {
             display: block;
