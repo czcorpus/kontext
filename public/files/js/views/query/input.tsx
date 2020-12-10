@@ -701,10 +701,14 @@ export function init({
             });
         };
 
-        return <>
-            <label htmlFor="match-case-switch">{he.translate('query__match_case')}:{'\u00a0'}</label>
-            <layoutViews.ToggleSwitch id="match-case-switch" checked={props.matchCaseValue} onChange={handleCheckbox} disabled={props.disabled} />
-        </>;
+        return <span>
+            <label htmlFor="match-case-switch">{he.translate('query__match_case')}</label>
+            <layoutViews.ToggleSwitch
+                id="match-case-switch"
+                checked={props.matchCaseValue}
+                onChange={handleCheckbox}
+                disabled={props.disabled} />
+        </span>;
     };
 
     // -------------------- <DefaultAttrSelector /> ------------------------
@@ -754,7 +758,7 @@ export function init({
 
         return (
             <span>
-                <label htmlFor="regexp-switch">{he.translate('query__simple_q_use_regexp')}:</label>
+                <label htmlFor="regexp-switch">{he.translate('query__simple_q_use_regexp')}</label>
                 <layoutViews.ToggleSwitch id="regexp-switch" checked={props.value} onChange={handleClick}/>
             </span>
         );
