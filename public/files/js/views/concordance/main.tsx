@@ -380,7 +380,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         };
 
         return (
-            <div id="result-info">
+            <div className="result-info">
                 {he.translate('concview__hits_label')}:  {renderNumHits()}
                 <span id="conc-calc-info" title="90"></span>
                 <span className="separ">|</span>
@@ -597,7 +597,6 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         : null}
                     <div id="conc-top-bar">
                         <div className="info-level">
-                            <paginationViews.Paginator {...this.props} />
                             <ConcSummary {...this.props.concSummary}
                                     corpname={this.props.baseCorpname}
                                     isUnfinishedCalculation={this.props.unfinishedCalculation}
@@ -607,6 +606,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                     subCorpName={this.props.subCorpName}
                                     origSubcorpName={this.props.origSubcorpName}
                                     isWaiting={this.props.unfinishedCalculation} />
+                            <paginationViews.Paginator {...this.props} />
                         </div>
                         <BoundConcToolbarWrapper
                                 lineSelOpsVisible={this.props.lineSelOptionsVisible}
@@ -630,6 +630,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     </div>
                     <div id="conc-bottom-bar">
                         <div className="info-level">
+                            <div style={{flexGrow: 3}} />
                             <paginationViews.Paginator {...this.props} />
                         </div>
                     </div>
