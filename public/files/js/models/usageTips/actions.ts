@@ -19,12 +19,14 @@
  */
 
 import { Action } from 'kombo';
+import { ForcedTip } from '.';
 
 
 export enum ActionName {
-    NextQueryHint = 'NEXT_QUERY_HINT',
-    NextCqlQueryHint = 'NEXT_CQL_QUERY_HINT',
-    NextConcHint = 'NEXT_CONC_HINT'
+    NextQueryHint = 'QUERY_HINTS_NEXT_QUERY_HINT',
+    NextCqlQueryHint = 'QUERY_HINTS_NEXT_CQL_QUERY_HINT',
+    NextConcHint = 'QUERY_HINTS_NEXT_CONC_HINT',
+    ForceHint = 'QUERY_HINTS_FORCE_HINT',
 }
 
 export namespace Actions {
@@ -42,5 +44,9 @@ export namespace Actions {
     export interface NextConcHint extends Action<{
     }> {
         name: ActionName.NextConcHint;
+    }
+
+    export interface ForceHint extends Action<ForcedTip> {
+        name: ActionName.ForceHint;
     }
 }

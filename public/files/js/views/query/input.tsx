@@ -209,7 +209,7 @@ export function init({
                     </span>
                     {
                         props.forcedTip ?
-                            props.forcedTip :
+                            props.forcedTip.message :
                             props.currentHints[props.queryType === 'simple' ? UsageTipCategory.QUERY : UsageTipCategory.CQL_QUERY]
                     }
                 </span>
