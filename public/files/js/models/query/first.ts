@@ -316,7 +316,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     props.corpora,
                     List.map(item => tuple(
                         item,
-                        false)
+                        true)
                     ),
                     Dict.fromEntries()
                 ),
