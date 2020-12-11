@@ -628,8 +628,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                     const queryObject = this.state.queries[action.payload.sourceId];
                     if (
-                        (queryObject.qtype === 'simple' && List.some(v => !!v.suggestions, queryObject.queryParsed)) ||
-                        (queryObject.qtype === 'advanced' && List.some(v => !!v.suggestions, queryObject.parsedAttrs))
+                        (queryObject.qtype === 'simple' && List.some(v => this.someSuggestionIsNonEmpty(v.suggestions), queryObject.queryParsed)) ||
+                        (queryObject.qtype === 'advanced' && List.some(v => this.someSuggestionIsNonEmpty(v.suggestions), queryObject.parsedAttrs))
                      ) {
                         this.dispatchSideEffect<QueryHintsActions.ForceHint>({
                             name: QueryHintsActionName.ForceHint,
