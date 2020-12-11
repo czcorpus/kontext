@@ -27,7 +27,7 @@ import { Subscription } from 'rxjs';
 
 export interface Views {
     CorptreePageComponent:React.ComponentClass<{}>;
-    FilterForm:React.SFC<{}>;
+    FilterForm:React.FC<{}>;
 }
 
 
@@ -36,7 +36,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // --------------------------------- <TreeNode /> --------------------------
 
-    const TreeNode:React.SFC<{
+    const TreeNode:React.FC<{
         ident:string;
         name:string;
         active:boolean;
@@ -343,7 +343,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <ItemList /> -------------------------------
 
-    const ItemList:React.SFC<{
+    const ItemList:React.FC<{
         level?:string;
         htmlClass?:string;
         name?:string;
@@ -616,7 +616,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
-    const FilterForm:React.SFC<{}> = (props) => {
+    const FilterForm:React.FC<{}> = (props) => {
         return <div />;
     }
 
