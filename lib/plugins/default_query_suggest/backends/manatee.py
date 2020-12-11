@@ -59,17 +59,17 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
                  for cr in args.fcrit]
         return freqs[0].get('Items', [])
 
-    def _normalize_multivalues(self, corp: manatee.Corpus, attr1: str, attr2: str) -> Tuple[str, str]:
+    def _normalize_multivalues(self, corp: manatee.Corpus, srch_val: str, attr1: str, attr2: str) -> Tuple[str, str]:
         multisep1 = corp.get_conf(self._conf["attr1"] + '.MULTISEP')
         multisep2 = corp.get_conf(self._conf["attr2"] + '.MULTISEP')
         if multisep1 and multisep2:
-            attr1_split = attr1.split(multisep1)
-            attr2_split = attr2.split(multisep2)
-            if len(attr1_split) == len(attr2_split):
-                return attr1_split[0], attr2_split[0]
-
-            logging.warning(
-                f'PosAttrPairRelManateeBackend multivalue normalization mismatch - {attr1}...{attr2}')
+            attr_pairs = list(zip(attr1.split(multisep1), attr2.split(multisep2)))
+            if len(attr_pairs) > 1:
+                for attr1c, attr2c in attr_pairs:
+                    if srch_val.lower() == attr1c.lower() or srch_val.lower() == attr2c.lower():
+                        return attr1c, attr2c
+                logging.warning(
+                    f'PosAttrPairRelManateeBackend multivalue normalization mismatch - {attr1}...{attr2}')
 
         return attr1, attr2
 
@@ -88,7 +88,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             fcrit = multi_level_crit(2, **mlargs)
             data = self._freq_dist(corp=used_corp, conc=conc, fcrit=fcrit, user_id=user_id)
             for item in data:
-                attr1, attr2 = self._normalize_multivalues(used_corp, *(tuple([w['n'] for w in item['Word']])[:2]))
+                attr1, attr2 = self._normalize_multivalues(used_corp, value_norm, *(tuple([w['n'] for w in item['Word']])[:2]))
                 rels[attr1].add(attr2)
         except RuntimeError as ex:
             msg = str(ex).lower()
