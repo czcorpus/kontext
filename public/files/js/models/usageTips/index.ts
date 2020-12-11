@@ -25,7 +25,6 @@ import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
-import { PluginInterfaces } from '../../types/plugins';
 
 
 
@@ -43,17 +42,23 @@ const availableTips = [
     {messageId: 'query__tip_04', category: [UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY]},
     {messageId: 'query__tip_05', category: [UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY]},
     {messageId: 'query__tip_06', category: [UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY]},
+    {messageId: 'query__tip_08', category: [UsageTipCategory.QUERY, UsageTipCategory.CQL_QUERY]},
     {messageId: 'concview__tip_01', category: [UsageTipCategory.CONCORDANCE]},
     {messageId: 'concview__tip_02', category: [UsageTipCategory.CONCORDANCE]},
     {messageId: 'concview__tip_03', category: [UsageTipCategory.CONCORDANCE]},
     {messageId: 'concview__tip_04', category: [UsageTipCategory.CONCORDANCE]}
 ];
 
+export interface ForcedTip {
+    message:string;
+    priority:number;
+}
+
 export interface UsageTipsState {
     availableTips:Array<{messageId:string; category:UsageTipCategory[]}>;
     currentHints:{[key in UsageTipCategory]:string};
     hintsPointers:{[key in UsageTipCategory]:number};
-    forcedTip:string;
+    forcedTip:ForcedTip|null;
 }
 
 
@@ -131,17 +136,19 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
             }
         );
 
-        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
-            PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
-            (state, action) => {
-                state.forcedTip = List.some(v => !Dict.empty(v.contents['data']), action.payload.results) ? this.translatorFn('query__tip_06') : state.forcedTip
-            }
-        );
-
         this.addActionHandler<QueryActions.QueryInputSetQType>(
             QueryActionName.QueryInputSetQType,
             (state, action) => {
                 state.forcedTip = null;
+            }
+        );
+
+        this.addActionHandler<Actions.ForceHint>(
+            ActionName.ForceHint,
+            (state, action) => {
+                if (state.forcedTip === null || state.forcedTip.priority < action.payload.priority) {
+                    state.forcedTip = action.payload;
+                }
             }
         );
     }

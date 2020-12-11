@@ -37,6 +37,7 @@ import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTok
     parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery, TokenSuggestions } from './query';
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
+import { Actions as QueryHintsActions, ActionName as QueryHintsActionName } from '../usageTips/actions';
 
 /*
 Some important terms to prevent confusion:
@@ -564,6 +565,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     0,
                     0
                 ));
+
+                const queryObject = this.state.queries[action.payload.sourceId];
+                if (queryObject.qtype === 'simple' && List.some(v => v.isExtended, queryObject.queryParsed)) {
+                    this.dispatchSideEffect<QueryHintsActions.ForceHint>({
+                        name: QueryHintsActionName.ForceHint,
+                        payload: {
+                            message: pageModel.translate('query__tip_08'),
+                            priority: 2
+                        }
+                    });
+                }
             }
         );
 
@@ -613,6 +625,20 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         );
                         state.suggestionsLoading[action.payload.sourceId][action.payload.valueStartIdx] = false;
                     });
+
+                    const queryObject = this.state.queries[action.payload.sourceId];
+                    if (
+                        (queryObject.qtype === 'simple' && List.some(v => !!v.suggestions, queryObject.queryParsed)) ||
+                        (queryObject.qtype === 'advanced' && List.some(v => !!v.suggestions, queryObject.parsedAttrs))
+                     ) {
+                        this.dispatchSideEffect<QueryHintsActions.ForceHint>({
+                            name: QueryHintsActionName.ForceHint,
+                            payload: {
+                                message: pageModel.translate('query__tip_06'),
+                                priority: 1
+                            }
+                        });
+                    }
                 }
             }
         );
