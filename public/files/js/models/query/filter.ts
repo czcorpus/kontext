@@ -284,7 +284,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 maincorps: {...props.maincorps},
                 downArrowTriggersHistory: pipe(
                     queries,
-                    Dict.map(v => false),
+                    Dict.map(v => true),
                 ),
                 currentSubcorp: pageModel.getCorpusIdent().usesubcorp,
                 lposValues: {...props.currLposValues},
