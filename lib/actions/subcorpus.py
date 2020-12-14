@@ -12,10 +12,9 @@
 
 import os
 import logging
-import json
 import time
 import hashlib
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Union
 
 from controller import exposed
 from controller.errors import FunctionNotSupported, UserActionException
@@ -26,7 +25,7 @@ from translation import ugettext as translate
 import plugins
 import l10n
 import corplib
-from texttypes import TextTypeCollector
+from texttypes import TextTypeCollector, TextTypesCache
 import settings
 import bgcalc
 
@@ -80,9 +79,6 @@ class CreateSubcorpusRawCQLArgs(SubmitBase):
 
 
 class Subcorpus(Querying):
-
-    def __init__(self, request, ui_lang):
-        super(Subcorpus, self).__init__(request, ui_lang)
 
     def get_mapping_url_prefix(self):
         return '/subcorpus/'

@@ -50,6 +50,8 @@ from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from .plg import PluginApi
 from templating import DummyGlobals
 from .req_args import RequestArgsProxy
+from texttypes import TextTypes, TextTypesCache
+
 
 JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 T = TypeVar('T')
@@ -168,7 +170,7 @@ class Kontext(Controller):
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
-    def __init__(self, request: Request, ui_lang: str) -> None:
+    def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
         super().__init__(request=request, ui_lang=ui_lang)
         # Note: always use _corp() method to access current corpus even from inside the class
         self._curr_corpus: Optional[Corpus] = None
@@ -198,10 +200,16 @@ class Kontext(Controller):
 
         # conc_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
+
         # data of the previous operation are stored here
         self._prev_q_data: Optional[Dict[str, Any]] = None
+
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
+
         self.on_conc_store: Callable[[List[str]], None] = lambda s: None
+        
+        self._tt_cache = tt_cache
+        self._tt = None  # this will be instantiated lazily
 
     def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
@@ -820,6 +828,14 @@ class Kontext(Controller):
                 return fallback_corpus.ErrorCorpus(ex)
         else:
             return fallback_corpus.EmptyCorpus()
+
+    @property
+    def tt(self) -> TextTypes:
+        """
+        Provides access to text types of the current corpus
+        """
+        return self._tt if self._tt is not None else TextTypes(
+            self.corp, self.corp.corpname, self._tt_cache, self._plugin_api)
 
     def permitted_corpora(self) -> Dict[str, str]:
         """
