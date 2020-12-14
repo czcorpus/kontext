@@ -29,9 +29,6 @@ USER_ACTIONS_DISABLED_ITEMS = (MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COL
 
 class User(Kontext):
 
-    def __init__(self, request, ui_lang):
-        super(User, self).__init__(request, ui_lang)
-
     def get_mapping_url_prefix(self):
         return '/user/'
 

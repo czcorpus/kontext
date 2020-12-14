@@ -143,16 +143,16 @@ class WsgiApp(object):
         """
         if path_info.startswith('/fcs'):
             from actions.fcs import Actions
-            return Actions(request, ui_lang)
+            return Actions(request, ui_lang, self._tt_cache)
         elif path_info.startswith('/user'):
             from actions.user import User
-            return User(request, ui_lang)
+            return User(request, ui_lang, self._tt_cache)
         elif path_info.startswith('/subcorpus'):
             from actions.subcorpus import Subcorpus
             return Subcorpus(request, ui_lang, self._tt_cache)
         elif path_info.startswith('/options'):
             from actions.options import Options
-            return Options(request, ui_lang)
+            return Options(request, ui_lang, self._tt_cache)
         elif path_info.startswith('/corpora'):
             from actions.corpora import Corpora
             return Corpora(request, ui_lang, self._tt_cache)
