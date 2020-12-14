@@ -149,13 +149,13 @@ class WsgiApp(object):
             return User(request, ui_lang)
         elif path_info.startswith('/subcorpus'):
             from actions.subcorpus import Subcorpus
-            return Subcorpus(request, ui_lang)
+            return Subcorpus(request, ui_lang, self._tt_cache)
         elif path_info.startswith('/options'):
             from actions.options import Options
             return Options(request, ui_lang)
         elif path_info.startswith('/corpora'):
             from actions.corpora import Corpora
-            return Corpora(request, ui_lang)
+            return Corpora(request, ui_lang, self._tt_cache)
         elif path_info.startswith('/wordlist'):
             from actions.wordlist import Wordlist
             return Wordlist(request, ui_lang, self._tt_cache)

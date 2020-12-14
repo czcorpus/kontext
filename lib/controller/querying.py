@@ -28,7 +28,7 @@ from werkzeug import Request
 import logging
 
 from controller.kontext import Kontext
-from l10n import corpus_get_conf
+from texttypes import TextTypesCache
 import corplib
 import plugins
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
@@ -47,8 +47,8 @@ class Querying(Kontext):
     by 'prev_id' reference (i.e. a reversed list).
     """
 
-    def __init__(self, request: Request, ui_lang: str) -> None:
-        super().__init__(request=request, ui_lang=ui_lang)
+    def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
+        super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
         self._curr_conc_form_args: Optional[ConcFormArgs] = None
 
     def get_mapping_url_prefix(self) -> str:

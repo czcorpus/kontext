@@ -44,7 +44,7 @@ import l10n
 from l10n import corpus_get_conf
 from translation import ugettext as translate
 from argmapping import WidectxArgsMapping
-from texttypes import TextTypeCollector, TextTypes
+from texttypes import TextTypeCollector
 from texttypes.cache import TextTypesCache
 from main_menu import MenuGenerator, MainMenu
 from controller.querying import Querying
@@ -79,9 +79,7 @@ class Actions(Querying):
         request -- werkzeug's Request obj.
         ui_lang -- a language code in which current action's result will be presented
         """
-        super(Actions, self).__init__(request=request, ui_lang=ui_lang)
-        self._tt_cache = tt_cache
-        self._tt = None  # this will be instantiated lazily
+        super(Actions, self).__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
         self.disabled_menu_items = ()
 
     def get_mapping_url_prefix(self):
@@ -179,14 +177,6 @@ class Actions(Querying):
         if len(out['query_overview']) > 0:
             out['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
                                                    out['query_overview'][0].get('nicearg'))
-
-    @property
-    def tt(self) -> TextTypes:
-        """
-        Provides access to text types of the current corpus
-        """
-        return self._tt if self._tt is not None else TextTypes(
-            self.corp, self.corp.corpname, self._tt_cache, self._plugin_api)
 
     @exposed(vars=('orig_query', ), mutates_conc=False)
     def view(self, _=None):
