@@ -113,7 +113,8 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             controlsEnabled: args.refineEnabled,
             isBusy: false,
             isTTListMinimized: false,
-            isEnabled: isEnabled
+            isEnabled: isEnabled,
+            resetConfirmed: false
         },
         controlsAlignedCorpora
     );
