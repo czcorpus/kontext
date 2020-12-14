@@ -87,6 +87,7 @@ export interface LiveAttrsModelState {
     isBusy:boolean;
     isTTListMinimized:boolean;
     isEnabled:boolean;
+    resetConfirmed:boolean;
 }
 
 /**
@@ -190,14 +191,17 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.ResetClicked>(
             PluginInterfaces.LiveAttributes.ActionName.ResetClicked,
             (state, action) => {
-                if (window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'))) {
+                state.resetConfirmed = window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'));
+                if (state.resetConfirmed) {
                     this.reset(state);
                 }
             },
             (state, action, dispatch) => {
-                dispatch<TTActions.ResetState>({
-                    name: TTActionName.ResetState
-                });
+                if (state.resetConfirmed) {
+                    dispatch<TTActions.ResetState>({
+                        name: TTActionName.ResetState
+                    });
+                }
             }
         );
 
