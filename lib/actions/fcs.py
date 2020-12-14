@@ -21,13 +21,13 @@ class Actions(Kontext):
     An action controller providing services related to the Federated Content Search support
     """
 
-    def __init__(self, request, ui_lang):
+    def __init__(self, request, ui_lang, tt_cache):
         """
         arguments:
         request -- Werkzeug's request object
         ui_lang -- a language code in which current action's result will be presented
         """
-        super(Actions, self).__init__(request=request, ui_lang=ui_lang)
+        super(Actions, self).__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
         self.search_attrs = settings.get('fcs', 'search_attributes', ['word'])
 
     def get_mapping_url_prefix(self):

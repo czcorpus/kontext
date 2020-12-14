@@ -21,8 +21,8 @@ from argmapping import WidectxArgsMapping
 
 class Options(Kontext):
 
-    def __init__(self, request, ui_lang):
-        super(Options, self).__init__(request, ui_lang)
+    def __init__(self, request, ui_lang, tt_cache):
+        super(Options, self).__init__(request, ui_lang, tt_cache)
 
     def get_mapping_url_prefix(self):
         return '/options/'
