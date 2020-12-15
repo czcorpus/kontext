@@ -15,7 +15,7 @@ from enum import Enum
 import logging
 import attr
 
-from controller.req_args import RequestArgsProxy
+from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy, is_req_args_proxy
 
 
 class Persistence(Enum):
@@ -247,7 +247,7 @@ class Args(object):
                 return 'visible-kwic'
         return value
 
-    def map_args_to_attrs(self, args: Union[RequestArgsProxy, Dict[str, Any]]):
+    def map_args_to_attrs(self, args: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
         """
         Set existing attrs of self to the values provided by args. Multi-value keys are supported
         in a limited way - only list of strings can be set.
@@ -255,7 +255,7 @@ class Args(object):
         arguments:
         req_args -- a RequestArgsProxy instance or a general dict containing parameters
         """
-        in_args = args if isinstance(args, RequestArgsProxy) else RequestArgsProxy(args, {}, {})
+        in_args = args if is_req_args_proxy(args) else create_req_arg_proxy(args, {}, {})
         for key in in_args.keys():
             values = in_args.getlist(key)
             if len(values) > 0:
