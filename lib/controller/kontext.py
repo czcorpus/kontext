@@ -617,7 +617,7 @@ class Kontext(Controller):
         """
         def validate_access(cn, allowed):
             if cn and cn.lower() in allowed:
-                return True, allowed[cn]
+                return True, allowed[cn.lower()]
             else:
                 return False, ''
 
