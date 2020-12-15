@@ -207,7 +207,7 @@ class Kontext(Controller):
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
         self.on_conc_store: Callable[[List[str]], None] = lambda s: None
-        
+
         self._tt_cache = tt_cache
         self._tt = None  # this will be instantiated lazily
 
@@ -616,7 +616,7 @@ class Kontext(Controller):
         Returns: a 2-tuple (copus id, corpus variant)
         """
         def validate_access(cn, allowed):
-            if cn in allowed:
+            if cn and cn.lower() in allowed:
                 return True, allowed[cn]
             else:
                 return False, ''

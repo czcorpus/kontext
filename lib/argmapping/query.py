@@ -433,7 +433,7 @@ def build_conc_form_args(corpora: List[str], data: Dict[str, Any], op_key: str) 
         raise ValueError(f'Cannot determine stored conc args class from type {tp}')
 
 
-class QuickFilterArgsConv(object):
+class QuickFilterArgsConv:
 
     def __init__(self, args) -> None:  # TODO args type ???
         self.args = args
