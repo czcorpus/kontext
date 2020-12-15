@@ -46,9 +46,9 @@ class StaticAuth(AbstractRemoteAuth):
             for corp in zone['corpora']:
                 tmp = corp.split('/')
                 if len(tmp) == 2:
-                    list_corpora[tmp[1]] = tmp[0]
+                    list_corpora[tmp[1].lower()] = tmp[0]
                 else:
-                    list_corpora[tmp[0]] = None
+                    list_corpora[tmp[0].lower()] = None
 
     def anonymous_user(self):
         return dict(
