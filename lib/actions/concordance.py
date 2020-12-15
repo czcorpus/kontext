@@ -113,8 +113,7 @@ class Actions(Querying):
         return None
 
     def add_globals(self, result, methodname, action_metadata):
-        super(Actions, self).add_globals(result, methodname, action_metadata)
-
+        super().add_globals(result, methodname, action_metadata)
         conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
         conc_args.set('q', [q for q in result.get('Q')])
         if corplib.is_subcorpus(self.corp):
