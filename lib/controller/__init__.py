@@ -50,7 +50,7 @@ import strings
 import plugins
 import settings
 from translation import ugettext as translate
-from .req_args import RequestArgsProxy
+from .req_args import RequestArgsProxy, create_req_arg_proxy
 from argmapping import Persistence, Args
 from argmapping.func import convert_func_mapping_types
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
@@ -578,7 +578,7 @@ class Controller(object):
                 raise UserActionException(
                     'Unknown output format: {0}'.format(self._request.args['format']))
         self.add_validator(partial(self._validate_http_method, action_metadata))
-        return RequestArgsProxy(self._request.form, self._request.args, self._request.json)
+        return create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
 
     def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str], result: Optional[Dict[str, Any]], err_desc: Tuple[Optional[Exception], Optional[str]]) -> None:
         """
@@ -666,7 +666,7 @@ class Controller(object):
         ex -- a risen exception
         return_type --
         """
-        ans = RequestArgsProxy(self._request.form, self._request.args, self._request.json)
+        ans = create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
         if return_type == 'json':
             ans.add_forced_arg('error_code', getattr(ex, 'error_code', None))
             ans.add_forced_arg('error_args', getattr(ex, 'error_args', {}))
