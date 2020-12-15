@@ -207,7 +207,7 @@ def parse_query(tag_prefix, query):
     return substrs, query_keywords
 
 
-class DeafultCorplistProvider(CorplistProvider):
+class DefaultCorplistProvider(CorplistProvider):
     """
     Corpus listing and filtering service
     """
@@ -448,7 +448,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return cl
 
     def create_corplist_provider(self, plugin_api):
-        return DeafultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
+        return DefaultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
 
     def _get_corplist_title(self, elm, lang):
         """

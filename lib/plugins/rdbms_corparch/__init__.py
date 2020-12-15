@@ -87,7 +87,7 @@ class CorpusListItem(DictLike):
         return self.__unicode__()
 
 
-class DeafultCorplistProvider(CorplistProvider):
+class DefaultCorplistProvider(CorplistProvider):
     """
     Corpus listing and filtering service
     """
@@ -424,7 +424,7 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
             menu_item.add_args(('requestable', '1'))
 
     def create_corplist_provider(self, plugin_api):
-        return DeafultCorplistProvider(plugin_api, self, self._tag_prefix)
+        return DefaultCorplistProvider(plugin_api, self, self._tag_prefix)
 
     def _export_favorite(self, plugin_api):
         ans = []
