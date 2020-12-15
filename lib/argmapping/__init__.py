@@ -268,10 +268,13 @@ class Args(object):
                         setattr(self, key, int(
                             self._upgrade_legacy_value(key, values[-1], in_args)))
                     else:
+                        if key in ('attrs', 'structs', 'refs'):
+                            setattr(self, key, ','.join(values))
                         # when mapping to a scalar arg we always take the last
                         # value item but in such case, the length of values should
                         # be always 1
-                        setattr(self, key, self._upgrade_legacy_value(key, values[-1], in_args))
+                        else:
+                            setattr(self, key, self._upgrade_legacy_value(key, values[-1], in_args))
 
 
 def update_attr(obj: Args, k: str, v: Union[str, int, float]) -> None:
