@@ -245,7 +245,10 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                     })}
                 </ul>
             </div>
-            <SelectAll onChange={() => props.handleAllClick(props.ident)} isSelected={props.hasSelectAll} />
+            {List.empty(props.items) ?
+                null :
+                <SelectAll onChange={() => props.handleAllClick(props.ident)} isSelected={props.hasSelectAll} />
+            }
         </>
     );
 
@@ -410,7 +413,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
     }> = (props) => {
 
-        const handleSelectChangeFn = (event:React.ChangeEvent<HTMLInputElement>) => {
+        const handleSelectChangeFn = () => {
             dispatcher.dispatch<Actions.ChangeQuerySuggestionMode>({
                 name: ActionName.ChangeQuerySuggestionMode,
                 payload: {
@@ -422,24 +425,32 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         return (
             <section>
                 <div className="Extensions">
-                    <fieldset>
-                        <legend className="label">{helpers.translate('options__query_suggestions_label')}</legend>
-                        <input type="checkbox" checked={props.queryHintEnabled} onChange={handleSelectChangeFn} />
-                        <p className="configured-items note">
-                            {helpers.translate('options__currently_avail_qs_providers')}:{'\u00a0'}
-                            {!List.empty(props.availProviders) ?
-                                <>
-                                    {List.map(
-                                        (v, i) => <React.Fragment key={`item:${i}`}>{i > 0 ? ', ' : ''}
-                                            <span className="item">&quot;{v}&quot;</span>
-                                        </React.Fragment>,
-                                        props.availProviders
-                                    )}
-                                </> :
-                                null
-                            }
-                        </p>
-                    </fieldset>
+                    <dl>
+                        <dt>
+                            <label className="label" htmlFor="options-qs-switch">
+                                {helpers.translate('options__query_suggestions_label')}
+                            </label>:{'\u00a0'}
+                            <layoutViews.ToggleSwitch checked={props.queryHintEnabled} onChange={handleSelectChangeFn}
+                                    id="options-qs-switch" />
+
+                        </dt>
+                        <dd>
+                            <p className="configured-items note">
+                                {helpers.translate('options__currently_avail_qs_providers')}:{'\u00a0'}
+                                {!List.empty(props.availProviders) ?
+                                    <>
+                                        {List.map(
+                                            (v, i) => <React.Fragment key={`item:${i}`}>{i > 0 ? ', ' : ''}
+                                                <span className="item">&quot;{v}&quot;</span>
+                                            </React.Fragment>,
+                                            props.availProviders
+                                        )}
+                                    </> :
+                                    <span>{helpers.translate('options__currently_avail_qs_none')}</span>
+                                }
+                            </p>
+                        </dd>
+                    </dl>
                 </div>
             </section>
         );
