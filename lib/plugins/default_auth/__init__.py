@@ -103,11 +103,12 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     USER_INDEX_KEY = 'user_index'
 
-    def __init__(self, db, sessions, anonymous_user_id, login_url, logout_url, smtp_server, mail_sender,
+    def __init__(self, db, sessions, anonymous_user_id, case_sensitive_corpora_names: bool,
+                 login_url, logout_url, smtp_server, mail_sender,
                  confirmation_token_ttl, on_register_get_corpora):
         """
         """
-        super(DefaultAuthHandler, self).__init__(anonymous_user_id)
+        super().__init__(anonymous_user_id)
         self.db = db
         self.sessions = sessions
         self._login_url = login_url
@@ -116,6 +117,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         self._mail_sender = mail_sender
         self._confirmation_token_ttl = confirmation_token_ttl
         self._on_register_get_corpora = on_register_get_corpora
+        self._case_sensitive_corpora_names = case_sensitive_corpora_names
 
     def validate_user(self, plugin_api, username, password):
         user_data = self._find_user(username)
@@ -178,6 +180,9 @@ class DefaultAuthHandler(AbstractInternalAuth):
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return dict((c, self._variant_prefix(c)) for c in corpora)
+
+    def ignores_corpora_names_case(self):
+        return not self._case_sensitive_corpora_names
 
     def get_user_info(self, plugin_api):
         user_key = mk_user_key(plugin_api.user_id)
@@ -355,6 +360,7 @@ def create_instance(conf, db, sessions):
     return DefaultAuthHandler(db=db,
                               sessions=sessions,
                               anonymous_user_id=int(plugin_conf['anonymous_user_id']),
+                              case_sensitive_corpora_names=plugin_conf.get('default:case_sensitive_corpora_names', False),
                               login_url=plugin_conf.get('login_url', '/user/login'),
                               logout_url=plugin_conf.get('logout_url', '/user/logoutx'),
                               smtp_server=conf.get('mailing', 'smtp_server'),

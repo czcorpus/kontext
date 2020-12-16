@@ -615,17 +615,10 @@ class Kontext(Controller):
 
         Returns: a 2-tuple (copus id, corpus variant)
         """
-        def validate_access(cn, allowed):
-            if cn and cn.lower() in allowed:
-                return True, allowed[cn.lower()]
-            else:
-                return False, ''
-
         with plugins.runtime.AUTH as auth:
-            allowed_corpora = auth.permitted_corpora(self.session_get('user'))
             if not action_metadata['skip_corpus_init']:
-                corpname, redirect = self._determine_curr_corpus(form, allowed_corpora)
-                has_access, variant = validate_access(corpname, allowed_corpora)
+                corpname, redirect = self._determine_curr_corpus(form)
+                has_access, variant = auth.validate_access(corpname, self.session_get('user'))
                 if has_access and redirect:
                     url_pref = self.get_mapping_url_prefix()
                     if len(url_pref) > 0:
@@ -635,7 +628,7 @@ class Kontext(Controller):
                 elif not has_access:
                     auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
                 for al_corp in form.getlist('align'):
-                    al_access, al_variant = validate_access(al_corp, allowed_corpora)
+                    al_access, al_variant = auth.validate_access(al_corp, self.session_get('user'))
                     # we cannot accept aligned corpora without access right
                     # or with different variant (from implementation reasons in this case)
                     # than the main corpus has
@@ -756,7 +749,7 @@ class Kontext(Controller):
             self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
                                                        ).add_args(('saveformat', save_format)))
 
-    def _determine_curr_corpus(self, form: RequestArgsProxy, corp_list):
+    def _determine_curr_corpus(self, form: RequestArgsProxy):
         """
         This method tries to determine which corpus is currently in use.
         If no answer is found or in case there is a conflict between selected
@@ -766,7 +759,6 @@ class Kontext(Controller):
 
         Parameters:
         form -- currently processed HTML form (if any)
-        corp_list -- a dict (corpus_id => corpus_variant) representing all the corpora user can access
 
         Return:
         2-tuple with (current corpus, whether we should reload to the main page)
@@ -776,17 +768,18 @@ class Kontext(Controller):
         if len(form.corpora) > 0:
             cn = form.corpora[0]
         elif not self.user_is_anonymous():
-            with plugins.runtime.QUERY_STORAGE as qs:
+            with plugins.runtime.QUERY_STORAGE as qs, plugins.runtime.AUTH as auth:
                 queries = qs.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
                 if len(queries) > 0:
                     cn = queries[0].get('corpname', '')
                     redirect = True
 
-        # 4th option (fallback): if no current corpus is set then we try previous user's corpus
-        # and if no such exists then we try default one as configured
-        # in settings.xml
+        # fallback option: if no current corpus is set then we try previous user's corpus
+        # and if no such exists then we try default one as configured in settings.xml
+        def test_fn(cname):
+            auth.validate_access(cname, self.session_get('user'))
         if not cn:
-            cn = settings.get_default_corpus(corp_list)
+            cn = settings.get_default_corpus(test_fn)
             redirect = True
         return cn, redirect
 

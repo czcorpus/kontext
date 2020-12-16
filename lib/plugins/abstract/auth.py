@@ -26,7 +26,7 @@ from controller.errors import CorpusForbiddenException, UserActionException
 class MetaAbstractAuth(abc.ABCMeta):
     """
     This meta-class is used to wrap calls for permitted_corpora
-    and normalize all the corpora IDs to lowercase without requiring
+    and optionally normalize all the corpora IDs to lowercase without requiring
     this from individual plug-ins or different code chunks where
     the method is called.
     """
@@ -34,7 +34,11 @@ class MetaAbstractAuth(abc.ABCMeta):
         super().__init__(name, bases, clsdict)
         if 'permitted_corpora' in clsdict:
             def wrapped_perm_corp(self, user_dict):
-                return dict((c.lower(), v) for c, v in clsdict['permitted_corpora'](self, user_dict).items())
+                corpora = clsdict['permitted_corpora'](self, user_dict)
+                if self.ignores_corpora_names_case():
+                    return dict((c.lower(), v) for c, v in corpora.items())
+                else:
+                    return corpora
             setattr(cls, 'permitted_corpora', wrapped_perm_corp)
 
 
@@ -92,6 +96,20 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         a dict corpus_id=>corpus_variant
         """
 
+    def validate_access(self, corpus_name: str, user_dict: Dict[str, Any]) -> Tuple[bool, str]:
+        """
+        returns a 2-tuple ( "has access?", accessible variant )
+        """
+        if not corpus_name:
+            return False, ''
+        if self.ignores_corpora_names_case():
+            corpus_name = corpus_name.lower()
+        allowed = self.permitted_corpora(user_dict)
+        if corpus_name in allowed:
+            return True, allowed[corpus_name]
+        else:
+            return False, ''
+
     def on_forbidden_corpus(self, plugin_api: 'PluginApi', corpname: str, corp_variant: str):
         """
         Optional method run in case KonText finds out that user
@@ -120,6 +138,9 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         An action performed after logout process finishes
         """
         pass
+
+    def ignores_corpora_names_case(self):
+        return True
 
 
 class AbstractSemiInternalAuth(AbstractAuth):
