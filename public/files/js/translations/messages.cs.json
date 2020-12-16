@@ -531,6 +531,7 @@
         "options__which_attrs_show_hd": "Které atributy zobrazit?",
         "options__cannot_remove_attribute_set_as_main": "Ze zobrazení nelze odstranit atribut, který je aktuálně nastaven jako hlavní",
         "options__currently_avail_qs_providers": "Funkce nastavené pro aktuální korpus",
+        "options__currently_avail_qs_none": "žádné",
         "subcform__create_subcorpus": "Vytvořit subkorpus",
         "subcform__mode_attr_list": "Seznam atributů",
         "subcform__mode_raw_within": "Vlastní 'within' podmínka",
