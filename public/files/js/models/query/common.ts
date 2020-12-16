@@ -420,13 +420,20 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     if (queryObj.qtype === 'simple') {
                         queryObj.use_regexp = !queryObj.use_regexp;
                         queryObj.qmcase = queryObj.use_regexp;
-                        this.autoSuggestTrigger.next(tuple(
-                            action.payload.sourceId,
-                            0,
-                            0
-                        ));
+                        if (queryObj.use_regexp) {
+                            queryObj.queryParsed = List.map(
+                                item => ({...item, suggestions: null}),
+                                queryObj.queryParsed
+                            );
+                            this.rehighlightSimpleQuery(queryObj);
+                        }
                     }
                 });
+                this.autoSuggestTrigger.next(tuple(
+                    action.payload.sourceId,
+                    0,
+                    0
+                ));
             }
         );
 
@@ -610,12 +617,18 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         state.suggestionsLoading[action.payload.sourceId][action.payload.valueStartIdx] = false;
                     });
 
-                } else if (this.isCurrentSuggestionInvalid(
-                    this.state,
-                    action.payload.sourceId,
-                    action.payload.valueStartIdx,
-                    action.payload
-                )) {
+                } else if (
+                    this.shouldAcceptSuggestion(
+                        this.state,
+                        action.payload.sourceId,
+                        action.payload) &&
+                    this.isCurrentSuggestionInvalid(
+                        this.state,
+                        action.payload.sourceId,
+                        action.payload.valueStartIdx,
+                        action.payload
+                    )
+                ) {
                     this.changeState(state => {
                         this.addSuggestion(
                             state,
@@ -769,7 +782,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                 List.forEach(
                     args => {
-                        if (this.shouldAskForSuggestion(args.value)) {
+                        if (this.shouldAskForSuggestion(sourceId, args.value)) {
                             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                                 name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                                 payload: {
@@ -839,6 +852,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             return queryObj.parsedAttrs[tokIdx].suggestions === null ||
                 queryObj.parsedAttrs[tokIdx].suggestions.timeReq <= data.timeReq;
         }
+    }
+
+    private shouldAcceptSuggestion(
+        state:QueryFormModelState,
+        sourceId:string,
+        data:PluginInterfaces.QuerySuggest.SuggestionArgs & PluginInterfaces.QuerySuggest.SuggestionAnswer
+    ):boolean {
+
+        return state.queries[sourceId].qtype === data.queryType;
     }
 
     /**
@@ -1093,8 +1115,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return 'simple_ic';
     }
 
-    private shouldAskForSuggestion(srchWord:string):boolean {
-        return this.state.suggestionsEnabled && !!srchWord.trim();
+    private shouldAskForSuggestion(sourceId:string, srchWord:string):boolean {
+        const queryObj = this.state.queries[sourceId];
+        const queryOptsOk = queryObj.qtype === 'simple' && !queryObj.use_regexp ||
+            queryObj.qtype === 'advanced';
+        return this.state.suggestionsEnabled && !!srchWord.trim() && queryOptsOk;
     }
 
     protected validateQuery(query:string, queryType:QueryType):boolean {
