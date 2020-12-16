@@ -80,6 +80,12 @@ section.closeable-frame {
     }
 }
 
+@media screen and (max-width: 479px) {
+    section.closeable-frame {
+        max-width: 100%;
+    }
+}
+
 .tooltip-box {
     z-index: 1000;
     position: absolute;
@@ -562,14 +568,14 @@ fieldset.FieldsetOutputOptions {
 
         .struct-groups {
 
-            display: flex;
-            align-items: flex-start;
-            align-items: stretch;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
 
             div.group {
                 padding-left: 0.7em;
                 display: flex;
                 flex-direction: column;
+                margin-bottom: 2em;
 
                 .AttrList {
                     flex-grow: 1;
@@ -587,11 +593,15 @@ fieldset.FieldsetOutputOptions {
                 }
             }
 
-            div.group:not(:last-child) {
+            div.group:not(:nth-child(4)) {
                 border-color: @color-superlight-text;
                 border-width: 0 1px 0 0;
                 border-style: solid;
                 padding-right: 0.7em;
+            }
+
+            div.group:last-child {
+                border-style: none;
             }
 
             label.struct {
