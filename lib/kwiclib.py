@@ -276,6 +276,8 @@ class Kwic(object):
             out.GroupNumbers = format_labelmap(args.labelmap)
         if fromp > 1:
             pagination.prev_page = fromp - 1
+        if args.pagesize <= 0:
+            raise ValueError('pagesize must be > 0')
         if self.conc.size() > args.pagesize:
             out.fromp = fromp
             numofpages = math.ceil(self.conc.size() / args.pagesize) if self.conc.size() > 0 else 1
