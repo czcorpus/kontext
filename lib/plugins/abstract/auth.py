@@ -35,12 +35,10 @@ class MetaAbstractAuth(abc.ABCMeta):
         if 'permitted_corpora' in clsdict:
             def wrapped_perm_corp(self, user_dict):
                 corpora = clsdict['permitted_corpora'](self, user_dict)
-
-                if not self._lowercase_names:
+                if self.ignores_corpora_names_case():
+                    return dict((c.lower(), v) for c, v in corpora.items())
+                else:
                     return corpora
-
-                return dict((c.lower(), v) for c, v in corpora.items())
-
             setattr(cls, 'permitted_corpora', wrapped_perm_corp)
 
 
@@ -50,15 +48,12 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
     Custom implementations should inherit from this.
     """
 
-    def __init__(self, anonymous_id: int,
-                 lowercase_names: bool=True) -> None:
+    def __init__(self, anonymous_id: int) -> None:
         """
         arguments:
         anonymous_id -- a numeric ID of anonymous user
-        lowercase_names -- whether to normalize corpus names to lowercase
         """
         self._anonymous_id = anonymous_id
-        self._lowercase_names = lowercase_names
 
     def anonymous_user(self) -> Dict[str, Any]:
         """
@@ -101,6 +96,20 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         a dict corpus_id=>corpus_variant
         """
 
+    def validate_access(self, corpus_name: str, user_dict: Dict[str, Any]) -> Tuple[bool, str]:
+        """
+        returns a 2-tuple ( "has access?", accessible variant )
+        """
+        if not corpus_name:
+            return False, ''
+        if self.ignores_corpora_names_case():
+            corpus_name = corpus_name.lower()
+        allowed = self.permitted_corpora(user_dict)
+        if corpus_name in allowed:
+            return True, allowed[corpus_name]
+        else:
+            return False, ''
+
     def on_forbidden_corpus(self, plugin_api: 'PluginApi', corpname: str, corp_variant: str):
         """
         Optional method run in case KonText finds out that user
@@ -130,12 +139,9 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         """
         pass
 
-    @property
-    def lowercase_corpora_names(self) -> bool:
-        """
-        Returns whether to normalize corpus names to lowercase.
-        """
-        return self._lowercase_names
+    def ignores_corpora_names_case(self):
+        return True
+
 
 class AbstractSemiInternalAuth(AbstractAuth):
 

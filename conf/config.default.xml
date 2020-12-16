@@ -85,7 +85,6 @@
         <colls_cache_ttl>3600</colls_cache_ttl>
         <colls_cache_min_lines>50</colls_cache_min_lines>
         <conc_dir>/var/local/corpora/conc</conc_dir>
-        <lowercase_names>true</lowercase_names>
         <default_corpora>
             <item>susanne</item>
             <!-- item>insert_your_default_corpus_here</item -->

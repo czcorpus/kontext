@@ -580,11 +580,6 @@
                         be cacheable.</a:documentation>
                         <data type="positiveInteger" />
                     </element>
-                    <element name="lowercase_names">
-                        <a:documentation>Specifies whether to normalize corpus names
-                        to lowercase.</a:documentation>
-                        <data type="boolean" />
-                    </element>
                     <element name="default_corpora">
                         <a:documentation>Specifies a default corpous to be offered to a user
                         in case she does not specify anything. A list can be used to define
