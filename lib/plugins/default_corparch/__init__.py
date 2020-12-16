@@ -688,8 +688,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             if root is not None:
                 self._parse_corplist_node(root, '/', lang, data)
 
-        def lowercase(s): s.lower()
-        def identity(s): s
+        def lowercase(s): return s.lower()
+        def identity(s): return s
         name_mod = lowercase if self._auth.ignores_corpora_names_case() else identity
         self._corplist = OrderedDict([(name_mod(item['id']), item) for item in data])
 
