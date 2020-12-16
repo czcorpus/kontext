@@ -1605,6 +1605,7 @@ class Actions(Querying):
         corpus_info = self.get_corpus_info(self.args.corpname)
         plg_status = {}
         self._setup_optional_plugins_js(plg_status)
+        conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
 
         ans = dict(
             corpname=self.args.corpname,
@@ -1618,7 +1619,7 @@ class Actions(Querying):
                 origSubcorpName=getattr(self.corp, 'orig_subcname', self.args.usesubcorp),
                 foreignSubcorp=(self.corp.author_id is not None and
                                 self.session_get('user', 'id') != self.corp.author_id)),
-            currentArgs=[['corpname', self.args.corpname]],
+            currentArgs=conc_args.export(),
             compiledQuery=[],
             concPersistenceOpId=None,
             alignedCorpora=self.args.align,
