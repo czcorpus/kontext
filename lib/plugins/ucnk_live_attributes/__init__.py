@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
