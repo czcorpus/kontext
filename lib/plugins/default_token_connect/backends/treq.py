@@ -108,8 +108,8 @@ class TreqBackend(HTTPBackend):
 
     def mk_server_addr(self):
         if self._conf.get('ssl', False):
-            return ('https://' + self._conf['server']).encode('utf-8')
-        return ('http://' + self._conf['server']).encode('utf-8')
+            return f'https://{self._conf["server"]}'
+        return f'http://{self._conf["server"]}'
 
     @cached
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
