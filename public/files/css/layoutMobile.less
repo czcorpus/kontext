@@ -224,6 +224,22 @@
             }
         }
     }
+
+    ul.tabs {
+        white-space: pre-wrap;
+
+        li {
+            display: block;
+        }
+
+        li:not(:first-child) {
+            margin-left: 0em;
+        }
+
+        li:not(:last-child) {
+            padding-right: 0em;
+        }
+    }
 }
 
 @import "~custom-styles/theme-mobile.less";
