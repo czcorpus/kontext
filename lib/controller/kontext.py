@@ -778,7 +778,7 @@ class Kontext(Controller):
         # fallback option: if no current corpus is set then we try previous user's corpus
         # and if no such exists then we try default one as configured in settings.xml
         def test_fn(auth_plg, cname):
-            auth_plg.validate_access(cname, self.session_get('user'))
+            return auth_plg.validate_access(cname, self.session_get('user'))
 
         if not cn:
             with plugins.runtime.AUTH as auth:
