@@ -309,7 +309,7 @@ export class CollPage {
                 state, this.collFormModel.getSubmitArgs(formState));
         args.remove('format');
         this.layoutModel.getHistory().replaceState(
-            'freqs',
+            'collx',
             args,
             {
                 currPage: state.currPage,
