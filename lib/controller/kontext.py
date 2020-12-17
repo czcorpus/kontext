@@ -21,6 +21,7 @@ from werkzeug import Request
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
 import attr
+from functools import partial
 
 import json
 import logging
@@ -768,7 +769,7 @@ class Kontext(Controller):
         if len(form.corpora) > 0:
             cn = form.corpora[0]
         elif not self.user_is_anonymous():
-            with plugins.runtime.QUERY_STORAGE as qs, plugins.runtime.AUTH as auth:
+            with plugins.runtime.QUERY_STORAGE as qs:
                 queries = qs.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
                 if len(queries) > 0:
                     cn = queries[0].get('corpname', '')
@@ -776,11 +777,13 @@ class Kontext(Controller):
 
         # fallback option: if no current corpus is set then we try previous user's corpus
         # and if no such exists then we try default one as configured in settings.xml
-        def test_fn(cname):
-            auth.validate_access(cname, self.session_get('user'))
+        def test_fn(auth_plg, cname):
+            auth_plg.validate_access(cname, self.session_get('user'))
+
         if not cn:
-            cn = settings.get_default_corpus(test_fn)
-            redirect = True
+            with plugins.runtime.AUTH as auth:
+                cn = settings.get_default_corpus(partial(test_fn, auth))
+                redirect = True
         return cn, redirect
 
     @property
