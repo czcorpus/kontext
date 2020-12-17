@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 import abc
 from translation import ugettext as _
-from controller.errors import CorpusForbiddenException, UserActionException
+from controller.errors import CorpusForbiddenException, ImmediateRedirectException
 
 
 class MetaAbstractAuth(abc.ABCMeta):
@@ -121,9 +121,8 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         if corpname:
             raise CorpusForbiddenException(corpname, corp_variant)
         else:
-            # normally, this happens only with flawed configuration
-            # (e.g. no default accessible corpus for the current user)
-            raise UserActionException('Cannot find any usable corpus for the user.')
+            # no default accessible corpus for the current user
+            raise ImmediateRedirectException(plugin_api.create_url('corpora/corplist', {}))
 
     @abc.abstractmethod
     def get_user_info(self, plugin_api: 'PluginApi') -> Dict[str, Any]:
