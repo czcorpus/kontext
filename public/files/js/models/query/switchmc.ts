@@ -80,7 +80,12 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
         this.addActionHandler<MainMenuActions.ShowSwitchMc>(
             MainMenuActionName.ShowSwitchMc,
             action => {
-                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
+                    error: err => {
+                        this.layoutModel.showMessage('error',
+                                `Failed to synchronize SwitchMainCorpModel: ${err}`);
+                    }
+                });
             }
         );
 

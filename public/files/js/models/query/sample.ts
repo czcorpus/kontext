@@ -71,8 +71,12 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         this.addActionHandler<MainMenuActions.ShowSample>(
             MainMenuActionName.ShowSample,
             action => {
-                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
-                this.emitChange();
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
+                    error: err => {
+                        this.pageModel.showMessage('error',
+                                `Failed to synchronize ConcSampleModel: ${err}`);
+                    }
+                })
             }
         );
 

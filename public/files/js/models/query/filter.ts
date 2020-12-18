@@ -349,7 +349,12 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         this.addActionHandler<MainMenuActions.ShowFilter>(
             MainMenuActionName.ShowFilter,
             action => {
-                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
+                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
+                    error: (err) => {
+                        this.pageModel.showMessage('error',
+                                `Failed to synchronize filter model: ${err}`);
+                    }
+                });
             }
         );
 
