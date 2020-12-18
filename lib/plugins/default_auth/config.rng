@@ -43,7 +43,7 @@
                     </oneOrMore>
                 </element>
             </optional>
-            <element name="case_sensitive_corp_names">
+            <element name="case_sensitive_corpora_names">
                 <a:documentation>By default, KonText converts all the corpora names to lowercase.
                     Setting this to true (or 1) disables the conversion and allows having corpora.
                     like 'Foo', 'FOO', 'foo' side by side.

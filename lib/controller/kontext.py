@@ -614,7 +614,7 @@ class Kontext(Controller):
             form:
             action_metadata:
 
-        Returns: a 2-tuple (copus id, corpus variant)
+        Returns: a 2-tuple (corpus id, corpus variant)
         """
         with plugins.runtime.AUTH as auth:
             if not action_metadata['skip_corpus_init']:
