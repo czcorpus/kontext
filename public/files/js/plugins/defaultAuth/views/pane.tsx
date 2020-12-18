@@ -91,7 +91,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <LoginButton /> ---------------------------------
 
-    const LoginButton:React.SFC<{
+    const LoginButton:React.FC<{
         isAnonymous:string;
         fullname:string,
         onLogoutClick:()=>void,
@@ -112,7 +112,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <SignUpButton /> ---------------------------------
 
-    const SignUpButton:React.SFC<{
+    const SignUpButton:React.FC<{
 
     }> = (props) => {
         return <a href={he.createActionLink('user/sign_up_form')}>{he.translate('user__signup_btn')}</a>;

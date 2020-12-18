@@ -31,7 +31,7 @@ export interface PasswordSetResponse extends Kontext.AjaxResponse {
 
 export interface SignUpResponse extends Kontext.AjaxResponse {
     ok:boolean;
-    error_args:Array<[string, string]>;
+    error_args:{[msgId:string]:string};
 }
 
 export interface ValidationStatus {
