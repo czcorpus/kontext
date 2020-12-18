@@ -219,7 +219,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         initialData:Array<ServerLineData>,
         providesAdHocIpm:boolean
     ) {
-
         const viewAttrs = layoutModel.exportConcArgs().head('attrs').split(',');
         super(
             dispatcher,
