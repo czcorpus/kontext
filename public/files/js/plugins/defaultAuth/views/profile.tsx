@@ -28,27 +28,27 @@ import { Actions, ActionName } from '../actions';
 
 export interface UserProfileViews {
     UserProfileView:React.ComponentClass;
-    TRNewPasswdInput:React.SFC<{
+    TRNewPasswdInput:React.FC<{
         value:Kontext.FormValue<string>;
         isRegistration:boolean;
     }>;
-    TRNewPasswdInput2:React.SFC<{
+    TRNewPasswdInput2:React.FC<{
         value:Kontext.FormValue<string>;
         isRegistration:boolean;
     }>;
-    TrUserFirstNameInput:React.SFC<{
+    TrUserFirstNameInput:React.FC<{
         onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
         value:Kontext.FormValue<string>;
     }>;
-    TrUserLastNameInput:React.SFC<{
+    TrUserLastNameInput:React.FC<{
         onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
         value:Kontext.FormValue<string>;
     }>;
-    TrUserAffiliationInput:React.SFC<{
+    TrUserAffiliationInput:React.FC<{
         onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
         value:Kontext.FormValue<string>;
     }>;
-    TrUserEmailInput:React.SFC<{
+    TrUserEmailInput:React.FC<{
         onChange?:((evt:React.ChangeEvent<HTMLInputElement>)=>void);
         value:Kontext.FormValue<string>;
     }>;
