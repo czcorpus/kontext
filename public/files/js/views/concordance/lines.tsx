@@ -270,7 +270,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     const TextKwicMode:React.FC<{
         corpname:string;
-        mainCorp:string;
+        isAlignedMainCorp:boolean;
         corpsWithKwic:Array<string>;
         supportsTokenConnect:boolean;
         lineIdx:number;
@@ -285,7 +285,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         const exportTextElmClass = (corpname:string, ...customClasses:Array<string>) => {
             const ans = customClasses.slice();
-            if (corpname === props.mainCorp) {
+            if (props.isAlignedMainCorp) {
                 ans.push('maincorp');
             }
             return ans.join(' ');
@@ -598,7 +598,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             if (this.props.viewMode === 'kwic') {
                 return <TextKwicMode
                             corpname={corpname}
-                            mainCorp={this.props.mainCorp}
+                            isAlignedMainCorp={this.props.mainCorp === corpname && this.props.cols.length > 1}
                             corpsWithKwic={this.props.corpsWithKwic}
                             supportsTokenConnect={this.props.supportsTokenConnect}
                             lineIdx={this.props.lineIdx}

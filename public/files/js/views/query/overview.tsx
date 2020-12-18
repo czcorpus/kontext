@@ -132,6 +132,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                 } else if (subvariant === 'n') {
                     return he.translate('query__operation_name_filter_n');
                 }
+                return he.translate('query__operation_name_filter');
             case Kontext.ConcFormTypes.SORT:
                 return he.translate('query__operation_name_sort');
             case Kontext.ConcFormTypes.SAMPLE:
@@ -152,7 +153,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <QueryReplayView /> --------------------------------
 
-    const QueryReplayView:React.SFC<{}> = (props) => {
+    const QueryReplayView:React.FC<{}> = (props) => {
 
         return (
             <layoutViews.ModalOverlay onCloseKey={()=>undefined}>
@@ -170,7 +171,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <ExecutionOptions /> --------------------------------
 
-    const ExecutionOptions:React.SFC<{
+    const ExecutionOptions:React.FC<{
         operationIdx:number;
         modeRunFullQuery:boolean;
 
@@ -214,7 +215,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <QueryEditor /> --------------------------------
 
-    const QueryEditor:React.SFC<{
+    const QueryEditor:React.FC<{
         corpname:string;
         opKey:string;
         operationId:string;
@@ -330,7 +331,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <QueryOpInfo /> --------------------------------
 
-    const QueryOpInfo:React.SFC<{
+    const QueryOpInfo:React.FC<{
         idx:number;
         corpname:string;
         item:ExtendedQueryOperation;
@@ -541,7 +542,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <RedirectingQueryOverview /> -------------------------------
 
-    const RedirectingQueryOverview:React.SFC<{
+    const RedirectingQueryOverview:React.FC<{
         corpname:string;
         humanCorpname:string;
         usesubcorp:string;
@@ -609,7 +610,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
      * A component wrapping a new operation form to be
      * added to the query chain.
      */
-    const AppendOperationOverlay:React.SFC<AppendOperationOverlayProps & {currEncodedOperations:Array<ExtendedQueryOperation>}
+    const AppendOperationOverlay:React.FC<AppendOperationOverlayProps & {currEncodedOperations:Array<ExtendedQueryOperation>}
     > = (props) => {
         const handleCloseClick = () => {
             dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
@@ -819,7 +820,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     // ------------------------ <NonViewPageQueryToolbar /> --------------------------------
 
-    const NonViewPageQueryToolbar:React.SFC<NonViewPageQueryToolbarProps & QueryReplayModelState> =
+    const NonViewPageQueryToolbar:React.FC<NonViewPageQueryToolbarProps & QueryReplayModelState> =
     (props) => (
         <div>
             <RedirectingQueryOverview {...props} ops={props.currEncodedOperations} />

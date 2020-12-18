@@ -311,6 +311,7 @@
         "query__apply_filter_btn": "Použít filter",
         "query__edit_current_hd_{operation}": "Upravit existující operaci operation \u201C{operation}\u201D",
         "query__operation_name_query": "dotaz",
+        "query__operation_name_filter": "filtr",
         "query__operation_name_filter_p": "pozitivní filtr",
         "query__operation_name_filter_n": "negativní filtr",
         "query__operation_name_sort": "třídění",
