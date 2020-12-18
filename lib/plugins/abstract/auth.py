@@ -224,7 +224,12 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
 
     @abc.abstractmethod
-    def sign_up_user(self, plugin_api: 'PluginApi', credentials: Dict[str, Any]):
+    def sign_up_user(self, plugin_api: 'PluginApi', credentials: Dict[str, Any]) -> Dict[str, str]:
+        """
+        returns:
+            a dict where keys are form item identifiers where error occurred
+            and values are respective error messsages
+        """
         pass
 
     @abc.abstractmethod

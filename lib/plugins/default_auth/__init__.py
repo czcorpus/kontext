@@ -26,6 +26,7 @@ import uuid
 import time
 import datetime
 import mailing
+from collections import defaultdict
 from plugins.abstract.auth import AbstractInternalAuth, AuthException, SignUpNeedsUpdateException
 from translation import ugettext as _
 import plugins
@@ -252,25 +253,24 @@ class DefaultAuthHandler(AbstractInternalAuth):
         token = SignUpToken(user_data=credentials,
                             label=_('KonText sign up confirmation'),
                             ttl=self._confirmation_token_ttl)
-        errors = []
+        errors = defaultdict(lambda: [])
         avail_un, valid_un = self.validate_new_username(plugin_api, credentials['username'])
         if not avail_un:
-            errors.append(('username', _('Username not available')))
+            errors['username'].append(_('Username not available'))
         if not valid_un:
-            errors.append(('username', _('Username not valid') + '. ' + self.get_required_username_properties(
-                plugin_api)))
+            errors['username'].append(_('Username not valid') + '. ' + self.get_required_username_properties(
+                plugin_api))
         if credentials['password'] != credentials['password2']:
-            errors.append(('password', _('New password and its confirmation do not match.')))
-            errors.append(('password2', None))
+            errors['password'].append(_('New password and its confirmation do not match.'))
+            errors['password2'].append('')
         if not self.validate_new_password(credentials['password']):
-            errors.append(('password', _('Password not valid') + '. ' +
-                           self.get_required_password_properties()))
+            errors['password'].append(_('Password not valid') + '. ' + self.get_required_password_properties())
         if not credentials['firstname']:
-            errors.append(('firstname', _('First name not valid')))
+            errors['first_name'].append(_('First name not valid'))
         if not credentials['lastname']:
-            errors.append(('lastname', _('Last name not valid')))
+            errors['last_name'].append(_('Last name not valid'))
         if re.match(r'^[^@]+@[^@]+\.[^@]+$', credentials['email']) is None:  # just a basic e-mail syntax validation
-            errors.append(('email', _('E-mail not valid')))
+            errors['email'].append(_('E-mail not valid'))
 
         credentials['password'] = mk_pwd_hash_default(credentials['password'])
         del credentials['password2']
@@ -280,9 +280,10 @@ class DefaultAuthHandler(AbstractInternalAuth):
                                              credentials['firstname'], credentials['lastname'], token)
             if not ok:
                 raise Exception(
-                    _('Failed to send a confirmation e-mail. Please check that you entered a valid e-mail and try again. Alternatively you can report a problem.'))
+                    _('Failed to send a confirmation e-mail. Please check that you entered a valid e-mail and try '
+                      'again. Alternatively you can report a problem.'))
 
-        return errors
+        return dict((k, ' '.join(v)) for k, v in errors.items())
 
     def send_confirmation_mail(self, plugin_api, user_email, username, firstname, lastname, token):
         expir_date = (

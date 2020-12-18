@@ -311,12 +311,10 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                         });
                     },
                     (err) => {
-                        const errors = err.response['error_args'] as
-                            Array<[keyof SubmitFormErrors, SubmitFormErrors[keyof SubmitFormErrors]]>;
                         dispatch<Actions.SubmitSignUpDone>({
                             name: ActionName.SubmitSignUpDone,
                             payload: {
-                                errors: Dict.fromEntries(errors)
+                                errors: err.response['error_args'] as SubmitFormErrors
                             },
                             error: err
                         });

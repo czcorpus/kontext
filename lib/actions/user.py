@@ -101,7 +101,7 @@ class User(Kontext):
                 password2=request.form['password2']
             ))
         if len(errors) == 0:
-            return dict(ok=True, error_args=[])
+            return dict(ok=True, error_args={})
         else:
             raise UserActionException(_('Failed to sign up user'), error_args=errors)
 
