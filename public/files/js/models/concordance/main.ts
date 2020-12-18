@@ -304,7 +304,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             action => {
                 if (!action.error) {
                     this.layoutModel.updateConcPersistenceId(action.payload.data.conc_persistence_op_id);
-                    this.importData(action.payload.data);
+                    this.changeState(state => {
+                        this.importData(state, action.payload.data);
+                        state.unfinishedCalculation = false;
+                    });
                     this.pushHistoryState(this.state.currentPage);
                 }
             }
@@ -837,36 +840,36 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             args
 
         ).pipe(
-            tap(update => {
-                this.importData(update);
-                this.changeState(state => {
-                    state.currentPage = pageNum
-                });
-            }),
+            tap(
+                update => {
+                    this.changeState(state => {
+                        this.importData(state, update);
+                        state.currentPage = pageNum
+                    });
+                }
+            ),
             map(_ => args)
         );
     }
 
-    private importData(data:AjaxConcResponse):void {
-        this.changeState(state => {
-            state.lines = importLines(
-                data.Lines,
-                this.getViewAttrs().indexOf(state.baseViewAttr) - 1
-            );
-            state.numItemsInLockedGroups = data.num_lines_in_groups;
-            state.pagination = data.pagination;
-            state.unfinishedCalculation = !!data.running_calc;
-            state.lineGroupIds = [];
-            state.adHocIpm = -1;
-            state.concSummary = {
-                concSize: data.concsize,
-                fullSize: data.fullsize,
-                sampledSize: data.sampled_size,
-                ipm: data.result_relative_freq,
-                arf: data.result_arf,
-                isShuffled: data.result_shuffled
-            };
-        });
+    private importData(state:ConcordanceModelState, data:AjaxConcResponse):void {
+        state.lines = importLines(
+            data.Lines,
+            this.getViewAttrs().indexOf(state.baseViewAttr) - 1
+        );
+        state.numItemsInLockedGroups = data.num_lines_in_groups;
+        state.pagination = data.pagination;
+        state.unfinishedCalculation = !!data.running_calc;
+        state.lineGroupIds = [];
+        state.adHocIpm = -1;
+        state.concSummary = {
+            concSize: data.concsize,
+            fullSize: data.fullsize,
+            sampledSize: data.sampled_size,
+            ipm: data.result_relative_freq,
+            arf: data.result_arf,
+            isShuffled: data.result_shuffled
+        };
     }
 
     private changeGroupNaming(state:ConcordanceModelState, data:ConcGroupChangePayload):void {
@@ -900,9 +903,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             args
 
         ).pipe(
-            tap((data) => {
-                this.importData(data);
-            })
+            tap(
+                data => {
+                    this.changeState(state => {
+                        this.importData(state, data);
+                    });
+                }
+            )
         );
     }
 
