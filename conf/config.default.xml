@@ -106,6 +106,7 @@
             <auth_cookie_name>kontext_session</auth_cookie_name>
             <login_url>/user/login?continue=%s</login_url>
             <logout_url>/user/logout?continue=%s</logout_url>
+            <confirmation_token_ttl>3600</confirmation_token_ttl>
         </auth>
         <conc_cache>
             <module>default_conc_cache</module>
@@ -157,8 +158,8 @@
             <js_module>defaultQueryStorage</js_module>
             <page_num_records>10</page_num_records>
             <ttl_days extension-by="default">10</ttl_days>
-    	</query_storage>
-	<query_suggest />
+        </query_storage>
+        <query_suggest />
         <settings_storage>
             <module>default_settings_storage</module>
             <excluded_users extension-by="default">
