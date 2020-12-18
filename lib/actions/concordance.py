@@ -669,8 +669,9 @@ class Actions(Querying):
         self.add_conc_form_args(ff_args)
         rank = dict(f=1, l=-1).get(ff_args.filfl, 1)
         texttypes = TextTypeCollector(self.corp, {}).get_query()
+        maincorp = self.args.maincorp if self.args.maincorp else self.ars.corpname
         try:
-            query = self._compile_query(data=ff_args, corpus=self.args.maincorp)
+            query = self._compile_query(data=ff_args, corpus=maincorp)
         except ConcError:
             if texttypes:
                 query = '[]'
@@ -680,9 +681,14 @@ class Actions(Querying):
                 raise ConcError(translate('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
         if ff_args.within:
-            wquery = ' within %s:(%s)' % (self.args.maincorp or self.args.corpname, query)
+            wquery = f' within {maincorp}:({query})'
             self.args.q[0] += wquery
-            self.args.q.append('x-' + (self.args.maincorp or self.args.corpname))
+            for i, op in enumerate(self.args.q):
+                if f'X{maincorp}' == op:
+                    self.args.q[i] = f'x-{maincorp}'
+                    break
+            else:
+                self.args.q.append(f'x-{maincorp}')
         else:
             wquery = ''
             self.args.q.append(
@@ -690,7 +696,8 @@ class Actions(Querying):
         self._status = 201
         try:
             return self.view()
-        except:
+        except Exception as ex:
+            logging.getLogger(__name__).error('Failed to apply filter: {}'.format(ex))
             if ff_args.within:
                 self.args.q[0] = self.args.q[0][:-len(wquery)]
             else:
