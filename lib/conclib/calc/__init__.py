@@ -92,12 +92,12 @@ def wait_for_conc(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     time_limit = 5 if minsize >= 0 else 30
     t0 = t1 = time.time()
     i = 1
-    has_result, finished = _check_result(cache_map, q, subchash, minsize)
-    while not finished and t1 - t0 < time_limit:
+    has_min_result, finished = _check_result(cache_map, q, subchash, minsize)
+    while not (finished or has_min_result) and t1 - t0 < time_limit:
         time.sleep(i * 0.1)
         i += 1
         t1 = time.time()
-        has_result, finished = _check_result(cache_map, q, subchash, minsize)
+        has_min_result, finished = _check_result(cache_map, q, subchash, minsize)
     if not os.path.isfile(cache_map.cache_file_path(subchash, q)):
         if finished:  # cache vs. filesystem mismatch
             cache_map.del_entry(subchash, q)
@@ -110,6 +110,8 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     """
     Check for result status while validating calculation
     status. In case of an error an Exception can be thrown.
+    It is perfectly fine to not find an entry for some
+    subchash+q combination (in such case, False, False is returned).
 
     return:
     2-tuple ["has min. acceptable result", "is finished"]
@@ -123,13 +125,12 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     """
     status = cache_map.get_calc_status(subchash, q)
     if status is None:
-        cache_map.del_full_entry(subchash, q)
-        raise ConcCalculationStatusException(f'Missing status information for ({subchash}, {q}).')
+        return False, False
     err = status.test_error(TASK_TIME_LIMIT)
     if err is not None:
         cache_map.del_full_entry(subchash, q)
         raise err
-    return not status.has_some_result(minsize=minsize), status.finished
+    return status.has_some_result(minsize=minsize), status.finished
 
 
 def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tuple[str, ...],

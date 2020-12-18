@@ -71,10 +71,10 @@ class GeneralWorker(object):
             cache_map = self._cache_factory.get_mapping(corp)
             cachefile = cache_map.cache_file_path(subchash, q)
             status = cache_map.get_calc_status(subchash, q)
-            status.test_error(TASK_TIME_LIMIT)
             if not status:
                 raise ConcCalculationStatusException('Concordance calculation not found', None)
-            elif status.error is not None:
+            status.test_error(TASK_TIME_LIMIT)
+            if status.error is not None:
                 raise ConcCalculationStatusException('Concordance calculation failed', status.error)
 
         if cachefile and os.path.isfile(cachefile):
