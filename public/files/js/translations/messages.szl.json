@@ -311,6 +311,7 @@
         "query__apply_filter_btn": "zastosuj filter",
         "query__edit_current_hd_{operation}": "Aktualizuj istniyjōncõ ôperacyjõ \u201C{operation}\u201D",
         "query__operation_name_query": "zapytanie",
+        "query__operation_name_filter": "filter",
         "query__operation_name_filter_p": "positive filter",
         "query__operation_name_filter_n": "negative filter",
         "query__operation_name_sort": "zortowanie",

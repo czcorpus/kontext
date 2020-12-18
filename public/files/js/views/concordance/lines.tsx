@@ -82,7 +82,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // ------------------------- <ConcColHideSwitch /> ---------------------------
 
-    const ConcColHideSwitch:React.SFC<{
+    const ConcColHideSwitch:React.FC<{
         corpusId:string;
         isVisible:boolean;
 
@@ -111,7 +111,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
-    const ConcColsHeading:React.SFC<{
+    const ConcColsHeading:React.FC<{
         corpsWithKwic:Array<string>;
         viewMode:string; // TODO enum
         hideable:boolean;
@@ -170,7 +170,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // ------------------------- <Token /> ---------------------------
 
-    const Token:React.SFC<{
+    const Token:React.FC<{
         tokenId:number;
         data:ConcToken;
         viewMode:ViewOptions.AttrViewMode;
@@ -210,7 +210,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // ------------------------- <NonKwicText /> ---------------------------
 
-    const NonKwicText:React.SFC<{
+    const NonKwicText:React.FC<{
         position:string;
         kwicTokenNum:number;
         chunkOffset:number;
@@ -268,9 +268,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // ------------------------- <TextKwicMode /> ---------------------------
 
-    const TextKwicMode:React.SFC<{
+    const TextKwicMode:React.FC<{
         corpname:string;
-        mainCorp:string;
+        isAlignedMainCorp:boolean;
         corpsWithKwic:Array<string>;
         supportsTokenConnect:boolean;
         lineIdx:number;
@@ -285,7 +285,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         const exportTextElmClass = (corpname:string, ...customClasses:Array<string>) => {
             const ans = customClasses.slice();
-            if (corpname === props.mainCorp) {
+            if (props.isAlignedMainCorp) {
                 ans.push('maincorp');
             }
             return ans.join(' ');
@@ -352,7 +352,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // ----------------------- <LeftChunk /> -----------------------------------
 
-    const LeftChunk:React.SFC<{
+    const LeftChunk:React.FC<{
         i:number;
         lineIdx:number;
         itemList:Array<TextChunk>;
@@ -385,7 +385,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // -------------------------- <KwicChunk /> --------------------
 
-    const KwicChunk:React.SFC<{
+    const KwicChunk:React.FC<{
         i:number;
         kwicTokenNum:number;
         lineIdx:number;
@@ -437,7 +437,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     // -------------------------- <RightChunk /> ---------------------
 
-    const RightChunk:React.SFC<{
+    const RightChunk:React.FC<{
         i:number;
         itemList:Array<TextChunk>;
         item:TextChunk;
@@ -598,7 +598,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
             if (this.props.viewMode === 'kwic') {
                 return <TextKwicMode
                             corpname={corpname}
-                            mainCorp={this.props.mainCorp}
+                            isAlignedMainCorp={this.props.mainCorp === corpname && this.props.cols.length > 1}
                             corpsWithKwic={this.props.corpsWithKwic}
                             supportsTokenConnect={this.props.supportsTokenConnect}
                             lineIdx={this.props.lineIdx}

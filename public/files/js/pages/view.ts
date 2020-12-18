@@ -360,7 +360,7 @@ export class ViewPage {
                         modalAction: {
                             name: QueryActionName.EditLastQueryOperation,
                             payload: {
-                                sourceId: this.layoutModel.exportConcArgs()['q']
+                                sourceId: this.layoutModel.exportConcArgs().head('q')
                             }
                         }
                     },
@@ -922,6 +922,7 @@ export class ViewPage {
             arf: this.layoutModel.getConf<number>('ResultArf'),
             isShuffled: this.layoutModel.getConf<boolean>('ResultShuffled')
         };
+
         const lineViewProps:ViewConfiguration = {
             basePosAttr: this.layoutModel.getConf<string>('baseAttr'),
             baseViewAttr: this.layoutModel.exportConcArgs().head('base_viewattr'),
@@ -942,7 +943,7 @@ export class ViewPage {
             origSubCorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
             pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
             currentPage: this.layoutModel.getConf<number>('FromPage'),
-            mainCorp: this.layoutModel.exportConcArgs()['maincorp'],
+            mainCorp: this.layoutModel.exportConcArgs().head('maincorp'),
             concSummary: concSummaryProps,
             Unfinished: this.layoutModel.getConf<boolean>('Unfinished'),
             FastAdHocIpm: this.layoutModel.getConf<boolean>('FastAdHocIpm'),

@@ -311,6 +311,7 @@
         "query__apply_filter_btn": "Apply filter",
         "query__edit_current_hd_{operation}": "Update existing operation \u201C{operation}\u201D",
         "query__operation_name_query": "query",
+        "query__operation_name_filter": "filter",
         "query__operation_name_filter_p": "positive filter",
         "query__operation_name_filter_n": "negative filter",
         "query__operation_name_sort": "sort",
