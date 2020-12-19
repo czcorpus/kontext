@@ -38,6 +38,7 @@ import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTok
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
 import { Actions as QueryHintsActions, ActionName as QueryHintsActionName } from '../usageTips/actions';
+import { AjaxResponse } from '../../types/ajaxResponses';
 
 /*
 Some important terms to prevent confusion:
@@ -99,6 +100,7 @@ export interface FilterServerArgs extends ConcServerArgs {
     inclkwic:0|1;
     qtype:QueryType;
     query:string;
+    queryParsed:AjaxResponse.SubmitEncodedSimpleTokens|undefined;
     qmcase:boolean;
     within:boolean;
     default_attr:string;

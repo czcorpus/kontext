@@ -478,8 +478,8 @@ class Actions(Querying):
             icase = '' if data.qmcase else '(?i)'
             attr = data.default_attr
             use_regexp = data.use_regexp
-            query_parsed = data.parsed_query
-
+            query_parsed = [x for x, _ in data.parsed_query]
+            
         if query.strip() == '':
             return None
 
