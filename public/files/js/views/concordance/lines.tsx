@@ -180,6 +180,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
     }> = (props) => {
 
+        const attrs = props.data.tailPosAttrs.filter(
+            (val) => val // .length > 0
+        );
+
         const mkClass = () => `${props.supportsTokenConnect ? 'active' : ''} ${props.data.className}`;
 
         if (props.data.className === 'strc') {
@@ -187,7 +191,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER ||
                 props.viewMode === ViewOptions.AttrViewMode.VISIBLE_KWIC && !props.isKwic) {
-            const title = props.data.tailPosAttrs.length > 0 ? props.data.tailPosAttrs.join(ATTR_SEPARATOR) : null;
+            const title = attrs.length > 0 ? attrs.join(ATTR_SEPARATOR) : null;
             return <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>{props.data.text.join(' ')}</mark>;
 
         } else {
@@ -196,10 +200,10 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                     <mark data-tokenid={props.tokenId} className={mkClass()}>
                         {props.data.text.join(' ')}
                     </mark>
-                    {props.data.tailPosAttrs.length > 0 ?
+                    {attrs.length > 0 ?
                         <span className="tail attr">
                             {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
-                            {props.data.tailPosAttrs.join(ATTR_SEPARATOR) || EMPTY_ATTRS_PLACEHOLDER}
+                            {attrs.join(ATTR_SEPARATOR) || EMPTY_ATTRS_PLACEHOLDER}
                         </span> :
                         null
                     }
