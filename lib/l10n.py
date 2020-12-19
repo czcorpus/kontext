@@ -125,15 +125,10 @@ def corpus_get_conf(corp, conf_key):
 
 
 def simplify_num(v):
-    if v >= 1e12:
-        return '%sT' % (round(v / 1e12, 0))
-    if v >= 1e9:
-        return '%dG' % (round(v / 1e9, 0))
-    if v >= 1e6:
-        return '%dM' % (round(v / 1e6, 0))
-    if v >= 1e3:
-        return '%dk' % (round(v / 1e3, 0))
-    return '%d' % (round(v / 1e2, 0) * 100,)
+    for s, thr in [('{:.3g}T', 1e12), ('{:.3g}G', 1e9), ('{:.3g}M', 1e6), ('{:.3g}k', 1e3)]:
+        if v >= thr:
+            return s.format(v / thr)
+    return '{:.0f}'.format(round(v / 1e2, 0) * 100,)
 
 
 def desimplify_num(v, strict=True):
