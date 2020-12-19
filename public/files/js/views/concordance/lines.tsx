@@ -201,10 +201,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         {props.data.text.join(' ')}
                     </mark>
                     {attrs.length > 0 ?
-                        <span className="tail attr">
-                            {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
-                            {attrs.join(ATTR_SEPARATOR) || EMPTY_ATTRS_PLACEHOLDER}
-                        </span> :
+                        <TokenAttributes attrs={attrs} viewMode={props.viewMode} /> :
                         null
                     }
                 </>
@@ -212,6 +209,31 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
         }
     }
 
+    // ------------------------- <TokenAttributes /> -------------------------
+
+    const TokenAttributes: React.FC<{
+        attrs: Array<string>;
+        viewMode: ViewOptions.AttrViewMode;
+
+    }> = (props) => {
+
+        return (
+            <span className="tail attr">
+                {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
+                {
+                    props.attrs.length > 0 ?
+                        // props.attrs.join(ATTR_SEPARATOR) :
+                        props.attrs.map((val, i) =>
+                            <React.Fragment key={i}>
+                                {i !== 0 ? ATTR_SEPARATOR : ''}
+                                <span>{val}</span>
+                            </React.Fragment>
+                        ) :
+                        EMPTY_ATTRS_PLACEHOLDER
+                }
+            </span>
+        );
+    }
 
     // ------------------------- <NonKwicText /> ---------------------------
 
