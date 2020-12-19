@@ -51,6 +51,7 @@ export interface LinesViews {
 }
 
 const ATTR_SEPARATOR = '/';
+const EMPTY_ATTRS_PLACEHOLDER = '\u00a0'; // non-breaking space
 
 
 export function init({dispatcher, he, lineModel, lineSelectionModel,
@@ -198,7 +199,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                     {props.data.tailPosAttrs.length > 0 ?
                         <span className="tail attr">
                             {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
-                            {props.data.tailPosAttrs.join(ATTR_SEPARATOR) || '\u00a0'}
+                            {props.data.tailPosAttrs.join(ATTR_SEPARATOR) || EMPTY_ATTRS_PLACEHOLDER}
                         </span> :
                         null
                     }
