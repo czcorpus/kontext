@@ -196,7 +196,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
                         {props.data.text.join(' ')}
                     </mark>
                     {props.data.tailPosAttrs.length > 0 ?
-                        <span className="tail attr" style={props.viewMode === ViewOptions.AttrViewMode.VISIBLE_MULTILINE && props.data.tailPosAttrs.length === 0 ? {display: 'none'} : null}>
+                        <span className="tail attr">
                             {props.viewMode !== ViewOptions.AttrViewMode.VISIBLE_MULTILINE ? ATTR_SEPARATOR : ''}
                             {props.data.tailPosAttrs.join(ATTR_SEPARATOR) || '\u00a0'}
                         </span> :
