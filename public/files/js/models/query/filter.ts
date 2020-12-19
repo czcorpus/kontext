@@ -577,10 +577,28 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
     private createSubmitArgs(filterId:string, concId:string):FilterServerArgs {
         const query = this.state.queries[filterId];
+        const defaultAttr = query.default_attr ?
+                            query.default_attr :
+                            this.state.simpleQueryDefaultAttrs[filterId];
         return {
             type:'filterQueryArgs',
             qtype: query.qtype,
             query: query.query,
+            queryParsed: query.qtype === 'simple' ?
+                pipe(
+                    query.queryParsed,
+                    List.map(
+                        item => tuple(
+                            item.args.length > 0 && item.args[0][0] ?
+                                item.args :
+                                defaultAttr ?
+                                    [tuple(defaultAttr, item.args[0][1])] :
+                                    [tuple(query.default_attr, item.args[0][1])],
+                            item.isExtended
+                        )
+                    )
+                ) :
+                undefined,
             default_attr: query.default_attr,
             qmcase: query.qtype === 'simple' ? query.qmcase : false,
             use_regexp: query.qtype === 'simple' ? query.use_regexp : false,
