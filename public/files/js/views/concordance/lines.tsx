@@ -194,7 +194,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
 
         } else if (props.viewMode === ViewOptions.AttrViewMode.MOUSEOVER ||
                 props.viewMode === ViewOptions.AttrViewMode.VISIBLE_KWIC && !props.isKwic) {
-            const title = attrs.length > 0 ? attrs.map(([attr, val]) => `${attr}: ${val}`).join('\n') : null;
+            const title = attrs.length > 0 ? attrs.map(([attr, val]) => `${attr}: ${val}`).join('\n') : "";
             return <mark data-tokenid={props.tokenId} className={mkClass()} title={title}>{props.data.text.join(' ')}</mark>;
 
         } else {
