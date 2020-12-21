@@ -81,6 +81,7 @@ export interface QueryToolbarProps {
     queryFormProps:QueryFormLiteProps;
     filterFormProps:FilterFormProps;
     shuffleFormProps:ShuffleFormProps;
+    sampleFormProps:SampleFormProps;
     switchMcFormProps:SwitchMainCorpFormProps;
     filterSubHitsFormProps:SubHitsFormProps;
     filterFirstDocHitsFormProps:FirstHitsFormProps;
@@ -410,6 +411,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         filterFormProps:FilterFormProps;
         filterFirstDocHitsFormProps:FirstHitsFormProps;
         sortFormProps:SortFormProps;
+        sampleFormProps:SampleFormProps;
         switchMcFormProps:SwitchMainCorpFormProps;
         shuffleFormProps:ShuffleFormProps;
     }
@@ -433,6 +435,9 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
             } else if (['p', 'P', 'n', 'N'].indexOf(opId) > -1) {
                 return props.filterFormProps.filterId;
+
+            } else if (opId === 'r') {
+                return props.sampleFormProps.sampleId;
             }
             return undefined;
         };
@@ -462,6 +467,12 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         });
                     }
                 }
+
+            } else if (opId === 'r') {
+                return {
+                    formType: Kontext.ConcFormTypes.SAMPLE,
+                    sampleId: opId
+                };
 
             } else if (opId === 'D') {
                 return {

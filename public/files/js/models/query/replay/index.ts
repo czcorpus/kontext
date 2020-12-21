@@ -515,23 +515,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SAMPLE) {
             return prepareFormData.pipe(
                 concatMap(
-                    () => {
-                        const url = this.sampleModel.getSubmitUrl(pipeOp.id, baseOnConcId);
-                        if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<AjaxConcResponse>(
-                                HTTP.Method.GET,
-                                url,
-                                {format: 'json'}
-                            );
-
-                        } else {
-                            return rxOf(null).pipe(
-                                tap(
-                                    (_) => this.sampleModel.submitQuery(pipeOp.id, baseOnConcId)
-                                )
-                            );
-                        }
-                    }
+                    () => this.sampleModel.submitQuery(pipeOp.id, baseOnConcId)
                 )
             );
 

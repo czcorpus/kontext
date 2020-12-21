@@ -759,6 +759,10 @@ export class ViewPage {
                 switchMcFormProps: {
                     formType: Kontext.ConcFormTypes.SWITCHMC,
                     opKey: undefined
+                },
+                sampleFormProps: {
+                    formType: Kontext.ConcFormTypes.SAMPLE,
+                    sampleId: undefined
                 }
             }
         );
