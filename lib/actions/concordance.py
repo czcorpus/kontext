@@ -1413,7 +1413,7 @@ class Actions(Querying):
             'corpora', 'speech_files_path'), self.args.corpname, chunk))
         basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
         if os.path.isfile(rpath) and rpath.startswith(basepath):
-            with open(rpath, 'r') as f:
+            with open(rpath, 'rb') as f:
                 file_size = os.path.getsize(rpath)
                 self._headers['Content-Type'] = 'audio/mpeg'
                 self._headers['Content-Length'] = '%s' % file_size

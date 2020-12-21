@@ -277,11 +277,16 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     state.wholeDocumentLoaded = false;
                 });
                 forkJoin([
-                    this.loadConcDetail(
-                        [],
-                        this.state.expandLeftArgs.length > 1 &&
-                                this.state.expandRightArgs.length > 1 ? 'reload' : null
-                    ),
+                    this.state.mode === 'speech' ?
+                        this.loadSpeechDetail(
+                            this.state.expandLeftArgs.length > 1 &&
+                            this.state.expandRightArgs.length > 1 ? 'reload' : null
+                        ) :
+                        this.loadConcDetail(
+                            [],
+                            this.state.expandLeftArgs.length > 1 &&
+                                    this.state.expandRightArgs.length > 1 ? 'reload' : null
+                        ),
                     this.loadTokenConnect(
                         action.payload.corpusId,
                         action.payload.tokenNumber,
@@ -704,10 +709,11 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
      */
     private loadSpeechDetail(expand?:'left'|'right'|'reload'):Observable<boolean> {
         const structs = this.layoutModel.exportConcArgs().getList('structs');
-        const args = this.state.speechAttrs
-                .map(x => `${this.state.speechOpts.speakerIdAttr[0]}.${x}`)
-                .concat([this.state.speechOpts.speechSegment.join('.')]);
-
+        const args = pipe(
+                this.state.speechAttrs,
+                List.map(x => `${this.state.speechOpts.speakerIdAttr[0]}.${x}`),
+                List.concat([this.state.speechOpts.speechSegment.join('.')])
+        );
         const [overlapStruct, overlapAttr] = (this.state.speechOpts.speechOverlapAttr ||
                 [undefined, undefined]);
         if (overlapStruct !== this.state.speechOpts.speakerIdAttr[0]
@@ -771,7 +777,6 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
      *
      */
     private loadConcDetail(structs:Array<string>, expand?:'left'|'right'|'reload'):Observable<boolean> {
-
         const args = new MultiDict(this.state.wideCtxGlobals);
         args.set('corpname', this.state.corpusId); // just for sure (is should be already in args)
         // we must delete 'usesubcorp' as the server API does not need it
