@@ -367,7 +367,7 @@ class Actions(Querying):
                     logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
             qdata = qs.find_by_qkey(request.args.get('qkey'))
             if qdata is not None:
-                qf_args = qf_args.updated(qdata.get('lastop_form', {}))
+                qf_args = qf_args.updated(qdata.get('lastop_form', {}), request.args.get('qkey'))
         # TODO xx reuse selections from last submit
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
