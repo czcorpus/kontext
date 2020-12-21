@@ -704,7 +704,7 @@ class Actions(Querying):
                 del self.args.q[-1]
             raise
 
-    @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_conc=True)
+    @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_conc=True, http_method='POST')
     def reduce(self, _):
         """
         random sample
@@ -715,7 +715,6 @@ class Actions(Querying):
         qinfo = SampleFormArgs(persist=True)
         qinfo.rlines = self.args.rlines
         self.add_conc_form_args(qinfo)
-
         self.args.q.append('r' + self.args.rlines)
         return self.view()
 

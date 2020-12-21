@@ -209,7 +209,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                 args.set('format', 'json');
                 this.state.lastArgs = args.head('q');
                 return this.layoutModel.ajax$<Response.Reduce>(
-                    HTTP.Method.GET,
+                    HTTP.Method.POST,
                     this.layoutModel.createActionUrl('reduce'),
                     args
                 );

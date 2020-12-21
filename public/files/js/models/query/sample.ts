@@ -21,7 +21,7 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { Dict } from 'cnc-tskit';
+import { Dict, HTTP, tuple } from 'cnc-tskit';
 
 import { PageModel } from '../../app/page';
 import { AjaxResponse } from '../../types/ajaxResponses';
@@ -29,6 +29,8 @@ import { MultiDict } from '../../multidict';
 import { SampleServerArgs } from './common';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
 import { Actions, ActionName } from './actions';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
+import { AjaxConcResponse } from '../concordance/common';
 
 
 export interface SampleFormProperties {
@@ -98,7 +100,27 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         this.addActionHandler<Actions.SampleFormSubmit>(
             ActionName.SampleFormSubmit,
             action => {
-                this.submitQuery(action.payload.sampleId, action.payload.sampleId);
+                this.submitQuery(
+                    action.payload.sampleId,
+                    this.pageModel.getConcArgs().q.substr(1)
+
+                ).subscribe(
+                    data => {
+                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
+                            payload: {
+                                concId: data.conc_persistence_op_id,
+                                data
+                            }
+                        });
+                    },
+                    error => {
+                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
+                            error
+                        });
+                    }
+                )
             }
         );
     }
@@ -130,20 +152,25 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         );
     }
 
-    private createSubmitArgs(sortId:string, concId:string):MultiDict<SampleServerArgs> {
+    createSubmitArgs(sortId:string, concId:string):MultiDict<SampleServerArgs> {
         const args = this.pageModel.exportConcArgs() as MultiDict<SampleServerArgs>;
         args.set('q', '~' + concId);
         args.set('rlines', parseInt(this.state.rlinesValues[sortId]));
         return args;
     }
 
-    submitQuery(sortId:string, concId:string):void {
+    submitQuery(sortId:string, concId:string):Observable<AjaxConcResponse> {
         const args = this.createSubmitArgs(sortId, concId);
-        window.location.href = this.pageModel.createActionUrl('reduce', args.items());
-    }
-
-    getSubmitUrl(sortId:string, concId:string):string {
-        return this.pageModel.createActionUrl('reduce', this.createSubmitArgs(sortId, concId).items());
+        return this.pageModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
+            this.pageModel.createActionUrl(
+                'reduce',
+                [
+                    tuple('format', 'json')
+                ]
+            ),
+            args
+        );
     }
 
 }

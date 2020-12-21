@@ -72,7 +72,7 @@ export interface ParsedSimpleQueryToken {
      * the value represents logical conjunction of
      * attr1 == val1 & attr2 == val2 & ... & attrN == valN
      *
-     * in case the first element of an item is an array, the interpreation
+     * in case the first element of an item is an array, the interpretation
      * is as follows: (attr1A == val1 | attr1B == va1 | ...) (this is just a single
      * item of the top level array.
      *
