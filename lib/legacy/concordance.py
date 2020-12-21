@@ -29,41 +29,102 @@ def nop_upgrade_stored_record(attrs: Dict[str, Any], avail_posattrs: List[str]) 
     return attrs
 
 
+def _set_qtype_q(data, sid, value):
+    data['curr_query_types'][sid] = value
+
+
+def _set_qtype_f(data, sid, value):
+    data['query_type'] = value
+
+
+def _get_query_q(data, sid):
+    return data['curr_queries'][sid]
+
+
+def _get_query_f(data, sid):
+    return data['query']
+
+
+def _set_query_q(data, sid,  value):
+    data['curr_queries'][sid] = value
+
+
+def _set_query_f(data, sid, value):
+    data['query'] = value
+
+
+def _set_regexp_q(data, sid, value):
+    data['curr_use_regexp_values'][sid] = value
+
+
+def _set_regexp_f(data, sid, value):
+    data['use_regexp'] = value
+
+
+def _set_nop(data, sid, value):
+    pass
+
+
+def _get_nop(data, sid):
+    return None
+
+
 def upgrade_stored_record(attrs: Dict[str, Any], avail_posattrs: List[str]) -> Dict[str, Any]:
     """
     Upgrade a legacy concordance operations record stored by KonText < 0.15.x
     """
     attrs = defaultdict(lambda: {}, attrs)
     upgraded = False
-    for source_id, legacy_qt in attrs['curr_query_types'].items():
+    form_type = attrs.get('form_type', None)
+
+    if form_type == 'query':
+        set_qtype = _set_qtype_q
+        get_query = _get_query_q
+        set_query = _set_query_q
+        set_regexp = _set_regexp_q
+        q_data = attrs['curr_query_types']
+    elif form_type == 'filter':
+        set_qtype = _set_qtype_f
+        get_query = _get_query_f
+        set_query = _set_query_f
+        set_regexp = _set_regexp_f
+        q_data = {'--': attrs.get('query_type')}
+    else:
+        set_qtype = _set_nop
+        get_query = _get_nop
+        set_query = _set_nop
+        set_regexp = _set_nop
+        q_data = {}
+
+    for source_id, legacy_qt in q_data.items():
         if legacy_qt == 'cql':
-            attrs['curr_query_types'][source_id] = 'advanced'
+            set_qtype(attrs, source_id, f'advanced')
             upgraded = True
         elif legacy_qt == 'lemma':
-            attrs['curr_query_types'][source_id] = 'advanced'
-            attrs['curr_queries'][source_id] = '[lemma="{}"]'.format(attrs['curr_queries'][source_id])
+            set_qtype(attrs, source_id, 'advanced')
+            set_query(attrs, source_id, '[lemma="{}"]'.format(get_query(attrs, source_id)))
             upgraded = True
         elif legacy_qt in ('phrase', 'word'):
-            attrs['curr_query_types'][source_id] = 'advanced'
-            attrs['curr_use_regexp_values'][source_id] = True
+            set_qtype(attrs, source_id, 'advanced')
+            set_regexp(attrs, source_id, True)
             upgraded = True
         elif legacy_qt == 'iquery':
-            attrs['curr_query_types'][source_id] = 'advanced'
+            set_qtype(attrs, source_id, 'advanced')
             if 'lc' in avail_posattrs:
                 if 'lemma_lc' in avail_posattrs:
-                    attrs['curr_queries'][source_id] = '[lc="{q}"|lemma_lc="{q}"]'.format(
-                        q=attrs['curr_queries'][source_id])
+                    set_query(attrs, source_id, '[lc="{q}"|lemma_lc="{q}"]'.format(
+                              q=get_query(attrs, source_id)))
                 elif 'lemma' in avail_posattrs:
-                    attrs['curr_queries'][source_id] = '[lc="{q}"|lemma="(?i){q}"]'.format(
-                        q=attrs['curr_queries'][source_id])
+                    set_query(attrs, source_id, '[lc="{q}"|lemma="(?i){q}"]'.format(
+                              q=get_query(attrs, source_id)))
                 else:
-                    attrs['curr_queries'][source_id] = '[lc="{}"]'.format(attrs['curr_queries'][source_id])
+                    set_query(attrs, source_id, '[lc="{}"]'.format(attrs['curr_queries'][source_id]))
             else:
                 if 'lemma' in avail_posattrs:
-                    attrs['curr_queries'][source_id] = '[word="(?i){q}" | lemma="(?i){q}"]'.format(
-                        q=attrs['curr_queries'][source_id])
+                    set_query(attrs, source_id, '[word="(?i){q}" | lemma="(?i){q}"]'.format(
+                              q=get_query(attrs, source_id)))
                 else:
-                    attrs['curr_queries'][source_id] = '[word="(?i){}"]'.format(attrs['curr_queries'][source_id])
+                    set_query(attrs, source_id, '[word="(?i){}"]'.format(get_query(attrs, source_id)))
             upgraded = True
         if upgraded:
             logging.getLogger(__name__).info('Upgraded legacy concordance record')
