@@ -18,6 +18,7 @@
 
 from typing import Dict, Any, List
 from collections import defaultdict
+import logging
 
 
 def nop_upgrade_stored_record(attrs: Dict[str, Any], avail_posattrs: List[str]) -> Dict[str, Any]:
@@ -33,15 +34,19 @@ def upgrade_stored_record(attrs: Dict[str, Any], avail_posattrs: List[str]) -> D
     Upgrade a legacy concordance operations record stored by KonText < 0.15.x
     """
     attrs = defaultdict(lambda: {}, attrs)
+    upgraded = False
     for source_id, legacy_qt in attrs['curr_query_types'].items():
         if legacy_qt == 'cql':
             attrs['curr_query_types'][source_id] = 'advanced'
+            upgraded = True
         elif legacy_qt == 'lemma':
             attrs['curr_query_types'][source_id] = 'advanced'
             attrs['curr_queries'][source_id] = '[lemma="{}"]'.format(attrs['curr_queries'][source_id])
+            upgraded = True
         elif legacy_qt in ('phrase', 'word'):
             attrs['curr_query_types'][source_id] = 'advanced'
             attrs['curr_use_regexp_values'][source_id] = True
+            upgraded = True
         elif legacy_qt == 'iquery':
             attrs['curr_query_types'][source_id] = 'advanced'
             if 'lc' in avail_posattrs:
@@ -59,4 +64,7 @@ def upgrade_stored_record(attrs: Dict[str, Any], avail_posattrs: List[str]) -> D
                         q=attrs['curr_queries'][source_id])
                 else:
                     attrs['curr_queries'][source_id] = '[word="(?i){}"]'.format(attrs['curr_queries'][source_id])
+            upgraded = True
+        if upgraded:
+            logging.getLogger(__name__).info('Upgraded legacy concordance record')
     return dict(attrs)
