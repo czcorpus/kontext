@@ -199,13 +199,19 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
         );
 
     } else if (sourceId && AjaxResponse.isFilterFormArgs(src)) {
+        const query = src.query || '';
+        const [queryHtml,] = highlightSyntaxStatic(
+            query,
+            'advanced',
+            {translate: id}
+        );
         return {
             [sourceId]: src.query_type === 'advanced' ?
                 {
                     corpname: sourceId,
                     qtype: 'advanced',
-                    query: src.query,
-                    queryHtml: src.query,
+                    query,
+                    queryHtml,
                     rawAnchorIdx: 0,
                     rawFocusIdx: 0,
                     parsedAttrs: [],
