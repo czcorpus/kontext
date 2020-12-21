@@ -680,7 +680,7 @@ class Actions(Querying):
         self.add_conc_form_args(ff_args)
         rank = dict(f=1, l=-1).get(ff_args.filfl, 1)
         texttypes = TextTypeCollector(self.corp, {}).get_query()
-        maincorp = self.args.maincorp if self.args.maincorp else self.ars.corpname
+        maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
         try:
             query = self._compile_query(data=ff_args, corpus=maincorp)
         except ConcError:
