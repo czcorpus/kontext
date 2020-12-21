@@ -203,7 +203,7 @@ class Actions(Querying):
         conc = EmptyConc(self.corp, None)
         try:
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.asnc,
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=False,
                             save=self.args.save, samplesize=corpus_info.sample_size)
             if conc:
                 self._apply_linegroups(conc)
@@ -288,8 +288,7 @@ class Actions(Querying):
 
         out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
             self._plugin_api, self.args.corpname)
-        # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
-        out['running_calc'] = not out['finished'] and self.args.asnc and self.args.save and not out['sampled_size']
+        out['running_calc'] = not out['finished']   # TODO running_calc is redundant
         out['chart_export_formats'] = []
         with plugins.runtime.CHART_EXPORT as ce:
             out['chart_export_formats'].extend(ce.get_supported_types())
@@ -410,7 +409,7 @@ class Actions(Querying):
         if sampled_size:
             orig_conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                                  q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize,
-                                 asnc=self.args.asnc, save=self.args.save)
+                                 asnc=False, save=self.args.save)
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
 
@@ -622,7 +621,7 @@ class Actions(Querying):
                     len(self.args.q) - 1, ShuffleFormArgs(persist=True))
             logging.getLogger(__name__).debug('query: {}'.format(self.args.q))
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=self.args.asnc,
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=qinfo.asnc,
                             save=self.args.save, samplesize=corpus_info.sample_size)
             ans['size'] = conc.size()
             ans['finished'] = conc.finished()
@@ -905,7 +904,7 @@ class Actions(Querying):
                 pfilter = [('q', 'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
                 cc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                               q=self.args.q + [pfilter[0][1]], fromp=self.args.fromp,
-                              pagesize=self.args.pagesize, asnc=self.args.asnc, save=self.args.save)
+                              pagesize=self.args.pagesize, asnc=False, save=self.args.save)
                 freq = cc.size()
                 err_nfilter, corr_nfilter = '', ''
                 if freq != calc_result['conc_size']:
@@ -1296,7 +1295,7 @@ class Actions(Querying):
 
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                             q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
-                            asnc=self.args.asnc, save=self.args.save, samplesize=corpus_info.sample_size)
+                            asnc=False, save=self.args.save, samplesize=corpus_info.sample_size)
             self._apply_linegroups(conc)
             kwic = Kwic(self.corp, self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))

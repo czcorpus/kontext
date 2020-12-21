@@ -146,7 +146,6 @@ class Args(object):
     subcname: str = def_attr('')
     subcpath: List[str] = def_attr(attr.Factory(list))
     save: int = def_attr(1)
-    asnc: int = def_attr(1)
     rlines: str = def_attr('250')
     attrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
     base_viewattr: str = def_attr('word', persistent=Persistence.PERSISTENT)

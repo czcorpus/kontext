@@ -488,7 +488,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.submitQuery(wAction.payload.data);
+                            return this.submitQuery(wAction.payload.data, true);
                         }
                     )
 
@@ -835,7 +835,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
     }
 
-    createSubmitArgs(contextFormArgs:QueryContextArgs):ConcQueryArgs {
+    createSubmitArgs(contextFormArgs:QueryContextArgs, async:boolean):ConcQueryArgs {
 
         const exportCsVal = (v:string) => typeof v === 'string' ? v.split(',') : [];
 
@@ -857,7 +857,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
             queries: [],
             text_types: this.textTypesModel.UNSAFE_exportSelections(false),
-            context: contextFormArgs
+            context: contextFormArgs,
+            async
         };
 
         if (this.state.corpora.length > 1) {
@@ -895,12 +896,19 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
     }
 
-    submitQuery(contextFormArgs:QueryContextArgs):Observable<[ConcQueryResponse|null, Array<[Kontext.UserMessageTypes, string]>]> {
+
+    submitQuery(
+        contextFormArgs:QueryContextArgs,
+        async:boolean
+    ):Observable<[ConcQueryResponse|null, Array<[Kontext.UserMessageTypes, string]>]> {
 
         return this.pageModel.ajax$<ConcQueryResponse>(
             HTTP.Method.POST,
-            this.pageModel.createActionUrl('query_submit', [tuple('format', 'json')]),
-            this.createSubmitArgs(contextFormArgs),
+            this.pageModel.createActionUrl(
+                'query_submit',
+                [tuple('format', 'json')]
+            ),
+            this.createSubmitArgs(contextFormArgs, async),
             {
                 contentType: 'application/json'
             }

@@ -458,9 +458,12 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 ),
                 concatMap(
                     () => {
-                        const args = this.queryModel.createSubmitArgs(queryContext);
-                        const url = this.pageModel.createActionUrl('query_submit', [['format', 'json']]);
                         if (opIdx < numOps - 1) {
+                            const args = this.queryModel.createSubmitArgs(queryContext, false);
+                            const url = this.pageModel.createActionUrl(
+                                'query_submit',
+                                [tuple('format', 'json')]
+                            );
                             return this.pageModel.ajax$<ConcQueryResponse>(
                                 HTTP.Method.POST,
                                 url,
@@ -477,7 +480,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             )
 
                         } else {
-                            return this.queryModel.submitQuery(queryContext)
+                            return this.queryModel.submitQuery(queryContext, true);
                         }
                     }
                 ),

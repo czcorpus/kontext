@@ -147,6 +147,7 @@ class QueryFormArgs(ConcFormArgs):
         self.tag_builder_support = empty_dict.copy()
         self.tagset_docs = empty_dict.copy()
         self.has_lemma = empty_dict.copy()
+        self.asnc = False
 
         # context filter
         self.fc_lemword_type = 'all'
@@ -179,6 +180,7 @@ class QueryFormArgs(ConcFormArgs):
 
     def update_by_user_query(self, data, bib_mapping):
         self._test_data_type(data, 'type', 'concQueryArgs')
+        self.asnc = data.get('async', False)
         for query in data['queries']:
             corp = query['corpname']
             self.curr_query_types[corp] = query['qtype']
