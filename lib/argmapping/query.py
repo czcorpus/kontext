@@ -24,12 +24,11 @@ from .error import ArgumentMappingError
 class ConcFormArgs(object):
     """
     A helper class to handle miscellaneous
-    form (filter, query, sort,...) args
-    properly. It is used only indirectly
-    - we create an instance and immediately
-    after that we export it (either to serialize
-    it via conc_persistence or to pass it
-    to the client-side).
+    concordance-related forms (filter, query, sort,...).
+
+    It is also used to store/restore data via
+    conc. persistence plug-in. Perstitent form can
+    be tested using `is_persistent` property.
     """
 
     def __init__(self, persist: bool) -> None:
@@ -164,26 +163,6 @@ class QueryFormArgs(ConcFormArgs):
         for corp in corpora:
             self._add_corpus_metadata(corp)
 
-    def update_by_stored_query(self, data):
-        self._test_data_type(data, 'form_type', 'query')
-        self.curr_queries = data['curr_queries']
-        self.curr_parsed_queries = data['curr_parsed_queries']
-        self.curr_query_types = data['curr_query_types']
-        self.curr_pcq_pos_neg_values = data['curr_pcq_pos_neg_values']
-        self.curr_include_empty_values = data['curr_include_empty_values']
-        self.curr_lpos_values = data['curr_lpos_values']
-        self.curr_qmcase_values = data['curr_qmcase_values']
-        self.curr_default_attr_values = data['curr_default_attr_values']
-        self.curr_use_regexp_values = data['curr_use_regexp_values']
-        self.fc_lemword_type = data['fc_lemword_type']
-        self.fc_lemword_wsize = data['fc_lemword_wsize']
-        self.fc_lemword = data['fc_lemword']
-        self.fc_pos_type = data['fc_pos_type']
-        self.fc_pos_wsize = data['fc_pos_wsize']
-        self.fc_pos = data['fc_pos']
-        self.selected_text_types = data['selected_text_types']
-        self.bib_mapping = data['bib_mapping']
-
     def apply_last_used_opts(self, data: Dict[str, Any], prev_corpora: List[str], curr_corpora: List[str]):
         self._test_data_type(data, 'form_type', 'query')
         prev_maincorp = prev_corpora[0]
@@ -191,8 +170,6 @@ class QueryFormArgs(ConcFormArgs):
         self.curr_query_types[curr_maincorp] = data['curr_query_types'][prev_maincorp]
         self.curr_qmcase_values[curr_maincorp] = data['curr_qmcase_values'][prev_maincorp]
         self.curr_use_regexp_values[curr_maincorp] = data['curr_use_regexp_values'][prev_maincorp]
-
-
 
     @staticmethod
     def _test_data_type(data, type_key, type_id):

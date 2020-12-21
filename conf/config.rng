@@ -347,6 +347,14 @@
                             </choice>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="legacy_support">
+                            <a:documentation>Apply functions for converting older formats (e.g. persistent concordance
+                            parameters) to newer ones. This always relates to the latest release vs supported older
+                            ones.</a:documentation>
+                            <ref name="boolValues" />
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">

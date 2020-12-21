@@ -24,7 +24,7 @@ extended, re-editable query processing.
 from typing import Dict, Any, Optional, List
 from argmapping.query import ConcFormArgs
 from werkzeug import Request
-
+from collections import defaultdict
 import logging
 
 from controller.kontext import Kontext
@@ -35,7 +35,11 @@ from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, Sampl
                               FirstHitsFilterFormArgs, build_conc_form_args)
 from translation import ugettext as translate
 from controller import exposed
-from collections import defaultdict
+import settings
+if settings.get_bool('global', 'legacy_support', False):
+    from legacy.concordance import upgrade_stored_record
+else:
+    from legacy.concordance import nop_upgrade_stored_record as upgrade_stored_record
 
 
 class Querying(Kontext):
@@ -169,21 +173,25 @@ class Querying(Kontext):
             self.add_system_message('error', translate('Operation not found in the storage'))
             return {}
 
-    @staticmethod
-    def load_pipeline_ops(last_id: str) -> List[ConcFormArgs]:
+    def load_pipeline_ops(self, last_id: str) -> List[ConcFormArgs]:
         ans = []
         # here checking if instance exists -> we can ignore type check error cp.open does not exist on None
         if plugins.runtime.CONC_PERSISTENCE.exists:
             with plugins.runtime.CONC_PERSISTENCE as cp:
                 data = cp.open(last_id)  # type: ignore
                 if data is not None:
+                    form_data = upgrade_stored_record(data.get('lastop_form', {}),
+                                                      self.corp.get_conf('ATTRLIST').split(','))
                     ans.append(build_conc_form_args(
-                        data.get('corpora', []), data.get('lastop_form', {}), data['id']))
+                        data.get('corpora', []), form_data, data['id']))
                 limit = 100
                 while data is not None and data.get('prev_id') and limit > 0:
                     data = cp.open(data['prev_id'])  # type: ignore
-                    ans.insert(0, build_conc_form_args(
-                        data.get('corpora', []), data.get('lastop_form', {}), data['id']))
+                    if data is not None:
+                        form_data = upgrade_stored_record(data.get('lastop_form', {}),
+                                                          self.corp.get_conf('ATTRLIST').split(','))
+                        ans.insert(0, build_conc_form_args(
+                            data.get('corpora', []), form_data, data['id']))
                     limit -= 1
                     if limit == 0:
                         logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(

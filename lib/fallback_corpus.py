@@ -54,7 +54,11 @@ class EmptyCorpus(object):
         pass
 
     def get_conf(self, param):
-        return {'ENCODING': 'UTF-8', 'NAME': self.corpname}.get(param, '')
+        return {
+            'ENCODING': 'UTF-8',
+            'NAME': self.corpname,
+            'ATTRLIST': []
+        }.get(param, '')
 
     def get_conffile(self, *args, **kwargs):
         pass
