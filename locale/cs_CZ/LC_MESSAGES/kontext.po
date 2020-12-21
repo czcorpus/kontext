@@ -56,6 +56,9 @@ msgstr "Nesprávné uživatelské jméno nebo heslo."
 msgid "No result. Please make sure the query and selected query type are correct."
 msgstr "Žádný výsledek. Zkontrolujte prosím zadání a zvolený typ dotazu."
 
+msgid "Syntax error. Please check the query and its type."
+msgstr "Syntaktická chyba. Zkontrolujte prosím zadání a zvolený typ dotazu."
+
 msgid "Custom"
 msgstr "Vlastní"
 

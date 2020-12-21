@@ -352,7 +352,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      *                  or an object containing an attribute 'messages' can
      *                  be used.
      */
-    showMessage(msgType:'info'|'warning'|'plain'|'error', message:any):void {
+    showMessage(msgType:Kontext.UserMessageTypes, message:any):void {
         this.dispatcher.dispatch<Actions.MessageAdd>({
             name: ActionName.MessageAdd,
             payload: {

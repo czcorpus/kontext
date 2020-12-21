@@ -466,6 +466,14 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                                 url,
                                 args,
                                 {contentType: 'application/json'}
+
+                            ).pipe(
+                                map(
+                                    resp => tuple(
+                                        resp,
+                                        resp.messages || []
+                                    )
+                                )
                             )
 
                         } else {
@@ -474,7 +482,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     }
                 ),
                 concatMap(
-                    data => this.pageModel.ajax$<AjaxConcResponse>(
+                    ([data,]) => this.pageModel.ajax$<AjaxConcResponse>(
                         HTTP.Method.GET,
                         this.queryModel.createViewUrl(
                             data.conc_persistence_op_id,
