@@ -41,7 +41,6 @@ import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from controller.errors import ForbiddenException, NotFoundException
 
-
 QUERY_KEY = 'q'
 ID_KEY = 'id'
 DEFAULT_TTL_DAYS = 7

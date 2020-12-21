@@ -26,6 +26,22 @@ import logging
 from plugins.abstract.query_storage import AbstractQueryStorage
 from plugins import inject
 import plugins
+from manatee import Corpus
+from fallback_corpus import EmptyCorpus
+
+
+class CorpusCache:
+
+    def __init__(self, corpus_manager):
+        self._cm = corpus_manager
+        self._corpora = {}
+
+    def corpus(self, cname: str) -> Corpus:
+        if not cname:
+            return EmptyCorpus()
+        if cname not in self._corpora:
+            self._corpora[cname] = self._cm.get_Corpus(cname)
+        return self._corpora[cname]
 
 
 class QueryStorage(AbstractQueryStorage):
@@ -159,6 +175,7 @@ class QueryStorage(AbstractQueryStorage):
                     return True
             return False
 
+        corpora = CorpusCache(corpus_manager)
         data = self.db.list_get(self._mk_key(user_id))
         full_data = []
 
@@ -208,16 +225,11 @@ class QueryStorage(AbstractQueryStorage):
             limit = len(full_data)
 
         tmp = [v for v in reversed(full_data)][offset:(offset + limit)]
-        corp_cache = {}
         for i, item in enumerate(tmp):
             item['idx'] = offset + i
-            if item['corpname'] not in corp_cache:
-                corp_cache[item['corpname']] = corpus_manager.get_Corpus(item['corpname'])
-            item['human_corpname'] = corp_cache[item['corpname']].get_conf('NAME')
+            item['human_corpname'] = corpora.corpus(item['corpname']).get_conf('NAME')
             for ac in item['aligned']:
-                if ac['corpname'] not in corp_cache:
-                    corp_cache[ac['corpname']] = corpus_manager.get_Corpus(ac['corpname'])
-                ac['human_corpname'] = corp_cache[ac['corpname']].get_conf('NAME')
+                ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
         return tmp
 
     def find_by_qkey(self, query_key):

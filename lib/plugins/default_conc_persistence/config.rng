@@ -25,6 +25,16 @@
                 </attribute>
                 <text />
             </element>
+            <optional>
+                <element name="handle_legacy_records">
+                    <choice>
+                        <value>false</value>
+                        <value>true</value>
+                        <value>0</value>
+                        <value>1</value>
+                    </choice>
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>
