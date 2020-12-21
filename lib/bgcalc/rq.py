@@ -76,7 +76,7 @@ class Control:
     def __init__(self, redis_conn):
         self._conn = redis_conn
 
-    def revoke(self, task_id):
+    def revoke(self, task_id, terminate=None, signal=None):
         job = Job.fetch(task_id, connection=self._conn)
         job.cancel()
 
