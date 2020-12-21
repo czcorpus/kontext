@@ -497,6 +497,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     default_attr: formSubmitArgs.wlattr
                 }
             ],
+            async: true,
             text_types: {},
             context: {
                 fc_lemword_wsize: [0, 0],

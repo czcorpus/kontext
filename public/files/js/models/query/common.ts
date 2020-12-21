@@ -77,6 +77,7 @@ export interface ConcQueryArgs {
     fromp:number;
     text_types:TextTypes.ExportedSelection;
     context:QueryContextArgs;
+    async:boolean;
     type:'concQueryArgs';
 }
 
