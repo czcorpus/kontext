@@ -27,7 +27,6 @@ import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
 import { AsyncTaskChecker } from '../models/asyncTask';
 import { GeneralViewOptionsModelState } from '../models/options/general';
 import { CorpusSwitchModel } from '../models/common/corpusSwitch';
-import { PluginInterfaces } from './plugins';
 import { WidgetView } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
 
@@ -299,7 +298,7 @@ export namespace Kontext {
     }
 
     export interface AjaxResponse {
-        messages:Array<[string, string]>;
+        messages:Array<[UserMessageTypes, string]>;
     }
 
     export interface LayoutModel {

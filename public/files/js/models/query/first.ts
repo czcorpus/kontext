@@ -493,12 +493,22 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     )
 
                 ).subscribe(
-                    (data:ConcQueryResponse|null) => {
+                    ([data, messages]) => {
                         if (data === null) {
-                            this.pageModel.showMessage(
-                                'error',
-                                this.pageModel.translate('query__no_result_found')
-                            );
+                            if (!List.empty(messages)) {
+                                List.forEach(
+                                    ([msgType, msg]) => {
+                                        this.pageModel.showMessage(msgType, msg);
+                                    },
+                                    messages
+                                );
+
+                            } else {
+                                this.pageModel.showMessage(
+                                    'error',
+                                    this.pageModel.translate('query__no_result_found')
+                                );
+                            }
 
                             this.changeState(state => {
                                 state.isBusy = false;
@@ -885,7 +895,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
     }
 
-    submitQuery(contextFormArgs:QueryContextArgs):Observable<ConcQueryResponse|null> {
+    submitQuery(contextFormArgs:QueryContextArgs):Observable<[ConcQueryResponse|null, Array<[Kontext.UserMessageTypes, string]>]> {
 
         return this.pageModel.ajax$<ConcQueryResponse>(
             HTTP.Method.POST,
@@ -895,8 +905,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 contentType: 'application/json'
             }
         ).pipe(
-            map(ans => ans.finished !== true || ans.size > 0 ? ans : null)
-        )
+            map(
+                ans => tuple(
+                    ans.finished !== true || ans.size > 0 ? ans : null,
+                    ans.messages || []
+                )
+            )
+        );
     }
 
 }

@@ -53,6 +53,7 @@ import mailing
 import attr
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape
+import plugins.abstract.conc_cache
 
 
 class ConcError(UserActionException):
@@ -622,7 +623,17 @@ class Actions(Querying):
             self.on_conc_store = store_last_op
             self._status = 201
         except ConcError as e:
+            ans['size'] = 0
+            ans['finished'] = True
             self.add_system_message('warning', str(e))
+        except plugins.abstract.conc_cache.CalcStatusException as ex:
+            ans['size'] = 0
+            ans['finished'] = True
+            if 'syntax error' in f'{ex}'.lower():
+                self.add_system_message(
+                    'error', translate('Syntax error. Please check the query and its type.'))
+            else:
+                raise ex
         ans['conc_args'] = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping)).export()
         self._attach_query_overview(ans)
         return ans

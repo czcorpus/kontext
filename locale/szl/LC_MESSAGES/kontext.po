@@ -54,6 +54,9 @@ msgstr "Niynŏleżne miano ôd używŏcza abo hasło"
 msgid "No result. Please make sure the query and selected query type are correct."
 msgstr "Żŏdnych wynikōw. Wejzdrzij, jeźli zapytanie i ôbranŏ zorta zapytaniŏ sōm nŏleżne."
 
+msgid "Syntax error. Please check the query and its type."
+msgstr "Syntax error. Please check the query and its type."
+
 msgid "Custom"
 msgstr "Włŏsne"
 
