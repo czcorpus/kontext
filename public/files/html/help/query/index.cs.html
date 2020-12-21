@@ -5,13 +5,17 @@
     <h2>Jednoduchý dotaz</h2>
 
     <p>
-        TODO
+        Tento typ dotazu ve své výchozí podobě najde všechny výskyty zadaného slova chápaného jako slovní tvar, lemma nebo sublemma (jsou-li lemma a/nebo sublemma pro daný korpus k dipozici). Toto chování lze změnit volbou výchozího atributu po rozkliknutí sekce "Upřesnit parametry" pod dotazovacím řádkem. V téže sekci lze dále určit, jestli chceme dotaz intepretovat s ohledem na velikost písmen a/nebo s použitím <a href="https://wiki.korpus.cz/doku.php/pojmy:regularni_vyrazy">regulárních výrazů</a>. Kombinace těchto voleb nahrazuje také ostatní typy dotazu z předchozích verzí KonTextu, s výjimkou dotazu typu CQL, kterému odpovídá <i>Pokročilý dotaz</i>.
     </p>
 
     <h2>Pokročilý dotaz</h2>
 
     <p>
-        Komplexní dotazovací jazyk umožňující práci s veškerou anotací, která je pro daný korpus dostupná. Např. následující dotaz vyhledá dvě po sobě jdoucí pozice (slova) se zadanými hodnotami atributů a vyskytující se v jediné větě: <code>[atribut1=&quot;hodnota1&quot; &amp; atribut2=&quot;hodnota2&quot;] [atribut3=&quot;hodnota3&quot;] within &lt;s/&gt;</code>. Pro hodnoty atributů lze použít regulární výrazy.
+        Komplexní dotazovací jazyk umožňující práci s veškerou anotací, která je pro daný korpus dostupná. Odpovídá dotazu typu CQL z předchozích verzí KonTextu a vyžaduje znalost dotazovacího jazyka <a href="https://www.sketchengine.eu/documentation/corpus-querying/">CQL</a>.
     </p>
 
+    <p>
+        V korpusu SYN2020 je dále zapojen doplněk, který uživateli nabídne další možné varianty zadávaného slova. Aktivace doplňku se pozná podle modrého obdélníku okolo slova, po Ctrl+klik se všechny varianty objeví a je možné původní interpretaci dotazu změnit. Změna původní interpretace je indikována zčervenáním volby "Interpretace dotazu" nad dotazovacím řádkem. Doplněk pracuje jak v režimu jednoduchého, tak i pokročilého dotazu.
+    </p>
+    
 </section>
