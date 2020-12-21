@@ -162,6 +162,7 @@ def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tupl
             logging.getLogger(__name__).warning(
                 'Removed failed calculation cache record (error: {0}'.format(calc_status.error))
             cache_map.del_full_entry(subchash, q)
+            raise ConcCalculationStatusException(calc_status.error)
 
     if _contains_shuffle_seq(q):
         srch_from = 1

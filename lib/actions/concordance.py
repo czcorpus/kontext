@@ -223,6 +223,12 @@ class Actions(Querying):
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
+        except plugins.abstract.conc_cache.CalcStatusException as ex:
+            if 'syntax error' in f'{ex}'.lower():
+                self.add_system_message(
+                    'error', translate('Syntax error. Please check the query and its type.'))
+            else:
+                raise ex
 
         if self.args.viewmode == 'sen':
             corplib.add_block_items(out['Lines'], block_size=1)
