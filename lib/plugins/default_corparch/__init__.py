@@ -602,7 +602,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if simple_query_default_attrs_elm is not None:
             ans.simple_query_default_attrs = [p.text for p in simple_query_default_attrs_elm.findall('attribute')]
         else:
-            ans.simple_query_default_attrs = ['word']
+            ans.simple_query_default_attrs = []
 
         query_suggest_elm = node.find('query_suggest')
         if query_suggest_elm is not None:
