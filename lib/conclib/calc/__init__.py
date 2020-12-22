@@ -25,7 +25,7 @@ import sys
 
 import settings
 import plugins
-from plugins.abstract.conc_cache import AbstractConcCache
+from plugins.abstract.conc_cache import AbstractConcCache, CalcStatus
 from corplib import CorpusManager, is_subcorpus, corp_mtime as corplib_corp_mtime
 from conclib.empty import EmptyConc
 import manatee
@@ -296,11 +296,12 @@ class ConcSyncCalculation(GeneralWorker):
         try:
             calc_from, conc = find_cached_conc_base(self.corpus_obj, subchash, query, minsize=0)
             if isinstance(conc, EmptyConc):
+                calc_status = self.cache_map.add_to_map(subchash, query, CalcStatus())
                 conc = self.compute_conc(self.corpus_obj, query, samplesize)
                 conc.sync()
-                conc.save(self.cache_map.cache_file_path(subchash, query[:1]))
+                conc.save(calc_status.cachefile)
                 self.cache_map.update_calc_status(
-                    subchash, query[:1], finished=True, concsize=conc.size())
+                    subchash, query, finished=True, concsize=conc.size())
                 calc_from += 1
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
@@ -313,11 +314,11 @@ class ConcSyncCalculation(GeneralWorker):
                 conc.exec_command(command, args)
                 if command in 'gae':  # user specific/volatile actions, cannot save
                     raise NotImplementedError(f'Cannot run command {command} in background')  # TODO
-                cachefile = self.cache_map.cache_file_path(subchash, query[:act + 1])
+                status = self.cache_map.get_calc_status(subchash, query[:act + 1])
                 # TODO if stored_status then something went wrong
-                conc.save(cachefile)
+                conc.save(status.cachefile)
                 self.cache_map.update_calc_status(
-                    subchash, query[:act + 1], finished=True, concsize=conc.size())
+                    subchash, query[:act + 1], readable=True, finished=True, concsize=conc.size())
             except Exception as ex:
                 self._mark_calc_states_err(subchash, query, act, ex)
                 logging.getLogger(__name__).error(ex)
