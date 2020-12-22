@@ -69,8 +69,8 @@ def _get_bg_conc(corp: manatee.Corpus, user_id: int, q: Tuple[str, ...], subchas
     # let's create cache records of the operations we'll have to perform
     if calc_from < len(q):
         for i in range(calc_from, len(q)):
-            status = cache_map.add_to_map(subchash, q[:i + 1], CalcStatus())
-            if os.path.isfile(status.cachefile):
+            status = cache_map.add_to_map(subchash, q[:i + 1], CalcStatus(), overwrite=True)
+            if os.path.isfile(status.cachefile):  # the file cannot be valid as otherwise, calc_from would be higher
                 del_silent(status.cachefile)
                 logging.getLogger(__name__).warning(f'Removed unbound conc. cache file {status.cachefile}')
         app = bgcalc.calc_backend_client(settings)

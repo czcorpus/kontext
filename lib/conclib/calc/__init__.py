@@ -201,9 +201,9 @@ def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tupl
                 continue
             ans = (i, conc)
             break
-    logging.getLogger(__name__).debug(f'get_cached_conc({corp.get_conffile()}, [{", ".join(q)}]), '
+    logging.getLogger(__name__).debug(f'find_cached_conc_base({corp.get_conffile()}, [{", ".join(q)}]), '
                                       f'conc: {conc.__class__.__name__}, '
-                                      f'missing ops start idx: {i if i < len(q) else "none"}, '
+                                      f'must calc ops from {i} to {len(q)}, '
                                       f'time: {(time.time() - start_time):.4f}')
     return ans
 
@@ -314,7 +314,7 @@ class ConcSyncCalculation(GeneralWorker):
                 conc.exec_command(command, args)
                 if command in 'gae':  # user specific/volatile actions, cannot save
                     raise NotImplementedError(f'Cannot run command {command} in background')  # TODO
-                status = self.cache_map.get_calc_status(subchash, query[:act + 1])
+                status = self.cache_map.add_to_map(subchash, query[:act + 1], CalcStatus(), overwrite=True)
                 # TODO if stored_status then something went wrong
                 conc.save(status.cachefile)
                 self.cache_map.update_calc_status(
