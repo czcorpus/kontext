@@ -125,10 +125,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <input type="text" className="fc_lemword" name="fc_lemword" value={props.fc_lemword}
                             onChange={handleInputChange} />
                     <span>
-                    {'\u00A0'}
-                    <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} changeHandler={handleTypeChange} />
-                    {'\u00A0'}
-                    {he.translate('query__of_these_items')}
+                        {'\u00A0'}
+                        <AllAnyNoneSelector inputName="fc_lemword_type" value={props.fc_lemword_type} changeHandler={handleTypeChange} />
                     </span>
                 </dd>
             </dl>
@@ -208,7 +206,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <div className="all-any-none-sel">
                             <AllAnyNoneSelector inputName="fc_pos_type" value={props.fc_pos_type} changeHandler={handleTypeChange}/>
                         </div>
-                        <span>{'\u00A0'}{he.translate('query__of_these_items')}</span>
                     </dd>
                 </dl>
             </div>
