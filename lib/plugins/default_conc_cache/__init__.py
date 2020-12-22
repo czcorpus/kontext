@@ -121,7 +121,7 @@ class DefaultCacheMapping(AbstractConcCache):
         """
         prev_status = self._get_entry(subchash, query)
         if prev_status and not overwrite:
-            raise CalcStatusException('Cannot add cache record for {} - already present'.format(query))
+            return prev_status
         calc_status.q0hash = _uniqname(subchash, query[:1])
         calc_status.cachefile = self._create_cache_file_path(subchash, query)
         self._set_entry(subchash, query, calc_status)

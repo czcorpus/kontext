@@ -98,7 +98,7 @@ def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
         status = cache_map.add_to_map(subchash, q[:1], status)
         conc.save(status.cachefile)
         # update size in map file
-        cache_map.update_calc_status(subchash, q[:1], concsize=conc.size())
+        cache_map.update_calc_status(subchash, q[:1], concsize=conc.size(), readable=True, finished=True)
     return conc
 
 

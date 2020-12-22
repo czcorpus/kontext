@@ -134,14 +134,7 @@ class AbstractConcCache(abc.ABC):
     def add_to_map(self, subchash: Optional[str], query: QueryType, calc_status: CalcStatus, overwrite: bool = False
                    ) -> CalcStatus:
         """
-        Add or update a cache map entry
-
-        ------
-        TODO: the current implementation has issues
-        regarding hidden arguments and cache status relationships
-        user cannot possibly understand. I.e. if a record is
-        not present yet then calc_status cannot be None.
-        ------
+        Add a cache entry. If already present, the stored version is returned unless overwrite is set to True
 
         arguments:
         subchash -- a subcorpus identifier hash (see corplib.CorpusManager.get_Corpus)
@@ -149,11 +142,9 @@ class AbstractConcCache(abc.ABC):
         size -- current size of a respective concordance (the one defined by corpus, subchash
                 and query)
         calc_status -- an instance of CalcStatus
-        overwrite -- normally, trying to store a status which is already present raises an exception; this
-                     setting can override this
+        overwrite -- if true then the new calc_status value is always used
         returns:
-            an update version of the original calc_status
-            (e.g. with cachefile set)
+            an updated version of the original calc_status (e.g. with cachefile set)
         """
 
     @abc.abstractmethod
