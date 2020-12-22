@@ -296,12 +296,12 @@ class ConcSyncCalculation(GeneralWorker):
         try:
             calc_from, conc = find_cached_conc_base(self.corpus_obj, subchash, query, minsize=0)
             if isinstance(conc, EmptyConc):
-                calc_status = self.cache_map.add_to_map(subchash, query, CalcStatus())
+                calc_status = self.cache_map.add_to_map(subchash, query, CalcStatus(), overwrite=True)
                 conc = self.compute_conc(self.corpus_obj, query, samplesize)
                 conc.sync()
                 conc.save(calc_status.cachefile)
                 self.cache_map.update_calc_status(
-                    subchash, query, finished=True, concsize=conc.size())
+                    subchash, query, readable=True, finished=True, concsize=conc.size())
                 calc_from += 1
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
