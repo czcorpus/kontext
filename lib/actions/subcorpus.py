@@ -25,7 +25,7 @@ from translation import ugettext as translate
 import plugins
 import l10n
 import corplib
-from texttypes import TextTypeCollector, TextTypesCache
+from texttypes import TextTypeCollector
 import settings
 import bgcalc
 

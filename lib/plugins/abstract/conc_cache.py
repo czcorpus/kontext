@@ -44,7 +44,8 @@ class CalcStatus(object):
     def __init__(self, task_id: Optional[str] = None, pid: Optional[int] = None, created: Optional[int] = None,
                  last_upd: Optional[int] = None, concsize: Optional[int] = 0, fullsize: Optional[int] = 0,
                  relconcsize: Optional[int] = 0, arf: Optional[float] = 0,
-                 error: Union[str, BaseException, None] = None, finished: Optional[bool] = False) -> None:
+                 error: Union[str, BaseException, None] = None, finished: Optional[bool] = False,
+                 q0hash: str = None, cachefile: str = None, readable: bool = False) -> None:
         self.task_id: Optional[str] = task_id
         self.pid = pid if pid else os.getpid()
         self.created = created if created else int(time.time())
@@ -55,6 +56,9 @@ class CalcStatus(object):
         self.arf = arf
         self.error: str = str(error) if isinstance(error, BaseException) else error
         self.finished = finished
+        self.q0hash = q0hash
+        self.cachefile = cachefile
+        self.readable = readable
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(self.__dict__)
@@ -69,7 +73,7 @@ class CalcStatus(object):
         return None
 
     def has_some_result(self, minsize: int) -> bool:
-        return minsize == -1 and self.finished or self.concsize >= minsize
+        return minsize == -1 and self.finished or (self.readable and self.concsize >= minsize)
 
     def update(self, **kw) -> 'CalcStatus':
         for k, v in kw.items():
@@ -127,7 +131,8 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_to_map(self, subchash: Optional[str], query: QueryType, size: int, calc_status: CalcStatus = None) -> Tuple[str, CalcStatus]:
+    def add_to_map(self, subchash: Optional[str], query: QueryType, calc_status: CalcStatus, overwrite: bool = False
+                   ) -> CalcStatus:
         """
         Add or update a cache map entry
 
@@ -144,10 +149,11 @@ class AbstractConcCache(abc.ABC):
         size -- current size of a respective concordance (the one defined by corpus, subchash
                 and query)
         calc_status -- an instance of CalcStatus
+        overwrite -- normally, trying to store a status which is already present raises an exception; this
+                     setting can override this
         returns:
-        2-tuple
-            cache_file_path -- path to a respective cache file
-            previous_status -- an instance of CalcStatus storing previous calc. state
+            an update version of the original calc_status
+            (e.g. with cachefile set)
         """
 
     @abc.abstractmethod

@@ -37,7 +37,7 @@ from typing import Union, Tuple, Optional
 import manatee
 
 import plugins
-from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus
+from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus, CalcStatusException
 from plugins import inject
 from plugins.abstract.general_storage import KeyValueStorage
 
@@ -76,28 +76,24 @@ class DefaultCacheMapping(AbstractConcCache):
         self._corpus = corpus
         self._db = db
 
-    def _get_entry(self, subchash, q) -> Union[CachedConcInfo, None]:
+    def _get_entry(self, subchash, q) -> Union[CalcStatus, None]:
         val = self._db.hash_get(self._mk_key(), _uniqname(subchash, q))
-        if val:
-            if type(val[1]) is not dict:
-                return None
-            return val[0], CalcStatus(**val[1]), val[2]
+        if val and type(val) is dict:
+            return CalcStatus(**val)
         return None
 
-    def _set_entry(self, subchash, q, data: CachedConcInfo):
-        tmp = [data[0], data[1].to_dict(), data[2]]
-        self._db.hash_set(self._mk_key(), _uniqname(subchash, q), tmp)
+    def _set_entry(self, subchash, q, data: CalcStatus):
+        self._db.hash_set(self._mk_key(), _uniqname(subchash, q), data.to_dict())
 
     def _mk_key(self) -> str:
         return DefaultCacheMapping.KEY_TEMPLATE % self._corpus.corpname
 
     def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[CalcStatus, None]:
-        val = self._get_entry(subchash, q)
-        return val[1] if val else None
+        return self._get_entry(subchash, q)
 
     def get_stored_size(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[int, None]:
         val = self._get_entry(subchash, q)
-        return val[0] if val else None
+        return val.concsize if val else None
 
     def refresh_map(self):
         """
@@ -115,48 +111,41 @@ class DefaultCacheMapping(AbstractConcCache):
 
     def cache_file_path(self, subchash, q) -> Optional[str]:
         val = self._get_entry(subchash, q)
-        if val:
-            return self._create_cache_file_path(subchash, q)
-        return None
+        return val.cachefile if val and val.readable else None
 
-    def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], size: int, calc_status: CalcStatus = None) -> Tuple[str, CalcStatus]:
+    def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], calc_status: CalcStatus,
+                   overwrite: bool = False) -> CalcStatus:
         """
-        TODO: the current implementation has serious issues
-        regarding hidden arguments and cache status relationships
-        user cannot possibly understand. I.e. if a record is
-        not present yet then calc_status cannot be None.
+        return:
+        path to a created cache file
         """
-        stored_data = self._get_entry(subchash, query)
-        if stored_data:
-            storedsize, stored_calc_status, q0hash = stored_data
-            if storedsize < size:
-                self._set_entry(subchash, query, (size, stored_calc_status, q0hash))
-        else:
-            stored_calc_status = None
-            self._set_entry(subchash, query, (size, calc_status, _uniqname(subchash, query[:1])))
-        return self._create_cache_file_path(subchash, query), stored_calc_status
+        prev_status = self._get_entry(subchash, query)
+        if prev_status and not overwrite:
+            raise CalcStatusException('Cannot add cache record for {} - already present'.format(query))
+        calc_status.q0hash = _uniqname(subchash, query[:1])
+        calc_status.cachefile = self._create_cache_file_path(subchash, query)
+        self._set_entry(subchash, query, calc_status)
+        return calc_status
 
     def get_calc_status(self, subchash: Optional[str], query: Tuple[str, ...]) -> Union[CalcStatus, None]:
-        stored_data = self._get_entry(subchash, query)
-        if stored_data:
-            return stored_data[1]
-        return None
+        return self._get_entry(subchash, query)
 
     def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
         stored_data = self._get_entry(subchash, query)
         if stored_data:
-            storedsize, stored_calc_status, q0hash = stored_data
-            stored_calc_status.update(**kw)
-            self._set_entry(subchash, query, (storedsize, stored_calc_status, q0hash))
+            stored_data.update(**kw)
+            self._set_entry(subchash, query, stored_data)
 
     def del_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
 
     def del_full_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         for k, stored in list(self._db.hash_get_all(self._mk_key()).items()):
-            if _uniqname(subchash, q[:1]) == stored[2]:  # stored[2] = q0hash
-                # original record's key must be used (k ~ entry_key match can be partial)
-                self._db.hash_del(self._mk_key(), k)  # must use direct access here (no del_entry())
+            if stored:
+                status = CalcStatus(**stored)
+                if _uniqname(subchash, q[:1]) == status.q0hash:
+                    # original record's key must be used (k ~ entry_key match can be partial)
+                    self._db.hash_del(self._mk_key(), k)  # must use direct access here (no del_entry())
 
 
 class CacheMappingFactory(AbstractCacheMappingFactory):

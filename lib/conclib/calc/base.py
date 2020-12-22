@@ -120,12 +120,16 @@ class TaskRegistration(GeneralWorker):
     def __init__(self, task_id: str):
         super(TaskRegistration, self).__init__(task_id=task_id)
 
-    def __call__(self, corpus_name: str, subc_name: str, subchash: Optional[str], subcpaths: Tuple[str, ...], query: Tuple[str, ...], samplesize: int) -> Dict[str, Any]:
+    def __call__(self, corpus_name: str, subc_name: str, subchash: Optional[str], subcpaths: Tuple[str, ...],
+                 query: Tuple[str, ...], samplesize: int) -> Dict[str, Any]:
         corpus_manager = CorpusManager(subcpath=subcpaths)
         corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
-        new_status = self.create_new_calc_status()
-        cachefile, prev_status = cache_map.add_to_map(subchash, query, 0, new_status)
-        return dict(
-            cachefile=cachefile,
-            already_running=prev_status is not None)
+        status = cache_map.get_calc_status(subchash, query)
+        if status is None or status.error:
+            status = self.create_new_calc_status()
+            status = cache_map.add_to_map(subchash, query, status, overwrite=True)
+            already_running = False
+        else:
+            already_running = True
+        return dict(cachefile=status.cachefile, already_running=already_running)

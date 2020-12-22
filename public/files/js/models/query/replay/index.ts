@@ -303,9 +303,9 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
                 }).pipe(
                     concatMap(
-                        (wAction:Actions.QueryContextFormPrepareArgsDone) => this.branchQuery(
+                        (wAction) => this.branchQuery(
                             state,
-                            wAction.payload.data,
+                            (wAction as Actions.QueryContextFormPrepareArgsDone).payload.data,
                             action.payload.operationIdx,
                             dispatch
                         )
@@ -490,7 +490,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         this.queryModel.createViewUrl(
                             data.conc_persistence_op_id,
                             data.conc_args,
-                            true
+                            true,
+                            false
                         ),
                         {}
                     )

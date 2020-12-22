@@ -478,7 +478,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
                 }).pipe(
                     concatMap(
-                        (wAction:Actions.QueryContextFormPrepareArgsDone) => {
+                        (wAction) => {
                             let err:Error;
                             err = this.testPrimaryQueryNonEmpty();
                             if (err !== null) {
@@ -488,7 +488,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.submitQuery(wAction.payload.data, true);
+                            return this.submitQuery(
+                                (wAction as Actions.QueryContextFormPrepareArgsDone).payload.data,
+                                true
+                            );
                         }
                     )
 
@@ -518,7 +521,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             window.location.href = this.createViewUrl(
                                 data.conc_persistence_op_id,
                                 data.conc_args,
-                                false
+                                false,
+                                true
                             );
                         }
                     },
@@ -883,10 +887,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     }
 
 
-    createViewUrl(concId:string, args:ConcServerArgs, retJson:boolean):string {
+    createViewUrl(concId:string, args:ConcServerArgs, retJson:boolean, async:boolean):string {
         return this.pageModel.createActionUrl(
             'view', [
                 ['q', '~' + concId],
+                ['asnc', async ? '1' : '0'],
                 ['format', retJson ? 'json' : undefined],
                 ...pipe(
                     args,

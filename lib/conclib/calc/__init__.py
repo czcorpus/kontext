@@ -98,7 +98,7 @@ def wait_for_conc(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
         i += 1
         t1 = time.time()
         has_min_result, finished = _check_result(cache_map, q, subchash, minsize)
-    if not os.path.isfile(cache_map.cache_file_path(subchash, q)):
+    if not has_min_result:
         if finished:  # cache vs. filesystem mismatch
             cache_map.del_entry(subchash, q)
         return False
@@ -230,37 +230,36 @@ class ConcCalculation(GeneralWorker):
             corpus_manager = CorpusManager(subcpath=subc_dirs)
             corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
-
             if not initial_args['already_running']:
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
                 # not be ready yet (this is checked by the 'finished()' method).
                 conc = self.compute_conc(corpus_obj, query, samplesize)
                 sleeptime = 0.1
                 time.sleep(sleeptime)
-                conc.save(initial_args['cachefile'], False, True, False)  # partial
+                cachefile = initial_args['cachefile']
+                conc.save(cachefile, False, True)  # partial
+                os.chmod(cachefile, 0o664)
+                cache_map.update_calc_status(subchash, query, readable=True)
                 while not conc.finished():
-                    # TODO it looks like append=True does not work with Manatee 2.121.1 properly
-                    tmp_cachefile = initial_args['cachefile'] + '.tmp'
-                    conc.save(tmp_cachefile, False, True, False)
-                    os.rename(tmp_cachefile, initial_args['cachefile'])
-                    time.sleep(sleeptime)
-                    sleeptime += 0.1
+                    conc.save(cachefile + '.tmp', False, True)
+                    os.rename(cachefile + '.tmp', cachefile)
                     sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
                     cache_map.update_calc_status(subchash, query, finished=sizes['finished'],
                                                  concsize=sizes['concsize'], fullsize=sizes['fullsize'],
                                                  relconcsize=sizes['relconcsize'], arf=None, task_id=self._task_id)
-                tmp_cachefile = initial_args['cachefile'] + '.tmp'
-                conc.save(tmp_cachefile)  # whole
-                os.rename(tmp_cachefile, initial_args['cachefile'])
+                    time.sleep(sleeptime)
+                    sleeptime += 0.1
+
+                conc.save(cachefile + '.tmp') # whole
+                os.rename(cachefile + '.tmp', cachefile)
+                os.chmod(cachefile, 0o664)
                 sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
                 cache_map.update_calc_status(subchash, query, finished=sizes['finished'],
-                                             concsize=sizes['concsize'], fullsize=sizes['fullsize'],
+                                             concsize=conc.size(), fullsize=sizes['fullsize'],
                                              relconcsize=sizes['relconcsize'],
                                              arf=round(conc.compute_ARF(), 2) if not is_subcorpus(
                                                  corpus_obj) else None,
                                              task_id=self._task_id)
-                # update size in map file
-                cache_map.add_to_map(subchash, query, conc.size())
         except Exception as e:
             # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
             # here as this is performed by _get_cached_conc()

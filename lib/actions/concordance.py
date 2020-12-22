@@ -179,7 +179,7 @@ class Actions(Querying):
                                                    out['query_overview'][0].get('nicearg'))
 
     @exposed(vars=('orig_query', ), mutates_conc=False)
-    def view(self, _=None):
+    def view(self, request):
         """
         KWIC view
         """
@@ -201,9 +201,10 @@ class Actions(Querying):
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
         out['items_per_page'] = self.args.pagesize
         conc = EmptyConc(self.corp, None)
+        asnc = bool(int(request.args['asnc'])) if 'asnc' in request.args else False
         try:
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=False,
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=asnc,
                             save=self.args.save, samplesize=corpus_info.sample_size)
             if conc:
                 self._apply_linegroups(conc)
@@ -443,7 +444,7 @@ class Actions(Querying):
             ctx = ctx.split('~')[0]
 
         self.args.q.append(f's{qinfo.sattr}/{qinfo.sicase}{qinfo.sbward} {ctx}')
-        return self.view()
+        return self.view(request)
 
     @exposed(access_level=1, template='view.html', page_model='view', mutates_conc=True, http_method='POST')
     def mlsortx(self, request):
@@ -464,7 +465,7 @@ class Actions(Querying):
                 crit += one_level_crit(' ', qinfo.ml3attr, qinfo.ml3ctx, qinfo.ml3pos, mlxfcode,
                                        qinfo.ml3icase, qinfo.ml3bward)
         self.args.q.append(crit)
-        return self.view()
+        return self.view(request)
 
     def _is_err_corpus(self):
         availstruct = self.corp.get_conf('STRUCTLIST').split(',')
@@ -661,7 +662,7 @@ class Actions(Querying):
             ff_args = q_conv(q)
             self.acknowledge_auto_generated_conc_op(op_idx, ff_args)
             self.args.q.append(q)
-        return self.view()
+        return self.view(request)
 
     @exposed(http_method='POST', template='view.html', page_model='view', mutates_conc=True)
     def switch_main_corp(self, request):
@@ -669,7 +670,7 @@ class Actions(Querying):
         self.args.q.append('x-{0}'.format(maincorp))
         ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
         self.add_conc_form_args(ksargs)
-        return self.view()
+        return self.view(request)
 
     @exposed(access_level=1, mutates_conc=True, http_method='POST', return_type='json')
     def filter(self, request):
@@ -711,7 +712,7 @@ class Actions(Querying):
                 f'{ff_args.pnfilter}{ff_args.filfpos} {ff_args.filtpos} {rank} {query}')
         self._status = 201
         try:
-            return self.view()
+            return self.view(request)
         except Exception as ex:
             logging.getLogger(__name__).error('Failed to apply filter: {}'.format(ex))
             if ff_args.within:
@@ -721,7 +722,7 @@ class Actions(Querying):
             raise
 
     @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_conc=True, http_method='POST')
-    def reduce(self, _):
+    def reduce(self, request):
         """
         random sample
         """
@@ -732,24 +733,24 @@ class Actions(Querying):
         qinfo.rlines = self.args.rlines
         self.add_conc_form_args(qinfo)
         self.args.q.append('r' + self.args.rlines)
-        return self.view()
+        return self.view(request)
 
     @exposed(access_level=0, template='view.html', page_model='view', mutates_conc=True)
-    def shuffle(self, _):
+    def shuffle(self, request):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(ShuffleFormArgs(persist=True))
         self.args.q.append('f')
-        return self.view()
+        return self.view(request)
 
     @exposed(access_level=0, template='view.html', page_model='view', mutates_conc=True)
-    def filter_subhits(self, _):
+    def filter_subhits(self, request):
         if len(self._lines_groups) > 0:
             raise UserActionException(
                 'Cannot apply the function once a group of lines has been saved')
         self.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
         self.args.q.append('D')
-        return self.view()
+        return self.view(request)
 
     @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=False,
              mutates_conc=True)
@@ -762,7 +763,7 @@ class Actions(Querying):
         self.add_conc_form_args(FirstHitsFilterFormArgs(
             persist=True, doc_struct=self.corp.get_conf('DOCSTRUCTURE')))
         self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
-        return self.view()
+        return self.view(request)
 
     @exposed(access_level=0, func_arg_mapped=True, page_model='freq')
     def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0, force_cache=0):
