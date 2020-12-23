@@ -427,10 +427,13 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
     def _export_favorite(self, plugin_api):
         ans = []
         for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api):
-            corp_info = self._fetch_corpus_info(item.main_corpus_id, plugin_api.user_lang)
             tmp = item.to_dict()
-            tmp['description'] = self._export_untranslated_label(
-                plugin_api, corp_info.description)
+            corp_info = self._fetch_corpus_info(item.main_corpus_id, plugin_api.user_lang)
+            if corp_info:
+                tmp['description'] = self._export_untranslated_label(
+                        plugin_api, corp_info.description)
+            else:
+                tmp['description'] = ''
             ans.append(tmp)
         return ans
 
