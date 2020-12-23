@@ -73,7 +73,7 @@ class CalcStatus(object):
         return None
 
     def has_some_result(self, minsize: int) -> bool:
-        return minsize == -1 and self.finished or (self.readable and self.concsize >= minsize)
+        return self.finished or (self.readable and self.concsize >= minsize)
 
     def update(self, **kw) -> 'CalcStatus':
         for k, v in kw.items():
