@@ -27,7 +27,7 @@ import settings
 import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, CalcStatus
 from corplib import CorpusManager, is_subcorpus, corp_mtime as corplib_corp_mtime
-from conclib.empty import EmptyConc
+from conclib.empty import InitialConc
 import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
@@ -169,7 +169,7 @@ def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tupl
     else:
         srch_from = len(q)
 
-    conc = EmptyConc(corp=corp)
+    conc = InitialConc(corp=corp)
     ans = (0, conc)
     # try to find the most complete cached operation
     # (e.g. query + filter + sample)
@@ -295,7 +295,7 @@ class ConcSyncCalculation(GeneralWorker):
     def __call__(self,  subchash, query: Tuple[str, ...], samplesize: int):
         try:
             calc_from, conc = find_cached_conc_base(self.corpus_obj, subchash, query, minsize=0)
-            if isinstance(conc, EmptyConc):
+            if isinstance(conc, InitialConc):
                 calc_status = self.cache_map.add_to_map(subchash, query, CalcStatus(), overwrite=True)
                 conc = self.compute_conc(self.corpus_obj, query, samplesize)
                 conc.sync()

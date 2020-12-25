@@ -21,7 +21,15 @@ from typing import Optional
 import manatee
 
 
-class EmptyConc:
+class InitialConc:
+    """
+    InitialConc represents a concordance which has always zero rows
+    but it is also expected to be calculated further. It is sometimes
+    used by KonText as an initial replacement for the manatee.Concordance
+    in case it is reasonable to expect the actual calculation to take a long time
+    before any (initial few rows) data arrives. In such case, the frontend uses
+    InitialConc while the backend worker calculates actual data.
+    """
 
     def __init__(self, corp: manatee.Corpus, cache_path: Optional[str] = None, finished: bool = False):
         self._corp = corp

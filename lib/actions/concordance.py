@@ -32,7 +32,7 @@ from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from argmapping import ConcArgsMapping
 import settings
 import conclib
-from conclib.empty import EmptyConc
+from conclib.empty import InitialConc
 from conclib.search import get_conc
 from conclib.calc.base import GeneralWorker
 from conclib.calc import cancel_async_task
@@ -200,7 +200,7 @@ class Actions(Querying):
         out = self._create_empty_conc_result_dict()
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
         out['items_per_page'] = self.args.pagesize
-        conc = EmptyConc(self.corp, None)
+        conc = InitialConc(self.corp, None)
         asnc = bool(int(request.args['asnc'])) if 'asnc' in request.args else False
         try:
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
