@@ -24,7 +24,7 @@ import { Response as TTDistResponse } from '../../models/concordance/ttDistModel
 import { ActionName as ConcActionName, Actions as ConcActions } from '../../models/concordance/actions';
 import { MultiDict } from '../../multidict';
 import { IConcLinesProvider } from '../../types/concordance';
-import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
+import { StatefulModel, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf, concat } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 import { FreqServerArgs } from '../../models/freqs/common';
@@ -99,7 +99,7 @@ export enum FreqDistType {
 
 
 export interface KwicConnectModelArgs {
-    dispatcher:IActionDispatcher;
+    dispatcher:IFullActionControl;
     pluginApi:IPluginApi;
     corpora:Array<string>;
     mainCorp:string;
@@ -109,7 +109,7 @@ export interface KwicConnectModelArgs {
     maxKwicWords:number;
 }
 
-export class KwicConnectModel extends StatelessModel<KwicConnectState> {
+export class KwicConnectModel extends StatefulModel<KwicConnectState> {
 
     private static UNIQ_KWIC_FREQ_PAGESIZE = 10;
 
@@ -154,72 +154,81 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
         this.addActionHandler(
             PluginInterfaces.KwicConnect.Actions.FetchInfo,
-            (state, action) => {
-                if (state.data.length === 0) {
-                    state.isBusy = true;
+            state => {
+                if (List.empty(this.state.data)) {
+                    this.changeState(state => {
+                        state.isBusy = true;
+                    });
                 }
-            },
-            (state, action, dispatch) => {
-                if (state.blockedByAsyncConc || state.data.length > 0) {
-                    return;
+                if (!this.state.blockedByAsyncConc && List.empty(this.state.data)) {
+                    this.loadData();
                 }
-                const freqType = this.selectFreqType();
-                this.fetchResponses(state, freqType, dispatch).subscribe(
-                    (data) => {
-                        dispatch<Actions.FetchInfoDone>({
-                            name: ActionName.FetchInfoDone,
-                            payload: {
-                                data,
-                                freqType
-                            }
-                        });
-                    },
-                    (err) => {
-                        this.pluginApi.showMessage('error', err);
-                        dispatch<Actions.FetchInfoDone>({
-                            name: ActionName.FetchInfoDone,
-                            payload: {
-                                data: [],
-                                freqType: null
-                            },
-                            error: err
-                        });
-                    }
-                );
+
             }
         );
 
         this.addActionHandler<Actions.FetchPartialInfoDone>(
             ActionName.FetchPartialInfoDone,
-            (state, action) => {
-                this.mergeDataOfProviders(state, action.payload.data);
+            action => {
+                this.changeState(state => {
+                    this.mergeDataOfProviders(state, action.payload.data);
+                });
             }
         );
 
         this.addActionHandler<Actions.FetchInfoDone>(
             ActionName.FetchInfoDone,
-            (state, action) => {
-                state.isBusy = false;
-                state.freqType = action.payload.freqType;
-                this.mergeDataOfProviders(state, action.payload.data);
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    state.freqType = action.payload.freqType;
+                    this.mergeDataOfProviders(state, action.payload.data);
+                });
             }
         );
 
         this.addActionHandler<ConcActions.AsyncCalculationUpdated>(
             ConcActionName.AsyncCalculationUpdated,
-            (state, action) => {
-                // Please note that this action breaks (de facto) the 'no side effect chain'
-                // rule (it is produced by async action of a StatefulModel and triggers a side
-                // effect here). But currently we have no solution to this.
-                state.blockedByAsyncConc = !action.payload.finished;
+            action => {
+                const prevBlocked = this.state.blockedByAsyncConc;
+                this.changeState(state => {
+                    state.blockedByAsyncConc = !action.payload.finished;
+                });
+                if (prevBlocked && !this.state.blockedByAsyncConc) {
+                    this.loadData();
+                }
+            }
+        );
+    }
+
+    private loadData():void {
+        const freqType = this.selectFreqType();
+        this.fetchResponses(freqType).subscribe(
+            (data) => {
+                this.dispatchSideEffect<Actions.FetchInfoDone>({
+                    name: ActionName.FetchInfoDone,
+                    payload: {
+                        data,
+                        freqType
+                    }
+                });
+            },
+            (err) => {
+                this.pluginApi.showMessage('error', err);
+                this.dispatchSideEffect<Actions.FetchInfoDone>({
+                    name: ActionName.FetchInfoDone,
+                    payload: {
+                        data: [],
+                        freqType: null
+                    },
+                    error: err
+                });
             }
         );
     }
 
     private fetchResponses(
-        state:KwicConnectState,
-        freqType:FreqDistType,
-        dispatch:SEDispatcher
+        freqType:FreqDistType
     ):Observable<Array<ProviderWordMatch>> {
 
         return this.fetchUniqValues(freqType).pipe(
@@ -233,23 +242,21 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
 
                     if (procData.length > 0) {
                         ans = List.reduce(
-                            (prev, curr) => {
-                                return prev.pipe(
-                                    concatMap(
-                                        (data) => {
-                                            if (data !== null) {
-                                                dispatch<Actions.FetchPartialInfoDone>({
-                                                    name: ActionName.FetchPartialInfoDone,
-                                                    payload: {
-                                                        data
-                                                    }
-                                                });
-                                            }
-                                            return this.fetchKwicInfo(state, curr);
+                            (prev, curr) => prev.pipe(
+                                concatMap(
+                                    (data) => {
+                                        if (data !== null) {
+                                            this.dispatchSideEffect<Actions.FetchPartialInfoDone>({
+                                                name: ActionName.FetchPartialInfoDone,
+                                                payload: {
+                                                    data
+                                                }
+                                            });
                                         }
-                                    )
-                                );
-                            },
+                                        return this.fetchKwicInfo(curr);
+                                    }
+                                )
+                            ),
                             rxOf([]),
                             procData
                         );
@@ -258,7 +265,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                         ans = this.pluginApi.ajax$<AjaxResponseListProviders>(
                             HTTP.Method.GET,
                             'get_corpus_kc_providers',
-                            {corpname: state.corpora[0]}
+                            {corpname: List.head(this.state.corpora)}
 
                         ).pipe(
                             concatMap(
@@ -279,7 +286,7 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
                             this.pluginApi.ajax$<AjaxResponseListProviders>(
                                 HTTP.Method.GET,
                                 'get_corpus_kc_providers',
-                                {corpname: state.corpora[0]}
+                                {corpname: List.head(this.state.corpora)}
 
                             ).pipe(
                                 concatMap(
@@ -358,13 +365,12 @@ export class KwicConnectModel extends StatelessModel<KwicConnectState> {
     };
 
     private fetchKwicInfo(
-        state:KwicConnectState,
         items:Array<string>
     ):Observable<Array<ProviderWordMatch>> {
 
         const args = new MultiDict<{corpname:string; align:string; w:string}>();
-        args.set('corpname', state.mainCorp);
-        args.replace('align', List.filter(v => v !== state.mainCorp, state.corpora));
+        args.set('corpname', this.state.mainCorp);
+        args.replace('align', List.filter(v => v !== this.state.mainCorp, this.state.corpora));
         const procItems = List.slice(0, KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE, items);
         if (procItems.length > 0) {
             List.forEach(v => args.add('w', v), procItems);
