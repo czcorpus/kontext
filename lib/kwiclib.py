@@ -26,7 +26,7 @@ import math
 import manatee
 from structures import FixedDict
 from corplib import is_subcorpus
-from conclib.empty import EmptyConc
+from conclib.empty import InitialConc
 
 SortCritType = List[Tuple[str, Union[str, int]]]
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
@@ -550,7 +550,7 @@ class Kwic(object):
 
         # self.conc.corp() must be used here instead of self.corpus
         # because in case of parallel corpora these two are different and only the latter one is correct
-        if isinstance(self.conc, EmptyConc):
+        if isinstance(self.conc, InitialConc):
             kl = EmptyKWiclines()
         else:
             kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, args.fromline, args.toline),

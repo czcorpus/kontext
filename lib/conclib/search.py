@@ -26,7 +26,7 @@ import settings
 import plugins
 from plugins.abstract.conc_cache import CalcStatus
 from conclib.pyconc import PyConc
-from conclib.empty import EmptyConc
+from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker
 from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent
 from conclib.calc.errors import ConcCalculationStatusException
@@ -56,11 +56,11 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
     if conc_avail:
         return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
     else:
-        return EmptyConc(corp, cache_map.cache_file_path(subchash, q))
+        return InitialConc(corp, cache_map.cache_file_path(subchash, q))
 
 
 def _get_bg_conc(corp: manatee.Corpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
-                 calc_from: int, minsize: int) -> Union[PyConc, EmptyConc]:
+                 calc_from: int, minsize: int) -> Union[PyConc, InitialConc]:
     """
     arguments:
     calc_from - from which operation idx (inclusive) we have to calculate respective results
@@ -84,7 +84,7 @@ def _get_bg_conc(corp: manatee.Corpus, user_id: int, q: Tuple[str, ...], subchas
         return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
     else:
         # return empty yet unfinished concordance to make the client watch the calculation
-        return EmptyConc(corp, cache_map.cache_file_path(subchash, q))
+        return InitialConc(corp, cache_map.cache_file_path(subchash, q))
 
 
 def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
@@ -109,7 +109,8 @@ def _should_be_bg_query(corp: manatee.Corpus, query: Tuple[str, ...], asnc: int)
              or corp.size() > CONC_BG_SYNC_SINGLE_CORP_THRESHOLD))
 
 
-def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0) -> Union[manatee.Concordance, EmptyConc]:
+def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0
+             ) -> Union[manatee.Concordance, InitialConc]:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -131,7 +132,7 @@ def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc
     samplesize -- ?
     """
     if not q:
-        return EmptyConc(corp=corp, finished=True)
+        return InitialConc(corp=corp, finished=True)
     # complete bg calc. without continuous data fetching => must accept 0
     if _should_be_bg_query(corp, q, asnc):
         minsize = 0
@@ -140,7 +141,7 @@ def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc
     else:
         minsize = fromp * pagesize  # happy case for a user
     subchash = getattr(corp, 'subchash', None)
-    conc = EmptyConc(corp=corp, finished=True)
+    conc = InitialConc(corp=corp, finished=True)
     # try to locate concordance in cache
     if save:
         calc_from, conc = find_cached_conc_base(corp, subchash, q, minsize)
@@ -164,7 +165,7 @@ def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc
                             calc_from=calc_from, minsize=minsize)
     else:
         worker = GeneralWorker()
-        if isinstance(conc, EmptyConc):
+        if isinstance(conc, InitialConc):
             calc_from = 1
             # use Manatee asynchronous conc. calculation (= show 1st page once it's avail.)
             if asnc and len(q) == 1:
