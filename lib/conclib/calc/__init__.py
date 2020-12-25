@@ -87,9 +87,9 @@ def wait_for_conc(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     minsize -- min. size of concordance we accept:
                 1) > 0  => we want at least some lines to be available => short time limit
                 2) == -1 => we want the whole concordance to be ready => longer time limit
-                3) == 0 => we only care whether the file exists => sort time limit
+                3) == 0 => we only care whether the file exists => short time limit
     """
-    time_limit = 5 if minsize >= 0 else 30
+    time_limit = 7 if minsize >= 0 else 20   # 7 => ~2s, 20 => ~19s
     t0 = t1 = time.time()
     i = 1
     has_min_result, finished = _check_result(cache_map, q, subchash, minsize)
