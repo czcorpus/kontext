@@ -857,6 +857,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             data.Lines,
             this.getViewAttrs().indexOf(state.baseViewAttr) - 1
         );
+        state.kwicCorps = data.KWICCorps;
         state.numItemsInLockedGroups = data.num_lines_in_groups;
         state.pagination = data.pagination;
         state.unfinishedCalculation = !!data.running_calc;

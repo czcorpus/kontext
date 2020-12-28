@@ -34,6 +34,7 @@ element conc_cache {
 import os
 import hashlib
 from typing import Union, Tuple, Optional
+import logging
 import manatee
 
 import plugins
@@ -142,10 +143,14 @@ class DefaultCacheMapping(AbstractConcCache):
     def del_full_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         for k, stored in list(self._db.hash_get_all(self._mk_key()).items()):
             if stored:
-                status = CalcStatus(**stored)
-                if _uniqname(subchash, q[:1]) == status.q0hash:
-                    # original record's key must be used (k ~ entry_key match can be partial)
-                    self._db.hash_del(self._mk_key(), k)  # must use direct access here (no del_entry())
+                if type(stored) is not dict:
+                    logging.getLogger(__name__).warning('Removed unsupported conc cache value: {}'.format(stored))
+                    self._db.hash_del(self._mk_key(), k)
+                else:
+                    status = CalcStatus(**stored)
+                    if _uniqname(subchash, q[:1]) == status.q0hash:
+                        # original record's key must be used (k ~ entry_key match can be partial)
+                        self._db.hash_del(self._mk_key(), k)  # must use direct access here (no del_entry())
 
 
 class CacheMappingFactory(AbstractCacheMappingFactory):
