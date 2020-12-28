@@ -700,12 +700,7 @@ class Actions(Querying):
         if ff_args.within:
             wquery = f' within {maincorp}:({query})'
             self.args.q[0] += wquery
-            for i, op in enumerate(self.args.q):
-                if f'X{maincorp}' == op:
-                    self.args.q[i] = f'x-{maincorp}'
-                    break
-            else:
-                self.args.q.append(f'x-{maincorp}')
+            self.args.q.append(f'x-{maincorp}')
         else:
             wquery = ''
             self.args.q.append(

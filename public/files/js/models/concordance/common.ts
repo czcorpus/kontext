@@ -239,6 +239,7 @@ export interface ConcQueryResponse extends Kontext.AjaxResponse {
  */
 export interface AjaxConcResponse extends ConcQueryResponse {
     Lines:Array<ServerLineData>;
+    KWICCorps:Array<string>;
     conc_use_safe_font:number; // TODO should be boolean
     concsize:number;
     fullsize:number;
