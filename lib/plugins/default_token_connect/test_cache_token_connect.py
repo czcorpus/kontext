@@ -85,7 +85,7 @@ class CacheTest(unittest.TestCase):
         """
         create an empty cache db file with properly structured table
         """
-        self.cache_man.prepare_cache()
+        self.cache_man.test_cache()
 
     def tearDown(self):
         self.cache_man.close()
