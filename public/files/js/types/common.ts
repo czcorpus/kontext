@@ -643,7 +643,7 @@ export namespace TextTypes {
          */
         availItems?:number;
 
-        extendedInfo?:Kontext.GeneralProps;
+        extendedInfo?:TextTypes.ExtendedInfo;
     }
 
     export interface AutoCompleteItem {
@@ -743,6 +743,8 @@ export namespace TextTypes {
         selected:boolean;
         locked:boolean;
     }
+
+    export type ExtendedInfo = Array<[string, string]>|{__message__:string};
 
 }
 

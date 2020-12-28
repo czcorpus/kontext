@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import { List, Dict } from 'cnc-tskit';
+import { List, Dict, pipe } from 'cnc-tskit';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 
 import { PluginInterfaces } from '../../types/plugins';
 import { Kontext, TextTypes } from '../../types/common';
-import { ExtendedInfo, TTSelOps } from '../../models/textTypes/selectionOps';
+import { TTSelOps } from '../../models/textTypes/selectionOps';
 import { CoreViews } from '../../types/coreViews';
 import { TextTypesModelState } from '../../models/textTypes/main';
 import { Actions, ActionName } from '../../models/textTypes/actions';
@@ -66,7 +66,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const ExtendedInfoBox:React.FC<{
         attrName:string;
         ident:string;
-        data:ExtendedInfo;
+        data:TextTypes.ExtendedInfo;
 
     }> = (props) => {
 
@@ -80,20 +80,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             });
         };
 
-        const renderContent = () => {
-            if (props.data.has('__message__')) {
-                return <div className="message"><p>{props.data.get('__message__')}</p></div>;
+        const renderContent = () =>
+            Array.isArray(props.data) ?
+                (<ul>
+                    {pipe(
+                        props.data,
+                        List.map(
+                            ([attr, value]) => (
+                                <li key={attr}>
+                                    <strong>{attr.replace('_', '.')}:</strong>
+                                    {'\u00A0'}{value}
+                                </li>
+                            )
+                        )
+                    )}
+                </ul>
+                ) :
+                <div className="message"><p>{props.data.__message__}</p></div>;
 
-            } else {
-                return (
-                    <ul>
-                        {props.data.entrySeq().map((item) => {
-                            return <li key={item[0]}><strong>{item[0]}:</strong>{'\u00A0'}{item[1]}</li>;
-                        })}
-                    </ul>
-                );
-            }
-        };
 
         return (
             <layoutViews.PopupBox onCloseClick={clickCloseHandler}
@@ -387,7 +391,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // ----------------------------- <TextTypesPanel /> --------------------------
 
     const TextTypesPanel:React.FC<TextTypesPanelProps & TextTypesModelState> = (props) => {
-
             return (
                 <div className="TextTypesPanel">
                     <div className="plugin-controls">
@@ -402,20 +405,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         {props.LiveAttrsCustomTT
                             ? <div><props.LiveAttrsCustomTT /></div>
                             : null}
-                        {List.map((attrObj) => {
-                            return <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>
+                        {List.map((attrObj) => (
+                            <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>
                                 <TableTextTypeAttribute
                                         attrObj={attrObj}
                                         widget={props.attributeWidgets[attrObj.name]}
                                         isMinimized={props.minimizedBoxes[attrObj.name]}
                                         metaInfoHelpVisible={props.metaInfoHelpVisible}
-                                        hasExtendedInfo={props.bibIdAttr === attrObj.name}
+                                        hasExtendedInfo={props.bibLabelAttr === attrObj.name}
                                         metaInfo={props.metaInfo[attrObj.name]}
                                         isBusy={props.busyAttribute === attrObj.name}
                                         textInputPlaceholder={props.textInputPlaceholder}
                                         firstDayOfWeek={props.firstDayOfWeek} />
-                            </div>;
-                            },
+                            </div>
+                            ),
                             props.attributes
                         )}
                     </div>

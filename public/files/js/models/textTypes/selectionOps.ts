@@ -19,10 +19,7 @@
  */
 
 import { TextTypes } from '../../types/common';
-import { id, List, pipe } from 'cnc-tskit';
-
-
-export type ExtendedInfo = {[key:string]:any}; // TODO type
+import { List, pipe } from 'cnc-tskit';
 
 
 /**
@@ -230,7 +227,12 @@ export namespace TTSelOps {
         return sel.type === 'regexp' ? sel.isLocked : List.some(item => item.locked, sel.values);
     }
 
-    export function setExtendedInfo(sel:TextTypes.AnyTTSelection, ident:string, data:ExtendedInfo):TextTypes.AnyTTSelection {
+    export function setExtendedInfo(
+        sel:TextTypes.AnyTTSelection,
+        ident:string,
+        data:TextTypes.ExtendedInfo
+    ):TextTypes.AnyTTSelection {
+
         if (sel.type === 'regexp') {
             return sel;
 

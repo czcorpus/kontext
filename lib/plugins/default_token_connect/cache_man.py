@@ -19,6 +19,15 @@
 
 import os
 import sqlite3
+import logging
+
+# required cache table:
+# CREATE TABLE cache (key text, provider text, data blob, found integer, last_access integer NOT NULL,
+# PRIMARY KEY (key))
+
+
+class CacheException(Exception):
+    pass
 
 
 class CacheMan(object):
@@ -30,26 +39,19 @@ class CacheMan(object):
         self._conn = sqlite3.connect(self.cache_path)
         return self
 
-    def prepare_cache(self):
+    def test_cache(self):
         """
         create cache path directory if it does not exist yet
         delete the existing cache file (if any) and create an empty one with the required table structure
         """
-        db_dir = os.path.dirname(self.cache_path)
-        if not os.path.exists(db_dir):
-            os.mkdir(db_dir)
-        if os.path.isfile(self.cache_path):
-            os.remove(self.cache_path)
+        if not os.path.isfile(self.cache_path):
+            raise CacheException('TC/KC cache path does not exist: {}'.format(self.cache_path))
         self.connect()
         c = self._conn.cursor()
-        c.execute("CREATE TABLE IF NOT EXISTS cache ("
-                  "key text, "
-                  "provider text, "
-                  "data blob, "
-                  "found integer, "
-                  "last_access integer NOT NULL, "
-                  "PRIMARY KEY (key))")
-        self._conn.commit()
+        c.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'cache'")
+        ans = c.fetchone()
+        if ans is None:
+            raise CacheException('Missing cache table for TC/KC')
 
     def clear_extra_rows(self, cache_size):
         """
