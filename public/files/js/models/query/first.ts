@@ -38,8 +38,8 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../com
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
-import { AdvancedQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, QueryType,
-    SimpleQuery } from './query';
+import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery,
+    QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
 
 
 export interface QueryFormUserEntries {
@@ -126,30 +126,42 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
     }
 };
 
-function determineDefaultAttr(data:QueryFormUserEntries, sourceId:string, simpleQueryDefaultAttrs:Array<string>):string {
+function determineDefaultAttr(
+    data:QueryFormUserEntries,
+    sourceId:string,
+    simpleQueryDefaultAttrs:Array<string>,
+    attrList:Array<Kontext.AttrItem>
+):string {
+
     const qtype = data.currQueryTypes[sourceId] || 'simple';
     const defaultAttr = data.currDefaultAttrValues[sourceId];
     if (defaultAttr) {
         return defaultAttr;
     }
-    if (qtype === 'advanced' || List.empty(simpleQueryDefaultAttrs)) {
-        return 'word';
+    if (qtype === 'simple' && !List.empty(simpleQueryDefaultAttrs)) {
+        return '';
     }
-    return '';
+    return List.head(attrList).n;
 }
 
 function importUserQueries(
     corpora:Array<string>,
     data:QueryFormUserEntries,
-    simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>}
-):{[corpus:string]:AnyQuery} {
+    simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>},
+    attrList:Array<Kontext.AttrItem>
 
+):{[corpus:string]:AnyQuery} {
     return pipe(
         corpora,
         List.filter(corpus => Dict.hasKey(corpus, data.currQueryTypes)),
         List.map(corpus => {
             const qtype = data.currQueryTypes[corpus];
-            const defaultAttr = determineDefaultAttr(data, corpus, simpleQueryDefaultAttrs[corpus]);
+            const defaultAttr = determineDefaultAttr(
+                data,
+                corpus,
+                simpleQueryDefaultAttrs[corpus],
+                attrList
+            );
             const query = data.currQueries[corpus] || '';
 
             if (qtype === 'advanced') {
@@ -283,7 +295,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     ) {
 
         const corpora = props.corpora;
-        const queries = importUserQueries(corpora, props, props.simpleQueryDefaultAttrs);
+        const queries = importUserQueries(
+            corpora, props, props.simpleQueryDefaultAttrs, props.attrList);
         const tagBuilderSupport = props.tagBuilderSupport;
         super(
             dispatcher,
@@ -642,10 +655,20 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         newCorp:string,
         isAligned?:boolean
     ) {
-        state.queries[newCorp] = {
-            ...data.queries[oldCorp],
-            corpname: newCorp
-        };
+        const oldQuery = data.queries[oldCorp];
+        let newQuery = state.queries[newCorp];
+        if (newQuery.qtype === 'advanced' && oldQuery.qtype === 'simple') {
+            newQuery = advancedToSimpleQuery(newQuery);
+
+        } else if (newQuery.qtype === 'simple' && oldQuery.qtype === 'advanced') {
+            newQuery = simpleToAdvancedQuery(newQuery);
+
+        } else if (newQuery.qtype === 'simple' && oldQuery.qtype === 'simple') {
+            newQuery.qmcase = oldQuery.qmcase;
+            newQuery.use_regexp = oldQuery.use_regexp;
+        }
+        state.queries[newCorp] = newQuery;
+        this.setRawQuery(state, newCorp, oldQuery.query, null);
         state.cqlEditorMessages[newCorp] = '';
         if (!isAligned) {
             state.queries[newCorp].include_empty = false; // this is rather a formal stuff
@@ -674,6 +697,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 state.tagBuilderSupport,
                 state.isAnonymousUser
             );
+            /*
             const firstCorp = List.head(state.corpora)
             const queryObj = state.queries[firstCorp];
             if (queryObj.qtype === 'simple') {
@@ -698,6 +722,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 );
                 this.reparseAdvancedQuery(state, firstCorp, true);
             }
+            */
         }
     }
 
@@ -724,7 +749,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                     currPcqPosNegValues: data.curr_pcq_pos_neg_values,
                                     currIncludeEmptyValues: data.curr_include_empty_values
                                 },
-                                state.simpleQueryDefaultAttrs
+                                state.simpleQueryDefaultAttrs,
+                                state.attrList
                             );
                             state.tagBuilderSupport = data.tag_builder_support;
                             state.hasLemma = data.has_lemma;

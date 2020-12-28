@@ -372,7 +372,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             !state.queryOptionsVisible[action.payload.sourceId];
                 })
             }
-        )
+        );
 
         this.addActionSubtypeHandler<Actions.QueryInputSetDefaultAttr>(
             ActionName.QueryInputSetDefaultAttr,
@@ -1040,7 +1040,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
      * @param range in case we want to insert a CQL snippet into an existing code;
      *              if undefined then whole query is replaced
      */
-    private setRawQuery(
+    protected setRawQuery(
         state:QueryFormModelState,
         sourceId:string,
         query:string,
