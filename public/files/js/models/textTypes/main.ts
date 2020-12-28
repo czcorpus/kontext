@@ -1175,8 +1175,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         state:TextTypesModelState,
         attrName:string,
         ident:string,
-        data:{[key:string]:string|number}
+        data:TextTypes.ExtendedInfo
     ):void {
+
         const attrIdx = this.getAttributeIdx(state, attrName);
         if (attrIdx > -1) {
             state.attributes[attrIdx] = TTSelOps.setExtendedInfo(state.attributes[attrIdx], ident, data);
