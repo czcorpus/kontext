@@ -58,7 +58,7 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     currQmcaseValues:{[sourceId:string]:boolean};
     currInclkwicValues:{[sourceId:string]:boolean};
     inputLanguage:string;
-    currPnFilterValues:{[sourceId:string]:string};
+    currPnFilterValues:{[sourceId:string]:'p'|'n'};
     currFilflVlaues:{[sourceId:string]:'f'|'l'};
     currFilfposValues:{[sourceId:string]:string};
     currFiltposValues:{[sourceId:string]:string};
@@ -97,7 +97,7 @@ export interface FilterFormModelState extends QueryFormModelState {
 
     lposValues:{[key:string]:string};
 
-    pnFilterValues:{[key:string]:string};
+    pnFilterValues:{[key:string]:'p'|'n'};
 
     /**
      * Highlighted token FIRST/LAST. Specifies which token is highlighted.
@@ -374,16 +374,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.FilterInputSetPCQPosNeg>(
-            ActionName.FilterInputSetPCQPosNeg,
-            action => action.payload.formType === 'filter',
-            action => {
-                this.changeState(state => {
-                    state.pnFilterValues[action.payload.filterId] = action.payload.value;
-                });
-            }
-        );
-
         this.addActionHandler<Actions.FilterInputSetFilfl>(
             ActionName.FilterInputSetFilfl,
             action => {
@@ -486,6 +476,15 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 });
             }
         );
+
+        this.addActionHandler<Actions.FilterInputSetFilterType>(
+            ActionName.FilterInputSetFilterType,
+            action => {
+                this.changeState(state => {
+                      state.pnFilterValues[action.payload.filterId] = action.payload.value;
+                });
+            }
+        )
     }
 
     private validateForm(state:FilterFormModelState, filterId:string):Error|null {
