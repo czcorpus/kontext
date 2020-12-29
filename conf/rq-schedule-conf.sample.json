@@ -1,6 +1,6 @@
 [
     {
-        "task": "conc_persistence_archive_concordance",
+        "task": "conc_persistence__archive_concordance",
         "schedule": "0 */1 * * *",
         "kwargs": {
             "cron_interval": 20,
@@ -9,7 +9,7 @@
         }
     },
     {
-        "task": "conc_cache_conc_cache_cleanup",
+        "task": "conc_cache__conc_cache_cleanup",
         "schedule": "10 */12 * * *",
         "kwargs": {
             "ttl": 120,
@@ -26,7 +26,7 @@
         "schedule": "30 */1 * * *"
     },
     {
-        "task": "token_connect_clean_cache",
+        "task": "token_connect__clean_cache",
         "schedule": "30 3 * * 0",
         "kwargs": {
             "cache_size": 10000000

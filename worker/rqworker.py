@@ -112,11 +112,11 @@ def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author
 # ----------------------------- PLUG-IN TASKS ---------------------------------
 
 
-# creates [plugin_name]_[task_name] tasks
+# creates [plugin_name]__[task_name] tasks
 for p in plugins.runtime:
     if callable(getattr(p.instance, 'export_tasks', None)):
         for tsk in p.instance.export_tasks():
-            globals()[f'{p.name}_{tsk.__name__}'] = tsk
+            globals()[f'{p.name}__{tsk.__name__}'] = tsk
 
 
 if __name__ == "__main__":
@@ -138,6 +138,5 @@ if __name__ == "__main__":
 
         qs = sys.argv[1:] or ['default']
         app.init_scheduler()
-
         w = Worker(qs)
         w.work()
