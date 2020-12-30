@@ -112,6 +112,7 @@ export namespace Actions {
     export interface ShowFilter extends Action<{
         within:boolean;
         maincorp:string;
+        pnfilter?:'p'|'n';
     }> {
         name: ActionName.ShowFilter;
     }

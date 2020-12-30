@@ -494,7 +494,7 @@ export class ViewPage {
                 List.map(v => v.op_key)
             ),
             maincorps: fetchArgs(item => item.maincorp),
-            currPnFilterValues: fetchArgs<string>(item => item.pnfilter),
+            currPnFilterValues: fetchArgs<'p'|'n'>(item => item.pnfilter),
             currQueryTypes: fetchArgs<QueryType>(item => item.query_type),
             currQueries: fetchArgs<string>(item => item.query),
             currQmcaseValues: fetchArgs<boolean>(item => item.qmcase),

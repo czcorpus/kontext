@@ -213,6 +213,34 @@ export function init({
         );
     };
 
+    // --------- <FilterTypeSelector /> ----------------------------------
+
+    const FilterTypeSelector:React.FC<{
+        value:'p'|'n';
+        sourceId:string;
+
+    }> = (props) => {
+
+        const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch<Actions.FilterInputSetFilterType>({
+                name: ActionName.FilterInputSetFilterType,
+                payload: {
+                    filterId: props.sourceId,
+                    value: evt.target.value as 'p'|'n'
+                }
+            });
+        };
+
+        return (
+            <div className="FilterTypeSelector">
+                <select  value={props.value} onChange={handleChange}>
+                    <option value="p">{he.translate('query__qfilter_pos')}</option>
+                    <option value="n">{he.translate('query__qfilter_neg')}</option>
+                </select>
+            </div>
+        );
+    };
+
     // -------- <FilterForm /> ---------------------------------------
 
     class FilterForm extends React.PureComponent<FilterFormProps & FilterFormModelState> {
@@ -324,6 +352,11 @@ export function init({
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <div className="form primary-language">
+                        {this.props.filterId === '__new__' ?
+                            null :
+                            <FilterTypeSelector value={this.props.pnFilterValues[this.props.filterId]}
+                                    sourceId={this.props.filterId} />
+                        }
                         <div>
                             <inputViews.TRQueryInputField
                                 widgets={this.props.supportedWidgets[this.props.filterId]}

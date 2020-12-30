@@ -75,6 +75,7 @@ export enum ActionName {
     FilterInputSetFilfl = 'FILTER_QUERY_SET_FILFL',
     FilterInputSetRange = 'FILTER_QUERY_SET_RANGE',
     FilterInputSetInclKwic = 'FILTER_QUERY_SET_INCL_KWIC',
+    FilterInputSetFilterType = 'FILTER_INPUT_SET_FILTER_TYPE',
     QueryInputSetIncludeEmpty = 'QUERY_INPUT_SET_INCLUDE_EMPTY',
     QueryInputMakeCorpusPrimary = 'QUERY_MAKE_CORPUS_PRIMARY',
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
@@ -446,6 +447,13 @@ export namespace Actions {
         value:boolean;
     }> {
         name:ActionName.FilterInputSetInclKwic;
+    }
+
+    export interface FilterInputSetFilterType extends Action<{
+        filterId:string;
+        value:'p'|'n';
+    }> {
+        name: ActionName.FilterInputSetFilterType;
     }
 
     export interface ApplyFilter extends Action<{

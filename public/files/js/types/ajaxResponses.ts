@@ -166,7 +166,7 @@ export namespace AjaxResponse {
         query_type:QueryType;
         query:string;
         maincorp:string;
-        pnfilter:string;
+        pnfilter:'p'|'n';
         filfl:'f'|'l';
         filfpos:string;
         filtpos:string;
