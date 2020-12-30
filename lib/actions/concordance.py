@@ -597,7 +597,8 @@ class Actions(Querying):
         if len(corpora) > 1:
             self.args.viewmode = 'align'
 
-    @exposed(mutates_conc=True, http_method=('POST',), return_type='json')
+    @exposed(mutates_conc=True, http_method=('POST',), action_log_mapper=QueryFormArgs.map_action_to_log,
+             return_type='json')
     def query_submit(self, request):
 
         def store_last_op(conc_ids: List[str]):
