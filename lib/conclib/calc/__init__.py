@@ -295,19 +295,19 @@ class ConcSyncCalculation(GeneralWorker):
     def __call__(self,  subchash, query: Tuple[str, ...], samplesize: int):
         try:
             calc_from, conc = find_cached_conc_base(self.corpus_obj, subchash, query, minsize=0)
-            if isinstance(conc, InitialConc):
-                calc_status = self.cache_map.add_to_map(subchash, query, CalcStatus(), overwrite=True)
-                conc = self.compute_conc(self.corpus_obj, query, samplesize)
+            if isinstance(conc, InitialConc):   # we have nothing, let's start with the 1st operation only
+                calc_status = self.cache_map.add_to_map(subchash, query[:1], CalcStatus(), overwrite=True)
+                conc = self.compute_conc(self.corpus_obj, query[:1], samplesize)
                 conc.sync()
                 conc.save(calc_status.cachefile)
                 self.cache_map.update_calc_status(
-                    subchash, query, readable=True, finished=True, concsize=conc.size())
-                calc_from += 1
+                    subchash, query[:1], readable=True, finished=True, concsize=conc.size())
+                calc_from = 1
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
             self._mark_calc_states_err(subchash, query, 0, ex)
             return
-        # save additional concordance actions to cache (e.g. sample)
+        # save additional concordance actions to cache (e.g. sample, aligned corpus without a query,...)
         for act in range(calc_from, len(query)):
             try:
                 command, args = query[act][0], query[act][1:]
@@ -315,7 +315,6 @@ class ConcSyncCalculation(GeneralWorker):
                 if command in 'gae':  # user specific/volatile actions, cannot save
                     raise NotImplementedError(f'Cannot run command {command} in background')  # TODO
                 status = self.cache_map.add_to_map(subchash, query[:act + 1], CalcStatus(), overwrite=True)
-                # TODO if stored_status then something went wrong
                 conc.save(status.cachefile)
                 self.cache_map.update_calc_status(
                     subchash, query[:act + 1], readable=True, finished=True, concsize=conc.size())
