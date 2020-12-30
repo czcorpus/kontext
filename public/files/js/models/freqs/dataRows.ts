@@ -31,6 +31,8 @@ import { ConcQuickFilterServerArgs } from '../concordance/common';
 import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 import { Action } from 'rxjs/internal/scheduler/Action';
+import { catchError } from 'rxjs/operators';
+import { ajaxErrorMapped } from '../../app/navigation';
 
 
 export interface ResultItem {
@@ -361,7 +363,12 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             HTTP.Method.GET,
             this.pageModel.createActionUrl('freqs'),
             this.getSubmitArgs(state)
-        );
+
+        ).pipe(
+            ajaxErrorMapped({
+                502: this.pageModel.translate('global__human_readable_502')
+            }),
+        )
     }
 
     getSaveModel():FreqResultsSaveModel {

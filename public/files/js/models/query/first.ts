@@ -22,7 +22,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
-import { tap, map, concatMap } from 'rxjs/operators';
+import { tap, map, concatMap, catchError } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
 import { Kontext, TextTypes } from '../../types/common';
@@ -40,6 +40,8 @@ import { PluginInterfaces } from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery,
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
+import { AjaxError } from 'rxjs/ajax';
+import { ajaxErrorMapped } from '../../app/navigation';
 
 
 export interface QueryFormUserEntries {
@@ -540,7 +542,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         }
                     },
                     (err) => {
-                        console.log('error: ', err);
                         this.pageModel.showMessage('error', err);
                         this.changeState(state => {
                             state.isBusy = false;
@@ -944,6 +945,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 contentType: 'application/json'
             }
         ).pipe(
+            ajaxErrorMapped({
+                502: this.pageModel.translate('global__human_readable_502')
+            }),
             map(
                 ans => tuple(
                     ans.finished !== true || ans.size > 0 ? ans : null,

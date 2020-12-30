@@ -173,6 +173,7 @@
         "global__lightbulb_icon": "Ikonka žárovky",
         "global__calculating_imtermediate_data": "Počítám pomocná data",
         "global__quicksave_limit_warning_{format}{lines}": "Stažení do formátu {format} na jedno-kliknutí uloží maximálně {lines, plural, one{# řádek} few{# řádky} other{# řádků}}. OK?",
+        "global__human_readable_502": "Server nezvládl zpracování požadované operace. Příčinou může být příliš velká konkordance či komplikovaný dotaz. Zkuste použít vhodnou podmnožinu dat (subkorpus, náhodný vzorek).",
         "global__creation_date": "Vytvořeno",
         "global__mo_short": "Po",
         "global__tu_short": "Út",
