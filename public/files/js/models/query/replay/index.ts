@@ -432,8 +432,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         changedOpIdx,
         numOps,
         op,
-        pipeOp,
-        dispatch
+        pipeOp
     }:CreateOperationArgs):Observable<AjaxConcResponse|null> {
         const prepareFormData:Observable<AjaxResponse.ConcFormArgs|null> = changedOpIdx !== opIdx ?
                 this.syncFormData(state, opIdx) : rxOf(null);

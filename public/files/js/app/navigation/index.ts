@@ -19,8 +19,8 @@
  */
 
 import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import { ajax, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
+import { catchError, map, tap } from 'rxjs/operators';
+import { ajax, AjaxError, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 import { IFullActionControl } from 'kombo';
 import { pipe, List, HTTP, Dict, tuple, id } from 'cnc-tskit';
 
@@ -31,6 +31,28 @@ import { createHistory } from './history';
 import { PageLeaveVoting, IPageLeaveVoter } from '../../models/common/pageLeave';
 import { IUnregistrable } from '../../models/common/common';
 
+
+/**
+ * ajaxErrorMapped is a custom operator for ajax operations allowing mapping of
+ * misc. HTTP return codes to custom errors. In case the thrown error is not AjaxError
+ * or in case its return code has no mapping, original error is rethrown.
+ *
+ * @param mapping mapping [HTTP status code] => [error message]
+ */
+export function ajaxErrorMapped<T>(mapping:{[status:number]:string}):(src:Observable<T>)=>Observable<T> {
+    return (src:Observable<T>) => src.pipe(
+        catchError(
+            err => {
+                if (err instanceof AjaxError && mapping[err.status]) {
+                    throw new Error(mapping[err.status])
+
+                } else {
+                    throw err;
+                }
+            }
+        )
+    );
+}
 
 /**
  * Parse a URL args string (k1=v1&k2=v2&...&kN=vN) into
@@ -292,7 +314,9 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             headers: {
                 'Content-Type': callArgs.contentType
             }
-        }).pipe(map<RxAjaxResponse, T>(v => v.response));
+        }).pipe(
+            map<RxAjaxResponse, T>(v => v.response)
+        );
     }
 
     /**
