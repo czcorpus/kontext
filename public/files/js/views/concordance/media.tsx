@@ -122,6 +122,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        AudioPlayer: AudioPlayer
+        AudioPlayer
     };
 }

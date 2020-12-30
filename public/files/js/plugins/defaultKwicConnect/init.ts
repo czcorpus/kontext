@@ -23,8 +23,8 @@ import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { init as viewInit, View } from './views';
 import { init as renderersInit, Views as RenderersView } from './renderers';
 import { KwicConnectModel, KnownRenderers } from './model';
-import { IConcLinesProvider } from '../../types/concordance';
 import { List } from 'cnc-tskit';
+import { IConcLinesProvider } from '../../models/concordance/common';
 
 declare var require:any;
 require('./style.less'); // webpack

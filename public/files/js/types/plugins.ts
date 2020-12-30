@@ -23,12 +23,10 @@ import { ITranslator, IFullActionControl, IModel, Action } from 'kombo';
 
 import { Kontext, TextTypes } from '../types/common';
 import { CoreViews } from './coreViews';
-import { IConcLinesProvider } from '../types/concordance';
-import { ConcServerArgs } from '../models/concordance/common';
+import { ConcServerArgs, IConcLinesProvider } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
 import { AnyQuery, QuerySuggestion, QueryType } from '../models/query/query';
-import { ParsedAttr } from '../models/query/cqleditor/parser';
 
 /**
  * An interface used by KonText plug-ins to access

@@ -22,6 +22,78 @@ import { Color, pipe, List } from 'cnc-tskit';
 import { ViewOptions, Kontext } from '../../types/common';
 import { SaveData } from '../../app/navigation';
 
+
+export interface ConcToken {
+    className:string;
+    text:Array<string>; // array => multiple words per 'pseudo-position'
+    tailPosAttrs:Array<string>; // array => multiple pos attrs per whole 'pseudo-position'
+}
+
+export interface KWICSection {
+
+    tokenNumber:number;
+
+    lineNumber:number;
+
+    ref:Array<string>;
+
+    left:Array<TextChunk>;
+
+    /**
+     * This is used to obtain token number based on KWIC token number
+     * which is the only one we know from the server.
+     */
+    leftOffsets:Array<number>;
+
+    kwic:Array<TextChunk>;
+
+    right:Array<TextChunk>;
+
+    /**
+     * This is used to obtain token number based on KWIC token number
+     * which is the only one we know from the server.
+     */
+    rightOffsets:Array<number>;
+}
+
+
+/**
+ * @todo - this is not used
+ */
+export interface SentSection {
+    tokenNumber:number;
+    lineNumber:number;
+    ref:Array<string>;
+    items:Array<TextChunk>;
+}
+
+
+export class TextChunk {
+    id:string;
+    className:string;
+    text:Array<string>;
+    openLink:{speechPath:string};
+    closeLink:{speechPath:string};
+    continued:boolean;
+    showAudioPlayer:boolean;
+    tailPosAttrs:Array<string>;
+}
+
+export interface Line {
+    lineGroup:number|undefined;
+    lineNumber:number;
+    kwicLength:number;
+    hasFocus:boolean;
+    languages:Array<KWICSection|SentSection>;
+}
+
+
+export interface IConcLinesProvider {
+    isUnfinishedCalculation():boolean;
+    getRecommOverviewMinFreq():number;
+}
+
+
 /**
  * RefsColumn describes a meta-data information
  * item as shown when clicking on the left
