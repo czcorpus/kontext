@@ -270,7 +270,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     payload: {data: this.getSubmitArgs(state)}
                 })
             }
-        );
+        ).sideEffectAlsoOn(MainMenuActionName.DirectSave);
 
         this.addActionHandler<Actions.ResultApplyQuickFilter>(
             ActionName.ResultApplyQuickFilter,
