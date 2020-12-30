@@ -23,18 +23,15 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
-import { Line as ConcLine } from '../../types/concordance';
 import { init as lineExtrasViewsInit } from './lineExtras';
 import { ConcordanceModel, ConcordanceModelState } from '../../models/concordance/main';
 import { LineSelectionModel, LineSelectionModelState }
     from '../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../models/concordance/detail';
-import { KWICSection } from '../../models/concordance/line';
-import { TextChunk, ConcToken } from '../../types/concordance';
 import { Actions, ActionName } from '../../models/concordance/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName }
     from '../../models/mainMenu/actions';
-import { LineSelectionModes } from '../../models/concordance/common';
+import { ConcToken, KWICSection, LineSelectionModes, TextChunk, Line as ConcLine } from '../../models/concordance/common';
 
 
 export interface LinesModuleArgs {
@@ -47,14 +44,13 @@ export interface LinesModuleArgs {
 
 
 export interface LinesViews {
-    ConcLines:React.ComponentClass<{}>;
+    ConcLines:React.ComponentClass<ConcordanceModelState>;
 }
 
 const ATTR_SEPARATOR = '/';
 
 
-export function init({dispatcher, he, lineModel, lineSelectionModel,
-                concDetailModel}:LinesModuleArgs):LinesViews {
+export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModuleArgs):LinesViews {
 
     const extras = lineExtrasViewsInit(dispatcher, he, lineModel);
 
@@ -782,6 +778,6 @@ export function init({dispatcher, he, lineModel, lineSelectionModel,
     }
 
     return {
-        ConcLines: ConcLines
+        ConcLines
     };
 }

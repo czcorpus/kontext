@@ -23,22 +23,21 @@ import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { ConcordanceModel } from '../../models/concordance/main';
-import { TextChunk } from '../../types/concordance';
 import { ConcLinesStorage } from '../../models/concordance/selectionStorage';
 import { init as initMediaViews } from './media';
 import { Actions, ActionName } from '../../models/concordance/actions'
-import { LineSelectionModes } from '../../models/concordance/common';
+import { LineSelectionModes, TextChunk } from '../../models/concordance/common';
 
 
 export interface LineExtrasViews {
 
-    AudioLink:React.SFC<{
+    AudioLink:React.FC<{
         lineIdx:number;
         chunks:Array<TextChunk>;
         t:string; // TODO enum
     }>;
 
-    TdLineSelection:React.SFC<{
+    TdLineSelection:React.FC<{
         lockedGroupId:number;
         groupId:number;
         groupColor:string;
@@ -49,12 +48,12 @@ export interface LineExtrasViews {
         isEditLocked:boolean;
     }>;
 
-    SyntaxTreeButton:React.SFC<{
+    SyntaxTreeButton:React.FC<{
         tokenNumber:number;
         kwicLength:number;
     }>;
 
-    RefInfo:React.SFC<{
+    RefInfo:React.FC<{
         corpusId:string;
         tokenNumber:number;
         lineIdx:number;
@@ -123,7 +122,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <LineSelCheckbox /> ---------------------------
 
-    const LineSelCheckbox:React.SFC<{
+    const LineSelCheckbox:React.FC<{
         tokenNumber:number;
         kwicLength:number;
         groupId:number|undefined;
@@ -148,7 +147,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <LineSelInput /> ---------------------------
 
-    const LineSelInput:React.SFC<{
+    const LineSelInput:React.FC<{
         tokenNumber:number;
         kwicLength:number;
         groupId:number;

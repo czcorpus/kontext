@@ -23,13 +23,13 @@ import { Kontext } from '../../types/common';
 import { Response as TTDistResponse } from '../../models/concordance/ttDistModel';
 import { ActionName as ConcActionName, Actions as ConcActions } from '../../models/concordance/actions';
 import { MultiDict } from '../../multidict';
-import { IConcLinesProvider } from '../../types/concordance';
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf, concat } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 import { FreqServerArgs } from '../../models/freqs/common';
 import { HTTP, List } from 'cnc-tskit';
 import { ActionName, Actions } from './actions';
+import { IConcLinesProvider } from '../../models/concordance/common';
 
 
 export enum KnownRenderers {

@@ -28,15 +28,14 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { PluginInterfaces } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
-import { KWICSection } from './line';
-import { Line, TextChunk, IConcLinesProvider } from '../../types/concordance';
+import { ConclineSectionOps } from './line';
 import { AudioPlayer, AudioPlayerStatus} from './media';
 import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
 import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, ConcServerArgs} from './common';
+    mapIdToIdWithColors, ConcServerArgs, Line, TextChunk, IConcLinesProvider, KWICSection} from './common';
 import { Actions, ActionName, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
@@ -81,7 +80,7 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
 
     data.forEach((item:ServerLineData, i:number) => {
         let line:Array<KWICSection> = [];
-        line.push(new KWICSection(
+        line.push(ConclineSectionOps.newKWICSection(
             item.toknum,
             item.linenum,
             item.ref,
@@ -91,7 +90,7 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
         ));
 
         line = line.concat((item.Align || []).map((item, k) => {
-            return new KWICSection(
+            return ConclineSectionOps.newKWICSection(
                 item.toknum,
                 item.linenum,
                 item.ref,
@@ -325,7 +324,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
             ActionName.PlayAudioSegment,
             action => {
                 this.playAudio(action.payload.chunksIds);
-                this.emitChange();
             }
         );
 
@@ -464,8 +462,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
                 }).pipe(
                     concatMap(
-                        (action:Actions.CalculateIpmForAdHocSubcReady) =>
-                                this.calculateAdHocIpm(action.payload.ttSelection)
+                        (action) => this.calculateAdHocIpm(
+                            (action as Actions.CalculateIpmForAdHocSubcReady).payload.ttSelection)
                     )
 
                 ).subscribe(
@@ -940,10 +938,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         }
     }
 
-    private findActiveLineIdx(chunkId:string):number {
-        for (let i = 0; i < this.state.lines.length; i += 1) {
-            for (let j = 0; j < this.state.lines[i].languages.length; j += 1) {
-                if (this.state.lines[i].languages[j].findChunk(chunkId)) {
+    private findActiveLineIdx(state:ConcordanceModelState):number {
+        for (let i = 0; i < state.lines.length; i += 1) {
+            for (let j = 0; j < state.lines[i].languages.length; j += 1) {
+                if (ConclineSectionOps.findChunk(state.lines[i].languages[j], state.playerAttachedChunk)) {
                     return i;
                 }
             }
@@ -951,12 +949,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         return -1;
     }
 
-    private findChunks(...chunkIds:Array<string>):Array<TextChunk> {
-        for (let i = 0; i < this.state.lines.length; i += 1) {
-            for (let j = 0; j < this.state.lines[i].languages.length; j += 1) {
+    private findChunks(state:ConcordanceModelState, ...chunkIds:Array<string>):Array<TextChunk> {
+        for (let i = 0; i < state.lines.length; i += 1) {
+            for (let j = 0; j < state.lines[i].languages.length; j += 1) {
                 const ans = pipe(
                     chunkIds,
-                    List.map(c => this.state.lines[i].languages[j].findChunk(c)),
+                    List.map(c => ConclineSectionOps.findChunk(state.lines[i].languages[j], c)),
                     List.filter(v => v !== undefined)
                 );
                 if (ans.length > 0) {
@@ -969,41 +967,49 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     private playAudio(chunksIds:Array<string>):void {
         this.setStopStatus(); // stop anything playing right now
-        const activeChunkId = chunksIds[chunksIds.length - 1];
-        this.changeState(state => {state.playerAttachedChunk = activeChunkId});
-        // let's get an active line - there can be only one even if we play multiple chunks
-        const activeLine = this.findActiveLineIdx(activeChunkId);
-        const fakeChangedLine = this.state.lines[activeLine];
-        this.changeState(state => {state.lines[activeLine] = fakeChangedLine});
+        const activeChunkId = List.last(chunksIds);
+        this.changeState(state => {
+            state.playerAttachedChunk = activeChunkId;
+            // let's get an active line - there can be only one even if we play multiple chunks
+            const activeLine = this.findActiveLineIdx(state);
+            const fakeChangedLine = state.lines[activeLine];
+            state.lines[activeLine] = fakeChangedLine
+            const playChunks = this.findChunks(state, ...chunksIds);
+            if (!List.empty(playChunks)) {
+                List.last(playChunks).showAudioPlayer = true
 
-        const playChunks = this.findChunks(...chunksIds);
-        if (playChunks.length > 0) {
-            playChunks[playChunks.length - 1].showAudioPlayer = true
+            } else {
+                throw new Error('No chunks to play');
+            }
+        });
+        const playChunks = this.findChunks(this.state, ...chunksIds);
+        if (!List.empty(playChunks)) {
             this.audioPlayer.start(pipe(
                 playChunks,
                 List.map(item => this.createAudioLink(item)),
                 List.filter(item => !!item)
             ));
-
-        } else {
-            throw new Error('No chunks to play');
         }
     }
 
     private setStopStatus():void {
         if (this.state.playerAttachedChunk) {
             this.audioPlayer.stop();
-            const playingLineIdx = this.findActiveLineIdx(this.state.playerAttachedChunk);
+            this.changeState(
+                state => {
+                    const playingLineIdx = this.findActiveLineIdx(state);
             const modLine = this.state.lines[playingLineIdx]; // TODO clone?
-            this.changeState(state => {state.lines[playingLineIdx] = modLine});
-            const playingChunk = this.findChunks(this.state.playerAttachedChunk)[0];
-            if (playingChunk) {
-                playingChunk.showAudioPlayer = false;
-                this.changeState(state => {state.playerAttachedChunk = null});
+                    state.lines[playingLineIdx] = modLine;
+                    const playingChunk = this.findChunks(state, this.state.playerAttachedChunk)[0];
+                    if (playingChunk) {
+                        playingChunk.showAudioPlayer = false;
+                        this.changeState(state => {state.playerAttachedChunk = null});
 
-            } else {
-                throw new Error(`Failed to find playing chunk "${this.state.playerAttachedChunk}"`);
-            }
+                    } else {
+                        throw new Error(`Failed to find playing chunk "${this.state.playerAttachedChunk}"`);
+                    }
+                }
+            );
         }
     }
 

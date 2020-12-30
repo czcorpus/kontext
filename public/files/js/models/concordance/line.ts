@@ -18,70 +18,65 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { LangSection, TextChunk } from '../../types/concordance';
 import { List, pipe } from 'cnc-tskit';
+import { KWICSection, SentSection, TextChunk } from './common';
 
 
 
-export class KWICSection extends LangSection {
 
-    left:Array<TextChunk>;
+export namespace ConclineSectionOps {
 
-    /**
-     * This is used to obtain token number based on KWIC token number
-     * which is the only one we know from the server.
-     */
-    leftOffsets:Array<number>;
+    function isKwicSection(sect:KWICSection|SentSection):sect is KWICSection {
+        return sect['left'] !== undefined && sect['kwic'] !== undefined && sect['right'] !== undefined;
+    }
 
-    kwic:Array<TextChunk>;
-
-    right:Array<TextChunk>;
-
-    /**
-     * This is used to obtain token number based on KWIC token number
-     * which is the only one we know from the server.
-     */
-    rightOffsets:Array<number>;
-
-
-    constructor(tokenNumber:number, lineNumber:number, ref:Array<string>,
-            left:Array<TextChunk>, kwic:Array<TextChunk>,
-            right:Array<TextChunk>) {
-        super(tokenNumber, lineNumber, ref);
-        this.left = left;
-        this.leftOffsets = pipe(
-            this.left,
-            List.foldr(
-                (r, v) => [(v.className ? 0 : v.text.length) + (r.length > 0 ? r[0] : 0)].concat(r), []
+    export function newKWICSection(
+        tokenNumber:number,
+        lineNumber:number,
+        ref:Array<string>,
+        left:Array<TextChunk>,
+        kwic:Array<TextChunk>,
+        right:Array<TextChunk>
+    ) {
+        const ans:KWICSection = {
+            tokenNumber,
+            lineNumber,
+            ref,
+            left,
+            leftOffsets: pipe(
+                left,
+                List.foldr(
+                    (r, v) => [(v.className ? 0 : v.text.length) + (r.length > 0 ? r[0] : 0)].concat(r), []
+                )
+            ),
+            kwic,
+            right,
+            rightOffsets: pipe(
+                right,
+                List.foldr(
+                    (r, v) => r.concat((v.className ? 0 : v.text.length) + (r.length > 0 ? r[r.length - 1] : 0)), [1]),
+                List.slice(0, -1)
             )
-        );
-        this.kwic = kwic;
-        this.right = right;
-        this.rightOffsets = pipe(
-            this.right,
-            List.foldr((r, v) => r.concat((v.className ? 0 : v.text.length) + (r.length > 0 ? r[r.length - 1] : 0)), [1]),
-            List.slice(0, -1)
-        );
+        };
+        return ans;
     }
 
-    getAllChunks():Array<TextChunk> {
-        return this.left.concat(this.kwic, this.right);
+    export function newSentSection(
+        tokenNumber:number,
+        lineNumber:number,
+        ref:Array<string>,
+        items:Array<TextChunk>
+    ) {
+        return {tokenNumber, lineNumber, ref, items};
     }
 
-    findChunk(chunkId:string):TextChunk {
-        return this.getAllChunks().find(v => v.id === chunkId);
-    }
-}
-
-
-export class SentSection extends LangSection {
-    items:Array<TextChunk>;
-
-    getAllChunks():Array<TextChunk> {
-        return this.items;
+    export function getAllChunks(sect:KWICSection|SentSection):Array<TextChunk> {
+        return isKwicSection(sect) ?
+            sect.left.concat(sect.kwic, sect.right) :
+            sect.items;
     }
 
-    findChunk(chunkId:string):TextChunk {
-        return this.getAllChunks().find(v => v.id === chunkId);
+    export function findChunk(sect:KWICSection|SentSection, chunkId:string):TextChunk {
+        return List.find(v => v.id === chunkId, getAllChunks(sect));
     }
 }
