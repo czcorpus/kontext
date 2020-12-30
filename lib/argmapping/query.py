@@ -13,10 +13,10 @@
 # GNU General Public License for more details.
 
 from typing import Dict, Any, List, Tuple, Optional
-
 import re
 import logging
 
+from werkzeug import Request
 import plugins
 from .error import ArgumentMappingError
 
@@ -163,6 +163,16 @@ class QueryFormArgs(ConcFormArgs):
 
         for corp in corpora:
             self._add_corpus_metadata(corp)
+
+    @staticmethod
+    def map_action_to_log(request: Request):
+        if request.json and len(request.json.get('queries', [])) > 0:
+            queries = request.json.get('queries', [])
+            corpora = []
+            for q in queries:
+                corpora.append(q.get('corpname'))
+            return dict(corpora=corpora, qtype=queries[0].get('qtype'))
+        return {}
 
     def apply_last_used_opts(self, data: Dict[str, Any], prev_corpora: List[str], curr_corpora: List[str]):
         self._test_data_type(data, 'form_type', 'query')

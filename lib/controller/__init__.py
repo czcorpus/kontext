@@ -50,7 +50,7 @@ import strings
 import plugins
 import settings
 from translation import ugettext as translate
-from .req_args import RequestArgsProxy, create_req_arg_proxy
+from .req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy
 from argmapping import Persistence, Args
 from argmapping.func import convert_func_mapping_types
 from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
@@ -65,9 +65,11 @@ T = TypeVar('T')
 http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
 
 
-def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple = (), page_model: Optional[str] = None, func_arg_mapped: bool = False, skip_corpus_init: bool = False,
-            mutates_conc: bool = False, http_method: Union[Optional[str], Tuple[str, ...]] = 'GET', accept_kwargs: bool = None, apply_semi_persist_args: bool = False,
-            return_type: str = 'template') -> Callable[..., Any]:
+def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple = (), page_model: Optional[str] = None,
+            func_arg_mapped: bool = False, skip_corpus_init: bool = False, mutates_conc: bool = False,
+            http_method: Union[Optional[str], Tuple[str, ...]] = 'GET', accept_kwargs: bool = None,
+            apply_semi_persist_args: bool = False, return_type: str = 'template',
+            action_log_mapper: Callable[[None], Any] = False) -> Callable[..., Any]:
     """
     This decorator allows more convenient way how to
     set methods' attributes. Please note that there is
@@ -98,6 +100,7 @@ def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple =
         func.__dict__['accept_kwargs'] = accept_kwargs
         func.__dict__['apply_semi_persist_args'] = apply_semi_persist_args
         func.__dict__['return_type'] = return_type
+        func.__dict__['action_log_mapper'] = action_log_mapper
         func.__dict__['__exposed__'] = True
         return func
     return wrapper
@@ -563,7 +566,8 @@ class Controller(object):
                                 'Plugins cannot overwrite existing action methods (%s.%s)' % (
                                     self.__class__.__name__, action.__name__))
 
-    def pre_dispatch(self, action_name: str, action_metadata: Optional[Dict[str, Any]] = None) -> RequestArgsProxy:
+    def pre_dispatch(self, action_name: str, action_metadata: Optional[Dict[str, Any]] = None
+                     ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         """
         Allows specific operations to be performed before the action itself is processed.
         """
@@ -580,7 +584,8 @@ class Controller(object):
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
 
-    def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str], result: Optional[Dict[str, Any]], err_desc: Tuple[Optional[Exception], Optional[str]]) -> None:
+    def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str],
+                      result: Optional[Dict[str, Any]], err_desc: Tuple[Optional[Exception], Optional[str]]) -> None:
         """
         Allows specific operations to be done after the action itself has been
         processed but before any output or HTTP headers.

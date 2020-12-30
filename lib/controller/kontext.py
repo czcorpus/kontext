@@ -50,7 +50,7 @@ from argmapping import ConcArgsMapping, Persistence, Args
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from .plg import PluginApi
 from templating import DummyGlobals
-from .req_args import RequestArgsProxy
+from .req_args import RequestArgsProxy, JSONRequestArgsProxy
 from texttypes import TextTypes, TextTypesCache
 
 
@@ -219,7 +219,8 @@ class Kontext(Controller):
     def get_mapping_url_prefix(self) -> str:
         return super().get_mapping_url_prefix()
 
-    def _create_action_log(self, user_settings: Dict[str, Any], action_name: str, err_desc: Tuple[str, str], proc_time: Optional[float] = None) -> Dict[str, JSONVal]:
+    def _create_action_log(self, action_log_mapper: Callable[[None], Any], action_name: str, err_desc: Tuple[str, str],
+                           proc_time: Optional[float] = None) -> Dict[str, JSONVal]:
         """
         Logs user's request by storing URL parameters, user settings and user name
 
@@ -236,7 +237,12 @@ class Kontext(Controller):
         import datetime
 
         logged_values = settings.get('logging', 'values', ())
-        log_data: Dict[str, JSONVal] = {}
+        log_data = {}
+        if action_log_mapper:
+            try:
+                log_data.update(action_log_mapper(self._request))
+            except Exception as ex:
+                logging.getLogger(__name__).error('Failed to map request info to log: {}'.format(ex))
 
         if err_desc:
             log_data['error'] = dict(name=err_desc[0], anchor=err_desc[1])
@@ -257,8 +263,6 @@ class Kontext(Controller):
                 log_data['user'] = self.session_get('user', 'user')
             elif val == 'params':
                 log_data['params'] = dict([(k, v) for k, v in list(params.items()) if v])
-            elif val == 'settings':
-                log_data['settings'] = dict([(k, v) for k, v in list(user_settings.items()) if v])
             elif val == 'proc_time' and proc_time is not None:
                 log_data['proc_time'] = proc_time
             elif val.find('environ:') == 0:
@@ -640,7 +644,7 @@ class Kontext(Controller):
                 variant = ''
             return corpname, variant
 
-    def pre_dispatch(self, action_name, action_metadata=None) -> RequestArgsProxy:
+    def pre_dispatch(self, action_name, action_metadata=None) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
@@ -731,7 +735,7 @@ class Kontext(Controller):
                 next_query_keys[-1] if len(next_query_keys) else None, result)
 
         # log user request
-        log_data = self._create_action_log(self._get_items_by_persistence(Persistence.PERSISTENT), '%s' % methodname,
+        log_data = self._create_action_log(action_metadata.get('action_log_mapper'), methodname,
                                            err_desc=encode_err(err_desc), proc_time=self._proc_time)
         if not settings.get_bool('logging', 'skip_user_actions', False):
             logging.getLogger('QUERY').info(json.dumps(log_data))
