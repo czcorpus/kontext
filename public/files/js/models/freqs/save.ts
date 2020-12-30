@@ -99,8 +99,9 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                     this.suspend({}, (action, syncData) =>
                         action.name === ActionName.ResultPrepareSubmitArgsDone ? null : syncData
                     ).subscribe(
-                        (action:Actions.ResultPrepareSubmitArgsDone) => {
-                            this.submit(action.payload.data);
+                        (action) => {
+                            this.submit(
+                                (action as Actions.ResultPrepareSubmitArgsDone).payload.data);
                         }
                     )
                 }
@@ -150,8 +151,9 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                     this.suspend({}, (action, syncData) => {
                         return action.name === ActionName.ResultPrepareSubmitArgsDone ? null : syncData
                     }).subscribe(
-                        (action:Actions.ResultPrepareSubmitArgsDone) => {
-                            this.submit(action.payload.data);
+                        (action) => {
+                            this.submit(
+                                (action as Actions.ResultPrepareSubmitArgsDone).payload.data);
                         }
                     )
                 }
