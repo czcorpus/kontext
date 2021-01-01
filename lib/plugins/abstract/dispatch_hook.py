@@ -37,7 +37,7 @@ class AbstractDispatchHook(abc.ABC):
             request -- current request (Werkzeug Request)
         """
 
-    def post_dispatch(self, plugin_api, methodname, action_metadata, log_data):
+    def post_dispatch(self, plugin_api, methodname, action_metadata):
         """
         A function run right after Controller.post_dispatch and before
         Kontext.post_dispatch.
@@ -51,8 +51,4 @@ class AbstractDispatchHook(abc.ABC):
             plugin_api -- an API available to plugins (controller.plg.PluginApi)
             methodname -- processed action method
             action_metadata -- action metadata (added by @inject)
-            log_data -- an action log record created by KonText (the same data are
-                        written to the log file (if configured so)).
-                        It's OK to mutate this value as it is already been used by
-                        KonText when the func. is called.
         """

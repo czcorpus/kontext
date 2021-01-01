@@ -219,63 +219,6 @@ class Kontext(Controller):
     def get_mapping_url_prefix(self) -> str:
         return super().get_mapping_url_prefix()
 
-    def _create_action_log(self, action_log_mapper: Callable[[None], Any], action_name: str, err_desc: Tuple[str, str],
-                           proc_time: Optional[float] = None) -> Dict[str, JSONVal]:
-        """
-        Logs user's request by storing URL parameters, user settings and user name
-
-        arguments:
-        user_settings -- a dict containing user settings
-        action_name -- name of current action
-        err_desc -- 2-tuple (Exception class name along with optional application log anchor ID) or None
-        proc_time -- float specifying how long the action took;
-        default is None - in such case no information is stored
-
-        returns:
-        log record dict
-        """
-        import datetime
-
-        logged_values = settings.get('logging', 'values', ())
-        log_data = {}
-        if action_log_mapper:
-            try:
-                log_data.update(action_log_mapper(self._request))
-            except Exception as ex:
-                logging.getLogger(__name__).error('Failed to map request info to log: {}'.format(ex))
-
-        if err_desc:
-            log_data['error'] = dict(name=err_desc[0], anchor=err_desc[1])
-
-        params = {}
-        if self.environ.get('QUERY_STRING'):
-            params.update(dict(list(self._request.args.items())))
-
-        for val in logged_values:
-            if val == 'date':
-                log_data['date'] = datetime.datetime.today().strftime(
-                    '%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
-            elif val == 'action':
-                log_data['action'] = action_name
-            elif val == 'user_id':
-                log_data['user_id'] = self.session_get('user', 'id')
-            elif val == 'user':
-                log_data['user'] = self.session_get('user', 'user')
-            elif val == 'params':
-                log_data['params'] = dict([(k, v) for k, v in list(params.items()) if v])
-            elif val == 'proc_time' and proc_time is not None:
-                log_data['proc_time'] = proc_time
-            elif val.find('environ:') == 0:
-                try:
-                    request = cast(Dict[str, Any], log_data['request'])
-                except KeyError:
-                    log_data['request'] = request = {}
-                k = val.split(':')[-1]
-                request[k] = self.environ.get(k)
-            elif val == 'pid':
-                log_data['pid'] = os.getpid()
-        return log_data
-
     @staticmethod
     def _init_default_settings(options):
         if 'shuffle' not in options:
@@ -734,13 +677,11 @@ class Kontext(Controller):
             self._update_output_with_conc_params(
                 next_query_keys[-1] if len(next_query_keys) else None, result)
 
-        # log user request
-        log_data = self._create_action_log(action_metadata.get('action_log_mapper'), methodname,
-                                           err_desc=encode_err(err_desc), proc_time=self._proc_time)
-        if not settings.get_bool('logging', 'skip_user_actions', False):
-            logging.getLogger('QUERY').info(json.dumps(log_data))
+        with plugins.runtime.ACTION_LOG as alog:
+            alog.log_action(self._request, action_metadata.get('action_log_mapper'), methodname,
+                            err_desc=encode_err(err_desc), proc_time=self._proc_time)
         with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.post_dispatch(self._plugin_api, methodname, action_metadata, log_data)
+            dhook.post_dispatch(self._plugin_api, methodname, action_metadata)
 
     def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:

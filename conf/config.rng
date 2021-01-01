@@ -509,24 +509,6 @@
                         <a:documentation>Maximum number of log files (log rotation</a:documentation>
                         <data type="positiveInteger" />
                     </element>
-                    <element name="values">
-                        <a:documentation>Specifies values written to the application log
-                        (date, user_id, action, param, proc_time, pid, environ:*)
-                        </a:documentation>
-                        <zeroOrMore>
-                            <element name="item">
-                                <text />
-                            </element>
-                        </zeroOrMore>
-                    </element>
-                    <optional>
-                        <element name="skip_user_actions">
-                            <a:documentation>If true than all the user action will be skipped in log which basically
-                            means that mostly warnings and errors will be logged. This is useful in case you want
-                            to log user requests in a custom way via dispatch_hook</a:documentation>
-                            <ref name="boolValues" />
-                        </element>
-                    </optional>
                 </interleave>
             </element>
             <element name="corpora">

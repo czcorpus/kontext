@@ -27,6 +27,7 @@ from controller.errors import UserActionException
 from bgcalc import freq_calc
 import plugins
 import settings
+from argmapping import log_mapping
 
 
 class WordlistError(UserActionException):
@@ -96,7 +97,8 @@ class Wordlist(ConcActions):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         return out
 
-    @exposed(access_level=1, func_arg_mapped=True, http_method=('POST', 'GET'), page_model='wordlist')
+    @exposed(access_level=1, func_arg_mapped=True, http_method=('POST', 'GET'), page_model='wordlist',
+             action_log_mapper=log_mapping.wordlist)
     def result(self, wlpat='', paginate=True, wlhash='', blhash=''):
         """
         """
