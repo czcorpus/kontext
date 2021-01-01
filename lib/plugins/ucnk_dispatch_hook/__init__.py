@@ -80,9 +80,6 @@ class UcnkDispatchHook(AbstractDispatchHook):
                 raise ImmediateRedirectException(
                     plugin_api.updated_current_url(dict(corpname=corp[len('omezeni/'):])))
 
-    def post_dispatch(self, plugin_api, methodname, action_metadata, log_data):
-        self._db.list_append(self._queue_key, log_data)
-
     def export_tasks(self):
         """
         Export tasks for Celery worker(s). Please note that here

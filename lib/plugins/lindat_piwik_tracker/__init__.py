@@ -109,7 +109,7 @@ class Tracker(AbstractDispatchHook):
         self.rest_methods = frozenset(['fcs'])
         self.auth_token = auth_token
 
-    def post_dispatch(self, plugin_api, methodname, action_metadata, log_data):
+    def post_dispatch(self, plugin_api, methodname, action_metadata):
         """
         Sends the tracking information to the tracking backend
         """

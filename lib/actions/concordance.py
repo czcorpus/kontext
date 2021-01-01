@@ -28,6 +28,7 @@ from controller.errors import UserActionException, BackgroundCalculationExceptio
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
                               KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
+from argmapping import log_mapping
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from argmapping import ConcArgsMapping
 import settings
@@ -178,7 +179,7 @@ class Actions(Querying):
             out['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
                                                    out['query_overview'][0].get('nicearg'))
 
-    @exposed(vars=('orig_query', ), mutates_conc=False)
+    @exposed(vars=('orig_query', ), mutates_conc=False, action_log_mapper=log_mapping.view)
     def view(self, request):
         """
         KWIC view
@@ -332,7 +333,7 @@ class Actions(Querying):
         self.redirect(self.create_url('query', request.args), code=301)
         return {}
 
-    @exposed(apply_semi_persist_args=True)
+    @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
     def query(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
@@ -597,7 +598,7 @@ class Actions(Querying):
         if len(corpora) > 1:
             self.args.viewmode = 'align'
 
-    @exposed(mutates_conc=True, http_method=('POST',), action_log_mapper=QueryFormArgs.map_action_to_log,
+    @exposed(mutates_conc=True, http_method=('POST',), action_log_mapper=log_mapping.query_submit,
              return_type='json')
     def query_submit(self, request):
 
