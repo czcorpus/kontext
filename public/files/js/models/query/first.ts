@@ -241,8 +241,6 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     lposValues:{[key:string]:string}; // corpname -> lpos
 
-    pcqPosNegValues:{[key:string]:'pos'|'neg'};
-
     tagBuilderSupport:{[key:string]:boolean};
 
     inputLanguages:{[key:string]:string};
@@ -338,11 +336,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 lposValues: pipe(
                     props.corpora,
                     List.map(item => tuple(item, props.currLposValues[item] || '')),
-                    Dict.fromEntries()
-                ),
-                pcqPosNegValues: pipe(
-                    props.corpora,
-                    List.map(item => tuple(item, props.currPcqPosNegValues[item] || 'pos')),
                     Dict.fromEntries()
                 ),
                 tagBuilderSupport,
@@ -613,11 +606,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.FilterInputSetPCQPosNeg>(
-            ActionName.FilterInputSetPCQPosNeg,
+        this.addActionHandler<Actions.QueryInputSetPCQPosNeg>(
+            ActionName.QueryInputSetPCQPosNeg,
             action => {
                 this.changeState(state => {
-                    state.pcqPosNegValues[action.payload.filterId] = action.payload.value;
+                    const queryObj = state.queries[action.payload.sourceId];
+                    queryObj.pcq_pos_neg = action.payload.value;
                 });
             }
         );

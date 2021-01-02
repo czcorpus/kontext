@@ -71,7 +71,7 @@ export enum ActionName {
     QueryToggleAlignedCorpora = 'QUERY_TOGGLE_ALIGNED_CORPORA',
     QueryInputAddAlignedCorpus = 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
     QueryInputRemoveAlignedCorpus = 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-    FilterInputSetPCQPosNeg = 'QUERY_INPUT_SET_PCQ_POS_NEG',
+    QueryInputSetPCQPosNeg = 'QUERY_INPUT_SET_PCQ_POS_NEG',
     FilterInputSetFilfl = 'FILTER_QUERY_SET_FILFL',
     FilterInputSetRange = 'FILTER_QUERY_SET_RANGE',
     FilterInputSetInclKwic = 'FILTER_QUERY_SET_INCL_KWIC',
@@ -419,12 +419,12 @@ export namespace Actions {
         name:ActionName.QueryInputRemoveAlignedCorpus;
     }
 
-    export interface FilterInputSetPCQPosNeg extends Action<{
+    export interface QueryInputSetPCQPosNeg extends Action<{
         formType:QueryFormType;
-        filterId:string;
+        sourceId:string;
         value:'pos'|'neg';
     }> {
-        name:ActionName.FilterInputSetPCQPosNeg;
+        name:ActionName.QueryInputSetPCQPosNeg;
     }
 
     export interface FilterInputSetFilfl extends Action<{

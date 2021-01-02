@@ -56,7 +56,7 @@ export interface AdvancedQuery {
     rawAnchorIdx:number;
     rawFocusIdx:number;
     queryHtml:string;
-    pcq_pos_neg:string;
+    pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
     default_attr:string;
 }
@@ -104,7 +104,7 @@ export interface SimpleQuery {
     rawAnchorIdx:number;
     rawFocusIdx:number;
     qmcase:boolean;
-    pcq_pos_neg:string;
+    pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
     default_attr:string|undefined;
     use_regexp:boolean;
@@ -122,7 +122,7 @@ export interface SimpleQuerySubmit {
     query:string;
     queryParsed:AjaxResponse.SubmitEncodedSimpleTokens;
     qmcase:boolean;
-    pcq_pos_neg:string;
+    pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
     default_attr:string;
     use_regexp:boolean;
@@ -135,7 +135,7 @@ export interface AdvancedQuerySubmit {
     corpname:string;
     qtype:'advanced';
     query:string;
-    pcq_pos_neg:string;
+    pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
     default_attr:string;
 }
