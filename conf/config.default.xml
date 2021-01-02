@@ -60,18 +60,6 @@
         <path>/var/log/kontext/application.log</path>
         <file_size>5000000</file_size>
         <num_files>10</num_files>
-        <values>
-            <item>environ:REMOTE_ADDR</item>
-            <item>environ:HTTP_USER_AGENT</item>
-            <item>date</item>
-            <item>user</item>
-            <item>user_id</item>
-            <item>action</item>
-            <item>params</item>
-            <item>settings</item>
-            <item>proc_time</item>
-            <item>pid</item>
-        </values>
     </logging>
     <corpora>
         <manatee_registry>/var/lib/manatee/registry</manatee_registry>
@@ -108,6 +96,9 @@
             <logout_url>/user/logout?continue=%s</logout_url>
             <confirmation_token_ttl>3600</confirmation_token_ttl>
         </auth>
+        <action_log>
+            <module>default_action_log</module>
+        </action_log>
         <conc_cache>
             <module>default_conc_cache</module>
             <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
