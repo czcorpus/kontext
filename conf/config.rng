@@ -669,6 +669,11 @@
                         <ref name="plugin_common" />
                         <ref name="customPluginConfiguration" />
                     </element>
+                    <element name="action_log">
+                        <a:documentation>Action logging module</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
                     <element name="auth">
                         <a:documentation>Authentication plug-in configuration</a:documentation>
                         <ref name="plugin_common" />
