@@ -76,7 +76,7 @@ export interface TRPcqPosNegFieldProps {
     span:number;
     formType:QueryFormType;
     sourceId:string;
-    value:string; // TODO enum
+    value:'pos'|'neg';
 }
 
 export interface TRIncludeEmptySelectorProps {
@@ -258,12 +258,12 @@ export function init({
     const TRPcqPosNegField:React.FC<TRPcqPosNegFieldProps> = (props) => {
 
         const handleSelectChange = (evt) => {
-            dispatcher.dispatch<Actions.FilterInputSetPCQPosNeg>({
-                name: ActionName.FilterInputSetPCQPosNeg,
+            dispatcher.dispatch<Actions.QueryInputSetPCQPosNeg>({
+                name: ActionName.QueryInputSetPCQPosNeg,
                 payload: {
-                    filterId: props.sourceId,
+                    sourceId: props.sourceId,
                     formType: props.formType,
-                    value: evt.target.value
+                    value: evt.target.value as 'pos'|'neg'
                 }
             });
         };
