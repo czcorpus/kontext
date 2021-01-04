@@ -370,7 +370,7 @@ export function init({
                                 inputLanguage={this.props.inputLanguage}
                                 useRichQueryEditor={this.props.useRichQueryEditor}
                                 onEnterKey={this._handleSubmit}
-                                takeFocus={false}
+                                takeFocus={true}
                                 qsuggPlugin={querySuggest}
                                 customOptions={opts} />
                         </div>
