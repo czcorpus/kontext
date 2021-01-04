@@ -1,11 +1,17 @@
 [Unit]
-Description=Rq Service
+Description=Rq Service Number %i
 After=network.target
+PartOf=rq-all.target
 
 [Service]
+User=celery
 Group=www-data
 WorkingDirectory=/opt/kontext/worker
 ExecStart=/bin/sh -ec 'python3 rqworker.py'
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+Restart=alwayss
 
 [Install]
 WantedBy=multi-user.target

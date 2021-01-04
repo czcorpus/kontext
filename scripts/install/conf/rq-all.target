@@ -1,0 +1,6 @@
+[Unit]
+Description=Workers
+Requires=rq@1.service rq@2.service rq@3.service rq@4.service
+
+[Install]
+WantedBy=multi-user.target
