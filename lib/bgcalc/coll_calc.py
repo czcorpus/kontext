@@ -18,7 +18,7 @@ import os
 import time
 
 import corplib
-from conclib.search import get_conc
+from conclib.calc import get_existing_conc
 from bgcalc import freq_calc
 import settings
 from structures import FixedDict
@@ -103,8 +103,7 @@ def calculate_colls_bg(coll_args):
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         corplib.frq_db(corp, coll_args.cattr)
-        conc = get_conc(corp=corp, user_id=coll_args.user_id, q=coll_args.q,
-                        fromp=0, pagesize=0, asnc=0, save=coll_args.save, samplesize=coll_args.samplesize)
+        conc = get_existing_conc(corp=corp, q=coll_args.q)
         if not conc.finished():
             raise UnfinishedConcordanceError(
                 _('Cannot calculate yet - source concordance not finished. Please try again later.'))
