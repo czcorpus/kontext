@@ -41,7 +41,6 @@ import corplib
 from bgcalc import freq_calc, coll_calc
 import plugins
 from kwiclib import Kwic, KwicPageArgs
-import l10n
 from l10n import corpus_get_conf
 from translation import ugettext as translate
 from argmapping import WidectxArgsMapping
@@ -53,7 +52,7 @@ import templating
 import mailing
 import attr
 from conclib.freq import one_level_crit, multi_level_crit
-from strings import re_escape
+from strings import re_escape, escape_attr_val
 import plugins.abstract.conc_cache
 
 
@@ -869,7 +868,7 @@ class Actions(Querying):
                                 wwords = item['Word'][level]['n'].split('  ')  # two spaces
                                 fquery = '%s %s 0 ' % (begin, end)
                                 fquery += ''.join(['[%s="%s%s"]'
-                                                   % (attr, icase, l10n.escape(w)) for w in wwords])
+                                                   % (attr, icase, escape_attr_val(w)) for w in wwords])
                             else:  # structure number
                                 fquery = '0 0 1 [] within <%s #%s/>' % \
                                          (attr, item['Word'][0]['n'].split('#')[1])
@@ -879,7 +878,7 @@ class Actions(Querying):
                                 block['unprecise'] = True
                             fquery = '0 0 1 [] within <%s %s="%s" />' \
                                      % (structname, attrname,
-                                        l10n.escape(item['Word'][0]['n']))
+                                        escape_attr_val(item['Word'][0]['n']))
                         if not item['freq']:
                             continue
                         item['pfilter'].append(('q2', 'p%s' % fquery))

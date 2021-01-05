@@ -41,3 +41,10 @@ def re_escape(s):
     if sys.version_info[1] <= 6:
         return re.sub(r'[(){}\[\].*?|^$\\+-]', r'\\\g<0>', s)
     return re.escape(s)
+
+
+def escape_attr_val(s):
+    """
+    Escapes a CQL attribute value to protect it against RegExp evaluation
+    """
+    return re.compile(r'[\'\]\[.*+{}?()|\\"$^]').sub(r'\\\g<0>', s)

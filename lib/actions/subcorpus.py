@@ -131,7 +131,13 @@ class Subcorpus(Querying):
                         attr_map=data.text_types,
                         aligned_corpora=data.aligned_corpora,
                         limit_lists=False)
-                    tt_query = TextTypeCollector(self.corp, sel_match).get_query()
+                    sel_attrs = {}
+                    for k, vals in sel_match.get('attr_values', {}).items():
+                        if k == corpus_info.metadata.label_attr:
+                            k = corpus_info.metadata.id_attr
+                        if '.' in k:
+                            sel_attrs[k] = [v[1] for v in vals]
+                    tt_query = TextTypeCollector(self.corp, sel_attrs).get_query()
                     tmp = ['<%s %s />' % item for item in tt_query]
                     full_cql = ' within '.join(tmp)
                     full_cql = 'aword,[] within %s' % full_cql

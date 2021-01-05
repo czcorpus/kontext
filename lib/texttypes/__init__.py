@@ -30,7 +30,7 @@ from typing import List, Tuple
 from functools import reduce
 
 import manatee
-import l10n
+from strings import escape_attr_val
 from werkzeug.wrappers import Request
 import settings
 import plugins
@@ -79,7 +79,7 @@ class TextTypeCollector(object):
             if type(v) is list:
                 expr_items = []
                 for v1 in v:
-                    expr_items.append(f'{a}="{l10n.escape(v1)}"')
+                    expr_items.append(f'{a}="{escape_attr_val(v1)}"')
                 if len(expr_items) > 0:
                     query = f'({" | ".join(expr_items)})'
                 else:
