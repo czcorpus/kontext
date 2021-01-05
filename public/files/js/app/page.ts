@@ -536,6 +536,12 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             this.replaceConcArg('q', ['~' + value]);
             this.setConf<string>('concPersistenceOpId', value);
         }
+        this.dispatcher.dispatch<Actions.ConcArgsUpdated>({
+            name: ActionName.ConcArgsUpdated,
+            payload: {
+                args: this.getConcArgs()
+            }
+        });
     }
 
     /**
@@ -759,7 +765,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     this.getConf<InitialMenuData>('menuData'),
                     ...disabledMenuItems
                 ),
-                this.exportConcArgs().items()
+                this.getConcArgs()
             );
 
             this.generalViewOptionsModel = new GeneralViewOptionsModel(

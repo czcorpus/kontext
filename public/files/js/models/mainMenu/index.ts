@@ -27,6 +27,8 @@ import { Actions, ActionName } from './actions';
 import { ActionName as ConcActionName } from '../concordance/actions';
 import { Actions as GeneralOptsActions,
     ActionName as GeneralOptsActionName } from '../options/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { ConcServerArgs } from '../concordance/common';
 
 
 
@@ -158,7 +160,7 @@ export interface MainMenuModelState {
     visibleSubmenu:string|null;
     data:Array<Kontext.MenuEntry>;
     isBusy:boolean;
-    concArgs:Array<[string, string]>;
+    concArgs:ConcServerArgs;
 }
 
 
@@ -168,7 +170,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
 
 
     constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initialData:InitialMenuData,
-            concArgs:Array<[string, string]>) {
+            concArgs:ConcServerArgs) {
         super(
             dispatcher,
             {
@@ -259,7 +261,14 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             (state, action) => {
                 state.activeItem = null;
             }
-        )
+        );
+
+        this.addActionHandler<GlobalActions.ConcArgsUpdated>(
+            GlobalActionName.ConcArgsUpdated,
+            (state, action) => {
+                state.concArgs = action.payload.args
+            }
+        );
     }
 
     exportKeyShortcutActions():Kontext.IMainMenuShortcutMapper {

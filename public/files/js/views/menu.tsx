@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { List } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher, IModel, Bound } from 'kombo';
 
 import { Kontext } from '../types/common';
@@ -29,6 +29,7 @@ import { Actions, ActionName } from '../models/mainMenu/actions';
 import { AsyncTaskCheckerState, AsyncTaskChecker } from '../models/asyncTask';
 import { Actions as ATActions, ActionName as ATActionName }
     from '../models/asyncTask/actions';
+import { ConcServerArgs } from '../models/concordance/common';
 
 
 export interface MenuModuleArgs {
@@ -52,7 +53,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
     // ----------------------------- <ConcDependentItem /> --------------------------
 
     const ConcDependentItem:React.FC<{
-        concArgs:Array<[string, string]>;
+        concArgs:ConcServerArgs;
         data:StaticSubmenuItem;
 
     }> = (props) => {
@@ -60,7 +61,15 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         const createLink = () => {
             return he.createActionLink(
                 props.data.action,
-                List.concat(props.data.args, props.concArgs)
+                pipe(
+                    props.concArgs,
+                    Dict.toEntries(),
+                    List.map<[keyof ConcServerArgs, ConcServerArgs[keyof ConcServerArgs]], [string, any]>(
+                        ([key, val]) => tuple(key, val)
+                    ),
+                    List.concat(props.data.args)
+                )
+
             )
         };
 
@@ -186,7 +195,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         isDisabled:boolean;
         label:string;
         items:Array<Kontext.SubmenuItem>;
-        concArgs:Array<[string, string]>;
+        concArgs:ConcServerArgs;
         closeActiveSubmenu:()=>void;
         handleMouseOver:()=>void;
         handleMouseOut:()=>void;
