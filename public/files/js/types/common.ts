@@ -251,8 +251,8 @@ export namespace Kontext {
 
         /**
          * Create a proper action URL based on normalized format
-         * (e.g. 'first_form' translates to
-         * http://localhost/kontext/first_form depending
+         * (e.g. 'query' translates to
+         * http://localhost/kontext/query depending
          * on a concrete configuration).
          */
         createActionLink(path:string, args?:MultiDictSrc):string;

@@ -20,6 +20,7 @@
 
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
+import { ConcServerArgs } from '../concordance/common';
 
 
 export enum ActionName {
@@ -34,7 +35,8 @@ export enum ActionName {
     OverviewCorpusInfoRequired = 'OVERVIEW_CORPUS_INFO_REQUIRED',
     OverviewShowCitationInfo = 'OVERVIEW_SHOW_CITATION_INFO',
     OverviewShowSubcorpusInfo = 'OVERVIEW_SHOW_SUBCORPUS_INFO',
-    OverviewShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS'
+    OverviewShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS',
+    ConcArgsUpdated = 'CONC_ARGS_UPDATED'
 }
 
 export interface CorpusSwitchModelRestorePayload {
@@ -115,6 +117,12 @@ export namespace Actions {
     export interface OverviewShowKeyShortcuts extends Action<{
     }> {
         name:ActionName.OverviewShowKeyShortcuts;
+    }
+
+    export interface ConcArgsUpdated extends Action<{
+        args:ConcServerArgs;
+    }> {
+        name:ActionName.ConcArgsUpdated;
     }
 
 }
