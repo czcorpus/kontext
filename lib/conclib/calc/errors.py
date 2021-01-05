@@ -27,3 +27,11 @@ class ConcCalculationStatusException(Exception):
     @property
     def orig_error(self):
         return self._orig_error
+
+
+class ConcNotFoundException(Exception):
+    pass
+
+
+class BrokenConcordanceException(Exception):
+    pass

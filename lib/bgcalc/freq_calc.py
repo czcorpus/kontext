@@ -26,9 +26,8 @@ from structures import FixedDict
 
 import manatee
 import corplib
-from conclib.search import get_conc
+from conclib.calc import get_existing_conc
 import settings
-import plugins
 import bgcalc
 from bgcalc import UnfinishedConcordanceError
 from bgcalc.celery import is_celery_user_error
@@ -237,8 +236,7 @@ def calc_freqs_bg(args: FreqCalsArgs):
 
     cm = corplib.CorpusManager(subcpath=args.subcpath)
     corp = cm.get_Corpus(args.corpname, subcname=args.subcname)
-    conc = get_conc(corp=corp, user_id=args.user_id, q=args.q, fromp=args.fromp, pagesize=args.pagesize,
-                    asnc=0, save=args.save, samplesize=args.samplesize)
+    conc = get_existing_conc(corp=corp, q=args.q)
     if not conc.finished():
         raise UnfinishedConcordanceError(
             _('Cannot calculate yet - source concordance not finished. Please try again later.'))

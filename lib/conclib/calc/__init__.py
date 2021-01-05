@@ -31,7 +31,7 @@ from conclib.empty import InitialConc
 import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
-from conclib.calc.errors import ConcCalculationStatusException
+from conclib.calc.errors import ConcCalculationStatusException, ConcNotFoundException, BrokenConcordanceException
 import bgcalc
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
@@ -131,6 +131,22 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
         cache_map.del_full_entry(subchash, q)
         raise err
     return status.has_some_result(minsize=minsize), status.finished
+
+
+def get_existing_conc(corp: manatee.Corpus, q: Tuple[str, ...]) -> manatee.Concordance:
+    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+    subchash = getattr(corp, 'subchash', None)
+    status = cache_map.get_calc_status(subchash, q)
+    if status is None:
+        raise ConcNotFoundException('Concordance not found.')
+    if status.finished and status.readable:
+        mcorp = corp
+        for qq in reversed(q):  # find the right main corp, if aligned
+            if qq.startswith('x-'):
+                mcorp = manatee.Corpus(qq[2:])
+                break
+        return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
+    raise BrokenConcordanceException('Concordance broken. File: {}, error: {}'.format(status.cachefile, status.error))
 
 
 def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tuple[str, ...],

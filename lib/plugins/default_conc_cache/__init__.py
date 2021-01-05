@@ -103,6 +103,7 @@ class DefaultCacheMapping(AbstractConcCache):
         cache_dir = self._cache_dir_path()
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
+            os.chmod(cache_dir, 0o775)
 
     def _cache_dir_path(self) -> str:
         return os.path.normpath('%s/%s' % (self._cache_root_dir, self._corpus.corpname))
