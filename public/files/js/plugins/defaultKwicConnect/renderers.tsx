@@ -22,6 +22,7 @@ import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
 import { IActionDispatcher } from 'kombo';
 import { List, pipe } from 'cnc-tskit';
+import { ActionName as QueryActionName, Actions as QueryActions } from '../../models/query/actions';
 
 
 export interface Views {
@@ -117,20 +118,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     }
 
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
-
-        const generateLink = (word1, word2) => {
-            const args = new MultiDict();
-            args.set('corpname', props.data.contents.primary_corp);
-            args.set('align', props.data.contents.translat_corp);
-            args.set('maincorp', props.data.contents.primary_corp);
-            args.set('qtype', 'simple');
-            args.set('query', word1);
-            args.set('viewmode', 'align');
-            args.set('qtype_' + props.data.contents.translat_corp, 'simple');
-            args.set('simple_' + props.data.contents.translat_corp, word2);
-            args.set('pcq_pos_neg_' + props.data.contents.translat_corp, 'pos');
-            return he.createActionLink('query_submit', args);
-        };
+        const handleClick = (word) => () => {
+            dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
+                name: QueryActionName.QueryInputSetQuery,
+                payload: {
+                    formType: Kontext.ConcFormTypes.QUERY,
+                    insertRange: null,
+                    query: word,
+                    rawAnchorIdx: 0,
+                    rawFocusIdx: 0,
+                    sourceId: props.data.contents.translat_corp
+                }
+            });
+            dispatcher.dispatch<QueryActions.QuerySubmit>({
+                name: QueryActionName.QuerySubmit
+            });
+        }
 
         const renderWords = () => {
             const translations = props.data.contents['translations'];
@@ -141,7 +144,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         {List.map((translation, i) => (
                             <React.Fragment key={`${translation['righ']}:${i}`}>
                                 <a className="word"
-                                        href={generateLink(props.data.kwic, translation['righ'])}
+                                        onClick={handleClick(translation['righ'])}
                                         title={he.translate('default_kwic_connect__use_as_filter_in_2nd_corp')}>
                                     {translation['righ']}
                                 </a>
