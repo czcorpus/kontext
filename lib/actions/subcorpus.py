@@ -28,6 +28,7 @@ import corplib
 from texttypes import TextTypeCollector
 import settings
 import bgcalc
+from argmapping import log_mapping
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
@@ -206,7 +207,7 @@ class Subcorpus(Querying):
             raise SubcorpusError(translate('Empty subcorpus!'))
 
     @exposed(access_level=1, template='subcorpus/subcorp_form.html', page_model='subcorpForm',
-             http_method='POST', return_type='json')
+             http_method='POST', return_type='json', action_log_mapper=log_mapping.new_subcorpus)
     def create(self, request):
         try:
             return self._create_subcorpus(request)
