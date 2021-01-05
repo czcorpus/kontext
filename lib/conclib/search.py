@@ -198,5 +198,5 @@ def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc
                     conc.save(calc_status.cachefile)
                     # TODO can we be sure here that conc is finished even if its not the first query op.?
                     cache_map.update_calc_status(
-                        subchash, q[:act + 1], finished=True, concsize=conc.size())
+                        subchash, q[:act + 1], finished=True, readable=True, concsize=conc.size())
     return conc
