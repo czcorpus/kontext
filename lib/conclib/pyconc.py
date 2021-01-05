@@ -25,7 +25,7 @@ import logging
 
 import manatee
 import l10n
-from l10n import escape
+from strings import escape_attr_val
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as translate
 from functools import reduce
@@ -401,8 +401,8 @@ class PyConc(manatee.Concordance):
                 str=colls.get_item(),
                 freq=colls.get_cnt(),
                 Stats=[{'s': '%.3f' % colls.get_bgr(s)} for s in cbgrfns],
-                pfilter=qfilter % ('P', escape(colls.get_item())),
-                nfilter=qfilter % ('N', escape(colls.get_item()))
+                pfilter=qfilter % ('P', escape_attr_val(colls.get_item())),
+                nfilter=qfilter % ('N', escape_attr_val(colls.get_item()))
             ))
             colls.next()
             i += 1
