@@ -14,13 +14,13 @@
             </element>
             <element name="ttl_days">
                 <attribute name="extension-by">
-                    <value>ucnk</value>
+                    <value>default</value>
                 </attribute>
                 <data type="positiveInteger" />
             </element>
             <element name="anonymous_user_ttl_days">
                 <attribute name="extension-by">
-                    <value>ucnk</value>
+                    <value>default</value>
                 </attribute>
                 <data type="positiveInteger" />
             </element>
