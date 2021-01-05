@@ -343,7 +343,7 @@ class LiveAttributes(AbstractLiveAttributes):
         exported = dict(attr_values=values, aligned=aligned_corpora)
         for k in list(data.keys()):
             if isinstance(data[k], Iterable):
-                if len(data[k]) <= max_attr_list_size or max_attr_list_size is None or k in expand_attrs:
+                if max_attr_list_size is None or len(data[k]) <= max_attr_list_size or k in expand_attrs:
                     out_data = l10n.sort(data[k], collator_locale, key=lambda t: t[0])
                     values[self.export_key(k)] = out_data
                 else:
