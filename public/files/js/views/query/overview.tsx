@@ -315,6 +315,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         return (
             <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
                 <layoutViews.CloseableFrame
+                        scrollable={true}
                         customClass="query-form-spa"
                         label={he.translate('query__edit_current_hd_{operation}',
                                 {operation: formTypeToTitle(props.operationFormType)})}
