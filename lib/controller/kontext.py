@@ -678,7 +678,8 @@ class Kontext(Controller):
                 next_query_keys[-1] if len(next_query_keys) else None, result)
 
         with plugins.runtime.ACTION_LOG as alog:
-            alog.log_action(self._request, action_metadata.get('action_log_mapper'), methodname,
+            alog.log_action(self._request, action_metadata.get('action_log_mapper'),
+                            f'{self.get_mapping_url_prefix()[1:]}{methodname}',
                             err_desc=encode_err(err_desc), proc_time=self._proc_time)
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.post_dispatch(self._plugin_api, methodname, action_metadata)

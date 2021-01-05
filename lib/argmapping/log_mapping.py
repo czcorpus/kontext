@@ -51,4 +51,5 @@ def view(request: Request):
 
 
 def wordlist(request: Request):
-    return dict(corpname=request.args.get('corpname'), wlsort=request.args.get('wlsort'))
+    return dict(corpname=request.form.get('corpname'), wlsort=request.form.get('wlsort'),
+                wlnums=request.form.get('wlnums'), wltype=request.form.get('wltype'))

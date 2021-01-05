@@ -25,14 +25,15 @@ class AbstractActionLog:
     a dict (with possibly nested values).
     """
 
-    def log_action(self, request: Request, action_log_mapper: Callable[[None], Any], action_name: str,
+    def log_action(self, request: Request, action_log_mapper: Callable[[None], Any], full_action_name: str,
                    err_desc: Tuple[str, str], proc_time: Optional[float]) -> None:
         """
         params:
             request -- a HTTP request leading to the logged action
             action_log_mapper -- a function which fetches some arguments out of a query, this can be
                                  used for more detailed and action-specific logging
-            action_name -- name of the called method
+            full_action_name -- full name of the called method - i.e. including controller prefix separated
+                                by the slash character - e.g. wordlist/form
             err_desc -- a message type and a message text
             proc_time -- time taken by the action method to process a respective request
 
