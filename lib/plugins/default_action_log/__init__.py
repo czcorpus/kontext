@@ -28,7 +28,7 @@ class DefaultActionLog(AbstractActionLog):
     client user agent).
     """
 
-    def log_action(self, request, action_log_mapper, action_name, err_desc, proc_time):
+    def log_action(self, request, action_log_mapper, full_action_name, err_desc, proc_time):
         log_data = {}
         if action_log_mapper:
             try:
@@ -39,7 +39,7 @@ class DefaultActionLog(AbstractActionLog):
         if err_desc:
             log_data['error'] = dict(name=err_desc[0], anchor=err_desc[1])
         log_data['date'] = datetime.datetime.today().strftime('%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
-        log_data['action'] = action_name
+        log_data['action'] = full_action_name
         log_data['user_id'] = request.session.get('user', {}).get('id')
         if proc_time is not None:
             log_data['proc_time'] = proc_time

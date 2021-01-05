@@ -1224,7 +1224,7 @@ class Actions(Querying):
         result = self.widectx(pos)
         return result
 
-    @exposed(access_level=0)
+    @exposed(access_level=0, action_log_mapper=log_mapping.widectx)
     def widectx(self, request):
         """
         display a hit in a wider context

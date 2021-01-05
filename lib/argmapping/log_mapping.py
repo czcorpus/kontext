@@ -51,4 +51,20 @@ def view(request: Request):
 
 
 def wordlist(request: Request):
-    return dict(corpname=request.args.corpname, wlsort=request.args.wlsort)
+    return dict(corpname=request.form.get('corpname'), wlsort=request.form.get('wlsort'),
+                wlnums=request.form.get('wlnums'), wltype=request.form.get('wltype'))
+
+
+def widectx(request: Request):
+    attrs = request.args.get('attrs', '').split(',')
+    structs = list(set(x.split('.')[0] for x in request.args.get('structs', '').split(',')))
+    expand_left = request.args.get('detail_left_ctx')
+    expand_right = request.args.get('detail_right_ctx')
+    expand = (None if expand_left is None else int(expand_left),
+              None if expand_right is None else int(expand_right))
+    return dict(corpname=request.args.get('corpname'), attrs=attrs, structs=structs, expand=expand)
+
+
+def new_subcorpus(request: Request):
+    return dict(corpname=request.json.get('corpname'), form_type=request.json.get('form_type'),
+                publish=request.json.get('publish', False))
