@@ -17,7 +17,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 {% extends "document.html" %}
 
-{% block title %}KonText - $_("List of my subcorpora")#slurp{% endblock %}
+{% block title %}KonText - {{'List of my subcorpora'|_ }}{% endblock %}
 
 {% block bodyonload %}
 __conf.SubcorpList = {{ subcorp_list|to_json }};
@@ -31,7 +31,7 @@ subcorpListPage.init(__conf);
 
 {% block main %}
 <section id="my-subcorpora">
-    <div class="bar"><h2>{{ 'My subcorpora'|_ }}</h2></div>
+    <div class="bar"><h2>{{'My subcorpora'|_ }}</h2></div>
     <div id="my-subcorpora-mount"></div>
 </section>
 {% endblock %}
