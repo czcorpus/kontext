@@ -27,6 +27,8 @@ import { ITranslator, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { List, HTTP } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { IUnregistrable } from '../common/common';
 
 /**
  * Validates form fields and stored possible errors there. In case of errors
@@ -80,7 +82,7 @@ export interface SubcorpFormModelState {
 }
 
 
-export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
+export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> implements IUnregistrable {
 
     private pageModel:PageModel;
 
@@ -168,6 +170,23 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
                 state.alignedCorpora = action.payload.alignedCorpora
             })
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            action => {
+                this.dispatchSideEffect<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'subcorp-form-model';
     }
 
     private getSubmitArgs():CreateSubcorpusArgs {
@@ -198,7 +217,6 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> {
 
     submit():Observable<any> {
         const args = this.getSubmitArgs();
-        console.log('args: ', args);
         const err = this.validateForm(true);
         if (!err) {
             return this.pageModel.ajax$<any>(
