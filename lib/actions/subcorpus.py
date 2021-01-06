@@ -123,7 +123,7 @@ class Subcorpus(Querying):
         if form_type == 'tt-sel':
             data = CreateSubcorpusArgs.from_dict(request.json)
             corpus_info = self.get_corpus_info(data.corpname)
-            if data.has_aligned_corpora() and plugins.runtime.LIVE_ATTRIBUTES.exists:
+            if plugins.runtime.LIVE_ATTRIBUTES.exists:
                 if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
                     within_cql = None
                     sel_match = plugins.runtime.LIVE_ATTRIBUTES.instance.get_attr_values(

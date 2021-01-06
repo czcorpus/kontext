@@ -231,7 +231,9 @@ export class SubcorpForm {
                 },
                 this.corparchPlugin,
                 this.textTypesModel,
-                this.liveAttrsPlugin
+                this.liveAttrsPlugin,
+                this.subcorpFormModel,
+                this.subcorpWithinFormModel
             );
 
             this.initCorpusInfo();

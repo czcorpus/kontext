@@ -27,6 +27,8 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
 import { List, pipe, HTTP } from 'cnc-tskit';
 import { ActionName, Actions } from './actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { IUnregistrable } from '../common/common';
 
 /**
  *
@@ -66,7 +68,7 @@ export interface SubcorpWithinFormModelState {
 /**
  *
  */
-export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormModelState> {
+export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormModelState> implements IUnregistrable {
 
     private pageModel:PageModel;
 
@@ -186,6 +188,24 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                 }
             }
         );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            null,
+            (state, action, dispatch) => {
+                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                });
+            }
+        );
+    }
+
+    getRegistrationId():string {
+        return 'subcorp-within-form-model';
     }
 
     updateWithinType(state:SubcorpWithinFormModelState, rowIdx, negated) {
