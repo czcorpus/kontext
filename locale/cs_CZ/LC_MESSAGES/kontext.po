@@ -539,3 +539,6 @@ msgstr "Špatné číslo stránky"
 
 msgid "View on GitHub"
 msgstr "Prohlédnout na GitHubu"
+
+msgid "Concordance regeneration"
+msgstr "Obnovení konkordance"

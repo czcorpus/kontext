@@ -133,7 +133,11 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     return status.has_some_result(minsize=minsize), status.finished
 
 
-def get_existing_conc(corp: manatee.Corpus, q: Tuple[str, ...]) -> manatee.Concordance:
+def require_existing_conc(corp: manatee.Corpus, q: Tuple[str, ...]) -> manatee.Concordance:
+    """
+    Load a cached concordance based on a provided corpus and query.
+    If nothing is found, ConcNotFoundException is thrown.
+    """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     subchash = getattr(corp, 'subchash', None)
     status = cache_map.get_calc_status(subchash, q)
@@ -145,7 +149,10 @@ def get_existing_conc(corp: manatee.Corpus, q: Tuple[str, ...]) -> manatee.Conco
             if qq.startswith('x-'):
                 mcorp = manatee.Corpus(qq[2:])
                 break
-        return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
+        try:
+            return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
+        except manatee.FileAccessError as ex:
+            raise ConcNotFoundException(ex)
     raise BrokenConcordanceException('Concordance broken. File: {}, error: {}'.format(status.cachefile, status.error))
 
 

@@ -26,7 +26,7 @@ from structures import FixedDict
 
 import manatee
 import corplib
-from conclib.calc import get_existing_conc
+from conclib.calc import require_existing_conc
 import settings
 import bgcalc
 from bgcalc import UnfinishedConcordanceError
@@ -236,7 +236,7 @@ def calc_freqs_bg(args: FreqCalsArgs):
 
     cm = corplib.CorpusManager(subcpath=args.subcpath)
     corp = cm.get_Corpus(args.corpname, subcname=args.subcname)
-    conc = get_existing_conc(corp=corp, q=args.q)
+    conc = require_existing_conc(corp=corp, q=args.q)
     if not conc.finished():
         raise UnfinishedConcordanceError(
             _('Cannot calculate yet - source concordance not finished. Please try again later.'))

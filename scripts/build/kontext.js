@@ -177,7 +177,6 @@
         const moduleMap = {
             'translations': path.resolve(jsPath, '.compiled/translations'),
             'views': path.resolve(jsPath, 'views'),
-            'vendor/rsvp-ajax' : path.resolve(jsPath, 'vendor/rsvp-ajax'),
             'vendor/d3': path.resolve(jsPath, 'vendor/d3.min'),
             'vendor/d3-color': path.resolve(jsPath, 'vendor/d3-color.min'),
             'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat'),

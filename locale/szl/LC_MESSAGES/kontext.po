@@ -456,3 +456,6 @@ msgstr "View on GitHub"
 
 msgid "unspecified"
 msgstr "unspecified"
+
+msgid "Concordance regeneration"
+msgstr "Concordance regeneration"

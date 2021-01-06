@@ -1,0 +1,37 @@
+{#
+Copyright (c) 2021 Charles University, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#}
+{% extends "document.html" %}
+{% block title %}{{ page_title|default('', true)|shorten(80, True) }} ({{ "Concordance"|_ }}){% endblock %}
+
+
+{% block bodyonload %}
+__conf.ConcFinished = {{finished|to_json}};
+__conf.NextAction = {{next_action|to_json}};
+__conf.NextActionArgs = {{next_action_args|to_json}};
+restoreConcPage.init(__conf);
+{% endblock %}
+
+
+{% block main %}
+<section>
+    <div class="bar"><h2>{{ "Concordance regeneration"|_ }}</h2></div>
+    <div id="view-mount"></div>
+</section>
+{% endblock %}
