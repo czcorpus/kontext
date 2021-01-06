@@ -383,7 +383,8 @@ class Kontext(Controller):
                         orig_corpora = form.add_forced_arg('corpname', corpora[0])
                         if len(orig_corpora) > 0 and orig_corpora[0] != corpora[0]:
                             raise UserActionException(translate(
-                                f'URL argument corpname={orig_corpora[0]} collides with corpus {corpora[0]} stored as part of original concordance'))
+                                f'URL argument corpname={orig_corpora[0]} collides with corpus '
+                                f'{corpora[0]} stored as part of original concordance'))
                     if len(corpora) > 1:
                         form.add_forced_arg('align', *corpora[1:])
                         form.add_forced_arg('viewmode', 'align')
@@ -504,7 +505,7 @@ class Kontext(Controller):
         """
         if plugins.runtime.CONC_PERSISTENCE.exists:
             if op_id:
-                tpl_data['Q'] = ['~%s' % op_id]
+                tpl_data['Q'] = [f'~{op_id}']
                 tpl_data['conc_persistence_op_id'] = op_id
                 if self._prev_q_data:  # => main query already entered; user is doing something else
                     # => additional operation => ownership is clear
