@@ -352,7 +352,8 @@ export class ViewPage {
             case 'filter':
             case 'sortx':
             case 'shuffle':
-            case 'reduce': {
+            case 'reduce':
+            case 'create_view': {
                 this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.exportConcArgs(),

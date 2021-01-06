@@ -301,6 +301,14 @@ class Actions(Querying):
         self._attach_query_overview(out)
         return out
 
+    @exposed(mutates_conc=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view)
+    def create_view(self, request):
+        """
+        This is intended for direct conc. access via external pages (i.e. no query_submit + view and just directly
+        to the result by providing raw CQL query
+        """
+        return self.view(request)
+
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def archive_concordance(self, request):
         with plugins.runtime.CONC_PERSISTENCE as cp:
