@@ -322,14 +322,17 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             <td className={exportTextElmClass(props.corpname, 'kw')}
                     onClick={handleKwicClick.bind(null, props.corpname,
                         props.output.tokenNumber, props.lineIdx)}>
-                <>
-                {props.output.kwic.map((item, i, itemList) =>
-                        <KwicChunk key={`kc-${i}`} i={i} item={item} itemList={itemList} prevBlockClosed={List.get(-1, props.output.left)}
+                {List.flatMap(
+                    (item, i) => [
+                        <KwicChunk key={`kc-${i}`} i={i} item={item} itemList={props.output.kwic}
+                                prevBlockClosed={List.get(-1, props.output.left)}
                                 hasKwic={hasKwic} lineIdx={props.lineIdx} attrViewMode={props.attrViewMode}
                                 supportsTokenConnect={props.supportsTokenConnect}
-                                kwicTokenNum={props.output.tokenNumber}  />)
-                }
-                </>
+                                kwicTokenNum={props.output.tokenNumber}  />,
+                        ' '
+                    ],
+                    props.output.kwic
+                )}
             </td>
             <td className={exportTextElmClass(props.corpname, 'rc')} onClick={handleTokenClick}>
                 <>
@@ -567,14 +570,18 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     </span>
                     <span onClick={this._handleKwicClick.bind(this, corpname,
                                     corpusOutput.tokenNumber, this.props.lineIdx)}>
-                        {corpusOutput.kwic.map((item, i, itemList) =>
-                                <KwicChunk key={`kc-${i}`} i={i} itemList={itemList} item={item}
+                        {List.flatMap(
+                            (item, i) => [
+                                <KwicChunk key={`kc-${i}`} i={i} itemList={corpusOutput.kwic} item={item}
                                         prevBlockClosed={List.get(-1, corpusOutput.left)} hasKwic={hasKwic}
                                         lineIdx={this.props.lineIdx}
                                         attrViewMode={this.props.attrViewMode}
                                         supportsTokenConnect={this.props.supportsTokenConnect}
-                                        kwicTokenNum={corpusOutput.tokenNumber} />)
-                        }
+                                        kwicTokenNum={corpusOutput.tokenNumber} />,
+                                ' '
+                            ],
+                            corpusOutput.kwic
+                        )}
                     </span>
                     <span onClick={handleTokenClick}>
                         {List.flatMap((item, i) => [
