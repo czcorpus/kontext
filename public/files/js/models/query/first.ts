@@ -22,7 +22,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
-import { tap, map, concatMap, catchError } from 'rxjs/operators';
+import { tap, map, concatMap, catchError, timestamp } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
 import { Kontext, TextTypes } from '../../types/common';
@@ -457,23 +457,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputMakeCorpusPrimary>(
-            ActionName.QueryInputMakeCorpusPrimary,
-            action => {
-                const corpora = this.state.corpora.slice()
-                List.removeValue(action.payload.corpname, corpora);
-                corpora.unshift(action.payload.corpname);
-                dispatcher.dispatch<GlobalActions.SwitchCorpus>({
-                    name: GlobalActionName.SwitchCorpus,
-                    payload: {
-                        corpora,
-                        subcorpus: '',
-                        changePrimaryCorpus: true
-                    }
-                });
-            }
-        );
-
         this.addActionHandler<Actions.QuerySubmit>(
             ActionName.QuerySubmit,
             action => {
@@ -553,8 +536,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             state,
                             action.payload.data[this.getRegistrationId()] as
                                 FirstQueryFormModelSwitchPreserve,
-                            action.payload.corpora,
-                            action.payload.changePrimaryCorpus
+                            action.payload.corpora
                         );
                     });
                     this.autoSuggestTrigger.next(tuple(List.head(action.payload.corpora)[1], 0, 0));
@@ -573,7 +555,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     name: GlobalActionName.SwitchCorpusReady,
                     payload: {
                         modelId: this.getRegistrationId(),
-                        data: this.serialize(this.state)
+                        data: this.serialize(
+                            this.state,
+                            action.payload.corpora,
+                            action.payload.newPrimaryCorpus
+                        )
                     }
                 });
             }
@@ -634,24 +620,59 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return 'FirstQueryFormModelState';
     }
 
-    private serialize(state:FirstQueryFormModelState):FirstQueryFormModelSwitchPreserve {
+    private serialize(
+        state:FirstQueryFormModelState,
+        newCorpora:Array<string>,
+        newPrimaryCorpus:string|undefined
+    ):FirstQueryFormModelSwitchPreserve {
+
+        const getSrcCorp = newPrimaryCorpus ?
+            (oldc:string) => {
+                if (oldc === newPrimaryCorpus) {
+                    return List.head(state.corpora);
+
+                } else if (newPrimaryCorpus && oldc === List.head(state.corpora)) {
+                    return newPrimaryCorpus;
+                }
+                return oldc;
+            } :
+            (oldc:string) => oldc;
+
+        const commonCorps = List.zip(newCorpora, state.corpora);
         return {
-            queries: {...state.queries},
-            lposValues: {...state.lposValues},
+            queries: pipe(
+                commonCorps,
+                List.map(
+                    ([oldCorp, newCorp]) => tuple(newCorp, state.queries[getSrcCorp(oldCorp)])
+                ),
+                Dict.fromEntries()
+            ),
+            lposValues: pipe(
+                commonCorps,
+                List.map(
+                    ([oldCorp, newCorp]) => tuple(newCorp, state.lposValues[getSrcCorp(oldCorp)])
+                ),
+                Dict.fromEntries()
+            ),
             alignedCorporaVisible: state.alignedCorporaVisible,
-            cqlEditorMessage: {...state.cqlEditorMessages}
+            cqlEditorMessage:  pipe(
+                commonCorps,
+                List.map(
+                    ([oldCorp, newCorp]) => tuple(newCorp, state.cqlEditorMessages[getSrcCorp(oldCorp)])
+                ),
+                Dict.fromEntries()
+            )
         };
     }
 
     private transferFormValues(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
-        oldCorp:string,
-        newCorp:string,
+        corp:string,
         isAligned?:boolean
     ) {
-        const oldQuery = data.queries[oldCorp];
-        let newQuery = state.queries[newCorp];
+        const oldQuery = data.queries[corp];
+        let newQuery = state.queries[corp];
         if (newQuery.qtype === 'advanced' && oldQuery.qtype === 'simple') {
             newQuery = advancedToSimpleQuery(newQuery);
 
@@ -662,29 +683,24 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             newQuery.qmcase = oldQuery.qmcase;
             newQuery.use_regexp = oldQuery.use_regexp;
         }
-        state.queries[newCorp] = newQuery;
-        this.setRawQuery(state, newCorp, oldQuery.query, null);
-        state.cqlEditorMessages[newCorp] = '';
+        state.queries[corp] = newQuery;
+        this.setRawQuery(state, corp, oldQuery.query, null);
+        state.cqlEditorMessages[corp] = '';
         if (!isAligned) {
-            state.queries[newCorp].include_empty = false; // this is rather a formal stuff
+            state.queries[corp].include_empty = false; // this is rather a formal stuff
         }
     }
 
     private deserialize(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
-        corpora:Array<[string, string]>,
-        changePrimaryCorpus:boolean
+        corpora:Array<[string, string]>
     ):void {
+
         if (data) {
-            const transferFn:(oc:string, nc:string, i:number)=>void = changePrimaryCorpus ?
-                (oldCorp, _, i) =>
-                    this.transferFormValues(state, data, oldCorp, oldCorp, i > 0) :
-                (oldCorp, newCorp, _) =>
-                    this.transferFormValues(state, data, oldCorp, newCorp);
             pipe(
                 corpora,
-                List.forEach(([oldCorp, newCorp], i) => transferFn(oldCorp, newCorp, i))
+                List.forEach(([,newCorp], i) => this.transferFormValues(state, data, newCorp, i > 0))
             );
             state.alignedCorporaVisible = data.alignedCorporaVisible;
             state.supportedWidgets = determineSupportedWidgets(
@@ -692,32 +708,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 state.tagBuilderSupport,
                 state.isAnonymousUser
             );
-            /*
-            const firstCorp = List.head(state.corpora)
-            const queryObj = state.queries[firstCorp];
-            if (queryObj.qtype === 'simple') {
-                queryObj.queryParsed = List.map(
-                    v => ({
-                        ...v,
-                        args: [tuple(undefined, v.value)],
-                        isExtended: false,
-                        suggestions: null
-                    }),
-                    queryObj.queryParsed
-                );
-                this.rehighlightSimpleQuery(queryObj);
-
-            } else {
-                queryObj.parsedAttrs = List.map(
-                    v => ({
-                        ...v,
-                        suggestions: null
-                    }),
-                    queryObj.parsedAttrs
-                );
-                this.reparseAdvancedQuery(state, firstCorp, true);
-            }
-            */
         }
     }
 

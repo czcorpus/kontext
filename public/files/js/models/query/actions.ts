@@ -77,7 +77,6 @@ export enum ActionName {
     FilterInputSetInclKwic = 'FILTER_QUERY_SET_INCL_KWIC',
     FilterInputSetFilterType = 'FILTER_INPUT_SET_FILTER_TYPE',
     QueryInputSetIncludeEmpty = 'QUERY_INPUT_SET_INCLUDE_EMPTY',
-    QueryInputMakeCorpusPrimary = 'QUERY_MAKE_CORPUS_PRIMARY',
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
     ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
@@ -467,12 +466,6 @@ export namespace Actions {
         value:boolean;
     }> {
         name:ActionName.QueryInputSetIncludeEmpty;
-    }
-
-    export interface QueryInputMakeCorpusPrimary extends Action<{
-        corpname:string;
-    }> {
-        name:ActionName.QueryInputMakeCorpusPrimary;
     }
 
     export interface QuerySubmit extends Action<{
