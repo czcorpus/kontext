@@ -21,7 +21,7 @@
 import { Kontext} from '../../../types/common';
 import { parse as parseQuery, SyntaxError } from 'cqlParser/parser';
 import { IAttrHelper, NullAttrHelper } from './attrs';
-import { List, tuple, pipe } from 'cnc-tskit';
+import { List, tuple, pipe, Dict } from 'cnc-tskit';
 import { QueryType, TokenSuggestions } from '../query';
 
 /**
@@ -147,26 +147,23 @@ class RuleCharMap {
     }
 
     generate():[string, Array<ParsedAttr>] {
-        const rulePointers:Array<CharsRule> = [];
-        for (let k in this.data) {
-            if (this.data.hasOwnProperty(k)) {
-                rulePointers.push(this.data[k]);
-            }
-        }
-        const chunks = rulePointers
-            .filter(v => v.to <= this.query.length)
-            .sort((x1, x2) => x1.from - x2.from)
-            .map(v => ({
+        const chunks = pipe(
+            this.data,
+            Dict.values(),
+            List.filter(v => v.to <= this.query.length),
+            List.sortedBy(v => v.from),
+            List.map(v => ({
                 value: this.ruleToSubstring(v),
                 htmlValue: this.emitTerminal(v.rule, v.from, v.to),
                 from: v.from,
                 to: v.to
-            }));
+            }))
+        );
         // 'inserts' contains values (= HTML tags) inserted
         // before matching 'result' items. I.e. 0th item
         // from 'inserts' is inserted before 0th item from 'result'
         // and n-th item from 'inserts' is inserted to the end
-        const inserts = chunks.concat(null).map(_ => []);
+        const inserts = List.repeat(_ => [], chunks.length + 1);
         const [codeTokens, parsedAttrs] = this.applyNonTerminals(chunks, inserts);
         return tuple(codeTokens.join(''), parsedAttrs);
     }
@@ -339,7 +336,9 @@ class RuleCharMap {
                     });
                     if (this.wrapLongQuery && this.posCounter % 3 == 0) {
                         const range = this.convertRange(v.from, v.to, chunks);
-                        inserts[range[0]].push('<br />');
+                        if (Array.isArray(inserts[range[0]]) && List.size(inserts[range[0]]) > 0) {
+                            inserts[range[0]].push('<br />');
+                        }
                     }
                     this.posCounter += 1;
                 break;
