@@ -27,8 +27,7 @@ import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { ContentEditable } from './contentEditable';
-import { PluginInterfaces } from '../../types/plugins';
-import { findTokenIdxByFocusIdx } from '../../models/query/query';
+import { findTokenIdxByFocusIdx, strictEqualParsedQueries } from '../../models/query/query';
 
 
 export interface CQLEditorProps {
@@ -294,8 +293,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         componentDidUpdate(prevProps, prevState) {
+            const prevQueryObj = prevProps.queries[this.props.sourceId];
             const queryObj = this.props.queries[this.props.sourceId];
-            if (queryObj.rawAnchorIdx !== null && queryObj.rawFocusIdx !== null) {
+            if (prevQueryObj.rawAnchorIdx !== queryObj.rawAnchorIdx ||
+                        prevQueryObj.rawFocusIdx !== queryObj.rawFocusIdx ||
+                        prevQueryObj.query !== queryObj.query ||
+                        !strictEqualParsedQueries(prevQueryObj, queryObj)) {
                 this.contentEditable.reapplySelection(
                     queryObj.rawAnchorIdx,
                     queryObj.rawFocusIdx

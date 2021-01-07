@@ -63,6 +63,7 @@ export enum ActionName {
     QueryInputResetQueryExpansion = 'QUERY_INPUT_RESET_QUERY_EXPANSION',
     QueryInputSetQuery = 'QUERY_INPUT_SET_QUERY',
     QueryInputAppendQuery = 'QUERY_INPUT_APPEND_QUERY',
+    QueryInputInsertAtCursor = 'QUERY_INPUT_INSERT_AT_CURSOR',
     QueryInputRemoveLastChar = 'QUERY_INPUT_REMOVE_LAST_CHAR',
     QueryInputSetLpos = 'QUERY_INPUT_SET_LPOS',
     QueryInputSetMatchCase = 'QUERY_INPUT_SET_MATCH_CASE',
@@ -77,7 +78,6 @@ export enum ActionName {
     FilterInputSetInclKwic = 'FILTER_QUERY_SET_INCL_KWIC',
     FilterInputSetFilterType = 'FILTER_INPUT_SET_FILTER_TYPE',
     QueryInputSetIncludeEmpty = 'QUERY_INPUT_SET_INCLUDE_EMPTY',
-    QueryInputMakeCorpusPrimary = 'QUERY_MAKE_CORPUS_PRIMARY',
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
     ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
@@ -364,6 +364,14 @@ export namespace Actions {
         name:ActionName.QueryInputAppendQuery;
     }
 
+    export interface QueryInputInsertAtCursor extends Action<{
+        formType:QueryFormType;
+        sourceId:string;
+        chunk:string;
+    }> {
+        name:ActionName.QueryInputInsertAtCursor;
+    }
+
     export interface QueryInputRemoveLastChar extends Action<{
         formType:QueryFormType;
         sourceId:string;
@@ -467,12 +475,6 @@ export namespace Actions {
         value:boolean;
     }> {
         name:ActionName.QueryInputSetIncludeEmpty;
-    }
-
-    export interface QueryInputMakeCorpusPrimary extends Action<{
-        corpname:string;
-    }> {
-        name:ActionName.QueryInputMakeCorpusPrimary;
     }
 
     export interface QuerySubmit extends Action<{

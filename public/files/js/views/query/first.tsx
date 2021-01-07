@@ -178,7 +178,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         render() {
-            const primaryCorpname = this.props.corpora[0];
+            const primaryCorpname = List.head(this.props.corpora);
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <div className="form primary-language">
@@ -205,6 +205,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                     {this.props.corpora.length > 1 || this.props.availableAlignedCorpora.length > 0 ?
                         <alignedViews.AlignedCorpora
                                 availableCorpora={this.props.availableAlignedCorpora}
+                                primaryCorpus={primaryCorpname}
                                 alignedCorpora={List.tail(this.props.corpora)}
                                 sectionVisible={this.props.alignedCorporaVisible}
                                 supportedWidgets={this.props.supportedWidgets}

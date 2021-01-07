@@ -79,7 +79,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
 
     // -------------------- <DummyKey /> ----------------------------
 
-    const DummyKey:React.SFC<{
+    const DummyKey:React.FC<{
         value:string;
 
     }> = (props) => {
@@ -88,7 +88,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
 
     // -------------------- <ShiftKey /> ----------------------------
 
-    const ShiftKey:React.SFC<{
+    const ShiftKey:React.FC<{
         shiftOn:boolean;
         handleShift:()=>void;
 
@@ -198,7 +198,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
 
     // -------------------- <KeysRow /> ----------------------------
 
-    const KeysRow:React.SFC<{
+    const KeysRow:React.FC<{
         shiftOn:boolean;
         capsOn:boolean;
         passTriggerIdx:number;
@@ -277,16 +277,13 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
             this._handleLayoutChange = this._handleLayoutChange.bind(this);
         }
 
-        _handleClick(v) {
-            dispatcher.dispatch<Actions.QueryInputAppendQuery>({
-                name: ActionName.QueryInputAppendQuery,
+        _handleClick(chunk:string) {
+            dispatcher.dispatch<Actions.QueryInputInsertAtCursor>({
+                name: ActionName.QueryInputInsertAtCursor,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
-                    query: v,
-                    prependSpace: false,
-                    closeWhenDone: false,
-                    triggeredKey: this.props.activeKey
+                    chunk
                 }
             });
 
@@ -373,6 +370,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
     }
 
     return {
-        VirtualKeyboard: BoundWithProps(VirtualKeyboard, virtualKeyboardModel)
+        VirtualKeyboard: BoundWithProps<VirtualKeyboardProps, VirtualKeyboardState>(
+            VirtualKeyboard, virtualKeyboardModel)
     };
 }

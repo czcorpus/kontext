@@ -19,13 +19,14 @@
  */
 
 import * as React from 'react';
-import { List } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { InputModuleViews } from './input';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/query/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 import { AnyQuery } from '../../models/query/query';
 
 
@@ -38,6 +39,7 @@ export interface AlignedModuleArgs {
 export interface AlignedCorporaProps {
     availableCorpora:Array<{n:string; label:string}>;
     sectionVisible:boolean;
+    primaryCorpus:string; // do not confuse with the maincorp
     alignedCorpora:Array<string>;
     queries:{[key:string]:AnyQuery};
     supportedWidgets:{[key:string]:Array<string>};
@@ -88,6 +90,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         useRichQueryEditor:boolean;
         tagHelperView:PluginInterfaces.TagHelper.View;
         onEnterKey:()=>void;
+        onChangePrimaryCorp:(corp:string)=>void;
 
     }, {}> {
 
@@ -107,13 +110,9 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         }
 
         handleMakeMainClick() {
-            dispatcher.dispatch<Actions.QueryInputMakeCorpusPrimary>({
-                name: ActionName.QueryInputMakeCorpusPrimary,
-                 payload: {
-                    corpname: this.props.corpname
-                }
-            });
+            this.props.onChangePrimaryCorp(this.props.corpname);
         }
+
         render() {
             return (
                 <div className="AlignedCorpBlock">
@@ -191,6 +190,22 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
             return !List.some(v => v === corpname, props.alignedCorpora);
         };
 
+        const handleMainCorpChange = (corp:string) => {
+            const newAligned = [...props.alignedCorpora];
+            const chngPos = List.findIndex(v => v === corp, newAligned);
+            if (chngPos > -1) {
+                newAligned[chngPos] = props.primaryCorpus;
+                dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                    name: GlobalActionName.SwitchCorpus,
+                    payload: {
+                        corpora: List.unshift(corp, newAligned),
+                        subcorpus: '',
+                        newPrimaryCorpus: corp
+                    }
+                });
+            }
+        }
+
         return (
             <section className={`AlignedCorpora${props.sectionVisible ? '' : ' closed'}`} role="group" aria-labelledby="parallel-corpora-forms">
                 <h2 id="parallel-corpora-forms">
@@ -215,7 +230,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 queryStorageView={props.queryStorageView}
                                 hasLemmaAttr={props.hasLemmaAttr[item]}
                                 useRichQueryEditor={props.useRichQueryEditor}
-                                onEnterKey={props.onEnterKey} />,
+                                onEnterKey={props.onEnterKey}
+                                onChangePrimaryCorp={handleMainCorpChange} />,
                             props.alignedCorpora
                         )}
                         <div id="add-searched-lang-widget">
