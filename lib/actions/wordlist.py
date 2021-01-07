@@ -302,7 +302,7 @@ class Wordlist(ConcActions):
     @exposed(func_arg_mapped=True, return_type='json')
     def process(self, attrname='', worker_tasks=None):
         backend = settings.get('calc_backend', 'type')
-        if worker_tasks and backend in ('celery', 'konserver'):
+        if worker_tasks and backend in ('celery', 'rq'):
             import bgcalc
             app = bgcalc.calc_backend_client(settings)
             for t in worker_tasks:

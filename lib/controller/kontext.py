@@ -1237,7 +1237,7 @@ class Kontext(Controller):
     def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
         now = time.time()
-        if backend in ('celery', 'konserver', 'rq'):
+        if backend in ('celery', 'rq'):
             import bgcalc
             app = bgcalc.calc_backend_client(settings)
             at_list = self.get_async_tasks()

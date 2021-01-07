@@ -57,21 +57,6 @@ def _init_backend_app(conf, fn_prefix):
         app = celery.Celery('bgcalc')
         app.config_from_object(cconf)
         return app
-    elif app_type == 'konserver':
-        from bgcalc.konserver import KonserverApp, Config
-
-        if app_conf:
-            kconf = SourceFileLoader('konserverconfig', app_conf).load_module()
-        else:
-            kconf = Config()
-            kconf.SERVER = conf.get('calc_backend', 'konserver_server')
-            kconf.PORT = conf.get_int('calc_backend', 'konserver_port')
-            kconf.PATH = conf.get('calc_backend', 'konserver_path')
-            kconf.HTTP_CONNECTION_TIMEOUT = conf.get_int(
-                'calc_backend', 'konserver_http_connection_timeout')
-            kconf.RESULT_WAIT_MAX_TIME = conf.get_int(
-                'calc_backend', 'konserver_result_wait_max_time')
-        return KonserverApp(conf=kconf, fn_prefix=fn_prefix)
     elif app_type == 'rq':
         from bgcalc.rq import RqClient, RqConfig
         rqconf = RqConfig()

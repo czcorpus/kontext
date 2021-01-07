@@ -291,7 +291,7 @@ def test_6(finfo):
     bck_type = settings.get('calc_backend', 'type')
     conf = settings.get('calc_backend', 'conf')
     if conf:  # otherwise user uses direct configuration which is taken care of by RelaxNG validation
-        if bck_type in ('celery', 'konserver', 'rq'):
+        if bck_type in ('celery', 'rq'):
             return finfo.file_exists(os.path.join(conf))
         else:
             return False, UnsupportedValue('/global/calc_backend', bck_type)
@@ -302,7 +302,7 @@ def test_6(finfo):
 def test_6(finfo):
     bck_type = settings.get('periodic_tasks', 'type')
     conf = settings.get('periodic_tasks', 'conf')
-    if bck_type in ('celery', 'konserver', 'rq'):
+    if bck_type in ('celery', 'rq'):
         return finfo.file_exists(os.path.join(conf))
     elif bck_type:
         return False, UnsupportedValue('/global/periodic_tasks', bck_type)
