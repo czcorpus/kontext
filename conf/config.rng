@@ -364,8 +364,6 @@
                         <choice>
                             <value>rq</value>
                             <value>celery</value>
-                            <value>konserver</value>
-                            <value>multiprocessing</value>
                         </choice>
                     </element>
                     <optional>
@@ -385,26 +383,6 @@
                             <element name="conf">
                                 <text />
                             </element>
-                            <group>
-                                <element name="konserver_server">
-                                    <text />
-                                </element>
-                                <element name="konserver_port">
-                                    <data type="positiveInteger" />
-                                </element>
-                                <element name="konserver_path">
-                                    <text />
-                                </element>
-                                <element name="konserver_http_connection_timeout">
-                                    <data type="positiveInteger" />
-                                </element>
-                                <element name="konserver_result_wait_max_time">
-                                    <data type="positiveInteger" />
-                                </element>
-                                <element name="konserver_worker_log">
-                                    <text />
-                                </element>
-                            </group>
                             <group>
                                 <element name="celery_broker_url">
                                     <data type="anyURI" />

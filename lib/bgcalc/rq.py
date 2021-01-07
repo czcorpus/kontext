@@ -106,9 +106,27 @@ class RqClient:
                         kwargs=entry['kwargs'] if 'kwargs' in entry else None
                     )
 
+    @staticmethod
+    def _resolve_limit(softl, hardl):
+        if softl is not None and hardl is not None:
+            return min(softl, hardl)
+        elif softl is not None:
+            return softl
+        elif hardl is not None:
+            return hardl
+        return None
+
     def send_task(self, name, args=None, time_limit=None, soft_time_limit=None):
+        """
+        Send a task to the worker.
+
+        Please note that Rq does not know hard vs. soft time limit. In case both
+        values are filled in (time_limit, soft_time_limit), the smaller one is
+        selected. Otherwise, the non-None is applied.
+        """
+        time_limit = self._resolve_limit(time_limit, soft_time_limit)
         try:
-            job = self.queue.enqueue(f'{self.prefix}.{name}', ttl=time_limit, args=args)
+            job = self.queue.enqueue(f'{self.prefix}.{name}', job_timeoutx=time_limit, args=args)
             return ResultWrapper(job)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
