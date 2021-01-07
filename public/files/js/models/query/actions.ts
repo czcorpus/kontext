@@ -63,6 +63,7 @@ export enum ActionName {
     QueryInputResetQueryExpansion = 'QUERY_INPUT_RESET_QUERY_EXPANSION',
     QueryInputSetQuery = 'QUERY_INPUT_SET_QUERY',
     QueryInputAppendQuery = 'QUERY_INPUT_APPEND_QUERY',
+    QueryInputInsertAtCursor = 'QUERY_INPUT_INSERT_AT_CURSOR',
     QueryInputRemoveLastChar = 'QUERY_INPUT_REMOVE_LAST_CHAR',
     QueryInputSetLpos = 'QUERY_INPUT_SET_LPOS',
     QueryInputSetMatchCase = 'QUERY_INPUT_SET_MATCH_CASE',
@@ -361,6 +362,14 @@ export namespace Actions {
         triggeredKey?:[number, number];
     }> {
         name:ActionName.QueryInputAppendQuery;
+    }
+
+    export interface QueryInputInsertAtCursor extends Action<{
+        formType:QueryFormType;
+        sourceId:string;
+        chunk:string;
+    }> {
+        name:ActionName.QueryInputInsertAtCursor;
     }
 
     export interface QueryInputRemoveLastChar extends Action<{

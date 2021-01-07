@@ -481,7 +481,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
         this.addActionSubtypeHandler<Actions.QueryInputAppendQuery>(
             ActionName.QueryInputAppendQuery,
-            action => action.payload.formType === 'query',
+            action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
                     this.setRawQuery(
@@ -497,6 +497,31 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     if (action.payload.closeWhenDone) {
                         state.activeWidgets[action.payload.sourceId] = null;
                     }
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputInsertAtCursor>(
+            ActionName.QueryInputInsertAtCursor,
+            action => action.payload.formType === this.formType,
+            action => {
+                this.changeState(state => {
+                    const queryObj = state.queries[action.payload.sourceId];
+                    const oldPos = queryObj.rawFocusIdx;
+                    this.setRawQuery(
+                        state,
+                        action.payload.sourceId,
+                        action.payload.chunk,
+                        tuple(
+                            queryObj.rawAnchorIdx,
+                            queryObj.rawFocusIdx
+                        )
+                    );
+                    this.moveCursorToPos(
+                        state,
+                        action.payload.sourceId,
+                        oldPos + action.payload.chunk.length
+                    );
                 });
             }
         );
