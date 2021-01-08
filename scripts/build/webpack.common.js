@@ -52,6 +52,7 @@ module.exports = {
             subcorpList: mkpath('js/pages/subcorpList.ts'),
             pubSubcorpList: mkpath('js/pages/pubSubcorpList.ts'),
             view: mkpath('js/pages/view.ts'),
+            restoreConc: mkpath('js/pages/restoreConc.ts'),
             wordlist: mkpath('js/pages/wordlist.ts'),
             wordlistForm: mkpath('js/pages/wordlistForm.ts'),
             login: mkpath('js/pages/login.ts'),

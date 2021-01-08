@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2013 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
  *
@@ -89,6 +89,7 @@ import kwicConnectInit from 'plugins/kwicConnect/init';
 import { TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
 import { HtmlHelpModel } from '../models/help/help';
+import { HitReloader } from '../models/concordance/concStatus';
 
 
 declare var require:any;
@@ -127,10 +128,6 @@ interface RenderLinesDeps {
  */
 export class ViewPage {
 
-    private static CHECK_CONC_DECAY = 1.08;
-
-    private static CHECK_CONC_MAX_WAIT = 500;
-
     private layoutModel:PageModel;
 
     private viewModels:ViewPageModels;
@@ -167,6 +164,8 @@ export class ViewPage {
 
     private freqFormViews:FreqFormViews;
 
+    private readonly hitReloader:HitReloader;
+
     /**
      *
      * @param layoutModel
@@ -180,6 +179,7 @@ export class ViewPage {
             this.layoutModel,
             this.layoutModel.getConf<Array<string>>('ChartExportFormats')
         );
+        this.hitReloader = new HitReloader(this.layoutModel);
     }
 
     private deserializeHashAction(v:string):Action {
@@ -259,79 +259,7 @@ export class ViewPage {
     }
 
     reloadHits():void {
-        const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
-        const applyData = (data:AjaxResponse.ConcStatus) => {
-            this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationUpdated>({
-                name: ActionName.AsyncCalculationUpdated,
-                payload: {
-                    finished: !!data.finished,
-                    concsize: data.concsize,
-                    relconcsize: data.relconcsize,
-                    arf: data.arf,
-                    fullsize: data.fullsize,
-                    availPages: Math.ceil(data.concsize / linesPerPage)
-                }
-            });
-        };
-
-        const wsArgs = new MultiDict()
-        wsArgs.set('corpusId', this.layoutModel.getCorpusIdent().id);
-        wsArgs.set('cacheKey', this.layoutModel.getConf('ConcCacheKey'));
-        const ws = this.layoutModel.openWebSocket(wsArgs);
-
-        if (ws) {
-            ws.onmessage = (evt:MessageEvent) => {
-                const dataSrc = <string>evt.data;
-                if (dataSrc) {
-                    applyData(JSON.parse(evt.data));
-                }
-            };
-
-            ws.onclose = (x) => {
-                if (x.code > 1000) {
-                    this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
-                        name: ActionName.AsyncCalculationFailed,
-                        payload: {}
-                    });
-                    this.layoutModel.showMessage('error', x.reason);
-                }
-            };
-
-        } else {
-            rxOf(ViewPage.CHECK_CONC_DECAY).pipe(
-                expand(
-                    (interval) => rxOf(interval * ViewPage.CHECK_CONC_DECAY)
-                ),
-                take(100), // just a safe limit
-                concatMap(v => rxOf(v).pipe(delay(v * 1000))),
-                concatMap(
-                    (interval) => zip(
-                        this.layoutModel.ajax$<AjaxResponse.ConcStatus>(
-                            HTTP.Method.GET,
-                            this.layoutModel.createActionUrl('get_cached_conc_sizes'),
-                            this.layoutModel.exportConcArgs()
-                        ),
-                        rxOf(interval)
-                    )
-                ),
-                takeWhile(
-                    ([response, interval]) => interval < ViewPage.CHECK_CONC_MAX_WAIT &&
-                        !response.finished,
-                    true // true => emit also the last item (which already breaks the predicate)
-                ),
-            ).subscribe(
-                ([response,]) => {
-                    applyData(response);
-                },
-                (err) => {
-                    this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
-                        name: ActionName.AsyncCalculationFailed,
-                        payload: {}
-                    });
-                    this.layoutModel.showMessage('error', err);
-                }
-            );
-        }
+        this.hitReloader.init();
     }
 
     /**

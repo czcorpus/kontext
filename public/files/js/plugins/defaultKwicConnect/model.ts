@@ -56,7 +56,7 @@ export interface ProviderOutputResponse {
     data:Array<{
         status:boolean;
         kwic:string;
-        contents:any; // <-- this is up to a concrete renderer/backend
+        contents:any; // TODO should be unknown
     }>;
 }
 
@@ -71,7 +71,7 @@ interface AjaxResponseListProviders extends Kontext.AjaxResponse {
 export interface ProviderOutput {
     found:boolean;
     kwic:string;
-    contents:any; // <-- this is up to a concrete renderer/backend
+    contents:any; // TODO should be unknown
 }
 
 export interface ProviderWordMatch {

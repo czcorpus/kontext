@@ -18,7 +18,7 @@ import os
 import time
 
 import corplib
-from conclib.calc import get_existing_conc
+from conclib.calc import require_existing_conc
 from bgcalc import freq_calc
 import settings
 from structures import FixedDict
@@ -103,7 +103,7 @@ def calculate_colls_bg(coll_args):
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         corplib.frq_db(corp, coll_args.cattr)
-        conc = get_existing_conc(corp=corp, q=coll_args.q)
+        conc = require_existing_conc(corp=corp, q=coll_args.q)
         if not conc.finished():
             raise UnfinishedConcordanceError(
                 _('Cannot calculate yet - source concordance not finished. Please try again later.'))
@@ -141,8 +141,7 @@ def calculate_colls(coll_args):
         collstart = 0
         collend = coll_args.num_lines
     else:
-        collstart = (int(coll_args.collpage) - 1) * \
-            int(coll_args.citemsperpage) + int(coll_args.line_offset)
+        collstart = (int(coll_args.collpage) - 1) * int(coll_args.citemsperpage) + int(coll_args.line_offset)
         collend = collstart + int(coll_args.citemsperpage) + 1
 
     cache = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
@@ -160,8 +159,7 @@ def calculate_colls(coll_args):
         if os.path.isfile(cache_path):  # cache avail. but not enough items
             os.unlink(cache_path)
         if collend >= num_fetch_items:
-            num_fetch_items += (collend - num_fetch_items) + 10 * \
-                int(coll_args.citemsperpage)  # TODO heuristics :)
+            num_fetch_items += (collend - num_fetch_items) + 10 * int(coll_args.citemsperpage)  # TODO heuristics :)
 
         coll_args.cache_path = cache_path
         coll_args.num_fetch_items = num_fetch_items

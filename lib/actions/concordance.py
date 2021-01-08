@@ -24,7 +24,7 @@ from typing import Dict, Any, List, Union
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
-from controller.errors import UserActionException, BackgroundCalculationException
+from controller.errors import UserActionException, BackgroundCalculationException, ImmediateRedirectException
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
                               KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
@@ -36,7 +36,7 @@ import conclib
 from conclib.empty import InitialConc
 from conclib.search import get_conc
 from conclib.calc.base import GeneralWorker
-from conclib.calc import cancel_async_task
+from conclib.calc import cancel_async_task, require_existing_conc, ConcNotFoundException
 import corplib
 from bgcalc import freq_calc, coll_calc
 import plugins
@@ -769,11 +769,79 @@ class Actions(Querying):
         self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
         return self.view(request)
 
+    @exposed()
+    def restore_conc(self, request):
+        out = self._create_empty_conc_result_dict()
+        out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
+        out['items_per_page'] = self.args.pagesize
+        try:
+            corpus_info = self.get_corpus_info(self.args.corpname)
+            conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=True,
+                            save=self.args.save, samplesize=corpus_info.sample_size)
+            if conc:
+                self._apply_linegroups(conc)
+                conc.switch_aligned(os.path.basename(self.args.corpname))
+
+                kwic_args = KwicPageArgs(attr.asdict(self.args), base_attr=Kontext.BASE_ATTR)
+                kwic_args.speech_attr = self._get_speech_segment()
+                kwic_args.labelmap = {}
+                kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
+                kwic_args.structs = self._get_struct_opts()
+
+                kwic = Kwic(self.corp, self.args.corpname, conc)
+
+                out['Sort_idx'] = kwic.get_sort_idx(q=self.args.q, pagesize=self.args.pagesize)
+                out.update(kwic.kwicpage(kwic_args))
+                out.update(self.get_conc_sizes(conc))
+                if request.args.get('next') == 'freqs':
+                    out['next_action'] = 'freqs'
+                    out['next_action_args'] = {
+                        'fcrit': request.args.get('fcrit'),
+                        'flimit': request.args.get('flimit'),
+                        'freq_sort': request.args.get('freq_sort'),
+                        'ml': request.args.get('ml'),
+                        'line_offset': request.args.get('line_offset'),
+                        'force_cache': request.args.get('force_cache', '0')}
+                elif request.args.get('next') == 'collx':
+                    out['next_action'] = 'collx'
+                    out['next_action_args'] = {
+                        'cattr': request.args.get('cattr'),
+                        'csortfn': request.args.get('csortfn'),
+                        'cbgrfns':  ''.join(request.args.get('cbgrfns')),
+                        'cfromw': request.args.get('cfromw'),
+                        'ctow': request.args.get('ctow'),
+                        'cminbgr': request.args.get('cminbgr'),
+                        'cminfreq': request.args.get('cminfreq'),
+                        'citemsperpage': request.args.get('citemsperpage'),
+                        'collpage': request.args.get('collpage'),
+                        'line_offset': request.args.get('line_offset'),
+                        'num_lines': request.args.get('num_lines')}
+        except TypeError as ex:
+            self.add_system_message('error', str(ex))
+            logging.getLogger(__name__).error(ex)
+        except plugins.abstract.conc_cache.CalcStatusException as ex:
+            if 'syntax error' in f'{ex}'.lower():
+                self.add_system_message(
+                    'error', translate('Syntax error. Please check the query and its type.'))
+            else:
+                raise ex
+        return out
+
     @exposed(access_level=0, func_arg_mapped=True, page_model='freq')
     def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0, force_cache=0):
         """
         display a frequency list
         """
+        try:
+            require_existing_conc(self.corp, self.args.q)
+            return self._freqs(fcrit, flimit, freq_sort, ml, line_offset, force_cache)
+        except ConcNotFoundException:
+            args = list(self._request.args.items()) + [('next', 'freqs')]
+            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+
+    def _freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0, force_cache=0):
+
         self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
                                     MainMenu.CONCORDANCE('query-overview'))
 
@@ -1118,6 +1186,14 @@ class Actions(Querying):
         """
         list collocations
         """
+        try:
+            require_existing_conc(self.corp, self.args.q)
+            return self._collx(line_offset, num_lines)
+        except ConcNotFoundException:
+            args = list(self._request.args.items()) + [('next', 'collx')]
+            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+
+    def _collx(self, line_offset=0, num_lines=0):
         self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
                                     MainMenu.CONCORDANCE('query-overview'))
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
