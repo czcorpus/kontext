@@ -210,7 +210,11 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
             <section className={`AlignedCorpora${props.sectionVisible ? '' : ' closed'}`} role="group" aria-labelledby="parallel-corpora-forms">
                 <h2 id="parallel-corpora-forms">
                     <layoutViews.ExpandButton isExpanded={props.sectionVisible} onClick={handleVisibilityChange} />
-                    <a onClick={handleVisibilityChange}>{he.translate('query__aligned_corpora_hd')}</a>
+                    <a onClick={handleVisibilityChange}>
+                        {he.translate('query__aligned_corpora_hd')}
+                        {List.empty(props.alignedCorpora) || props.sectionVisible ? null : '\u00a0\u2713'}
+                    </a>
+
                 </h2>
                 {props.sectionVisible ?
                     <>
@@ -238,11 +242,13 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             <select onChange={handleAddAlignedCorpus} value="">
                                 <option value="" disabled={true}>
                                     {`-- ${he.translate('query__add_a_corpus')} --`}</option>
-                                {props.availableCorpora
-                                    .filter(item => corpIsUnused(item.n))
-                                    .map(item => {
+                                {pipe(
+                                    props.availableCorpora,
+                                    List.filter(item => corpIsUnused(item.n)),
+                                    List.map(item => {
                                         return <option key={item.n} value={item.n}>{item.label}</option>;
-                                    })}
+                                    })
+                                )}
                             </select>
                         </div>
                     </> :
