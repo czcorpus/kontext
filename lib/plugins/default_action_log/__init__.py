@@ -45,6 +45,7 @@ class DefaultActionLog(AbstractActionLog):
             log_data['proc_time'] = proc_time
         log_data['request'] = {
             'REMOTE_ADDR': request.environ.get('REMOTE_ADDR'),
+            'HTTP_X_FORWARDED_FOR': request.environ.get('HTTP_X_FORWARDED_FOR'),
             'HTTP_USER_AGENT': request.environ.get('HTTP_USER_AGENT')
         }
         logging.getLogger('QUERY').info(json.dumps(log_data))
