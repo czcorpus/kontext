@@ -22,7 +22,6 @@ import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 import { Kontext } from '../types/common';
 import { ConcRestoreModel, ConcRestoreModelState } from '../models/concRestore';
-import { Strings } from 'cnc-tskit';
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:ConcRestoreModel) {
