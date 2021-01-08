@@ -19,7 +19,6 @@
 
 import os
 import sys
-import pickle
 from rq import Connection, Worker, get_current_job
 import redis
 

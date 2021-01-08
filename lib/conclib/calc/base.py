@@ -44,12 +44,11 @@ class GeneralWorker(object):
     def create_new_calc_status(self) -> CalcStatus:
         return CalcStatus(task_id=self._task_id)
 
-    def get_cached_conc_sizes(self, corp: manatee.Corpus, q: Tuple[str, ...] = None, cachefile: str = None) -> Dict[str, Any]:
+    def get_cached_conc_sizes(self, corp: manatee.Corpus, q: Tuple[str, ...] = None) -> Dict[str, Any]:
         """
         arguments:
         corp -- manatee.Corpus instance
         q -- a list containing preprocessed query
-        cachefile -- if not provided then the path is determined automatically
         using CACHE_ROOT_DIR and corpus name, corpus name and the query
 
         returns:
@@ -65,20 +64,21 @@ class GeneralWorker(object):
 
         if q is None:
             q = ()
-        ans = dict(finished=False, concsize=0, fullsize=0, relconcsize=0)
-        if not cachefile:  # AJAX call
-            subchash = getattr(corp, 'subchash', None)
-            cache_map = self._cache_factory.get_mapping(corp)
-            cachefile = cache_map.cache_file_path(subchash, q)
-            status = cache_map.get_calc_status(subchash, q)
-            if not status:
-                raise ConcCalculationStatusException('Concordance calculation not found', None)
-            status.test_error(TASK_TIME_LIMIT)
-            if status.error is not None:
-                raise ConcCalculationStatusException('Concordance calculation failed', status.error)
+        ans = dict(finished=False, concsize=0, fullsize=0, relconcsize=0, error=None)
+        subchash = getattr(corp, 'subchash', None)
+        cache_map = self._cache_factory.get_mapping(corp)
+        status = cache_map.get_calc_status(subchash, q)
+        if not status:
+            raise ConcCalculationStatusException('Concordance calculation not found', None)
+        status.test_error(TASK_TIME_LIMIT)
+        if status.error is not None:
+            raise ConcCalculationStatusException('Concordance calculation failed', status.error)
 
-        if cachefile and os.path.isfile(cachefile):
-            cache = open(cachefile, 'rb')
+        if status.error:
+            ans['finished'] = True
+            ans['error'] = status.error
+        elif status.cachefile and os.path.isfile(status.cachefile):
+            cache = open(status.cachefile, 'rb')
             cache.seek(15)
             finished = bool(ord(cache.read(1)))
             (fullsize,) = struct.unpack('q', cache.read(8))
@@ -91,7 +91,7 @@ class GeneralWorker(object):
                 relconcsize = 1000000.0 * concsize / corp.search_size()
 
             if finished and not is_subcorpus(corp):
-                conc = manatee.Concordance(corp, cachefile)
+                conc = manatee.Concordance(corp, status.cachefile)
                 result_arf = round(conc.compute_ARF(), 2)
             else:
                 result_arf = None

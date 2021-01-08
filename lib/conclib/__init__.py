@@ -221,7 +221,7 @@ def fcs_scan(corpname, scan_query, max_ter, start):
                 raise Exception
     except Exception:
         raise Exception(10, scan_query, 'Query syntax error')
-    if not attr in attrs:
+    if attr not in attrs:
         raise Exception(16, attr, 'Unsupported index')
     import corplib
     if exact_match:
