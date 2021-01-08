@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatelessModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
@@ -31,6 +31,7 @@ import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, Aj
 } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as UserInfoActions, ActionName as UserInfoActionName } from '../user/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { MultiDict } from '../../multidict';
 import { IPageLeaveVoter } from '../common/pageLeave';
 
@@ -92,7 +93,7 @@ export interface LineSelectionModelArgs {
  * - binary (checked/unchecked)
  * - categorical (0,1,2,3,4)
  */
-export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
+export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
         implements IPageLeaveVoter<LineSelectionModelState> {
 
     private readonly layoutModel:PageModel;
@@ -158,60 +159,66 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
 
         this.addActionHandler<Actions.SelectLines>(
             ActionName.SelectLine,
-            (state, action) => {
+            action => {
                 const val = action.payload.value;
-                if (this.validateGroupId(state, val)) {
-                    this.selectLine(
-                        state,
-                        val,
-                        action.payload.tokenNumber,
-                        action.payload.kwicLength
-                    );
+                this.changeState(state => {
+                    if (this.validateGroupId(state, val)) {
+                        this.selectLine(
+                            state,
+                            val,
+                            action.payload.tokenNumber,
+                            action.payload.kwicLength
+                        );
 
-                } else {
-                    this.layoutModel.showMessage('error',
-                            this.layoutModel.translate(
-                                'linesel__error_group_name_please_use{max_group}',
-                                {max_group: this.getState().maxGroupId}
-                            )
-                    );
-                }
+                    } else {
+                        this.layoutModel.showMessage('error',
+                                this.layoutModel.translate(
+                                    'linesel__error_group_name_please_use{max_group}',
+                                    {max_group: this.getState().maxGroupId}
+                                )
+                        );
+                    }
+                });
             }
         );
 
         this.addActionHandler<Actions.LineSelectionReset>(
             ActionName.LineSelectionReset,
-            (state, action) => {
-                this.clearSelection(state);
+            action => {
+                this.changeState(state => {
+                    this.clearSelection(state);
+                });
             }
         );
 
         this.addActionHandler<Actions.LineSelectionResetOnServerDone>(
             ActionName.LineSelectionResetOnServerDone,
-            (state, action) => {
+            action => {
                 if (!action.error) {
-                    state.isBusy = false;
+                    this.changeState(state => {
+                        state.isBusy = false;
+                    });
                 }
             }
         );
 
         this.addActionHandler<Actions.LineSelectionResetOnServer>(
             ActionName.LineSelectionResetOnServer,
-            (state, action) => {
-                state.isBusy = true;
-                state.currentGroupIds = [];
-                state.isLocked = false;
-                this.clStorage.clear(state, state.queryHash);
-            },
-            (state, action, dispatch) => {
-                this.resetServerLineGroups(state).subscribe(
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.currentGroupIds = [];
+                    state.isLocked = false;
+                    this.clStorage.clear(state, state.queryHash);
+                });
+                this.resetServerLineGroups(this.state).subscribe(
                     (args) => {
-                        dispatch<Actions.LineSelectionResetOnServerDone>({
+                        this.dispatchSideEffect<Actions.LineSelectionResetOnServerDone>({
                             name: ActionName.LineSelectionResetOnServerDone
                         });
                     },
                     (err) => {
-                        dispatch<Actions.LineSelectionResetOnServerDone>({
+                        this.dispatchSideEffect<Actions.LineSelectionResetOnServerDone>({
                             name: ActionName.LineSelectionResetOnServerDone,
                             error: err
                         });
@@ -223,81 +230,80 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
 
         this.addActionHandler<Actions.RemoveSelectedLines>(
             ActionName.RemoveSelectedLines,
-            null,
-            (state, action, dispatch) => {
+            action => {
                 // we leave the page here
-                this.removeLines(state, 'n');
+                this.removeLines(this.state, 'n');
             }
         );
 
         this.addActionHandler<Actions.RemoveNonSelectedLines>(
             ActionName.RemoveNonSelectedLines,
-            null,
-            (state, action, dispatch) => {
+            action => {
                  // we leave the page here
-                this.removeLines(state, 'p');
+                this.removeLines(this.state, 'p');
             }
         );
 
         this.addActionHandler<Actions.MarkLinesDone>(
             ActionName.MarkLinesDone,
-            (state, action) => {
-                state.isBusy = false;
-                if (!action.error) {
-                    state.currentGroupIds = action.payload.groupIds;
-                    state.isLocked = true;
-                }
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    if (!action.error) {
+                        state.currentGroupIds = action.payload.groupIds;
+                        state.isLocked = true;
+                    }
+                });
             }
         );
 
         this.addActionHandler<Actions.MarkLines>(
             ActionName.MarkLines,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
-                this.saveGroupsToServerConc(state).subscribe(
-                    (response) => {
-                        dispatch<Actions.MarkLinesDone>({
-                            name: ActionName.MarkLinesDone,
-                            payload: {
-                                data: response,
-                                groupIds: attachColorsToIds(
-                                    response.lines_groups_numbers,
-                                    v => v,
-                                    mapIdToIdWithColors
-                                )
-                            }
-                        });
-                    },
-                    (err) => {
-                        dispatch<Actions.MarkLinesDone>({
-                            name: ActionName.MarkLinesDone,
-                            error: err
-                        });
-                        this.layoutModel.showMessage('error', err);
-                    }
-                );
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    this.saveGroupsToServerConc(state).subscribe(
+                        (response) => {
+                            this.dispatchSideEffect<Actions.MarkLinesDone>({
+                                name: ActionName.MarkLinesDone,
+                                payload: {
+                                    data: response,
+                                    groupIds: attachColorsToIds(
+                                        response.lines_groups_numbers,
+                                        v => v,
+                                        mapIdToIdWithColors
+                                    )
+                                }
+                            });
+                        },
+                        (err) => {
+                            this.dispatchSideEffect<Actions.MarkLinesDone>({
+                                name: ActionName.MarkLinesDone,
+                                error: err
+                            });
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+                });
             }
         );
 
         this.addActionHandler<Actions.RemoveLinesNotInGroups>(
             ActionName.RemoveLinesNotInGroups,
-            null,
-            (state, action, dispatch) => {
+            action => {
                 this.removeNonGroupLines(); // we leave the page here ...
             }
         );
 
         this.addActionHandler<Actions.UnlockLineSelection>(
             ActionName.UnlockLineSelection,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
                 this.reenableEdit().subscribe(
                     (data:ReenableEditResponse) => {
-                        dispatch<Actions.UnlockLineSelectionDone>({
+                        this.dispatchSideEffect<Actions.UnlockLineSelectionDone>({
                             name: ActionName.UnlockLineSelectionDone,
                             payload: {
                                 selection: data.selection,
@@ -308,7 +314,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
 
                     },
                     (err) => {
-                        dispatch<Actions.UnlockLineSelectionDone>({
+                        this.dispatchSideEffect<Actions.UnlockLineSelectionDone>({
                             name: ActionName.UnlockLineSelectionDone,
                             error: err
                         });
@@ -320,38 +326,42 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
 
         this.addActionHandler<Actions.UnlockLineSelectionDone>(
             ActionName.UnlockLineSelectionDone,
-            (state, action) => {
-                state.isBusy = false;
-                state.isLocked = false;
-                LineSelectionModel.registerQuery(state, this.clStorage, action.payload.query);
-                this.importData(state, action.payload.selection, action.payload.mode);
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    state.isLocked = false;
+                    LineSelectionModel.registerQuery(state, this.clStorage, action.payload.query);
+                    this.importData(state, action.payload.selection, action.payload.mode);
+                });
             }
         );
 
         this.addActionHandler<Actions.RenameSelectionGroupDone>(
             ActionName.RenameSelectionGroupDone,
-            (state, action) => {
-                state.isBusy = false;
-                if (!action.error) {
-                    state.currentGroupIds = action.payload.lineGroupIds;
-                }
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    if (!action.error) {
+                        state.currentGroupIds = action.payload.lineGroupIds;
+                    }
+                });
             }
         );
 
         this.addActionHandler<Actions.RenameSelectionGroup>(
             ActionName.RenameSelectionGroup,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
                 this.renameLineGroup(
-                    state,
+                    this.state,
                     action.payload.srcGroupNum,
                     action.payload.dstGroupNum
 
                 ).subscribe(
                     (resp) => {
-                        dispatch<Actions.RenameSelectionGroupDone>({
+                        this.dispatchSideEffect<Actions.RenameSelectionGroupDone>({
                             name: ActionName.RenameSelectionGroupDone,
                             payload: {
                                 concId: resp.conc_persistence_op_id,
@@ -369,7 +379,7 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
                     },
                     (err) => {
                         this.layoutModel.showMessage('error', err);
-                        dispatch<Actions.RenameSelectionGroupDone>({
+                        this.dispatchSideEffect<Actions.RenameSelectionGroupDone>({
                             name: ActionName.RenameSelectionGroupDone,
                             error: err
                         });
@@ -381,41 +391,42 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
 
         this.addActionHandler<Actions.ChangePage>(
             ActionName.ChangePage,
-            null,
-            (state, action, dispatch) => {
-                dispatch<Actions.PublishStoredLineSelections>({
+            action => {
+                this.dispatchSideEffect<Actions.PublishStoredLineSelections>({
                     name: ActionName.PublishStoredLineSelections,
                     payload: {
-                        selections: state.data[state.queryHash] ?
-                            state.data[state.queryHash].selections : [],
-                        mode: state.data[state.queryHash] ?
-                            state.data[state.queryHash].mode : 'simple'
+                        selections: this.state.data[this.state.queryHash] ?
+                                this.state.data[this.state.queryHash].selections : [],
+                        mode: this.state.data[this.state.queryHash] ?
+                                this.state.data[this.state.queryHash].mode : 'simple'
                     }
-                })
+                });
             }
         );
 
         this.addActionHandler<Actions.SendLineSelectionToEmailDone>(
             ActionName.SendLineSelectionToEmailDone,
-            (state, action) => {
-                state.isBusy = false;
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                });
             }
         );
 
         this.addActionHandler<Actions.SendLineSelectionToEmail>(
             ActionName.SendLineSelectionToEmail,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
                 this.sendSelectionUrlToEmail(action.payload.email).subscribe(
                     (data) => {
-                        dispatch<Actions.SendLineSelectionToEmailDone>({
+                        this.dispatchSideEffect<Actions.SendLineSelectionToEmailDone>({
                             name: ActionName.SendLineSelectionToEmailDone
                         });
                     },
                     (err) => {
-                        dispatch<Actions.SendLineSelectionToEmailDone>({
+                        this.dispatchSideEffect<Actions.SendLineSelectionToEmailDone>({
                             name: ActionName.SendLineSelectionToEmailDone,
                             error: err
                         });
@@ -427,69 +438,88 @@ export class LineSelectionModel extends StatelessModel<LineSelectionModelState>
 
         this.addActionHandler<Actions.SortLineSelection>(
             ActionName.SortLineSelection,
-            null,
-            (state, action, dispatch) => {
+            action => {
                 this.sortLines(); // we leave the page here ...
             }
         );
 
         this.addActionHandler<Actions.SetLineSelectionMode>(
             ActionName.SetLineSelectionMode,
-            (state, action) => {
-                this.setMode(state, action.payload.mode);
+            action => {
+                this.changeState(state => {
+                    this.setMode(state, action.payload.mode);
+                });
             }
         );
 
         this.addActionHandler<UserInfoActions.UserInfoLoaded>(
             UserInfoActionName.UserInfoLoaded,
-            (state, action) => {
-                state.isBusy = false;
-                state.emailDialogCredentials = action.payload.data;
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    state.emailDialogCredentials = action.payload.data;
+                });
             }
         );
 
         this.addActionHandler<UserInfoActions.UserInfoRequested>(
             UserInfoActionName.UserInfoRequested,
-            (state, action) => {
-                state.isBusy = true;
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
             }
         );
 
         this.addActionHandler<Actions.ClearUserCredentials>(
             ActionName.ClearUserCredentials,
-            (state, action) => {
-                state.emailDialogCredentials = null;
+            action => {
+                this.changeState(state => {
+                    state.emailDialogCredentials = null;
+                });
             }
         );
 
         this.addActionHandler<Actions.SaveLineSelection>(
             ActionName.SaveLineSelection,
-            null,
-            (state, action, dispatcher) => {
-                this.clStorage.serialize(state.data);
+            action => {
+                this.clStorage.serialize(this.state.data);
             }
         );
 
         this.addActionHandler<Actions.ApplyStoredLineSelections>(
             ActionName.ApplyStoredLineSelections,
-            null,
-            (state, action, dispatch) => {
-                dispatch<Actions.ApplyStoredLineSelectionsDone>({
+            action => {
+                this.dispatchSideEffect<Actions.ApplyStoredLineSelectionsDone>({
                     name: ActionName.ApplyStoredLineSelectionsDone,
                     payload: {
-                        selections: state.data[state.queryHash] ?
-                            state.data[state.queryHash].selections : [],
-                        mode: state.data[state.queryHash] ?
-                            state.data[state.queryHash].mode : 'simple'
+                        selections: this.state.data[this.state.queryHash] ?
+                                this.state.data[this.state.queryHash].selections : [],
+                        mode: this.state.data[this.state.queryHash] ?
+                                this.state.data[this.state.queryHash].mode : 'simple'
                     }
-                })
+                });
             }
         );
 
         this.addActionHandler<Actions.ToggleLineGroupRenameForm>(
             ActionName.ToggleLineGroupRenameForm,
-            (state, action) => {
-                state.renameLabelDialogVisible = !state.renameLabelDialogVisible;
+            action => {
+                this.changeState(state => {
+                    state.renameLabelDialogVisible = !state.renameLabelDialogVisible;
+                });
+            }
+        );
+
+        this.addActionHandler<GlobalActions.ConcArgsUpdated>(
+            GlobalActionName.ConcArgsUpdated,
+            action => {
+                this.changeState(state => {
+                    state.lastCheckpointUrl = layoutModel.createActionUrl(
+                        'view',
+                        layoutModel.exportConcArgs().items()
+                    );
+                });
             }
         );
     }
