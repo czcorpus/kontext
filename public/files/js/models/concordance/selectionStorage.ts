@@ -136,10 +136,14 @@ export class ConcLinesStorage<T extends StorageUsingState> {
      * @param category category number
      */
     addLine(state:T, tokenId:number, kwiclen:number, category:number):void {
-        if (!List.some(([tokId,,]) => tokId === tokenId, this.actualData(state).selections)) {
+        const srchIdx = List.findIndex(([tokId,,]) => tokId === tokenId, this.actualData(state).selections);
+        if (srchIdx === -1) {
             state.data[state.queryHash].selections.push(tuple(tokenId, kwiclen, category));
-            this.writeEvents.next(new Date().getTime());
+
+        } else {
+            state.data[state.queryHash].selections[srchIdx] = tuple(tokenId, kwiclen, category);
         }
+        this.writeEvents.next(new Date().getTime());
     }
 
     removeLine(state:T, tokenId:number):void {
