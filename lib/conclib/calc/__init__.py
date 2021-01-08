@@ -266,17 +266,17 @@ class ConcCalculation(GeneralWorker):
                 while not conc.finished():
                     conc.save(cachefile + '.tmp', False, True)
                     os.rename(cachefile + '.tmp', cachefile)
-                    sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
+                    sizes = self.get_cached_conc_sizes(corpus_obj, query)
                     cache_map.update_calc_status(subchash, query, finished=sizes['finished'],
                                                  concsize=sizes['concsize'], fullsize=sizes['fullsize'],
                                                  relconcsize=sizes['relconcsize'], arf=None, task_id=self._task_id)
                     time.sleep(sleeptime)
                     sleeptime += 0.1
 
-                conc.save(cachefile + '.tmp') # whole
+                conc.save(cachefile + '.tmp')  # whole
                 os.rename(cachefile + '.tmp', cachefile)
                 os.chmod(cachefile, 0o664)
-                sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
+                sizes = self.get_cached_conc_sizes(corpus_obj, query)
                 cache_map.update_calc_status(subchash, query, finished=sizes['finished'],
                                              concsize=conc.size(), fullsize=sizes['fullsize'],
                                              relconcsize=sizes['relconcsize'],
