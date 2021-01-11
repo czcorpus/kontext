@@ -301,7 +301,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<Actions.AddedNewOperation>(
             ActionName.AddedNewOperation,
             action => {
-                if (!action.error) {
+                if (action.error) {
+                    this.changeState(state => {
+                        state.unfinishedCalculation = false;
+                    });
+
+                } else {
                     this.layoutModel.updateConcPersistenceId(action.payload.data.conc_persistence_op_id);
                     this.changeState(state => {
                         this.importData(state, action.payload.data);

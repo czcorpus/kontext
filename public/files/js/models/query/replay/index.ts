@@ -195,8 +195,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.addActionHandler<ConcActions.AddedNewOperation>(
             ConcActionName.AddedNewOperation,
             (state, action) => {
+                state.branchReplayIsRunning = false;
                 if (!action.error) {
-                    state.branchReplayIsRunning = false;
                     state.lastOperationKey = action.payload.data.conc_persistence_op_id;
                     state.currEncodedOperations = List.map(importEncodedOperation, action.payload.data.query_overview);
                     state.replayOperations = List.repeat(() => null, List.size(state.currEncodedOperations));
