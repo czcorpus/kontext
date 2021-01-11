@@ -22,7 +22,7 @@ from conclib.calc import require_existing_conc
 from bgcalc import freq_calc
 import settings
 from structures import FixedDict
-from bgcalc import UnfinishedConcordanceError
+from bgcalc.errors import UnfinishedConcordanceError
 from translation import ugettext as _
 import bgcalc
 

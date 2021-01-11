@@ -19,6 +19,7 @@ from rq.job import Job
 from rq.exceptions import NoSuchJobError
 from redis import Redis
 from rq_scheduler import Scheduler
+from .errors import CalcTaskNotFoundError, CalcBackendError
 import json
 
 
@@ -130,6 +131,15 @@ class RqClient:
             return ResultWrapper(job)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
+
+    def get_task_error(self, task_id):
+        try:
+            job = Job.fetch(task_id, connection=self.redis_conn)
+            if job.get_status() == 'failed':
+                return CalcBackendError(job.exc_info)
+        except NoSuchJobError as ex:
+            return CalcTaskNotFoundError(ex)
+        return None
 
     def AsyncResult(self, ident):
         try:

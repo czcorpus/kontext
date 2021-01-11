@@ -64,7 +64,10 @@ def del_silent(path: str):
         logging.getLogger(__name__).warning(f'del_silent problem: {ex} (file: {path}')
 
 
-def cancel_async_task(cache_map: AbstractConcCache, subchash: Optional[str], q: Tuple[str, ...]):
+def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str], q: Tuple[str, ...]):
+    """
+    Removes conc. cache entry and also a respective calculation task (silently).
+    """
     cachefile = cache_map.cache_file_path(subchash, q)
     status = cache_map.get_calc_status(subchash, q)
     if status:
@@ -205,7 +208,7 @@ def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tupl
                                       q=q[:i], minsize=minsize)
                 if not ready:
                     if minsize != 0:
-                        cancel_async_task(cache_map, subchash, q[:i])
+                        cancel_conc_task(cache_map, subchash, q[:i])
                         logging.getLogger(__name__).warning(
                             'Removed unfinished concordance cache record due to exceeded time limit')
                     continue
@@ -220,7 +223,7 @@ def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tupl
                     conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp)
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
                 logging.getLogger(__name__).error(f'Failed to use cached concordance for {q[:i]}: {ex}')
-                cancel_async_task(cache_map, subchash, q[:i])
+                cancel_conc_task(cache_map, subchash, q[:i])
                 continue
             ans = (i, conc)
             break
@@ -262,7 +265,7 @@ class ConcCalculation(GeneralWorker):
                 cachefile = initial_args['cachefile']
                 conc.save(cachefile, False, True)  # partial
                 os.chmod(cachefile, 0o664)
-                cache_map.update_calc_status(subchash, query, readable=True)
+                cache_map.update_calc_status(subchash, query, readable=True, task_id=self._task_id)
                 while not conc.finished():
                     conc.save(cachefile + '.tmp', False, True)
                     os.rename(cachefile + '.tmp', cachefile)
@@ -319,7 +322,8 @@ class ConcSyncCalculation(GeneralWorker):
         try:
             calc_from, conc = find_cached_conc_base(self.corpus_obj, subchash, query, minsize=0)
             if isinstance(conc, InitialConc):   # we have nothing, let's start with the 1st operation only
-                calc_status = self.cache_map.add_to_map(subchash, query[:1], CalcStatus(), overwrite=True)
+                calc_status = self.cache_map.add_to_map(subchash, query[:1], CalcStatus(task_id=self._task_id),
+                                                        overwrite=True)
                 conc = self.compute_conc(self.corpus_obj, query[:1], samplesize)
                 conc.sync()
                 conc.save(calc_status.cachefile)
@@ -337,7 +341,8 @@ class ConcSyncCalculation(GeneralWorker):
                 conc.exec_command(command, args)
                 if command in 'gae':  # user specific/volatile actions, cannot save
                     raise NotImplementedError(f'Cannot run command {command} in background')  # TODO
-                status = self.cache_map.add_to_map(subchash, query[:act + 1], CalcStatus(), overwrite=True)
+                status = self.cache_map.add_to_map(subchash, query[:act + 1], CalcStatus(task_id=self._task_id),
+                                                   overwrite=True)
                 conc.save(status.cachefile)
                 self.cache_map.update_calc_status(
                     subchash, query[:act + 1], readable=True, finished=True, concsize=conc.size())

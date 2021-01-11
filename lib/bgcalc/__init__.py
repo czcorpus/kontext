@@ -14,27 +14,10 @@
 
 
 from importlib.machinery import SourceFileLoader
+from .errors import CalcBackendInitError
 
 
 _backend_app = None
-
-
-class CalcBackendInitError(Exception):
-    pass
-
-
-class ExternalTaskError(Exception):
-    pass
-
-
-class UnfinishedConcordanceError(Exception):
-    """
-    This error is used whenever a concordance
-    used by some background calculation is
-    not completed yet (i.e. this applies only
-    in case asnc=1).
-    """
-    pass
 
 
 def _init_backend_app(conf, fn_prefix):

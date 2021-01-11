@@ -26,6 +26,7 @@ from main_menu import MainMenu
 from translation import ugettext as translate
 from controller.errors import UserActionException
 from bgcalc import freq_calc
+from bgcalc.errors import CalcBackendError
 import plugins
 import settings
 from argmapping import log_mapping
@@ -315,5 +316,5 @@ class Wordlist(ConcActions):
             for t in worker_tasks:
                 tr = app.AsyncResult(t)
                 if tr.status == 'FAILURE':
-                    raise bgcalc.ExternalTaskError('Task %s failed' % (t,))
+                    raise CalcBackendError('Task %s failed' % (t,))
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}
