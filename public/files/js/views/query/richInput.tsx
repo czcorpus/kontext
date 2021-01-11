@@ -76,13 +76,13 @@ export function init(
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
             this.contentEditable = new ContentEditable<HTMLSpanElement>(props.refObject);
             this.handlePaste = this.handlePaste.bind(this);
+            this.handleSelect = this.handleSelect.bind(this);
         }
 
 
         private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
-            const src = this.contentEditable.extractText(this.props.refObject.current);
-            const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection(src);
-            const query = src.map(v => v[0]).join('');
+            const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
+            const query = this.contentEditable.extractText();
 
             dispatcher.dispatch<Actions.QueryInputSetQuery>({
                 name: ActionName.QueryInputSetQuery,
@@ -124,6 +124,17 @@ export function init(
                             rawFocusIdx
                         }
                     });
+                },
+                (anchorIdx, focusIdx) => {
+                    dispatcher.dispatch<Actions.QueryInputSelectText>({
+                        name: ActionName.QueryInputSelectText,
+                        payload: {
+                            sourceId: this.props.sourceId,
+                            formType: this.props.formType,
+                            anchorIdx,
+                            focusIdx
+                        }
+                    });
                 }
             );
         }
@@ -143,8 +154,7 @@ export function init(
         private handleKeyUp(evt) {
             if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
                     evt.keyCode === Keyboard.Code.END) {
-                const src = this.contentEditable.extractText(this.props.refObject.current);
-                const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection(src);
+                const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
                     payload: {
@@ -187,8 +197,7 @@ export function init(
                 });
 
             } else if (this.props.refObject.current) {
-                const src = this.contentEditable.extractText(this.props.refObject.current);
-                const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection(src);
+                const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
                     payload: {
@@ -199,6 +208,19 @@ export function init(
                     }
                 });
             }
+        }
+
+        private handleSelect() {
+            const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
+            dispatcher.dispatch<Actions.QueryInputSelectText>({
+                name: ActionName.QueryInputSelectText,
+                payload: {
+                    sourceId: this.props.sourceId,
+                    formType: this.props.formType,
+                    anchorIdx,
+                    focusIdx
+                }
+            });
         }
 
         componentDidUpdate(prevProps:RichInputProps & QueryFormModelState, _:unknown) {
@@ -241,6 +263,7 @@ export function init(
                         onKeyUp={this.handleKeyUp}
                         onClick={this.handleClick}
                         onPaste={this.handlePaste}
+                        onSelect={this.handleSelect}
                         dangerouslySetInnerHTML={{__html: this.props.queries[this.props.sourceId].queryHtml}} />
             );
         }

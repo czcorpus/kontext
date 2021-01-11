@@ -137,13 +137,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             this.inputKeyUpHandler = this.inputKeyUpHandler.bind(this);
             this.inputKeyDownHandler = this.inputKeyDownHandler.bind(this);
             this.ffKeyDownHandler = this.ffKeyDownHandler.bind(this);
+            this.handleSelect = this.handleSelect.bind(this);
             this.contentEditable = new ContentEditable<HTMLPreElement>(this.props.inputRef);
         }
 
         private handleInputChange() {
-            const src = this.contentEditable.extractText(this.props.inputRef.current);
-            const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection(src);
-            const query = src.map(v => v[0]).join('');
+            const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
+            const query = this.contentEditable.extractText();
 
             dispatcher.dispatch<Actions.QueryInputSetQuery>({
                 name: ActionName.QueryInputSetQuery,
@@ -218,8 +218,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 }
 
             } else {
-                const src = this.contentEditable.extractText(this.props.inputRef.current);
-                const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection(src);
+                const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
                     payload: {
@@ -235,8 +234,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         private inputKeyUpHandler(evt:React.KeyboardEvent) {
             if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
                     evt.keyCode === Keyboard.Code.END) {
-                const src = this.contentEditable.extractText(this.props.inputRef.current);
-                const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection(src);
+                const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
                     payload: {
@@ -288,8 +286,32 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             rawFocusIdx
                         }
                     });
+                },
+                (anchorIdx, focusIdx) => {
+                    dispatcher.dispatch<Actions.QueryInputSelectText>({
+                        name: ActionName.QueryInputSelectText,
+                        payload: {
+                            sourceId: this.props.sourceId,
+                            formType: this.props.formType,
+                            anchorIdx,
+                            focusIdx
+                        }
+                    });
                 }
             );
+        }
+
+        private handleSelect() {
+            const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
+            dispatcher.dispatch<Actions.QueryInputSelectText>({
+                name: ActionName.QueryInputSelectText,
+                payload: {
+                    sourceId: this.props.sourceId,
+                    formType: this.props.formType,
+                    anchorIdx,
+                    focusIdx
+                }
+            });
         }
 
         componentDidUpdate(prevProps, prevState) {
@@ -339,7 +361,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 dangerouslySetInnerHTML={
                                     {__html: this.props.queries[this.props.sourceId].queryHtml || ''}}
                                 onKeyDown={this.inputKeyDownHandler}
-                                onKeyUp={this.inputKeyUpHandler} />
+                                onKeyUp={this.inputKeyUpHandler}
+                                onSelect={this.handleSelect} />
                     <div className="cql-editor-messages">
                         {
                             this.props.cqlEditorMessages[this.props.sourceId] ?

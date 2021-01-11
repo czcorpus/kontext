@@ -30,7 +30,7 @@ export class ContentEditable<T extends HTMLElement> {
         this.inputRef = inputRef;
     }
 
-    extractText(root:Node) {
+    private extractTextFromNode(root:Node) {
         const ans:Array<[string, Node]> = [];
         for (let i = 0; i < root.childNodes.length; i += 1) {
             const elm = root.childNodes[i];
@@ -39,16 +39,24 @@ export class ContentEditable<T extends HTMLElement> {
                     ans.push([elm.nodeValue, elm]);
                 break;
                 case Node.ELEMENT_NODE:
-                    ans.splice(ans.length, 0, ...this.extractText(elm));
+                    ans.splice(ans.length, 0, ...this.extractTextFromNode(elm));
                 break;
             }
         };
         return ans;
     }
 
+    extractTextElements():Array<[string, Node]> {
+        return this.extractTextFromNode(this.inputRef.current);
+    }
+
+    extractText():string {
+        return List.map(v => List.head(v), this.extractTextElements()).join('');
+    }
+
     reapplySelection(rawAnchorIdx:number, rawFocusIdx:number) {
         const sel = window.getSelection();
-        const src = this.extractText(this.inputRef.current);
+        const src = this.extractTextElements();
 
         const ans = List.foldl(
             (acc, [text, node]) => {
@@ -77,7 +85,8 @@ export class ContentEditable<T extends HTMLElement> {
         sel.setBaseAndExtent(ans.anchorNode, ans.anchorIdx, ans.focusNode, ans.focusIdx);
     }
 
-    getRawSelection(src:Array<[string, Node]>) {
+    getRawSelection() {
+        const src = this.extractTextElements();
         let rawAnchorIdx = 0;
         let rawFocusIdx = 0;
         let currIdx = 0;
@@ -106,14 +115,16 @@ export class ContentEditable<T extends HTMLElement> {
         onMoveCursor:(
             rawAnchorIdx:number,
             rawFocusIdx:number,
+        )=>void,
+        onTextSelect:(
+            rawAnchorIdx:number,
+            rawFocusIdx:number
         )=>void
     ) {
 
         if (evt.keyCode === Keyboard.Code.BACKSPACE || evt.keyCode === Keyboard.Code.DEL) {
-            const src = this.extractText(this.inputRef.current);
-            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
-            const rawSrc = src.map(v => v[0]).join('');
-
+            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection();
+            const rawSrc = this.extractText();
             if (rawAnchorIdx === rawFocusIdx) {
                 const query = evt.keyCode === Keyboard.Code.BACKSPACE ?
                         rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
@@ -146,9 +157,8 @@ export class ContentEditable<T extends HTMLElement> {
             evt.preventDefault();
 
         } else if (evt.keyCode === Keyboard.Code.ENTER && evt.shiftKey) {
-            const src = this.extractText(this.inputRef.current);
-            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
-            const query = src.map(v => v[0]).join('');
+            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection();
+            const query = this.extractText();
             onSetInput(
                     // We have to add a single whitespace here because otherwise FF cannot
                     // handle cursor position properly (normally it inserts its custom br
@@ -162,13 +172,16 @@ export class ContentEditable<T extends HTMLElement> {
             evt.preventDefault();
 
         } else if (evt.keyCode === Keyboard.Code.END) {
-            const src = this.extractText(this.inputRef.current);
-            const [anchorIdx, focusIdx] = this.getRawSelection(src);
-            const query = src.map(v => v[0]).join('');
+            const [anchorIdx, focusIdx] = this.getRawSelection();
+            const query = this.extractText();
             onMoveCursor(
                 anchorIdx === focusIdx ? query.length : anchorIdx,
                 query.length
             );
+            evt.preventDefault();
+
+        } else if (evt.key === 'a' && (evt.metaKey || evt.ctrlKey)) {
+            onTextSelect(0, this.extractText().length);
             evt.preventDefault();
         }
     }
