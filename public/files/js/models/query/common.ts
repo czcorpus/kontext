@@ -39,6 +39,7 @@ import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
 import { Actions as QueryHintsActions, ActionName as QueryHintsActionName } from '../usageTips/actions';
 import { AjaxResponse } from '../../types/ajaxResponses';
+import { Action } from 'rxjs/internal/scheduler/Action';
 
 /*
 Some important terms to prevent confusion:
@@ -769,6 +770,18 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     } else {
                         throw new Error('Cannot reset query expansion - invalid target query type');
                     }
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.QueryInputSelectText>(
+            ActionName.QueryInputSelectText,
+            action => action.payload.formType === this.formType,
+            action => {
+                this.changeState(state => {
+                    const queryObj = state.queries[action.payload.sourceId];
+                    queryObj.rawAnchorIdx = action.payload.anchorIdx;
+                    queryObj.rawFocusIdx = action.payload.focusIdx;
                 });
             }
         );
