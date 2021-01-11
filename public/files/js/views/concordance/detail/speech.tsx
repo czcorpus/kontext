@@ -24,30 +24,28 @@ import { IActionDispatcher, Bound } from 'kombo';
 import { Speech, ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
 import { Kontext } from '../../../types/common';
 import { Actions, ActionName } from '../../../models/concordance/actions';
-import { Color, pipe, List } from 'cnc-tskit';
+import { Color, pipe, List, Dict } from 'cnc-tskit';
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             concDetailModel:ConcDetailModel):React.ComponentClass<{}> {
 
-    function exportMetadata(data) {
-        if (data.size > 0) {
-            return data.map((val, attr) => `${attr}: ${val}`).join(', ');
+    function exportMetadata(data:{[k:string]:unknown}) {
+        if (!Dict.empty(data)) {
+            return pipe(
+                data,
+                Dict.toEntries(),
+                List.map(([attr, val]) => `${attr}: ${val}`)
+            ).join(', ');
 
         } else {
             return he.translate('concview__no_speech_metadata_available');
         }
     }
 
-    function renderSpeech(data, key) {
-        return data.map((item, i) => {
-            return <span key={`${key}-${i}`} className={item.class ? item.class : null}>{item.str + ' '}</span>;
-        });
-    }
-
     // ------------------------- <ExpandSpeechesButton /> ---------------------------
 
-    const ExpandSpeechesButton:React.SFC<{
+    const ExpandSpeechesButton:React.FC<{
         position:string;
         isWaiting:boolean;
 
@@ -237,7 +235,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------- <TRSingleSpeech /> ---------------------------
 
-    const TRSingleSpeech:React.SFC<{
+    const TRSingleSpeech:React.FC<{
         idx:number;
         speech:Speech;
         isPlaying:boolean;
@@ -273,7 +271,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------- <TROverlappingSpeeches /> ---------------------------
 
-    const TROverlappingSpeeches:React.SFC<{
+    const TROverlappingSpeeches:React.FC<{
         idx:number;
         speeches:Array<Speech>;
         isPlaying:boolean;
@@ -349,9 +347,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return this.props.isBusy && this.props.expandingSide === side;
         }
 
-        _canStartPlayback(speechPart) {
-            return speechPart.segments.size > 0
-                && speechPart.segments.find(v => !!v);
+        _canStartPlayback(speechPart:Speech) {
+            return !List.empty(speechPart.segments) && List.some(v => !!v, speechPart.segments);
         }
 
         _renderSpeechLines() {
@@ -360,22 +357,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     if (item.length === 1) {
                         return <TRSingleSpeech
                                     key={`sp-line-${i}`}
-                                    speech={item[0]}
+                                    speech={List.head(item)}
                                     idx={i}
-                                    handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
+                                    handlePlayClick={this._handlePlayClick.bind(this, List.head(item).segments, i)}
                                     handleStopClick={this._handleStopClick}
                                     isPlaying={this.props.playingRowIdx === i}
-                                    canStartPlayback={this._canStartPlayback(item[0])} />;
+                                    canStartPlayback={this._canStartPlayback(List.head(item))} />;
 
                     } else if (item.length > 1) {
                         return <TROverlappingSpeeches
                                     key={`sp-line-${i}`}
                                     speeches={item}
                                     idx={i}
-                                    handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
+                                    handlePlayClick={this._handlePlayClick.bind(this, List.head(item).segments, i)}
                                     handleStopClick={this._handleStopClick}
                                     isPlaying={this.props.playingRowIdx === i}
-                                    canStartPlayback={this._canStartPlayback(item[0])} />;
+                                    canStartPlayback={this._canStartPlayback(List.head(item))} />;
 
                     } else {
                         return null;
