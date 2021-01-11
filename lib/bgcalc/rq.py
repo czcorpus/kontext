@@ -126,7 +126,7 @@ class RqClient:
         """
         time_limit = self._resolve_limit(time_limit, soft_time_limit)
         try:
-            job = self.queue.enqueue(f'{self.prefix}.{name}', job_timeoutx=time_limit, args=args)
+            job = self.queue.enqueue(f'{self.prefix}.{name}', job_timeout=time_limit, args=args)
             return ResultWrapper(job)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
