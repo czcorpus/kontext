@@ -118,11 +118,11 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def cache_file_path(self, subchash: str, q: QueryType) -> Optional[str]:
+    def readable_cache_path(self, subchash: str, q: QueryType) -> Optional[str]:
         """
         Return a path to a cache file matching provided subcorpus hash and query
-        elements. If there is no entry matching (subchash, q) then None must be
-        returned.
+        elements. If there is no entry matching (subchash, q) or if a respective
+        entry is not in the 'readable' state then None must be returned.
 
         arguments:
         subchash -- hashed subcorpus identifier (corplib.CorpusManager does this)

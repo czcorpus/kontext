@@ -54,9 +54,9 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
+        return PyConc(corp, 'l', cache_map.readable_cache_path(subchash, q))
     else:
-        return InitialConc(corp, cache_map.cache_file_path(subchash, q))
+        return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
 def _get_bg_conc(corp: manatee.Corpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
@@ -85,10 +85,10 @@ def _get_bg_conc(corp: manatee.Corpus, user_id: int, q: Tuple[str, ...], subchas
     # is ready in a few seconds - let's try this:
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
+        return PyConc(corp, 'l', cache_map.readable_cache_path(subchash, q))
     else:
         # return empty yet unfinished concordance to make the client watch the calculation
-        return InitialConc(corp, cache_map.cache_file_path(subchash, q))
+        return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
 def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
