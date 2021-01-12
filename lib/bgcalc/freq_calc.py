@@ -29,8 +29,7 @@ import corplib
 from conclib.calc import require_existing_conc
 import settings
 import bgcalc
-from bgcalc import UnfinishedConcordanceError
-from bgcalc.celery import is_celery_user_error
+from bgcalc.errors import UnfinishedConcordanceError
 from translation import ugettext as _
 from controller.errors import UserActionException
 
@@ -417,7 +416,7 @@ def calculate_freqs_ct(args):
                             time_limit=TASK_TIME_LIMIT)
         calc_result = res.get()
     except Exception as ex:
-        if is_celery_user_error(ex):
+        if app.is_wrapped_user_error(ex):
             raise UserActionException(str(ex)) from ex
         else:
             raise ex

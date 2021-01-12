@@ -66,6 +66,10 @@ def _get_bg_conc(corp: manatee.Corpus, user_id: int, q: Tuple[str, ...], subchas
     calc_from - from which operation idx (inclusive) we have to calculate respective results
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+
+    status = cache_map.get_calc_status(subchash, q)
+    if status and not status.finished:  # the calc is already running, the client has to wait and check regularly
+        return InitialConc(corp, status.cachefile)
     # let's create cache records of the operations we'll have to perform
     if calc_from < len(q):
         for i in range(calc_from, len(q)):

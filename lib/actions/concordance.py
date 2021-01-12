@@ -24,7 +24,7 @@ from typing import Dict, Any, List, Union
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
-from controller.errors import UserActionException, BackgroundCalculationException, ImmediateRedirectException
+from controller.errors import UserActionException, ImmediateRedirectException, NotFoundException
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
                               KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
@@ -35,10 +35,10 @@ import settings
 import conclib
 from conclib.empty import InitialConc
 from conclib.search import get_conc
-from conclib.calc.base import GeneralWorker
-from conclib.calc import cancel_async_task, require_existing_conc, ConcNotFoundException
+from conclib.calc import cancel_conc_task, require_existing_conc, ConcNotFoundException
 import corplib
-from bgcalc import freq_calc, coll_calc
+from bgcalc import freq_calc, coll_calc, calc_backend_client
+from bgcalc.errors import CalcTaskNotFoundError
 import plugins
 from kwiclib import Kwic, KwicPageArgs
 from l10n import corpus_get_conf
@@ -390,16 +390,34 @@ class Actions(Querying):
         return out
 
     @exposed(return_type='json')
-    def get_cached_conc_sizes(self, _):
+    def get_conc_cache_status(self, _):
         self._headers['Content-Type'] = 'text/plain'
+        cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(self.corp)
+        q = tuple(self.args.q)
+        subchash = getattr(self.corp, 'subchash', None)
         try:
-            return GeneralWorker().get_cached_conc_sizes(corp=self.corp, q=self.args.q)
+            cache_status = cache_map.get_calc_status(subchash, q)
+            if cache_status is None:  # conc is not cached nor calculated
+                raise NotFoundException('Concordance calculation is lost')
+            elif not cache_status.finished and cache_status.task_id:
+                # we must also test directly a respective task as might have been killed
+                # and thus failed to store info to cache metadata
+                app = calc_backend_client(settings)
+                err = app.get_task_error(cache_status.task_id)
+                if err is not None:
+                    raise err
+            return dict(
+                finished=cache_status.finished,
+                concsize=cache_status.concsize,
+                fullsize=cache_status.fullsize,
+                relconcsize=cache_status.relconcsize,
+                arf=cache_status.arf)
+        except CalcTaskNotFoundError as ex:
+            cancel_conc_task(cache_map, subchash, q)
+            raise NotFoundException(f'Concordance calculation is lost: {ex}')
         except Exception as ex:
-            cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(self.corp)
-            q = tuple(self.args.q)
-            subchash = getattr(self.corp, 'subchash', None)
-            cancel_async_task(cache_map, subchash, q)
-            raise BackgroundCalculationException(str(ex))
+            cancel_conc_task(cache_map, subchash, q)
+            raise ex
 
     def get_conc_sizes(self, conc):
         i = 1

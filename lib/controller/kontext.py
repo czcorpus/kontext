@@ -23,7 +23,6 @@ from werkzeug.datastructures import MultiDict
 import attr
 from functools import partial
 
-import json
 import logging
 import inspect
 import os.path
@@ -46,7 +45,7 @@ from l10n import corpus_get_conf
 from translation import ugettext as translate
 import scheduled
 import fallback_corpus
-from argmapping import ConcArgsMapping, Persistence, Args
+from argmapping import ConcArgsMapping, Args
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from .plg import PluginApi
 from templating import DummyGlobals

@@ -90,7 +90,7 @@ export class HitReloader {
                     (interval) => zip(
                         this.layoutModel.ajax$<AjaxResponse.ConcStatus>(
                             HTTP.Method.GET,
-                            this.layoutModel.createActionUrl('get_cached_conc_sizes'),
+                            this.layoutModel.createActionUrl('get_conc_cache_status'),
                             this.layoutModel.exportConcArgs()
                         ),
                         rxOf(interval)

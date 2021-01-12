@@ -19,6 +19,8 @@ from rq.job import Job
 from rq.exceptions import NoSuchJobError
 from redis import Redis
 from rq_scheduler import Scheduler
+from .errors import CalcTaskNotFoundError, CalcBackendError
+from controller.errors import UserActionException
 import json
 
 
@@ -116,6 +118,10 @@ class RqClient:
             return hardl
         return None
 
+    @property
+    def app_impl(self):
+        return self.queue
+
     def send_task(self, name, args=None, time_limit=None, soft_time_limit=None):
         """
         Send a task to the worker.
@@ -131,9 +137,21 @@ class RqClient:
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
 
+    def get_task_error(self, task_id):
+        try:
+            job = Job.fetch(task_id, connection=self.redis_conn)
+            if job.get_status() == 'failed':
+                return CalcBackendError(job.exc_info)
+        except NoSuchJobError as ex:
+            return CalcTaskNotFoundError(ex)
+        return None
+
     def AsyncResult(self, ident):
         try:
             return ResultWrapper(Job.fetch(ident, connection=self.redis_conn))
         except NoSuchJobError:
             logging.getLogger(__name__).warning(f'Job {ident} not found')
             return None
+
+    def is_wrapped_user_error(self, err):
+        return isinstance(err, UserActionException)
