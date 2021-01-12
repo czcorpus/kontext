@@ -469,10 +469,12 @@ class Kontext(Controller):
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
                 prev = dict(id=ans[-1], lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
+                            corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
                             user_id=self.session_get('user', 'id'))
                 curr = dict(lines_groups=lines_groups,
-                            q=getattr(self.args, 'q')[:q_idx + 1], lastop_form=op.to_dict(),
-                            user_id=self.session_get('user', 'id'))
+                            q=getattr(self.args, 'q')[:q_idx + 1],
+                            corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
+                            lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
                 ans.append(cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
             return ans
 
