@@ -322,14 +322,20 @@ class ConcSyncCalculation(GeneralWorker):
         try:
             calc_from, conc = find_cached_conc_base(self.corpus_obj, subchash, query, minsize=0)
             if isinstance(conc, InitialConc):   # we have nothing, let's start with the 1st operation only
-                calc_status = self.cache_map.add_to_map(subchash, query[:1], CalcStatus(task_id=self._task_id),
-                                                        overwrite=True)
+                for i in range(0, len(query)):
+                    self.cache_map.add_to_map(subchash, query[:i + 1], CalcStatus(task_id=self._task_id),
+                                              overwrite=True)
+                calc_status = self.cache_map.get_calc_status(subchash, query[:1])
                 conc = self.compute_conc(self.corpus_obj, query[:1], samplesize)
                 conc.sync()
                 conc.save(calc_status.cachefile)
                 self.cache_map.update_calc_status(
                     subchash, query[:1], readable=True, finished=True, concsize=conc.size())
                 calc_from = 1
+            else:
+                for i in range(calc_from, len(query)):
+                    self.cache_map.add_to_map(subchash, query[:i + 1], CalcStatus(task_id=self._task_id),
+                                              overwrite=True)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
             self._mark_calc_states_err(subchash, query, 0, ex)
@@ -341,9 +347,8 @@ class ConcSyncCalculation(GeneralWorker):
                 conc.exec_command(command, args)
                 if command in 'gae':  # user specific/volatile actions, cannot save
                     raise NotImplementedError(f'Cannot run command {command} in background')  # TODO
-                status = self.cache_map.add_to_map(subchash, query[:act + 1], CalcStatus(task_id=self._task_id),
-                                                   overwrite=True)
-                conc.save(status.cachefile)
+                calc_status = self.cache_map.get_calc_status(subchash, query[:act + 1])
+                conc.save(calc_status.cachefile)
                 self.cache_map.update_calc_status(
                     subchash, query[:act + 1], readable=True, finished=True, concsize=conc.size())
             except Exception as ex:
