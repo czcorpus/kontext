@@ -20,6 +20,7 @@ from rq.exceptions import NoSuchJobError
 from redis import Redis
 from rq_scheduler import Scheduler
 from .errors import CalcTaskNotFoundError, CalcBackendError
+from controller.errors import UserActionException
 import json
 
 
@@ -151,3 +152,6 @@ class RqClient:
         except NoSuchJobError:
             logging.getLogger(__name__).warning(f'Job {ident} not found')
             return None
+
+    def is_wrapped_user_error(self, err):
+        return isinstance(err, UserActionException)

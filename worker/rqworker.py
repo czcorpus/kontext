@@ -22,9 +22,10 @@ import sys
 from rq import Connection, Worker, get_current_job
 import redis
 
-APP_PATH = os.path.realpath('%s/..' % os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, '%s/lib' % APP_PATH)
-sys.path.insert(0, '%s/worker' % APP_PATH)
+APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
+sys.path.insert(0, os.path.join(APP_PATH, 'lib'))
+sys.path.insert(0, os.path.join(APP_PATH, 'worker'))
+
 import settings
 import plugins
 
