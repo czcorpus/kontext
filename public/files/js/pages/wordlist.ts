@@ -59,7 +59,7 @@ export class WordlistPage {
 
     private wordlistViews:WordlistFormExportViews;
 
-    static MAX_NUM_NO_CHANGE = 30;
+    static MAX_NUM_NO_CHANGE = 100;
 
     static MAX_NUM_STATUS_CHECK = 300;
 
