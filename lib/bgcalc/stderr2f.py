@@ -16,6 +16,10 @@ c_stderr = ctypes.c_void_p.in_dll(libc, 'stderr')
 
 @contextmanager
 def stderr_redirector(stream):
+    """
+    This is for Celery backend as it makes it quite complicated to obtain
+    stderr output in a normal way
+    """
     original_stderr_fd = 2
 
     def _redirect_stderr(to_fd):
@@ -39,3 +43,17 @@ def stderr_redirector(stream):
     finally:
         tfile.close()
         os.close(saved_stderr_fd)
+
+
+@contextmanager
+def dummy_redirector(stream):
+    yield stream
+
+
+def get_stderr_redirector(conf):
+    app_type = conf.get('calc_backend', 'type')
+    if app_type == 'celery':
+        return stderr_redirector
+    elif app_type == 'rq':
+        return dummy_redirector
+    raise Exception('No such calc backend: {}'.format(app_type))  # TODO more explicit exception
