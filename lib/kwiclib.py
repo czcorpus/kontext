@@ -197,6 +197,8 @@ class KwicPageArgs(object):
             return int(v)
         elif t is float:
             return float(v)
+        elif t is str:
+            return v if v is not None else ''
         else:
             return v
 
