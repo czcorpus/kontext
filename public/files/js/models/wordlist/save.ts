@@ -115,10 +115,12 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
         this.addActionHandler<Actions.WordlistSaveFormSubmit>(
             ActionName.WordlistSaveFormSubmit,
             (state, action) => {
-
+                const err = this.validateForm(state);
+                if (!err) {
+                    state.formIsActive = false;
+                }
             },
             (state, action, dispatch) => {
-                const err = this.validateForm(state);
                 this.suspend({}, (action, syncData) => {
                     if (action.name === ActionName.WordlistFormSubmitReady) {
                         return null;
