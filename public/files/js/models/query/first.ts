@@ -22,7 +22,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
-import { tap, map, concatMap, catchError, timestamp } from 'rxjs/operators';
+import { tap, map, concatMap } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
 import { Kontext, TextTypes } from '../../types/common';
@@ -40,7 +40,6 @@ import { PluginInterfaces } from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery,
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
-import { AjaxError } from 'rxjs/ajax';
 import { ajaxErrorMapped } from '../../app/navigation';
 
 
