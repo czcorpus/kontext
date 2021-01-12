@@ -21,6 +21,7 @@ import hashlib
 import corplib
 from actions.concordance import Actions as ConcActions
 from controller import exposed
+from controller.errors import ImmediateRedirectException
 from main_menu import MainMenu
 from translation import ugettext as translate
 from controller.errors import UserActionException
@@ -225,10 +226,15 @@ class Wordlist(ConcActions):
             return result
 
     @exposed(template='freqs.html', page_model='freq', http_method='POST', mutates_conc=True)
-    def struct_result(self, _):
+    def struct_result(self, request):
+        self.args.corpname = request.form.get('corpname')
+        self.args.usesubcorp = request.form.get('usesubcorp')
         if self.args.fcrit:
             self._make_wl_query()
-            return self.freqs(self.args.fcrit, self.args.flimit, self.args.freq_sort, 1)
+            args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
+                    ('fcrit', self.args.fcrit), ('flimit', self.args.flimit),
+                    ('freq_sort', self.args.freq_sort)] + [('q', q) for q in self.args.q]
+            raise ImmediateRedirectException(self.create_url('freqs', args))
 
         if '.' in self.args.wlattr:
             raise WordlistError('Text types are limited to Simple output')
@@ -246,9 +252,10 @@ class Wordlist(ConcActions):
                 translate('You must specify either a pattern or a file to get the multilevel wordlist'))
         self._make_wl_query()
         self.args.flimit = self.args.wlminfreq
-        return self.freqml(flimit=self.args.wlminfreq, freqlevel=level,
-                           ml1attr=self.args.wlposattr1, ml2attr=self.args.wlposattr2,
-                           ml3attr=self.args.wlposattr3)
+        args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
+                ('flimit', self.args.wlminfreq), ('freqlevel', level), ('ml1attr', self.args.wlposattr1),
+                ('ml2attr', self.args.wlposattr2), ('ml3attr', self.args.wlposattr3)] + [('q', q) for q in self.args.q]
+        raise ImmediateRedirectException(self.create_url('freqml', args))
 
     @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savewl.html', return_type='plain')
     def savewl(self, from_line=1, to_line='', usesubcorp='', saveformat='text', colheaders=0, heading=0):

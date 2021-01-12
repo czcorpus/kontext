@@ -769,7 +769,7 @@ class Actions(Querying):
         self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
         return self.view(request)
 
-    @exposed()
+    @exposed(mutates_conc=True)
     def restore_conc(self, request):
         out = self._create_empty_conc_result_dict()
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
@@ -803,6 +803,15 @@ class Actions(Querying):
                         'ml': request.args.get('ml'),
                         'line_offset': request.args.get('line_offset'),
                         'force_cache': request.args.get('force_cache', '0')}
+                elif request.args.get('next') == 'freqml':
+                    out['next_action'] = 'freqml'
+                    out['next_action_args'] = {
+                        'flimit': request.args.get('flimit'),
+                        'freqlevel': request.args.get('freqlevel'),
+                        'ml1attr': request.args.get('ml1attr'),
+                        'ml2attr': request.args.get('ml2attr'),
+                        'ml3attr': request.args.get('ml3attr')
+                    }
                 elif request.args.get('next') == 'collx':
                     out['next_action'] = 'collx'
                     out['next_action_args'] = {
@@ -1101,6 +1110,14 @@ class Actions(Querying):
 
     @exposed(access_level=0, template='freqs.html', page_model='freq', accept_kwargs=True, func_arg_mapped=True)
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
+        try:
+            require_existing_conc(self.corp, self.args.q)
+            return self._freqml(flimit, freqlevel, **kwargs)
+        except ConcNotFoundException:
+            args = list(self._request.args.items()) + [('next', 'freqml')]
+            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+
+    def _freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
         """
