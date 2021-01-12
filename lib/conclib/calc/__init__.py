@@ -68,7 +68,7 @@ def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str], q: T
     """
     Removes conc. cache entry and also a respective calculation task (silently).
     """
-    cachefile = cache_map.cache_file_path(subchash, q)
+    cachefile = cache_map.readable_cache_path(subchash, q)
     status = cache_map.get_calc_status(subchash, q)
     if status:
         try:
@@ -200,7 +200,7 @@ def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tupl
     # try to find the most complete cached operation
     # (e.g. query + filter + sample)
     for i in range(srch_from, 0, -1):
-        cache_path = cache_map.cache_file_path(subchash, q[:i])
+        cache_path = cache_map.readable_cache_path(subchash, q[:i])
         # now we know that someone already calculated the conc (but it might not be finished yet)
         if cache_path:
             try:

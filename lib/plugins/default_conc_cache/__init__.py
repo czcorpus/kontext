@@ -111,7 +111,7 @@ class DefaultCacheMapping(AbstractConcCache):
     def _create_cache_file_path(self, subchash: Optional[str], q: Tuple[str, ...]) -> str:
         return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), _uniqname(subchash, q)))
 
-    def cache_file_path(self, subchash, q) -> Optional[str]:
+    def readable_cache_path(self, subchash, q) -> Optional[str]:
         val = self._get_entry(subchash, q)
         return val.cachefile if val and val.readable else None
 
