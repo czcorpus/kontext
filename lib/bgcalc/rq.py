@@ -117,6 +117,10 @@ class RqClient:
             return hardl
         return None
 
+    @property
+    def app_impl(self):
+        return self.queue
+
     def send_task(self, name, args=None, time_limit=None, soft_time_limit=None):
         """
         Send a task to the worker.

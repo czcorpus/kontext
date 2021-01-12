@@ -12,6 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from celery import Celery
+
 
 class Config(object):
     broker_url = None
@@ -20,6 +22,25 @@ class Config(object):
     result_serializer = 'json'
     accept_content = ['json']
     timezone = None
+
+
+class CeleryClient:
+
+    def __init__(self, app: Celery):
+        self._app = app
+
+    @property
+    def app_impl(self):
+        return self._app
+
+    def send_task(self, name, args=None, time_limit=None, soft_time_limit=None, **kw):
+        return self._app.send_task(name, args, time_limit, soft_time_limit, **kw)
+
+    def get_task_error(self, task_id):
+        return None
+
+    def AsyncResult(self, ident):
+        return self._app.AsyncResult(ident)
 
 
 def is_celery_error(err):

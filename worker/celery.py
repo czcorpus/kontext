@@ -33,8 +33,8 @@ import os
 import sys
 import pickle
 
-APP_PATH = os.path.realpath('%s/..' % os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, '%s/lib' % APP_PATH)
+APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
+sys.path.insert(0, f'{APP_PATH}/lib')
 import settings
 import plugins
 
@@ -42,10 +42,10 @@ settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
-from . import general
+from worker import general
 import bgcalc
 
-app = bgcalc.calc_backend_server(settings, '')
+app = bgcalc.calc_backend_server(settings, '').app_impl
 
 
 class CustomTasks(object):

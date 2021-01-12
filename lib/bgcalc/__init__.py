@@ -24,7 +24,7 @@ def _init_backend_app(conf, fn_prefix):
     app_type = conf.get('calc_backend', 'type')
     app_conf = conf.get('calc_backend', 'conf')
     if app_type == 'celery':
-        from bgcalc.celery import Config
+        from bgcalc.celery import Config, CeleryClient
         import celery
 
         if app_conf:
@@ -39,7 +39,7 @@ def _init_backend_app(conf, fn_prefix):
             cconf.timezone = conf.get('calc_backend', 'celery_timezone')
         app = celery.Celery('bgcalc')
         app.config_from_object(cconf)
-        return app
+        return CeleryClient(app)
     elif app_type == 'rq':
         from bgcalc.rq import RqClient, RqConfig
         rqconf = RqConfig()
