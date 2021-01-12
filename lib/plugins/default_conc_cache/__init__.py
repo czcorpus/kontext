@@ -38,7 +38,7 @@ import logging
 import manatee
 
 import plugins
-from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus, CalcStatusException
+from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus
 from plugins import inject
 from plugins.abstract.general_storage import KeyValueStorage
 

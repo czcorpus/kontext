@@ -25,12 +25,11 @@ the instance of AbstractConcCache is request-dependent.
 """
 
 import abc
-from typing import Dict, Any, List, Optional, Union, Tuple
+from typing import Dict, Any, Optional, Union, Tuple
 from manatee import Corpus
 
 import os
 import time
-import math
 
 QueryType = Tuple[str, ...]
 
