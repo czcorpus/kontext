@@ -383,11 +383,8 @@ class Controller(object):
         def convert_val(x):
             return x.encode('utf-8') if isinstance(x, str) else str(x)
 
-        if isinstance(params, dict):
-            params_str = '&'.join(f'{k}={quote(convert_val(v))}' for k, v in params.items())
-        else:
-            params_str = '&'.join(f'{k}={quote(convert_val(v))}' for k, v in params)
-
+        fparams = params.items() if isinstance(params, dict) else params
+        params_str = '&'.join(f'{k}={quote(convert_val(v))}' for k, v in fparams if v is not None)
         if len(params_str) > 0:
             return f'{root}{action}?{params_str}'
         else:
