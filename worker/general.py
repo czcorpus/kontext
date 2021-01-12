@@ -34,12 +34,12 @@ import imp
 import sys
 import time
 
-APP_PATH = os.path.realpath('%s/..' % os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, '%s/../lib' % APP_PATH)
+APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
+sys.path.insert(0, f'{APP_PATH}/../lib')
 import settings
 import initializer
 import translation
-from bgcalc.stderr2f import stderr_redirector
+from bgcalc.stderr2f import get_stderr_redirector
 
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
@@ -66,6 +66,8 @@ translation.activate('en_US')  # background jobs do not need localization
 import conclib.calc
 import conclib.calc.base
 from bgcalc import (freq_calc, subc_calc, coll_calc)
+
+stderr_redirector = get_stderr_redirector(settings)
 
 
 def load_script_module(name, path):
@@ -268,7 +270,7 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
         base_path = freq_calc.corp_freqs_cache_path(corp, attr)
-        frq_data_file = '%s.frq' % base_path
+        frq_data_file = f'{base_path}.frq'
         while num_wait > 0 and freq_calc.calc_is_running(base_path, 'frq'):
             if os.path.isfile(frq_data_file):
                 break
@@ -281,8 +283,11 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
         with open(logfile, 'a') as f:
             f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'arf already compiled'}
-    with stderr_redirector(open(logfile, 'a')):
-        corp.compile_arf(attr)
+    else:
+        with stderr_redirector(open(logfile, 'a')):
+            corp.compile_arf(attr)
+            with open(logfile, 'a') as f:
+                f.write('\n100 %\n')
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
@@ -301,9 +306,11 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
         doc = corp.get_struct(doc_struct)
         with stderr_redirector(open(logfile, 'a')):
             corp.compile_docf(attr, doc.name)
+            with open(logfile, 'a') as f:
+                f.write('\n100 %\n')
         return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
     except manatee.AttrNotFound:
-        raise WorkerTaskException('Failed to compile docf: attribute %s.%s not found in %s' % (
+        raise WorkerTaskException('Failed to compile docf: attribute {}.{} not found in {}'.format(
                                   doc_struct, attr, corp_id))
 
 
