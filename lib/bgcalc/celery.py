@@ -33,8 +33,8 @@ class CeleryClient:
     def app_impl(self):
         return self._app
 
-    def send_task(self, name, args=None, time_limit=None, soft_time_limit=None, **kw):
-        return self._app.send_task(name, args, time_limit, soft_time_limit, **kw)
+    def send_task(self, name, args=None, time_limit=None, soft_time_limit=None):
+        return self._app.send_task(name=name, args=args, time_limit=time_limit, soft_time_limit=soft_time_limit)
 
     def get_task_error(self, task_id):
         return None
