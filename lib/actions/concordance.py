@@ -344,18 +344,6 @@ class Actions(Querying):
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.VIEW('kwic-sentence'))
         out = {}
-
-        if len(self.get_available_aligned_corpora()) == 1:
-            self.args.align = []
-        else:
-            self.args.align = [
-                ac for ac in self.args.align if ac in self.get_available_aligned_corpora()]
-
-        if self.args.corpname in self.args.align:
-            self.args.align = list(set(self.args.align).difference(set([self.args.corpname])))
-            self.redirect(self.create_url('query', [('corpname', self.args.corpname)] +
-                                          [('align', a) for a in self.args.align]))
-
         out['aligned_corpora'] = self.args.align
         tt_data = self.tt.export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
@@ -371,11 +359,16 @@ class Actions(Querying):
         with plugins.runtime.QUERY_STORAGE as qs:
             qdata = qs.find_by_qkey(last_op)
             if qdata is not None:
+                prev_corpora = qdata.get('corpora', [])
+                curr_corpora = [self.args.corpname] + self.args.align
+                if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
+                    raise ImmediateRedirectException(self.create_url('query',
+                        [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
                 try:
                     qf_args.apply_last_used_opts(
                         data=qdata.get('lastop_form', {}),
-                        prev_corpora=qdata.get('corpora', []),
-                        curr_corpora=[self.args.corpname] + self.args.align,
+                        prev_corpora=prev_corpora,
+                        curr_corpora=curr_corpora,
                         curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
                 except Exception as ex:
                     logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
