@@ -66,7 +66,7 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
             ),
             mainCorp: concArgs.has('maincorp') ?
                 concArgs.head('maincorp') :
-                concArgs.head('corpname'),
+                pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
             rendererMap: this.selectRenderer.bind(this),
             concLinesProvider,
             loadChunkSize,

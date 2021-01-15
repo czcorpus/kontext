@@ -460,9 +460,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     exportConcArgs():MultiDict<ConcServerArgs> {
         const args = this.getConcArgs();
         return new MultiDict([
-            tuple('corpname', args.corpname),
             tuple('maincorp', args.maincorp),
-            tuple('align', args.align),
             tuple('viewmode', args.viewmode),
             tuple('format', args.format),
             tuple('pagesize', args.pagesize),
@@ -472,16 +470,14 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             tuple('ctxattrs', args.ctxattrs),
             tuple('structs', args.structs),
             tuple('refs', args.refs),
-            tuple('q', args.q),
-            tuple('fromp', args.fromp)
+            tuple('fromp', args.fromp),
+            tuple('q', args.q)
         ]);
     }
 
     getConcArgs():ConcServerArgs {
         return {
-            corpname: '',
             maincorp: undefined,
-            align: undefined,
             viewmode: 'kwic',
             format: undefined,
             pagesize: 0,
@@ -491,8 +487,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             ctxattrs: undefined,
             structs: undefined,
             refs: undefined,
-            q: undefined,
             fromp: undefined,
+            q: undefined,
             ...this.getConf<ConcServerArgs>('currentArgs')
         };
     }

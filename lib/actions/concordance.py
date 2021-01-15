@@ -117,8 +117,6 @@ class Actions(Querying):
         super().add_globals(result, methodname, action_metadata)
         conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
         conc_args.set('q', [q for q in result.get('Q')])
-        if corplib.is_subcorpus(self.corp):
-            conc_args.set('usesubcorp', self.corp.subcname)
         args = {}
         result['Globals'] = conc_args.update(args)
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
@@ -619,7 +617,6 @@ class Actions(Querying):
                       data.fc_pos_type)
 
         for al_corpname in corpora[1:]:
-            self.args.align.append(al_corpname)
             if al_corpname in nopq and not int(data.curr_include_empty_values[al_corpname]):
                 self.args.q.append('X%s' % al_corpname)
         if len(corpora) > 1:
