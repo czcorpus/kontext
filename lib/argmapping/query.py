@@ -163,13 +163,19 @@ class QueryFormArgs(ConcFormArgs):
         for corp in corpora:
             self._add_corpus_metadata(corp)
 
-    def apply_last_used_opts(self, data: Dict[str, Any], prev_corpora: List[str], curr_corpora: List[str]):
+    def apply_last_used_opts(self, data: Dict[str, Any], prev_corpora: List[str], curr_corpora: List[str],
+                             curr_posattrs: List[str]):
         self._test_data_type(data, 'form_type', 'query')
         prev_maincorp = prev_corpora[0]
         curr_maincorp = curr_corpora[0]
         self.curr_query_types[curr_maincorp] = data['curr_query_types'][prev_maincorp]
         self.curr_qmcase_values[curr_maincorp] = data['curr_qmcase_values'][prev_maincorp]
         self.curr_use_regexp_values[curr_maincorp] = data['curr_use_regexp_values'][prev_maincorp]
+        prev_default_attr = data['curr_default_attr_values'][prev_maincorp]
+        if prev_default_attr in curr_posattrs:
+            self.curr_default_attr_values[curr_maincorp] = prev_default_attr
+        else:
+            self.curr_default_attr_values[curr_maincorp] = None
 
     @staticmethod
     def _test_data_type(data, type_key, type_id):

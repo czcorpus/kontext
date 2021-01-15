@@ -191,7 +191,7 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
         qmcase: false,
         pcq_pos_neg: 'pos',
         include_empty: false,
-        default_attr: q.default_attr,
+        default_attr: undefined,
         use_regexp: false
     };
 }
