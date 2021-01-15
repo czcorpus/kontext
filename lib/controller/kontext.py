@@ -237,9 +237,19 @@ class Kontext(Controller):
             return self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')() and not self.user_is_anonymous()
 
     def get_current_aligned_corpora(self) -> List[str]:
+        """
+        Return currently active corpora
+
+        note: the name is a bit confusing considering how 'align(ed)' is used elsewhere
+        here we mean: all the aligned corpora including the primary one
+        """
         return [getattr(self.args, 'corpname')] + getattr(self.args, 'align')
 
     def get_available_aligned_corpora(self) -> List[str]:
+        """
+        note: the name is a bit confusing considering how 'align(ed)' is used elsewhere
+        here we mean: all the aligned corpora including the primary one
+        """
         return [getattr(self.args, 'corpname')] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
 
     def _get_valid_settings(self):
@@ -630,10 +640,10 @@ class Kontext(Controller):
         if len(corpname) > 0:
             self._apply_corpus_user_settings(corp_options, corpname)
 
+        # always prefer corpname returned by _check_corpus_access()
+        req_args.set_forced_arg('corpname', corpname)  # TODO we should reflect align here if corpus has changed
         # now we apply args from URL (highest priority)
         self.args.map_args_to_attrs(req_args)
-        # always prefer corpname returned by _check_corpus_access()
-        setattr(self.args, 'corpname', corpname)
         self._corpus_variant = corpus_variant
 
         # return url (for 3rd party pages etc.)

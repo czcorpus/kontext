@@ -39,7 +39,6 @@ import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
 import { Actions as QueryHintsActions, ActionName as QueryHintsActionName } from '../usageTips/actions';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { Action } from 'rxjs/internal/scheduler/Action';
 
 /*
 Some important terms to prevent confusion:

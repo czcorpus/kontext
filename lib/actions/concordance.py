@@ -117,8 +117,6 @@ class Actions(Querying):
         super().add_globals(result, methodname, action_metadata)
         conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
         conc_args.set('q', [q for q in result.get('Q')])
-        if corplib.is_subcorpus(self.corp):
-            conc_args.set('usesubcorp', self.corp.subcname)
         args = {}
         result['Globals'] = conc_args.update(args)
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
@@ -346,18 +344,6 @@ class Actions(Querying):
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.VIEW('kwic-sentence'))
         out = {}
-
-        if len(self.get_available_aligned_corpora()) == 1:
-            self.args.align = []
-        else:
-            self.args.align = [
-                ac for ac in self.args.align if ac in self.get_available_aligned_corpora()]
-
-        if self.args.corpname in self.args.align:
-            self.args.align = list(set(self.args.align).difference(set([self.args.corpname])))
-            self.redirect(self.create_url('query', [('corpname', self.args.corpname)] +
-                                          [('align', a) for a in self.args.align]))
-
         out['aligned_corpora'] = self.args.align
         tt_data = self.tt.export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
@@ -373,11 +359,16 @@ class Actions(Querying):
         with plugins.runtime.QUERY_STORAGE as qs:
             qdata = qs.find_by_qkey(last_op)
             if qdata is not None:
+                prev_corpora = qdata.get('corpora', [])
+                curr_corpora = [self.args.corpname] + self.args.align
+                if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
+                    raise ImmediateRedirectException(self.create_url('query',
+                        [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
                 try:
                     qf_args.apply_last_used_opts(
                         data=qdata.get('lastop_form', {}),
-                        prev_corpora=qdata.get('corpora', []),
-                        curr_corpora=[self.args.corpname] + self.args.align,
+                        prev_corpora=prev_corpora,
+                        curr_corpora=curr_corpora,
                         curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
                 except Exception as ex:
                     logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
@@ -619,7 +610,6 @@ class Actions(Querying):
                       data.fc_pos_type)
 
         for al_corpname in corpora[1:]:
-            self.args.align.append(al_corpname)
             if al_corpname in nopq and not int(data.curr_include_empty_values[al_corpname]):
                 self.args.q.append('X%s' % al_corpname)
         if len(corpora) > 1:

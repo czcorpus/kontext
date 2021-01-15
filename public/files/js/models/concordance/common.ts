@@ -224,9 +224,7 @@ export interface ServerPagination {
  * Array-like values are encoded as comma-separated strings.
  */
 export interface ConcServerArgs {
-    corpname:string;
     maincorp:string;
-    align:string;
     viewmode:'kwic'|'sen'|'align';
     format:Kontext.ResponseFormat;
     pagesize:number;
@@ -236,8 +234,8 @@ export interface ConcServerArgs {
     ctxattrs:string; // comma-separated values
     structs:string; // comma-separated values
     refs:string; //comma-separated values
-    q:string;
     fromp:number;
+    q:string;
 }
 
 /**

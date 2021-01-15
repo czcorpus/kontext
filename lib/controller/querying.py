@@ -80,7 +80,7 @@ class Querying(Kontext):
         """
         Add persistent form arguments for a currently processed
         action. The data are used in two ways:
-        1) as a source of values when respective JS Flux stores are instantiated
+        1) as a source of values when respective JS models are instantiated
         2) when conc persistence automatic save procedure
            is performed during post_dispatch() (see self.get_saveable_conc_data())
         """

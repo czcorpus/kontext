@@ -85,6 +85,9 @@ class RequestArgsProxy:
         else:
             return tmp
 
+    def set_forced_arg(self, k, *v: List[str]) -> None:
+        self._forced[k] = list(v)
+
     def add_forced_arg(self, k, *v: List[str]) -> List[str]:
         """
         add key-value parameter overriding any previous or
@@ -139,8 +142,14 @@ class JSONRequestArgsProxy:
 
     @property
     def corpora(self) -> List[str]:
+        """
+        Provide a list of corpora actually required. The source specification highly
+        depends on the current action.
+        """
         if self._json.get('type') == 'concQueryArgs':
             return [q['corpname'] for q in self._json['queries']]
+        elif self._json.get('type') in ('filterQueryArgs', 'sortQueryArgs', 'mlSortQueryArgs'):
+            return [self.getlist('corpname')[0]] + self.getlist('align')
         else:
             return [self._json.get('corpname')]
 
@@ -183,6 +192,9 @@ class JSONRequestArgsProxy:
             return tmp[0]
         else:
             return tmp
+
+    def set_forced_arg(self, k, *v: List[str]) -> None:
+        self._forced[k] = list(v)
 
     def add_forced_arg(self, k, *v: List[str]) -> List[str]:
         """

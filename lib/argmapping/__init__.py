@@ -30,18 +30,12 @@ class Persistence(Enum):
     SEMI_PERSISTENT = 0b0010
 
 
-# This attribute set covers all the arguments representing a concordance.
-# I.e. the application should be able to restore any concordance just by
-# using these parameters. Please note that this list does not include
-# the 'q' parameter which collects currently built query and is handled
-# individually.
+# This attribute set covers concordance options
+# specifying how to concordance is presented
 ConcArgsMapping = (
-    'corpname',
-    'usesubcorp',
     'maincorp',
     'viewmode',
     'pagesize',
-    'align',
     'attrs',
     'attr_vmode',
     'base_viewattr',  # attribute used in a text flow
@@ -274,6 +268,9 @@ class Args(object):
                         # be always 1
                         else:
                             setattr(self, key, self._upgrade_legacy_value(key, values[-1], in_args))
+        if len(in_args.corpora) > 0:
+            self.corpname = in_args.corpora[0]
+            self.align = in_args.corpora[1:] if len(in_args.corpora) > 1 else []
 
 
 def update_attr(obj: Args, k: str, v: Union[str, int, float]) -> None:
