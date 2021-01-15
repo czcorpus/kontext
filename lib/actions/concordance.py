@@ -375,8 +375,10 @@ class Actions(Querying):
             if qdata is not None:
                 try:
                     qf_args.apply_last_used_opts(
-                        qdata.get('lastop_form', {}), qdata.get('corpora', []),
-                        [self.args.corpname] + self.args.align)
+                        data=qdata.get('lastop_form', {}),
+                        prev_corpora=qdata.get('corpora', []),
+                        curr_corpora=[self.args.corpname] + self.args.align,
+                        curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
                 except Exception as ex:
                     logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
             qdata = qs.find_by_qkey(request.args.get('qkey'))
