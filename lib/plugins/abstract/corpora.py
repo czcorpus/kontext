@@ -198,7 +198,7 @@ class CorpusInfo(DictLike):
         self.path: Optional[str] = None
         self.web: Optional[str] = None
         self.sentence_struct: Optional[str] = None
-        self.tagsets: List[str] = []
+        self.tagsets: List[TagsetInfo] = []
         self.speech_segment = None
         self.speaker_id_attr = None
         self.speech_overlap_attr = None

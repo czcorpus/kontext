@@ -31,7 +31,7 @@ import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
-    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets } from './common';
+    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
@@ -41,6 +41,7 @@ import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery,
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
 import { ajaxErrorMapped } from '../../app/navigation';
+import { AttrHelper } from './cqleditor/attrs';
 
 
 export interface QueryFormUserEntries {
@@ -65,12 +66,13 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     currentSubcorp:string;
     origSubcorpName:string;
     isForeignSubcorpus:boolean;
-    tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
     selectedTextTypes:TextTypes.ExportedSelection;
     hasLemma:{[corpname:string]:boolean};
+    tagsets:{[corpname:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
     isAnonymousUser:boolean;
+    isLocalUiLang:boolean;
     suggestionsEnabled:boolean;
     simpleQueryDefaultAttrs:{[corpname:string]:Array<string>};
 }
@@ -112,11 +114,10 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
             curr_qmcase_values: {},
             curr_default_attr_values: {},
             curr_use_regexp_values: {},
-            tag_builder_support: {},
             selected_text_types: {},
             bib_mapping: {},
             has_lemma: {},
-            tagset_docs: {},
+            tagsets: {},
             fc_lemword_type: 'none',
             fc_lemword_wsize: [-1, 1],
             fc_lemword: '',
@@ -155,7 +156,7 @@ function importUserQueries(
     return pipe(
         corpora,
         List.filter(corpus => Dict.hasKey(corpus, data.currQueryTypes)),
-        List.map(corpus => {
+        List.map<string, [string, AnyQuery]>(corpus => {
             const qtype = data.currQueryTypes[corpus];
             const defaultAttr = determineDefaultAttr(
                 data,
@@ -240,7 +241,7 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     lposValues:{[key:string]:string}; // corpname -> lpos
 
-    tagBuilderSupport:{[key:string]:boolean};
+    tagsets:{[key:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
 
     inputLanguages:{[key:string]:string};
 
@@ -296,21 +297,26 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         const corpora = props.corpora;
         const queries = importUserQueries(
             corpora, props, props.simpleQueryDefaultAttrs, props.attrList);
-        const tagBuilderSupport = props.tagBuilderSupport;
+        const attrHelper = new AttrHelper( // TODO this is only for the primary corpus
+            props.attrList,
+            props.structAttrList,
+            props.structList,
+            props.tagsets[List.head(props.corpora)]
+        );
         super(
             dispatcher,
             pageModel,
             textTypesModel,
             queryContextModel,
             qsPlugin,
+            attrHelper,
             'first-query-model',
-            props, {
+            {
                 formType: Kontext.ConcFormTypes.QUERY,
                 forcedAttr: props.forcedAttr,
                 attrList: props.attrList,
                 structAttrList: props.structAttrList,
                 wPoSList: props.wPoSList,
-                tagAttr: props.tagAttr,
                 useRichQueryEditor: props.useRichQueryEditor,
                 currentAction: 'query',
                 widgetArgs: {},
@@ -337,9 +343,9 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     List.map(item => tuple(item, props.currLposValues[item] || '')),
                     Dict.fromEntries()
                 ),
-                tagBuilderSupport,
                 inputLanguages: props.inputLanguages,
                 hasLemma: props.hasLemma,
+                tagsets: props.tagsets,
                 textTypesNotes: props.textTypesNotes,
                 activeWidgets: pipe(
                     props.corpora,
@@ -349,7 +355,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 isAnonymousUser: props.isAnonymousUser,
                 supportedWidgets: determineSupportedWidgets(
                     queries,
-                    tagBuilderSupport,
+                    getTagBuilderSupport(props.tagsets),
                     props.isAnonymousUser
                 ),
                 contextFormVisible: false,   // TODO load from previous state ?
@@ -377,7 +383,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 ),
                 isBusy: false,
                 simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
-                alignedCorporaVisible: List.size(corpora) > 1
+                alignedCorporaVisible: List.size(corpora) > 1,
+                isLocalUiLang: props.isLocalUiLang
         });
 
         this.addActionHandler<Actions.QueryInputSelectSubcorp>(
@@ -704,7 +711,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             state.alignedCorporaVisible = data.alignedCorporaVisible;
             state.supportedWidgets = determineSupportedWidgets(
                 state.queries,
-                state.tagBuilderSupport,
+                getTagBuilderSupport(this.getTagsets(state)),
                 state.isAnonymousUser
             );
         }
@@ -736,11 +743,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                 state.simpleQueryDefaultAttrs,
                                 state.attrList
                             );
-                            state.tagBuilderSupport = data.tag_builder_support;
+                            state.tagsets = data.tagsets;
                             state.hasLemma = data.has_lemma;
                             state.supportedWidgets = determineSupportedWidgets(
                                 state.queries,
-                                state.tagBuilderSupport,
+                                getTagBuilderSupport(this.getTagsets(state)),
                                 state.isAnonymousUser
                             );
                             Dict.forEach(
@@ -775,6 +782,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         )
     }
 
+    getTagsets(state:FirstQueryFormModelState):{[sourceId:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>} {
+        return state.tagsets;
+    }
+
     private addAlignedCorpus(state:FirstQueryFormModelState, corpname:string):void {
         if (!List.some(v => v === corpname, state.corpora) &&
                 List.some(x => x.n === corpname, state.availableAlignedCorpora)) {
@@ -797,7 +808,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
             state.supportedWidgets = determineSupportedWidgets(
                 state.queries,
-                state.tagBuilderSupport,
+                getTagBuilderSupport(this.getTagsets(state)),
                 state.isAnonymousUser
             );
 

@@ -21,7 +21,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
-import { Keyboard, List, Dict, pipe } from 'cnc-tskit';
+import { Keyboard, List, Dict, pipe, tuple } from 'cnc-tskit';
 
 import { init as inputInit } from './input';
 import { init as alignedInit } from './aligned';
@@ -76,7 +76,8 @@ export interface QueryFormLiteProps {
 
 
 export interface QueryHelpProps {
-    tagsetDocs:{[corpname:string]:string};
+    isLocalUiLang:boolean;
+    tagsets:{[corpname:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
 }
 
 
@@ -194,6 +195,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 forcedAttr={this.props.forcedAttr}
                                 attrList={this.props.attrList}
                                 tagHelperView={this.props.tagHelperViews[primaryCorpname]}
+                                tagsets={this.props.tagsets[primaryCorpname]}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguages[primaryCorpname]}
                                 onEnterKey={this._handleSubmit}
@@ -219,6 +221,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 hasLemmaAttr={this.props.hasLemma}
                                 useRichQueryEditor={this.props.useRichQueryEditor}
                                 tagHelperViews={this.props.tagHelperViews}
+                                tagsets={this.props.tagsets}
                                 onEnterKey={this._handleSubmit} />
                         : null
                     }
@@ -418,7 +421,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             inputLanguage={this.props.inputLanguages[this.props.corpname]}
                             onEnterKey={this._handleSubmit}
                             useRichQueryEditor={this.props.useRichQueryEditor}
-                            qsuggPlugin={querySuggest} />
+                            qsuggPlugin={querySuggest}
+                            tagsets={this.props.tagsets[this.props.corpname]} />
                     </div>
                     <inputViews.AdvancedFormFieldset
                             uniqId="section-specify-context"
@@ -475,19 +479,40 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             <div>
                                 <div dangerouslySetInnerHTML={{__html: props.rawHtml}}/>
                                 <p><a target="_blank" href={he.getHelpLink('term_cql')}>{he.getHelpLink('term_cql')}</a></p>
-                                <h2>Tagsets</h2>
-                                {Dict.empty(props.tagsetDocs) ?
+                                <h2>{he.translate('query__tagset_summary')}</h2>
+                                {Dict.empty(props.tagsets) ?
                                     null :
-                                    <ul>{pipe(
-                                        props.tagsetDocs,
+                                    <ul className="tagset-links">{pipe(
+                                        props.tagsets,
                                         Dict.toEntries(),
                                         List.map(
-                                            ([k, v]) => (
-                                                <li key={`item:${k}`}>{k}:
-                                                    <a target="_blank" href={v}>{v}</a>
+                                            ([corpus, tagsets]) => (
+                                                <li key={`item:${corpus}`}>
+                                                    <h3>{corpus}</h3>
+                                                    <dl>{pipe(
+                                                        tagsets,
+                                                        List.map(tagset => tuple(
+                                                            tagset,
+                                                            props.isLocalUiLang ? tagset.docUrlLocal : tagset.docUrlEn
+                                                        )),
+                                                        List.forEach(v => console.log('tagset: ', v)),
+                                                        List.filter(([,url]) => !!url),
+                                                        List.map(
+                                                            ([tagset, url]) => (
+                                                                <React.Fragment key={`item:${tagset.ident}`}>
+                                                                    <dt>
+                                                                        {he.translate('global__attribute').toLocaleLowerCase()}{'\u00a0'}
+                                                                        <span className="attr">{tagset.featAttr}</span>:
+                                                                    </dt>
+                                                                    <dd>
+                                                                        <a className="external" target="_blank" href={url}>{url}</a>
+                                                                    </dd>
+                                                                </React.Fragment>
+                                                            )
+                                                        )
+                                                    )}</dl>
                                                 </li>
-                                            )
-                                        )
+                                            ))
                                     )}</ul>
                                 }
                             </div>

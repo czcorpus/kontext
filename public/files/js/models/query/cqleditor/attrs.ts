@@ -20,6 +20,7 @@
 
 import { Kontext } from '../../../types/common';
 import { List, pipe } from 'cnc-tskit';
+import { PluginInterfaces } from '../../../types/plugins';
 
 /**
  * IAttrHelper defines a general object able to
@@ -54,14 +55,14 @@ export class AttrHelper implements IAttrHelper {
 
     private readonly structList:Array<string>;
 
-    private readonly tagAttr:string;
+    private readonly tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
 
     constructor(attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>,
-            structList:Array<string>, tagAttr:string) {
+            structList:Array<string>, tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>) {
         this.attrList = attrList;
         this.structAttrList = structAttrList;
         this.structList = structList;
-        this.tagAttr = tagAttr;
+        this.tagsets = tagsets;
     }
 
     structExists(struct:string):boolean {
@@ -98,7 +99,7 @@ export class AttrHelper implements IAttrHelper {
     }
 
     isTagAttr(attr:string):boolean {
-        return this.tagAttr === attr;
+        return List.some(v => v.ident === attr, this.tagsets);
     }
 }
 

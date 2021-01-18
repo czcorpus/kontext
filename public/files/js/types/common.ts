@@ -27,8 +27,8 @@ import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
 import { AsyncTaskChecker } from '../models/asyncTask';
 import { GeneralViewOptionsModelState } from '../models/options/general';
 import { CorpusSwitchModel } from '../models/common/corpusSwitch';
-import { WidgetView } from '../models/textTypes/common';
-import { QueryType } from '../models/query/query';
+import { WidgetView } from '../models/textTypes/common'; // TODO this breaks meaning of the 'common' module
+import { QueryType } from '../models/query/query'; // dtto
 
 /**
  *
@@ -523,6 +523,7 @@ export namespace Kontext {
         LOCKED = 'locked',
         LGROUP = 'lgroup'
     }
+
 }
 
 

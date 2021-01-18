@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import { IActionDispatcher, StatelessModel, BoundWithProps } from 'kombo';
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { IActionDispatcher, BoundWithProps, StatelessModel, Bound } from 'kombo';
+import { Dict, List, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
@@ -29,12 +29,13 @@ import { Actions as QueryActions, ActionName as QueryActionName,
 import { Actions, ActionName } from './actions';
 import { TabFrameModel, TabFrameModelState } from './models';
 
+
+
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     frameModel:TabFrameModel,
-    deps:{[key:string]:[StatelessModel<TagBuilderBaseState>,
-            React.FC<{}>|React.ComponentClass<{}>]}
+    deps:{[key:string]:[React.FC<{}>|React.ComponentClass<{}>, StatelessModel<{}>]}
 ):PluginInterfaces.TagHelper.View {
 
     const layoutViews = he.getLayoutViews();
@@ -225,16 +226,6 @@ export function init(
         )
     );
 
-    const tabbedBoundBuilders = pipe(
-        deps,
-        Dict.toEntries(),
-        List.map(([key, [model, view]]) => tuple(
-            key,
-            view,
-            BoundWithProps<ActiveTagBuilderProps, TagBuilderBaseState>(TagBuilder, model)
-        ))
-    );
-
     // ---------------- <ActiveTagBuilder /> -----------------------------------
 
     const ActiveTagBuilder:React.FC<PluginInterfaces.TagHelper.ViewProps & TabFrameModelState> = (props) => {
@@ -250,17 +241,21 @@ export function init(
         };
 
         const children = pipe(
-            tabbedBoundBuilders,
-            List.map(
-                ([key, view, TabbedWidget]) => <TabbedWidget
-                    key={key}
-                    activeView={view}
-                    sourceId={props.sourceId}
-                    formType={props.formType}
-                    range={props.range}
-                    onInsert={props.onInsert}
-                    onEscKey={props.onEscKey} />
-            )
+            deps,
+            Dict.map(
+                ([view, model], key) => {
+                    const BoundTagBuilder = BoundWithProps<ActiveTagBuilderProps, {}>(TagBuilder, model);
+                    return <BoundTagBuilder
+                                key={key}
+                                activeView={view}
+                                sourceId={props.sourceId}
+                                formType={props.formType}
+                                range={props.range}
+                                onInsert={props.onInsert}
+                                onEscKey={props.onEscKey} />;
+                }
+            ),
+            Dict.values()
         );
 
         return (

@@ -204,6 +204,21 @@ export namespace PluginInterfaces {
              * is stored within.
              */
             featAttr:string;
+
+            /**
+             * If true then taghelper widget should be enabled
+             */
+            widgetEnabled:boolean;
+
+            /**
+             * A URL leading to a localized description of a respective tagset
+             */
+            docUrlLocal:string;
+
+            /**
+             * A URL leading to an English version of the tagset description
+             */
+            docUrlEn:string;
         }
 
         export interface ViewProps {

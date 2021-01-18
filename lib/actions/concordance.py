@@ -1757,6 +1757,9 @@ class Actions(Querying):
             corpname=self.args.corpname,
             subcorpname=self.corp.subcname if corplib.is_subcorpus(self.corp) else None,
             baseAttr=Kontext.BASE_ATTR,
+            tagsets=[dict(ident=tagset.tagset_name, posAttr=tagset.pos_attr, featAttr=tagset.feat_attr,
+                          docUrlLocal=tagset.doc_url_local, docUrlEn=tagset.doc_url_en)
+                     for tagset in corpus_info.tagsets],
             humanCorpname=self._human_readable_corpname(),
             corpusIdent=dict(
                 id=self.args.corpname, name=self._human_readable_corpname(),

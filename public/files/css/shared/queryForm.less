@@ -147,6 +147,15 @@ form.query-form {
         }
     }
 
+    .query-options {
+        .default-attr-selection .InlineHelp {
+            a.context-help {
+                margin: 0;
+                padding: 0;
+            }
+        }
+    }
+
     .AdvancedFormFieldset.query-options {
 
         margin-top: 1.8em;
@@ -753,4 +762,51 @@ table.radio-like-sel {
         }
     }
 
+}
+
+.QueryHelp #modal-overlay {
+
+    h2::first-letter {
+        text-transform: capitalize;
+    }
+
+    h3 {
+        color: @color-default-text;
+        margin: 0.5em 0 0.5em 0;
+    }
+
+    ul.tagset-links {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+
+        li {
+            margin: 0 0 0 1em;
+            padding: 0;
+
+            dl {
+                margin: 0 0 0 1em;
+                padding: 0;
+
+                .attr {
+                    color: @color-logo-pink;
+                }
+
+                dt {
+                    padding: 0.3em;
+                    display: inline-block;
+                }
+
+                dd {
+                    display: inline-block;
+                    margin-inline-start: 0.1em;
+                }
+
+                dd::after {
+                    content: "\a";
+                    white-space: pre;
+                }
+            }
+        }
+    }
 }

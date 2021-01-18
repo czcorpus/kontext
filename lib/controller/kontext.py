@@ -826,7 +826,6 @@ class Kontext(Controller):
             usesubcorp=usesubcorp,
             origSubcorpName=getattr(self.corp, 'orig_subcname', usesubcorp),
             foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id)
-
         if getattr(self.args, 'usesubcorp'):
             result['subcorp_size'] = self.corp.search_size()
         else:
@@ -860,8 +859,6 @@ class Kontext(Controller):
             ttcrit_attrs = corpus_get_conf(maincorp, 'SUBCORPATTRS')
         result['ttcrit'] = [('fcrit', '%s 0' % a)
                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
-        result['corp_uses_tag'] = 'tag' in corpus_get_conf(
-            maincorp, 'ATTRLIST').split(',')  # legacy value
         result['interval_chars'] = (
             settings.get('corpora', 'left_interval_char', None),
             settings.get('corpora', 'interval_char', None),
@@ -1044,13 +1041,17 @@ class Kontext(Controller):
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
 
+        avail_languages = settings.get_full('global', 'translations')
+        ui_lang = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
         # available languages; used just by UI language switch
         if plugins.runtime.GETLANG.exists:
             result['avail_languages'] = ()  # getlang plug-in provides customized switch
         else:
-            result['avail_languages'] = settings.get_full('global', 'translations')
+            result['avail_languages'] = avail_languages
+        result['uiLang'] = ui_lang
+        result['is_local_ui_lang'] = any(settings.import_bool(meta.get('local', '0'))
+                                         for code, meta in avail_languages if code == ui_lang)
 
-        result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
         day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
         result['first_day_of_week'] = day_map[
             babel.Locale(self.ui_lang if self.ui_lang else 'en_US').first_week_day

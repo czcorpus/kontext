@@ -24,18 +24,9 @@ import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 
 import { IPluginApi } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
-import { Actions, ActionName, isSetActiveTagAction } from '../actions';
+import { Actions, ActionName } from '../actions';
 import { Kontext } from '../../../types/common';
 
-
-export interface FeatureSelectProps {
-    sourceId:string;
-    error:Error|null;
-    allFeatures:{[key:string]:Array<string>};
-    availableFeatures:{[key:string]:Array<string>};
-    filterFeaturesHistory:Array<Array<FilterRecord>>;
-    showCategory:string;
-}
 
 interface DataResponse extends Kontext.AjaxResponse {
     keyval_tags:{[key:string]:Array<string>};

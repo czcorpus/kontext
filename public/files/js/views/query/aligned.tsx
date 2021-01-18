@@ -52,6 +52,7 @@ export interface AlignedCorporaProps {
     hasLemmaAttr:{[key:string]:boolean};
     useRichQueryEditor:boolean;
     tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
+    tagsets:{[key:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
     onEnterKey:()=>void;
 }
 
@@ -88,6 +89,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         inputLanguage:string;
         queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
         useRichQueryEditor:boolean;
+        tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
         tagHelperView:PluginInterfaces.TagHelper.View;
         onEnterKey:()=>void;
         onChangePrimaryCorp:(corp:string)=>void;
@@ -144,6 +146,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             useRichQueryEditor={this.props.useRichQueryEditor}
                             onEnterKey={this.props.onEnterKey}
                             tagHelperView={this.props.tagHelperView}
+                            tagsets={this.props.tagsets}
                             qsuggPlugin={null}
                             isNested={true}
                             customOptions={[
@@ -234,6 +237,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 queryStorageView={props.queryStorageView}
                                 hasLemmaAttr={props.hasLemmaAttr[item]}
                                 useRichQueryEditor={props.useRichQueryEditor}
+                                tagsets={props.tagsets[item]}
                                 onEnterKey={props.onEnterKey}
                                 onChangePrimaryCorp={handleMainCorpChange} />,
                             props.alignedCorpora

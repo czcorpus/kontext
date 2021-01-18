@@ -29,7 +29,7 @@ import { PageModel } from '../../app/page';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
-    FilterServerArgs, determineSupportedWidgets } from './common';
+    FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
 import { ActionName, Actions } from './actions';
 import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
@@ -38,6 +38,7 @@ import { TextTypesModel } from '../textTypes/main';
 import { AjaxConcResponse } from '../concordance/common';
 import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query';
 import { highlightSyntaxStatic } from './cqleditor/parser';
+import { AttrHelper } from './cqleditor/attrs';
 
 
 /**
@@ -53,7 +54,6 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     currQueries:{[sourceId:string]:string};
     currDefaultAttrValues:{[sourceId:string]:string};
     currUseRegexpValues:{[sourceId:string]:boolean};
-    tagBuilderSupport:{[sourceId:string]:boolean};
     currLposValues:{[sourceId:string]:string};
     currQmcaseValues:{[sourceId:string]:boolean};
     currInclkwicValues:{[sourceId:string]:boolean};
@@ -65,7 +65,9 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     withinArgValues:{[sourceId:string]:boolean};
     opLocks:{[sourceId:string]:boolean};
     hasLemma:{[sourceId:string]:boolean};
+    tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
     isAnonymousUser:boolean;
+    isLocalUiLang:boolean;
 }
 
 export function isFilterFormProperties(v:FilterFormProperties|AjaxResponse.FilterFormArgs):v is FilterFormProperties {
@@ -132,6 +134,8 @@ export interface FilterFormModelState extends QueryFormModelState {
     opLocks:{[key:string]:boolean};
 
     inputLanguage:string;
+
+    tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
 }
 
 /**
@@ -144,7 +148,7 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
     if (isFilterFormProperties(src)) {
         return pipe(
             sourceId ? [sourceId] : Dict.keys(src.currQueries),
-            List.map(
+            List.map<string, [string, AnyQuery]>(
                 filter => {
                     if (src.currQueryTypes[filter] === 'advanced') {
                         const query = src.currQueries[filter] || '';
@@ -244,6 +248,24 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
     }
 }
 
+function determineFilterTagWidgets(
+    queries:{[sourceId:string]:AnyQuery},
+    tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>,
+    anonymousUser:boolean
+):{[sourceId:string]:Array<string>} {
+
+    return determineSupportedWidgets(
+        queries,
+        getTagBuilderSupport(pipe(
+            queries,
+            Dict.keys(),
+            List.map(k => tuple(k, tagsets)),
+            Dict.fromEntries()
+        )),
+        anonymousUser
+    )
+}
+
 /**
  * FilterFormModel handles all the filtsters applied within a query "pipeline".
  * Each filter is identified by its database ID (i.e. a key used by conc_persistence
@@ -265,16 +287,20 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         const queries:{[sourceId:string]:AnyQuery} = {
             ...importFormValues(props)
         };
-
-        const tagBuilderSupport = props.tagBuilderSupport;
+        const attrHelper = new AttrHelper( // TODO this is only for the primary corpus
+            props.attrList,
+            props.structAttrList,
+            props.structList,
+            props.tagsets
+        );
         super(
             dispatcher,
             pageModel,
             textTypesModel,
             queryContextModel,
             qsPlugin,
+            attrHelper,
             'filter-form-model',
-            props,
             {
                 formType: Kontext.ConcFormTypes.FILTER,
                 forcedAttr: '', // TODO
@@ -285,7 +311,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 queries, // corpname|filter_id -> query
                 cqlEditorMessages: {},
                 useRichQueryEditor: props.useRichQueryEditor,
-                tagAttr: props.tagAttr,
+                tagsets: props.tagsets,
                 widgetArgs: {}, // TODO
                 maincorps: {...props.maincorps},
                 downArrowTriggersHistory: pipe(
@@ -305,7 +331,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     Dict.map((v, fid) => Kontext.newFormValue(v, true)),
                 ),
                 inclkwicValues: {...props.currInclkwicValues},
-                tagBuilderSupport: {...tagBuilderSupport},
                 opLocks: {...props.opLocks},
                 activeWidgets: pipe(
                     props.filters,
@@ -316,9 +341,9 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 hasLemma: {...props.hasLemma},
                 inputLanguage: props.inputLanguage,
                 isAnonymousUser: props.isAnonymousUser,
-                supportedWidgets: determineSupportedWidgets(
+                supportedWidgets: determineFilterTagWidgets(
                     queries,
-                    tagBuilderSupport,
+                    props.tagsets,
                     props.isAnonymousUser
                 ),
                 contextFormVisible: false,    // TODO load from some previous state?
@@ -348,7 +373,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     Dict.fromEntries()
                 ),
                 isBusy: false,
-                simpleQueryDefaultAttrs: {}
+                simpleQueryDefaultAttrs: {},
+                isLocalUiLang: props.isLocalUiLang
         });
         this.syncInitialArgs = syncInitialArgs;
 
@@ -527,6 +553,15 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         }
     }
 
+    getTagsets(state:FilterFormModelState):{[sourceId:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>} {
+        return pipe(
+            state.queries,
+            Dict.keys(),
+            List.map(q => tuple(q, state.tagsets)),
+            Dict.fromEntries()
+        );
+    }
+
     /**
      * Synchronize user input values from an external source
      * (typically a server response or a local cache).
@@ -553,14 +588,14 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 isRequired: true
                             };
                             state.inclkwicValues[filterId] = data.inclkwic;
-                            state.tagBuilderSupport[filterId] = data.tag_builder_support;
+                            state.tagsets = data.tagsets;
                             state.withinArgs[filterId] = data.within;
                             state.lposValues[filterId] = data.lpos;
                             state.hasLemma[filterId] = data.has_lemma;
                             state.opLocks[filterId] = false;
                             state.supportedWidgets = determineSupportedWidgets(
                                 state.queries,
-                                state.tagBuilderSupport,
+                                getTagBuilderSupport(this.getTagsets(state)),
                                 state.isAnonymousUser
                             );
                         });

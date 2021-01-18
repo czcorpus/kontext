@@ -136,7 +136,6 @@ export interface GeneralQueryFormProperties {
     structList:Array<string>;
     wPoSList:Array<{v:string; n:string}>;
     useRichQueryEditor:boolean;
-    tagAttr:string;
     suggestionsEnabled:boolean;
 }
 
@@ -171,11 +170,7 @@ export interface QueryFormModelState {
 
     cqlEditorMessages:{[sourceId:string]:string};
 
-    tagBuilderSupport:{[sourceId:string]:boolean};
-
     useRichQueryEditor:boolean;
-
-    tagAttr:string;
 
     widgetArgs:Kontext.GeneralProps;
 
@@ -210,6 +205,8 @@ export interface QueryFormModelState {
      * 1-th is used etc.
      */
     simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>};
+
+    isLocalUiLang:boolean;
 }
 
 /**
@@ -244,6 +241,21 @@ export function determineSupportedWidgets(
     );
 }
 
+/**
+ *
+ */
+export function getTagBuilderSupport(tagsets:{[sourceId:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>}):{[sourceId:string]:boolean} {
+    return pipe(
+        tagsets,
+        Dict.map(
+            corpTagsets => List.some(t => t.widgetEnabled, corpTagsets)
+        )
+    );
+}
+
+/**
+ *
+ */
 interface SuggestionReqArgs {
     value:string;
     attrStartIdx:number;
@@ -286,8 +298,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
             qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
+            attrHelper:AttrHelper,
             ident:string,
-            props:GeneralQueryFormProperties,
             initState:T) {
         super(
             dispatcher,
@@ -301,12 +313,10 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
         this.formType = initState.formType;
-        this.attrHelper = new AttrHelper(
-            props.attrList, props.structAttrList, props.structList, props.tagAttr);
+        this.attrHelper = attrHelper;
         this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.qsSubscription = this.qsPlugin.isActive() ?
                 this.subscribeAutoSuggest(dispatcher) : undefined;
-
         this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
             ActionName.QueryInputSetQType,
             action => action.payload.formType === this.formType,
@@ -321,7 +331,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     }
                     state.supportedWidgets = determineSupportedWidgets(
                         state.queries,
-                        state.tagBuilderSupport,
+                        getTagBuilderSupport(this.getTagsets(state)),
                         state.isAnonymousUser
                     );
                 })
@@ -785,6 +795,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
     }
+
+    abstract getTagsets(state:T):{[sourceId:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
 
     private subscribeAutoSuggest(dispatcher:IFullActionControl):Subscription {
         return this.autoSuggestTrigger.pipe(

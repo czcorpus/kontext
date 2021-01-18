@@ -2,12 +2,12 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { List, pipe, Dict } from 'cnc-tskit';
 
-import { FilterRecord, FeatureSelectProps } from './models';
+import { FilterRecord, UDTagBuilderModelState } from './models';
 import { Kontext } from '../../../types/common';
 import { Actions, ActionName } from '../actions';
 
 
-export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.FC<FeatureSelectProps> {
+export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.FC<UDTagBuilderModelState & {sourceId:string}> {
 
     // --------------------------- <CategoryDetail /> ------------------------------
 
@@ -128,7 +128,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
 
     // ---------------------------- <FeatureSelect /> ---------------------------------
 
-    const FeatureSelect:React.FC<FeatureSelectProps> = (props) => {
+    const FeatureSelect:React.FC<UDTagBuilderModelState & {sourceId:string}> = (props) => {
 
         const handleCheckboxChange = (event) => {
             if (event.target.checked) {
