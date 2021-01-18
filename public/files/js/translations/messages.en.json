@@ -154,6 +154,7 @@
         "global__failed_to_render_component": "Failed to render the component",
         "global__failed_to_render_component_expl": "This is typically caused by a misconfigured plug-in.",
         "global__select_last_used_corpus_{corpname}": "Open last used corpus \"{corpname}\"",
+        "global__view_last_concordance": "View the last used concordance",
         "global__where_to_continue": "Where to continue",
         "global__description": "Description",
         "global__public_subc_id_{id}": "The subcorpus is available via a permanent public code {id}",

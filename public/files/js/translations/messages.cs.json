@@ -154,6 +154,7 @@
         "global__failed_to_render_component": "Nepodařilo se zobrazit komponentu",
         "global__failed_to_render_component_expl": "Příčinou této situace je obvykle chybně nakonfigurovaný plug-in.",
         "global__select_last_used_corpus_{corpname}": "Otevřít naposledy použitý korpus \"{corpname}\"",
+        "global__view_last_concordance": "Zobrazit naposledy prohlíženou konkordanci",
         "global__where_to_continue": "Kam pokračovat",
         "global__description": "Popis",
         "global__public_subc_id_{id}": "Korpus je veřejně k dispozici prostřednictvím permanentního identifikátoru {id}",

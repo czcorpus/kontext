@@ -154,6 +154,7 @@
         "global__failed_to_render_component": "Niy szło pokŏzać kōmponyntu",
         "global__failed_to_render_component_expl": "To z wiynksza sie dzieje skuli źle skōnfigurowanego przidŏwka.",
         "global__select_last_used_corpus_{corpname}": "Ôtwōrz ôstatni używany korpus \"{corpname}\"",
+        "global__view_last_concordance": "View the last used concordance",
         "global__where_to_continue": "Kaj kōntynuować",
         "global__description": "Ôpis",
         "global__public_subc_id_{id}": "Podkorpus je dostympny bez permanyntny kod publiczny {id}",

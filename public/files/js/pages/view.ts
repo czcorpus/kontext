@@ -21,9 +21,7 @@
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
 import { Action } from 'kombo';
-import { of as rxOf, zip } from 'rxjs';
-import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
-import { List, tuple, Dict, pipe, HTTP } from 'cnc-tskit';
+import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main';
 import { Kontext, ViewOptions } from '../types/common';
