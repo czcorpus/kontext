@@ -399,8 +399,7 @@ class CTCalculation(object):
         """
         cm = corplib.CorpusManager(subcpath=self._args.subcpath)
         self._corp = cm.get_Corpus(self._args.corpname, subcname=self._args.subcname)
-        self._conc = get_conc(corp=self._corp, user_id=self._args.user_id, q=self._args.q,
-                              fromp=0, pagesize=0, asnc=0, save=0, samplesize=0)
+        self._conc = require_existing_conc(corp=self._corp, q=self._args.q)
         result, full_size = self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
                                          limit_type=self._args.ctminfreq_type)
         return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
