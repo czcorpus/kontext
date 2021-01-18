@@ -36,7 +36,7 @@ export function init(conf:Kontext.Conf):void {
                 layoutModel.dispatcher.dispatch({
                     name: 'USER_SHOW_LOGIN_DIALOG',
                     payload: {
-                        returnUrl: layoutModel.createActionUrl('first_form')
+                        returnUrl: layoutModel.createActionUrl('query')
                     }
                 });
             });

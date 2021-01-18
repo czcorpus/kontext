@@ -383,7 +383,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             ActionName.GoToMainPage,
             null,
             (state, action, dispatch) => {
-                window.location.href = this.pluginApi.createActionUrl('first_form');
+                window.location.href = this.pluginApi.createActionUrl('query');
             }
         )
     }

@@ -228,7 +228,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
     /**
      * A single dataset row
      */
-    const CorplistRow:React.SFC<{
+    const CorplistRow:React.FC<{
         row:CorplistItem;
         enableUserActions:boolean;
         userIsAnonymous:boolean;
@@ -242,7 +242,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         const keywords = props.row.keywords.map((k, i) => {
             return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
         });
-        const link = he.createActionLink('first_form', [['corpname', props.row.id]]);
+        const link = he.createActionLink('query', [['corpname', props.row.id]]);
         const size = props.row.size_info ? props.row.size_info : '-';
 
         let userAction = null;
@@ -371,7 +371,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
      * Provides a link allowing to load more items with current
      * query and filter settings.
      */
-    const ListExpansion:React.SFC<{
+    const ListExpansion:React.FC<{
         offset:number;
         limit:number;
 

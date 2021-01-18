@@ -36,7 +36,7 @@ export interface NonQueryCorpusSelectionModelState {
 
 /**
  * Fixed corpus, selectable subcorpus. This is used as an alternative to query model
- * on the 'first_form' page for pages where we still expect switching of (sub)corpus
+ * on the 'query' page for pages where we still expect switching of (sub)corpus
  * but not for querying purposes.
  */
 export class NonQueryCorpusSelectionModel extends StatefulModel<NonQueryCorpusSelectionModelState> {

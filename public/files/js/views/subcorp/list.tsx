@@ -42,7 +42,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <TrUnfinishedLine /> --------------------------
 
-    const TrUnfinishedLine:React.SFC<{
+    const TrUnfinishedLine:React.FC<{
         item:UnfinishedSubcorp;
 
     }> = (props) => {
@@ -68,7 +68,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <PublishCheckbox /> -----------------------------
 
-    const PublishCheckbox:React.SFC<{
+    const PublishCheckbox:React.FC<{
         value:boolean;
         onChange:()=>void;
 
@@ -78,7 +78,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <DeleteButton /> -----------------------------
 
-    const DeleteButton:React.SFC<{
+    const DeleteButton:React.FC<{
         rowIdx:number;
         subcname:string;
 
@@ -102,7 +102,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <TrDataLine /> --------------------------
 
-    const TrDataLine:React.SFC<{
+    const TrDataLine:React.FC<{
         idx:number;
         item:SubcorpListItem;
         publishCheckboxHandle:(idx:number)=>void;
@@ -115,7 +115,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             if (!item.deleted) {
                 const title = he.translate('subclist__search_in_subc');
                 const href = he.createActionLink(
-                    'first_form',
+                    'query',
                     [
                         ['corpname', item.corpname],
                         ['usesubcorp', item.usesubcorp]
@@ -165,7 +165,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <ThSortable /> --------------------------
 
-    const ThSortable:React.SFC<{
+    const ThSortable:React.FC<{
         ident:string;
         sortKey:SortKey;
         label:string;
@@ -272,7 +272,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <FilterForm /> --------------------------
 
-    const FilterForm:React.SFC<{
+    const FilterForm:React.FC<{
         filter:SubcListFilter;
         relatedCorpora:Array<string>;
         usesSubcRestore:boolean;
@@ -325,7 +325,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <FormActionTemplate /> --------------------------
 
-    const FormActionTemplate:React.SFC<{auxInfoElm?:React.ReactElement}> = (props) => {
+    const FormActionTemplate:React.FC<{auxInfoElm?:React.ReactElement}> = (props) => {
 
         return (
             <form className="subc-action">
@@ -417,7 +417,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <FormActionWipe /> --------------------------
 
-    const FormActionWipe:React.SFC<{
+    const FormActionWipe:React.FC<{
         idx:number;
 
     }> = (props) => {
@@ -445,7 +445,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <FormActionRestore /> --------------------------
 
-    const FormActionRestore:React.SFC<{
+    const FormActionRestore:React.FC<{
         idx:number;
 
     }> = (props) => {
@@ -472,7 +472,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <PublishSubmitButton /> --------------------------
 
-    const PublishSubmitButton:React.SFC<{
+    const PublishSubmitButton:React.FC<{
         published:boolean;
         onSubmit:()=>void;
 

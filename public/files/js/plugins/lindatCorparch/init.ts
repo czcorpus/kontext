@@ -44,7 +44,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
             pluginApi,
             this.pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
             (corpusIdent:string) => {
-                window.location.href = pluginApi.createActionUrl('first_form', [['corpname', corpusIdent]]);
+                window.location.href = pluginApi.createActionUrl('query', [['corpname', corpusIdent]]);
             }
         );
         this.components = corplistViewInit(

@@ -142,7 +142,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const keywords = props.row.keywords.map((k, i) => {
             return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
         });
-        const link = he.createActionLink('first_form', [['corpname', props.row.id]]);
+        const link = he.createActionLink('query', [['corpname', props.row.id]]);
         const size = props.row.size_info ? props.row.size_info : '-';
         const pmltq = () => {
             if (props.row.pmltq !== 'no') {
@@ -630,9 +630,9 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }
 
     return {
-        CorplistTable: BoundWithProps(CorplistTable, listModel),
+        CorplistTable: BoundWithProps<CorplistTableProps, CorplistTableModelState>(CorplistTable, listModel),
         CorplistHeader: CorplistHeader,
-        FilterForm: BoundWithProps(FilterForm, listModel),
+        FilterForm: BoundWithProps<FilterFormProps, CorplistTableModelState>(FilterForm, listModel),
         FavStar: FavStar,
         CorpKeywordLink: CorpKeywordLink
     };
