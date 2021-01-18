@@ -37,6 +37,7 @@ export interface VirtualKeyboardState {
     layouts:VirtualKeyboardLayouts;
     activeKey:[number, number];
     currentLayoutIdx:number;
+    activeDeadKeyIndex:number|null;
 }
 
 
@@ -65,9 +66,17 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
             currentLayoutIdx: List.findIndex(
                 v => v.name === pageModel.getConf('DefaultVirtKeyboard'),
                 kbLayouts
-            )
+            ),
+            activeDeadKeyIndex: null
         });
         this.pageModel = pageModel;
+
+        this.addActionHandler<Actions.QueryInputHitVirtualKeyboardDeadKey>(
+            ActionName.QueryInputHitVirtualKeyboardDeadKey,
+            (state, action) => {
+                state.activeDeadKeyIndex = action.payload.deadKeyIndex;
+            }
+        );
 
         this.addActionHandler<Actions.QueryInputToggleVirtualKeyboardShift>(
             ActionName.QueryInputToggleVirtualKeyboardShift,
@@ -103,6 +112,7 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
             ActionName.QueryInputHitVirtualKeyboardKey,
             (state, action) => {
                 state.activeKey = this.getActiveKey(action.payload.keyCode);
+                state.activeDeadKeyIndex = null;
             },
             (state, action, dispatch) => {
                 let timeout;

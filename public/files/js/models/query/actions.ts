@@ -42,6 +42,7 @@ export enum ActionName {
     QueryInputToggleVirtualKeyboardShift = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputUnhitVirtualKeyboardShift = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_SHIFT',
     QueryInputToggleVirtualKeyboardCaps = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_CAPS',
+    QueryInputHitVirtualKeyboardDeadKey = 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_DEAD_KEY',
     QueryContextSetLemwordWsize = 'QUERY_CONTEXT_SET_LEMWORD_WSIZE',
     QueryContextSetLemword = 'QUERY_CONTEXT_SET_LEMWORD',
     QueryContextSetLemwordType = 'QUERY_CONTEXT_SET_LEMWORD_TYPE',
@@ -121,7 +122,7 @@ export enum ActionName {
     StorageClearEditingQueryID = 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
     StorageOpenQueryForm = 'QUERY_STORAGE_OPEN_QUERY_FORM',
     StorageLoadMore = 'QUERY_STORAGE_LOAD_MORE',
-    QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN',
+    QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN'
 }
 
 export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
@@ -216,6 +217,12 @@ export namespace Actions {
     export interface QueryInputToggleVirtualKeyboardCaps extends Action<{
     }> {
         name:ActionName.QueryInputToggleVirtualKeyboardCaps;
+    }
+
+    export interface QueryInputHitVirtualKeyboardDeadKey extends Action<{
+        deadKeyIndex:number;
+    }> {
+        name:ActionName.QueryInputHitVirtualKeyboardDeadKey;
     }
 
     export interface QueryContextSetLemwordWsize extends Action<{

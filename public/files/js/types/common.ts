@@ -498,6 +498,7 @@ export namespace Kontext {
         label:string;
         name:string;
         keys:VirtualKeys;
+        deadKeys?:Array<string>;
     }
 
     export enum ConcFormTypes {
