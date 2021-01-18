@@ -32,12 +32,12 @@ export function init(conf:Kontext.Conf):void {
             layoutModel.dispatcher.dispatch({
                 name: 'USER_SHOW_LOGIN_DIALOG',
                 payload: {
-                    returnUrl: layoutModel.createActionUrl('first_form')
+                    returnUrl: layoutModel.createActionUrl('query')
                 }
             });
         });
         document.getElementById('go-to-query').addEventListener('click', () => {
-            window.location.href = layoutModel.createActionUrl('first_form');
+            window.location.href = layoutModel.createActionUrl('query');
         });
     });
 }

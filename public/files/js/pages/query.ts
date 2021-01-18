@@ -128,7 +128,7 @@ export class QueryPage {
         const plg = corplistComponent(this.layoutModel.pluginApi());
         return tuple(
             plg.createWidget(
-                'first_form',
+                'query',
                 {
                     itemClickAction: (corpora:Array<string>, subcorpId:string) => {
                         this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({

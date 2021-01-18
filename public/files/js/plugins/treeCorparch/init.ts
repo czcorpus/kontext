@@ -201,7 +201,7 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
             pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
             (corpora:Array<string>, subcorpId:string) => {
                 window.location.href = pluginApi.createActionUrl(
-                    'first_form?corpname=' + corpora[0]);
+                    'query', [['corpname', corpora]]);
                 return null; // just to keep the type check cool
             }
         );
