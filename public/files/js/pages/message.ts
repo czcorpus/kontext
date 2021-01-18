@@ -24,6 +24,7 @@ import { init as messageViewsInit, MessageViewProps } from '../views/message';
 import { KontextPage } from '../app/main';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import { PluginName } from '../app/plugin';
+import { ConcServerArgs } from '../models/concordance/common';
 
 
 declare var require:any;
@@ -42,6 +43,8 @@ class MessagePage {
     }
 
     init():void {
+        const concId = this.layoutModel.getConf<string>('concPersistenceOpId');
+
         this.layoutModel.init(false, [], () => {
             const plugin = this.layoutModel.pluginTypeIsActive(PluginName.ISSUE_REPORTING) ?
                     issueReportingPlugin(this.layoutModel.pluginApi()) : null;
@@ -58,9 +61,15 @@ class MessagePage {
                     widgetProps: this.layoutModel.getConf<Kontext.GeneralProps>(
                         'issueReportingAction') || null,
                     anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
-                    issueReportingView: plugin ? <React.SFC<{}>>plugin.getWidgetView() : null,
+                    issueReportingView: plugin ? <React.FC<{}>>plugin.getWidgetView() : null,
                     lastUsedCorpus: this.layoutModel.getConf<
-                        {corpname:string; human_corpname:string}>('LastUsedCorp')
+                        {corpname:string; human_corpname:string}>('LastUsedCorp'),
+                    lastUsedConc: concId ?
+                        {
+                            id: concId,
+                            args: this.layoutModel.getConf<ConcServerArgs>('currentArgs') || undefined
+                        } :
+                        undefined
                 },
                 () => this.layoutModel.dispatchServerMessages()
             );

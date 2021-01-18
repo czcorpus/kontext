@@ -22,6 +22,8 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../types/common';
 import { MessageModel, MessageModelState } from '../models/common/layout';
+import { ConcServerArgs } from '../models/concordance/common';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 
 export interface MessageViewProps {
@@ -29,6 +31,7 @@ export interface MessageViewProps {
     widgetProps:any;
     anonymousUser:boolean;
     lastUsedCorpus:{corpname:string; human_corpname:string};
+    lastUsedConc?:{id:string; args:ConcServerArgs};
 }
 
 export interface MessageViews {
@@ -65,6 +68,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             window.location.href = he.createActionLink('corpora/corplist');
         };
 
+        const createConcArgs = () => {
+            if (props.lastUsedConc) {
+                const args = props.lastUsedConc.args ? {...props.lastUsedConc.args} : {};
+                if (!Dict.hasKey('q', args)) {
+                    args['q'] = props.lastUsedConc.id;
+                }
+                return Dict.toEntries(args);
+            }
+            return [];
+        };
+
         return (
             <div className="MessagePageHelp">
                 <div className="messages">
@@ -74,9 +88,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 </div>
                 <h2>{he.translate('global__where_to_continue')}:</h2>
                 <ul className="links">
+                    {props.lastUsedConc ?
+                        <li>
+                            <a href={he.createActionLink('view', createConcArgs())}>
+                                {he.translate('global__view_last_concordance')}
+                            </a>
+                        </li> :
+                        null
+                    }
                     {props.lastUsedCorpus.corpname ?
                         <li>
-                            <a href={he.createActionLink('first_form', [['corpname', props.lastUsedCorpus.corpname]])}>
+                            <a href={he.createActionLink('query', [['corpname', props.lastUsedCorpus.corpname]])}>
                                 {he.translate('global__select_last_used_corpus_{corpname}', {corpname: props.lastUsedCorpus.human_corpname})}
                             </a>
                         </li> :
