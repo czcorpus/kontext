@@ -150,10 +150,21 @@ class TagsetInfo(DictLike):
         self.feat_attr: Optional[str] = None
         self.tagset_type: Optional[str] = None
         self.tagset_name: Optional[str] = None
+        self.widget_enabled: bool = False
+        self.doc_url_local: Optional[str] = None
+        self.doc_url_en: Optional[str] = None
+
+    def from_dict(self, data: Dict[str, Any]) -> 'DictLike':
+        self.__dict__.update(data)
+        self.widget_enabled = bool(self.widget_enabled)
+        return self
 
     def to_dict(self):
         # Note: the returned type must match client-side's PluginInterfaces.TagHelper.TagsetInfo
-        return dict(ident=self.tagset_name, type=self.tagset_type, posAttr=self.pos_attr, featAttr=self.feat_attr)
+        return dict(ident=self.tagset_name, type=self.tagset_type,
+                    posAttr=self.pos_attr, featAttr=self.feat_attr,
+                    widgetEnabled=self.widget_enabled,
+                    docUrlLocal=self.doc_url_local, docUrlEn=self.doc_url_en)
 
 
 class QuerySuggest(DictLike):
