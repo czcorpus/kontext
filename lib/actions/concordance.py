@@ -822,6 +822,15 @@ class Actions(Querying):
                         'ml2attr': request.args.get('ml2attr'),
                         'ml3attr': request.args.get('ml3attr')
                     }
+                elif request.args.get('next') == 'freqct':
+                    out['next_action'] = 'freqct'
+                    out['next_action_args'] = {
+                        'ctminfreq': request.args.get('ctminfreq', '1'),
+                        'ctminfreq_type': request.args.get('ctminfreq_type'),
+                        'ctattr1': self.args.ctattr1,
+                        'ctfcrit1': self.args.ctfcrit1,
+                        'ctattr2': self.args.ctattr2,
+                        'ctfcrit2': self.args.ctfcrit2}
                 elif request.args.get('next') == 'collx':
                     out['next_action'] = 'collx'
                     out['next_action_args'] = {
@@ -1156,7 +1165,14 @@ class Actions(Querying):
     def freqct(self, request):
         """
         """
+        try:
+            require_existing_conc(self.corp, self.args.q)
+            return self._freqct(request)
+        except ConcNotFoundException:
+            args = list(self._request.args.items()) + [('next', 'freqct')]
+            raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
+    def _freqct(self, request):
         args = freq_calc.CTFreqCalcArgs()
         args.corpname = self.corp.corpname
         args.subcname = getattr(self.corp, 'subcname', None)

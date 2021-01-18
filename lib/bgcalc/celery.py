@@ -42,6 +42,10 @@ class CeleryClient:
     def AsyncResult(self, ident):
         return self._app.AsyncResult(ident)
 
+    @property
+    def control(self):
+        return self._app.control
+
     @staticmethod
     def _is_celery_error(err):
         """
