@@ -28,6 +28,7 @@ import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { PluginName } from '../../app/plugin';
+import { MultiDict } from '../../multidict';
 
 
 interface StructAttrsSubmit {
@@ -123,7 +124,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
 
                     }).pipe(
                         concatMap(
-                            (v) => this.loadData()
+                            (v) => this.loadData(state)
                         )
                     ).subscribe(
                         (data:ViewOptions.LoadOptionsResponse) => {
@@ -733,9 +734,9 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         state.qsEnabled = data.QueryHintEnabled;
     }
 
-    private loadData():Observable<ViewOptions.LoadOptionsResponse> {
-        const args = this.layoutModel.exportConcArgs();
-        args.set('format', 'json');
+    private loadData(state:CorpusViewOptionsModelState):Observable<ViewOptions.LoadOptionsResponse> {
+        const args = new MultiDict();
+        args.set('corpname', state.corpusIdent.id);
         return this.layoutModel.ajax$<ViewOptions.LoadOptionsResponse>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('options/viewattrs', args),
