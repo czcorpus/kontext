@@ -190,6 +190,8 @@ export class QueryPage {
     }
 
     private initQueryModel(queryFormArgs:AjaxResponse.QueryFormArgs):void {
+        const corpora = [this.layoutModel.getCorpusIdent().id].concat(
+            this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
         this.queryModel = new FirstQueryFormModel(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -197,8 +199,7 @@ export class QueryPage {
             this.queryContextModel,
             this.layoutModel.qsuggPlugin,
             {
-                corpora: [this.layoutModel.getCorpusIdent().id].concat(
-                    this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
+                corpora,
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
                     'availableAlignedCorpora'
                 ),
@@ -217,7 +218,7 @@ export class QueryPage {
                 currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
                 origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
                 isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
-                tagBuilderSupport: queryFormArgs.tag_builder_support,
+                tagsets: queryFormArgs.tagsets,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
@@ -231,8 +232,8 @@ export class QueryPage {
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
                 useRichQueryEditor:this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
-                tagAttr: this.layoutModel.getConf<string>('tagAttr'),
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
+                isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
                 suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
                 simpleQueryDefaultAttrs: {
                     [this.layoutModel.getCorpusIdent().id]: this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')
@@ -241,9 +242,10 @@ export class QueryPage {
         );
     }
 
+
     private attachQueryForm(
         properties:QueryFormProps,
-        tagsetDocs:{[corp:string]:string},
+        tagsets:{[corp:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>},
         corparchWidget:React.ComponentClass
 
     ):void {
@@ -269,7 +271,8 @@ export class QueryPage {
             queryFormComponents.QueryHelp,
             window.document.getElementById('topbar-help-mount'),
             {
-                tagsetDocs
+                tagsets,
+                isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang')
             }
         );
     }
@@ -356,7 +359,7 @@ export class QueryPage {
 
             this.initQueryModel(queryFormArgs);
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
-            this.attachQueryForm(ttAns, queryFormArgs.tagset_docs, corparchWidget);
+            this.attachQueryForm(ttAns, queryFormArgs.tagsets, corparchWidget);
             this.initCorpnameLink();
             const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
             // all the models must be unregistered and components must

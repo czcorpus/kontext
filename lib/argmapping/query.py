@@ -14,9 +14,9 @@
 
 from typing import Dict, Any, List, Tuple, Optional
 import re
-import logging
 
 import plugins
+from plugins.abstract.corpora import TagsetInfo
 from .error import ArgumentMappingError
 
 
@@ -143,8 +143,7 @@ class QueryFormArgs(ConcFormArgs):
         self.curr_qmcase_values = empty_dict.copy()
         self.curr_default_attr_values = {k: None for k in corpora}
         self.curr_use_regexp_values = {k: False for k in corpora}
-        self.tag_builder_support = empty_dict.copy()
-        self.tagset_docs = empty_dict.copy()
+        self.tagsets = empty_dict.copy()
         self.has_lemma = empty_dict.copy()
         self.asnc = False
 
@@ -209,19 +208,17 @@ class QueryFormArgs(ConcFormArgs):
         self.selected_text_types = data['text_types']
 
     def _add_corpus_metadata(self, corpus_id: str):
-        with plugins.runtime.TAGHELPER as th:
-            self.tag_builder_support[corpus_id] = getattr(th, 'tags_enabled_for')(corpus_id)
-
-        with plugins.runtime.CORPARCH as ca:
+        with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:
             corp_info = getattr(ca, 'get_corpus_info')('en_US', corpus_id)
             self.has_lemma[corpus_id] = corp_info.manatee.has_lemma
-            self.tagset_docs[corpus_id] = corp_info.manatee.tagset_doc
+            self.tagsets[corpus_id] = [d.to_dict() for d in corp_info.tagsets]
+            for ts in self.tagsets[corpus_id]:
+                ts['widgetEnabled'] = th.tags_enabled_for(corpus_id, ts['ident'])
 
     def serialize(self) -> Dict[str, Any]:
         ans = super().to_dict()
         del ans['has_lemma']
-        del ans['tagset_docs']
-        del ans['tag_builder_support']
+        del ans['tagsets']
         return ans
 
 
@@ -251,8 +248,7 @@ class FilterFormArgs(ConcFormArgs):
         self.default_attr: str = 'word'
         self.use_regexp: bool = False
         self.has_lemma: bool = False
-        self.tagset_doc: str = ''
-        self.tag_builder_support: bool = False
+        self.tagsets: List[TagsetInfo] = []
         self.within: bool = False
         self._add_corpus_metadata()
 
@@ -272,13 +268,12 @@ class FilterFormArgs(ConcFormArgs):
         self.use_regexp = data.get('use_regexp', False)
 
     def _add_corpus_metadata(self):
-        with plugins.runtime.TAGHELPER as th:
-            self.tag_builder_support = th.tags_enabled_for(self.maincorp)
-
-        with plugins.runtime.CORPARCH as ca:
+        with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:
             corp_info = ca.get_corpus_info('en_US', self.maincorp)
             self.has_lemma = corp_info.manatee.has_lemma
-            self.tagset_doc = corp_info.manatee.tagset_doc
+            self.tagsets = [d.to_dict() for d in corp_info.tagsets]
+            for tagset in self.tagsets:
+                tagset['widgetEnabled'] = th.tags_enabled_for(self.maincorp, tagset['ident'])
 
 
 class SortFormArgs(ConcFormArgs):

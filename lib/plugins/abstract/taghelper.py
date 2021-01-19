@@ -126,7 +126,7 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    def tags_enabled_for(self, corpus_id: str) -> bool:
+    def tags_enabled_for(self, corpus_id: str, tagset_id: str) -> bool:
         """
         Test whether tag variant data exist for a specified
         corpus.

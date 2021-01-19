@@ -241,6 +241,11 @@
                                 <attribute name="label">
                                     <text />
                                 </attribute>
+                                <optional>
+                                    <attribute name="local">
+                                        <ref name="boolValues" />
+                                    </attribute>
+                                </optional>
                                 <data type="language" />
                             </element>
                         </oneOrMore>

@@ -419,7 +419,8 @@ class Backend(DatabaseBackend):
 
     def load_corpus_tagsets(self, corpus_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT corpus_name, pos_attr, feat_attr, tagset_type, tagset_name '
+        cursor.execute('SELECT corpus_name, pos_attr, feat_attr, tagset_type, tagset_name, '
+                       'widget_enabled, doc_url_local, doc_url_en '
                        'FROM kontext_corpus_taghelper '
                        'WHERE corpus_name = %s', (corpus_id,))
         return cursor.fetchall()

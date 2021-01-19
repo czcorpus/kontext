@@ -361,20 +361,20 @@ export class ViewPage {
             currentSubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
             origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
             isForeignSubcorpus: this.layoutModel.getCorpusIdent().foreignSubcorp,
-            tagBuilderSupport: queryFormArgs.tag_builder_support,
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             structList: this.layoutModel.getConf<Array<string>>('StructList'),
             hasLemma: queryFormArgs.has_lemma,
+            tagsets: queryFormArgs.tagsets,
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
             textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
             selectedTextTypes: queryFormArgs.selected_text_types,
             useRichQueryEditor:this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
+            isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
             suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
             simpleQueryDefaultAttrs: {
                 [List.head(this.getActiveCorpora())]: this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')
@@ -433,7 +433,7 @@ export class ViewPage {
             currFilfposValues: fetchArgs<string>(item => item.filfpos),
             currFiltposValues: fetchArgs<string>(item => item.filtpos),
             currInclkwicValues: fetchArgs<boolean>(item => item.inclkwic),
-            tagBuilderSupport: fetchArgs<boolean>(item => item.tag_builder_support),
+            tagsets: this.concFormsInitialArgs.filter.tagsets,
             withinArgValues: fetchArgs<boolean>(item => !!item.within),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
@@ -446,8 +446,8 @@ export class ViewPage {
             )[this.layoutModel.getCorpusIdent().id],
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
             useRichQueryEditor: this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
-            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
+            isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
             suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled')
         };
 

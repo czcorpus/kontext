@@ -22,6 +22,7 @@ import {Kontext, TextTypes} from '../types/common';
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../models/concordance/common';
 import { CtxLemwordType } from '../models/query/common';
 import { QueryType } from '../models/query/query';
+import { PluginInterfaces } from './plugins';
 
 // TODO !! this should be broken and moved into respective modules
 
@@ -142,11 +143,10 @@ export namespace AjaxResponse {
         curr_default_attr_values:{[corpname:string]:string};
         curr_use_regexp_values:{[corpname:string]:boolean};
         curr_include_empty_values:{[corpname:string]:boolean};
-        tag_builder_support:{[corpname:string]:boolean};
+        tagsets:{[corpname:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
         selected_text_types:TextTypes.ExportedSelection;
         bib_mapping:TextTypes.BibMapping;
         has_lemma:{[corpname:string]:boolean};
-        tagset_docs:{[corpname:string]:string};
         fc_lemword_type:CtxLemwordType;
         fc_lemword_wsize:[number, number];
         fc_lemword:string;
@@ -174,11 +174,10 @@ export namespace AjaxResponse {
         qmcase:boolean;
         default_attr:string;
         use_regexp:boolean;
-        tag_builder_support:boolean;
+        tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
         lpos:string;
         within:boolean; // used when switching to an aligned corp without specific query (true)
         has_lemma:boolean;
-        tagset_doc:string;
     }
 
     export function isFilterFormArgs(args:ConcFormArgs):args is FilterFormArgs {

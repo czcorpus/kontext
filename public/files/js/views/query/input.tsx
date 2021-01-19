@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Dict, Keyboard, List, pipe } from 'cnc-tskit';
+import { Dict, Keyboard, List, pipe, tuple } from 'cnc-tskit';
 
 import { init as keyboardInit } from './virtualKeyboard';
 import { init as cqlEditoInit } from './cqlEditor';
@@ -62,6 +62,7 @@ export interface TRQueryInputFieldProps {
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
     isNested?:boolean;
     customOptions?:Array<React.ReactElement<{span:number}>>;
+    tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
 }
 
 
@@ -722,18 +723,38 @@ export function init({
         formType:QueryFormType;
         queryType:QueryType;
         label:string;
+        isLocalUiLang:boolean;
+        tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
 
-    }> = (props) => (
-        <span className="default-attr-selection">
-            {props.label + ':\u00a0'}
-            <DefaultAttrSelect defaultAttr={props.defaultAttr}
-                forcedAttr={props.forcedAttr}
-                attrList={props.attrList}
-                simpleQueryDefaultAttrs={props.simpleQueryDefaultAttrs}
-                sourceId={props.sourceId}
-                formType={props.formType}
-                queryType={props.queryType} />{'\u00a0'}
-        </span>
+    }> = (props) => {
+        const srch = pipe(
+            props.tagsets,
+            List.map(tagset => tuple(
+                tagset,
+                props.isLocalUiLang ? tagset.docUrlLocal : tagset.docUrlEn
+            )),
+            List.filter(([tagset, url]) => props.defaultAttr === tagset.featAttr && !!url)
+        );
+        const tagsetHelp = List.empty(srch) ? undefined : List.head(srch)[1];
+
+        return (
+            <span className="default-attr-selection">
+                {props.label + ':\u00a0'}
+                <DefaultAttrSelect defaultAttr={props.defaultAttr}
+                    forcedAttr={props.forcedAttr}
+                    attrList={props.attrList}
+                    simpleQueryDefaultAttrs={props.simpleQueryDefaultAttrs}
+                    sourceId={props.sourceId}
+                    formType={props.formType}
+                    queryType={props.queryType} />{'\u00a0'}
+                {tagsetHelp ?
+                    <layoutViews.InlineHelp noSuperscript={true} url={tagsetHelp}>
+                        {he.translate('query__tagset_summary')}
+                    </layoutViews.InlineHelp> :
+                    null
+                }
+            </span>
+        );
     );
 
     // -------------------- <UseRegexpSelector /> --------------------------
@@ -1011,7 +1032,9 @@ export function init({
                                         attrList={this.props.attrList}
                                         simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
                                         formType={this.props.formType}
-                                        queryType={this.props.queries[this.props.sourceId].qtype} />
+                                        queryType={this.props.queries[this.props.sourceId].qtype}
+                                        tagsets={this.props.tagsets}
+                                        isLocalUiLang={this.props.isLocalUiLang} />
                                 </div>
                             </>
                         </>
@@ -1038,7 +1061,9 @@ export function init({
                                         attrList={this.props.attrList}
                                         simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
                                         formType={this.props.formType}
-                                        queryType={this.props.queries[this.props.sourceId].qtype} />
+                                        queryType={this.props.queries[this.props.sourceId].qtype}
+                                        tagsets={this.props.tagsets}
+                                        isLocalUiLang={this.props.isLocalUiLang} />
                                 </div>
                             </div>
                         </>

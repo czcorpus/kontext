@@ -312,6 +312,7 @@ export function init({
                                 forcedAttr={this.props.forcedAttr}
                                 attrList={this.props.attrList}
                                 tagHelperView={this.props.tagHelperView}
+                                tagsets={this.props.tagsets}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguage}
                                 useRichQueryEditor={this.props.useRichQueryEditor}
@@ -366,6 +367,7 @@ export function init({
                                 forcedAttr={this.props.forcedAttr}
                                 attrList={this.props.attrList}
                                 tagHelperView={this.props.tagHelperView}
+                                tagsets={this.props.tagsets}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.props.inputLanguage}
                                 useRichQueryEditor={this.props.useRichQueryEditor}
