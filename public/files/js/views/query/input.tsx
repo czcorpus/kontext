@@ -755,7 +755,7 @@ export function init({
                 }
             </span>
         );
-    );
+    };
 
     // -------------------- <UseRegexpSelector /> --------------------------
 
