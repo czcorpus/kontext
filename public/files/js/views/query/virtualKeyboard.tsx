@@ -202,6 +202,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
         shiftOn:boolean;
         capsOn:boolean;
         passTriggerIdx:number;
+        activeDeadKeyIdx:number|null;
         data:Kontext.ListOfPairs;
         handleShift:()=>void;
         handleCaps:()=>void;
@@ -212,9 +213,17 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
 
         const selectValue = (v) => {
             if (props.shiftOn || props.capsOn) {
+                if (props.activeDeadKeyIdx !== null && v[4 + props.activeDeadKeyIdx] !== null && v[4 + props.activeDeadKeyIdx] !== undefined) {
+                    return v[4 + props.activeDeadKeyIdx].toUpperCase();
+                }
+
                 return v[1];
 
             } else {
+                if (props.activeDeadKeyIdx !== null && v[4 + props.activeDeadKeyIdx] !== null && v[4 + props.activeDeadKeyIdx] !== undefined) {
+                    return v[4 + props.activeDeadKeyIdx];
+                }
+
                 return v[0];
             }
         };
@@ -278,14 +287,37 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
         }
 
         _handleClick(chunk:string) {
-            dispatcher.dispatch<Actions.QueryInputInsertAtCursor>({
-                name: ActionName.QueryInputInsertAtCursor,
-                payload: {
-                    formType: this.props.formType,
-                    sourceId: this.props.sourceId,
-                    chunk
-                }
-            });
+            const deadKeys = this.getCurrentLayout().deadKeys;
+            let deadKeyIndex;
+            if (deadKeys) {
+                deadKeyIndex = List.findIndex(v => v === chunk, deadKeys);
+            }
+            
+            if (deadKeys && deadKeyIndex >= 0 && this.props.activeDeadKeyIndex !== deadKeyIndex) {
+                dispatcher.dispatch<Actions.QueryInputHitVirtualKeyboardDeadKey>({
+                    name: ActionName.QueryInputHitVirtualKeyboardDeadKey,
+                    payload: {
+                        deadKeyIndex: deadKeyIndex,
+                    }
+                });
+
+            } else {
+                dispatcher.dispatch<Actions.QueryInputHitVirtualKeyboardDeadKey>({
+                    name: ActionName.QueryInputHitVirtualKeyboardDeadKey,
+                    payload: {
+                        deadKeyIndex: null,
+                    }
+                });
+
+                dispatcher.dispatch<Actions.QueryInputInsertAtCursor>({
+                    name: ActionName.QueryInputInsertAtCursor,
+                    payload: {
+                        formType: this.props.formType,
+                        sourceId: this.props.sourceId,
+                        chunk
+                    }
+                });
+            }
 
             dispatcher.dispatch<Actions.QueryInputUnhitVirtualKeyboardShift>({
                 name: ActionName.QueryInputUnhitVirtualKeyboardShift
@@ -354,7 +386,8 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
                                     capsOn={this.props.capsOn}
                                     handleCaps={this._handleCaps}
                                     handleBackspace={this._handleBackspace}
-                                    passTriggerIdx={passTriggerIdx} />;
+                                    passTriggerIdx={passTriggerIdx}
+                                    activeDeadKeyIdx={this.props.activeDeadKeyIndex} />;
                     }, this.getCurrentLayout().keys)}
                 </div>
             );
