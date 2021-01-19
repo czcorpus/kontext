@@ -214,14 +214,14 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
         const selectValue = (v) => {
             if (props.shiftOn || props.capsOn) {
                 if (props.activeDeadKeyIdx !== null && v[4 + props.activeDeadKeyIdx] !== null && v[4 + props.activeDeadKeyIdx] !== undefined) {
-                    return v[4 + props.activeDeadKeyIdx][1];
+                    return v[4 + props.activeDeadKeyIdx].toUpperCase();
                 }
 
                 return v[1];
 
             } else {
                 if (props.activeDeadKeyIdx !== null && v[4 + props.activeDeadKeyIdx] !== null && v[4 + props.activeDeadKeyIdx] !== undefined) {
-                    return v[4 + props.activeDeadKeyIdx][0];
+                    return v[4 + props.activeDeadKeyIdx];
                 }
 
                 return v[0];
