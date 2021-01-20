@@ -50,7 +50,8 @@ class MySQLConf(object):
         self.password = conf.get('plugins', 'conc_persistence')['mysql_passwd']
         self.pool_size = int(conf.get('plugins', 'conc_persistence')['mysql_pool_size'])
         self.conn_retry_delay = int(conf.get('plugins', 'conc_persistence')['mysql_retry_delay'])
-        self.conn_retry_attempts = int(conf.get('plugins', 'conc_persistence')['mysql_retry_attempts'])
+        self.conn_retry_attempts = int(conf.get('plugins', 'conc_persistence')[
+                                       'mysql_retry_attempts'])
 
     @property
     def conn_dict(self):
@@ -208,6 +209,29 @@ def _create_archive(conf, dry_run):
         print('Created a new archive table.')
 
 
+def _import_sqlite_db(conf, db_path, chunk_size):
+    import sqlite3
+
+    ucnk_db = sqlite3.connect(db_path)
+    cursor = ucnk_db.cursor()
+    mysql_db = MySQLOps(MySQLConf(conf))
+
+    cursor.execute('SELECT id, data, created, num_access, last_access FROM archive')
+    while True:
+        data = cursor.fetchmany(chunk_size)
+        if len(data):
+            mysql_db.executemany(
+                'INSERT IGNORE INTO archive (id, data, created, num_access, last_access) VALUES (%s, %s, %s, %s, %s)',
+                data
+            )
+            mysql_db.commit()
+        else:
+            break
+
+    cursor.close()
+    ucnk_db.close()
+
+
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
     sys.path.insert(0, os.path.realpath('%s/../../../scripts/' %
@@ -222,13 +246,17 @@ if __name__ == '__main__':
     initializer.init_plugin('auth')
 
     parser = argparse.ArgumentParser(
-        description='Archive old records from Redis to a SQLite3 database')
-    parser.add_argument('action', metavar='ACTION', type=str, help='One of {new_archive, backup}')
+        description='Archive old records from Redis to a MySQL database')
+    parser.add_argument('action', metavar='ACTION', type=str,
+                        help='One of {new_archive, backup, import_sqlite}')
     parser.add_argument('-n', '--num_proc', type=int, default=1000,
-                        help='For backup, how many items to process. Default is 1000')
+                        help='For backup, how many items to process. Also import chunk size. Default is 1000')
     parser.add_argument('-d', '--dry-run', action='store_true', default=False,
                         help=('allows running without affecting storage data '
                               '(not 100%% error prone as it reads/writes to Redis)'))
+    parser.add_argument('-p', '--path', type=str,
+                        help=('path to sqlite3 db used in import'))
+
     args = parser.parse_args()
     if args.action == 'backup':
         ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
@@ -236,6 +264,16 @@ if __name__ == '__main__':
     elif args.action == 'new_archive':
         try:
             _create_archive(conf=settings, dry_run=args.dry_run)
+        except Exception as ex:
+            print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
+            sys.exit(1)
+    elif args.action == 'import_sqlite':
+        if not args.path:
+            print('You have to specify path to sqlite3 db for import using --path parameter')
+            sys.exit(1)
+        try:
+            _import_sqlite_db(conf=settings, db_path=args.path, chunk_size=args.num_proc)
+            print('Data imported')
         except Exception as ex:
             print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
             sys.exit(1)
