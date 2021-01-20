@@ -20,12 +20,8 @@
 A script to archive outdated concordance queries from Redis to a MySQL database.
 """
 
-import os
-import sys
-import argparse
-import time
+import datetime
 import json
-from datetime import datetime
 import logging
 
 import redis
@@ -37,6 +33,10 @@ def redis_connection(host, port, db_id):
     Creates a connection to a Redis instance
     """
     return redis.StrictRedis(host=host, port=port, db=db_id)
+
+
+def get_iso_datetime():
+    return datetime.datetime.now().isoformat()
 
 
 class MySQLConf(object):
@@ -138,7 +138,7 @@ class Archiver(object):
         a dict containing some information about processed data (num_processed,
         error, dry_run, queue_size)
         """
-        curr_time = time.time()
+        curr_time = get_iso_datetime()
         conc_prefix = 'concordance:'
         inserts = []
         i = 0
@@ -154,7 +154,8 @@ class Archiver(object):
 
             if not dry_run:
                 self._to_db.executemany(
-                    'INSERT IGNORE INTO archive (id, data, created, num_access) VALUES (%s, %s, %s, %s)',
+                    'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                    'VALUES (%s, %s, %s, %s)',
                     inserts
                 )
                 self._to_db.commit()
@@ -163,6 +164,7 @@ class Archiver(object):
                     self._from_db.lpush(self._archive_queue_key,
                                         json.dumps(dict(key=conc_prefix + ins[0])))
         except Exception as ex:
+            logging.getLogger(__name__).error('Failed to archive items: {}'.format(ex))
             for item in inserts:
                 self._from_db.rpush(self._archive_queue_key, json.dumps(
                     dict(key=conc_prefix + item[0])))
@@ -184,61 +186,6 @@ def run(conf, num_proc, dry_run):
                                conf.get('plugins', 'db')['default:id'])
     to_db = MySQLOps(MySQLConf(conf))
 
-    archive_queue_key = conf.get('plugins')['conc_persistence']['mysql:archive_queue_key']
+    archive_queue_key = conf.get('plugins')['conc_persistence']['archive_queue_key']
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=archive_queue_key)
     return archiver.run(num_proc, dry_run)
-
-
-def _create_archive(conf, dry_run):
-    sql = '''
-        CREATE TABLE archive (
-            id VARCHAR(191) PRIMARY KEY,
-            data TEXT NOT NULL,
-            created INT NOT NULL,
-            num_access INT NOT NULL DEFAULT 0,
-            last_access INT
-        )
-    '''
-    if dry_run:
-        print(sql)
-    else:
-        to_db = MySQLOps(MySQLConf(conf))
-        to_db.execute(sql, ())
-        to_db.commit()
-        print('Created a new archive table.')
-
-
-if __name__ == '__main__':
-    sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
-    sys.path.insert(0, os.path.realpath('%s/../../../scripts/' %
-                                        os.path.dirname(os.path.realpath(__file__))))
-    import autoconf
-    import initializer
-    settings = autoconf.settings
-    logger = autoconf.logger
-
-    initializer.init_plugin('db')
-    initializer.init_plugin('sessions')
-    initializer.init_plugin('auth')
-
-    parser = argparse.ArgumentParser(
-        description='Archive old records from Redis to a SQLite3 database')
-    parser.add_argument('action', metavar='ACTION', type=str, help='One of {new_archive, backup}')
-    parser.add_argument('-n', '--num_proc', type=int, default=1000,
-                        help='For backup, how many items to process. Default is 1000')
-    parser.add_argument('-d', '--dry-run', action='store_true', default=False,
-                        help=('allows running without affecting storage data '
-                              '(not 100%% error prone as it reads/writes to Redis)'))
-    args = parser.parse_args()
-    if args.action == 'backup':
-        ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
-        print(ans)
-    elif args.action == 'new_archive':
-        try:
-            _create_archive(conf=settings, dry_run=args.dry_run)
-        except Exception as ex:
-            print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
-            sys.exit(1)
-    else:
-        print(('Unknown action "{0}"'.format(args.action)))
-        sys.exit(1)

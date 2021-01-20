@@ -24,34 +24,26 @@ A custom implementation of conc_persistence where:
 
 archive db (can be also created using the 'archive.py' script):
 
-CREATE TABLE archive (
+CREATE TABLE kontext_conc_persistence (
     id VARCHAR(191) PRIMARY KEY,
     data TEXT NOT NULL,
-    created INT NOT NULL,
+    created TIMESTAMP NOT NULL,
     num_access INT NOT NULL DEFAULT 0,
-    last_access INT
+    last_access TIMESTAMP
 );
 """
 
-import hashlib
-import time
 import re
 import json
-import sqlite3
-import uuid
-import os
-import logging
 
 import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
+from plugins.abstract.conc_persistence.common import generate_idempotent_id
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 
-from .archive import Archiver, MySQLOps, MySQLConf
+from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime
 
-
-KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
-               ['%d' % i for i in range(10)]
 
 PERSIST_LEVEL_KEY = 'persist_level'
 ID_KEY = 'id'
@@ -68,35 +60,8 @@ def id_exists(id):
     return False
 
 
-def generate_uniq_id():
-    return mk_short_id(uuid.uuid1().hex, min_length=DEFAULT_CONC_ID_LENGTH)
-
-
 def mk_key(code):
     return 'concordance:%s' % (code, )
-
-
-def mk_short_id(s, min_length=6):
-    """
-    Generates a hash based on md5 but using [a-zA-Z0-9] characters and with
-    limited length.
-
-    arguments:ucnk_op_persistence
-    s -- a string to be hashed
-    min_length -- minimum length of the output hash
-    """
-    x = int('0x' + hashlib.md5(s.encode('utf-8')).hexdigest(), 16)
-    ans = []
-    while x > 0:
-        p = x % len(KEY_ALPHABET)
-        ans.append(KEY_ALPHABET[p])
-        x = int(x / len(KEY_ALPHABET))
-    ans = ''.join([str(x) for x in ans])
-    max_length = len(ans)
-    i = min_length
-    while id_exists(ans[:i]) and i < max_length:
-        i += 1
-    return ans[:i]
 
 
 class ConcPersistence(AbstractConcPersistence):
@@ -110,11 +75,11 @@ class ConcPersistence(AbstractConcPersistence):
 
     def __init__(self, settings, db, auth):
         plugin_conf = settings.get('plugins', 'conc_persistence')
-        ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
+        ttl_days = int(plugin_conf.get('ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
         self._anonymous_user_ttl_days = int(plugin_conf.get(
-            'default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
-        self._archive_queue_key = plugin_conf['mysql:archive_queue_key']
+            'anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+        self._archive_queue_key = plugin_conf['archive_queue_key']
         self.db = db
         self._auth = auth
         self._archive = MySQLOps(MySQLConf(settings))
@@ -185,14 +150,16 @@ class ConcPersistence(AbstractConcPersistence):
         data = self.db.get(mk_key(data_id))
         if data is None:
             cursor = self._archive.cursor()
-            cursor.execute('SELECT data, num_access FROM archive WHERE id = %s', (data_id,))
+            cursor.execute('SELECT data, num_access FROM kontext_conc_persistence WHERE id = %s', (data_id,))
             tmp = cursor.fetchone()
             if tmp:
-                data = json.loads(tmp[0])
+                data = json.loads(tmp['data'])
                 if save_access:
                     cursor.execute(
-                        'UPDATE archive SET last_access = %s, num_access = num_access + 1 WHERE id = %s',
-                        (int(round(time.time())), data_id)
+                        'UPDATE kontext_conc_persistence '
+                        'SET last_access = %s, num_access = num_access + 1 '
+                        'WHERE id = %s',
+                        (get_iso_datetime(), data_id)
                     )
                     self._archive.commit()
         return data
@@ -216,7 +183,7 @@ class ConcPersistence(AbstractConcPersistence):
                     r1.get('lines_groups') != r2.get('lines_groups'))
 
         if prev_data is None or records_differ(curr_data, prev_data):
-            data_id = generate_uniq_id()
+            data_id = generate_idempotent_id(curr_data)
             curr_data[ID_KEY] = data_id
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
@@ -235,7 +202,7 @@ class ConcPersistence(AbstractConcPersistence):
     def archive(self, user_id, conc_id, revoke=False):
         cursor = self._archive.cursor()
         cursor.execute(
-            'SELECT id, data, created, num_access, last_access FROM archive WHERE id = %s LIMIT 1',
+            'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
             (conc_id,)
         )
         row = cursor.fetchone()
@@ -243,15 +210,15 @@ class ConcPersistence(AbstractConcPersistence):
 
         if revoke:
             if archived_rec:
-                cursor.execute('DELETE FROM archive WHERE id = %s', (conc_id,))
+                cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
                 ans = 1
             else:
-                raise NotFoundException('Concordance {0} not archived'.format(conc_id))
+                raise NotFoundException('Archive revoke error - concordance {0} not archived'.format(conc_id))
         else:
             cursor = self._archive.cursor()
             data = self.db.get(mk_key(conc_id))
             if data is None and archived_rec is None:
-                raise NotFoundException('Concordance {0} not found'.format(conc_id))
+                raise NotFoundException('Archive store error - concordance {0} not found'.format(conc_id))
             elif archived_rec:
                 ans = 0
             else:
@@ -259,10 +226,10 @@ class ConcPersistence(AbstractConcPersistence):
                 if user_id != stored_user_id:
                     raise ForbiddenException(
                         'Cannot change status of a concordance belonging to another user')
-                curr_time = time.time()
                 cursor.execute(
-                    'INSERT IGNORE INTO archive (id, data, created, num_access) VALUES (%s, %s, %s, %s)',
-                    (conc_id, json.dumps(data), curr_time, 0))
+                    'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                    'VALUES (%s, %s, %s, %s)',
+                    (conc_id, json.dumps(data), get_iso_datetime(), 0))
                 archived_rec = data
                 ans = 1
         self._archive.commit()
@@ -273,7 +240,7 @@ class ConcPersistence(AbstractConcPersistence):
 
     def export_tasks(self):
         """
-        Export tasks for Celery worker(s)
+        Export tasks for async queue worker(s)
         """
         def archive_concordance(num_proc, dry_run):
             from . import archive

@@ -42,17 +42,16 @@ CREATE TABLE archive (
 );
 """
 
-import hashlib
 import time
 import re
 import json
 import sqlite3
-import uuid
 import os
 import logging
 
 import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
+from plugins.abstract.conc_persistence.common import generate_uniq_id
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 
@@ -77,35 +76,8 @@ def id_exists(id):
     return False
 
 
-def generate_uniq_id():
-    return mk_short_id(uuid.uuid1().hex, min_length=DEFAULT_CONC_ID_LENGTH)
-
-
 def mk_key(code):
     return 'concordance:%s' % (code, )
-
-
-def mk_short_id(s, min_length=6):
-    """
-    Generates a hash based on md5 but using [a-zA-Z0-9] characters and with
-    limited length.
-
-    arguments:ucnk_op_persistence
-    s -- a string to be hashed
-    min_length -- minimum length of the output hash
-    """
-    x = int('0x' + hashlib.md5(s.encode('utf-8')).hexdigest(), 16)
-    ans = []
-    while x > 0:
-        p = x % len(KEY_ALPHABET)
-        ans.append(KEY_ALPHABET[p])
-        x = int(x / len(KEY_ALPHABET))
-    ans = ''.join([str(x) for x in ans])
-    max_length = len(ans)
-    i = min_length
-    while id_exists(ans[:i]) and i < max_length:
-        i += 1
-    return ans[:i]
 
 
 class ConcPersistence(AbstractConcPersistence):
@@ -252,7 +224,7 @@ class ConcPersistence(AbstractConcPersistence):
                     r1.get('lines_groups') != r2.get('lines_groups'))
 
         if prev_data is None or records_differ(curr_data, prev_data):
-            data_id = generate_uniq_id()
+            data_id = generate_uniq_id(curr_data)
             curr_data[ID_KEY] = data_id
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
