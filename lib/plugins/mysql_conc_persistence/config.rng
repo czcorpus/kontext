@@ -4,7 +4,7 @@
     <start>
         <element name="conc_persistence">
             <element name="module">
-                <value>rdbms_conc_persistence</value>
+                <value>mysql_conc_persistence</value>
             </element>
             <element name="ttl_days">
                 <data type="positiveInteger" />
