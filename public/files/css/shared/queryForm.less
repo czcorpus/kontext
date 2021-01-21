@@ -148,10 +148,21 @@ form.query-form {
     }
 
     .query-options {
-        .default-attr-selection .InlineHelp {
-            a.context-help {
-                margin: 0;
-                padding: 0;
+        .default-attr-selection .sel {
+            display: flex;
+            flex-direction: column;
+
+            .tagset-summary {
+                display: block;
+                text-align: right;
+                color: @color-light-text;
+                padding-top: 0.3em;
+
+                a {
+                    color: @color-light-text;
+                    display: inline-block;
+                    padding-right: 0.9em;
+                }
             }
         }
     }
@@ -171,7 +182,7 @@ form.query-form {
             grid-template-rows: auto;
             grid-gap: 1em;
             grid-row-gap: 1.5em;
-            align-items: center;
+            align-items: baseline;
 
             div.option {
                 white-space: nowrap;
@@ -221,17 +232,6 @@ form.query-form {
                 text-align: justify;
                 margin: 0.7em 1em;
             }
-        }
-    }
-
-
-    span.tagset-summary {
-        color: @color-light-text;
-
-        a {
-            color: @color-light-text;
-            display: inline-block;
-            padding-right: 0.9em;
         }
     }
 
