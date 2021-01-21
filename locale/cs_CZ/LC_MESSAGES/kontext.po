@@ -37,6 +37,9 @@ msgstr ""
 "Chyba při zpracování požadavku. Opakujte prosím akci později nebo "
 "kontaktujte technickou podporu."
 
+msgid "The query is empty."
+msgstr "Dotaz je prázdný"
+
 #, python-format
 msgid "Subcorpus \"%s\" not found"
 msgstr "Subkorpus \"%s\" nebyl nalezen"
