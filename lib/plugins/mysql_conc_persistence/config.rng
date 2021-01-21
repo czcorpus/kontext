@@ -15,27 +15,29 @@
             <element name="archive_queue_key">
                 <text />
             </element>
-            <element name="mysql_host">
-                <text />
-            </element>
-            <element name="mysql_db">
-                <text />
-            </element>
-            <element name="mysql_user">
-                <text />
-            </element>
-            <element name="mysql_passwd">
-                <text />
-            </element>
-            <element name="mysql_pool_size">
-                <data type="positiveInteger" />
-            </element>
-            <element name="mysql_retry_delay">
-                <data type="positiveInteger" />
-            </element>
-            <element name="mysql_retry_attempts">
-                <data type="positiveInteger" />
-            </element>
+            <optional>
+                <element name="mysql_host">
+                    <text />
+                </element>
+                <element name="mysql_db">
+                    <text />
+                </element>
+                <element name="mysql_user">
+                    <text />
+                </element>
+                <element name="mysql_passwd">
+                    <text />
+                </element>
+                <element name="mysql_pool_size">
+                    <data type="positiveInteger" />
+                </element>
+                <element name="mysql_retry_delay">
+                    <data type="positiveInteger" />
+                </element>
+                <element name="mysql_retry_attempts">
+                    <data type="positiveInteger" />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>

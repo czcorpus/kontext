@@ -20,6 +20,7 @@ from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, TY
 from types import ModuleType
 from secure_cookie.session import Session
 from .abstract.general_storage import KeyValueStorage
+from .abstract.integration_db import IntegrationDatabase
 from .abstract.settings_storage import AbstractSettingsStorage
 from .abstract.conc_persistence import AbstractConcPersistence
 from .abstract.conc_cache import AbstractCacheMappingFactory
@@ -136,6 +137,7 @@ class _ID(Generic[T]):
 
 class _Names(object):
     DB: _ID[KeyValueStorage] = _ID('db')
+    INTEGRATION_DB: _ID[IntegrationDatabase] = _ID('integration_db')
     SESSIONS: _ID[Session] = _ID('sessions')
     SETTINGS_STORAGE: _ID[AbstractSettingsStorage] = _ID('settings_storage')
     AUTH: _ID['AbstractAuth'] = _ID('auth')
@@ -165,11 +167,11 @@ class _Names(object):
     ACTION_LOG: _ID[AbstractActionLog] = _ID('action_log', optional=True)
 
     def __iter__(self) -> Iterator[_ID]:
-        return iter([self.DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH, self.CONC_PERSISTENCE,
-                     self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS, self.MENU_ITEMS,
-                     self.GETLANG, self.CORPARCH, self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR,
-                     self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER,
-                     self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
+        return iter([self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
+                     self.CONC_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
+                     self.MENU_ITEMS, self.GETLANG, self.CORPARCH, self.QUERY_STORAGE, self.APPLICATION_BAR,
+                     self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER,
+                     self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
                      self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])
 
 

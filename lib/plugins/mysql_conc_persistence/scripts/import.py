@@ -23,7 +23,8 @@ def import_sqlite_db(db_path, chunk_size):
         data = cursor.fetchmany(chunk_size)
         if len(data):
             mysql_db.executemany(
-                'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access, last_access) VALUES (%s, %s, %s, %s, %s)',
+                'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access, last_access) '
+                'VALUES (%s, %s, %s, %s, %s)',
                 [(
                     d[0],
                     d[1],

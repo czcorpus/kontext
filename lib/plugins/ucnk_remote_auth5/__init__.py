@@ -38,7 +38,7 @@ import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
 from plugins import inject
 
-from .backend.mysql import Backend, MySQLConf
+from .backend.mysql import Backend
 
 
 IMPLICIT_CORPUS = 'susanne'
@@ -222,8 +222,8 @@ class CentralAuth(AbstractRemoteAuth):
         return self._conf.logout_url % (urllib.parse.quote(return_url) if return_url is not None else '')
 
 
-@inject(plugins.runtime.SESSIONS)
-def create_instance(conf, sessions):
-    backend = Backend(MySQLConf(conf))
+@inject(plugins.runtime.SESSIONS, plugins.runtime.INTEGRATION_DB)
+def create_instance(conf, sessions, cnc_db):
+    backend = Backend(cnc_db)
     return CentralAuth(db=backend, sessions=sessions, conf=AuthConf(conf),
                        toolbar_conf=ToolbarConf(conf))

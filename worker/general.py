@@ -48,6 +48,7 @@ import manatee
 
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 initializer.init_plugin('db')
+initializer.init_plugin('integration_db')
 initializer.init_plugin('sessions')
 initializer.init_plugin('auth')
 initializer.init_plugin('conc_cache')

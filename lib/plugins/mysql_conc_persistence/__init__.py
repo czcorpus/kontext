@@ -20,9 +20,16 @@
 A custom implementation of conc_persistence where:
 
 1) primary storage is in Redis with different TTL for public and registered users
-2) secondary storage is a list of MySQL databases.
+2) secondary storage is a MySQL/MariaDB database.
 
-archive db (can be also created using the 'archive.py' script):
+The concordance keys are generated as idempotent (i.e. the same user with same conc arguments
+produces the same conc ID).
+
+The plug-in is able to connect either via its own configuration (see config.rng) or via
+an integration_db plugin.
+
+
+How to create the required data table:
 
 CREATE TABLE kontext_conc_persistence (
     id VARCHAR(191) PRIMARY KEY,
@@ -31,6 +38,29 @@ CREATE TABLE kontext_conc_persistence (
     num_access INT NOT NULL DEFAULT 0,
     last_access TIMESTAMP
 );
+
+Possible modifications in case the number of records is large:
+
+ALTER TABLE `kontext_conc_persistence`
+ENGINE='Aria';
+
+ALTER TABLE `kontext_conc_persistence`
+ADD PRIMARY KEY `id_created` (`id`, `created`),
+DROP INDEX `PRIMARY`;
+
+ALTER TABLE kontext_conc_persistence
+PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
+    PARTITION `to_2016` VALUES LESS THAN (UNIX_TIMESTAMP('2016-12-31 23:59:59')),
+    PARTITION `to_2019` VALUES LESS THAN (UNIX_TIMESTAMP('2019-12-31 23:59:59')),
+    PARTITION `to_2022` VALUES LESS THAN (UNIX_TIMESTAMP('2022-12-31 23:59:59')),
+    PARTITION `to_2025` VALUES LESS THAN (UNIX_TIMESTAMP('2025-12-31 23:59:59')),
+    PARTITION `to_2028` VALUES LESS THAN (UNIX_TIMESTAMP('2028-12-31 23:59:59')),
+    PARTITION `to_2031` VALUES LESS THAN (UNIX_TIMESTAMP('2031-12-31 23:59:59')),
+    PARTITION `to_2034` VALUES LESS THAN (UNIX_TIMESTAMP('2034-12-31 23:59:59')),
+    PARTITION `to_2037` VALUES LESS THAN (UNIX_TIMESTAMP('2037-12-31 23:59:59')),
+    PARTITION `the_rest` VALUES LESS THAN MAXVALUE
+)
+
 """
 
 import re
@@ -41,6 +71,7 @@ from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins.abstract.conc_persistence.common import generate_idempotent_id
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
+import logging
 
 from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime
 
@@ -64,7 +95,7 @@ def mk_key(code):
     return 'concordance:%s' % (code, )
 
 
-class ConcPersistence(AbstractConcPersistence):
+class MySqlConcPersistence(AbstractConcPersistence):
     """
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
@@ -73,16 +104,20 @@ class ConcPersistence(AbstractConcPersistence):
 
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
 
-    def __init__(self, settings, db, auth):
+    def __init__(self, settings, db, integration_db, auth):
         plugin_conf = settings.get('plugins', 'conc_persistence')
-        ttl_days = int(plugin_conf.get('ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
+        ttl_days = int(plugin_conf.get('ttl_days', MySqlConcPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
         self._anonymous_user_ttl_days = int(plugin_conf.get(
-            'anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+            'anonymous_user_ttl_days', MySqlConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
         self._archive_queue_key = plugin_conf['archive_queue_key']
         self.db = db
         self._auth = auth
-        self._archive = MySQLOps(MySQLConf(settings))
+        if integration_db.is_active:
+            self._archive = integration_db
+            logging.getLogger(__name__).info(f'MySqlConcPersistence uses integration_db {integration_db.info}')
+        else:
+            self._archive = MySQLOps(MySQLConf(settings))
         self._settings = settings
 
     def _get_ttl_for(self, user_id):
@@ -251,9 +286,9 @@ class ConcPersistence(AbstractConcPersistence):
         return archive_concordance,
 
 
-@inject(plugins.runtime.DB, plugins.runtime.AUTH)
-def create_instance(settings, db, auth):
+@inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
+def create_instance(settings, db, integration_db, auth):
     """
     Creates a plugin instance.
     """
-    return ConcPersistence(settings, db, auth)
+    return MySqlConcPersistence(settings, db, integration_db, auth)
