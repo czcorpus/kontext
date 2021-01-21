@@ -150,7 +150,8 @@ class ConcPersistence(AbstractConcPersistence):
         data = self.db.get(mk_key(data_id))
         if data is None:
             cursor = self._archive.cursor()
-            cursor.execute('SELECT data, num_access FROM kontext_conc_persistence WHERE id = %s', (data_id,))
+            cursor.execute(
+                'SELECT data, num_access FROM kontext_conc_persistence WHERE id = %s', (data_id,))
             tmp = cursor.fetchone()
             if tmp:
                 data = json.loads(tmp['data'])
@@ -206,19 +207,21 @@ class ConcPersistence(AbstractConcPersistence):
             (conc_id,)
         )
         row = cursor.fetchone()
-        archived_rec = json.loads(row[1]) if row else None
+        archived_rec = json.loads(row['data']) if row is not None else None
 
         if revoke:
             if archived_rec:
                 cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
                 ans = 1
             else:
-                raise NotFoundException('Archive revoke error - concordance {0} not archived'.format(conc_id))
+                raise NotFoundException(
+                    'Archive revoke error - concordance {0} not archived'.format(conc_id))
         else:
             cursor = self._archive.cursor()
             data = self.db.get(mk_key(conc_id))
             if data is None and archived_rec is None:
-                raise NotFoundException('Archive store error - concordance {0} not found'.format(conc_id))
+                raise NotFoundException(
+                    'Archive store error - concordance {0} not found'.format(conc_id))
             elif archived_rec:
                 ans = 0
             else:
