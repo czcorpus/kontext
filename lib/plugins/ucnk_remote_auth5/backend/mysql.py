@@ -37,106 +37,11 @@ WHERE (user.id = user_id_global_func()))) utf8mb4 utf8mb4_general_ci;
 
 --------
 """
-import mysql.connector
-import mysql.connector.errors
-import logging
-import urllib.parse
-from types import ModuleType
 from plugins.rdbms_corparch.backend import DatabaseBackend
 
 
 class MySQLConfException(Exception):
     pass
-
-
-class MySQLConf(object):
-    """
-    MySQL backend configuration wrapper which is able to read
-    set-up from "auth" plug-in XML subtree or from its own (very
-    similar) subtree. It is also possible to instantiate it
-    as empty and attach values manually (which is used when
-    running from CMD).
-    """
-
-    def __init__(self, conf=None):
-        self.pool_name = 'kontext_mysql_pool'
-        self.autocommit = True
-        if isinstance(conf, ModuleType):
-            if conf.get('plugins', 'auth', {}).get('module') == 'ucnk_remote_auth4':
-                self.host = conf.get('plugins', 'auth')['ucnk:sync_host']
-                self.database = conf.get('plugins', 'auth')['ucnk:sync_db']
-                self.user = conf.get('plugins', 'auth')['ucnk:sync_user']
-                self.password = conf.get('plugins', 'auth')['ucnk:sync_passwd']
-                self.pool_size = int(conf.get('plugins', 'auth')['ucnk:sync_pool_size'])
-                self.conn_retry_delay = int(conf.get('plugins', 'auth')['ucnk:sync_retry_delay'])
-                self.conn_retry_attempts = int(conf.get('plugins', 'auth')[
-                                               'ucnk:sync_retry_attempts'])
-            else:
-                self.host = conf.get('plugins', 'corparch')['ucnk:mysql_host']
-                self.database = conf.get('plugins', 'corparch')['ucnk:mysql_db']
-                self.user = conf.get('plugins', 'corparch')['ucnk:mysql_user']
-                self.password = conf.get('plugins', 'corparch')['ucnk:mysql_passwd']
-                self.pool_size = int(conf.get('plugins', 'corparch')['ucnk:mysql_pool_size'])
-                self.conn_retry_delay = int(conf.get('plugins', 'corparch')[
-                                            'ucnk:mysql_retry_delay'])
-                self.conn_retry_attempts = int(conf.get('plugins', 'corparch')[
-                                               'ucnk:mysql_retry_attempts'])
-        elif type(conf) is str:
-            parsed = urllib.parse.urlparse(conf)
-            self.host = parsed.netloc
-            if parsed.query:
-                p_query = parsed.query
-                self.database = parsed.path.strip('/')
-            else:
-                p_db, p_query = parsed.path.rsplit('?')
-                self.database = p_db.strip('/')
-            for k, v in list(urllib.parse.parse_qs(p_query).items()):
-                setattr(self, k, v[0])
-            self.pool_size = 1
-            self.conn_retry_delay = 2
-            self.conn_retry_attempts = 1
-        elif conf is not None:
-            raise MySQLConfException(
-                'Unknown configuration source. Use either a "settings" module object or a connection URL (found: {0}'.format(type(conf)))
-
-    @property
-    def conn_dict(self):
-        return dict(host=self.host, database=self.database, user=self.user,
-                    password=self.password, pool_size=self.pool_size, pool_name=self.pool_name,
-                    autocommit=self.autocommit)
-
-
-class MySQL(object):
-    """
-    A simple wrapper for mysql.connector with ability
-    to reconnect.
-    """
-
-    def __init__(self, mysql_conf):
-        self._conn = mysql.connector.connect(**mysql_conf.conn_dict)
-        self._conn_retry_delay = mysql_conf.conn_retry_delay
-        self._conn_retry_attempts = mysql_conf.conn_retry_attempts
-
-    def cursor(self, dictionary=True, buffered=False):
-        try:
-            return self._conn.cursor(dictionary=dictionary, buffered=buffered)
-        except mysql.connector.errors.OperationalError as ex:
-            if 'MySQL Connection not available' in ex.msg:
-                logging.getLogger(__name__).warning(
-                    'Lost connection to MySQL server - reconnecting')
-                self._conn.reconnect(delay=self._conn_retry_delay,
-                                     attempts=self._conn_retry_attempts)
-                return self._conn.cursor(dictionary=dictionary, buffered=buffered)
-
-    @property
-    def connection(self):
-        return self._conn
-
-    def commit(self):
-        self._conn.commit()
-
-    def rollback(self):
-        self._conn.rollback()
 
 
 class Backend(DatabaseBackend):
@@ -146,8 +51,8 @@ class Backend(DatabaseBackend):
     a configuration.
     """
 
-    def __init__(self, conf):
-        self._db = MySQL(conf)
+    def __init__(self, db):
+        self._db = db
 
     def contains_corpus(self, corpus_id):
         cursor = self._db.cursor()

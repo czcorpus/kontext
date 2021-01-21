@@ -43,7 +43,7 @@ import plugins
 from plugins import inject
 from plugins.rdbms_corparch import RDBMSCorparch, CorpusListItem, parse_query
 from plugins.abstract.corpora import CorpusInfo
-from plugins.ucnk_remote_auth4.backend.mysql import Backend, MySQLConf
+from plugins.ucnk_remote_auth5.backend.mysql import Backend
 from controller import exposed
 from controller.errors import ForbiddenException
 import actions.user
@@ -93,7 +93,7 @@ def ask_corpus_access(ctrl, request):
     return ans
 
 
-class UcnkCorpArch2(RDBMSCorparch):
+class UcnkCorpArch3(RDBMSCorparch):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format
@@ -104,7 +104,7 @@ class UcnkCorpArch2(RDBMSCorparch):
     def __init__(self, backend, auth, user_items, tag_prefix, max_num_hints,
                  max_page_size, access_req_sender, access_req_smtp_server,
                  access_req_recipients, default_label, registry_lang):
-        super(UcnkCorpArch2, self).__init__(backend=backend, user_items=user_items,
+        super(UcnkCorpArch3, self).__init__(backend=backend, user_items=user_items,
                                             tag_prefix=tag_prefix, max_num_hints=max_num_hints,
                                             max_page_size=max_page_size, registry_lang=registry_lang)
         self._auth = auth
@@ -114,13 +114,13 @@ class UcnkCorpArch2(RDBMSCorparch):
         self.default_label = default_label
 
     def corpus_list_item_from_row(self, plugin_api, row):
-        obj = super(UcnkCorpArch2, self).corpus_list_item_from_row(plugin_api, row)
+        obj = super(UcnkCorpArch3, self).corpus_list_item_from_row(plugin_api, row)
         obj.requestable = row['requestable']
         return obj
 
     def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
                      offset=0, limit=-1, favourites=()):
-        return super(UcnkCorpArch2, self).list_corpora(plugin_api=plugin_api, substrs=substrs, keywords=keywords,
+        return super(UcnkCorpArch3, self).list_corpora(plugin_api=plugin_api, substrs=substrs, keywords=keywords,
                                                        min_size=min_size, max_size=max_size, requestable=requestable,
                                                        offset=offset, limit=limit if limit > -1 else 1000000000,
                                                        favourites=favourites)
@@ -138,7 +138,7 @@ class UcnkCorpArch2(RDBMSCorparch):
         return ans
 
     def export(self, plugin_api):
-        ans = super(UcnkCorpArch2, self).export(plugin_api)
+        ans = super(UcnkCorpArch3, self).export(plugin_api)
         ans['initial_keywords'] = plugin_api.session.get(
             self.SESSION_KEYWORDS_KEY, [self.default_label])
         return ans
@@ -156,7 +156,7 @@ class UcnkCorpArch2(RDBMSCorparch):
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = (' '.join(query_substrs) + ' ' + ' '.join('%s%s' %
                                                           (self._tag_prefix, s) for s in query_keywords))
-        return super(UcnkCorpArch2, self).search(plugin_api, query, offset, limit, filter_dict)
+        return super(UcnkCorpArch3, self).search(plugin_api, query, offset, limit, filter_dict)
 
     def send_request_email(self, corpus_id, plugin_api, custom_message):
         """
@@ -218,10 +218,11 @@ class UcnkCorpArch2(RDBMSCorparch):
             'soft reset, cleaning all corpus info caches (pid {}: {} corpora)'.format(os.getpid(), num_items))
 
 
-@inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH)
-def create_instance(conf, user_items, auth):
-    backend = Backend(MySQLConf(conf))
-    return UcnkCorpArch2(backend=backend,
+@inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
+def create_instance(conf, user_items, auth, cnc_db):
+    backend = Backend(cnc_db)
+    logging.getLogger(__name__).info(f'UcnkCorpArch3 uses integration_db {cnc_db.info}')
+    return UcnkCorpArch3(backend=backend,
                          auth=auth,
                          user_items=user_items,
                          tag_prefix=conf.get('plugins', 'corparch')['ucnk:tag_prefix'],

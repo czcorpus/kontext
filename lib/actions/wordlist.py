@@ -230,12 +230,13 @@ class Wordlist(ConcActions):
     def struct_result(self, request):
         self.args.corpname = request.form.get('corpname')
         self.args.usesubcorp = request.form.get('usesubcorp')
+
         if self.args.fcrit:
             self._make_wl_query()
             args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
                     ('fcrit', self.args.fcrit), ('flimit', self.args.flimit),
-                    ('freq_sort', self.args.freq_sort)] + [('q', q) for q in self.args.q]
-            raise ImmediateRedirectException(self.create_url('freqs', args))
+                    ('freq_sort', self.args.freq_sort), ('next', 'freqs')] + [('q', q) for q in self.args.q]
+            raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
         if '.' in self.args.wlattr:
             raise WordlistError('Text types are limited to Simple output')
@@ -255,8 +256,9 @@ class Wordlist(ConcActions):
         self.args.flimit = self.args.wlminfreq
         args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
                 ('flimit', self.args.wlminfreq), ('freqlevel', level), ('ml1attr', self.args.wlposattr1),
-                ('ml2attr', self.args.wlposattr2), ('ml3attr', self.args.wlposattr3)] + [('q', q) for q in self.args.q]
-        raise ImmediateRedirectException(self.create_url('freqml', args))
+                ('ml2attr', self.args.wlposattr2), ('ml3attr', self.args.wlposattr3),
+                ('next', 'freqml')] + [('q', q) for q in self.args.q]
+        raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
     @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savewl.html', return_type='plain')
     def savewl(self, from_line=1, to_line='', usesubcorp='', saveformat='text', colheaders=0, heading=0):

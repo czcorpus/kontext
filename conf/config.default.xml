@@ -123,6 +123,11 @@
             <port extension-by="default">6379</port>
             <id extension-by="default">1</id>
         </db>
+        <integration_db>
+            <module>default_integration_db</module>
+            <!-- default plugin provides a "null" integration database; please keep this setting
+            unless you want to include your own integration database -->
+        </integration_db>
         <export>
             <csv>default_csv</csv>
             <xlsx>default_xlsx</xlsx>
