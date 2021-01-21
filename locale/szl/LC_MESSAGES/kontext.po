@@ -35,6 +35,9 @@ msgid "Failed to process your request. Please try again later or contact system 
 msgstr ""
 "Niy szło przerobić twojigo żōndaniŏ. Sprōbuj zaś niyskorzij abo skōntaktuj sie ze administracyjōm."
 
+msgid "The query is empty."
+msgstr "Zapytanie jest puste."
+
 #, python-format
 msgid "Subcorpus \"%s\" not found"
 msgstr "Niy szło znojś podkorpusu \"%s\""

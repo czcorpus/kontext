@@ -192,9 +192,14 @@ class Actions(Querying):
 
         i = 0
         while i < len(self.args.q):
-            if self.args.q[i].startswith('s*') or self.args.q[i][0] == 'e':
+            if self.args.q[i].startswith('s*') or self.args.q[i][0] == 'e' or self.args.q[i][0] == '~':
                 del self.args.q[i]
-            i += 1
+            else:
+                i += 1
+
+        if len(self.args.q) == 0:
+            raise ConcError(translate('The query is empty.'))
+
         out = self._create_empty_conc_result_dict()
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
         out['items_per_page'] = self.args.pagesize
@@ -363,7 +368,7 @@ class Actions(Querying):
                 curr_corpora = [self.args.corpname] + self.args.align
                 if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
                     raise ImmediateRedirectException(self.create_url('query',
-                        [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
+                                                                     [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
                 try:
                     qf_args.apply_last_used_opts(
                         data=qdata.get('lastop_form', {}),
@@ -371,7 +376,8 @@ class Actions(Querying):
                         curr_corpora=curr_corpora,
                         curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
                 except Exception as ex:
-                    logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
+                    logging.getLogger(__name__).warning(
+                        'Cannot restore prev. query form: {}'.format(ex))
             qdata = qs.find_by_qkey(request.args.get('qkey'))
             if qdata is not None:
                 qf_args = qf_args.updated(qdata.get('lastop_form', {}), request.args.get('qkey'))
