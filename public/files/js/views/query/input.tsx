@@ -739,20 +739,26 @@ export function init({
 
         return (
             <span className="default-attr-selection">
-                {props.label + ':\u00a0'}
-                <DefaultAttrSelect defaultAttr={props.defaultAttr}
-                    forcedAttr={props.forcedAttr}
-                    attrList={props.attrList}
-                    simpleQueryDefaultAttrs={props.simpleQueryDefaultAttrs}
-                    sourceId={props.sourceId}
-                    formType={props.formType}
-                    queryType={props.queryType} />{'\u00a0'}
-                {tagsetHelp ?
-                    <layoutViews.InlineHelp noSuperscript={true} url={tagsetHelp}>
-                        {he.translate('query__tagset_summary')}
-                    </layoutViews.InlineHelp> :
-                    null
+                <span className="sel">
+                    <span>
+                        {props.label + ':\u00a0'}
+                        <DefaultAttrSelect defaultAttr={props.defaultAttr}
+                            forcedAttr={props.forcedAttr}
+                            attrList={props.attrList}
+                            simpleQueryDefaultAttrs={props.simpleQueryDefaultAttrs}
+                            sourceId={props.sourceId}
+                            formType={props.formType}
+                            queryType={props.queryType} />
+                    </span>
+                    {tagsetHelp ?
+                        <span className="tagset-summary">
+                            <a href={tagsetHelp} className="external" target="_blank">
+                                {he.translate('query__tagset_summary')}
+                            </a>
+                        </span> :
+                        null
                 }
+                </span>
             </span>
         );
     };
