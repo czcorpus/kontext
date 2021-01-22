@@ -61,9 +61,8 @@ class RequestArgsProxy:
 
         URL arguments have higher priority over POST ones.
         """
-        tmp = self._forced[k]
-        if len(tmp) > 0:
-            return tmp
+        if k in self._forced:
+            return self._forced[k]
         tmp = self._form.getlist(k)
         if len(tmp) > 0:
             return tmp
