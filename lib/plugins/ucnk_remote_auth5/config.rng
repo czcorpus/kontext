@@ -12,7 +12,7 @@
     <start>
         <element name="auth">
             <element name="module">
-                <value>ucnk_remote_auth4</value>
+                <value>ucnk_remote_auth5</value>
             </element>
             <element name="js_module">
                 <a:documentation>
