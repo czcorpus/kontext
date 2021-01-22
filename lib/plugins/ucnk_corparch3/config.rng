@@ -5,7 +5,7 @@
     <start>
         <element name="corparch">
             <element name="module">
-                <value>ucnk_corparch2</value>
+                <value>ucnk_corparch3</value>
             </element>
             <element name="js_module">
                 <value>ucnkCorparch</value>

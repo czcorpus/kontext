@@ -29,7 +29,6 @@ not supported).
 """
 
 import json
-import hashlib
 import re
 import time
 import os
@@ -39,15 +38,12 @@ import logging
 from plugins import inject
 import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
+from plugins.abstract.conc_persistence.common import generate_idempotent_hex_id
 from controller.errors import ForbiddenException, NotFoundException
 
 QUERY_KEY = 'q'
 ID_KEY = 'id'
 DEFAULT_TTL_DAYS = 7
-
-
-def generate_stable_id(data):
-    return hashlib.md5(json.dumps(data).encode('utf-8')).hexdigest()
 
 
 def mk_key(code):
@@ -137,7 +133,7 @@ class StableConcPersistence(AbstractConcPersistence):
         if prev_data is None or records_differ(curr_data, prev_data):
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data[ID_KEY]
-            data_id = generate_stable_id(curr_data)
+            data_id = generate_idempotent_hex_id(curr_data)
             curr_data[ID_KEY] = data_id
             data_key = mk_key(data_id)
             self.db.set(data_key, curr_data)

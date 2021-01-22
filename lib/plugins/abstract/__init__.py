@@ -28,11 +28,3 @@ class CorpusDependentPlugin(abc.ABC):
         returns:
         True if plug-in supports corpus 'corpname' else False
         """
-
-
-class PluginException(Exception):
-    pass
-
-
-class PluginDependencyException(PluginException):
-    pass

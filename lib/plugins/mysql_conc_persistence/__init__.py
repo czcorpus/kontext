@@ -1,6 +1,6 @@
-# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2020 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2020 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,46 +20,61 @@
 A custom implementation of conc_persistence where:
 
 1) primary storage is in Redis with different TTL for public and registered users
-2) secondary storage is a list of SQLite3 databases. The config.xml contains only the current
-   database file and all the other (readonly) archives are searched within the same directory.
-   The order of a search is the following:
-     - the current archive file always comes first
-     - other files are sorted in a reversed alphabetical order; i.e. e.g. the following naming convention
-       works well: 'conc.db', 'conc.20180801.db', 'conc.2017.08.17.db', 'conc.2016.08.30.db'.
+2) secondary storage is a MySQL/MariaDB database.
+
+The concordance keys are generated as idempotent (i.e. the same user with same conc arguments
+produces the same conc ID).
+
+The plug-in is able to connect either via its own configuration (see config.rng) or via
+an integration_db plugin.
 
 
-For required config.xml entries - please see config.rng (and/or use scripts/validate_xml to check your config)
+How to create the required data table:
 
-archive db (can be also created using the 'archive.py' script):
-
-CREATE TABLE archive (
-    id text,
-    data text NOT NULL,
-    created integer NOT NULL,
-    num_access integer NOT NULL DEFAULT 0,
-    last_access integer,
-    PRIMARY KEY (id)
+CREATE TABLE kontext_conc_persistence (
+    id VARCHAR(191) PRIMARY KEY,
+    data TEXT NOT NULL,
+    created TIMESTAMP NOT NULL,
+    num_access INT NOT NULL DEFAULT 0,
+    last_access TIMESTAMP
 );
+
+Possible modifications in case the number of records is large:
+
+ALTER TABLE `kontext_conc_persistence`
+ENGINE='Aria';
+
+ALTER TABLE `kontext_conc_persistence`
+ADD PRIMARY KEY `id_created` (`id`, `created`),
+DROP INDEX `PRIMARY`;
+
+ALTER TABLE kontext_conc_persistence
+PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
+    PARTITION `to_2016` VALUES LESS THAN (UNIX_TIMESTAMP('2016-12-31 23:59:59')),
+    PARTITION `to_2019` VALUES LESS THAN (UNIX_TIMESTAMP('2019-12-31 23:59:59')),
+    PARTITION `to_2022` VALUES LESS THAN (UNIX_TIMESTAMP('2022-12-31 23:59:59')),
+    PARTITION `to_2025` VALUES LESS THAN (UNIX_TIMESTAMP('2025-12-31 23:59:59')),
+    PARTITION `to_2028` VALUES LESS THAN (UNIX_TIMESTAMP('2028-12-31 23:59:59')),
+    PARTITION `to_2031` VALUES LESS THAN (UNIX_TIMESTAMP('2031-12-31 23:59:59')),
+    PARTITION `to_2034` VALUES LESS THAN (UNIX_TIMESTAMP('2034-12-31 23:59:59')),
+    PARTITION `to_2037` VALUES LESS THAN (UNIX_TIMESTAMP('2037-12-31 23:59:59')),
+    PARTITION `the_rest` VALUES LESS THAN MAXVALUE
+)
+
 """
 
-import time
 import re
 import json
-import sqlite3
-import os
-import logging
 
 import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
-from plugins.abstract.conc_persistence.common import generate_uniq_id
+from plugins.abstract.conc_persistence.common import generate_idempotent_id
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
+import logging
 
-from .archive import Archiver
+from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime
 
-
-KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
-               ['%d' % i for i in range(10)]
 
 PERSIST_LEVEL_KEY = 'persist_level'
 ID_KEY = 'id'
@@ -80,7 +95,7 @@ def mk_key(code):
     return 'concordance:%s' % (code, )
 
 
-class ConcPersistence(AbstractConcPersistence):
+class MySqlConcPersistence(AbstractConcPersistence):
     """
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
@@ -89,22 +104,21 @@ class ConcPersistence(AbstractConcPersistence):
 
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
 
-    def __init__(self, settings, db, auth):
+    def __init__(self, settings, db, integration_db, auth):
         plugin_conf = settings.get('plugins', 'conc_persistence')
-        ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
+        ttl_days = int(plugin_conf.get('ttl_days', MySqlConcPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
         self._anonymous_user_ttl_days = int(plugin_conf.get(
-            'default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
-        self._archive_queue_key = plugin_conf['ucnk:archive_queue_key']
+            'anonymous_user_ttl_days', MySqlConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+        self._archive_queue_key = plugin_conf['archive_queue_key']
         self.db = db
         self._auth = auth
-        self._db_path = plugin_conf['ucnk:archive_db_path']
-        self._archives = self._open_archives()
+        if integration_db.is_active:
+            self._archive = integration_db
+            logging.getLogger(__name__).info(f'mysql_conc_perstistence uses integration_db[{integration_db.info}]')
+        else:
+            self._archive = MySQLOps(MySQLConf(settings))
         self._settings = settings
-
-    @property
-    def _archive(self):
-        return self._archives[0]
 
     def _get_ttl_for(self, user_id):
         if self._auth.is_anonymous(user_id):
@@ -116,19 +130,6 @@ class ConcPersistence(AbstractConcPersistence):
             return 0
         else:
             return 1
-
-    def _open_archives(self):
-        root_dir = os.path.dirname(self._db_path)
-        curr_file = os.path.basename(self._db_path)
-        curr_db = sqlite3.connect(self._db_path)
-        dbs = []
-        for item in os.listdir(root_dir):
-            if item != curr_file:
-                dbs.append((item, sqlite3.connect(os.path.join(root_dir, item))))
-        dbs = [(curr_file, curr_db)] + sorted(dbs, reverse=True)
-        logging.getLogger(__name__).info(
-            'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
-        return [x[1] for x in dbs]
 
     @property
     def ttl(self):
@@ -183,27 +184,21 @@ class ConcPersistence(AbstractConcPersistence):
         """
         data = self.db.get(mk_key(data_id))
         if data is None:
-            for arch_db in self._archives:
-                cursor = arch_db.cursor()
-                tmp = cursor.execute(
-                    'SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
-                if tmp:
-                    data = json.loads(tmp[0])
-                    if save_access:
-                        cursor.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
-                                       (int(round(time.time())), data_id))
-                        arch_db.commit()
-                    break
+            cursor = self._archive.cursor()
+            cursor.execute(
+                'SELECT data, num_access FROM kontext_conc_persistence WHERE id = %s', (data_id,))
+            tmp = cursor.fetchone()
+            if tmp:
+                data = json.loads(tmp['data'])
+                if save_access:
+                    cursor.execute(
+                        'UPDATE kontext_conc_persistence '
+                        'SET last_access = %s, num_access = num_access + 1 '
+                        'WHERE id = %s',
+                        (get_iso_datetime(), data_id)
+                    )
+                    self._archive.commit()
         return data
-
-    def find_key_db(self, data_id):
-        for arch_db in self._archives:
-            cursor = arch_db.cursor()
-            tmp = cursor.execute(
-                'SELECT COUNT(*) FROM archive WHERE id = ?', (data_id,)).fetchone()
-            if tmp[0] > 0:
-                return arch_db
-        return None
 
     def store(self, user_id, curr_data, prev_data=None):
         """
@@ -224,7 +219,7 @@ class ConcPersistence(AbstractConcPersistence):
                     r1.get('lines_groups') != r2.get('lines_groups'))
 
         if prev_data is None or records_differ(curr_data, prev_data):
-            data_id = generate_uniq_id(curr_data)
+            data_id = generate_idempotent_id(curr_data)
             curr_data[ID_KEY] = data_id
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
@@ -241,29 +236,27 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
     def archive(self, user_id, conc_id, revoke=False):
-        archive_db = self.find_key_db(conc_id)
-        if archive_db:
-            cursor = archive_db.cursor()
-            cursor.execute(
-                'SELECT id, data, created integer, num_access, last_access FROM archive WHERE id = ? LIMIT 1',
-                (conc_id,))
-            row = cursor.fetchone()
-            archived_rec = json.loads(row[1]) if row else None
-        else:
-            cursor = None
-            archived_rec = None
+        cursor = self._archive.cursor()
+        cursor.execute(
+            'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
+            (conc_id,)
+        )
+        row = cursor.fetchone()
+        archived_rec = json.loads(row['data']) if row is not None else None
 
         if revoke:
             if archived_rec:
-                cursor.execute('DELETE FROM archive WHERE id = ?', (conc_id,))
+                cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
                 ans = 1
             else:
-                raise NotFoundException('Concordance {0} not archived'.format(conc_id))
+                raise NotFoundException(
+                    'Archive revoke error - concordance {0} not archived'.format(conc_id))
         else:
-            cursor = self._archive.cursor()  # writing to the latest archive
+            cursor = self._archive.cursor()
             data = self.db.get(mk_key(conc_id))
             if data is None and archived_rec is None:
-                raise NotFoundException('Concordance {0} not found'.format(conc_id))
+                raise NotFoundException(
+                    'Archive store error - concordance {0} not found'.format(conc_id))
             elif archived_rec:
                 ans = 0
             else:
@@ -271,10 +264,10 @@ class ConcPersistence(AbstractConcPersistence):
                 if user_id != stored_user_id:
                     raise ForbiddenException(
                         'Cannot change status of a concordance belonging to another user')
-                curr_time = time.time()
                 cursor.execute(
-                    'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                    (conc_id, json.dumps(data), curr_time, 0))
+                    'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                    'VALUES (%s, %s, %s, %s)',
+                    (conc_id, json.dumps(data), get_iso_datetime(), 0))
                 archived_rec = data
                 ans = 1
         self._archive.commit()
@@ -285,7 +278,7 @@ class ConcPersistence(AbstractConcPersistence):
 
     def export_tasks(self):
         """
-        Export tasks for Celery worker(s)
+        Export tasks for async queue worker(s)
         """
         def archive_concordance(num_proc, dry_run):
             from . import archive
@@ -293,9 +286,9 @@ class ConcPersistence(AbstractConcPersistence):
         return archive_concordance,
 
 
-@inject(plugins.runtime.DB, plugins.runtime.AUTH)
-def create_instance(settings, db, auth):
+@inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
+def create_instance(settings, db, integration_db, auth):
     """
     Creates a plugin instance.
     """
-    return ConcPersistence(settings, db, auth)
+    return MySqlConcPersistence(settings, db, integration_db, auth)
