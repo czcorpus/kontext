@@ -1,0 +1,29 @@
+[
+  {
+    "id": 0,
+    "username": "anonymous",
+    "pwd": null,
+    "firstname": "Anonymous",
+    "lastname": null,
+    "email": null,
+    "permitted_corpora": ["susanne"]
+  },
+  {
+    "id": 1,
+    "username": "jodoe",
+    "pwd": "mypassword",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "john.doe@localhost",
+    "permitted_corpora": ["susanne", "intercorp_v11_cs", "intercorp_v11_en"]
+  },
+  {
+    "id": 2,
+    "username": "tomas",
+    "pwd": "asdf123",
+    "firstname": "Tomik",
+    "lastname": "Machalek",
+    "email": "tomas.machalek@gmail.com",
+    "permitted_corpora": ["syn2015", "susanne", "oral2013", "intercorp_v11_cs", "intercorp_v11_en", "online_now"]
+  }
+]

@@ -25,6 +25,12 @@ import logging
 
 
 class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
+    """
+    MySqlIntegrationDb is a variant of integration_db plug-in providing access
+    to MySQL and MariaDB instances. In case you have an existing information system
+    based on one of those databases and multiple KonText plug-ins you use
+    require access to them, it is recommended to configure this plug-in.
+    """
 
     _conn: MySQLConnection
 
@@ -71,6 +77,9 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
         cursor.executemany(sql, args_rows)
         return cursor
 
+    def start_transaction(self, isolation_level=None):
+        return self._conn.start_transaction()
+
     def commit(self):
         self._conn.commit()
 
@@ -83,4 +92,5 @@ def create_instance(conf):
     return MySqlIntegrationDb(host=pconf['host'], database=pconf['db'], user=pconf['user'],
                               password=pconf['passwd'], pool_size=int(pconf['pool_size']),
                               pool_name='kontext_pool', autocommit=False,
-                              retry_delay=int(pconf['retry_delay']), retry_attempts=int(pconf['retry_attempts']))
+                              retry_delay=int(pconf['retry_delay']),
+                              retry_attempts=int(pconf['retry_attempts']))
