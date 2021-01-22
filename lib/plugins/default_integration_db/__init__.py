@@ -18,6 +18,8 @@
 
 from typing import TypeVar
 from plugins.abstract.integration_db import IntegrationDatabase
+from plugins.errors import PluginCompatibilityException
+import logging
 
 N = TypeVar('N')
 R = TypeVar('R')
@@ -25,16 +27,29 @@ R = TypeVar('R')
 
 class DefaultIntegrationDb(IntegrationDatabase[None, None]):
     """
-    Default integration database is empty, returning None for both the connection and
-    the cursor().
+    The default integration database is designed to make sure no plug-in will try to
+    use integration_db without proper status check. It means that a corrent plug-in
+    must first test if integration_db.is_active is True. Otherwise it should use
+    its own database connection mechanism or report that it requires a working
+    installation of integration_db.
+
+    This plug-in version throws PluginCompatibilityException on each method call
+    and logs some more information for an administrator to be able to handle the problem.
     """
+
+    @staticmethod
+    def _err_msg():
+        logging.getLogger(__name__).warning('It looks like there is no concrete integration_db enabled '
+                                            'and one of the active plug-ins either requires it or assumes '
+                                            'incorrectly that a concrete instance is enabled.')
+        return 'DefaultIntegrationDb provides no true database integration'
 
     @property
     def connection(self) -> N:
-        return None
+        raise PluginCompatibilityException(self._err_msg())
 
     def cursor(self, dictionary=True, buffered=False) -> R:
-        return None
+        raise PluginCompatibilityException(self._err_msg())
 
     @property
     def is_active(self):
@@ -45,13 +60,20 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
         return 'Empty integration DB.'
 
     def execute(self, sql, args):
-        return None
+        raise PluginCompatibilityException(self._err_msg())
 
     def executemany(self, sql, args_rows):
-        return None
+        raise PluginCompatibilityException(self._err_msg())
+
+    def start_transaction(self, isolation_level=None):
+        raise PluginCompatibilityException(self._err_msg())
 
     def commit(self):
-        pass
+        raise PluginCompatibilityException(self._err_msg())
 
     def rollback(self):
-        pass
+        raise PluginCompatibilityException(self._err_msg())
+
+
+def create_instance(_):
+    return DefaultIntegrationDb()

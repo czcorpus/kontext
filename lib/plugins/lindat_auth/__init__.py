@@ -14,7 +14,7 @@ from actions import corpora, user
 from controller import exposed
 from controller.errors import ImmediateRedirectException
 from plugins.abstract.auth import AbstractSemiInternalAuth
-from plugins.abstract import PluginException
+from plugins.errors import PluginException
 
 _logger = logging.getLogger(__name__)
 

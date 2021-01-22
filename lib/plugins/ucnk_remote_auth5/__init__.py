@@ -224,6 +224,7 @@ class CentralAuth(AbstractRemoteAuth):
 
 @inject(plugins.runtime.SESSIONS, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, sessions, cnc_db):
+    logging.getLogger(__name__).info(f'ucnk_remote_auth5 uses integration_db[{cnc_db.info}]')
     backend = Backend(cnc_db)
     return CentralAuth(db=backend, sessions=sessions, conf=AuthConf(conf),
                        toolbar_conf=ToolbarConf(conf))

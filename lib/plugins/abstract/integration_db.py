@@ -27,40 +27,86 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
     """
     Integration DB plugin allows sharing a single database connection pool across multiple plugins
     which can be convenient in case KonText is integrated into an existing information system with
-    existing user accounts, corpora information etc.
+    existing user accounts, corpora information, settings storage etc.
+
+    Even if it is not stated explicitly the interface is tailored for use with SQL databases
+    where terms like 'cursor', 'commit', 'rollback' are common. But in general, it should be possible
+    to wrap also some NoSQL databases if needed.
+
+    Also please note that "integration database" is not to be meant for a standalone KonText
+    installations. KonText itself (with default plug-ins) uses the DB (aka KeyValueStorage) plugin
+    for its operations. But if you have an existing information system and do not want redundant
+    information in KonText's db, the "integration_db" is the way to go.
     """
 
     @property
     @abc.abstractmethod
-    def connection(self) -> N:
-        pass
-
-    @abc.abstractmethod
-    def cursor(self, dictionary=True, buffered=False) -> R:
-        pass
-
-    @property
-    @abc.abstractmethod
     def is_active(self):
+        """
+        Return true if the integration plug-in is active. I.e. it actually provides
+        access to an actual database.
+
+        Plug-in with optional support for integration_db should use this method
+        to decide whether to use integration_db or some custom connection of their own.
+        """
         pass
 
     @property
     @abc.abstractmethod
     def info(self) -> str:
+        """
+        Provide a brief info about the database. This is mainly for administrators
+        as it is typically written to the application log during KonText start.
+        """
+        pass
+
+    @property
+    @abc.abstractmethod
+    def connection(self) -> N:
+        """
+        Return a connection to the integration database
+        """
+        pass
+
+    @abc.abstractmethod
+    def cursor(self, dictionary=True, buffered=False) -> R:
+        """
+        Create a new database cursor
+        """
         pass
 
     @abc.abstractmethod
     def execute(self, sql, args):
+        """
+        Execute a query.
+        """
         pass
 
     @abc.abstractmethod
     def executemany(self, sql, args_rows):
+        """
+        Execute a single query multiple times with different argument sets.
+        """
+        pass
+
+    @abc.abstractmethod
+    def start_transaction(self, isolation_level=None):
+        """
+        Start a new transaction with optional custom isolation level
+        (typical values are: 'READ UNCOMMITTED', 'READ COMMITTED', 'REPEATABLE READ', 'SERIALIZABLE')
+        """
         pass
 
     @abc.abstractmethod
     def commit(self):
+        """
+        Commit the current transaction
+        """
         pass
 
     @abc.abstractmethod
     def rollback(self):
+        """
+        Rollback the current transaction
+        """
         pass

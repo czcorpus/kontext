@@ -22,7 +22,7 @@ import struct
 from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
 import plugins
-from plugins.abstract import PluginException
+from plugins.errors import PluginException
 from controller import exposed
 import actions.subcorpus
 import corplib

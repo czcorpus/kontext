@@ -221,7 +221,7 @@ class UcnkCorpArch3(RDBMSCorparch):
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, user_items, auth, cnc_db):
     backend = Backend(cnc_db)
-    logging.getLogger(__name__).info(f'UcnkCorpArch3 uses integration_db {cnc_db.info}')
+    logging.getLogger(__name__).info(f'ucnk_corparch3 uses integration_db[{cnc_db.info}]')
     return UcnkCorpArch3(backend=backend,
                          auth=auth,
                          user_items=user_items,

@@ -115,7 +115,7 @@ class MySqlConcPersistence(AbstractConcPersistence):
         self._auth = auth
         if integration_db.is_active:
             self._archive = integration_db
-            logging.getLogger(__name__).info(f'MySqlConcPersistence uses integration_db {integration_db.info}')
+            logging.getLogger(__name__).info(f'mysql_conc_perstistence uses integration_db[{integration_db.info}]')
         else:
             self._archive = MySQLOps(MySQLConf(settings))
         self._settings = settings
