@@ -1058,19 +1058,17 @@ export function init({
                                 null
                             }
                             <div className="option-list">
-                                <div>
-                                    <DefaultAttrSelector
-                                        label={he.translate('query__default_attr')}
-                                        sourceId={this.props.sourceId}
-                                        defaultAttr={query.default_attr}
-                                        forcedAttr={this.props.forcedAttr}
-                                        attrList={this.props.attrList}
-                                        simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
-                                        formType={this.props.formType}
-                                        queryType={this.props.queries[this.props.sourceId].qtype}
-                                        tagsets={this.props.tagsets}
-                                        isLocalUiLang={this.props.isLocalUiLang} />
-                                </div>
+                                <DefaultAttrSelector
+                                    label={he.translate('query__default_attr')}
+                                    sourceId={this.props.sourceId}
+                                    defaultAttr={query.default_attr}
+                                    forcedAttr={this.props.forcedAttr}
+                                    attrList={this.props.attrList}
+                                    simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
+                                    formType={this.props.formType}
+                                    queryType={this.props.queries[this.props.sourceId].qtype}
+                                    tagsets={this.props.tagsets}
+                                    isLocalUiLang={this.props.isLocalUiLang} />
                             </div>
                         </>
                     );
@@ -1086,6 +1084,7 @@ export function init({
                 item => item === false,
                 this.props.suggestionsLoading[this.props.sourceId]
             );
+            const optionsCount = (this.props.customOptions || []).length + (queryObj.qtype === 'simple' ? 3 : 1);
 
             return (
                 <div>
@@ -1128,7 +1127,7 @@ export function init({
                             htmlClass="query-options"
                             title={he.translate('query__specify_options')}
                             isNested={this.props.isNested}>
-                        <div className="options">
+                        <div className="options" style={optionsCount === 1 ? {gridTemplateColumns: "1fr"} : null}>
                             {this._renderInputOptions()}
                         </div>
                     </AdvancedFormFieldset>
