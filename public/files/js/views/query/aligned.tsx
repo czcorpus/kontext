@@ -136,6 +136,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                     <div className="form">
                         <inputViews.TRQueryInputField
                             sourceId={this.props.corpname}
+                            corpname={this.props.corpname}
                             widgets={this.props.widgets}
                             wPoSList={this.props.wPoSList}
                             lposValue={this.props.lposValue}

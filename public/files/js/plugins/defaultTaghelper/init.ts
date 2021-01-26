@@ -18,19 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Bound, BoundWithProps, StatelessModel } from 'kombo';
-import { List, Dict, tuple, pipe } from 'cnc-tskit';
+import { BoundWithProps } from 'kombo';
+import { List, tuple, pipe } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { TagHelperModel, PositionOptions } from './positional/models';
-import { UDTagBuilderModel, UDTagBuilderModelState } from './keyval/models';
+import { PosTagModel, PosTagModelState, createEmptyPosTagsetStatus } from './positional/models';
+import { createEmptyUDTagsetStatus, UDTagBuilderModel, UDTagBuilderModelState } from './keyval/models';
 import { init as viewInit} from './views';
 import { init as ppTagsetViewInit} from './positional/views';
 import { init as udTagsetViewInit} from './keyval/views';
-import { ActionName as QueryActionName } from '../../models/query/actions';
-import { Actions, ActionName } from './actions';
 import { TabFrameModel } from './models';
-import { ISuspendable } from 'kombo/dist/model/common';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -38,10 +35,12 @@ require('./style.less'); // webpack
 
 type AnyComponent = React.FC<any>|React.ComponentClass<any>;
 
+type AnyModel = PosTagModel|UDTagBuilderModel;
 
 
-function isPresent(list:Array<[string, AnyComponent, StatelessModel<{}>]>, ident:string):boolean {
-    return List.some(([d,]) => d === ident, list);
+
+function isPresent(list:Array<[string, AnyComponent, AnyModel]>, ident:string):boolean {
+    return List.some(([d,,]) => d === ident, list);
 }
 
 /**
@@ -56,8 +55,11 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
 
     private pluginApi:IPluginApi;
 
+    private deps:Array<[string, AnyComponent, AnyModel]>;
+
     constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
+        this.deps = [];
     }
 
     isActive():boolean {
@@ -65,47 +67,47 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
     }
 
     private addPosTagsetBuilder(
-            deps:Array<[string, AnyComponent, StatelessModel<{}>]>,
+            deps:Array<[string, AnyComponent, AnyModel]>,
             tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,
-            corpname:string
+            corpname:string,
+            sourceId:string
     ):void {
-        const positions:Array<PositionOptions> = [];
+        if (isPresent(deps, tagsetInfo.ident)) {
+            return;
+        }
         const view = ppTagsetViewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers()
         );
-        const model = new TagHelperModel(
+        const model = new PosTagModel(
             this.pluginApi.dispatcher(),
             this.pluginApi,
             {
-                corpname,
-                tagsetName: tagsetInfo.ident,
-                data: [positions],
-                positions,
-                tagAttr: tagsetInfo.featAttr,
-                presetPattern: '',
-                srchPattern: '.*',
-                rawPattern: '.*',
-                generatedQuery: `${tagsetInfo.featAttr}=".*"`,
+                tagsetInfo,
                 isBusy: false,
-                canUndo: false
+                data: {
+                    [sourceId]: createEmptyPosTagsetStatus(tagsetInfo, corpname)
+                }
             },
             tagsetInfo.ident
         );
-        if (!isPresent(deps, tagsetInfo.ident)) {
-            deps.push(tuple(
-                tagsetInfo.ident,
-                Bound(view, model),
-                model
-            ));
-        }
+
+        deps.push(tuple<string, AnyComponent, AnyModel>(
+            tagsetInfo.ident,
+            BoundWithProps<{sourceId:string}, PosTagModelState>(view, model),
+            model
+        ));
     }
 
     private addKeyvalTagsetBuilder(
-        deps:Array<[string, AnyComponent, StatelessModel<{}>]>,
+        deps:Array<[string, AnyComponent, AnyModel]>,
         tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,
-        corpname:string
+        corpname:string,
+        sourceId:string
     ):void {
+        if (isPresent(deps, tagsetInfo.ident)) {
+            return;
+        }
         const view = udTagsetViewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers()
@@ -114,44 +116,20 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
             this.pluginApi.dispatcher(),
             this.pluginApi,
             {
-                corpname,
-                tagsetName: tagsetInfo.ident,
+                tagsetInfo,
                 isBusy: false,
-                insertRange: [0, 0],
-                canUndo: false,
-                generatedQuery: '',
-                rawPattern: '', // not applicable for the current UI
-                error: null,
-                allFeatures: {},
-                availableFeatures: {'': []},
-                filterFeaturesHistory: [[]],
-                showCategory: '',
-                posField: tagsetInfo.posAttr,
-                featureField: tagsetInfo.featAttr
+                data: {
+                    [sourceId]: createEmptyUDTagsetStatus(tagsetInfo, corpname)
+                }
             },
             tagsetInfo.ident
         );
-        if (!isPresent(deps, tagsetInfo.ident)) {
-            deps.push(tuple(
-                tagsetInfo.ident,
-                BoundWithProps<{sourceId:string}, UDTagBuilderModelState>(view, model),
-                model
-            ));
-        }
-    }
 
-    private suspendModel(model:ISuspendable<{}>, ident:string, tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>):void {
-        model.suspend({}, (action, syncObj) => {
-            if (action.name === ActionName.SetActiveTag &&
-                    (ident === (action as Actions.SetActiveTag).payload.value)) {
-                return null;
-
-            } else if (action.name === QueryActionName.SetActiveInputWidget &&
-                    ident === tagsets[0].ident) {
-                return null;
-            }
-            return syncObj;
-        });
+        deps.push(tuple(
+            tagsetInfo.ident,
+            BoundWithProps<{sourceId:string}, UDTagBuilderModelState>(view, model),
+            model
+        ));
     }
 
     /**
@@ -161,36 +139,32 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
      */
     getWidgetView(
         corpname:string,
+        sourceId:string,
         tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>
     ):PluginInterfaces.TagHelper.View {
-
-        const deps:Array<[string, AnyComponent, StatelessModel<{}>]> = [];
-        List.forEach(
-            tagsetInfo => {
-                switch (tagsetInfo.type) {
-                    case 'positional':
-                        this.addPosTagsetBuilder(deps, tagsetInfo, corpname);
-                    break;
-                    case 'keyval':
-                        this.addKeyvalTagsetBuilder(deps, tagsetInfo, corpname);
-                    break;
-                    case 'other': // 'other' means defined but unsupported
-                    case null:  // null means no tagset defined for the corpus
-                        return null;
-                    default:
-                        throw new Error(
-                            `Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`
-                        );
-                }
-            },
-            tagsets
-        );
-
-        List.forEach(
-            ([ident,,model]) => {
-                this.suspendModel(model, ident, tagsets);
-            },
-            deps
+        this.deps = pipe(
+            tagsets,
+            List.foldl(
+                (acc, tagsetInfo) => {
+                    switch (tagsetInfo.type) {
+                        case 'positional':
+                            this.addPosTagsetBuilder(acc, tagsetInfo, corpname, sourceId);
+                        break;
+                        case 'keyval':
+                            this.addKeyvalTagsetBuilder(acc, tagsetInfo, corpname, sourceId);
+                        break;
+                        case 'other': // 'other' means defined but unsupported
+                        case null:  // null means no tagset defined for the corpus
+                            return acc;
+                        default:
+                            throw new Error(
+                                `Cannot init taghelper widget - unknown tagset type ${tagsetInfo.type}`
+                            );
+                    }
+                    return acc;
+                },
+               this.deps
+            )
         );
 
         return viewInit(
@@ -202,13 +176,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
                     activeTabs: {}
                 }
             ),
-            pipe(
-                deps,
-                List.map(
-                    ([ident, view, model]) => tuple(ident, tuple(view, model))
-                ),
-                Dict.fromEntries()
-            )
+            this.deps
         );
     }
 }

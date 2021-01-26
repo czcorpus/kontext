@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import {PositionValue, PositionOptions, TagHelperModelState} from './models';
+import {PositionValue, PositionOptions, PosTagModelState} from './models';
 import { Kontext } from '../../../types/common';
 import { Actions, ActionName } from '../actions';
 
@@ -161,6 +161,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     // ------------------------------ <PositionList /> ----------------------------
 
     const PositionList:React.FC<{
+        tagsetId:string;
         sourceId:string;
         positions:Array<PositionOptions>;
         checkboxHandler:CheckboxHandler;
@@ -171,6 +172,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                 name: ActionName.ToggleActivePosition,
                 payload: {
                     idx: idx,
+                    tagsetId: props.tagsetId,
                     sourceId: props.sourceId
                 }
             });
@@ -188,13 +190,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    const TagBuilder:React.FC<TagHelperModelState> = (props) => {
+    const TagBuilder:React.FC<PosTagModelState & {sourceId:string}> = (props) => {
 
         const checkboxHandler = (lineIdx:number, value:string, checked:boolean) => {
             dispatcher.dispatch<Actions.CheckboxChanged>({
                 name: ActionName.CheckboxChanged,
                 payload: {
-                    sourceId: props.corpname,
+                    tagsetId: props.tagsetInfo.ident,
+                    sourceId: props.sourceId,
                     position: lineIdx,
                     value: value,
                     checked: checked
@@ -204,10 +207,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         return (
             <div>
-                <input type="text" className="postag-display-box" value={props.generatedQuery} readOnly />
+                <input type="text" className="postag-display-box"
+                        value={props.data[props.sourceId].generatedQuery} readOnly />
                 <PositionList
-                    positions={props.positions}
-                    sourceId={props.corpname}
+                    positions={props.data[props.sourceId].positions}
+                    sourceId={props.sourceId}
+                    tagsetId={props.tagsetInfo.ident}
                     checkboxHandler={checkboxHandler} />
             </div>
         );

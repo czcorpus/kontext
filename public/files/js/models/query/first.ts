@@ -319,7 +319,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 wPoSList: props.wPoSList,
                 useRichQueryEditor: props.useRichQueryEditor,
                 currentAction: 'query',
-                widgetArgs: {},
                 corpora,
                 availableAlignedCorpora: props.availableAlignedCorpora,
                 subcorpList: props.subcorpList,

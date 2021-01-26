@@ -634,6 +634,7 @@ export class ViewPage {
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
+                                this.layoutModel.getCorpusIdent().id,
                                 this.layoutModel.getNestedConf<
                                     Array<PluginInterfaces.TagHelper.TagsetInfo>>(
                                         'pluginData', 'taghelper', 'corp_tagsets')
@@ -647,13 +648,15 @@ export class ViewPage {
                     tagHelperView: this.layoutModel.isNotEmptyPlugin(taghelperPlugin) ?
                             taghelperPlugin.getWidgetView(
                                 this.layoutModel.getCorpusIdent().id,
+                                '__new__',
                                 this.layoutModel.getNestedConf<
                                 Array<PluginInterfaces.TagHelper.TagsetInfo>>(
                                     'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
-                    filterId: '__new__'
+                    filterId: '__new__',
+                    corpname: this.layoutModel.getCorpusIdent().id
                 },
                 filterSubHitsFormProps: {
                     formType: Kontext.ConcFormTypes.SUBHITS,

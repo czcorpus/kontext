@@ -223,8 +223,8 @@ export namespace PluginInterfaces {
 
         export interface ViewProps {
             sourceId:string;
+            corpname:string;
             formType:QueryFormType;
-            range:[number, number];
             onInsert:()=>void;
             onEscKey:()=>void;
         }
@@ -232,8 +232,11 @@ export namespace PluginInterfaces {
         export type View = React.ComponentClass<ViewProps>|React.FC<ViewProps>;
 
         export interface IPlugin extends BasePlugin {
-            getWidgetView(corpname:string,
-                tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>):TagHelper.View;
+            getWidgetView(
+                corpname:string,
+                sourceId:string,
+                tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>
+            ):TagHelper.View;
         }
 
         export interface Factory {

@@ -312,7 +312,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 cqlEditorMessages: {},
                 useRichQueryEditor: props.useRichQueryEditor,
                 tagsets: props.tagsets,
-                widgetArgs: {}, // TODO
                 maincorps: {...props.maincorps},
                 downArrowTriggersHistory: pipe(
                     queries,

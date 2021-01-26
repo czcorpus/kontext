@@ -20,12 +20,13 @@
  */
 
 import { tuple, pipe, List, Dict, HTTP } from 'cnc-tskit';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { Action, StatefulModel, IFullActionControl } from 'kombo';
 
-import { IPluginApi } from '../../../types/plugins';
+import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
 import { Actions, ActionName } from '../actions';
 import { Kontext } from '../../../types/common';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../../models/query/actions';
 
 
 interface DataResponse extends Kontext.AjaxResponse {
@@ -64,78 +65,120 @@ export class FilterRecord {
     }
 }
 
-function composeQuery(state:UDTagBuilderModelState):string {
+function composeQuery(data:TagsetStatus):string {
     return pipe(
-        state.filterFeaturesHistory,
+        data.filterFeaturesHistory,
         List.last(),
         List.groupBy(x => x.name),
         List.map(
             ([recName, groupedRecs]) =>
                 recName === 'POS' ?
-                    `${state.posField}="${groupedRecs.map(x => x.value).join('|')}"` :
-                    `${state.featureField}="${groupedRecs.map(x => x.composeString()).join('|')}"`
+                    `${data.posField}="${groupedRecs.map(x => x.value).join('|')}"` :
+                    `${data.featureField}="${groupedRecs.map(x => x.composeString()).join('|')}"`
         ),
         List.sorted((v1, v2) => v1.localeCompare(v2))
     ).join(' & ');
 }
 
-export interface UDTagBuilderModelState extends TagBuilderBaseState {
 
-    // where in the current CQL query the resulting
-    // expression will by inserted
-    insertRange:[number, number];
+export interface TagsetStatus {
+
+    corpname:string;
+
+    /**
+     * An encoded representation of a tag selection. From CQL
+     * point of view, this is just a string. Typically,
+     * this can be used directly as a part of 'generatedQuery'.
+     *
+     * The value is used when user directly modifies an
+     * existing tag within a CQL query. In such case, we
+     * inject just the raw value.
+     */
+    rawPattern:string;
 
     canUndo:boolean;
 
     // a string-exported variant of the current UD props selection
     generatedQuery:string;
 
+    error:Error|null;
 
-    // ...
-    error: Error|null;
     allFeatures:{[key:string]:Array<string>};
+
     availableFeatures:{[key:string]:Array<string>};
+
     filterFeaturesHistory:Array<Array<FilterRecord>>;
+
     showCategory:string;
 
-    posField: string;
-    featureField: string;
+    posField:string;
+
+    featureField:string;
+
+    // where in the current CQL query the resulting
+    // expression will by inserted
+    queryRange:[number, number];
 }
 
-export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
+
+export function createEmptyUDTagsetStatus(tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo, corpname:string):TagsetStatus {
+    return {
+        corpname,
+        canUndo: false,
+        generatedQuery: '',
+        rawPattern: '', // not applicable for the current UI
+        error: null,
+        allFeatures: {},
+        availableFeatures: {'': []},
+        filterFeaturesHistory: [[]],
+        showCategory: '',
+        posField: tagsetInfo.posAttr,
+        featureField: tagsetInfo.featAttr,
+        queryRange:[0, 0]
+    };
+}
+
+export interface UDTagBuilderModelState extends TagBuilderBaseState {
+
+    data:{[sourceId:string]:TagsetStatus};
+
+}
+
+export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
 
     private readonly pluginApi:IPluginApi;
 
-    private readonly ident:string;
+    private readonly tagsetId:string;
 
-    private readonly sourceId:string;
-
-    constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi,
-            initialState:UDTagBuilderModelState, ident:string) {
+    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi,
+            initialState:UDTagBuilderModelState, tagsetId:string) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
-        this.ident = ident;
-        this.sourceId = initialState.corpname;
+        this.tagsetId = tagsetId;
 
         this.addActionSubtypeHandler<Actions.KVSelectCategory>(
             ActionName.KVSelectCategory,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
-                state.showCategory = action.payload.value;
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    state.data[action.payload.sourceId].showCategory = action.payload.value;
+                });
             }
         );
 
         this.addActionSubtypeHandler<Actions.GetInitialData>(
             ActionName.GetInitialData,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
-                if (state.filterFeaturesHistory.length === 1) {
-                    this.getFilteredFeatures(
-                        state,
-                        dispatch,
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    if (!Dict.hasKey(action.payload.sourceId, state.data)) {
+                        state.data[action.payload.sourceId] = createEmptyUDTagsetStatus(
+                                state.tagsetInfo, action.payload.corpname);
+                    }
+                });
+                if (this.state.data[action.payload.sourceId].filterFeaturesHistory.length === 1) {
+                    this.getFilteredFeatures<Actions.KVGetInitialDataDone['payload']>(
                         (data, err) => err ?
                         {
                             name: ActionName.KVGetInitialDataDone,
@@ -145,18 +188,20 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
                         {
                             name: ActionName.KVGetInitialDataDone,
                             payload: {
-                                sourceId: this.sourceId,
+                                tagsetId: this.tagsetId,
+                                sourceId: action.payload.sourceId,
                                 result: data
                             }
                         },
-                        false
+                        false,
+                        action.payload.sourceId
                     );
 
                 } else {
-                    dispatch<Actions.KVGetInitialDataNOP>({
+                    this.dispatchSideEffect<Actions.KVGetInitialDataNOP>({
                         name: ActionName.KVGetInitialDataNOP,
                         payload: {
-                            sourceId: action.payload.sourceId
+                            tagsetId: action.payload.tagsetId
                         }
                     });
                 }
@@ -165,148 +210,204 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
         this.addActionSubtypeHandler<Actions.KVGetInitialDataDone>(
             ActionName.KVGetInitialDataDone,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
-                if (!action.error) {
-                    state.availableFeatures = action.payload.result;
-                    state.allFeatures = action.payload.result;
-                    state.showCategory = pipe(
-                        action.payload.result,
-                        Dict.keys(),
-                        List.sorted((v1, v2) => v1.localeCompare(v2)),
-                        List.head()
-                    );
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    if (!action.error) {
+                        state.data[action.payload.sourceId].availableFeatures = action.payload.result;
+                        state.data[action.payload.sourceId].allFeatures = action.payload.result;
+                        state.data[action.payload.sourceId].showCategory = pipe(
+                            action.payload.result,
+                            Dict.keys(),
+                            List.sorted((v1, v2) => v1.localeCompare(v2)),
+                            List.head()
+                        );
 
-                } else {
-                    state.error = action.error;
-                }
-                state.isBusy = false;
+                    } else {
+                        state.data[action.payload.sourceId].error = action.error;
+                    }
+                    state.isBusy = false;
+                });
             }
         );
 
         this.addActionSubtypeHandler<Actions.KVGetInitialDataNOP>(
             ActionName.KVGetInitialDataNOP,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
-                state.isBusy = false;
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                });
             }
         );
 
         this.addActionSubtypeHandler<Actions.KVGetFilteredDataDone>(
             ActionName.KVGetFilteredDataDone,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
-                if (action.error) {
-                    state.error = action.error;
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    if (action.error) {
+                        state.data[action.payload.sourceId].error = action.error;
 
-                } else {
-                    const reset = Dict.map(
-                        _ => [],
-                        state.availableFeatures
-                    )
-                    state.availableFeatures = {...reset, ...action.payload.result};
-                }
-                state.isBusy = false;
+                    } else {
+                        const reset = Dict.map(
+                            _ => [],
+                            state.data[action.payload.sourceId].availableFeatures
+                        )
+                        state.data[action.payload.sourceId].availableFeatures = {
+                            ...reset, ...action.payload.result};
+                    }
+                    state.isBusy = false;
+                });
             }
         );
 
         this.addActionSubtypeHandler<Actions.KVAddFilter>(
             ActionName.KVAddFilter,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
-                const filter = new FilterRecord(
-                    action.payload.name,
-                    action.payload.value
-                );
-                const filterFeatures = List.last(state.filterFeaturesHistory);
-                state.isBusy = true;
-                if (List.every(x => !x.equals(filter), filterFeatures)) {
-                    filterFeatures.push(filter);
-                    state.filterFeaturesHistory.push(filterFeatures);
-                    state.canUndo = true;
-                    state.generatedQuery = composeQuery(state);
-                }
-            },
-            (state, action, dispatch) => {
-                this.getFilteredFeatures(
-                    state,
-                    dispatch,
-                    (data, err) => err ?
-                        {
-                            name: ActionName.KVGetFilteredDataDone,
-                            error: err
-
-                        } :
-                        {
-                            name: ActionName.KVGetFilteredDataDone,
-                            payload: {
-                                sourceId: this.sourceId,
-                                result: data
-                            }
-                        },
-                    true
-                );
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    const filter = new FilterRecord(
+                        action.payload.name,
+                        action.payload.value
+                    );
+                    const filterFeatures = List.last(state.data[action.payload.sourceId].filterFeaturesHistory);
+                    state.isBusy = true;
+                    if (List.every(x => !x.equals(filter), filterFeatures)) {
+                        filterFeatures.push(filter);
+                        state.data[action.payload.sourceId].filterFeaturesHistory.push(filterFeatures);
+                        state.data[action.payload.sourceId].canUndo = true;
+                        state.data[action.payload.sourceId].generatedQuery = composeQuery(
+                            state.data[action.payload.sourceId]);
+                    }
+                });
+                this.updateFeatures(action.payload.sourceId);
             }
-        ).sideEffectAlsoOn(
-            ActionName.KVRemoveFilter,
-            ActionName.Undo
         );
 
         this.addActionSubtypeHandler<Actions.KVRemoveFilter>(
             ActionName.KVRemoveFilter,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
                 const filter = new FilterRecord(
                     action.payload.name,
                     action.payload.value
                 );
-                const filterFeatures = List.last(state.filterFeaturesHistory);
+                this.changeState(state => {
+                    const filterFeatures = List.last(state.data[action.payload.sourceId].filterFeaturesHistory);
 
-                const newFilterFeatures = List.filter(
-                    value => !value.equals(filter),
-                    filterFeatures
-                );
-                state.filterFeaturesHistory.push(newFilterFeatures);
-                state.canUndo = true;
-                state.isBusy = true;
-                state.generatedQuery = composeQuery(state);
+                    const newFilterFeatures = List.filter(
+                        value => !value.equals(filter),
+                        filterFeatures
+                    );
+                    state.data[action.payload.sourceId].filterFeaturesHistory.push(newFilterFeatures);
+                    state.data[action.payload.sourceId].canUndo = true;
+                    state.isBusy = true;
+                    state.data[action.payload.sourceId].generatedQuery = composeQuery(state.data[action.payload.sourceId]);
+                });
+                this.updateFeatures(action.payload.sourceId);
             }
         );
 
         this.addActionSubtypeHandler<Actions.Undo>(
             ActionName.Undo,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
-                state.filterFeaturesHistory = List.init(state.filterFeaturesHistory);
-                if (state.filterFeaturesHistory.length === 1) {
-                    state.canUndo = false;
-                }
-                state.isBusy = true;
-                state.generatedQuery = composeQuery(state);
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    const data = state.data[action.payload.sourceId];
+                    data.filterFeaturesHistory = List.init(data.filterFeaturesHistory);
+                    if (data.filterFeaturesHistory.length === 1) {
+                        data.canUndo = false;
+                    }
+                    state.isBusy = true;
+                    data.generatedQuery = composeQuery(data);
+                });
+                this.updateFeatures(action.payload.sourceId);
             }
         );
 
         this.addActionSubtypeHandler<Actions.Reset>(
             ActionName.Reset,
-            action => action.payload.sourceId === this.sourceId,
-            (state, action) => {
-                state.filterFeaturesHistory = [[]];
-                state.availableFeatures = state.allFeatures;
-                state.canUndo = false;
-                state.generatedQuery = composeQuery(state);
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    const data = state.data[action.payload.sourceId];
+                    data.filterFeaturesHistory = [[]];
+                    data.availableFeatures = data.allFeatures;
+                    data.canUndo = false;
+                    data.generatedQuery = composeQuery(data);
+                });
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.SetActiveTag>(
+            ActionName.SetActiveTag,
+            action => action.payload.tagsetId === this.tagsetId,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    if (!Dict.hasKey(action.payload.sourceId, state.data)) {
+                        state.data[action.payload.sourceId] = createEmptyUDTagsetStatus(
+                                state.tagsetInfo, action.payload.corpname);
+                    }
+                });
+                if (this.state.data[action.payload.sourceId].filterFeaturesHistory.length === 1) {
+                    this.getFilteredFeatures<Actions.KVGetInitialDataDone['payload']>(
+                        (data, err) => err ?
+                        {
+                            name: ActionName.KVGetInitialDataDone,
+                            error: err
+
+                        } :
+                        {
+                            name: ActionName.KVGetInitialDataDone,
+                            payload: {
+                                tagsetId: this.tagsetId,
+                                sourceId: action.payload.sourceId,
+                                result: data
+                            }
+                        },
+                        false,
+                        action.payload.sourceId
+                    );
+
+                } else {
+                    this.dispatchSideEffect<Actions.KVGetInitialDataNOP>({
+                        name: ActionName.KVGetInitialDataNOP,
+                        payload: {
+                            tagsetId: action.payload.tagsetId
+                        }
+                    });
+                }
+            }
+        );
+
+        this.addActionHandler<QueryActions.SetActiveInputWidget>(
+            QueryActionName.SetActiveInputWidget,
+            action => {
+                this.changeState(state => {
+                    if (!Dict.hasKey(action.payload.sourceId, state.data)) {
+                        state.data[action.payload.sourceId] = createEmptyUDTagsetStatus(
+                                state.tagsetInfo, action.payload.corpname);
+                    }
+                    state.data[action.payload.sourceId].queryRange = action.payload.appliedQueryRange;
+                });
             }
         );
     }
 
 
-    private getFilteredFeatures<U>(state:UDTagBuilderModelState, dispatch:SEDispatcher,
-            actionFactory:(data:any, err?:Error)=>Action<U>, useFilter:boolean) {
+    private getFilteredFeatures<U>(
+        actionFactory:(data:any, err?:Error)=>Action<U>,
+        useFilter:boolean,
+        sourceId:string
+    ) {
         const baseArgs:Array<[string, string]> = [
-            tuple('corpname', state.corpname),
-            tuple('tagset', state.tagsetName)
+            tuple('corpname', this.state.data[sourceId].corpname),
+            tuple('tagset', this.state.tagsetInfo.ident)
         ];
         const queryArgs:Array<[string, string]> = pipe(
-            state.filterFeaturesHistory,
+            this.state.data[sourceId].filterFeaturesHistory,
             List.last(),
             List.map(x => x.getKeyval())
         );
@@ -321,12 +422,33 @@ export class UDTagBuilderModel extends StatelessModel<UDTagBuilderModelState> {
 
         ).subscribe(
             (result) => {
-                dispatch<Action<U>>(actionFactory(result.keyval_tags));
+                this.dispatchSideEffect<Action<U>>(actionFactory(result.keyval_tags));
             },
             (error) => {
-                dispatch(actionFactory(null, error));
+                this.dispatchSideEffect(actionFactory(null, error));
             }
-        )
+        );
+    }
+
+    private updateFeatures(sourceId:string):void {
+        this.getFilteredFeatures<Actions.KVGetFilteredDataDone['payload']>(
+            (data, err) => err ?
+                {
+                    name: ActionName.KVGetFilteredDataDone,
+                    error: err
+
+                } :
+                {
+                    name: ActionName.KVGetFilteredDataDone,
+                    payload: {
+                        tagsetId: this.tagsetId,
+                        sourceId,
+                        result: data
+                    }
+                },
+            true,
+            sourceId
+        );
     }
 
 }

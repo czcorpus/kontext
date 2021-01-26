@@ -48,6 +48,7 @@ export interface InputModuleViews {
 
 export interface TRQueryInputFieldProps {
     sourceId:string;
+    corpname:string;
     lposValue:string;
     wPoSList:Array<{n:string; v:string}>;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
@@ -99,6 +100,7 @@ export interface AdvancedFormFieldsetProps {
 
 interface QueryToolboxProps {
     sourceId:string;
+    corpname:string;
     widgets:Array<string>;
     inputLanguage:string;
     suggestionsLoading:boolean;
@@ -310,7 +312,8 @@ export function init({
     const TagWidget:React.FC<{
         formType:QueryFormType;
         sourceId:string;
-        args:Kontext.GeneralProps;
+        corpname:string;
+        appliedQueryRange:[number, number];
         tagHelperView:PluginInterfaces.TagHelper.View
         closeClickHandler:()=>void;
 
@@ -324,10 +327,10 @@ export function init({
                     takeFocus={true}>
                 <props.tagHelperView
                         sourceId={props.sourceId}
+                        corpname={props.corpname}
                         onInsert={props.closeClickHandler}
                         onEscKey={props.closeClickHandler}
-                        formType={props.formType}
-                        range={[props.args['leftIdx'], props.args['rightIdx']]} />
+                        formType={props.formType} />
             </layoutViews.PopupBox>
         );
     };
@@ -601,16 +604,19 @@ export function init({
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
+                    corpname: this.props.corpname,
                     value: name,
-                    widgetArgs: this.props.widgetArgs
+                    appliedQueryRange: tuple(
+                        this.props.queries[this.props.sourceId].rawFocusIdx,
+                        this.props.queries[this.props.sourceId].rawAnchorIdx
+                    )
                 }
             });
         }
 
         _handleHistoryWidget() {
             this.setState({
-                activeWidget: null,
-                widgetArgs: {}
+                activeWidget: null
             });
             this.props.toggleHistoryWidget();
         }
@@ -621,8 +627,12 @@ export function init({
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
+                    corpname: this.props.corpname,
                     value: null,
-                    widgetArgs: this.props.widgetArgs
+                    appliedQueryRange: tuple(
+                        this.props.queries[this.props.sourceId].rawFocusIdx,
+                        this.props.queries[this.props.sourceId].rawAnchorIdx
+                    )
                 }
             });
         }
@@ -637,8 +647,11 @@ export function init({
                     return <TagWidget closeClickHandler={this._handleCloseWidget}
                                 tagHelperView={this.props.tagHelperView}
                                 sourceId={this.props.sourceId}
+                                corpname={this.props.corpname}
                                 formType={this.props.formType}
-                                args={this.props.widgetArgs} />;
+                                appliedQueryRange={tuple(
+                                    this.props.queries[this.props.sourceId].rawFocusIdx,
+                                    this.props.queries[this.props.sourceId].rawAnchorIdx)} />;
                 case 'within':
                     return <BoundWithinWidget closeClickHandler={this._handleCloseWidget}
                                 sourceId={this.props.sourceId} formType={this.props.formType} />;
@@ -974,6 +987,7 @@ export function init({
                         <cqlEditorViews.CQLEditor
                                 formType={this.props.formType}
                                 sourceId={this.props.sourceId}
+                                corpname={this.props.corpname}
                                 takeFocus={this.props.takeFocus}
                                 onReqHistory={this.handleReqHistory}
                                 onEsc={this.handleInputEscKeyDown}
@@ -1094,6 +1108,7 @@ export function init({
                             widgets={this.props.widgets}
                             tagHelperView={this.props.tagHelperView}
                             sourceId={this.props.sourceId}
+                            corpname={this.props.corpname}
                             toggleHistoryWidget={this._toggleHistoryWidget}
                             toggleStructureWidget={this._toggleStructureWidget}
                             inputLanguage={this.props.inputLanguage}
