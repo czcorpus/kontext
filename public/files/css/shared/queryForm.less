@@ -150,7 +150,12 @@ form.query-form {
     .query-options {
         .default-attr-selection .sel {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            flex-wrap: wrap;
+
+            span {
+                flex-grow: 1;
+            }
 
             .tagset-summary {
                 display: block;
@@ -781,11 +786,9 @@ table.radio-like-sel {
         list-style-type: none;
 
         li {
-            margin: 0 0 0 1em;
             padding: 0;
 
             dl {
-                margin: 0 0 0 1em;
                 padding: 0;
 
                 .attr {

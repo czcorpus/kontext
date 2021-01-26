@@ -475,7 +475,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 </a>
                 {visible ?
                     <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
-                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} customClass="block-help" label={"query help"}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} customClass="block-help" label={he.translate('query__help')}>
                             <div>
                                 <div dangerouslySetInnerHTML={{__html: props.rawHtml}}/>
                                 <p><a target="_blank" href={he.getHelpLink('term_cql')}>{he.getHelpLink('term_cql')}</a></p>
