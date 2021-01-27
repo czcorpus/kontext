@@ -115,6 +115,7 @@ export namespace Actions {
     export interface AddedNewOperation extends Action<{
         concId:string;
         data:AjaxConcResponse;
+        changeMaincorp?:string;
     }> {
         name:ActionName.AddedNewOperation;
     }
