@@ -136,6 +136,8 @@ export interface FilterFormModelState extends QueryFormModelState {
     inputLanguage:string;
 
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
+    
+    changeMaincorp:string;
 }
 
 /**
@@ -374,13 +376,18 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 ),
                 isBusy: false,
                 simpleQueryDefaultAttrs: {},
-                isLocalUiLang: props.isLocalUiLang
+                isLocalUiLang: props.isLocalUiLang,
+                changeMaincorp: undefined
         });
         this.syncInitialArgs = syncInitialArgs;
 
         this.addActionHandler<MainMenuActions.ShowFilter>(
             MainMenuActionName.ShowFilter,
             action => {
+                this.changeState(state => {
+                    state.changeMaincorp = action.payload.maincorp
+                });
+                
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
                     error: (err) => {
                         this.pageModel.showMessage('error',
@@ -469,6 +476,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 name: ConcActionName.AddedNewOperation,
                                 payload: {
                                     concId: data.conc_persistence_op_id,
+                                    changeMaincorp: this.state.changeMaincorp,
                                     data
                                 }
                             });

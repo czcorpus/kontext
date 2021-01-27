@@ -313,6 +313,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                     this.layoutModel.updateConcPersistenceId(action.payload.data.conc_persistence_op_id);
                     this.changeState(state => {
                         this.importData(state, action.payload.data);
+                        if (action.payload.changeMaincorp) {
+                            state.maincorp = action.payload.changeMaincorp;
+                        }
                         state.unfinishedCalculation = false;
                     });
                     this.pushHistoryState(this.state.currentPage);
