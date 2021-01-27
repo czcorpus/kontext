@@ -252,10 +252,10 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
         args.set('offset', this.state.offset);
         args.set('limit', this.state.limit + 1);
         args.set('query_type', this.state.queryType);
-        if (widgetMode || this.state.currentCorpusOnly) {
+        if (!widgetMode && this.state.currentCorpusOnly) {
             args.set('corpname', this.pluginApi.getCorpusIdent().id);
         }
-        args.set('archived_only', !widgetMode && this.state.archivedOnly ? '1' : '0');
+        args.set('archived_only', widgetMode || !this.state.archivedOnly ? '0' : '1');
         return this.pluginApi.ajax$<AjaxResponse.QueryHistory>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('user/ajax_query_history'),
