@@ -265,6 +265,7 @@ export class CollPage {
                 filterFormProps: {
                     formType: Kontext.ConcFormTypes.FILTER,
                     filterId: null,
+                    corpname: this.layoutModel.getCorpusIdent().id,
                     tagHelperView: null,
                     queryStorageView: null
                 },

@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Keyboard } from 'cnc-tskit';
+import { Keyboard, tuple } from 'cnc-tskit';
 
 import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
@@ -33,6 +33,7 @@ import { findTokenIdxByFocusIdx, strictEqualParsedQueries } from '../../models/q
 export interface CQLEditorProps {
     formType:QueryFormType;
     sourceId:string;
+    corpname:string;
     takeFocus:boolean;
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
@@ -176,17 +177,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     case 'tag':
                         const leftIdx = parseInt(a.getAttribute('data-leftIdx'));
                         const rightIdx = parseInt(a.getAttribute('data-rightIdx'));
+                        const tagsetId = a.getAttribute('data-tagsetId');
 
                         dispatcher.dispatch<Actions.SetActiveInputWidget>({
                             name: ActionName.SetActiveInputWidget,
                             payload: {
                                 formType: this.props.formType,
                                 sourceId: this.props.sourceId,
+                                corpname: this.props.corpname,
                                 value: 'tag',
-                                widgetArgs: {
-                                    leftIdx: leftIdx,
-                                    rightIdx: rightIdx
-                                }
+                                appliedQueryRange: tuple(
+                                    leftIdx, rightIdx
+                                )
                             }
                         });
                         dispatcher.dispatch<Actions.QueryTaghelperPresetPattern>({
@@ -194,6 +196,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             payload: {
                                 formType: this.props.formType,
                                 sourceId: this.props.sourceId,
+                                tagsetId: tagsetId,
                                 pattern: this.props.queries[this.props.sourceId].query.substring(
                                     leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                             }

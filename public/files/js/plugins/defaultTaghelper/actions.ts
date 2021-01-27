@@ -41,11 +41,14 @@ export namespace Actions {
 
     export interface GetInitialData extends Action<{
         sourceId:string;
+        tagsetId:string;
+        corpname:string;
     }> {
         name:ActionName.GetInitialData;
     }
 
     export interface GetInitialDataDone extends Action<{
+        tagsetId:string;
         sourceId:string;
         tags:Array<Array<[string, string]>>;
         labels:Array<string>;
@@ -54,6 +57,7 @@ export namespace Actions {
     }
 
     export interface CheckboxChanged extends Action<{
+        tagsetId:string;
         sourceId:string;
         position:number;
         value:string;
@@ -63,26 +67,30 @@ export namespace Actions {
     }
 
     export interface LoadFilteredDataDone extends Action<{
+        tagsetId:string;
+        sourceId:string;
         tags:Array<Array<[string, string]>>;
         triggerRow:number;
-        sourceId:string;
     }> {
         name:ActionName.LoadFilteredDataDone;
     }
 
     export interface Undo extends Action<{
+        tagsetId:string;
         sourceId:string;
     }> {
         name:ActionName.Undo;
     }
 
     export interface Reset extends Action<{
+        tagsetId:string;
         sourceId:string;
     }> {
         name:ActionName.Reset;
     }
 
     export interface ToggleActivePosition extends Action<{
+        tagsetId:string;
         sourceId:string;
         idx:number;
     }> {
@@ -90,13 +98,15 @@ export namespace Actions {
     }
 
     export interface SetActiveTag extends Action<{
+        tagsetId:string;
         sourceId:string;
-        value:string;
+        corpname:string;
     }> {
         name:ActionName.SetActiveTag;
     }
 
     export interface KVSelectCategory extends Action<{
+        tagsetId:string;
         sourceId:string;
         value:string;
     }> {
@@ -104,6 +114,7 @@ export namespace Actions {
     }
 
     export interface KVAddFilter extends Action<{
+        tagsetId:string;
         sourceId:string;
         name:string;
         value:string;
@@ -112,6 +123,7 @@ export namespace Actions {
     }
 
     export interface KVRemoveFilter extends Action<{
+        tagsetId:string;
         sourceId:string;
         name:string;
         value:string;
@@ -120,6 +132,7 @@ export namespace Actions {
     }
 
     export interface KVGetInitialDataDone extends Action<{
+        tagsetId:string;
         sourceId:string;
         result:{[key:string]:Array<string>};
     }> {
@@ -127,12 +140,13 @@ export namespace Actions {
     }
 
     export interface KVGetInitialDataNOP extends Action<{
-        sourceId:string;
+        tagsetId:string;
     }> {
         name: ActionName.KVGetInitialDataNOP;
     }
 
     export interface KVGetFilteredDataDone extends Action<{
+        tagsetId:string;
         sourceId:string;
         result:{[key:string]:Array<string>};
     }> {

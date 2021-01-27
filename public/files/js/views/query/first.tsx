@@ -190,6 +190,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                             <inputViews.TRQueryInputField
                                 widgets={this.props.supportedWidgets[primaryCorpname]}
                                 sourceId={primaryCorpname}
+                                corpname={primaryCorpname}
                                 wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValues[primaryCorpname]}
                                 forcedAttr={this.props.forcedAttr}
@@ -412,6 +413,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                         <inputViews.TRQueryInputField
                             widgets={this.props.supportedWidgets[this.props.corpname]}
                             sourceId={this.props.corpname}
+                            corpname={this.props.corpname}
                             wPoSList={this.props.wPoSList}
                             lposValue={this.props.lposValues[this.props.corpname]}
                             forcedAttr={this.props.forcedAttr}

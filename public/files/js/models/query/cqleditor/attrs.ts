@@ -99,7 +99,7 @@ export class AttrHelper implements IAttrHelper {
     }
 
     isTagAttr(attr:string):boolean {
-        return List.some(v => v.ident === attr, this.tagsets);
+        return List.some(v => v.featAttr === attr, this.tagsets);
     }
 }
 

@@ -172,8 +172,6 @@ export interface QueryFormModelState {
 
     useRichQueryEditor:boolean;
 
-    widgetArgs:Kontext.GeneralProps;
-
     supportedWidgets:{[sourceId:string]:Array<string>};
 
     isAnonymousUser:boolean;
@@ -456,7 +454,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     state.activeWidgets[action.payload.sourceId] = action.payload.value;
-                    state.widgetArgs = action.payload.widgetArgs || {};
                 });
             }
         );

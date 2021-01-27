@@ -46,6 +46,7 @@ export interface FilterFormViews {
 export interface FilterFormProps {
     formType:Kontext.ConcFormTypes.FILTER;
     filterId:string;
+    corpname:string;
     operationIdx?:number;
     tagHelperView:PluginInterfaces.TagHelper.View;
     queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
@@ -307,6 +308,7 @@ export function init({
                             <inputViews.TRQueryInputField
                                 widgets={this.props.supportedWidgets[this.props.filterId]}
                                 sourceId={this.props.filterId}
+                                corpname={this.props.corpname}
                                 wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValues[this.props.filterId]}
                                 forcedAttr={this.props.forcedAttr}
@@ -362,6 +364,7 @@ export function init({
                             <inputViews.TRQueryInputField
                                 widgets={this.props.supportedWidgets[this.props.filterId]}
                                 sourceId={this.props.filterId}
+                                corpname={this.props.corpname}
                                 wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValues[this.props.filterId]}
                                 forcedAttr={this.props.forcedAttr}

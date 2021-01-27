@@ -312,8 +312,9 @@ export namespace Actions {
     export interface SetActiveInputWidget extends Action<{
         formType:QueryFormType;
         sourceId:string;
+        corpname:string;
         value:string;
-        widgetArgs:{[key:string]:string|number|boolean};
+        appliedQueryRange:[number, number];
     }> {
         name:ActionName.SetActiveInputWidget;
     }
@@ -761,6 +762,7 @@ export namespace Actions {
      */
     export interface QueryTaghelperPresetPattern extends Action<{
         sourceId:string;
+        tagsetId:string;
         formType:QueryFormType;
         pattern:string;
     }> {

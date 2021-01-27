@@ -18,24 +18,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, StatelessModel, Bound } from 'kombo';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { List, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
-import { TagBuilderBaseState } from './common';
 import { Actions as QueryActions, ActionName as QueryActionName,
         QueryFormType } from '../../models/query/actions';
 import { Actions, ActionName } from './actions';
 import { TabFrameModel, TabFrameModelState } from './models';
-
+import { PosTagModelState, PosTagModel } from './positional/models';
+import { UDTagBuilderModelState, UDTagBuilderModel } from './keyval/models';
 
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     frameModel:TabFrameModel,
-    deps:{[key:string]:[React.FC<{}>|React.ComponentClass<{}>, StatelessModel<{}>]}
+    deps:Array<[string, React.FC<{}>|React.ComponentClass<{}>, UDTagBuilderModel|PosTagModel]>
 ):PluginInterfaces.TagHelper.View {
 
     const layoutViews = he.getLayoutViews();
@@ -100,10 +100,12 @@ export function init(
                 range:[number, number];
                 formType:QueryFormType;
                 sourceId:string;
+                tagsetId:string;
                 onInsert?:()=>void;
                 canUndo:boolean;
                 rawPattern:string;
                 generatedQuery:string;
+                isBusy:boolean;
             }> = (props) => {
 
         const buttonClick = (evt) => {
@@ -111,6 +113,7 @@ export function init(
                 dispatcher.dispatch<Actions.Reset>({
                     name: ActionName.Reset,
                     payload: {
+                        tagsetId: props.tagsetId,
                         sourceId: props.sourceId
                     }
                 });
@@ -119,41 +122,31 @@ export function init(
                 dispatcher.dispatch<Actions.Undo>({
                     name: ActionName.Undo,
                     payload: {
+                        tagsetId: props.tagsetId,
                         sourceId: props.sourceId
                     }
                 });
 
             } else if (evt.target.value === 'insert') {
-                if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
-                    const query = `"${props.rawPattern}"`;
-                    dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
-                        name: QueryActionName.QueryInputSetQuery,
-                        payload: {
-                            formType: props.formType,
-                            sourceId: props.sourceId,
-                            query: query,
-                            insertRange: [props.range[0], props.range[1]],
-                            rawAnchorIdx: null,
-                            rawFocusIdx: null
-                        }
-                    });
+                const query = !Array.isArray(props.range) || props.range[0] === props.range[1] ?
+                        `[${props.generatedQuery}]` :
+                        `"${props.rawPattern}"` ;
 
-                } else {
-                    dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
-                        name: QueryActionName.QueryInputSetQuery,
-                        payload: {
-                            formType: props.formType,
-                            sourceId: props.sourceId,
-                            query: `[${props.generatedQuery}]`,
-                            insertRange: [props.range[0], props.range[1]],
-                            rawAnchorIdx: null,
-                            rawFocusIdx: null
-                        }
-                    });
-                }
+                dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
+                    name: QueryActionName.QueryInputSetQuery,
+                    payload: {
+                        formType: props.formType,
+                        sourceId: props.sourceId,
+                        query,
+                        insertRange: [props.range[0], props.range[1]],
+                        rawAnchorIdx: null,
+                        rawFocusIdx: null
+                    }
+                });
                 dispatcher.dispatch<Actions.Reset>({
                     name: ActionName.Reset,
                     payload: {
+                        tagsetId: props.tagsetId,
                         sourceId: props.sourceId
                     }
                 });
@@ -165,9 +158,14 @@ export function init(
 
         return (
             <div className="buttons">
-                <InsertButton onClick={buttonClick} />
-                <UndoButton onClick={buttonClick} enabled={props.canUndo} />
-                <ResetButton onClick={buttonClick} enabled={props.canUndo} />
+                {props.isBusy ?
+                    <layoutViews.AjaxLoaderBarImage /> :
+                    <>
+                        <InsertButton onClick={buttonClick} />
+                        <UndoButton onClick={buttonClick} enabled={props.canUndo} />
+                        <ResetButton onClick={buttonClick} enabled={props.canUndo} />
+                    </>
+                }
             </div>
         );
     };
@@ -177,49 +175,56 @@ export function init(
     type ActiveTagBuilderProps = PluginInterfaces.TagHelper.ViewProps &
             {activeView:React.ComponentClass|React.FC};
 
-    class TagBuilder extends React.PureComponent<ActiveTagBuilderProps & TagBuilderBaseState> {
-
-        constructor(props) {
-            super(props);
-        }
-
-        componentDidMount() {
-            dispatcher.dispatch<Actions.GetInitialData>({
-                name: ActionName.GetInitialData,
-                payload: {
-                    sourceId: this.props.sourceId
-                }
-            });
-        }
-
-        render() {
-            return (
-                <div>
-                    <this.props.activeView {...this.props} />
-                    <div className="flex">
-                        <TagButtons sourceId={this.props.sourceId}
-                                    onInsert={this.props.onInsert}
-                                    canUndo={this.props.canUndo}
-                                    range={this.props.range}
-                                    formType={this.props.formType}
-                                    rawPattern={this.props.rawPattern}
-                                    generatedQuery={this.props.generatedQuery} />
-                        <div>
-                            { this.props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null }
-                        </div>
+    const UDTagBuilder:React.FC<ActiveTagBuilderProps & UDTagBuilderModelState> = (props) => {
+        return (
+            <div>
+                <props.activeView {...props} />
+                <div className="flex">
+                    <TagButtons sourceId={props.sourceId}
+                                tagsetId={props.tagsetInfo.ident}
+                                onInsert={props.onInsert}
+                                canUndo={props.data[props.sourceId].canUndo}
+                                range={props.data[props.sourceId].queryRange}
+                                formType={props.formType}
+                                rawPattern={props.data[props.sourceId].rawPattern}
+                                generatedQuery={props.data[props.sourceId].generatedQuery}
+                                isBusy={props.isBusy} />
+                    <div>
+                        { props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null }
                     </div>
                 </div>
-            );
-        }
-    }
+            </div>
+        );
+    };
+
+    const PosTagBuilder:React.FC<ActiveTagBuilderProps & PosTagModelState> = (props) => {
+        return (
+            <div>
+                <props.activeView {...props} />
+                <div className="flex">
+                    <TagButtons sourceId={props.sourceId}
+                                tagsetId={props.tagsetInfo.ident}
+                                onInsert={props.onInsert}
+                                canUndo={props.data[props.sourceId].canUndo}
+                                range={props.data[props.sourceId].queryRange}
+                                formType={props.formType}
+                                rawPattern={props.data[props.sourceId].rawPattern}
+                                generatedQuery={props.data[props.sourceId].generatedQuery}
+                                isBusy={props.isBusy} />
+                    <div>
+                        { props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null }
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     // -------------------------------------------
 
     const tagsetTabs = pipe(
         deps,
-        Dict.keys(),
         List.map(
-            tagset => ({
+            ([tagset,,]) => ({
                 id: tagset,
                 label: tagset
             })
@@ -230,32 +235,50 @@ export function init(
 
     const ActiveTagBuilder:React.FC<PluginInterfaces.TagHelper.ViewProps & TabFrameModelState> = (props) => {
 
-        const handleTabSelection = (value:string) => {
+        const handleTabSelection = (tagsetId:string) => {
             dispatcher.dispatch<Actions.SetActiveTag>({
                 name: ActionName.SetActiveTag,
                 payload: {
                     sourceId: props.sourceId,
-                    value: value
+                    tagsetId,
+                    corpname: props.corpname
                 }
             });
         };
 
+        const initialTagsetId = List.head(deps)[0];
+
+        React.useEffect(
+            () => {
+                dispatcher.dispatch<Actions.GetInitialData>({
+                    name: ActionName.GetInitialData,
+                    payload: {
+                        tagsetId: initialTagsetId,
+                        sourceId: props.sourceId,
+                        corpname: props.corpname
+                    }
+                });
+            },
+            []
+        );
+
         const children = pipe(
             deps,
-            Dict.map(
-                ([view, model], key) => {
-                    const BoundTagBuilder = BoundWithProps<ActiveTagBuilderProps, {}>(TagBuilder, model);
+            List.map(
+                ([key, view, model]) => {
+                    const BoundTagBuilder = model instanceof PosTagModel ?
+                        BoundWithProps<ActiveTagBuilderProps, PosTagModelState>(PosTagBuilder, model) :
+                        BoundWithProps<ActiveTagBuilderProps, UDTagBuilderModelState>(UDTagBuilder, model)
                     return <BoundTagBuilder
                                 key={key}
                                 activeView={view}
                                 sourceId={props.sourceId}
+                                corpname={props.corpname}
                                 formType={props.formType}
-                                range={props.range}
                                 onInsert={props.onInsert}
                                 onEscKey={props.onEscKey} />;
                 }
-            ),
-            Dict.values()
+            )
         );
 
         return (
@@ -265,7 +288,7 @@ export function init(
                         className="TagsetFormSelector"
                         callback={handleTabSelection}
                         items={tagsetTabs}
-                        defaultId={props.activeTabs[props.sourceId]} >
+                        defaultId={initialTagsetId} >
                     {children}
                 </layoutViews.TabView>
             </div>

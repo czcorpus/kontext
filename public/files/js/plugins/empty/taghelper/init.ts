@@ -25,6 +25,7 @@ export class EmptyTagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin 
 
     getWidgetView(
         corpname:string,
+        sourceId:string,
         tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>
     ):PluginInterfaces.TagHelper.View {
         return null;

@@ -347,6 +347,7 @@ export class QueryPage {
                         corpus,
                         tagHelperPlg.getWidgetView(
                             corpus,
+                            corpus,
                             this.layoutModel.getNestedConf<
                             Array<PluginInterfaces.TagHelper.TagsetInfo>>(
                                 'pluginData', 'taghelper', 'corp_tagsets')

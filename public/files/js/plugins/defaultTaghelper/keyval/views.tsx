@@ -128,13 +128,14 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
 
     // ---------------------------- <FeatureSelect /> ---------------------------------
 
-    const FeatureSelect:React.FC<UDTagBuilderModelState & {sourceId:string}> = (props) => {
+    const FeatureSelect:React.FC<UDTagBuilderModelState & {sourceId: string}> = (props) => {
 
         const handleCheckboxChange = (event) => {
             if (event.target.checked) {
                 dispatcher.dispatch<Actions.KVAddFilter>({
                     name: ActionName.KVAddFilter,
                     payload: {
+                        tagsetId: props.tagsetInfo.ident,
                         sourceId: props.sourceId,
                         name: event.target.name,
                         value: event.target.value
@@ -150,6 +151,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             dispatcher.dispatch<Actions.KVRemoveFilter>({
                 name: ActionName.KVRemoveFilter,
                 payload: {
+                    tagsetId: props.tagsetInfo.ident,
                     sourceId: props.sourceId,
                     name: event.target.name,
                     value: event.target.value
@@ -161,17 +163,20 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             dispatcher.dispatch<Actions.KVSelectCategory>({
                 name: ActionName.KVSelectCategory,
                 payload: {
+                    tagsetId: props.tagsetInfo.ident,
                     sourceId: props.sourceId,
                     value: event.target.value
                 }
             });
         };
 
-        if (props.error) {
-            return <div>Error: {props.error.message}</div>;
+        const data = props.data[props.sourceId];
+
+        if (data.error) {
+            return <div>Error: {data.error.message}</div>;
 
         } else {
-            const featsWithoutPos = {...props.allFeatures};
+            const featsWithoutPos = {...data.allFeatures};
             delete featsWithoutPos['POS'];
 
             return (
@@ -179,7 +184,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                     <h4>{ut.translate('taghelper__selected_features_label')}:</h4>
                     <div className='QueryLine' style={{maxWidth: '39em', minHeight: '4em'}}>
                         <QueryExpression
-                            filterFeatures={List.last(props.filterFeaturesHistory)}
+                            filterFeatures={List.last(data.filterFeaturesHistory)}
                             handleRemoveFilter={handleRemoveFilter} />
                     </div>
                     <div style={{display: 'flex', alignItems: 'stretch'}}>
@@ -187,10 +192,10 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                             <h4>{ut.translate('taghelper__part_of_speech_label')}:</h4>
                             <CategoryDetail
                                 onChangeHandler={(event) => handleCheckboxChange(event)}
-                                filterFeatures={List.last(props.filterFeaturesHistory)}
+                                filterFeatures={List.last(data.filterFeaturesHistory)}
                                 categoryName="POS"
-                                allValues={props.allFeatures['POS'] || []}
-                                availableValues={props.availableFeatures['POS'] || []} />
+                                allValues={data.allFeatures['POS'] || []}
+                                availableValues={data.availableFeatures['POS'] || []} />
                         </div>
                         <div>
                             <h4>{ut.translate('taghelper__features_label')}:</h4>
@@ -198,17 +203,17 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                                 <div className='CategorySelect' style={{marginRight: '2em'}}>
                                     <CategorySelect
                                         allFeatures={featsWithoutPos}
-                                        availableFeatures={props.availableFeatures}
+                                        availableFeatures={data.availableFeatures}
                                         onSelectCategoryHandler={handleCategorySelect}
-                                        selectedCategory={props.showCategory} />
+                                        selectedCategory={data.showCategory} />
                                 </div>
                                 <div className='CategoryDetail'>
                                     <CategoryDetail
                                         onChangeHandler={(event) => handleCheckboxChange(event)}
-                                        filterFeatures={List.last(props.filterFeaturesHistory)}
-                                        categoryName={props.showCategory}
-                                        allValues={props.allFeatures[props.showCategory] || []}
-                                        availableValues={props.availableFeatures[props.showCategory] || []} />
+                                        filterFeatures={List.last(data.filterFeaturesHistory)}
+                                        categoryName={data.showCategory}
+                                        allValues={data.allFeatures[data.showCategory] || []}
+                                        availableValues={data.availableFeatures[data.showCategory] || []} />
                                 </div>
                             </div>
                         </div>
