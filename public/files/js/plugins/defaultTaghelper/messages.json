@@ -1,6 +1,6 @@
 {
   "en-US": {
-      "taghelper__create_tag_heading": "Create/edit a tag",
+      "taghelper__create_tag_heading": "Create / edit a tag",
       "taghelper__insert_btn": "Insert",
       "taghelper__unfulfilled": "Unspecified",
       "taghelper__reset": "Reset",
@@ -11,7 +11,7 @@
       "taghelper__features_label": "Features"
   },
   "cs-CZ": {
-      "taghelper__create_tag_heading": "Vytvořit/upravit tag",
+      "taghelper__create_tag_heading": "Vytvořit / upravit tag",
       "taghelper__insert_btn": "Vložit",
       "taghelper__unfulfilled": "Neurčeno",
       "taghelper__reset": "Obnovit",
@@ -22,7 +22,7 @@
       "taghelper__features_label": "Vlastnosti"
   },
   "szl": {
-      "taghelper__create_tag_heading": "Create/edit a tag",
+      "taghelper__create_tag_heading": "Create / edit a tag",
       "taghelper__insert_btn": "Wraź",
       "taghelper__unfulfilled": "Unspecified",
       "taghelper__reset": "Ôdnōw",

@@ -707,7 +707,7 @@ export function init(
             );
             return <div>
                 <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>
-                <hr />
+                {props.noButtonSeparator ? null : <hr />}
                 {props.children[activeIndex]}
             </div>;
         }

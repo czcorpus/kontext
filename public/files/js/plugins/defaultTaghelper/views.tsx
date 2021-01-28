@@ -44,7 +44,7 @@ export function init(
 
     const InsertButton:React.FC<{onClick:(evt:React.MouseEvent<{}>)=>void}> = (props) => {
         return (
-            <button className="util-button" type="button"
+            <button className="InsertButton default-button" type="button"
                     value="insert" onClick={props.onClick}>
                 {he.translate('taghelper__insert_btn')}
             </button>
@@ -57,7 +57,7 @@ export function init(
     (props) => {
         if (props.enabled) {
             return (
-                <button type="button" className="util-button" value="undo"
+                <button type="button" className="default-button" value="undo"
                         onClick={props.onClick}>
                     {he.translate('taghelper__undo')}
                 </button>
@@ -78,7 +78,7 @@ export function init(
     (props) => {
         if (props.enabled) {
             return (
-                <button type="button" className="util-button cancel"
+                <button type="button" className="default-button"
                         value="reset" onClick={props.onClick}>
                     {he.translate('taghelper__reset')}
                 </button>
@@ -162,6 +162,7 @@ export function init(
                     <layoutViews.AjaxLoaderBarImage /> :
                     <>
                         <InsertButton onClick={buttonClick} />
+                        <span className="separ"></span>
                         <UndoButton onClick={buttonClick} enabled={props.canUndo} />
                         <ResetButton onClick={buttonClick} enabled={props.canUndo} />
                     </>
@@ -288,7 +289,8 @@ export function init(
                         className="TagsetFormSelector"
                         callback={handleTabSelection}
                         items={tagsetTabs}
-                        defaultId={initialTagsetId} >
+                        defaultId={initialTagsetId}
+                        noButtonSeparator={true} >
                     {children}
                 </layoutViews.TabView>
             </div>

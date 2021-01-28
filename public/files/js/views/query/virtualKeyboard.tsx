@@ -196,6 +196,33 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
         }
     }
 
+    // -------------------- <AltGrKey /> ----------------------------
+
+    class AltGrKey extends React.PureComponent<{
+        triggered:boolean;
+        handleAltGr:()=>void;
+
+    }> {
+
+        componentDidUpdate(prevProps, prevState) {
+            if (!prevProps.triggered && this.props.triggered) {
+                this.props.handleAltGr();
+            }
+        }
+
+        render() {
+            const htmlClasses = ['altgr', 'spec'];
+            if (this.props.triggered) {
+                htmlClasses.push('active');
+            }
+            return (
+                <button type="button" className={htmlClasses.join(' ')} onClick={this.props.handleAltGr}>
+                    AltGr
+                </button>
+            );
+        }
+    }
+
     // -------------------- <KeysRow /> ----------------------------
 
     const KeysRow:React.FC<{
@@ -207,6 +234,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
         handleShift:()=>void;
         handleCaps:()=>void;
         handleBackspace:()=>void;
+        handleAltGr:()=>void;
         handleClick:(v:string)=>void;
 
     }> = (props) => {
@@ -228,8 +256,8 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
             }
         };
 
-        const selectKeyType = (item, i) => {
-            if (/^[A-Z][a-z]{2,}$/.exec(item[0])) {
+        const selectKeyType = (item:Array<string>, i:number) => {
+            if (/^([A-Z][a-z]+)*$/.exec(item[0])) {
                 switch (item[0]) {
                     case 'Shift':
                         return <ShiftKey
@@ -246,6 +274,10 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
                     case 'Bksp':
                         return <BackspaceKey key={`${item[0]}-${i}`}
                                     handleBackspace={props.handleBackspace}
+                                    triggered={i === props.passTriggerIdx} />;
+                    case 'AltGr':
+                        return <AltGrKey key={`${item[0]}-${i}`}
+                                    handleAltGr={props.handleAltGr}
                                     triggered={i === props.passTriggerIdx} />;
                     default:
                         return <DummyKey
@@ -284,6 +316,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
             this._handleCaps = this._handleCaps.bind(this);
             this._handleBackspace = this._handleBackspace.bind(this);
             this._handleLayoutChange = this._handleLayoutChange.bind(this);
+            this._handleAltGr = this._handleAltGr.bind(this);
         }
 
         _handleClick(chunk:string) {
@@ -292,7 +325,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
             if (deadKeys) {
                 deadKeyIndex = List.findIndex(v => v === chunk, deadKeys);
             }
-            
+
             if (deadKeys && deadKeyIndex >= 0 && this.props.activeDeadKeyIndex !== deadKeyIndex) {
                 dispatcher.dispatch<Actions.QueryInputHitVirtualKeyboardDeadKey>({
                     name: ActionName.QueryInputHitVirtualKeyboardDeadKey,
@@ -357,6 +390,12 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
             });
         }
 
+        _handleAltGr() {
+            dispatcher.dispatch<Actions.QueryInputToggleVirtualKeyboardAltGr>({
+                name: ActionName.QueryInputToggleVirtualKeyboardAltGr
+            });
+        }
+
         getCurrentLayoutIdx():number {
             return this.props.currentLayoutIdx > 0 ? this.props.currentLayoutIdx : 0;
         }
@@ -385,6 +424,7 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
                                     handleShift={this._handleShift}
                                     capsOn={this.props.capsOn}
                                     handleCaps={this._handleCaps}
+                                    handleAltGr={this._handleAltGr}
                                     handleBackspace={this._handleBackspace}
                                     passTriggerIdx={passTriggerIdx}
                                     activeDeadKeyIdx={this.props.activeDeadKeyIndex} />;

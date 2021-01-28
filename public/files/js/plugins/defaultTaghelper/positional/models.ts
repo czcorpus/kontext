@@ -337,16 +337,16 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             action => {
                 this.changeState(state => {
                     const latest = List.last(state.data[action.payload.sourceId].selHistory);
-                    state.data[action.payload.sourceId].selHistory.push(
-                        List.map(
-                            (item, i) => ({
-                                ...item,
-                                isActive: i === action.payload.idx ?
-                                    !item.isActive : item.isActive
-                            }),
-                            latest
-                        )
+                    const activeItem = latest[action.payload.idx];
+                    const newStep = List.map(
+                        (item, i) => ({
+                            ...item,
+                            isActive: activeItem.isActive ? item.isActive : false
+                        }),
+                        latest
                     );
+                    newStep[action.payload.idx].isActive = !newStep[action.payload.idx].isActive;
+                    state.data[action.payload.sourceId].selHistory.push(newStep);
                     state.data[action.payload.sourceId].positions = List.last(
                         state.data[action.payload.sourceId].selHistory);
                 });
@@ -412,6 +412,7 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
     }
+
 
     private loadInitialData(sourceId:string):Observable<TagDataResponse> {
         return this.pluginApi.ajax$<TagDataResponse>(
