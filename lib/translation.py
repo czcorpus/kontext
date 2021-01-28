@@ -30,12 +30,13 @@ from threading import local
 import gettext
 import os
 import logging
+from typing import List, Union, Tuple
 
 _translations = {}  # global (all requests share this)
 _current = local()  # thread local is used to allow per-request translation
 
 
-def load_translations(languages):
+def load_translations(languages: Union[List[str], Tuple[str]]):
     """
     arguments:
     languages -- list of required languages; languages should be encoded in xx_YY form
