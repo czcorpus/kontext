@@ -335,6 +335,7 @@ export namespace CoreViews {
             items:Array<{id:string, label:string}>;
             defaultId?:string;
             className?:string;
+            noButtonSeparator?:boolean;
             callback?:(id:string) => void;
         }
 

@@ -52,22 +52,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
             );
         };
 
-        const inputId = 'c_position_' + props.lineIdx + '_' + props.sublineIdx;
         const label = props.data['title'] ?
                     props.data['title'] : he.translate('taghelper__unfulfilled');
         return (
-        <tr>
-            <td className="checkbox-cell">
-                <input type="checkbox"
-                        id={inputId}
-                        checked={props.isChecked}
-                        onChange={checkboxHandler}
-                        disabled={props.isLocked ? true : false } />
-            </td>
-            <td>
-                <label htmlFor={inputId}>{label}</label>
-            </td>
-        </tr>
+            <li>
+                <label className={props.isChecked ? 'active' : null}>
+                    <input type="checkbox"
+                            checked={props.isChecked}
+                            onChange={checkboxHandler}
+                            disabled={props.isLocked ? true : false } />
+                    {label}
+                </label>
+        </li>
         );
     };
 
@@ -80,13 +76,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
                 checkboxHandler:CheckboxHandler;
             }> = (props) => {
 
-        const renderChildren = () => {
-            return props.positionValues.map((item, i) => item.available
-                ? <ValueLine key={i} data={item} lineIdx={props.lineIdx} sublineIdx={i}
+        const renderChildren = () => List.map(
+            (item, i) => item.available ?
+                    <ValueLine key={i} data={item} lineIdx={props.lineIdx} sublineIdx={i}
                                 isLocked={props.isLocked} isChecked={item.selected}
-                                checkboxHandler={props.checkboxHandler} />
-                : null);
-        };
+                                checkboxHandler={props.checkboxHandler} /> :
+                    null,
+                props.positionValues
+        );
 
         const hasOnlyUnfulfilledChild = () => {
             return props.positionValues.length === 1 && List.head(props.positionValues).id === '-';
@@ -94,23 +91,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         const renderUnfulfilledCheckbox = () => {
             return (
-                <tr>
-                    <td className="checkbox-cell"><input type="checkbox" checked={true} disabled={true} /></td>
-                    <td>{he.translate('taghelper__unfulfilled')}</td>
-                </tr>
+                <ul className="ValueList">
+                    <li>
+                        <label>
+                            <input type="checkbox" checked={true} disabled={true} />
+                            {he.translate('taghelper__unfulfilled')}
+                        </label>
+                    </li>
+                </ul>
             );
         };
         return (
             List.filter(item => item.available, props.positionValues).length > 0 ?
             (
-                <table className="checkbox-list">
-                <tbody>
+                <ul className="ValueList">
                 {
                     hasOnlyUnfulfilledChild() ?
                     renderUnfulfilledCheckbox() : renderChildren()
                 }
-                </tbody>
-                </table>
+                </ul>
             )
             : null
         );
@@ -144,7 +143,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         return (
             <li className="defaultTaghelper_PositionLine">
                 <a className={linkClass} onClick={clickHandler}>
-                    <span className="pos-num">{props.lineIdx + 1})</span> {props.position['label']}
+                    <span className="pos-num">{props.lineIdx + 1}.</span>
+                    <span className="desc">{props.position['label']}</span>
                     <span className="status-text">[ {getAvailableChildren().length} ]</span>
                 </a>
                 <div className="defaultTaghelper_PositionValuesWrapper">

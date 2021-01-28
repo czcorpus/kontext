@@ -323,7 +323,7 @@ export function init({
             <layoutViews.PopupBox
                     onCloseClick={props.closeClickHandler}
                     customClass="tag-builder-widget"
-                    customStyle={{position: 'absolute', left: '10em', marginTop: '6.5em'}}
+                    customStyle={{position: 'absolute', left: '0.3em', top: '2.2em'}}
                     takeFocus={true}>
                 <props.tagHelperView
                         sourceId={props.sourceId}
@@ -405,7 +405,7 @@ export function init({
             return (
                 <layoutViews.PopupBox
                         onCloseClick={this.props.closeClickHandler}
-                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
+                        customStyle={{position: 'absolute', left: '0.3em', top: '2.2em'}}>
                     <div onKeyDown={this._handleKeyDown}>
                         <h3>{he.translate('query__create_within')}</h3>
                         {this.props.isBusy ?
@@ -552,7 +552,7 @@ export function init({
         return (
             <layoutViews.PopupBox
                     onCloseClick={props.closeClickHandler}
-                    customStyle={{marginTop: '3.5em'}}
+                    customStyle={{top: '5.6em'}}
                     takeFocus={true}
                     keyPressHandler={keyHandler}>
                 <keyboardViews.VirtualKeyboard sourceId={props.sourceId}
