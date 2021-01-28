@@ -34,13 +34,14 @@ class AuthTest(unittest.TestCase):
         self.mock_redis_plugin = MockRedisPlugin(self.mck_rds_cmn.users)
         self.auth_handler = DefaultAuthHandler(db=self.mock_redis_plugin, sessions=None, anonymous_user_id=0,
                                                login_url=None, logout_url=None, smtp_server=None, mail_sender=None,
-                                               confirmation_token_ttl=None, on_register_get_corpora=None)
+                                               confirmation_token_ttl=None, on_register_get_corpora=None,
+                                               case_sensitive_corpora_names=False)
 
     def setUp(self):
         self.mock_redis_plugin.clear()
         # these are needed to return anonymous user w/o errors:
-        load_translations('en_US')
-        activate('en_US')
+        load_translations(('en-US',))
+        activate('en-US')
 
     def load_users(self):
         """
