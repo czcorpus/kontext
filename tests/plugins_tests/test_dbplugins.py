@@ -455,22 +455,6 @@ class DbTest(unittest.TestCase):
             self.assertEqual(t1, -1)
             self.assertEqual(t2, -1)
 
-    def test_fork(self):
-        """
-        test the fork method:
-        create forks in both plugins, set key-value pairs in the forks
-        and check whether the same result gets returned
-        """
-        key = 'foo'
-        value = 'bar'
-        r1 = self.r.fork()
-        s1 = self.s.fork()
-        s1.set(key, value)
-        r1.set(key, value)
-        out_r = r1.get(key)
-        out_s = s1.get(key)
-        self.assertEqual(out_r, out_s)
-
     def test_incr(self):
         """
         Test the incr method:
