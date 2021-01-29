@@ -17,7 +17,7 @@
 
 import unittest
 
-import kwiclib
+from kwiclib_common import tokens2strclass
 
 
 class Tokens2StrClassTest(unittest.TestCase):
@@ -25,7 +25,7 @@ class Tokens2StrClassTest(unittest.TestCase):
     def test_tokens2strclass(self):
         # notes: class1..class2 (2 whitespaces), 'bar  ' (trailing whitespace)
         data = ('foo', '{class1  class2}', 'bar  ', '{class3 class4}', 'last one', '{class5}')
-        output = kwiclib.tokens2strclass(data)
+        output = tokens2strclass(data)
 
         self.assertEqual(len(output), 3)
         self.assertEqual(output[0].get('str'), 'foo')

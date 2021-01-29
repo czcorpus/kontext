@@ -134,11 +134,11 @@ class SettingsSampleTest(unittest.TestCase):
         self.assertEqual(v, conf_path)
 
     def test_get_default_corpus_permitted(self):
-        v = settings.get_default_corpus(['susanne'])
+        v = settings.get_default_corpus(lambda x: x == 'susanne')
         self.assertEqual(v, 'susanne')
 
     def test_get_default_corpus_not_permitted(self):
-        v = settings.get_default_corpus(['other'])
+        v = settings.get_default_corpus(lambda x: x == 'other')
         self.assertEqual(v, '')  # yes, it returns an empty string...
 
     def test_debug_level(self):

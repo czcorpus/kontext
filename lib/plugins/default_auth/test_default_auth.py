@@ -98,7 +98,7 @@ class AuthTest(unittest.TestCase):
         information is present
         """
         orig_keys = {'algo': 'sha512', 'iterations': 1000, 'keylen': 64}
-        salt = os.urandom(orig_keys['keylen']).encode('hex')
+        salt = os.urandom(orig_keys['keylen']).hex()
         hashed = mk_pwd_hash(
             'password', salt, orig_keys['iterations'], orig_keys['keylen'], orig_keys['algo'])
         split = split_pwd_hash(hashed)
