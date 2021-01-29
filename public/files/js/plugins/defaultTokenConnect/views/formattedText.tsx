@@ -268,7 +268,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                                 }
 
                             } else {
-                                targetTags.push(tagName)
+                                targetTags.push(mappedTag)
                             }
                             return pipe(
                                 targetTags,
