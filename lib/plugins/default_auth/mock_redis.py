@@ -103,7 +103,7 @@ class MockRedisPlugin(MockRedisDirect):
             firstname=firstname,
             lastname=lastname,
             email=email,
-            pwd_hash=hashlib.md5(pwd).hexdigest()))
+            pwd_hash=hashlib.md5(pwd.encode()).hexdigest()))
 
     def add_user_dict(self, user):
         self.user_index[user.get('username')] = "user:" + str(user.get('id'))
@@ -121,7 +121,7 @@ class MockRedisPlugin(MockRedisDirect):
 
     def print_users(self):
         for user in self.users:
-            print (user)
+            print(user)
 
     def clear(self):
         del self.users[:]

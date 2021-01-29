@@ -127,7 +127,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
             split = split_pwd_hash(user_data['pwd_hash'])
             if 'salt' not in split:
                 if len(user_data['pwd_hash']) == 32:
-                    pwd_hash = hashlib.md5(password).hexdigest()
+                    pwd_hash = hashlib.md5(password.encode()).hexdigest()
                     if user_data['pwd_hash'] == pwd_hash:
                         valid_pwd = True
                 else:
@@ -264,7 +264,8 @@ class DefaultAuthHandler(AbstractInternalAuth):
             errors['password'].append(_('New password and its confirmation do not match.'))
             errors['password2'].append('')
         if not self.validate_new_password(credentials['password']):
-            errors['password'].append(_('Password not valid') + '. ' + self.get_required_password_properties())
+            errors['password'].append(_('Password not valid') + '. ' +
+                                      self.get_required_password_properties())
         if not credentials['firstname']:
             errors['first_name'].append(_('First name not valid'))
         if not credentials['lastname']:
@@ -365,7 +366,8 @@ def create_instance(conf, db, sessions):
     return DefaultAuthHandler(db=db,
                               sessions=sessions,
                               anonymous_user_id=int(plugin_conf['anonymous_user_id']),
-                              case_sensitive_corpora_names=plugin_conf.get('default:case_sensitive_corpora_names', False),
+                              case_sensitive_corpora_names=plugin_conf.get(
+                                  'default:case_sensitive_corpora_names', False),
                               login_url=plugin_conf.get('login_url', '/user/login'),
                               logout_url=plugin_conf.get('logout_url', '/user/logoutx'),
                               smtp_server=conf.get('mailing', 'smtp_server'),
