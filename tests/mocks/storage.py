@@ -99,3 +99,12 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def set_ttl(self, key, ttl):
         pass
+
+    def clear_ttl(self, key):
+        pass
+
+    def get_ttl(self, key):
+        pass
+
+    def rename(self, key, new_key):
+        pass
