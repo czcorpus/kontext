@@ -219,7 +219,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                                     if (activeNode.parent && Dict.hasValue(activeNode.element, mappedTag.map)) {
                                         let trueActiveNode = activeNode;
                                         while (trueActiveNode.hasGroupParent) {
-                                            trueActiveNode = activeNode.parent;
+                                            trueActiveNode = trueActiveNode.parent;
                                         }
                                         return trueActiveNode.parent;
                                     }
@@ -245,12 +245,12 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                         } else {
                             const tagName = /<(\w+).*?>/g.exec(curr.str)[1];
                             const mappedTag = structMapping[tagName];
-                            const targetTags:Array<string> = [];
+                            let targetTags:Array<string>;
                             if (isTypefaceElm(mappedTag)) {
                                 const re = new RegExp(`${mappedTag.attr}=([\\w\\s]+)`);
                                 const attrSrch = re.exec(curr.str);
                                 if (attrSrch) {
-                                    pipe(
+                                    targetTags = pipe(
                                         attrSrch[1].trim().split(/\s+/),
                                         List.map(attr => mappedTag.map[attr]),
                                         List.foldl(
@@ -258,26 +258,28 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                                                 acc.push(curr);
                                                 return acc;
                                             },
-                                            targetTags
+                                            []
                                         )
                                     );
 
                                 } else {
                                     console.warn(`Attr '${mappedTag.attr}' not found in '${curr.str}'. Using default element.`);
-                                    targetTags.push(mappedTag.map['default']);
+                                    targetTags = [mappedTag.map['default']];
                                 }
 
                             } else {
-                                targetTags.push(mappedTag)
+                                targetTags = [mappedTag];
                             }
                             return pipe(
                                 targetTags,
                                 List.map((t, i) => tuple(t, i)),
                                 List.foldl(
                                     (acc, [elm, i]) => {
-                                        const newChildNode = new TreeNode(elm, [], acc, i > 0);
+                                        const isSelfClosing = elm === 'br' || elm === 'noSpace';
+                                        const hasGroupParent = i > 0 && !isSelfClosing;
+                                        const newChildNode = new TreeNode(elm, [], acc, hasGroupParent);
                                         acc.addChild(newChildNode);
-                                        return elm === 'br' || elm === 'noSpace' ? acc : newChildNode;
+                                        return isSelfClosing ? acc : newChildNode;
                                     },
                                     activeNode
                                 )
