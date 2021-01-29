@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List, pipe } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import * as React from 'react';
 import { AjaxResponse } from '../../../types/ajaxResponses';
 import { Kontext } from '../../../types/common';
@@ -31,13 +31,21 @@ export interface FormattedTextRendererProps {
 
 class TreeNode {
     element:string;
+    className:string;
     children:Array<TreeNode|string>;
     parent:TreeNode;
 
-    constructor(element:string, children:Array<TreeNode|string>, parent:TreeNode) {
+    // because some elements produce more that one target elements (<hi rend=bold italic>) we
+    // need to keep track of how many elements are actually in the group to be able to move
+    // the 'current node' pointer in the target tree.
+    hasGroupParent:boolean;
+
+    constructor(element:string, children:Array<TreeNode|string>, parent:TreeNode, hasGroupParent:boolean=false) {
         this.element = element;
         this.children = children;
         this.parent = parent;
+        this.hasGroupParent = hasGroupParent;
+        this.className = '';
     }
 
     addChild(child:TreeNode|string) {
@@ -66,47 +74,38 @@ class TreeNode {
 
         switch (this.element) {
             case 'p':
-                return <p key={index}>{renderedChildren}</p>;
+                return <p key={index} className={this.className}>{renderedChildren}</p>;
             case 'br':
                 return <br key={index}/>;
             case 'b':
-                return <b key={index}>{renderedChildren}</b>;
+                return <b key={index} className={this.className}>{renderedChildren}</b>;
             case 'i':
-                return <i key={index}>{renderedChildren}</i>;
+                return <i key={index} className={this.className}>{renderedChildren}</i>;
             case 'u':
-                return <u key={index}>{renderedChildren}</u>;
+                return <u key={index} className={this.className}>{renderedChildren}</u>;
             case 'del':
-                return <del key={index}>{renderedChildren}</del>;
+                return <del key={index} className={this.className}>{renderedChildren}</del>;
             case 'sup':
-                return <sup key={index}>{renderedChildren}</sup>;
+                return <sup key={index} className={this.className}>{renderedChildren}</sup>;
             case 'sub':
-                return <sub key={index}>{renderedChildren}</sub>;
+                return <sub key={index} className={this.className}>{renderedChildren}</sub>;
             case 'mark':
-                return <mark key={index}>{renderedChildren}</mark>;
+                return <mark key={index} className={this.className}>{renderedChildren}</mark>;
             case 'div':
-                return <div key={index}>{renderedChildren}</div>;
+                return <div key={index} className={this.className}>{renderedChildren}</div>;
             case 'doc':
-                return <div key={index} className={index === 0 ? null : "document"}>{renderedChildren}</div>;
+                return <div key={index} className={index === 0 ? this.className : `${this.className} document`}>{renderedChildren}</div>;
             case 'text':
-                return <div key={index} className={index === 0 ? null : "text"}>{renderedChildren}</div>;
+                return <div key={index} className={index === 0 ? this.className : `${this.className} text`}>{renderedChildren}</div>;
             case 'span':
-                return <span key={index}>{renderedChildren}</span>;
+                return <span key={index} className={this.className}>{renderedChildren}</span>;
             case 'sentence':
-                return <span key={index} className="sentence">{renderedChildren}</span>;
+                return <span key={index} className={`${this.className} sentence`}>{renderedChildren}</span>;
             default:
                 console.warn(`Unknown element type, can not render: ${this.element}`);
-                return <span key={index}>{renderedChildren}</span>;
+                return <span key={index} className={this.className}>{renderedChildren}</span>;
         }
     }
-}
-
-interface AttrMapping {
-    attr:string;
-    map:{[attrValue:string]:string};
-}
-
-function isAttrMapping(object):object is AttrMapping {
-    return object instanceof Object && 'attr' in object && 'map' in object;
 }
 
 interface ElementConf {
@@ -124,7 +123,28 @@ interface FeatureConf {
     document?:ElementConf;
 }
 
-const typefaceMap = {
+type TargetFormattingElms = 'b'|'i'|'u'|'del'|'sup'|'sub'|'span';
+
+interface TypefaceMap {
+    bold:'b';
+    italic:'i';
+    underline:'u';
+    overstrike:'del';
+    superscript:'sup';
+    subscript:'sub';
+    default:'span';
+}
+
+type TypefaceElm = {
+    attr:string;
+    map:TypefaceMap;
+}
+
+function isTypefaceElm(v:any):v is TypefaceElm {
+    return v instanceof Object && v['attr'] !== undefined && v['map'] !== undefined;
+}
+
+const typefaceMap:TypefaceMap = {
     bold: 'b',
     italic: 'i',
     underline: 'u',
@@ -134,7 +154,9 @@ const typefaceMap = {
     default: 'span'
 }
 
-function getStructMapping(featureConf:FeatureConf) {
+type NormalizedElements = 'p'|'noSpace'|'br'|'sentence'|'text'|'doc';
+
+function getStructMapping(featureConf:FeatureConf):{[srcElm:string]:NormalizedElements|TypefaceElm} {
     const mapping = {};
     if (featureConf.paragraph) {
         mapping[featureConf.paragraph.element] = 'p';
@@ -165,11 +187,12 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
     const FormattedTextRenderer:React.FC<FormattedTextRendererProps> = (props) => {
         const structMapping = getStructMapping(props.data.features);
         const rootNode = new TreeNode('div', [], null);
+        rootNode.className = 'formatted-text';
         pipe(
             props.data.content,
             // split content by xml tags (only strc classes)
             List.flatMap<{class:string, str:string}, {class:string, str:string}>(
-                v => {    
+                v => {
                     if (v.class === 'strc') {
                         const matches = v.str.match(/<.+?>/g);
                         const splits = v.str.split(/<.+?>/g);
@@ -192,71 +215,90 @@ export function init(he:Kontext.ComponentHelpers):React.FC<FormattedTextRenderer
                             const tagName = /<\/(\w+)>/g.exec(curr.str)[1];
                             const mappedTag = structMapping[tagName];
                             if (mappedTag) {
-                                if (isAttrMapping(mappedTag)) {
+                                if (isTypefaceElm(mappedTag)) {
                                     if (activeNode.parent && Dict.hasValue(activeNode.element, mappedTag.map)) {
-                                        return activeNode.parent;
+                                        let trueActiveNode = activeNode;
+                                        while (trueActiveNode.hasGroupParent) {
+                                            trueActiveNode = activeNode.parent;
+                                        }
+                                        return trueActiveNode.parent;
                                     }
                                     // ignoring unknown attribute closing tag
                                     return activeNode;
-                                
+
                                 // handling closing tag
                                 } else if (activeNode.parent && activeNode.element === mappedTag) {
                                     return activeNode.parent;
-                                
+
                                 // handling closing tag when missing opening tag
                                 } else {
                                     const upperNode = new TreeNode(mappedTag, activeNode.children, activeNode);
                                     activeNode.children = [upperNode];
-            
                                     return activeNode;
                                 }
                             }
-                            
+
                             console.warn(`Undefined tag mapping for ${curr.str}`);
                             return activeNode;
-                        
+
                         // handle opening tags
                         } else {
                             const tagName = /<(\w+).*?>/g.exec(curr.str)[1];
-                            let mappedTag = structMapping[tagName];
-                            if (isAttrMapping(mappedTag)) {
-                                const re = new RegExp(`${mappedTag.attr}=(\\w+)`);
-                                const attrValue = re.exec(curr.str);
-                                if (attrValue) {
-                                    mappedTag = mappedTag.map[attrValue[1]]
-                                
+                            const mappedTag = structMapping[tagName];
+                            const targetTags:Array<string> = [];
+                            if (isTypefaceElm(mappedTag)) {
+                                const re = new RegExp(`${mappedTag.attr}=([\\w\\s]+)`);
+                                const attrSrch = re.exec(curr.str);
+                                if (attrSrch) {
+                                    pipe(
+                                        attrSrch[1].trim().split(/\s+/),
+                                        List.map(attr => mappedTag.map[attr]),
+                                        List.foldl(
+                                            (acc, curr) => {
+                                                acc.push(curr);
+                                                return acc;
+                                            },
+                                            targetTags
+                                        )
+                                    );
+
                                 } else {
                                     console.warn(`Attr '${mappedTag.attr}' not found in '${curr.str}'. Using default element.`);
-                                    mappedTag = mappedTag.map['default'];
+                                    targetTags.push(mappedTag.map['default']);
                                 }
-                            }
 
-                            if (mappedTag) {
-                                const lowerNode = new TreeNode(mappedTag, [], activeNode);
-                                activeNode.addChild(lowerNode);
-                                return ['br', 'noSpace'].includes(mappedTag) ? activeNode : lowerNode;
+                            } else {
+                                targetTags.push(tagName)
                             }
-
-                            console.warn(`Undefined tag mapping for ${curr.str}`);
-                            return activeNode;        
+                            return pipe(
+                                targetTags,
+                                List.map((t, i) => tuple(t, i)),
+                                List.foldl(
+                                    (acc, [elm, i]) => {
+                                        const newChildNode = new TreeNode(elm, [], acc, i > 0);
+                                        acc.addChild(newChildNode);
+                                        return elm === 'br' || elm === 'noSpace' ? acc : newChildNode;
+                                    },
+                                    activeNode
+                                )
+                            );
                         }
-                    
+
                     // searched word element
                     } else if (curr.class === 'coll') {
                         const wrapper = new TreeNode('mark', [curr.str], activeNode);
                         activeNode.addChild(wrapper);
-                    
+
                     // plain text contents
                     } else {
                         activeNode.addChild(curr.str);
                     }
 
-                    return activeNode;    
+                    return activeNode;
                 },
                 rootNode
             )
         );
-        
         return rootNode.renderNode();
     };
 
