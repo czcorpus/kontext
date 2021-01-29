@@ -1,8 +1,5 @@
 ![KonText screenshot](https://github.com/czcorpus/kontext/blob/master/doc/images/kontext-screenshot1.jpg)
 
-## Important note
-
-Please note that due to [Python 2 EOL](https://www.python.org/doc/sunset-python-2/), KonText **version 0.13.x is the last one running in Python 2**. It means that the **next release** (planned for <del>Q3</del> Q4 2020) **will run only in Python 3**. For the `master` branch users - the last commit supporting Python 2 is tagged [py2_last_version](https://github.com/czcorpus/kontext/releases/tag/py2_last_version) and the first one supporting Python 3 is tagged  [py3_initial_version](https://github.com/czcorpus/kontext/releases/tag/py3_initial_version). To upgrade, please refer to [doc/py2to3.md](doc/py2to3.md) for details. For new installations, please follow [doc/INSTALL.md](doc/INSTALL.md).
 
 ## Contents
 
@@ -15,38 +12,42 @@ Please note that due to [Python 2 EOL](https://www.python.org/doc/sunset-python-
 
 ## Introduction
 
-KonText is an **advanced corpus query interface** and corpus data integration middleware built around corpus search engine [Manatee-open](http://nlp.fi.muni.cz/trac/noske). The development is maintained by the [Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
+KonText is an **advanced corpus query interface** and corpus data **integration platform** built around corpus search engine [Manatee-open](http://nlp.fi.muni.cz/trac/noske). It is written in Python 3 and TypeScript and it runs on any major Linux distribution. The development is maintained by the [Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
 
-## Notable end-user features
+## Features
 
 * fully **editable query chain**
     * any operation from a user defined sequence (e.g. query -&gt; filter -&gt; sample -&gt; sorting) can be changed
     and the whole sequence is then re-executed.
-* **advanced CQL editor** with **syntax highlighting** and **attribute recognition**
-    * **interactive PoS tag tool** - in case of positional PoS tag formats an interactive tool can be used to write tag queries
+* simple and advanced query types
+    * **advanced CQL editor** with **syntax highlighting** and **attribute recognition**
+    * **interactive PoS tag composing tool** for positional and key-value tagsets
+    * customizable query suggestions and simple type query refinement (e.g. for homonym disambiguation)
 * support for **spoken corpora**
-    * defined concordance segments can be played back as audio
-    * KWIC detail provides a custom rendering with **easily distinguishable speeches**
-* support for **user-defined line groups**
-    * user can define custom numeric tags attached to concordance lines, filter out other lines, review groups ratios
+    * defined text segments can be played back as audio
+    * KWIC detail with **easily distinguishable speeches**
+* rich **concordance view options and tools**
+    * any positional attribute can be set as primary
+    * multiple ways how to display other attributes
+    * **user-defined line groups** - filtering, reviewing groups ratios
+    * tokens and KWICs can be connected to external data services (e.g. dictionaries, encyclopedias)
 * **rich subcorpus-related functionality**
-    * user can easily examine corpus structure by selecting some text types and see how other text type attributes
-      availability changed ("which publishers are there in case only *fiction* is selected?")
+    * a subcorpus can be either private or published
+    * text types metadata can be gradually refined to a specific subcorpus ("which publishers are there in case only *fiction* is selected?")
     * a **custom text types ratio** can be defined ("give me 20% fiction and 80% journalism")
-    * a sub-corpus can be created by a custom CQL expression
-    * a **sub-corpus can be published** so other users can access it
-    * subcorpora are backed up as CQL queries which makes further modification/restoring possible
 * **frequency distribution**
-    * **2-dimensional frequency distribution** for both positional and structural attributes
-    * result caching decreases time required to navigate between pages
-    * on the multilevel frequency distribution page, starting word can be specified for multi-word KWICs
-* **persistent URL for any query** - you can send a link to someone even if the query string was megabytes long
+    * univariate
+        * positional attributes (including tuples of multiple attributes per token)
+        * structural attributes
+    * **multivariate distribution** (2 dimensions) for both positional and structural attributes
+* collocation analysis
+* **persistent URLs** - any result page can be easily shared even if the original query is megabytes long
 * access to **previous queries**, named queries
-* **access to favorite corpora** (subcorpora, aligned corpora)
-* a concordance/frequency/collocation listing can be **saved in Excel format** (xlsx)
-* concordance tokens and KWICs can be connected to external data services (e.g. dictionaries, encyclopedias)
-* a correct (i.e. the one calculating only with selected text types) i.p.m. can be calculated on-demand for ad-hoc subcorpora
-* integrability with external data resources (e.g. dictionaries, media libraries)
+* convenient corpus access
+    * finding corpus by a keyword (tag), size, description
+    * adding corpus to **favorites** (incl. subcorpora, aligned corpora)
+* saving result to Excel, CSV, XML, TXT
+* integrability with existing information systems
 
 
 ## Internal features
@@ -59,12 +60,8 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 
 ## Requirements
 
-* Rerverse proxy server
-  + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/) (tested)
-* Python *3.6* (or newer) and:
-    * WSGI-compatible server
-      * [Gunicorn](http://gunicorn.org/) (recommended)
-      * or [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (tested)
+* Python *3.6* (or newer):
+    * WSGI-compatible server - [Gunicorn](http://gunicorn.org/) (recommended), [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (supported)
     * [Werkzeug](http://werkzeug.pocoo.org/) web application library
     * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) template engine
     * [lxml](http://lxml.de/) library
@@ -72,16 +69,13 @@ adapters, authentication method, corpus listing widgets, HTTP session management
     * [markdown](https://pypi.python.org/pypi/Markdown) library (optional, for formatted corpora references)
     * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
     * [Babel](http://babel.pocoo.org/en/latest/) library
-* corpus search engine [Manatee](http://nlp.fi.muni.cz/trac/noske)
-    * versions *2.167.8* and newer are supported by KonText 0.15 and newer
-    * versions from *2.83.3* to *2.158.8* are supported by KonText 0.13 and older
+* [Manatee](http://nlp.fi.muni.cz/trac/noske) corpus search engine - version *2.167.8* and onwards
 * a key-value storage
-    * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available by default)
-* a task queue for asynchronous/demanding background calculations and maintenance tasks
-    * [Celery task queue](http://www.celeryproject.org/) (more mature implementation in KonText)
-    * [Rq](https://python-rq.org/) (lightweight worker, more recent implementation in KonText)
+    * [Redis](http://redis.io/) (recommended), [SQLite](https://sqlite.org/) (supported), custom implementations possible
+* a task queue - [Rq](https://python-rq.org/) (recommended), [Celery task queue](http://www.celeryproject.org/) (supported)
+* HTTP proxy server
+  + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/),...
 
-Note: KonText versions up to 0.13.x (incl.) run on Python 2. To use Python 3, 0.15.x and newer versions of KonText must be used.
 
 ## Build and installation
 
