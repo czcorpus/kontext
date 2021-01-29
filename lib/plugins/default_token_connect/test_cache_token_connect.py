@@ -75,7 +75,7 @@ class CacheTest(unittest.TestCase):
         }]
 
         providers_conf = mocked_json
-        self.tok_det = DefaultTokenConnect(dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf),
+        self.tok_det = DefaultTokenConnect({b['ident']: init_provider(b, b['ident']) for b in providers_conf},
                                            corparch)
         self.cache_path = CACHE_DB_PATH
         self.cache_man = CacheMan(self.cache_path)
@@ -86,6 +86,7 @@ class CacheTest(unittest.TestCase):
         create an empty cache db file with properly structured table
         """
         self.cache_man.test_cache()
+        self.cache_man.clear_extra_rows(0)
 
     def tearDown(self):
         self.cache_man.close()
