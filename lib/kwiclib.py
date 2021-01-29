@@ -27,6 +27,7 @@ import manatee
 from structures import FixedDict
 from corplib import is_subcorpus
 from conclib.empty import InitialConc
+from kwiclib_common import tokens2strclass
 
 SortCritType = List[Tuple[str, Union[str, int]]]
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
@@ -60,21 +61,6 @@ def format_labelmap(labelmap: Mapping[str, str], separator: str = '.') -> LabelM
         lines.append(
             {'Items': [{'n': n, 'lab': lab} for (s, lab, n) in line]})
     return lines
-
-
-def tokens2strclass(tokens):
-    """
-    Converts internal data structure produced by KwicLine and CorpRegion containing tokens and
-    respective HTML classes into a more suitable form.
-
-    arguments:
-    tokens -- a tuple of the following format: ('a token', '{class1 class2}', 'another token', '{class3}',...)
-
-    returns:
-    a list of dicts {'str': '[token]', 'class': '[classes]'}
-    """
-    return [{'str': tokens[i], 'class': tokens[i + 1].strip('{}')}
-            for i in range(0, len(tokens), 2)]
 
 
 class EmptyKWiclines:

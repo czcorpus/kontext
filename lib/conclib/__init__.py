@@ -22,7 +22,7 @@ from typing import Tuple
 import manatee
 import settings
 from translation import ugettext as _
-from kwiclib import tokens2strclass
+from kwiclib_common import tokens2strclass
 import plugins
 
 
