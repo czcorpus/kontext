@@ -677,8 +677,6 @@ class Kontext(Controller):
                 set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
         super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
 
-        def encode_err(e): return None if e[0] is None else (e[0].__class__.__name__, e[1])
-
         # create and store concordance query key
         if type(result) is dict:
             if action_metadata['mutates_conc']:
@@ -692,7 +690,7 @@ class Kontext(Controller):
         with plugins.runtime.ACTION_LOG as alog:
             alog.log_action(self._request, action_metadata.get('action_log_mapper'),
                             f'{self.get_mapping_url_prefix()[1:]}{methodname}',
-                            err_desc=encode_err(err_desc), proc_time=self._proc_time)
+                            err_desc=err_desc, proc_time=self._proc_time)
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.post_dispatch(self._plugin_api, methodname, action_metadata)
 

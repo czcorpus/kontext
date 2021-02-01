@@ -16,7 +16,9 @@ import logging
 import json
 import datetime
 import settings
+from typing import Tuple, Union, Optional
 from plugins.abstract.action_log import AbstractActionLog
+from controller.errors import UserActionException, ImmediateRedirectException
 
 
 class DefaultActionLog(AbstractActionLog):
@@ -28,7 +30,22 @@ class DefaultActionLog(AbstractActionLog):
     client user agent).
     """
 
-    def log_action(self, request, action_log_mapper, full_action_name, err_desc, proc_time):
+    @staticmethod
+    def is_error(e: Optional[Tuple[Exception, str]]):
+        return e is not None and not isinstance(e[0], ImmediateRedirectException)
+
+    @staticmethod
+    def expand_error_desc(e: Tuple[Exception, str]) -> Tuple[str, Union[str, None], Union[str, None]]:
+        if not isinstance(e[0], Exception):  # this should normally not happen (= incorrect error processing)
+            return f'Unknown Error [{e[0]}]', None, None
+        elif isinstance(e[0], UserActionException):
+            return e[0].__class__.__name__, e[0].internal_message, e[1]
+        elif hasattr(e, 'message'):
+            return e[0].__class__.__name__, e.message, e[1]
+        else:
+            return e[0].__class__.__name__, str(e[0]), e[1]
+
+    def collect_args(self, request, action_log_mapper, full_action_name, err_desc, proc_time):
         log_data = {}
         if action_log_mapper:
             try:
@@ -36,8 +53,9 @@ class DefaultActionLog(AbstractActionLog):
             except Exception as ex:
                 log_data['args'] = {}
                 logging.getLogger(__name__).error('Failed to map request info to log: {}'.format(ex))
-        if err_desc:
-            log_data['error'] = dict(name=err_desc[0], anchor=err_desc[1])
+        if self.is_error(err_desc):
+            err_name, err_msg, err_anchor = self.expand_error_desc(err_desc)
+            log_data['error'] = dict(name=err_name, message=err_msg, anchor=err_anchor)
         log_data['date'] = datetime.datetime.today().strftime('%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
         log_data['action'] = full_action_name
         log_data['user_id'] = request.session.get('user', {}).get('id')
@@ -48,7 +66,10 @@ class DefaultActionLog(AbstractActionLog):
             'HTTP_X_FORWARDED_FOR': request.environ.get('HTTP_X_FORWARDED_FOR'),
             'HTTP_USER_AGENT': request.environ.get('HTTP_USER_AGENT')
         }
-        logging.getLogger('QUERY').info(json.dumps(log_data))
+        return log_data
+
+    def write_action(self, data: str) -> None:
+        logging.getLogger('QUERY').info(json.dumps(data))
 
 
 def create_instance(_):
