@@ -459,7 +459,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResetDetail>(
+        this.addActionHandler<Actions.ResetDetail, Actions.ShowRefDetail>(
             [
                 ActionName.ResetDetail,
                 ActionName.ShowRefDetail

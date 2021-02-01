@@ -389,8 +389,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
         );
 
 
-        this.addActionHandler<Actions.ChangePage>(
-            ActionName.ChangePage,
+        this.addActionHandler<Actions.ChangePage, Actions.ReloadConc>(
+            [ActionName.ChangePage, ActionName.ReloadConc],
             action => {
                 this.dispatchSideEffect<Actions.PublishStoredLineSelections>({
                     name: ActionName.PublishStoredLineSelections,

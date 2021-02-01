@@ -216,6 +216,8 @@ export interface ServerPagination {
     lastPage:number;
 }
 
+export type PaginationActions = 'prevPage'|'nextPage'|'customPage'|'firstPage'|'lastPage';
+
 /**
  * ConcServerArgs defines a set of arguments needed
  * to address a specific concordance (including required
@@ -311,6 +313,7 @@ export interface AjaxConcResponse extends ConcQueryResponse {
     Lines:Array<ServerLineData>;
     KWICCorps:Array<string>;
     conc_use_safe_font:number; // TODO should be boolean
+    conc_persistence_op_id:string;
     concsize:number;
     fullsize:number;
     finished:boolean;

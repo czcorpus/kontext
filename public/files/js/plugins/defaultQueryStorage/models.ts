@@ -129,7 +129,7 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.ToggleQueryHistoryWidget|MainMenuActions.ShowQueryHistory>(
+        this.addActionHandler<QueryActions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory>(
             [QueryActionName.ToggleQueryHistoryWidget, MainMenuActionName.ShowQueryHistory],
             action => {
                 this.changeState(state => {

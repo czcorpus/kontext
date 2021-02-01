@@ -22,7 +22,7 @@ import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { WithinBuilderData, QueryContextArgs, CtxLemwordType } from './common';
-import { QueryType, SimpleQuery } from './query';
+import { QueryType } from './query';
 
 
 export enum ActionName {
@@ -33,6 +33,7 @@ export enum ActionName {
     EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
     BranchQuery = 'BRANCH_QUERY',
     TrimQuery = 'TRIM_QUERY',
+    SliceQueryChain = 'QUERY_REPLAY_SLICE_QUERY_CHAIN',
     QuerySetStopAfterIdx = 'QUERY_SET_STOP_AFTER_IDX',
     RedirectToEditQueryOperation = 'REDIRECT_TO_EDIT_QUERY_OPERATION',
     QueryOverviewEditorClose = 'QUERY_OVERVIEW_EDITOR_CLOSE',
@@ -169,6 +170,13 @@ export namespace Actions {
         operationIdx:number;
     }> {
         name:ActionName.TrimQuery;
+    }
+
+    export interface SliceQueryChain extends Action<{
+        operationIdx:number;
+        concId:string;
+    }> {
+        name:ActionName.SliceQueryChain;
     }
 
     export interface QuerySetStopAfterIdx extends Action<{
