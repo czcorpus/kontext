@@ -149,6 +149,7 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         this.addActionHandler<Actions.SubmitNewPasswordDone>(
             ActionName.SubmitNewPasswordDone,
             (state, action) => {
+                state.isBusy = false;
                 if (action.error) {
                     if (!action.payload.validationStatus.currPasswd) {
                         state.currPasswd = Kontext.updateFormValue(
@@ -184,23 +185,10 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         this.addActionHandler<Actions.SubmitNewPassword>(
             ActionName.SubmitNewPassword,
             (state, action) => {
-
+                state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.pluginApi.ajax$<UsernameTestResponse>(
-                    HTTP.Method.GET,
-                    this.pluginApi.createActionUrl('user/test_username'),
-                    {
-                        username: state.username
-                    }
-                ).pipe(
-                    concatMap(
-                        resp => resp.valid && resp.available ?
-                            this.submitNewPassword(state) :
-                            throwError(this.pluginApi.translate('defaultAuth__cannot_use_username'))
-                    )
-
-                ).subscribe(
+                this.submitNewPassword(state).subscribe(
                     (validationStatus) => {
                         if (validationStatusHasErrors(validationStatus)) {
                             dispatch<Actions.SubmitNewPasswordDone>({

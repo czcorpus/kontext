@@ -1,5 +1,6 @@
 import os
 from werkzeug.security import pbkdf2_hex
+from base64 import b64encode
 
 
 def mk_pwd_hash_default(data):
@@ -9,7 +10,7 @@ def mk_pwd_hash_default(data):
     iterations = 1000
     keylen = 24
     algo = 'sha512'
-    salt = str(os.urandom(keylen))
+    salt = b64encode(os.urandom(keylen)).decode('utf-8')
     return mk_pwd_hash(data, salt, iterations, keylen, algo)
 
 
