@@ -32,7 +32,7 @@ class MockHTTPBackend(AbstractBackend):
         self._conf = conf
 
     @cached
-    def fetch(self, corpora, token_id, num_tokens, query_args, lang):
+    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
         lemma = query_args.get('lemma', None)
         word = query_args.get('word', None)
         if lemma == 'unicode':
