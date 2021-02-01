@@ -42,16 +42,12 @@ class CacheMan(object):
     def test_cache(self):
         """
         create cache path directory if it does not exist yet
-        delete the existing cache file (if any) and create an empty one with the required table structure
         """
-        if os.path.isfile(self.cache_path):
-            os.remove(self.cache_path)
         self.connect()
         c = self._conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'cache'")
         ans = c.fetchone()
         if ans is None:
-            # raise CacheException('Missing cache table for TC/KC')
             c.execute(
                 'CREATE TABLE cache (key text, provider text, data blob, found integer, last_access integer NOT NULL, PRIMARY KEY (key))')
 
