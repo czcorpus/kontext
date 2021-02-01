@@ -150,7 +150,6 @@ class AuthTest(unittest.TestCase):
         """
         self.mock_redis_plugin.add_user_old_hashing(
             2, 'mary', 'maryspassword', 'Mary', 'White', 'mary.white@localhost')
-
         msg = "wrong length of pwd_hash created using the legacy method"
         self.assertEqual(len(self.auth_handler._find_user('mary').get('pwd_hash')), 32, msg)
 
@@ -161,8 +160,8 @@ class AuthTest(unittest.TestCase):
         self.auth_handler.update_user_password(2, 'marysnewpassword')
         split_new = split_pwd_hash(self.auth_handler._find_user('mary').get('pwd_hash'))
         msg = "the password update method failed"
-        self.assertTrue(len(split_new['salt']) == len(
-            split_new['data']) == 2 * split_new['keylen'], msg)
+        self.assertTrue(len(split_new['salt']) > 0)
+        self.assertTrue(len(split_new['data']) == 2 * split_new['keylen'], msg)
 
         msg = "failed to authenticate using the new hashing method"
         self.assertEqual('mary', self.auth_handler.validate_user(
