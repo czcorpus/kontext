@@ -12,8 +12,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Callable, Any, Tuple, Optional
+from typing import Callable, Any, Tuple, Optional, Dict
 from werkzeug import Request
+import abc
 
 
 class AbstractActionLog:
@@ -26,16 +27,31 @@ class AbstractActionLog:
     """
 
     def log_action(self, request: Request, action_log_mapper: Callable[[None], Any], full_action_name: str,
-                   err_desc: Tuple[str, str], proc_time: Optional[float]) -> None:
+                   err_desc: Optional[Tuple[Exception, Optional[str]]], proc_time: Optional[float]) -> str:
+        self.write_action(self.collect_args(request, action_log_mapper, full_action_name, err_desc, proc_time))
+
+    @abc.abstractmethod
+    def collect_args(self, request: Request, action_log_mapper: Callable[[None], Any], full_action_name: str,
+                     err_desc: Optional[Tuple[Exception, Optional[str]]],
+                     proc_time: Optional[float]) -> Dict[str, Any]:
         """
+        A custom implementation transforming passed arguments into a dictionary with possibly nested values.
+        The only restriction regarding the structure is that the write_action() method should be able
+        to write it to a target location.
+
         params:
             request -- a HTTP request leading to the logged action
             action_log_mapper -- a function which fetches some arguments out of a query, this can be
                                  used for more detailed and action-specific logging
             full_action_name -- full name of the called method - i.e. including controller prefix separated
                                 by the slash character - e.g. wordlist/form
-            err_desc -- a message type and a message text
+            err_desc -- a 2-tuple (Exception and a unique ID/anchor for searching the error in a log file).
+                        In case of no error, None should be used (i.e. no (None, None) tuple).
             proc_time -- time taken by the action method to process a respective request
-
         """
-        pass
+
+    @abc.abstractmethod
+    def write_action(self, data: Dict[str, Any]) -> None:
+        """
+        Write logged data to a desired location.
+        """

@@ -582,7 +582,7 @@ class Controller(object):
         return create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
 
     def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str],
-                      result: Optional[Dict[str, Any]], err_desc: Tuple[Optional[Exception], Optional[str]]) -> None:
+                      result: Optional[Dict[str, Any]], err_desc: Optional[Tuple[Exception, Optional[str]]]) -> None:
         """
         Allows specific operations to be done after the action itself has been
         processed but before any output or HTTP headers.
@@ -693,7 +693,7 @@ class Controller(object):
         path = path if path is not None else self._import_req_path()
         methodname = path[0]
         headers: List[Tuple[str, str]] = []
-        err: Tuple[Optional[Exception], Optional[str]] = (None, None)
+        err: Optional[Tuple[Exception, Optional[str]]] = None
         action_metadata: Dict[str, Any] = self._get_method_metadata(methodname)
 
         tmpl: Optional[str]
