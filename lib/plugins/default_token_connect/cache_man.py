@@ -44,8 +44,7 @@ class CacheMan(object):
         create cache path directory if it does not exist yet
         delete the existing cache file (if any) and create an empty one with the required table structure
         """
-        if not os.path.isfile(self.cache_path):
-            # raise CacheException('TC/KC cache path does not exist: {}'.format(self.cache_path))
+        if os.path.isfile(self.cache_path):
             os.remove(self.cache_path)
         self.connect()
         c = self._conn.cursor()
