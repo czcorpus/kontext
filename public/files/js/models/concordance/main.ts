@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple } from 'cnc-tskit';
@@ -35,7 +35,7 @@ import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
 import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, ConcServerArgs, Line, TextChunk, IConcLinesProvider, KWICSection, PaginationActions} from './common';
+    mapIdToIdWithColors, Line, TextChunk, IConcLinesProvider, KWICSection, PaginationActions} from './common';
 import { Actions, ActionName, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
@@ -851,6 +851,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         if (Actions.isChangePage(action)) {
             args.set('fromp', action.payload.pageNum);
         }
+        args.set('q', '~' + this.state.concId);
         const onPopStateAction = {
             name: action.name,
             payload: {...action.payload, isPopState: true}
@@ -966,6 +967,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.changeState(state => {state.viewMode = mode});
         this.layoutModel.replaceConcArg('viewmode', [this.state.viewMode]);
         const args = this.layoutModel.exportConcArgs();
+        args.set('q', '~' + this.state.concId);
         args.set('format', 'json');
 
         return this.layoutModel.ajax$<AjaxConcResponse>(
@@ -1002,6 +1004,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         if (this.state.kwicCorps.indexOf(corpusId) > -1) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');
+            args.set('q', '~' + this.state.concId);
             this.layoutModel.setLocationPost(
                 this.layoutModel.createActionUrl('switch_main_corp', args.items()), []);
 

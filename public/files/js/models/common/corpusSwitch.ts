@@ -130,8 +130,10 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                         }
                     ).pipe(
                         scan(
-                            (acc, action:Actions.SwitchCorpusReady<{}>) => {
-                                acc[action.payload.modelId] = action.payload.data;
+                            (acc, action) => {
+                                if (Actions.isSwitchCorpusReady(action)) {
+                                    acc[action.payload.modelId] = action.payload.data;
+                                }
                                 return acc;
                             },
                             {}

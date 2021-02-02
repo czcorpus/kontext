@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatelessModel, IActionDispatcher, Action } from 'kombo';
+import { StatelessModel, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';

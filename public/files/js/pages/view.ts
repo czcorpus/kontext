@@ -72,7 +72,7 @@ import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
-import { Actions, ActionName } from '../models/concordance/actions';
+import { ActionName } from '../models/concordance/actions';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
 import { ConcSortModel } from '../models/query/sort/single';
@@ -228,10 +228,6 @@ export class ViewPage {
             if (event.state) {
                 if (event.state['onPopStateAction']) {
                     this.layoutModel.dispatcher.dispatch(event.state['onPopStateAction']);
-
-                } else {
-                    // only dispatcher actions stored under the 'onPopStateAction' are allowed
-                   console.error('Unknown onPopState action ', event.state);
                 }
             }
         });
@@ -293,7 +289,8 @@ export class ViewPage {
                         onPopStateAction: {
                             name: ActionName.ReloadConc,
                             payload: {
-                                concId: this.layoutModel.getConf<string>('concPersistenceOpId')
+                                concId: this.layoutModel.getConf<string>('concPersistenceOpId'),
+                                isPopState: true
                             }
                         }
                     },

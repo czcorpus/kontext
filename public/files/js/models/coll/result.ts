@@ -339,14 +339,19 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
     private pushStateToHistory(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):void {
         formArgs.remove('format');
-        const hstate:HistoryState = {
-            currPage: state.currPage,
-            sortFn: state.sortFn
-        };
         this.layoutModel.getHistory().pushState(
             'collx',
             formArgs,
-            hstate,
+            {
+                onPopStateAction: {
+                    name: ActionName.PopHistory,
+                    payload: {
+                        currPage: state.currPage,
+                        currPageInput: state.currPageInput,
+                        sortFn: state.sortFn
+                    }
+                }
+            },
             window.document.title
         );
     }

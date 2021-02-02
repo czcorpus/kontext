@@ -31,7 +31,7 @@ export enum ActionName {
     PlayAudioSegment = 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
     AudioPlayerClickControl = 'AUDIO_PLAYER_CLICK_CONTROL',
     ChangePage = 'CONCORDANCE_CHANGE_PAGE',
-    ReloadConc = 'CONCORDANCE_REVISIT_PAGE',
+    ReloadConc = 'CONCORDANCE_RELOAD_CONC',
     AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
     AsyncCalculationFailed = 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
     CalculateIpmForAdHocSubc = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
