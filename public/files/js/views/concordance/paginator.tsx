@@ -26,6 +26,7 @@ import { Subscription } from 'rxjs';
 import {ConcordanceModel} from '../../models/concordance/main';
 import {Actions, ActionName} from '../../models/concordance/actions'
 import { Kontext } from '../../types/common';
+import { PaginationActions } from '../../models/concordance/common';
 
 
 export interface PaginatorProps {
@@ -58,7 +59,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     // TODO implement a proper initialization of currently selected item
 
 
-    const JumpTo:React.SFC<{
+    const JumpTo:React.FC<{
         sortIdx:Array<{page:number; label:string}>;
         clickHandler:()=>void;
 
@@ -93,8 +94,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <FirstPgButton /> ---------------------------
 
-    const NavigButton:React.SFC<{
-        action:string;
+    const NavigButton:React.FC<{
+        action:PaginationActions;
         image:string;
         label:string;
         clickHandler:(evt:React.MouseEvent<{}>)=>void;
@@ -125,7 +126,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <FirstPgButton /> ---------------------------
 
-    const FirstPgButton:React.SFC<{
+    const FirstPgButton:React.FC<{
         clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
     }> = (props) => {
@@ -137,7 +138,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <PrevPgButton /> ---------------------------
 
-    const PrevPgButton:React.SFC<{
+    const PrevPgButton:React.FC<{
         clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
     }> = (props) => {
@@ -149,7 +150,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <NextPgButton /> ---------------------------
 
-    const NextPgButton:React.SFC<{
+    const NextPgButton:React.FC<{
         clickHandler:(evt:React.MouseEvent<{}>)=>void;
 
     }> = (props) => {
@@ -161,7 +162,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <LastPgButton /> ---------------------------
 
-    const LastPgButton:React.SFC<{
+    const LastPgButton:React.FC<{
         clickHandler:()=>void;
 
     }> = (props) => {
@@ -173,7 +174,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <PositionInfo /> ---------------------------
 
-    const PositionInfo:React.SFC<{
+    const PositionInfo:React.FC<{
         inputHandler:(evt:React.KeyboardEvent<{}>)=>void;
         inputKeyDownHandler:(evt:React.KeyboardEvent<{}>)=>void;
         loader:boolean;

@@ -320,15 +320,19 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     private pushStateToHistory(state:FreqDataRowsModelState):void {
         const args = this.getSubmitArgs(state);
         args.remove('format');
-        const hstate:HistoryState = {
-            currentPage: state.currentPage,
-            flimit: state.flimit,
-            sortColumn: state.sortColumn
-        };
         this.pageModel.getHistory().pushState(
             'freqs',
             args,
-            hstate,
+            {
+                onPopStateAction: {
+                    name: ActionName.PopHistory,
+                    payload: {
+                        currentPage: state.currentPage,
+                        flimit: state.flimit,
+                        sortColumn: state.sortColumn
+                    }
+                }
+            },
             window.document.title
         );
     }

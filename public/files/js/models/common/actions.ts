@@ -90,6 +90,10 @@ export namespace Actions {
         name:ActionName.SwitchCorpusReady;
     }
 
+    export function isSwitchCorpusReady(a:Action):a is SwitchCorpusReady<{}> {
+        return a.name === ActionName.SwitchCorpusReady;
+    }
+
     export interface OverviewClose extends Action<{
     }> {
         name:ActionName.OverviewClose;

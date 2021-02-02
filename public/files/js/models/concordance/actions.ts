@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
-    AjaxConcResponse, LineGroupId, RefsColumn } from './common';
+    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions } from './common';
 import { SaveData } from '../../app/navigation';
 import { TextTypes } from '../../types/common';
 
@@ -31,7 +31,7 @@ export enum ActionName {
     PlayAudioSegment = 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
     AudioPlayerClickControl = 'AUDIO_PLAYER_CLICK_CONTROL',
     ChangePage = 'CONCORDANCE_CHANGE_PAGE',
-    RevisitPage = 'CONCORDANCE_REVISIT_PAGE',
+    ReloadConc = 'CONCORDANCE_RELOAD_CONC',
     AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
     AsyncCalculationFailed = 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
     CalculateIpmForAdHocSubc = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
@@ -139,17 +139,26 @@ export namespace Actions {
     }
 
     export interface ChangePage extends Action<{
-        action:string;
+        action:PaginationActions;
         pageNum:number;
+        isPopState?:boolean;
     }> {
         name:ActionName.ChangePage;
     }
 
-    export interface RevisitPage extends Action<{
-        action:string;
-        pageNum:number;
+    export function isChangePage(a:Action):a is ChangePage {
+        return a.name === ActionName.ChangePage;
+    }
+
+    export interface ReloadConc extends Action<{
+        concId:string;
+        isPopState?:boolean;
     }> {
-        name:ActionName.RevisitPage;
+        name:ActionName.ReloadConc;
+    }
+
+    export function isReloadConc(a:Action):a is ReloadConc {
+        return a.name === ActionName.ReloadConc;
     }
 
     export interface AsyncCalculationUpdated extends Action<{

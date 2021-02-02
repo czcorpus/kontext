@@ -64,5 +64,6 @@ export interface CollSaveServerArgs extends CollServerArgs {
 
 export interface HistoryState {
     currPage:number;
+    currPageInput:string;
     sortFn:string;
 }

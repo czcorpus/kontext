@@ -350,14 +350,8 @@ class FreqPage {
 
     private setupBackButtonListening():void {
         this.layoutModel.getHistory().setOnPopState((event) => {
-            if (event.state) {
-                this.layoutModel.dispatcher.dispatch<Actions.PopHistory>({
-                    name: ActionName.PopHistory,
-                    payload: event.state
-                });
-
-            } else {
-                console.warn('History pop state empty');
+            if (event.state['onPopStateAction']) {
+                this.layoutModel.dispatcher.dispatch(event.state['onPopStateAction']);
             }
         });
 
@@ -368,7 +362,7 @@ class FreqPage {
                 this.layoutModel.getHistory().replaceState(
                     'freqct',
                     args,
-                    {}
+                    {} // TODO missing handler action
                 );
             }
             break;
@@ -381,9 +375,14 @@ class FreqPage {
                     'freqs',
                     args,
                     {
-                        currentPage: state.currentPage,
-                        flimit: state.flimit,
-                        sortColumn: state.sortColumn
+                        onPopStateAction: {
+                            name: ActionName.PopHistory,
+                            payload: {
+                                currentPage: state.currentPage,
+                                flimit: state.flimit,
+                                sortColumn: state.sortColumn
+                            }
+                        }
                     }
                 );
             }

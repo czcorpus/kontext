@@ -299,10 +299,9 @@ export class CollPage {
 
     private setupBackButtonListening():void {
         this.layoutModel.getHistory().setOnPopState((event) => {
-            this.layoutModel.dispatcher.dispatch<Actions.PopHistory>({
-                name: ActionName.PopHistory,
-                payload: event.state
-            })
+            if (event.state['onPopStateAction']) {
+                this.layoutModel.dispatcher.dispatch(event.state['onPopStateAction']);
+            }
         });
         const state = this.collResultModel.getState(); // no antipattern here
         const formState = this.collFormModel.getState();
@@ -313,9 +312,14 @@ export class CollPage {
             'collx',
             args,
             {
-                currPage: state.currPage,
-                currPageInput: state.currPageInput,
-                sortFn: state.sortFn
+                onPopStateAction: {
+                    name: ActionName.PopHistory,
+                    payload: {
+                        currPage: state.currPage,
+                        currPageInput: state.currPageInput,
+                        sortFn: state.sortFn
+                    }
+                }
             }
         );
     }

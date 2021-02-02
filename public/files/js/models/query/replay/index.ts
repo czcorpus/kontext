@@ -379,6 +379,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
+        this.addActionHandler<Actions.SliceQueryChain>(
+            ActionName.SliceQueryChain,
+            (state, action) => {
+                state.currEncodedOperations = state.currEncodedOperations.slice(0, action.payload.operationIdx + 1);
+                state.replayOperations = state.replayOperations.slice(0, action.payload.operationIdx + 1);
+                state.lastOperationKey = action.payload.concId;
+            }
+        );
+
         this.addActionHandler<Actions.QuerySetStopAfterIdx>(
             ActionName.QuerySetStopAfterIdx,
             (state, action) => {
@@ -394,6 +403,40 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.currentQueryOverview = null;
             }
         );
+
+        this.addActionHandler<ConcActions.ReloadConc>(
+            ConcActionName.ReloadConc,
+            null,
+            (state, action, dispatch) => {
+                const args = this.pageModel.exportConcArgs();
+                args.set('q', '~' + state.lastOperationKey);
+                this.pageModel.ajax$<QueryPipelineResponse>(
+                    HTTP.Method.GET,
+                    this.pageModel.createActionUrl('load_query_pipeline'),
+                    args
+
+                ).subscribe(
+                    resp => {
+                        if (action.payload.concId) {
+                            const operationIdx = pipe(
+                                resp.ops,
+                                List.zip(state.currEncodedOperations),
+                                List.findIndex(([op,]) => op.id === action.payload.concId)
+                            ); // TODO kind of a weak mapping here
+                            if (operationIdx < state.currEncodedOperations.length - 1) {
+                                dispatch<Actions.SliceQueryChain>({
+                                    name: ActionName.SliceQueryChain,
+                                    payload: {
+                                        operationIdx,
+                                        concId: action.payload.concId
+                                    }
+                                });
+                            }
+                        }
+                    }
+                );
+            }
+        )
     }
 
     private getActualCorpname():string {
