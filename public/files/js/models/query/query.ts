@@ -106,7 +106,7 @@ export interface SimpleQuery {
     qmcase:boolean;
     pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
-    default_attr:string|undefined;
+    default_attr:string|Array<string>;
     use_regexp:boolean;
 }
 
@@ -124,7 +124,7 @@ export interface SimpleQuerySubmit {
     qmcase:boolean;
     pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
-    default_attr:string;
+    default_attr:string|Array<string>;
     use_regexp:boolean;
 }
 
@@ -175,7 +175,7 @@ export function simpleToAdvancedQuery(q:SimpleQuery):AdvancedQuery {
         queryHtml,
         pcq_pos_neg: q.pcq_pos_neg,
         include_empty: q.include_empty,
-        default_attr: q.default_attr
+        default_attr: Array.isArray(q.default_attr) ? List.head(q.default_attr) : q.default_attr // TODO check
     };
 }
 
@@ -191,7 +191,7 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
         qmcase: false,
         pcq_pos_neg: 'pos',
         include_empty: false,
-        default_attr: undefined,
+        default_attr: q.default_attr, // TODO check
         use_regexp: false
     };
 }
@@ -247,8 +247,8 @@ export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken
 }
 
 export function parseSimpleQuery(q:SimpleQuery):Array<ParsedSimpleQueryToken>;
-export function parseSimpleQuery(q:string|null, attr:string):Array<ParsedSimpleQueryToken>;
-export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string):Array<ParsedSimpleQueryToken> {
+export function parseSimpleQuery(q:string|null, attr:string|Array<string>):Array<ParsedSimpleQueryToken>;
+export function parseSimpleQuery(q:SimpleQuery|string|null, attr?:string|Array<string>):Array<ParsedSimpleQueryToken> {
     if (q === null) {
         return [{
             args: [tuple(attr, '')],

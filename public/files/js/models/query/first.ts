@@ -133,7 +133,7 @@ function determineDefaultAttr(
     sourceId:string,
     simpleQueryDefaultAttrs:Array<string>,
     attrList:Array<Kontext.AttrItem>
-):string {
+):string|Array<string> {
 
     const qtype = data.currQueryTypes[sourceId] || 'simple';
     const defaultAttr = data.currDefaultAttrValues[sourceId];
@@ -141,7 +141,7 @@ function determineDefaultAttr(
         return defaultAttr;
     }
     if (qtype === 'simple' && !List.empty(simpleQueryDefaultAttrs)) {
-        return '';
+        return simpleQueryDefaultAttrs;
     }
     return List.head(attrList).n;
 }
@@ -180,7 +180,7 @@ function importUserQueries(
                         focusedAttr: undefined,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
-                        default_attr: defaultAttr
+                        default_attr: Array.isArray(defaultAttr) ? List.head(defaultAttr) : defaultAttr // determineDefaultAttr always returns string for advanced query
                     }
                 );
 

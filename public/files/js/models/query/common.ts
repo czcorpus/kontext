@@ -104,7 +104,7 @@ export interface FilterServerArgs extends ConcServerArgs {
     queryParsed:AjaxResponse.SubmitEncodedSimpleTokens|undefined;
     qmcase:boolean;
     within:boolean;
-    default_attr:string;
+    default_attr:string|Array<string>;
     use_regexp:boolean;
     type:'filterQueryArgs';
 }
@@ -832,6 +832,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 List.forEach(
                     args => {
                         if (this.shouldAskForSuggestion(sourceId, args.value)) {
+                            const defaultAttr = this.state.queries[sourceId].default_attr;
                             dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
                                 name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
                                 payload: {
@@ -845,7 +846,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                     valueType: 'unspecified',
                                     valueSubformat: this.determineSuggValueType(sourceId),
                                     queryType: this.state.queries[sourceId].qtype,
-                                    posAttr: this.state.queries[sourceId].default_attr,
+                                    posAttr: Array.isArray(defaultAttr) ? undefined : defaultAttr,
                                     struct: undefined,
                                     structAttr: undefined,
                                     sourceId,
