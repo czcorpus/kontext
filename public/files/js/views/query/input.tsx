@@ -1047,7 +1047,7 @@ export function init({
                                     <DefaultAttrSelector
                                         label={he.translate('query__default_attr')}
                                         sourceId={this.props.sourceId}
-                                        defaultAttr={query.default_attr}
+                                        defaultAttr={Array.isArray(query.default_attr) ? undefined : query.default_attr}
                                         forcedAttr={this.props.forcedAttr}
                                         attrList={this.props.attrList}
                                         simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
