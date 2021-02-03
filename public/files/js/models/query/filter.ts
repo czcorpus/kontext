@@ -136,7 +136,7 @@ export interface FilterFormModelState extends QueryFormModelState {
     inputLanguage:string;
 
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
-    
+
     changeMaincorp:string;
 }
 
@@ -386,7 +386,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 this.changeState(state => {
                     state.changeMaincorp = action.payload.maincorp
                 });
-                
+
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
                     error: (err) => {
                         this.pageModel.showMessage('error',
@@ -624,11 +624,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
     private createSubmitArgs(filterId:string, concId:string):FilterServerArgs {
         const query = this.state.queries[filterId];
-        const defaultAttr = query.default_attr ?
-                            query.default_attr :
-                            this.state.simpleQueryDefaultAttrs[filterId];
         return {
-            type:'filterQueryArgs',
+            type: 'filterQueryArgs',
             qtype: query.qtype,
             query: query.query,
             queryParsed: query.qtype === 'simple' ?
@@ -638,9 +635,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                         item => tuple(
                             item.args.length > 0 && item.args[0][0] ?
                                 item.args :
-                                defaultAttr ?
-                                    [tuple(defaultAttr, item.args[0][1])] :
-                                    [tuple(query.default_attr, item.args[0][1])],
+                                [tuple(query.default_attr, item.args[0][1])],
                             item.isExtended
                         )
                     )

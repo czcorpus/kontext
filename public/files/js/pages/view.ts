@@ -370,7 +370,11 @@ export class ViewPage {
             isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
             suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
             simpleQueryDefaultAttrs: {
-                [List.head(this.getActiveCorpora())]: this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')
+                [List.head(this.getActiveCorpora())]: pipe(
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                    List.map(v => v.n),
+                    List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs'))
+                )
             }
         };
 

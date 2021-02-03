@@ -74,7 +74,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     isAnonymousUser:boolean;
     isLocalUiLang:boolean;
     suggestionsEnabled:boolean;
-    simpleQueryDefaultAttrs:{[corpname:string]:Array<string>};
+    simpleQueryDefaultAttrs:{[corpname:string]:Array<string|Array<string>>};
 }
 
 export interface QueryInputSetQueryProps {
@@ -131,25 +131,22 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 function determineDefaultAttr(
     data:QueryFormUserEntries,
     sourceId:string,
-    simpleQueryDefaultAttrs:Array<string>,
+    simpleQueryDefaultAttrs:string|Array<string>,
     attrList:Array<Kontext.AttrItem>
-):string {
+):string|Array<string> {
 
     const qtype = data.currQueryTypes[sourceId] || 'simple';
     const defaultAttr = data.currDefaultAttrValues[sourceId];
     if (defaultAttr) {
         return defaultAttr;
     }
-    if (qtype === 'simple' && !List.empty(simpleQueryDefaultAttrs)) {
-        return '';
-    }
-    return List.head(attrList).n;
+    return qtype === 'simple' ? simpleQueryDefaultAttrs : List.head(attrList).n;
 }
 
 function importUserQueries(
     corpora:Array<string>,
     data:QueryFormUserEntries,
-    simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>},
+    simpleQueryDefaultAttrs:{[sourceId:string]:Array<string|Array<string>>},
     attrList:Array<Kontext.AttrItem>
 
 ):{[corpus:string]:AnyQuery} {
@@ -161,7 +158,7 @@ function importUserQueries(
             const defaultAttr = determineDefaultAttr(
                 data,
                 corpus,
-                simpleQueryDefaultAttrs[corpus],
+                List.head(simpleQueryDefaultAttrs[corpus]),
                 attrList
             );
             const query = data.currQueries[corpus] || '';
@@ -180,7 +177,7 @@ function importUserQueries(
                         focusedAttr: undefined,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
-                        default_attr: defaultAttr
+                        default_attr: Array.isArray(defaultAttr) ? List.head(defaultAttr) : defaultAttr // determineDefaultAttr always returns string for advanced query
                     }
                 );
 
@@ -679,10 +676,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         const oldQuery = data.queries[corp];
         let newQuery = state.queries[corp];
         if (newQuery.qtype === 'advanced' && oldQuery.qtype === 'simple') {
-            newQuery = advancedToSimpleQuery(newQuery);
+            newQuery = simpleToAdvancedQuery(oldQuery, List.head(state.attrList).n);
 
         } else if (newQuery.qtype === 'simple' && oldQuery.qtype === 'advanced') {
-            newQuery = simpleToAdvancedQuery(newQuery);
+            newQuery = advancedToSimpleQuery(oldQuery, List.head(state.simpleQueryDefaultAttrs[corp]));
 
         } else if (newQuery.qtype === 'simple' && oldQuery.qtype === 'simple') {
             newQuery.qmcase = oldQuery.qmcase;
@@ -820,7 +817,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         List.removeValue(corpname, state.corpora);
     }
 
-    private exportQuery(query:AnyQuery, defaultAttr?:string|Array<string>):AnyQuerySubmit {
+    private exportQuery(query:AnyQuery):AnyQuerySubmit {
         if (query.qtype === 'advanced') {
             return {
                 qtype: 'advanced',
@@ -828,8 +825,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 query: query.query.trim().normalize(),
                 pcq_pos_neg: query.pcq_pos_neg,
                 include_empty: query.include_empty,
-                default_attr: defaultAttr && !Array.isArray(defaultAttr) ?
-                    defaultAttr : query.default_attr
+                default_attr: !Array.isArray(query.default_attr) ?
+                                    query.default_attr : ''
             };
 
         } else {
@@ -840,20 +837,18 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 queryParsed: pipe(
                     query.queryParsed,
                     List.map(
-                        item => tuple(
-                            item.args.length > 0 && item.args[0][0] ?
-                                item.args :
-                                defaultAttr ?
-                                    [tuple(defaultAttr, item.args[0][1])] :
-                                    [tuple(query.default_attr, item.args[0][1])],
-                            item.isExtended
+                        token => tuple(
+                            token.args.length > 0 && token.args[0][0] ?
+                                token.args :
+                                [tuple(query.default_attr, token.args[0][1])],
+                            token.isExtended
                         )
                     )
                 ),
                 qmcase: query.qmcase,
                 pcq_pos_neg: query.pcq_pos_neg,
                 include_empty: query.include_empty,
-                default_attr: query.default_attr,
+                default_attr: Array.isArray(query.default_attr) ? '' : query.default_attr,
                 use_regexp: query.use_regexp
             }
         }
@@ -866,7 +861,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         const primaryCorpus = List.head(this.state.corpora);
         const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
-            type:'concQueryArgs',
+            type: 'concQueryArgs',
             maincorp: primaryCorpus,
             usesubcorp: this.state.currentSubcorp || null,
             viewmode: 'kwic',
@@ -891,15 +886,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
 
         args.queries = List.map(
-            (corpus, i) => {
-                const query = this.state.queries[corpus];
-                return this.exportQuery(
-                    query,
-                    query.default_attr ?
-                        query.default_attr :
-                        this.state.simpleQueryDefaultAttrs[corpus]
-                );
-            },
+            corpus => this.exportQuery(this.state.queries[corpus]),
             this.state.corpora
         );
 

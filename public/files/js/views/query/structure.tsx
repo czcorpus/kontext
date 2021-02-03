@@ -35,7 +35,6 @@ export interface InputModuleArgs {
 interface QueryStructureWidgetProps {
     sourceId:string;
     formType:QueryFormType;
-    defaultAttribute:Array<string>;
 }
 
 export function init({dispatcher, he, queryModel}:InputModuleArgs) {
@@ -47,15 +46,15 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
     const ParsedToken:React.FC<{
         value:ParsedSimpleQueryToken;
         matchCase:boolean;
-        defaultAttrs:Array<string>;
 
     }> = (props) => {
 
-        const mkExpr = (attr:string|Array<string>|undefined, val:string) => {
+        const mkExpr = (attr:string|Array<string>, val:string) => {
             const csFlag = props.matchCase ? '' : '(?i)';
-            if (!attr || Array.isArray(attr)) {
-                return pipe(
-                    attr ? attr : props.defaultAttrs,
+            if (Array.isArray(attr)) {
+                return <React.Fragment key={`v:${props.value.value}:${props.value.position[0]}`}>
+                {pipe(
+                    attr,
                     List.map((attr, i) => (
                         <div key={`item:${attr}:${i}`}>
                             <span className="attr">{attr}</span>=<span className="value">"{`${csFlag}${val}`}"</span>
@@ -68,7 +67,8 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                             </span>
                         </div>
                     ))
-                );
+                )}
+                </React.Fragment>;
             }
             return <div key={`item:${attr}:0`}><span className="attr">{attr}</span>=<span className="value">"{`${csFlag}${val}`}"</span></div>;
         }
@@ -77,7 +77,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
             <td>
                 {pipe(
                     props.value.args,
-                    List.map(u => mkExpr(u[0], u[1])),
+                    List.map(([attr, value]) => mkExpr(attr, value)),
                     List.join((i) => (
                         <div key={`op:${i}`}  className="operator">
                             <span>
@@ -118,6 +118,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
 
         if (queryObj.qtype === 'simple') {
             const hasExpandedTokens = List.some(t => t.isExtended, queryObj.queryParsed);
+            console.log('queryObj: ', queryObj)
             return (
                 <layoutViews.ModalOverlay onCloseKey={handleClose}>
                     <layoutViews.CloseableFrame onCloseClick={handleClose} label={he.translate('query__query_structure')}>
@@ -153,7 +154,6 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                                             <tr className="interpretation">
                                                 {List.map(
                                                     (v, i) => <ParsedToken key={`${v.value}:${i}`} value={v}
-                                                                    defaultAttrs={props.defaultAttribute}
                                                                     matchCase={queryObj.qmcase} />,
                                                     queryObj.queryParsed
                                                 )}
