@@ -319,26 +319,26 @@ export function init({
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
             const argMap = {
-                [Keyboard.Code.DOWN_ARROW]: [0, 1],
-                [Keyboard.Code.UP_ARROW]: [0, -1],
-                [Keyboard.Code.LEFT_ARROW]: [-1, 0],
-                [Keyboard.Code.RIGHT_ARROW]: [1, 0]
+                [Keyboard.Value.DOWN_ARROW]: [0, 1],
+                [Keyboard.Value.UP_ARROW]: [0, -1],
+                [Keyboard.Value.LEFT_ARROW]: [-1, 0],
+                [Keyboard.Value.RIGHT_ARROW]: [1, 0]
             };
-            switch (evt.keyCode) {
-                case Keyboard.Code.DOWN_ARROW:
-                case Keyboard.Code.UP_ARROW:
-                case Keyboard.Code.LEFT_ARROW:
-                case Keyboard.Code.RIGHT_ARROW:
+            switch (evt.key) {
+                case Keyboard.Value.DOWN_ARROW:
+                case Keyboard.Value.UP_ARROW:
+                case Keyboard.Value.LEFT_ARROW:
+                case Keyboard.Value.RIGHT_ARROW:
                     dispatcher.dispatch<Actions.MoveFocusToNextListItem>({
                         name: ActionName.MoveFocusToNextListItem,
                         payload: {
-                            change: argMap[evt.keyCode]
+                            change: argMap[evt.key]
                         }
                     });
                     evt.preventDefault();
                     evt.stopPropagation();
                 break;
-                case Keyboard.Code.ENTER:
+                case Keyboard.Value.ENTER:
                     dispatcher.dispatch<Actions.EnterOnActiveListItem>({
                         name: ActionName.EnterOnActiveListItem
                     });
@@ -440,26 +440,26 @@ export function init({
 
         const handleKeyDown = (evt) => {
 
-            switch (evt.keyCode) {
-                case Keyboard.Code.DOWN_ARROW:
-                case Keyboard.Code.UP_ARROW:
+            switch (evt.key) {
+                case Keyboard.Value.DOWN_ARROW:
+                case Keyboard.Value.UP_ARROW:
                     dispatcher.dispatch<Actions.FocusSearchRow>({
                         name: ActionName.FocusSearchRow,
                         payload: {
-                            inc: evt.keyCode === Keyboard.Code.DOWN_ARROW ? 1 : -1
+                            inc: evt.key === Keyboard.Value.DOWN_ARROW ? 1 : -1
                         }
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
                 break;
-                case Keyboard.Code.ENTER:
+                case Keyboard.Value.ENTER:
                     dispatcher.dispatch<Actions.FocusedItemSelect>({
                         name: ActionName.FocusedItemSelect
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
                 break;
-                case Keyboard.Code.TAB:
+                case Keyboard.Value.TAB:
                     props.handleTab();
                     evt.stopPropagation();
                 break;
@@ -581,7 +581,7 @@ export function init({
     const CorpusButton:React.SFC<CorpusSwitchModelState & CorpusButtonProps> = (props) => {
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
-            if (evt.keyCode === Keyboard.Code.ENTER || evt.keyCode === Keyboard.Code.ESC) {
+            if (evt.key === Keyboard.Value.ENTER || evt.key === Keyboard.Value.ESC) {
                 props.onClick();
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -661,13 +661,13 @@ export function init({
 
         _handleKeypress(evt) {
             if (this.props.isVisible) {
-                switch (evt.keyCode) {
-                    case Keyboard.Code.TAB:
+                switch (evt.key) {
+                    case Keyboard.Value.TAB:
                         this._handleTabSwitch(1 - this.props.activeTab);
                         evt.preventDefault();
                         evt.stopPropagation();
                     break;
-                    case Keyboard.Code.ESC:
+                    case Keyboard.Value.ESC:
                         this._handleCloseClick();
                         evt.preventDefault();
                         evt.stopPropagation();

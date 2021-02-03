@@ -270,7 +270,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _inputKeyDownHandler(evt:React.KeyboardEvent<{}>) {
-            if (evt.keyCode === Keyboard.Code.ENTER) {
+            if (evt.key === Keyboard.Value.ENTER) {
                 this._navigActionHandler();
                 dispatcher.dispatch<Actions.ChangePage>({
                     name: ActionName.ChangePage,

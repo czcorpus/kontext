@@ -71,9 +71,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         _keyPressHandler(data, evt) {
             const inc = Number({
-                [Keyboard.Code.UP_ARROW]: data.length - 1,
-                [Keyboard.Code.DOWN_ARROW]: 1
-            }[evt.keyCode]);
+                [Keyboard.Value.UP_ARROW]: data.length - 1,
+                [Keyboard.Value.DOWN_ARROW]: 1
+            }[evt.key]);
             const modulo = data.length > 0 ? data.length : 1;
             if (!isNaN(inc)) {
                 dispatcher.dispatch<Actions.SelectItem>({
@@ -81,7 +81,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     payload: {value: (this.props.currentItem + inc) % modulo}
                 });
 
-            } else if (evt.keyCode === Keyboard.Code.ENTER) {
+            } else if (evt.key === Keyboard.Value.ENTER) {
                 const historyItem = data[this.props.currentItem];
                 dispatcher.dispatch<QueryActions.QueryInputSetQType>({
                     name: QueryActionName.QueryInputSetQType,

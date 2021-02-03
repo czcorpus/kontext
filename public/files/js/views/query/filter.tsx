@@ -253,7 +253,7 @@ export function init({
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === Keyboard.Code.ENTER && !evt.ctrlKey && !evt.shiftKey) {
+            if (evt.key === Keyboard.Value.ENTER && !evt.ctrlKey && !evt.shiftKey) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch<Actions.BranchQuery>({
                         name: ActionName.BranchQuery,
