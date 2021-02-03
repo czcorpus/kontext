@@ -156,7 +156,20 @@ export interface QueryFormModelState {
 
     forcedAttr:string;
 
+    /**
+     * This list also serves as a list of default values
+     * for the advanced query mode.
+     */
     attrList:Array<Kontext.AttrItem>;
+
+    /**
+     * simpleQueryDefaultAttrs contains a list of default attributes
+     * for the simple query. The possible value types for a single item are:
+     * 1) a string -> single attribute (e.g. 'word')
+     * 2) a list of strings -> multiple attributes interpreted by server as disjunction
+     *    (e.g. ['word', 'lemma'] -> [word="foo" | lemma="foo"])
+     */
+    simpleQueryDefaultAttrs:{[sourceId:string]:Array<Array<string>|string>};
 
     structAttrList:Array<Kontext.AttrItem>;
 
@@ -195,14 +208,6 @@ export interface QueryFormModelState {
     suggestionsLoading:{[sourceId:string]:{[position:number]:boolean}};
 
     isBusy:boolean;
-
-    /**
-     * In case of a simple query, this sequence determines
-     * which attribute is set in case nothing is specified by user.
-     * The client starts with 0-th item and if nothing is found,
-     * 1-th is used etc.
-     */
-    simpleQueryDefaultAttrs:{[sourceId:string]:Array<string>};
 
     isLocalUiLang:boolean;
 }
@@ -251,6 +256,15 @@ export function getTagBuilderSupport(tagsets:{[sourceId:string]:Array<PluginInte
     );
 }
 
+export function formEncodeDefaultAttr(attr:string|Array<string>):string {
+    return Array.isArray(attr) ? attr.join('|') : attr;
+}
+
+export function formDecodeDefaultAttr(attr:string):string|Array<string> {
+    const items = attr.split('|');
+    return items.length > 1 ? items : items[0];
+}
+
 /**
  *
  */
@@ -263,7 +277,7 @@ interface SuggestionReqArgs {
 }
 
 /**
- *
+ * QueryFormModel is a common base for both 'first' and 'filter' queries.
  */
 export abstract class QueryFormModel<T extends QueryFormModelState> extends StatefulModel<T> {
 
@@ -315,6 +329,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.qsSubscription = this.qsPlugin.isActive() ?
                 this.subscribeAutoSuggest(dispatcher) : undefined;
+
         this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
             ActionName.QueryInputSetQType,
             action => action.payload.formType === this.formType,
@@ -322,10 +337,16 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 this.changeState(state => {
                     const query = state.queries[action.payload.sourceId];
                     if (query.qtype === 'advanced' && action.payload.queryType === 'simple') {
-                        state.queries[action.payload.sourceId] = advancedToSimpleQuery(query);
+                        state.queries[action.payload.sourceId] = advancedToSimpleQuery(
+                            query,
+                            List.head(initState.simpleQueryDefaultAttrs[action.payload.sourceId])
+                        );
 
                     } else if (query.qtype === 'simple' && action.payload.queryType === 'advanced') {
-                        state.queries[action.payload.sourceId] = simpleToAdvancedQuery(query);
+                        state.queries[action.payload.sourceId] = simpleToAdvancedQuery(
+                            query,
+                            List.head(state.attrList).n
+                        );
                     }
                     state.supportedWidgets = determineSupportedWidgets(
                         state.queries,
@@ -388,9 +409,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
-                    queryObj.default_attr = action.payload.value;
                     if (queryObj.qtype === 'simple') {
+                        queryObj.default_attr = formDecodeDefaultAttr(action.payload.value);
                         queryObj.queryParsed = parseSimpleQuery(queryObj);
+
+                    } else if (action.payload.value) {
+                        queryObj.default_attr = action.payload.value;
+
+                    } else {
+                        throw new Error(`Invalid default attr value: ${action.payload.value}`);
                     }
                 });
                 this.autoSuggestTrigger.next(tuple(

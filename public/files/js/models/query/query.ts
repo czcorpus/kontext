@@ -161,7 +161,11 @@ export function findTokenIdxByFocusIdx(q:AnyQuery, focusIdx:number):number {
     return -1;
 }
 
-export function simpleToAdvancedQuery(q:SimpleQuery):AdvancedQuery {
+/**
+ * Transform simple query to an advanced one. Please note that default attribute
+ * is not preserved as it serves a bit different purposes in both query types.
+ */
+export function simpleToAdvancedQuery(q:SimpleQuery, defaultAttr:string):AdvancedQuery {
     const query = q.query.trim();
     const [queryHtml, parsedAttrs] = highlightSyntaxStatic(query, 'advanced', {translate: id});
     return {
@@ -175,11 +179,15 @@ export function simpleToAdvancedQuery(q:SimpleQuery):AdvancedQuery {
         queryHtml,
         pcq_pos_neg: q.pcq_pos_neg,
         include_empty: q.include_empty,
-        default_attr: Array.isArray(q.default_attr) ? List.head(q.default_attr) : q.default_attr // TODO check
+        default_attr: defaultAttr
     };
 }
 
-export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
+/**
+ * Transform advanced query to a simple one. Please note that default attribute
+ * is not preserved as it serves a bit different purposes in both query types.
+ */
+export function advancedToSimpleQuery(q:AdvancedQuery, defaultAttr:string|Array<string>):SimpleQuery {
     return {
         corpname: q.corpname,
         qtype: 'simple',
@@ -191,7 +199,7 @@ export function advancedToSimpleQuery(q:AdvancedQuery):SimpleQuery {
         qmcase: false,
         pcq_pos_neg: 'pos',
         include_empty: false,
-        default_attr: q.default_attr, // TODO check
+        default_attr: defaultAttr,
         use_regexp: false
     };
 }
@@ -212,7 +220,12 @@ export function strictEqualParsedQueries(q1:AnyQuery, q2:AnyQuery):boolean {
     return false;
 }
 
-export function runSimpleQueryParser(q:string, onToken:(t:ParsedSimpleQueryToken, idx:number, charIdx:number)=>void, onSpace:()=>void):void {
+export function runSimpleQueryParser(
+    q:string,
+    onToken:(t:ParsedSimpleQueryToken, idx:number, charIdx:number)=>void,
+    onSpace:()=>void
+):void {
+
     let currWord = [];
     let startWord = 0;
     const isWhitespace = (s:string) => /^\s$/.exec(s) !== null;

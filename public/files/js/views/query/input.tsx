@@ -28,7 +28,7 @@ import { init as richInputInit } from './richInput';
 import { WithinBuilderModel, WithinBuilderModelState } from '../../models/query/withinBuilder';
 import { PluginInterfaces } from '../../types/plugins';
 import { Kontext } from '../../types/common';
-import { QueryFormModel, QueryFormModelState } from '../../models/query/common';
+import { formEncodeDefaultAttr, QueryFormModel, QueryFormModelState } from '../../models/query/common';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
 import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
@@ -660,8 +660,7 @@ export function init({
                                 sourceId={this.props.sourceId} inputLanguage={this.props.inputLanguage}
                                 formType={this.props.formType} />;
                 case 'query-structure':
-                    return <QueryStructure sourceId={this.props.sourceId} formType={this.props.formType}
-                                defaultAttribute={this.props.simpleQueryDefaultAttrs[this.props.sourceId]} />;
+                    return <QueryStructure sourceId={this.props.sourceId} formType={this.props.formType} />;
                 default:
                     return null;
             }
@@ -731,7 +730,7 @@ export function init({
         defaultAttr:string;
         forcedAttr:string;
         attrList:Array<Kontext.AttrItem>;
-        simpleQueryDefaultAttrs:Array<string>;
+        simpleQueryDefaultAttrs:Array<Array<string>|string>;
         sourceId:string;
         formType:QueryFormType;
         queryType:QueryType;
@@ -755,7 +754,8 @@ export function init({
                 <span className="sel">
                     <span>
                         {props.label + ':\u00a0'}
-                        <DefaultAttrSelect defaultAttr={props.defaultAttr}
+                        <DefaultAttrSelect
+                            value={props.defaultAttr}
                             forcedAttr={props.forcedAttr}
                             attrList={props.attrList}
                             simpleQueryDefaultAttrs={props.simpleQueryDefaultAttrs}
@@ -813,8 +813,8 @@ export function init({
         sourceId:string;
         queryType:QueryType;
         forcedAttr:string;
-        defaultAttr:string|undefined;
-        simpleQueryDefaultAttrs:Array<string>;
+        value:string|Array<string>;
+        simpleQueryDefaultAttrs:Array<Array<string>|string>;
         attrList:Array<Kontext.AttrItem>;
 
     }> = (props) => {
@@ -839,13 +839,22 @@ export function init({
 
         } else {
             return (
-                <select className="DefaultAttrSelect" value={props.defaultAttr || ''} onChange={handleSelectChange}>
-                    {!List.empty(props.simpleQueryDefaultAttrs) && props.queryType === 'simple' ?
-                        <option value="">{props.simpleQueryDefaultAttrs.join(' | ')}</option> :
-                        null}
-                    {props.attrList.map(item => {
-                        return <option key={item.n} value={item.n || ''}>{item.label}</option>;
-                    })}
+                <select className="DefaultAttrSelect" value={formEncodeDefaultAttr(props.value)} onChange={handleSelectChange}>
+                    {props.queryType === 'simple' ?
+                        List.map(
+                            defaultAttr => {
+                                const val = Array.isArray(defaultAttr) ? defaultAttr : [defaultAttr];
+                                return <option key={`attr:${val}`} value={formEncodeDefaultAttr(val)}>{val.join(' | ')}</option>;
+                            },
+                            props.simpleQueryDefaultAttrs
+                        ) :
+                        List.map(
+                            item => {
+                                return <option key={item.n} value={item.n || ''}>{item.label}</option>;
+                            },
+                            props.attrList
+                        )
+                    }
                 </select>
             );
         }

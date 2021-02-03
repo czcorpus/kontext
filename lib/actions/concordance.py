@@ -518,12 +518,12 @@ class Actions(Querying):
             expr = []
             for token_args in q:
                 position = []
-                for attr, val in token_args:
-                    if type(attr) is str:
-                        position.append(f'{attr}="{mk_query_val(val)}"')
+                for tok_attr, val in token_args:
+                    if type(tok_attr) is str:
+                        position.append(f'{tok_attr}="{mk_query_val(val)}"')
                     else:
                         position.append('({})'.format(' | '.join(
-                            [f'{a2}="{mk_query_val(val)}"' for a2 in attr])))
+                            [f'{a2}="{mk_query_val(val)}"' for a2 in tok_attr])))
                 expr.append('[' + ' & '.join(position) + ']')
             return ' '.join(expr)
 

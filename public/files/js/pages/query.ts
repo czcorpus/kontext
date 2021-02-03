@@ -236,7 +236,11 @@ export class QueryPage {
                 isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
                 suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
                 simpleQueryDefaultAttrs: {
-                    [this.layoutModel.getCorpusIdent().id]: this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')
+                    [this.layoutModel.getCorpusIdent().id]: pipe(
+                        this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                        List.map(v => v.n),
+                        List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs'))
+                    )
                 }
             }
         );
