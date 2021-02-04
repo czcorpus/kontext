@@ -62,11 +62,17 @@ class StaticAuth(AbstractRemoteAuth):
     def is_administrator(self, user_id):
         return False
 
+    def corpus_access(self, user_dict, corpus_id):
+        corpora = self._user_corpora.get(user_dict['id'], {})
+        if corpus_id not in corpora:
+            return False, False, ''
+        return False, True, corpora[corpus_id]
+
     def permitted_corpora(self, user_dict):
         if self.is_anonymous(user_dict['id']):
-            return dict()
+            return []
         else:
-            return self._user_corpora[user_dict['id']]
+            return list(self._user_corpora[user_dict['id']].keys())
 
     def get_user_info(self, plugin_api):
         return dict(id=plugin_api.session['user']['id'], user='apiuser', fullname='API user')
