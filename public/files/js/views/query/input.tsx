@@ -363,7 +363,7 @@ export function init({
         }
 
         _handleKeyDown(evt) {
-            if (evt.keyCode === Keyboard.Code.ESC) {
+            if (evt.key === Keyboard.Value.ESC) {
                 evt.stopPropagation();
                 evt.preventDefault();
                 this.props.closeClickHandler();
@@ -483,7 +483,7 @@ export function init({
         );
 
         const handleKey = (e:React.KeyboardEvent) => {
-            if (e.keyCode === Keyboard.Code.ESC) {
+            if (e.key === Keyboard.Value.ESC) {
                 dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
                     name: ActionName.ToggleQuerySuggestionWidget,
                     payload: {

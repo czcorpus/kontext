@@ -75,8 +75,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyUpHandler(evt) {
-            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
-                    evt.keyCode === Keyboard.Code.END) {
+            if (Keyboard.isArrowKey(evt.keyCode) || evt.key === Keyboard.Value.HOME ||
+                    evt.key === Keyboard.Value.END) {
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
                     payload: {
@@ -90,13 +90,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleKeyDown(evt) {
-            if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
+            if (evt.key === Keyboard.Value.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
                     this.props.downArrowTriggersHistory &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
-            } else if (evt.keyCode === Keyboard.Code.ESC) {
+            } else if (evt.key === Keyboard.Value.ESC) {
                 this.props.onEsc();
             }
         }
@@ -235,8 +235,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyUpHandler(evt:React.KeyboardEvent) {
-            if (Keyboard.isArrowKey(evt.keyCode) || evt.keyCode === Keyboard.Code.HOME ||
-                    evt.keyCode === Keyboard.Code.END) {
+            if (Keyboard.isArrowKey(evt.keyCode) || evt.key === Keyboard.Value.HOME ||
+                    evt.key === Keyboard.Value.END) {
                 const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
                 dispatcher.dispatch<Actions.QueryInputMoveCursor>({
                     name: ActionName.QueryInputMoveCursor,
@@ -251,13 +251,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private inputKeyDownHandler(evt:React.KeyboardEvent) {
-            if (evt.keyCode === Keyboard.Code.DOWN_ARROW &&
+            if (evt.key === Keyboard.Value.DOWN_ARROW &&
                     this.props.hasHistoryWidget &&
                     this.props.downArrowTriggersHistory[this.props.sourceId] &&
                     !this.props.historyIsVisible) {
                 this.props.onReqHistory();
 
-            } else if (evt.keyCode === Keyboard.Code.ESC) {
+            } else if (evt.key === Keyboard.Value.ESC) {
                 this.props.onEsc();
             }
         }

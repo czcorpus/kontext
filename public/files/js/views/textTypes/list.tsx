@@ -98,7 +98,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         _keyboardHandler(evt) {
-            if (evt.keyCode === Keyboard.Code.ENTER) {
+            if (evt.key === Keyboard.Value.ENTER) {
                 this._confirmClickHandler();
                 evt.preventDefault();
             }

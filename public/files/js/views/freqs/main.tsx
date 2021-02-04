@@ -148,7 +148,7 @@ export function init(
         };
 
         const inputKeyDownHandler = (evt:React.KeyboardEvent<{}>) => {
-            if (evt.keyCode === Keyboard.Code.ENTER) {
+            if (evt.key === Keyboard.Value.ENTER) {
                 dispatcher.dispatch<Actions.ResultApplyMinFreq>({
                     name: ActionName.ResultApplyMinFreq,
                     payload: {}

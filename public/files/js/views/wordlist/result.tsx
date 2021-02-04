@@ -248,7 +248,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
      }> = (props) => {
 
         const handleKeyPress = (evt) => {
-            if (evt.keyCode === Keyboard.Code.ENTER) {
+            if (evt.key === Keyboard.Value.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 dispatcher.dispatch<Actions.WordlistResultConfirmPage>({

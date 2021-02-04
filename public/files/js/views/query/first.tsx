@@ -155,7 +155,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === Keyboard.Code.ENTER && !evt.shiftKey) {
+            if (evt.key === Keyboard.Value.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey && !evt.shiftKey) {
                     dispatcher.dispatch<Actions.QuerySubmit>({
                         name: ActionName.QuerySubmit
@@ -367,7 +367,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === Keyboard.Code.ENTER && !evt.shiftKey) {
+            if (evt.key === Keyboard.Value.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey) {
                     if (this.props.operationIdx !== undefined) {
                         dispatcher.dispatch<Actions.BranchQuery>({

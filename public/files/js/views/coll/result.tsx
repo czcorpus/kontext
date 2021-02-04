@@ -264,7 +264,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     }> = (props) => {
 
         const handleKeyPress = (evt) => {
-            if (evt.keyCode === Keyboard.Code.ENTER) {
+            if (evt.key === Keyboard.Value.ENTER) {
                 dispatcher.dispatch<Actions.ResultConfirmPageValue>({
                     name: ActionName.ResultConfirmPageValue
                 });

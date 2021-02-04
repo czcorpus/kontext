@@ -120,7 +120,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private _handleKeyDown(evt:React.KeyboardEvent<{}>):void {
-            if (evt.keyCode === Keyboard.Code.ENTER) {
+            if (evt.key === Keyboard.Value.ENTER) {
                 this.submit();
                 evt.preventDefault();
                 evt.stopPropagation();

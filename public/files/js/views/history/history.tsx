@@ -337,12 +337,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleKeyDown = (evt) => {
-            if (evt.keyCode === Keyboard.Code.ESC) {
+            if (evt.key === Keyboard.Value.ESC) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleCloseClick();
 
-            } else if (evt.keyCode === Keyboard.Code.ENTER) {
+            } else if (evt.key === Keyboard.Value.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleSubmitClick();

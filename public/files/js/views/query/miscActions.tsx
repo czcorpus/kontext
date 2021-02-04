@@ -91,7 +91,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmitEvent(evt) {
-            if (evt.keyCode === undefined || evt.keyCode === Keyboard.Code.ENTER) {
+            if (evt.key === undefined || evt.key === Keyboard.Value.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch<Actions.BranchQuery>({
                         name: ActionName.BranchQuery,
@@ -217,7 +217,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmitEvent(evt) {
-            if (evt.keyCode === undefined || evt.keyCode === Keyboard.Code.ENTER) {
+            if (evt.key === undefined || evt.key === Keyboard.Value.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch<Actions.BranchQuery>({
                         name: ActionName.BranchQuery,

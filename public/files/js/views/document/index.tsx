@@ -108,7 +108,7 @@ export function init(
         }
 
         _keyPressHandler(evt) {
-            if (evt.keyCode === Keyboard.Code.ESC && typeof this.props.onCloseKey === 'function') {
+            if (evt.key === Keyboard.Value.ESC && typeof this.props.onCloseKey === 'function') {
                 this.props.onCloseKey();
             }
         }
@@ -232,7 +232,7 @@ export function init(
         }
 
         _handleKeyPress(evt:React.KeyboardEvent) {
-            if (evt.keyCode === Keyboard.Code.ESC) {
+            if (evt.key === Keyboard.Value.ESC) {
                  this._closeClickHandler();
                  evt.stopPropagation();
             }

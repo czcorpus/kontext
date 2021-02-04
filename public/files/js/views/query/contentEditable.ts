@@ -122,17 +122,17 @@ export class ContentEditable<T extends HTMLElement> {
         )=>void
     ) {
 
-        if (evt.keyCode === Keyboard.Code.BACKSPACE || evt.keyCode === Keyboard.Code.DEL) {
+        if (evt.key === Keyboard.Value.BACKSPACE || evt.key === Keyboard.Value.DEL) {
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection();
             const rawSrc = this.extractText();
             if (rawAnchorIdx === rawFocusIdx) {
-                const query = evt.keyCode === Keyboard.Code.BACKSPACE ?
+                const query = evt.key === Keyboard.Value.BACKSPACE ?
                         rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
                         rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1);
                 onSetInput(
                     query,
-                    evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
-                    evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx,
+                    evt.key === Keyboard.Value.BACKSPACE ? rawAnchorIdx - 1 : rawAnchorIdx,
+                    evt.key === Keyboard.Value.BACKSPACE ? rawFocusIdx - 1 : rawFocusIdx,
                     null
                 );
 
@@ -140,8 +140,8 @@ export class ContentEditable<T extends HTMLElement> {
                 const query = rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx);
                 onSetInput(
                     query,
-                    evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
-                    evt.keyCode === Keyboard.Code.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                    evt.key === Keyboard.Value.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
+                    evt.key === Keyboard.Value.BACKSPACE ? rawAnchorIdx : rawAnchorIdx,
                     null
                 );
 
@@ -149,14 +149,14 @@ export class ContentEditable<T extends HTMLElement> {
                 const query = rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx);
                 onSetInput(
                     query,
-                    evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
-                    evt.keyCode === Keyboard.Code.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                    evt.key === Keyboard.Value.BACKSPACE ? rawFocusIdx : rawFocusIdx,
+                    evt.key === Keyboard.Value.BACKSPACE ? rawFocusIdx : rawFocusIdx,
                     null
                 );
             }
             evt.preventDefault();
 
-        } else if (evt.keyCode === Keyboard.Code.ENTER && evt.shiftKey) {
+        } else if (evt.key === Keyboard.Value.ENTER && evt.shiftKey) {
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection();
             const query = this.extractText();
             onSetInput(
@@ -171,7 +171,7 @@ export class ContentEditable<T extends HTMLElement> {
             );
             evt.preventDefault();
 
-        } else if (evt.keyCode === Keyboard.Code.END) {
+        } else if (evt.key === Keyboard.Value.END) {
             const [anchorIdx, focusIdx] = this.getRawSelection();
             const query = this.extractText();
             onMoveCursor(
