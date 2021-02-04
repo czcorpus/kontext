@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 from secure_cookie.session import Session
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
@@ -80,20 +80,20 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         return False
 
     @abc.abstractmethod
-    def permitted_corpora(self, user_dict: Dict[str, Any]) -> Dict[str, str]:
+    def corpus_access(self, user_dict: Dict[str, Any], corpus_name: str) -> Tuple[bool, bool, str]:
         """
-        Return a dictionary containing corpora IDs user can access.
-        Important note: The AbstractAuth and its meta-class always
-        transform your returned corpora IDs to lowercase to ensure
-        proper corpus ID comparison.
+        Return a 3-tuple (is owner, has read access, corpus variant)
+        """
+
+    @abc.abstractmethod
+    def permitted_corpora(self, user_dict: Dict[str, Any]) -> List[str]:
+        """
+        Return a list of corpora accessible by a user
 
         arguments:
         user_dict -- user credentials as returned by validate_user()
                      (or as written to session by revalidate() in case
                      of AbstractRemoteAuth implementations).
-
-        returns:
-        a dict corpus_id=>corpus_variant
         """
 
     def validate_access(self, corpus_name: str, user_dict: Dict[str, Any]) -> Tuple[bool, str]:
@@ -104,11 +104,8 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
             return False, ''
         if self.ignores_corpora_names_case():
             corpus_name = corpus_name.lower()
-        allowed = self.permitted_corpora(user_dict)
-        if corpus_name in allowed:
-            return True, allowed[corpus_name]
-        else:
-            return False, ''
+        _, access, variant = self.corpus_access(user_dict, corpus_name)
+        return access, variant
 
     def on_forbidden_corpus(self, plugin_api: 'PluginApi', corpname: str, corp_variant: str):
         """

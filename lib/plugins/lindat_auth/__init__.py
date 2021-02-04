@@ -120,18 +120,24 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         self._sessions.delete(session)
         session.clear()
 
+    def corpus_access(self, user_dict, corpus_name):
+        corpora = self.permitted_corpora(user_dict)
+        if corpus_name in corpora:
+            return False, True, ''
+        return False, False, ''
+
     def permitted_corpora(self, user_dict):
         """
         Returns a dictionary containing corpora IDs user can access.
 
-        :param user_id -- database user ID
+        :param user_dict -- user info as stored in session
         :return:
         a dict canonical_corpus_id=>corpus_id
         """
         # fetch groups based on user_id (manual and shib based) intersect with corplist
         groups = self.get_groups_for(user_dict)
-        return dict([(corpora['ident'], '') for corpora in self._corplist
-                     if len(set(corpora['access']).intersection(set(groups))) > 0])
+        return [corpora['ident'] for corpora in self._corplist
+                if len(set(corpora['access']).intersection(set(groups))) > 0]
 
     def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
         if self.is_anonymous(plugin_api.user_id):
@@ -244,7 +250,8 @@ def ajax_get_permitted_corpora(ctrl, request):
     """
     An exposed HTTP action showing permitted corpora required by client-side widget.
     """
-    return dict(permitted_corpora=plugins.runtime.AUTH.instance.permitted_corpora(ctrl.session_get('user')))
+    corpora = plugins.runtime.AUTH.instance.permitted_corpora(ctrl.session_get('user'))
+    return dict(permitted_corpora=dict((c, '') for c in corpora))
 
 
 # =============================================================================

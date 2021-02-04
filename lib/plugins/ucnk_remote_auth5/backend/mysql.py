@@ -306,6 +306,24 @@ class Backend(DatabaseBackend):
             (corpus_id,))
         return cursor.fetchall()
 
+    def corpus_access(self, user_id, corpus_id):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
+                       'FROM ( '
+                       '  SELECT user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited '
+                       '  FROM user_corpus_relation WHERE (user_corpus_relation.user_id = %s) '
+                       '  UNION '
+                       '  SELECT relation.corpora AS corpus_id, relation.limited AS limited '
+                       '  FROM relation '
+                       '  WHERE (relation.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+                       ') as ucp '
+                       'JOIN corpora AS c ON ucp.corpus_id = c.id AND c.name = %s',
+                       (user_id, user_id, user_id, corpus_id))
+        row = cursor.fetchone()
+        if not row:
+            return False, False, ''
+        return False, True, row['variant'] if row['variant'] else ''
+
     def get_permitted_corpora(self, user_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
@@ -318,7 +336,7 @@ class Backend(DatabaseBackend):
                        '  WHERE (relation.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
                        ') as ucp '
                        'JOIN corpora AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
-        return [(r['corpus_id'], r['variant']) for r in cursor.fetchall()]
+        return [r['corpus_id'] for r in cursor.fetchall()]
 
     def load_corpus_tagsets(self, corpus_id):
         cursor = self._db.cursor()

@@ -36,6 +36,7 @@ import logging
 
 import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
+from plugins.rdbms_corparch.backend import DatabaseBackend
 from plugins import inject
 
 from .backend.mysql import Backend
@@ -71,7 +72,7 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db, sessions, conf: AuthConf, toolbar_conf: ToolbarConf):
+    def __init__(self, db: DatabaseBackend, sessions, conf: AuthConf, toolbar_conf: ToolbarConf):
         """
         arguments:
         db -- a key-value storage plug-in
@@ -187,20 +188,23 @@ class CentralAuth(AbstractRemoteAuth):
                 plugin_api.session.clear()
                 plugin_api.session['user'] = self.anonymous_user()
 
+    def corpus_access(self, user_dict, corpus_name):
+        if corpus_name == IMPLICIT_CORPUS:
+            return False, True, ''
+        _, access, variant = self._db.corpus_access(user_dict['id'], corpus_name)
+        return False, access, variant
+
     def permitted_corpora(self, user_dict):
         """
         Fetches list of corpora available to the current user
 
         arguments:
         user_dict -- a user credentials dictionary
-
-        returns:
-        a dict (corpus_id, corpus_variant)
         """
         corpora = self._db.get_permitted_corpora(user_dict['id'])
-        if (IMPLICIT_CORPUS, None) not in corpora:
-            corpora.append((IMPLICIT_CORPUS, None))
-        return dict((c, pref) for c, pref in corpora)
+        if IMPLICIT_CORPUS not in corpora:
+            corpora.append(IMPLICIT_CORPUS)
+        return corpora
 
     def get_user_info(self, plugin_api):
         ans = {}

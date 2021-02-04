@@ -201,7 +201,10 @@ class DatabaseBackend(object):
     def load_tckc_providers(self, corpus_id: str) -> List[Dict[str, Any]]:
         raise NotImplementedError()
 
-    def get_permitted_corpora(self, user_id) -> List[Dict[str, Any]]:
+    def get_permitted_corpora(self, user_id) -> List[str]:
+        raise NotImplementedError()
+
+    def corpus_access(self, user_id: int, corpus_id: str) -> Tuple[bool, bool, str]:
         raise NotImplementedError()
 
     def load_corpus_tagsets(self, corpus_id) -> List[Dict[str, Any]]:

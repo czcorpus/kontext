@@ -789,15 +789,6 @@ class Kontext(Controller):
         return self._tt if self._tt is not None else TextTypes(
             self.corp, self.corp.corpname, self._tt_cache, self._plugin_api)
 
-    def permitted_corpora(self) -> Dict[str, str]:
-        """
-        Returns corpora identifiers accessible by the current user.
-
-        returns:
-        a dict (corpus_id, corpus_variant)
-        """
-        return getattr(plugins.runtime.AUTH.instance, 'permitted_corpora')(self.session_get('user'))
-
     def _add_corpus_related_globals(self, result, maincorp):
         """
         arguments:
