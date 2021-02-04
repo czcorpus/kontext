@@ -21,20 +21,6 @@ A corparch-plugin database backend for MySQL with some minor UCNK-specific stuff
 It can be used along with rdbms_corparch as an alternative backend to the sqlite3 one - in such case
 you have to copy the whole 'mysql' directory/package to rdbms_corparch/backend directory.
 
-From performance reasons (tens of seconds vs. tenths of a second), this module requires a following stuff
-in UCNK MySQL database:
-
---------
-CREATE FUNCTION user_id_global_func() returns INTEGER DETERMINISTIC NO SQL return @user_id_global;
-
-CREATE VIEW user_corpus_parametrized AS select user_corpus_relation.user_id AS user_id,
-user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited
-FROM user_corpus_relation WHERE (user_corpus_relation.user_id = user_id_global_func())
-UNION
-SELECT user_id_global_func() AS user_id, relation.corpora AS corpus_id, relation.limited AS limited
-FROM relation WHERE (relation.corplist = (SELECT user.corplist FROM user
-WHERE (user.id = user_id_global_func()))) utf8mb4 utf8mb4_general_ci;
-
 --------
 """
 from plugins.rdbms_corparch.backend import DatabaseBackend
@@ -125,7 +111,7 @@ class Backend(DatabaseBackend):
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
-        values_cond2 = [user_id, 1]  # the first item belongs to setting a special @ variable
+        values_cond2 = [user_id, user_id, 1]  # the first item belongs to setting a special @ variable
         if substrs is not None:
             for substr in substrs:
                 where_cond1.append(
@@ -207,11 +193,17 @@ class Backend(DatabaseBackend):
             '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
             'WHERE kcx.corpus_name = c.name) AS keywords '
             'FROM '
-            '(SELECT @user_id_global := %s AS p) AS param '
-            'JOIN corpora AS c '
+            'corpora AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'JOIN user_corpus_parametrized AS kcu ON c.id = kcu.corpus_id '
+            'JOIN ('
+            '  SELECT user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited '
+            '  FROM user_corpus_relation WHERE (user_corpus_relation.user_id = %s) '
+            '  UNION '
+            '  SELECT relation.corpora AS corpus_id, relation.limited AS limited '
+            '  FROM relation '
+            '  WHERE (relation.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+            ') AS kcu ON c.id = kcu.corpus_id '
             'WHERE {where2} '
             'GROUP BY c.name '
             'HAVING num_match_keys >= %s ) '
@@ -316,10 +308,16 @@ class Backend(DatabaseBackend):
 
     def get_permitted_corpora(self, user_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT ucp.user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
-                       'FROM (SELECT @user_id_global := %s p) AS param '
-                       'JOIN user_corpus_parametrized AS ucp '
-                       'JOIN corpora AS c ON ucp.corpus_id = c.id', (user_id, ))
+        cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
+                       'FROM ( '
+                       '  SELECT user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited '
+                       '  FROM user_corpus_relation WHERE (user_corpus_relation.user_id = %s) '
+                       '  UNION '
+                       '  SELECT relation.corpora AS corpus_id, relation.limited AS limited '
+                       '  FROM relation '
+                       '  WHERE (relation.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+                       ') as ucp '
+                       'JOIN corpora AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
         return [(r['corpus_id'], r['variant']) for r in cursor.fetchall()]
 
     def load_corpus_tagsets(self, corpus_id):
