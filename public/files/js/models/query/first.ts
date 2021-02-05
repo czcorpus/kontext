@@ -676,10 +676,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         const oldQuery = data.queries[corp];
         let newQuery = state.queries[corp];
         if (newQuery.qtype === 'advanced' && oldQuery.qtype === 'simple') {
-            newQuery = simpleToAdvancedQuery(oldQuery, List.head(state.attrList).n);
+            newQuery = advancedToSimpleQuery(newQuery, List.head(state.simpleQueryDefaultAttrs[corp]));
 
         } else if (newQuery.qtype === 'simple' && oldQuery.qtype === 'advanced') {
-            newQuery = advancedToSimpleQuery(oldQuery, List.head(state.simpleQueryDefaultAttrs[corp]));
+            newQuery = simpleToAdvancedQuery(newQuery, List.head(state.attrList).n);
 
         } else if (newQuery.qtype === 'simple' && oldQuery.qtype === 'simple') {
             newQuery.qmcase = oldQuery.qmcase;
