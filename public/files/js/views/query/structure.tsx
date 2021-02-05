@@ -118,7 +118,6 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
 
         if (queryObj.qtype === 'simple') {
             const hasExpandedTokens = List.some(t => t.isExtended, queryObj.queryParsed);
-            console.log('queryObj: ', queryObj)
             return (
                 <layoutViews.ModalOverlay onCloseKey={handleClose}>
                     <layoutViews.CloseableFrame onCloseClick={handleClose} label={he.translate('query__query_structure')}>
