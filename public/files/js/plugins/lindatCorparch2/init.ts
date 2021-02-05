@@ -28,13 +28,12 @@ import { init as overviewViewInit } from '../../views/overview';
 import { CorplistTableModel } from './corplist';
 import * as common from './common';
 import { SearchEngine } from './search';
-import { IUnregistrable } from '../../models/common/common';
 
 declare var require:any;
 require('./style.less'); // webpack
 
 
-export class Plugin implements IUnregistrable {
+export class Plugin implements PluginInterfaces.Corparch.IPlugin {
 
     protected pluginApi:IPluginApi;
 
