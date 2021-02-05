@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatelessModel } from 'kombo';
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { Dict, id, List, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../types/common';
 import { AjaxResponse } from '../types/ajaxResponses';
@@ -239,7 +239,9 @@ export class QueryPage {
                     [this.layoutModel.getCorpusIdent().id]: pipe(
                         this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                         List.map(v => v.n),
-                        List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs'))
+                        this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs').length > 0 ?
+                            List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')) :
+                            id
                     )
                 }
             }

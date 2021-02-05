@@ -329,7 +329,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.qsSubscription = this.qsPlugin.isActive() ?
                 this.subscribeAutoSuggest(dispatcher) : undefined;
-
         this.addActionSubtypeHandler<Actions.QueryInputSetQType>(
             ActionName.QueryInputSetQType,
             action => action.payload.formType === this.formType,

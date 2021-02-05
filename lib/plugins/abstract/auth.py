@@ -33,13 +33,25 @@ class MetaAbstractAuth(abc.ABCMeta):
     def __init__(cls, name, bases, clsdict):
         super().__init__(name, bases, clsdict)
         if 'permitted_corpora' in clsdict:
+            old_fn = clsdict['permitted_corpora']
+
             def wrapped_perm_corp(self, user_dict):
-                corpora = clsdict['permitted_corpora'](self, user_dict)
+                corpora = old_fn(self, user_dict)
                 if self.ignores_corpora_names_case():
-                    return dict((c.lower(), v) for c, v in corpora.items())
+                    return [c.lower() for c in corpora]
                 else:
                     return corpora
             setattr(cls, 'permitted_corpora', wrapped_perm_corp)
+
+        if 'corpus_access' in clsdict:
+            old_fn = clsdict['corpus_access']
+
+            def wrapped_corp_acc(self, user_dict, corpus_name):
+                if self.ignores_corpora_names_case():
+                    return old_fn(self, user_dict, corpus_name.lower())
+                else:
+                    return old_fn(self, user_dict, corpus_name)
+            setattr(cls, 'corpus_access', wrapped_corp_acc)
 
 
 class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
