@@ -22,20 +22,21 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Dict, Keyboard, List, pipe, tuple } from 'cnc-tskit';
 
-import { init as keyboardInit } from './virtualKeyboard';
-import { init as cqlEditoInit } from './cqlEditor';
-import { init as richInputInit } from './richInput';
-import { WithinBuilderModel, WithinBuilderModelState } from '../../models/query/withinBuilder';
-import { PluginInterfaces } from '../../types/plugins';
-import { Kontext } from '../../types/common';
-import { formEncodeDefaultAttr, QueryFormModel, QueryFormModelState } from '../../models/query/common';
-import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
-import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
-import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
+import { init as keyboardInit } from '../virtualKeyboard';
+import { init as cqlEditoInit } from '../cqlEditor';
+import { init as richInputInit } from '../richInput';
+import { WithinBuilderModel, WithinBuilderModelState } from '../../../models/query/withinBuilder';
+import { PluginInterfaces } from '../../../types/plugins';
+import { Kontext } from '../../../types/common';
+import { formEncodeDefaultAttr, QueryFormModel, QueryFormModelState } from '../../../models/query/common';
+import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
+import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
+import { Actions, ActionName, QueryFormType } from '../../../models/query/actions';
 import { Actions as HintActions,
-    ActionName as HintActionName } from '../../models/usageTips/actions';
-import { QueryType, TokenSuggestions } from '../../models/query/query';
-import { init as queryStructureInit } from '../../views/query/structure';
+    ActionName as HintActionName } from '../../../models/usageTips/actions';
+import { QueryType, TokenSuggestions } from '../../../models/query/query';
+import { init as queryStructureInit } from '../structure';
+import * as S from './style';
 
 
 export interface InputModuleViews {
@@ -148,7 +149,7 @@ export function init({
         }
 
         return (
-            <span className="AdvancedFormFieldsetDesc">
+            <S.AdvancedFormFieldsetDesc>
                 <a onClick={handleClick}><layoutViews.StatusIcon status="info" inline={true} /></a>
                 {opened ?
                     <layoutViews.PopupBox onCloseClick={handleClick}>
@@ -158,7 +159,7 @@ export function init({
                     </layoutViews.PopupBox> :
                     null
                 }
-            </span>
+            </S.AdvancedFormFieldsetDesc>
         );
     };
 
@@ -202,7 +203,7 @@ export function init({
         };
 
         return (
-            <div className="QueryHints">
+            <S.QueryHints>
                 <span className="hint">
                     <span className="tip">
                         {props.forcedTip ?
@@ -223,7 +224,7 @@ export function init({
                     </a>
                     )
                 </span>
-            </div>
+            </S.QueryHints>
         );
     };
 
