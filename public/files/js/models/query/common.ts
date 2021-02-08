@@ -364,6 +364,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     state.historyVisible[action.payload.sourceId] =
                         !state.historyVisible[action.payload.sourceId];
                     state.suggestionsVisible[action.payload.sourceId] = null;
+                    state.activeWidgets[action.payload.sourceId] = null;
                 });
             }
         );
@@ -374,6 +375,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 this.changeState(state => {
                     state.suggestionsVisible[action.payload.sourceId] = action.payload.tokenIdx;
+                    state.historyVisible[action.payload.sourceId] = null;
+                    state.activeWidgets[action.payload.sourceId] = null;
                 });
                 if (action.payload.tokenIdx !== null) {
                     const queryObj = this.state.queries[action.payload.sourceId];
