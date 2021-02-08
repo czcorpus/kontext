@@ -32,6 +32,7 @@ import { WidgetView } from '../../models/textTypes/common';
 import { init as listSelectorInit } from './list';
 import { init as rawInputMultiValSelectorInit } from './input';
 import { init as daysSelectorInit } from './days';
+import * as S from './style';
 
 
 export interface TextTypesPanelProps {
@@ -390,45 +391,43 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ----------------------------- <TextTypesPanel /> --------------------------
 
-    const TextTypesPanel:React.FC<TextTypesPanelProps & TextTypesModelState> = (props) => {
-            return (
-                <div className="TextTypesPanel">
-                    <div className="plugin-controls">
-                    {props.LiveAttrsView
-                        ? <props.LiveAttrsView />
-                        : null}
+    const TextTypesPanel:React.FC<TextTypesPanelProps & TextTypesModelState> = (props) => (
+        <S.TextTypesPanel>
+            <div className="plugin-controls">
+            {props.LiveAttrsView
+                ? <props.LiveAttrsView />
+                : null}
+            </div>
+            <div className="text-type-top-bar">
+                <TTAttribMinimizeSwitch hasSomeMaximized={Dict.hasValue(false, props.minimizedBoxes)} />
+            </div>
+            <div className="grid">
+                {props.LiveAttrsCustomTT
+                    ? <div><props.LiveAttrsCustomTT /></div>
+                    : null}
+                {List.map((attrObj) => (
+                    <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>
+                        <TableTextTypeAttribute
+                                attrObj={attrObj}
+                                widget={props.attributeWidgets[attrObj.name]}
+                                isMinimized={props.minimizedBoxes[attrObj.name]}
+                                metaInfoHelpVisible={props.metaInfoHelpVisible}
+                                hasExtendedInfo={props.bibLabelAttr === attrObj.name}
+                                metaInfo={props.metaInfo[attrObj.name]}
+                                isBusy={props.busyAttribute === attrObj.name}
+                                textInputPlaceholder={props.textInputPlaceholder}
+                                firstDayOfWeek={props.firstDayOfWeek} />
                     </div>
-                    <div className="text-type-top-bar">
-                        <TTAttribMinimizeSwitch hasSomeMaximized={Dict.hasValue(false, props.minimizedBoxes)} />
-                    </div>
-                    <div className="grid">
-                        {props.LiveAttrsCustomTT
-                            ? <div><props.LiveAttrsCustomTT /></div>
-                            : null}
-                        {List.map((attrObj) => (
-                            <div key={attrObj.name + ':list:' + TTSelOps.containsFullList(attrObj)}>
-                                <TableTextTypeAttribute
-                                        attrObj={attrObj}
-                                        widget={props.attributeWidgets[attrObj.name]}
-                                        isMinimized={props.minimizedBoxes[attrObj.name]}
-                                        metaInfoHelpVisible={props.metaInfoHelpVisible}
-                                        hasExtendedInfo={props.bibLabelAttr === attrObj.name}
-                                        metaInfo={props.metaInfo[attrObj.name]}
-                                        isBusy={props.busyAttribute === attrObj.name}
-                                        textInputPlaceholder={props.textInputPlaceholder}
-                                        firstDayOfWeek={props.firstDayOfWeek} />
-                            </div>
-                            ),
-                            props.attributes
-                        )}
-                    </div>
-                </div>
-            );
-    }
+                    ),
+                    props.attributes
+                )}
+            </div>
+        </S.TextTypesPanel>
+    );
 
     return {
         TextTypesPanel: BoundWithProps<TextTypesPanelProps, TextTypesModelState>(TextTypesPanel, textTypesModel),
-        TextTypeAttributeMinIcon: TextTypeAttributeMinIcon
+        TextTypeAttributeMinIcon
     };
 
 }

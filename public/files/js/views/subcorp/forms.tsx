@@ -26,6 +26,9 @@ import { TextTypesPanelProps } from '../textTypes';
 import { ActionName, Actions } from '../../models/subcorp/actions';
 import { List } from 'cnc-tskit';
 
+import * as S from './style';
+
+
 export interface FormsModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
@@ -279,7 +282,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         render() {
             return (
-                <div className="TRWithinBuilderWrapper">
+                <S.TRWithinBuilderWrapper>
                     <div>
                         <a id="custom-within-hint" onClick={this._handleHelpClick}>
                             <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
@@ -293,7 +296,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                     <div className="container">
                         <WithinBuilder lines={this.props.lines} structsAndAttrs={this.props.structsAndAttrs} />
                     </div>
-                </div>
+                </S.TRWithinBuilderWrapper>
             );
         }
     }
@@ -428,7 +431,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
         render() {
             return (
-                <form className="SubcorpForm">
+                <S.SubcorpForm>
                     <table className="form">
                         <tbody>
                             <tr>
@@ -500,7 +503,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                         </button>
                         </p>
                     }
-                </form>
+                </S.SubcorpForm>
             );
         }
     }

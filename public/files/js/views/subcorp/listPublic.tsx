@@ -25,6 +25,8 @@ import {PublicSubcorpListState, PublicSubcorpListModel, DataItem} from '../../mo
 import {Actions, ActionName} from '../../models/subcorp/actions';
 import { List, tuple } from 'cnc-tskit';
 
+import * as S from './style';
+
 export interface Views {
     ListPublic:React.ComponentClass<ListPublicProps>;
 }
@@ -95,24 +97,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         return (
-            <fieldset className="Filter">
+            <S.Filter>
                 <QueryInput value={props.query} minPrefixSize={props.minQuerySize} />
                 <p className="note">
                     {he.translate('pubsubclist__search_type_{min_size}', {min_size: props.minQuerySize})}
                 </p>
-            </fieldset>
+            </S.Filter>
         );
     };
 
     // -------------------------- <DetailExpandSwitch /> -----------------------
 
-    const DetailExpandSwitch:React.SFC<{
+    const DetailExpandSwitch:React.FC<{
         expanded:boolean;
         onClick:()=>void;
 
     }> = (props) => {
         return (
-            <a className="DetailExpandSwitch" onClick={props.onClick}
+            <S.DetailExpandSwitch onClick={props.onClick}
                         title={he.translate('pubsubclist__view_detail')}>
                 {props.expanded ?
                     <>
@@ -128,7 +130,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('pubsubclist__view_detail')}{'\u2026'}
                     </>
                 }
-            </a>
+            </S.DetailExpandSwitch>
         );
     };
 
@@ -159,7 +161,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         render() {
-            return <li className="DataRow">
+            return <S.DataRow>
                 <button type="button" className="util-button use-in-query"
                         onClick={this._handleUseInQueryButton}>
                     {he.translate('pubsubclist__use_in_query')}
@@ -199,7 +201,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </div> :
                     null
                 }
-            </li>;
+            </S.DataRow>;
         }
     };
 
@@ -212,7 +214,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
         if (props.hasQuery) {
             return (
-                <ul className="DataList">
+                <S.DataList>
                     {props.data.length > 0 ?
                         List.map(item => <DataRow key={item.ident} item={item} />, props.data) :
                         <li>
@@ -221,7 +223,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             </p>
                         </li>
                     }
-                </ul>
+                </S.DataList>
             );
 
         } else {
@@ -235,7 +237,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div className="List">
+                <S.ListPublic>
                     <form>
                         <fieldset>
                             <legend>{he.translate('pubsubclist__filter_legend')}</legend>
@@ -251,7 +253,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
                         {he.translate('pubsubclist__operator_disclaimer')}
                     </p>
-                </div>
+                </S.ListPublic>
             );
         }
     }

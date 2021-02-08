@@ -165,57 +165,13 @@
         min-width: initial;
     }
 
-    form.query-form {
-
-        margin: 1em;
-
-        .primary-language,
-        .AlignedCorpora .AlignedCorpBlock .form {
-
-            max-width: auto;
-        }
-
-        .query-area {
-            border-radius: @input-border-radius;
-            border: @input-border-style;
-            background-color: #FFFFFF;
-
-            > textarea,
-            pre.cql-input,
-            > input[type=text] {
-                min-width: auto;
-            }
-        }
-
-        .AdvancedFormFieldset.query-options {
-
-            div.options {
-                grid-template-columns: 1fr;
-
-                div.option {
-                    select {
-                        width: 10em;
-                    }
-                }
-            }
-
-        }
-
-        .TextTypesPanel {
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    }
-
     .StructAttrsViewOptions {
 
         .StructsAndAttrsForm {
-    
-    
+
+
             .struct-groups {
-    
+
                 grid-template-columns: 1fr 1fr;
 
                 div.group:nth-child(2) {
@@ -240,5 +196,3 @@
         }
     }
 }
-
-@import "~custom-styles/theme-mobile.less";

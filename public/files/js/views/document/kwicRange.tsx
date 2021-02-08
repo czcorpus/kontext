@@ -24,6 +24,8 @@ import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { CoreViews } from '../../types/coreViews';
 
+import * as S from './style';
+
 
 
 export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.KwicRangeSelector.Props> {
@@ -149,7 +151,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.KwicRangeSe
         };
 
         return (
-            <div className="KwicRangeSelector">
+            <S.KwicRangeSelector>
                 <div className="items" onClick={handleClick}>
                     <div className={`${state.leftRange === parseInt(state.leftInput.value) ? 'selected' : null}`}
                             title={state.leftInput.isInvalid ? state.leftInput.errorDesc : null}>
@@ -196,7 +198,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.KwicRangeSe
                             onFocus={handleRightInputChange} />
                     </div>
                 </div>
-            </div>
+            </S.KwicRangeSelector>
         );
     };
 

@@ -47,13 +47,8 @@ import { List, Dict } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
-import { ActionName as GlobalActionName, Actions as GlobalActions } from '../models/common/actions';
-import { ActionName, Actions } from '../models/freqs/actions';
-import { strictEqualParsedQueries } from '../models/query/query';
+import { ActionName } from '../models/freqs/actions';
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/freq.less');
 
 /**
  *

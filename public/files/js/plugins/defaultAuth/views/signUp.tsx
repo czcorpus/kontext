@@ -28,6 +28,7 @@ import { UserProfileModel, UserProfileState } from './../profile';
 import { UserProfileViews } from './profile';
 import { Actions, ActionName } from '../actions';
 
+import * as S from './style';
 
 export interface UserSignUpViews {
     SignUpForm:React.ComponentClass;
@@ -63,9 +64,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             }
         };
 
-        return <span className="UsernameAvailFlag">
+        return <S.UsernameAvailFlag>
             {props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : getMsg()}
-        </span>;
+        </S.UsernameAvailFlag>;
     };
 
     // --------------- <TrUsernameInput /> ----------------------------------------------
@@ -201,7 +202,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         render() {
             if (this.props.isFinished) {
                 return (
-                    <form className="SignUpForm">
+                    <S.SignUpForm>
                         <fieldset>
                             <legend>{he.translate('user__signup_heading')}</legend>
                             <p className="confirm-msg">
@@ -218,12 +219,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 </button>
                             </p>
                         </fieldset>
-                    </form>
+                    </S.SignUpForm>
                 );
 
             } else {
                 return (
-                    <form className="SignUpForm">
+                    <S.SignUpForm>
                         {this.props.message ?
                         <p className="message"><layoutViews.StatusIcon inline={true} status="warning" />{this.props.message}</p> :
                         null}
@@ -251,7 +252,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 }
                             </p>
                         </fieldset>
-                    </form>
+                    </S.SignUpForm>
                 );
             }
 

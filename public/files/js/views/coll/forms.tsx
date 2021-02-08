@@ -26,6 +26,8 @@ import { CollFormModel, CollFormModelState } from '../../models/coll/collForm';
 import { Dict, List } from 'cnc-tskit';
 import { Actions, ActionName } from '../../models/coll/actions';
 
+import * as S from './style';
+
 
 
 export interface FormsViews {
@@ -203,7 +205,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         return (
-            <table className="CollMetricsSelection">
+            <S.CollMetricsSelection>
                 <thead>
                     <tr>
                         <td />
@@ -239,7 +241,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         props.availCbgrfns
                     )}
                 </tbody>
-            </table>
+            </S.CollMetricsSelection>
         );
     };
 
@@ -260,7 +262,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         render() {
             return (
-                <form className="CollForm">
+                <S.CollForm>
                     <table className="form">
                         <tbody>
                             <tr>
@@ -308,7 +310,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             {he.translate('coll__make_candidate_list')}
                         </button>
                     </div>
-                </form>
+                </S.CollForm>
             );
         }
     }

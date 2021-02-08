@@ -35,10 +35,6 @@ import { WordlistResultModel } from '../models/wordlist/main';
 import { ResultItem } from '../models/wordlist/common';
 import { Actions, ActionName } from '../models/wordlist/actions';
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/wordlist.less');
-
 
 interface AsyncProcessResponse {
     status:number;

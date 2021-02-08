@@ -23,7 +23,7 @@ _logger = logging.getLogger(__name__)
 def uni(s):
     """
     Get a properly decoded utf-8 string.
-    
+
     It seems that py3-based KonText versions along with
     Apache-based Shibboleth service provider cause
     improperly decoded utf-8 characters stored in respective
