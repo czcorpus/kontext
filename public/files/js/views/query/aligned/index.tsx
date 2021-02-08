@@ -22,12 +22,13 @@ import * as React from 'react';
 import { List, pipe } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { InputModuleViews } from './input';
-import { PluginInterfaces } from '../../types/plugins';
-import { Actions, ActionName } from '../../models/query/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
-import { AnyQuery } from '../../models/query/query';
+import { Kontext } from '../../../types/common';
+import { InputModuleViews } from '../input';
+import { PluginInterfaces } from '../../../types/plugins';
+import { Actions, ActionName } from '../../../models/query/actions';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../../models/common/actions';
+import { AnyQuery } from '../../../models/query/query';
+import * as S from './style';
 
 
 export interface AlignedModuleArgs {
@@ -243,7 +244,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 onChangePrimaryCorp={handleMainCorpChange} />,
                             props.alignedCorpora
                         )}
-                        <div id="add-searched-lang-widget">
+                        <S.AlignedLangWidget>
                             <select onChange={handleAddAlignedCorpus} value="">
                                 <option value="" disabled={true}>
                                     {`-- ${he.translate('query__add_a_corpus')} --`}</option>
@@ -255,7 +256,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                     })
                                 )}
                             </select>
-                        </div>
+                        </S.AlignedLangWidget>
                     </> :
                     null
                 }

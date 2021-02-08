@@ -21,10 +21,11 @@
 import { List, pipe } from 'cnc-tskit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { ActionName, Actions, QueryFormType } from '../../models/query/actions';
-import { QueryFormModel, QueryFormModelState } from '../../models/query/common';
-import { ParsedSimpleQueryToken } from '../../models/query/query';
-import { Kontext } from '../../types/common';
+import { ActionName, Actions, QueryFormType } from '../../../models/query/actions';
+import { QueryFormModel, QueryFormModelState } from '../../../models/query/common';
+import { ParsedSimpleQueryToken } from '../../../models/query/query';
+import { Kontext } from '../../../types/common';
+import * as S from './style';
 
 export interface InputModuleArgs {
     dispatcher:IActionDispatcher;
@@ -121,7 +122,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
             return (
                 <layoutViews.ModalOverlay onCloseKey={handleClose}>
                     <layoutViews.CloseableFrame onCloseClick={handleClose} label={he.translate('query__query_structure')}>
-                        <div className="QueryStructureWidget">
+                        <S.QueryStructureWidget>
                             {pipe(queryObj.queryParsed, List.filter(v => !!v.value), List.empty()) ?
                                 <div className="empty">
                                     <layoutViews.StatusIcon status="info" inline={true} />
@@ -175,7 +176,7 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
                                     </p>
                                 </>
                             }
-                        </div>
+                        </S.QueryStructureWidget>
                     </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>
             );

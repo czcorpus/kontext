@@ -19,12 +19,13 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {QueryFormModel, QueryFormModelState} from '../../models/query/common';
-import { VirtualKeyboardModel, VirtualKeyboardState } from '../../models/query/virtualKeyboard';
-import { ActionName, Actions, QueryFormType } from '../../models/query/actions';
 import { List } from 'cnc-tskit';
+import {IActionDispatcher, BoundWithProps} from 'kombo';
+import { Kontext } from '../../../types/common';
+import {QueryFormModel, QueryFormModelState} from '../../../models/query/common';
+import { VirtualKeyboardModel, VirtualKeyboardState } from '../../../models/query/virtualKeyboard';
+import { ActionName, Actions, QueryFormType } from '../../../models/query/actions';
+import * as S from './style';
 
 
 export interface VirtualKeyboardProps {
@@ -435,9 +436,9 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
 
         render() {
             return (
-                <div className="virtual-keyboard-buttons">
+                <S.VirtualKeyboard>
                     {this._renderContents()}
-                </div>
+                </S.VirtualKeyboard>
             );
         }
     }

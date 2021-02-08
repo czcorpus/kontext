@@ -23,22 +23,23 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Keyboard, List, Dict, pipe, tuple } from 'cnc-tskit';
 
-import { init as inputInit } from './input';
-import { init as alignedInit } from './aligned';
-import { init as contextInit } from './context';
-import { init as ttViewsInit } from '../textTypes';
-import { Kontext, TextTypes } from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
-import { FirstQueryFormModel, FirstQueryFormModelState } from '../../models/query/first';
-import { UsageTipsModel } from '../../models/usageTips';
-import { TextTypesModel, TextTypesModelState } from '../../models/textTypes/main';
-import { WithinBuilderModel } from '../../models/query/withinBuilder';
-import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
-import { QueryContextModel } from '../../models/query/context';
-import { ActionName, Actions } from '../../models/query/actions';
-import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { HtmlHelpModel, HtmlHelpModelState } from '../../models/help/help';
-import { Actions as HelpActions, ActionName as HelpActionName } from '../../models/help/actions';
+import { init as inputInit } from '../input';
+import { init as alignedInit } from '../aligned';
+import { init as contextInit } from '../context';
+import { init as ttViewsInit } from '../../textTypes';
+import { Kontext, TextTypes } from '../../../types/common';
+import { PluginInterfaces } from '../../../types/plugins';
+import { FirstQueryFormModel, FirstQueryFormModelState } from '../../../models/query/first';
+import { UsageTipsModel } from '../../../models/usageTips';
+import { TextTypesModel, TextTypesModelState } from '../../../models/textTypes/main';
+import { WithinBuilderModel } from '../../../models/query/withinBuilder';
+import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
+import { QueryContextModel } from '../../../models/query/context';
+import { ActionName, Actions } from '../../../models/query/actions';
+import { TTSelOps } from '../../../models/textTypes/selectionOps';
+import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
+import { Actions as HelpActions, ActionName as HelpActionName } from '../../../models/help/actions';
+import * as S from './style';
 
 
 export interface MainModuleArgs {
@@ -181,82 +182,84 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         render() {
             const primaryCorpname = List.head(this.props.corpora);
             return (
-                <form className="query-form" onKeyDown={this._keyEventHandler}>
-                    <div className="form primary-language">
-                        {this.props.allowCorpusSelection ?
-                            <TRCorpusField corparchWidget={CorparchWidget} />
-                            : null}
-                        <div className="query">
-                            <inputViews.TRQueryInputField
-                                widgets={this.props.supportedWidgets[primaryCorpname]}
-                                sourceId={primaryCorpname}
-                                corpname={primaryCorpname}
-                                wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValues[primaryCorpname]}
-                                forcedAttr={this.props.forcedAttr}
-                                attrList={this.props.attrList}
-                                tagHelperView={this.props.tagHelperViews[primaryCorpname]}
-                                tagsets={this.props.tagsets[primaryCorpname]}
-                                queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.props.inputLanguages[primaryCorpname]}
-                                onEnterKey={this._handleSubmit}
-                                useRichQueryEditor={this.props.useRichQueryEditor}
-                                takeFocus={true}
-                                qsuggPlugin={querySuggest} />
+                <S.QueryForm>
+                    <div onKeyDown={this._keyEventHandler}>
+                        <div className="form primary-language">
+                            {this.props.allowCorpusSelection ?
+                                <TRCorpusField corparchWidget={CorparchWidget} />
+                                : null}
+                            <div className="query">
+                                <inputViews.TRQueryInputField
+                                    widgets={this.props.supportedWidgets[primaryCorpname]}
+                                    sourceId={primaryCorpname}
+                                    corpname={primaryCorpname}
+                                    wPoSList={this.props.wPoSList}
+                                    lposValue={this.props.lposValues[primaryCorpname]}
+                                    forcedAttr={this.props.forcedAttr}
+                                    attrList={this.props.attrList}
+                                    tagHelperView={this.props.tagHelperViews[primaryCorpname]}
+                                    tagsets={this.props.tagsets[primaryCorpname]}
+                                    queryStorageView={this.props.queryStorageView}
+                                    inputLanguage={this.props.inputLanguages[primaryCorpname]}
+                                    onEnterKey={this._handleSubmit}
+                                    useRichQueryEditor={this.props.useRichQueryEditor}
+                                    takeFocus={true}
+                                    qsuggPlugin={querySuggest} />
+                            </div>
+                        </div>
+                        {this.props.corpora.length > 1 || this.props.availableAlignedCorpora.length > 0 ?
+                            <alignedViews.AlignedCorpora
+                                    availableCorpora={this.props.availableAlignedCorpora}
+                                    primaryCorpus={primaryCorpname}
+                                    alignedCorpora={List.tail(this.props.corpora)}
+                                    sectionVisible={this.props.alignedCorporaVisible}
+                                    supportedWidgets={this.props.supportedWidgets}
+                                    wPoSList={this.props.wPoSList}
+                                    queries={this.props.queries}
+                                    lposValues={this.props.lposValues}
+                                    forcedAttr={this.props.forcedAttr}
+                                    attrList={this.props.attrList}
+                                    inputLanguages={this.props.inputLanguages}
+                                    queryStorageView={this.props.queryStorageView}
+                                    hasLemmaAttr={this.props.hasLemma}
+                                    useRichQueryEditor={this.props.useRichQueryEditor}
+                                    tagHelperViews={this.props.tagHelperViews}
+                                    tagsets={this.props.tagsets}
+                                    onEnterKey={this._handleSubmit} />
+                            : null
+                        }
+                        <inputViews.AdvancedFormFieldset
+                                uniqId="section-specify-context"
+                                formVisible={this.props.contextFormVisible}
+                                handleClick={this._handleContextFormVisibility}
+                                htmlClass="specify-context"
+                                title={he.translate('query__specify_context')}>
+                            <contextViews.SpecifyContextForm
+                                    hasLemmaAttr={this.props.hasLemma[primaryCorpname]}
+                                    wPoSList={this.props.wPoSList} />
+                        </inputViews.AdvancedFormFieldset>
+                        <inputViews.AdvancedFormFieldset
+                            uniqId="section-specify-text-types"
+                                    formVisible={this.props.textTypesFormVisible}
+                                    handleClick={this._handleTextTypesFormVisibility}
+                                    title={he.translate('query__specify_tt')}
+                                    htmlClass="specify-text-types"
+                                    closedStateHint={<BoundTextTypesFieldsetHint />}
+                                    closedStateDesc={this.props.textTypesNotes}>
+                                <ttViews.TextTypesPanel
+                                        LiveAttrsView={this.props.LiveAttrsView}
+                                        LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
+                        </inputViews.AdvancedFormFieldset>
+                        <div className="buttons">
+                            {this.props.isBusy ?
+                                <layoutViews.AjaxLoaderBarImage /> :
+                                <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                    {he.translate('query__search_btn')}
+                                </button>
+                            }
                         </div>
                     </div>
-                    {this.props.corpora.length > 1 || this.props.availableAlignedCorpora.length > 0 ?
-                        <alignedViews.AlignedCorpora
-                                availableCorpora={this.props.availableAlignedCorpora}
-                                primaryCorpus={primaryCorpname}
-                                alignedCorpora={List.tail(this.props.corpora)}
-                                sectionVisible={this.props.alignedCorporaVisible}
-                                supportedWidgets={this.props.supportedWidgets}
-                                wPoSList={this.props.wPoSList}
-                                queries={this.props.queries}
-                                lposValues={this.props.lposValues}
-                                forcedAttr={this.props.forcedAttr}
-                                attrList={this.props.attrList}
-                                inputLanguages={this.props.inputLanguages}
-                                queryStorageView={this.props.queryStorageView}
-                                hasLemmaAttr={this.props.hasLemma}
-                                useRichQueryEditor={this.props.useRichQueryEditor}
-                                tagHelperViews={this.props.tagHelperViews}
-                                tagsets={this.props.tagsets}
-                                onEnterKey={this._handleSubmit} />
-                        : null
-                    }
-                    <inputViews.AdvancedFormFieldset
-                            uniqId="section-specify-context"
-                            formVisible={this.props.contextFormVisible}
-                            handleClick={this._handleContextFormVisibility}
-                            htmlClass="specify-context"
-                            title={he.translate('query__specify_context')}>
-                        <contextViews.SpecifyContextForm
-                                hasLemmaAttr={this.props.hasLemma[primaryCorpname]}
-                                wPoSList={this.props.wPoSList} />
-                    </inputViews.AdvancedFormFieldset>
-                    <inputViews.AdvancedFormFieldset
-                        uniqId="section-specify-text-types"
-                                formVisible={this.props.textTypesFormVisible}
-                                handleClick={this._handleTextTypesFormVisibility}
-                                title={he.translate('query__specify_tt')}
-                                htmlClass="specify-text-types"
-                                closedStateHint={<BoundTextTypesFieldsetHint />}
-                                closedStateDesc={this.props.textTypesNotes}>
-                            <ttViews.TextTypesPanel
-                                    LiveAttrsView={this.props.LiveAttrsView}
-                                    LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
-                    </inputViews.AdvancedFormFieldset>
-                    <div className="buttons">
-                        {this.props.isBusy ?
-                            <layoutViews.AjaxLoaderBarImage /> :
-                            <button type="button" className="default-button" onClick={this._handleSubmit}>
-                                {he.translate('query__search_btn')}
-                            </button>
-                        }
-                    </div>
-                </form>
+                </S.QueryForm>
             );
         }
     }
@@ -408,43 +411,45 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
         render() {
             return (
-                <form className="query-form" onKeyDown={this._keyEventHandler}>
-                    <div className="form primary-language">
-                        <inputViews.TRQueryInputField
-                            widgets={this.props.supportedWidgets[this.props.corpname]}
-                            sourceId={this.props.corpname}
-                            corpname={this.props.corpname}
-                            wPoSList={this.props.wPoSList}
-                            lposValue={this.props.lposValues[this.props.corpname]}
-                            forcedAttr={this.props.forcedAttr}
-                            attrList={this.props.attrList}
-                            tagHelperView={this.props.tagHelperView}
-                            queryStorageView={this.props.queryStorageView}
-                            inputLanguage={this.props.inputLanguages[this.props.corpname]}
-                            onEnterKey={this._handleSubmit}
-                            useRichQueryEditor={this.props.useRichQueryEditor}
-                            qsuggPlugin={querySuggest}
-                            tagsets={this.props.tagsets[this.props.corpname]} />
+                <S.QueryForm>
+                    <div onKeyDown={this._keyEventHandler}>
+                        <div className="form primary-language">
+                            <inputViews.TRQueryInputField
+                                widgets={this.props.supportedWidgets[this.props.corpname]}
+                                sourceId={this.props.corpname}
+                                corpname={this.props.corpname}
+                                wPoSList={this.props.wPoSList}
+                                lposValue={this.props.lposValues[this.props.corpname]}
+                                forcedAttr={this.props.forcedAttr}
+                                attrList={this.props.attrList}
+                                tagHelperView={this.props.tagHelperView}
+                                queryStorageView={this.props.queryStorageView}
+                                inputLanguage={this.props.inputLanguages[this.props.corpname]}
+                                onEnterKey={this._handleSubmit}
+                                useRichQueryEditor={this.props.useRichQueryEditor}
+                                qsuggPlugin={querySuggest}
+                                tagsets={this.props.tagsets[this.props.corpname]} />
+                        </div>
+                        <inputViews.AdvancedFormFieldset
+                                uniqId="section-specify-context"
+                                formVisible={this.props.contextFormVisible}
+                                handleClick={this._handleContextFormVisibility}
+                                htmlClass="specify-context"
+                                title={he.translate('query__specify_context')}>
+                            <contextViews.SpecifyContextForm
+                                    hasLemmaAttr={this.props.hasLemma[this.props.corpname]}
+                                    wPoSList={this.props.wPoSList} />
+                        </inputViews.AdvancedFormFieldset>
+                        <BoundSelectedTextTypesLite />
+                        <div className="buttons">
+                            <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                {this.props.operationIdx !== undefined ?
+                                        he.translate('global__proceed')
+                                        : he.translate('query__search_btn')}
+                            </button>
+                        </div>
                     </div>
-                    <inputViews.AdvancedFormFieldset
-                            uniqId="section-specify-context"
-                            formVisible={this.props.contextFormVisible}
-                            handleClick={this._handleContextFormVisibility}
-                            htmlClass="specify-context"
-                            title={he.translate('query__specify_context')}>
-                        <contextViews.SpecifyContextForm
-                                hasLemmaAttr={this.props.hasLemma[this.props.corpname]}
-                                wPoSList={this.props.wPoSList} />
-                    </inputViews.AdvancedFormFieldset>
-                    <BoundSelectedTextTypesLite />
-                    <div className="buttons">
-                        <button type="button" className="default-button" onClick={this._handleSubmit}>
-                            {this.props.operationIdx !== undefined ?
-                                    he.translate('global__proceed')
-                                    : he.translate('query__search_btn')}
-                        </button>
-                    </div>
-                </form>
+                </S.QueryForm>
             );
         }
     }
@@ -497,7 +502,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                                             tagset,
                                                             props.isLocalUiLang ? tagset.docUrlLocal : tagset.docUrlEn
                                                         )),
-                                                        List.forEach(v => console.log('tagset: ', v)),
                                                         List.filter(([,url]) => !!url),
                                                         List.map(
                                                             ([tagset, url]) => (

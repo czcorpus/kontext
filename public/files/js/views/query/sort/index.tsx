@@ -21,11 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { ConcSortModel, ConcSortModelState } from '../../models/query/sort/single';
-import { Actions, ActionName } from '../../models/query/actions';
+import { Kontext } from '../../../types/common';
+import { ConcSortModel, ConcSortModelState } from '../../../models/query/sort/single';
+import { Actions, ActionName } from '../../../models/query/actions';
 import { List } from 'cnc-tskit';
-import { MultiLevelConcSortModel, MultiLevelConcSortModelState } from '../../models/query/sort/multi';
+import { MultiLevelConcSortModel, MultiLevelConcSortModelState } from '../../../models/query/sort/multi';
+import * as S from './style';
 
 
 export interface SortModuleArgs {
@@ -71,7 +72,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
     // -------------------------- <AttributeList /> ---------------------------------
 
-    const AttributeList:React.SFC<{
+    const AttributeList:React.FC<{
         onAttrSelect:(val:string)=>void;
         currValue:string;
         availAttrs:Array<Kontext.AttrItem>;
@@ -91,7 +92,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
     // -------------------------- <SortKeySelector /> ---------------------------------
 
-    const SortKeySelector:React.SFC<{
+    const SortKeySelector:React.FC<{
         sortId:string;
         currValue:string;
 
@@ -252,7 +253,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
     // -------------------------- <MLCtxSelector /> ---------------------------------
 
-    const MLCtxSelector:React.SFC<{
+    const MLCtxSelector:React.FC<{
         sortId:string;
         level:number;
         currentValue:number;
