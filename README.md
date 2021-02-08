@@ -9,6 +9,7 @@
 * [Build and installation](#build-and-installation)
 * [Customization and contribution](#customization-and-contribution)
 * [Notable users](#notable-users)
+* [How to cite](#how-to-cite-kontext)
 
 ## Introduction
 
@@ -97,3 +98,23 @@ Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-
 * [CLARIN-SI](https://www.clarin.si/kontext/)
 * [Інститут української](https://mova.institute/kontext/first_form)
 * [Serbski Institut](https://www.serbski-institut.de) (API version of KonText)
+
+## How to cite KonText
+
+Tomáš Machálek (2020) - KonText: Advanced and Flexible Corpus Query Interface
+
+```bibtex
+@inproceedings{machalek-2020-kontext,
+    title = "{K}on{T}ext: Advanced and Flexible Corpus Query Interface",
+    author = "Mach{\'a}lek, Tom{\'a}{\v{s}}",
+    booktitle = "Proceedings of the 12th Language Resources and Evaluation Conference",
+    month = may,
+    year = "2020",
+    address = "Marseille, France",
+    publisher = "European Language Resources Association",
+    url = "https://www.aclweb.org/anthology/2020.lrec-1.865",
+    pages = "7003--7008",
+    language = "English",
+    ISBN = "979-10-95546-34-4",
+}
+```
