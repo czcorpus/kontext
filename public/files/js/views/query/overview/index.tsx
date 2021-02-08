@@ -22,21 +22,22 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { List, tuple } from 'cnc-tskit';
 
-import { init as saveViewInit } from './save';
-import { init as basicOverviewInit } from './basicOverview';
-import { Kontext } from '../../types/common';
-import { ExtendedQueryOperation } from '../../models/query/replay/common';
-import { QueryReplayModelState, QueryReplayModel } from '../../models/query/replay';
-import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../models/query/replay/indirect';
-import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../models/query/save';
-import { Actions, ActionName } from '../../models/query/actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
-import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from './miscActions';
-import { QueryFormLiteProps, QueryFormProps } from './first';
-import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from './filter';
-import { SortFormProps } from './sort';
-import { MainMenuModelState } from '../../models/mainMenu';
+import { init as saveViewInit } from '../save';
+import { init as basicOverviewInit } from '../basicOverview';
+import { Kontext } from '../../../types/common';
+import { ExtendedQueryOperation } from '../../../models/query/replay/common';
+import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay';
+import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../../models/query/replay/indirect';
+import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models/query/save';
+import { Actions, ActionName } from '../../../models/query/actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../../models/mainMenu/actions';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../../../models/concordance/actions';
+import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from '../miscActions';
+import { QueryFormLiteProps, QueryFormProps } from '../first';
+import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from '../filter';
+import { SortFormProps } from '../sort';
+import { MainMenuModelState } from '../../../models/mainMenu';
+import * as S from './style';
 
 /*
 Important note regarding variable naming conventions:
@@ -316,16 +317,17 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
                 <layoutViews.CloseableFrame
                         scrollable={true}
-                        customClass="query-form-spa"
                         label={he.translate('query__edit_current_hd_{operation}',
                                 {operation: formTypeToTitle(props.operationFormType)})}
                         onCloseClick={props.closeClickHandler}>
-                    {props.operationIdx < props.numOps - 1 ?
-                        <ExecutionOptions modeRunFullQuery={props.modeRunFullQuery}
-                                operationIdx={props.operationIdx} />
-                        : null
-                    }
-                    {renderEditorComponent()}
+                    <S.QueryFormOverlay>
+                        {props.operationIdx < props.numOps - 1 ?
+                            <ExecutionOptions modeRunFullQuery={props.modeRunFullQuery}
+                                    operationIdx={props.operationIdx} />
+                            : null
+                        }
+                        {renderEditorComponent()}
+                    </S.QueryFormOverlay>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );
@@ -675,10 +677,11 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         return (
             <layoutViews.ModalOverlay onCloseKey={handleCloseClick}>
                 <layoutViews.CloseableFrame
-                        customClass="query-form-spa"
                         onCloseClick={handleCloseClick}
                         label={createTitle()}>
-                    {createActionBasedForm()}
+                    <S.QueryFormOverlay>
+                        {createActionBasedForm()}
+                    </S.QueryFormOverlay>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );

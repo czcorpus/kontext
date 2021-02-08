@@ -21,17 +21,18 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { init as inputInit } from './input';
-import { FilterFormModel, FilterFormModelState } from '../../models/query/filter';
-import { FirstHitsModelState } from '../../models/query/firstHits';
-import { WithinBuilderModel } from '../../models/query/withinBuilder';
-import { VirtualKeyboardModel } from '../../models/query/virtualKeyboard';
-import { FirstHitsModel } from '../../models/query/firstHits';
-import { PluginInterfaces } from '../../types/plugins';
-import { UsageTipsModel } from '../../models/usageTips';
-import { ActionName, Actions } from '../../models/query/actions';
+import { Kontext } from '../../../types/common';
+import { init as inputInit } from '../input';
+import { FilterFormModel, FilterFormModelState } from '../../../models/query/filter';
+import { FirstHitsModelState } from '../../../models/query/firstHits';
+import { WithinBuilderModel } from '../../../models/query/withinBuilder';
+import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
+import { FirstHitsModel } from '../../../models/query/firstHits';
+import { PluginInterfaces } from '../../../types/plugins';
+import { UsageTipsModel } from '../../../models/usageTips';
+import { ActionName, Actions } from '../../../models/query/actions';
 import { Keyboard } from 'cnc-tskit';
+import * as QS from '../first/style';
 
 
 
@@ -302,37 +303,39 @@ export function init({
         _renderSwitchMaincorpForm() {
 
             return (
-                <form className="query-form" onKeyDown={this._keyEventHandler}>
-                    <div className="form">
-                        <div className="query">
-                            <inputViews.TRQueryInputField
-                                widgets={this.props.supportedWidgets[this.props.filterId]}
-                                sourceId={this.props.filterId}
-                                corpname={this.props.corpname}
-                                wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValues[this.props.filterId]}
-                                forcedAttr={this.props.forcedAttr}
-                                attrList={this.props.attrList}
-                                tagHelperView={this.props.tagHelperView}
-                                tagsets={this.props.tagsets}
-                                queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.props.inputLanguage}
-                                useRichQueryEditor={this.props.useRichQueryEditor}
-                                onEnterKey={this._handleSubmit}
-                                qsuggPlugin={querySuggest} />
+                <QS.QueryForm>
+                    <div onKeyDown={this._keyEventHandler}>
+                        <div className="form">
+                            <div className="query">
+                                <inputViews.TRQueryInputField
+                                    widgets={this.props.supportedWidgets[this.props.filterId]}
+                                    sourceId={this.props.filterId}
+                                    corpname={this.props.corpname}
+                                    wPoSList={this.props.wPoSList}
+                                    lposValue={this.props.lposValues[this.props.filterId]}
+                                    forcedAttr={this.props.forcedAttr}
+                                    attrList={this.props.attrList}
+                                    tagHelperView={this.props.tagHelperView}
+                                    tagsets={this.props.tagsets}
+                                    queryStorageView={this.props.queryStorageView}
+                                    inputLanguage={this.props.inputLanguage}
+                                    useRichQueryEditor={this.props.useRichQueryEditor}
+                                    onEnterKey={this._handleSubmit}
+                                    qsuggPlugin={querySuggest} />
+                            </div>
+                        </div>
+                        <div className="buttons">
+                            {this.props.isBusy ?
+                                <layoutViews.AjaxLoaderBarImage /> :
+                                <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                    {this.props.operationIdx !== undefined ?
+                                        he.translate('global__proceed')
+                                        : he.translate('query__search_btn')}
+                                </button>
+                            }
                         </div>
                     </div>
-                    <div className="buttons">
-                        {this.props.isBusy ?
-                            <layoutViews.AjaxLoaderBarImage /> :
-                            <button type="button" className="default-button" onClick={this._handleSubmit}>
-                                {this.props.operationIdx !== undefined ?
-                                    he.translate('global__proceed')
-                                    : he.translate('query__search_btn')}
-                            </button>
-                        }
-                    </div>
-                </form>
+                </QS.QueryForm>
             );
         }
 
@@ -353,44 +356,46 @@ export function init({
             }
 
             return (
-                <form className="query-form" onKeyDown={this._keyEventHandler}>
-                    <div className="form primary-language">
-                        {this.props.filterId === '__new__' ?
-                            null :
-                            <FilterTypeSelector value={this.props.pnFilterValues[this.props.filterId]}
-                                    sourceId={this.props.filterId} />
-                        }
-                        <div>
-                            <inputViews.TRQueryInputField
-                                widgets={this.props.supportedWidgets[this.props.filterId]}
-                                sourceId={this.props.filterId}
-                                corpname={this.props.corpname}
-                                wPoSList={this.props.wPoSList}
-                                lposValue={this.props.lposValues[this.props.filterId]}
-                                forcedAttr={this.props.forcedAttr}
-                                attrList={this.props.attrList}
-                                tagHelperView={this.props.tagHelperView}
-                                tagsets={this.props.tagsets}
-                                queryStorageView={this.props.queryStorageView}
-                                inputLanguage={this.props.inputLanguage}
-                                useRichQueryEditor={this.props.useRichQueryEditor}
-                                onEnterKey={this._handleSubmit}
-                                takeFocus={true}
-                                qsuggPlugin={querySuggest}
-                                customOptions={opts} />
+                <QS.QueryForm>
+                    <div onKeyDown={this._keyEventHandler}>
+                        <div className="form primary-language">
+                            {this.props.filterId === '__new__' ?
+                                null :
+                                <FilterTypeSelector value={this.props.pnFilterValues[this.props.filterId]}
+                                        sourceId={this.props.filterId} />
+                            }
+                            <div>
+                                <inputViews.TRQueryInputField
+                                    widgets={this.props.supportedWidgets[this.props.filterId]}
+                                    sourceId={this.props.filterId}
+                                    corpname={this.props.corpname}
+                                    wPoSList={this.props.wPoSList}
+                                    lposValue={this.props.lposValues[this.props.filterId]}
+                                    forcedAttr={this.props.forcedAttr}
+                                    attrList={this.props.attrList}
+                                    tagHelperView={this.props.tagHelperView}
+                                    tagsets={this.props.tagsets}
+                                    queryStorageView={this.props.queryStorageView}
+                                    inputLanguage={this.props.inputLanguage}
+                                    useRichQueryEditor={this.props.useRichQueryEditor}
+                                    onEnterKey={this._handleSubmit}
+                                    takeFocus={true}
+                                    qsuggPlugin={querySuggest}
+                                    customOptions={opts} />
+                            </div>
+                        </div>
+                        <div className="buttons">
+                            {this.props.isBusy ?
+                                <layoutViews.AjaxLoaderBarImage /> :
+                                <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                    {this.props.operationIdx !== undefined ?
+                                        he.translate('global__proceed')
+                                        : he.translate('query__search_btn')}
+                                </button>
+                            }
                         </div>
                     </div>
-                    <div className="buttons">
-                        {this.props.isBusy ?
-                            <layoutViews.AjaxLoaderBarImage /> :
-                            <button type="button" className="default-button" onClick={this._handleSubmit}>
-                                {this.props.operationIdx !== undefined ?
-                                    he.translate('global__proceed')
-                                    : he.translate('query__search_btn')}
-                            </button>
-                        }
-                    </div>
-                </form>
+                </QS.QueryForm>
             );
         }
 

@@ -407,34 +407,36 @@ export function init({
                 <layoutViews.PopupBox
                         onCloseClick={this.props.closeClickHandler}
                         customStyle={{position: 'absolute', left: '0.3em', top: '2.2em'}}>
-                    <div onKeyDown={this._handleKeyDown}>
-                        <h3>{he.translate('query__create_within')}</h3>
-                        {this.props.isBusy ?
-                            <layoutViews.AjaxLoaderImage /> :
-                            <>
-                                <div className="within-widget">
-                                    <select onChange={this._handleAttrChange} value={this.props.currAttrIdx}>
-                                        {List.map(
-                                            ([struct, attr], i) => (
-                                                <option key={`${struct}-${attr}`} value={i}>{WithinBuilderModel.ithValue(this.props, i)}</option>
-                                            ),
-                                            this.props.data
-                                        )}
-                                    </select>
-                                    {'\u00a0'}={'\u00a0'}
-                                    <input type="text" value={this.props.query} onChange={this._handleInputChange}
-                                            ref={item => item ? item.focus() : null} />
-                                    {'\u00a0'}
-                                </div>
-                                <p>
-                                    <button type="button" className="util-button"
-                                            onClick={this._handleInsert}>
-                                        {he.translate('query__insert_within')}
-                                    </button>
-                                </p>
-                            </>
-                        }
-                    </div>
+                    <S.WithinWidget>
+                        <div onKeyDown={this._handleKeyDown}>
+                            <h3>{he.translate('query__create_within')}</h3>
+                            {this.props.isBusy ?
+                                <layoutViews.AjaxLoaderImage /> :
+                                <>
+                                    <div className="within-widget">
+                                        <select onChange={this._handleAttrChange} value={this.props.currAttrIdx}>
+                                            {List.map(
+                                                ([struct, attr], i) => (
+                                                    <option key={`${struct}-${attr}`} value={i}>{WithinBuilderModel.ithValue(this.props, i)}</option>
+                                                ),
+                                                this.props.data
+                                            )}
+                                        </select>
+                                        {'\u00a0'}={'\u00a0'}
+                                        <input type="text" value={this.props.query} onChange={this._handleInputChange}
+                                                ref={item => item ? item.focus() : null} />
+                                        {'\u00a0'}
+                                    </div>
+                                    <p>
+                                        <button type="button" className="util-button"
+                                                onClick={this._handleInsert}>
+                                            {he.translate('query__insert_within')}
+                                        </button>
+                                    </p>
+                                </>
+                            }
+                        </div>
+                    </S.WithinWidget>
                 </layoutViews.PopupBox>
             );
         }
@@ -669,7 +671,7 @@ export function init({
 
         render() {
             return (
-                <div className="query-toolbox">
+                <S.QueryToolbox>
                     {this._renderWidget()}
                     <ul>
                         <li>
@@ -687,7 +689,7 @@ export function init({
                             null
                         }
                     </ul>
-                </div>
+                </S.QueryToolbox>
             );
         }
     }
@@ -1112,7 +1114,7 @@ export function init({
 
             return (
                 <div>
-                    <div className="query-area">
+                    <S.QueryArea>
                         <BoundQueryToolbox
                             widgets={this.props.widgets}
                             tagHelperView={this.props.tagHelperView}
@@ -1144,7 +1146,7 @@ export function init({
                             }
                         </div>
                         <BoundQueryHints queryType={queryObj.qtype} />
-                    </div>
+                    </S.QueryArea>
                     <AdvancedFormFieldset
                             uniqId="query-options-section"
                             formVisible={this.props.queryOptionsVisible[this.props.sourceId]}
