@@ -681,6 +681,7 @@ class Actions(Querying):
             ff_args = q_conv(q)
             self.acknowledge_auto_generated_conc_op(op_idx, ff_args)
             self.args.q.append(q)
+            op_idx += 1
         return self.view(request)
 
     @exposed(http_method='POST', template='view.html', page_model='view', mutates_conc=True)
