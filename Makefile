@@ -10,6 +10,6 @@ client-production-with-maps : deprecated
 client-production-notc : deprecated
 	$(error Please run command: 'npm start build:production-notc')
 devel-server : deprecated
-	$(error Please run command: 'npm start build:devel-server')
+	$(error Please run command: 'npm start devel-server')
 deprecated :
 	@echo Makefile is no longer supported!

@@ -1,9 +1,9 @@
 {
   "menu": {
     "description": "action",
+    "devel-server:Starts development server.": "devel-server",
     "build:Build Kontext.": {
       "description": "environment",
-      "devel-server:Builds your app for the development environment.": "build:devel-server",
       "production:Builds your app for the production environment.": "build:production",
       "production-with-maps:Builds your app for the production environment with maps.": "build:production-with-maps",
       "production-notc:Builds your app for the production environment ???.": "build:production-notc"
