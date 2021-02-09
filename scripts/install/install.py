@@ -36,6 +36,8 @@ REQUIREMENTS = [
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser('Kontext instalation script')
+    argparser.add_argument('--celery', dest='install_celery', action='store_true',
+                           default=False, help='Install celery instead of rq')
     argparser.add_argument('--gunicorn', dest='install_gunicorn', action='store_true',
                            default=False, help='Install gunicorn to run web server')
     argparser.add_argument('--patch', dest='patch_path', action='store',
@@ -51,6 +53,8 @@ if __name__ == "__main__":
     stdout = None if args.verbose else open(os.devnull, 'wb')
     stderr = None
 
+    subprocess.call(['systemctl', 'stop', 'rq-all.target'])
+    subprocess.call(['systemctl', 'stop', 'rqscheduler'])
     subprocess.call(['systemctl', 'stop', 'celery'])
     subprocess.call(['systemctl', 'stop', 'gunicorn'])
 
@@ -73,16 +77,25 @@ if __name__ == "__main__":
     # import steps here, because some depend on packages installed by this script
     import steps
     # run installation steps
+    steps.SetupBgCalc(KONTEXT_PATH, stdout, stderr).run(args.install_celery)
+    steps.SetupNginx(KONTEXT_PATH, stdout, stderr).run()
     steps.SetupManatee(KONTEXT_PATH, stdout, stderr, args.no_cert_check).run(
         args.manatee_version, args.patch_path)
-    steps.SetupKontext(KONTEXT_PATH, stdout, stderr).run()
+    steps.SetupKontext(KONTEXT_PATH, stdout, stderr).run(args.install_celery)
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
     if args.install_gunicorn:
         steps.SetupGunicorn(KONTEXT_PATH, stdout, stderr).run()
 
     # finalize instalation
-    print('Initializing celery and nginx services...')
-    subprocess.check_call(['systemctl', 'start', 'celery'], stdout=stdout)
+    if args.install_celery:
+        print('Initializing Celery...')
+        subprocess.check_call(['systemctl', 'start', 'celery'], stdout=stdout)
+    else:
+        print('Initializing Rq...')
+        subprocess.check_call(['systemctl', 'start', 'rq-all.target'], stdout=stdout)
+        subprocess.check_call(['systemctl', 'start', 'rqscheduler'], stdout=stdout)
+
+    print('Initializing Nginx...')
     subprocess.check_call(['systemctl', 'restart', 'nginx'], stdout=stdout)
     if args.install_gunicorn:
         print('Initializing gunicorn...')

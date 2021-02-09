@@ -39,21 +39,17 @@
         </conc_dashboard_modules>
     </global>
     <calc_backend>
-        <type>celery</type>
+        <type>rq</type>
         <task_time_limit>300</task_time_limit>
-        <status_service_url />
-        <celery_broker_url>redis://127.0.0.1:6379/2</celery_broker_url>
-        <celery_result_backend>redis://127.0.0.1:6379/2</celery_result_backend>
-        <celery_task_serializer>json</celery_task_serializer>
-        <celery_result_serializer>json</celery_result_serializer>
-        <celery_accept_content>
-            <item>json</item>
-        </celery_accept_content>
-        <celery_timezone>Europe/Prague</celery_timezone>
+        <status_service_url>http://0.0.0.0/</status_service_url>
+        <rq_redis_host>localhost</rq_redis_host>
+        <rq_redis_port>6379</rq_redis_port>
+        <rq_redis_db>2</rq_redis_db>
+        <rq_log_path>/var/log/rq/worker.log</rq_log_path>
     </calc_backend>
     <job_scheduler>
-        <type>celery</type>
-        <conf>/opt/kontext/conf/beatconfig.py</conf>
+        <type>rq</type>
+        <conf>/opt/kontext/conf/rq-schedule-conf.json</conf>
     </job_scheduler>
     <mailing/>
     <logging>
