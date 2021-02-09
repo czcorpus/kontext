@@ -11,10 +11,34 @@ import json
 import redis
 import random
 import string
+import re
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib/plugins/default_auth'))
 from tools import mk_pwd_hash_default
 
 WEBSERVER_USER = "www-data"
+
+CELERY_CONFIG = """
+<calc_backend>
+    <type>celery</type>
+    <task_time_limit>300</task_time_limit>
+    <status_service_url />
+    <celery_broker_url>redis://127.0.0.1:6379/2</celery_broker_url>
+    <celery_result_backend>redis://127.0.0.1:6379/2</celery_result_backend>
+    <celery_task_serializer>json</celery_task_serializer>
+    <celery_result_serializer>json</celery_result_serializer>
+    <celery_accept_content>
+        <item>json</item>
+    </celery_accept_content>
+    <celery_timezone>Europe/Prague</celery_timezone>
+</calc_backend>
+"""
+
+CELERY_SCHEDULER_CONFIG = """
+<job_scheduler>
+    <type>celery</type>
+    <conf>/opt/kontext/conf/beatconfig.py</conf>
+</job_scheduler>
+"""
 
 
 def create_directory(path: str, user: str = None, group: str = None, mode: int = 0o755):
@@ -28,7 +52,7 @@ def replace_string_in_file(path: str, old: str, new: str):
     with open(path, 'r', encoding='utf8') as f:
         config_text = f.read()
     with open(path, 'w', encoding='utf8') as f:
-        f.write(config_text.replace(old, new))
+        f.write(re.sub(old, new, config_text))
 
 
 def generate_random_password() -> Tuple[str, str]:
@@ -87,6 +111,69 @@ def wget_cmd(url, no_cert_check):
     return ['wget', url, '-N']
 
 
+class SetupBgCalc(InstallationStep):
+    def __init__(self, kontext_path: str, stdout: str, stderr: str):
+        super().__init__(kontext_path, stdout, stderr)
+
+    def is_done(self):
+        pass
+
+    def abort(self):
+        pass
+
+    def run(self, celery_worker):
+        try:
+            subprocess.check_call(['useradd', '-r', '-s', '/bin/false', 'celery'], stdout=self.stdout)
+        except:
+            pass
+
+        if celery_worker:
+            print('Setting up Celery...')
+            subprocess.check_call(['adduser', 'celery', WEBSERVER_USER], stdout=self.stdout)
+            create_directory('/etc/conf.d')
+            subprocess.check_call(['cp', os.path.join(
+                self.kontext_path, 'scripts/install/conf/celery-conf.d'), '/etc/conf.d/celery'], stdout=self.stdout)
+            subprocess.check_call(['cp', os.path.join(
+                self.kontext_path, 'scripts/install/conf/celery.service'), '/etc/systemd/system'], stdout=self.stdout)
+            replace_string_in_file('/etc/systemd/system/celery.service', '/opt/kontext', self.kontext_path)
+            subprocess.check_call(['cp', os.path.join(
+                self.kontext_path, 'scripts/install/conf/celery.tmpfiles'), '/usr/lib/tmpfiles.d/celery.conf'], stdout=self.stdout)
+            create_directory('/var/log/celery', 'celery', 'root')
+            create_directory('/var/run/celery', 'celery', 'root')
+            subprocess.check_call(['systemctl', 'enable', 'celery'], stdout=self.stdout)
+        else:
+            print('Setting up Rq...')
+            subprocess.check_call(['cp', os.path.join(
+                self.kontext_path, 'scripts/install/conf/rq-all.target'), '/etc/systemd/system'], stdout=self.stdout)
+            subprocess.check_call(['cp', os.path.join(
+                self.kontext_path, 'scripts/install/conf/rq@.service'), '/etc/systemd/system'], stdout=self.stdout)
+            replace_string_in_file('/etc/systemd/system/rq@.service', '/opt/kontext', self.kontext_path)
+            subprocess.check_call(['cp', os.path.join(
+                self.kontext_path, 'scripts/install/conf/rqscheduler.service'), '/etc/systemd/system'], stdout=self.stdout)
+            create_directory('/var/log/rq', 'celery', 'root')
+            subprocess.check_call(['systemctl', 'enable', 'rq-all'], stdout=self.stdout)
+            subprocess.check_call(['systemctl', 'enable', 'rqscheduler'], stdout=self.stdout)
+        
+        subprocess.check_call(['systemctl', 'daemon-reload'], stdout=self.stdout)
+
+
+class SetupNginx(InstallationStep):
+    def __init__(self, kontext_path: str, stdout: str, stderr: str):
+        super().__init__(kontext_path, stdout, stderr)
+
+    def is_done(self):
+        pass
+
+    def abort(self):
+        pass
+
+    def run(self):
+        # config nginx
+        print('Setting up nginx...')
+        subprocess.check_call(['cp', os.path.join(self.kontext_path, 'scripts/install/conf/nginx'),
+                               '/etc/nginx/sites-available/default'], stdout=self.stdout)
+
+
 class SetupManatee(InstallationStep):
 
     def __init__(self, kontext_path: str, stdout: str, stderr: str, no_cert_check: bool):
@@ -100,31 +187,6 @@ class SetupManatee(InstallationStep):
         pass
 
     def run(self, manatee_version: str, patch_path: str = None):
-        # config celery
-        print('Setting up celery...')
-        try:
-            subprocess.check_call(['useradd', '-r', '-s', '/bin/false',
-                                   'celery'], stdout=self.stdout)
-        except:
-            pass
-        subprocess.check_call(['adduser', 'celery', WEBSERVER_USER], stdout=self.stdout)
-        create_directory('/etc/conf.d')
-        subprocess.check_call(['cp', os.path.join(
-            self.kontext_path, 'scripts/install/conf/celery-conf.d'), '/etc/conf.d/celery'], stdout=self.stdout)
-        subprocess.check_call(['cp', os.path.join(
-            self.kontext_path, 'scripts/install/conf/celery.service'), '/etc/systemd/system'], stdout=self.stdout)
-        subprocess.check_call(['cp', os.path.join(
-            self.kontext_path, 'scripts/install/conf/celery.tmpfiles'), '/usr/lib/tmpfiles.d/celery.conf'], stdout=self.stdout)
-        create_directory('/var/log/celery', 'celery', 'root')
-        create_directory('/var/run/celery', 'celery', 'root')
-        subprocess.check_call(['systemctl', 'enable', 'celery'], stdout=self.stdout)
-        subprocess.check_call(['systemctl', 'daemon-reload'], stdout=self.stdout)
-
-        # config nginx
-        print('Setting up nginx...')
-        subprocess.check_call(['cp', os.path.join(self.kontext_path, 'scripts/install/conf/nginx'),
-                               '/etc/nginx/sites-available/default'], stdout=self.stdout)
-
         # install manatee with ucnk patch
         print('Installing manatee...')
 
@@ -195,15 +257,25 @@ class SetupKontext(InstallationStep):
     def abort(self):
         pass
 
-    def run(self):
+    def run(self, use_celery):
         print('Installing kontext...')
         subprocess.check_call(['cp', 'config.default.xml', 'config.xml'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
         subprocess.check_call(['cp', 'corplist.default.xml', 'corplist.xml'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
-        subprocess.check_call(['cp', 'beatconfig.sample.py', 'beatconfig.py'],
-                              cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
 
+        # celery config if required
+        if use_celery:
+            subprocess.check_call(['cp', 'beatconfig.sample.py', 'beatconfig.py'],
+                              cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
+            replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
+                                   '<calc_backend>.*</calc_backend>', CELERY_CONFIG)
+            replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
+                                   '<job_scheduler>.*</job_scheduler>', CELERY_SCHEDULER_CONFIG)
+        else:
+            subprocess.check_call(['cp', 'rq-schedule-conf.sample.json', 'rq-schedule-conf.json'],
+                              cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
+        
         # update config.xml with current install path
         replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
                                '/opt/kontext', self.kontext_path)
