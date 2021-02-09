@@ -29,6 +29,7 @@ import { Actions, ActionName } from '../../../models/query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../../models/common/actions';
 import { AnyQuery } from '../../../models/query/query';
 import * as S from './style';
+import * as SC from '../style';
 
 
 export interface AlignedModuleArgs {
@@ -118,7 +119,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
 
         render() {
             return (
-                <div className="AlignedCorpBlock">
+                <S.AlignedCorpBlock>
                     <div className="heading">
                         <h3>{this.props.label}</h3>
                         <span className="icons">
@@ -162,7 +163,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                     span={1} />
                             ]} />
                     </div>
-                </div>
+                </S.AlignedCorpBlock>
             );
         }
     }
@@ -212,15 +213,15 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         }
 
         return (
-            <section className={`AlignedCorpora${props.sectionVisible ? '' : ' closed'}`} role="group" aria-labelledby="parallel-corpora-forms">
-                <h2 id="parallel-corpora-forms">
+            <S.AlignedCorpora className={props.sectionVisible ? '' : ' closed'} role="group" aria-labelledby="parallel-corpora-forms">
+                <SC.ExpandableSectionLabel id="parallel-corpora-forms">
                     <layoutViews.ExpandButton isExpanded={props.sectionVisible} onClick={handleVisibilityChange} />
                     <a onClick={handleVisibilityChange}>
                         {he.translate('query__aligned_corpora_hd')}
                         {List.empty(props.alignedCorpora) || props.sectionVisible ? null : '\u00a0\u2713'}
                     </a>
 
-                </h2>
+                </SC.ExpandableSectionLabel>
                 {props.sectionVisible ?
                     <>
                         {List.map(
@@ -260,13 +261,13 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                     </> :
                     null
                 }
-            </section>
+            </S.AlignedCorpora>
         );
     };
 
 
     return {
-        AlignedCorpora: AlignedCorpora
+        AlignedCorpora
     };
 
 }

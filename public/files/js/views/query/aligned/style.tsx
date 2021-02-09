@@ -19,9 +19,97 @@
  */
 
 import styled from 'styled-components';
+import * as theme from '../../theme/default';
+
+// ---------------- <AlignedLangWidget /> -----------------------------
 
 export const AlignedLangWidget = styled.div`
 
     text-align: center;
     margin-top: 1em;
+`;
+
+// ---------------- <AlignedCorpora /> -----------------------------
+
+export const AlignedCorpora = styled.section`
+    &.closed {
+
+        padding-bottom: 0;
+
+        .contents {
+            margin: 0;
+            padding: 0;
+        }
+    }
+`;
+
+// ---------------- <AlignedCorpBlock /> -----------------------------
+
+export const AlignedCorpBlock = styled.div`
+
+    margin-left: 2.5em;
+
+    table.form {
+        margin: 5px 10px;
+    }
+
+    .form {
+        > *:not(:first-child) {
+            margin-top: 1em;
+        }
+
+        .query {
+            max-width: 60em;
+            margin-top: 2.7em;
+        }
+    }
+
+    .heading {
+
+        border: 1px solid #C7E7B2;
+        background-color: ${theme.colorLightFrame};
+        padding: 0.2em 1em;
+        border-radius: ${theme.borderRadiusDefault};
+        margin: 1em 0 1em 0;
+
+        .icons {
+            float: right;
+
+            a {
+                display: inline-block;
+
+                img {
+                    width: 1em;
+                    vertical-align: middle;
+                }
+            }
+
+            a:not(:last-child) {
+                margin-right: 0.7em;
+            }
+
+            a.make-primary img {
+                margin-bottom: 0.1em;
+            }
+        }
+
+        h3 {
+            display: inline-block;
+            font-weight: normal;
+            margin: 0;
+        }
+    }
+
+    .close-button {
+
+        float: right;
+        padding: 0;
+        margin-right: 0;
+
+        img {
+            display: inline-block;
+            vertical-align: middle;
+            width: 1em;
+        }
+    }
 `;

@@ -37,6 +37,7 @@ import { Actions as HintActions,
 import { QueryType, TokenSuggestions } from '../../../models/query/query';
 import { init as queryStructureInit } from '../structure';
 import * as S from './style';
+import * as SC from '../style';
 
 
 export interface InputModuleViews {
@@ -171,9 +172,9 @@ export function init({
         htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
 
         return (
-            <section className={`AdvancedFormFieldset${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
+            <S.AdvancedFormFieldset className={`${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
                     role="group" aria-labelledby={props.uniqId}>
-                <h2 id={props.uniqId}>
+                <SC.ExpandableSectionLabel id={props.uniqId}>
                     <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
                         <a onClick={props.handleClick}>{props.title}</a>
                     {props.formVisible ? null : props.closedStateHint}
@@ -181,14 +182,14 @@ export function init({
                         null :
                         <AdvancedFormFieldsetDesc html={props.closedStateDesc} />
                     }
-                </h2>
+                </SC.ExpandableSectionLabel>
                 {props.formVisible ?
                     <div className="contents">
                         {props.children}
                     </div> :
                     null
                 }
-            </section>
+            </S.AdvancedFormFieldset>
         );
     };
 
@@ -1020,6 +1021,7 @@ export function init({
         _renderInputOptions() {
             const customOpts = this.props.customOptions || [];
             const query = this.props.queries[this.props.sourceId];
+
             switch (query.qtype) {
                 case 'simple':
                     return (
@@ -1168,9 +1170,9 @@ export function init({
 
     return {
         TRQueryInputField: BoundTRQueryInputField,
-        TRPcqPosNegField: TRPcqPosNegField,
-        TRIncludeEmptySelector: TRIncludeEmptySelector,
-        AdvancedFormFieldset: AdvancedFormFieldset
+        TRPcqPosNegField,
+        TRIncludeEmptySelector,
+        AdvancedFormFieldset
     };
 
 }

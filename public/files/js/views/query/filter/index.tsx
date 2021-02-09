@@ -33,6 +33,7 @@ import { UsageTipsModel } from '../../../models/usageTips';
 import { ActionName, Actions } from '../../../models/query/actions';
 import { Keyboard } from 'cnc-tskit';
 import * as QS from '../first/style';
+import * as S from './style';
 
 
 
@@ -234,12 +235,12 @@ export function init({
         };
 
         return (
-            <div className="FilterTypeSelector">
+            <S.FilterTypeSelector>
                 <select  value={props.value} onChange={handleChange}>
                     <option value="p">{he.translate('query__qfilter_pos')}</option>
                     <option value="n">{he.translate('query__qfilter_neg')}</option>
                 </select>
-            </div>
+            </S.FilterTypeSelector>
         );
     };
 
