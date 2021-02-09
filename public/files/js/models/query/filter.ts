@@ -20,7 +20,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import { tuple, pipe, Dict, List, HTTP, id } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
@@ -68,6 +68,7 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
     isAnonymousUser:boolean;
     isLocalUiLang:boolean;
+    simpleQueryDefaultAttrs:{[corpname:string]:Array<string|Array<string>>};
 }
 
 export function isFilterFormProperties(v:FilterFormProperties|AjaxResponse.FilterFormArgs):v is FilterFormProperties {
@@ -374,12 +375,11 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     Dict.fromEntries()
                 ),
                 isBusy: false,
-                simpleQueryDefaultAttrs: {},
+                simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 isLocalUiLang: props.isLocalUiLang,
                 changeMaincorp: undefined
         });
         this.syncInitialArgs = syncInitialArgs;
-
         this.addActionHandler<MainMenuActions.ShowFilter>(
             MainMenuActionName.ShowFilter,
             action => {
@@ -605,6 +605,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 getTagBuilderSupport(this.getTagsets(state)),
                                 state.isAnonymousUser
                             );
+                            // set of default attrs for the simple query will be always the same (same corpus):
+                            state.simpleQueryDefaultAttrs[filterId] = state.simpleQueryDefaultAttrs['__new__']
                         });
 
                     } else if (data.form_type === Kontext.ConcFormTypes.LOCKED ||
