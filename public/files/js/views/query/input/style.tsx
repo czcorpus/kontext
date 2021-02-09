@@ -21,6 +21,7 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
+// -------------------- <AdvancedFormFieldsetDesc /> ---------------------------
 
 export const AdvancedFormFieldsetDesc = styled.span`
 a {
@@ -44,32 +45,20 @@ a {
 }
 `;
 
+// --------------------- <AdvancedFormFieldset /> ------------------------------
 
 export const AdvancedFormFieldset = styled.section`
 
-    padding: 0.2em 0 1.6em 0;
+    &.closed {
+        padding-bottom: 0;
 
-    h2 {
-        margin: 0 0 0.4em 0;
-        padding: 0.2em;
-        font-size: 1.05em;
-        font-weight: normal;
-
-        .ExpandButton {
-            margin-right: 0.7em;
-        }
-
-        a,
-        span {
-            font-weight: normal;
-            color: ${theme.colorLogoBlue};
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
+        .contents {
+            margin: 0;
+            padding: 0;
         }
     }
+
+    padding: 0.2em 0 1.6em 0;
 
     .contents {
         padding: 1.1em 1.5em;
@@ -97,7 +86,7 @@ export const AdvancedFormFieldset = styled.section`
         color: ${theme.colorLightText};
     }
 
-    .query-options {
+    &.query-options {
 
         margin-top: 1.8em;
 
@@ -143,6 +132,67 @@ export const AdvancedFormFieldset = styled.section`
         }
     }
 
+    &.specify-context {
+
+        h3 {
+            font-weight: bold;
+            margin-left: 0;
+            margin-top: 0.7em;
+            margin-bottom: 0.3em;
+            font-size: 1.3em;
+            letter-spacing: 0.06em;
+        }
+
+        .pos-filter {
+            margin-top: 3em;
+
+            .pos-list {
+                ul {
+                    padding-left: 0em;
+                    list-style-type: none;
+
+                    li {
+                        margin: 0.4em 0;
+                    }
+                }
+            }
+
+            .ToggleSwitch {
+                font-size: 1.3em;
+                margin-right: 0.4em;
+            }
+        }
+
+        dl.form {
+            margin-bottom: 2.5em;
+
+            dd {
+                display: flex;
+                align-items: center;
+
+                .all-any-none-sel {
+                    display: flex;
+                    flex-direction: row;
+                    height: 100%;
+                }
+            }
+
+            dt:not(:first-of-type) {
+                padding-top: 1em;
+            }
+
+            dt {
+                font-weight: normal;
+                padding-bottom: 0.3em;
+            }
+
+            .fc_lemword {
+                width: 25em;
+            }
+        }
+        }
+
+
     ${theme.mediaPhone} {
 
         .query-options {
@@ -159,10 +209,15 @@ export const AdvancedFormFieldset = styled.section`
     }
 `;
 
+// --------------------- <AlignedCorpora /> ----------------------------
+
 export const AlignedCorpora = styled(AdvancedFormFieldset);
+
+// --------------------- <SelectedTextTypesLite /> ----------------------------
 
 export const SelectedTextTypesLite = styled(AdvancedFormFieldset);
 
+// --------------------- <QueryHints /> ----------------------------
 
 export const QueryHints = styled.div`
 
@@ -207,6 +262,8 @@ export const QueryHints = styled.div`
         color: ${theme.colorLogoBlue};
     }
 `;
+
+// ------------------- <QueryToolbox /> --------------------------------
 
 export const QueryToolbox = styled.div`
     position: relative;
@@ -271,6 +328,8 @@ export const QueryToolbox = styled.div`
     }
 `;
 
+// ----------- <WithinWidget /> ----------------------------
+
 export const WithinWidget = styled.div`
 
     input {
@@ -279,6 +338,8 @@ export const WithinWidget = styled.div`
     white-space: nowrap;
 `;
 
+
+// ----------- <QueryArea /> ----------------------------
 
 export const QueryArea = styled.div`
 
