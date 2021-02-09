@@ -151,7 +151,7 @@ class SetupBgCalc(InstallationStep):
             subprocess.check_call(['cp', os.path.join(
                 self.kontext_path, 'scripts/install/conf/rqscheduler.service'), '/etc/systemd/system'], stdout=self.stdout)
             create_directory('/var/log/rq', 'celery', 'root')
-            subprocess.check_call(['systemctl', 'enable', 'rq-all'], stdout=self.stdout)
+            subprocess.check_call(['systemctl', 'enable', 'rq-all.target'], stdout=self.stdout)
             subprocess.check_call(['systemctl', 'enable', 'rqscheduler'], stdout=self.stdout)
         
         subprocess.check_call(['systemctl', 'daemon-reload'], stdout=self.stdout)
@@ -269,9 +269,9 @@ class SetupKontext(InstallationStep):
             subprocess.check_call(['cp', 'beatconfig.sample.py', 'beatconfig.py'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
             replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
-                                   '<calc_backend>.*</calc_backend>', CELERY_CONFIG)
+                                   r'<calc_backend>[\s\S]*<\/calc_backend>', CELERY_CONFIG)
             replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
-                                   '<job_scheduler>.*</job_scheduler>', CELERY_SCHEDULER_CONFIG)
+                                   r'<job_scheduler>[\s\S]*<\/job_scheduler>', CELERY_SCHEDULER_CONFIG)
         else:
             subprocess.check_call(['cp', 'rq-schedule-conf.sample.json', 'rq-schedule-conf.json'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)

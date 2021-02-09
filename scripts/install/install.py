@@ -53,6 +53,8 @@ if __name__ == "__main__":
     stdout = None if args.verbose else open(os.devnull, 'wb')
     stderr = None
 
+    subprocess.call(['systemctl', 'stop', 'rq-all.target'])
+    subprocess.call(['systemctl', 'stop', 'rqscheduler'])
     subprocess.call(['systemctl', 'stop', 'celery'])
     subprocess.call(['systemctl', 'stop', 'gunicorn'])
 
@@ -90,7 +92,7 @@ if __name__ == "__main__":
         subprocess.check_call(['systemctl', 'start', 'celery'], stdout=stdout)
     else:
         print('Initializing Rq...')
-        subprocess.check_call(['systemctl', 'start', 'rq-all'], stdout=stdout)
+        subprocess.check_call(['systemctl', 'start', 'rq-all.target'], stdout=stdout)
         subprocess.check_call(['systemctl', 'start', 'rqscheduler'], stdout=stdout)
 
     print('Initializing Nginx...')
