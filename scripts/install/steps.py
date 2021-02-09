@@ -220,7 +220,7 @@ class SetupKontext(InstallationStep):
         create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
 
         subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout)
-        self.cmd(['make', 'production'], cwd=self.kontext_path)
+        self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path)
 
 
 class SetupGunicorn(InstallationStep):
