@@ -131,3 +131,56 @@ export const ModalOverlay = styled.div`
         }
     }
 `;
+
+// ---------------- <CloseableFrame /> --------------------------------------
+
+export const CloseableFrame = styled.section`
+    background-color: ${theme.colorSectionBg};
+    border-radius: ${theme.borderRadiusDefault};
+    box-shadow: ${theme.portalBoxShadow};
+    max-width: 1280px;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    > .heading {
+        padding: 0.6em 0.8em;
+        background-color: ${theme.colorLightFrame};
+        border-radius: 6px 6px 0 0;
+        font-weight: normal;
+        text-align: left;
+
+        h2 {
+            margin: 0 1.6em 0 0;
+            padding: 0;
+            display: block;
+            text-align: left;
+            width: 90%;
+            font-size: 140%;
+            font-weight: 300;
+        }
+
+        div.control {
+            text-align: right;
+            font-size: 1em;
+            margin-right: 0;
+            margin-top: 0.3em;
+            float: right;
+
+            img {
+                width: 1em;
+                height: 1em;
+                cursor: pointer;
+            }
+        }
+    }
+
+    .contents {
+        flex-grow: 1;
+
+        .padded-contents {
+            padding: 1.7em 1.4em 1em 1.4em;
+        }
+    }
+`;
