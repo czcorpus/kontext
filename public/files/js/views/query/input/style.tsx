@@ -24,25 +24,25 @@ import * as theme from '../../theme/default';
 // -------------------- <AdvancedFormFieldsetDesc /> ---------------------------
 
 export const AdvancedFormFieldsetDesc = styled.span`
-a {
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 0.5em;
+    a {
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 0.5em;
 
-    img {
-        width: 1em;
+        img {
+            width: 1em;
+        }
     }
-}
 
-.html-code {
+    .html-code {
 
-    max-width: 40em;
+        max-width: 40em;
 
-    > div {
-        text-align: justify;
-        margin: 0.7em 1em;
+        > div {
+            text-align: justify;
+            margin: 0.7em 1em;
+        }
     }
-}
 `;
 
 // --------------------- <AdvancedFormFieldset /> ------------------------------
