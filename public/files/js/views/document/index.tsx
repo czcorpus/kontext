@@ -31,6 +31,7 @@ import { init as calendarInit } from './calendar';
 import { init as kwicRangeInit } from './kwicRange';
 import { init as toggleSwitchInit } from './toggle';
 import { ImgWithMouseover } from './general';
+import * as S from './style';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -127,9 +128,9 @@ export function init(
                 style['overflow'] = 'auto';
             }
             return (
-                <div id="modal-overlay" style={style}>
+                <S.ModalOverlay id="modal-overlay" style={style}>
                     {this.props.children}
-                </div>
+                </S.ModalOverlay>
             );
         }
     }
