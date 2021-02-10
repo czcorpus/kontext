@@ -1,56 +1,5 @@
 @import "./shared/globals.less";
 
-section.closeable-frame {
-    background-color: @color-section-bg;
-    border-radius: @border-radius-default;
-    box-shadow: @portal-box-shadow;
-    max-width: 1280px;
-    max-height: 90%;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-
-    > .heading {
-        padding: 0.6em 0.8em;
-        background-color: @color-light-frame;
-        border-radius: 6px 6px 0 0;
-        font-weight: normal;
-        text-align: left;
-
-        h2 {
-            margin: 0 1.6em 0 0;
-            padding: 0;
-            display: block;
-            text-align: left;
-            width: 90%;
-            font-size: 140%;
-            font-weight: 300;
-        }
-
-        div.control {
-            text-align: right;
-            font-size: 1em;
-            margin-right: 0;
-            margin-top: 0.3em;
-            float: right;
-
-            img {
-                width: 1em;
-                height: 1em;
-                cursor: pointer;
-            }
-        }
-    }
-
-    .contents {
-        flex-grow: 1;
-
-        .padded-contents {
-            padding: 1.7em 1.4em 1em 1.4em;
-        }
-    }
-}
-
 @media screen and (max-width: 1366px) {
     section.closeable-frame {
         max-width: 90%;

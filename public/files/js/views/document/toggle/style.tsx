@@ -49,41 +49,5 @@ export const ToggleSwitch = styled.span`
             background-size: contain;
             background-position-y: 0%;
         }
-
-        a.on {
-            background-image: url(../img/toggle_on.svg);
-        }
-
-        a.off {
-            background-image: url(../img/toggle_off.svg);
-        }
-
-        a.switch-on {
-            animation: switchingOn 0.1s steps(2, end);
-        }
-
-        a.switch-off {
-            animation: switchingOff 0.1s steps(2, end);
-        }
-
-        @keyframes switchingOn {
-            0%, 50% {
-                background-image: url(../img/toggle_off_1.svg);
-            }
-
-            50%, 100% {
-                background-image: url(../img/toggle_off_2.svg);
-            }
-        }
-
-        @keyframes switchingOff {
-            0%, 50% {
-                background-image: url(../img/toggle_off_2.svg);
-            }
-
-            50%, 100% {
-                background-image: url(../img/toggle_off_1.svg);
-            }
-        }
     }
 `;
