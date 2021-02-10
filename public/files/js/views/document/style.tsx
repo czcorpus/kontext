@@ -110,26 +110,6 @@ export const ModalOverlay = styled.div`
             margin-bottom: 1em;
         }
     }
-
-    .block-help {
-        color: ${theme.colorDarkGreenText};
-
-        .contents {
-            h2 {
-                margin-left: 0;
-                margin-top: 1em;
-                font-size: 1.5em;
-            }
-
-            h3 {
-                margin-left: 0;
-                font-size: 1.2em;
-                color: ${theme.colorLogoPink};
-                font-weight: normal;
-            }
-
-        }
-    }
 `;
 
 // ---------------- <CloseableFrame /> --------------------------------------
@@ -182,5 +162,86 @@ export const CloseableFrame = styled.section`
         .padded-contents {
             padding: 1.7em 1.4em 1em 1.4em;
         }
+    }
+`;
+
+// ---------------- <TooltipBox /> --------------------------------------
+
+export const TooltipBox = styled.section`
+    z-index: 1000;
+    position: absolute;
+    border: 1px solid #e2eaea;
+    background-color: ${theme.colorWhitelikeBlue};
+    border-radius: 5px;
+    box-shadow: 5px 5px 7px #aaa;
+    padding: 1.4em;
+    color: #444444;
+    text-align: left;
+    white-space: normal;
+
+    .header {
+        padding-bottom: 0.4em;
+    }
+
+    h3 {
+        margin-top: 0;
+    }
+
+    img.info-icon {
+        margin-right: 0.7em;
+        padding-bottom: 0.2em;
+        display: inline-block;
+        width: 1.4em;
+        vertical-align: middle;
+    }
+
+    > div > p {
+        margin: 0.4em 0;
+        padding-left: 0.4em;
+        padding-right: 0.4em;
+    }
+
+    button.close-link {
+        display: block;
+        position: absolute;
+        padding: 0.1em;
+        margin: 0;
+        width: ${theme.closeButtonSize};
+        height: ${theme.closeButtonSize};
+        top: 0.4em;
+        right: 0.4em;
+        background-image: url(../img/close-icon.svg);
+        background-size: ${theme.closeButtonSize} ${theme.closeButtonSize};
+        background-repeat: no-repeat;
+        background-position: 0.1em 0.1em;
+        cursor: pointer;
+        border: none;
+        background-color: transparent;
+        box-sizing: content-box;
+    }
+
+    button.close-link:focus {
+        outline: none;
+    }
+
+    button.close-link:hover {
+        background-image: url(../img/close-icon_s.svg);
+    }
+
+    div.movable {
+        position: absolute;
+        left: 0.4em;
+        top: 0.4em;
+        padding: 0.1em;
+        width: 1em;
+        height: 1em;
+        background-image: url(../img/movable.svg);
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+        cursor: move;
+    }
+
+    code {
+        color: ${theme.colorLogoPink};
     }
 `;
