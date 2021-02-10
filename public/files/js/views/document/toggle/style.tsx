@@ -20,6 +20,11 @@
 
 import styled from 'styled-components';
 
+const toggleOnImg = require('../../../../img/toggle_on.svg').default;
+const toggleOffImg = require('../../../../img/toggle_off.svg').default;
+const toggleOff1Img = require('../../../../img/toggle_off_1.svg').default;
+const toggleOff2Img = require('../../../../img/toggle_off_2.svg').default;
+
 
 export const ToggleSwitch = styled.span`
 
@@ -48,6 +53,42 @@ export const ToggleSwitch = styled.span`
             background-repeat: no-repeat;
             background-size: contain;
             background-position-y: 0%;
+        }
+
+        a.on {
+            background-image: url(${toggleOnImg});
+        }
+
+        a.off {
+            background-image: url(${toggleOffImg});
+        }
+
+        a.switch-on {
+            animation: switchingOn 0.1s steps(2, end);
+        }
+
+        a.switch-off {
+            animation: switchingOff 0.1s steps(2, end);
+        }
+
+        @keyframes switchingOn {
+            0%, 50% {
+                background-image: url(${toggleOff1Img});
+            }
+
+            50%, 100% {
+                background-image: url(${toggleOff2Img});
+            }
+        }
+
+        @keyframes switchingOff {
+            0%, 50% {
+                background-image: url(${toggleOff2Img});
+            }
+
+            50%, 100% {
+                background-image: url(${toggleOff1Img});
+            }
         }
     }
 `;

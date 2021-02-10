@@ -21,6 +21,10 @@
 import styled from 'styled-components';
 import * as theme from '../theme/default';
 
+const closeIconImg = require('../../../img/close-icon.svg').default;
+const closeIconSImg = require('../../../img/close-icon_s.svg').default;
+const movableImg = require('../../../img/movable.svg').default;
+
 // ---------------- <ModalOverlay /> --------------------------------------
 
 export const ModalOverlay = styled.div`
@@ -210,7 +214,7 @@ export const TooltipBox = styled.section`
         height: ${theme.closeButtonSize};
         top: 0.4em;
         right: 0.4em;
-        background-image: url(../img/close-icon.svg);
+        background-image: url(${closeIconImg});
         background-size: ${theme.closeButtonSize} ${theme.closeButtonSize};
         background-repeat: no-repeat;
         background-position: 0.1em 0.1em;
@@ -225,7 +229,7 @@ export const TooltipBox = styled.section`
     }
 
     button.close-link:hover {
-        background-image: url(../img/close-icon_s.svg);
+        background-image: url(${closeIconSImg});
     }
 
     div.movable {
@@ -235,7 +239,7 @@ export const TooltipBox = styled.section`
         padding: 0.1em;
         width: 1em;
         height: 1em;
-        background-image: url(../img/movable.svg);
+        background-image: url(${movableImg});
         background-size: 100% 100%;
         background-repeat: no-repeat;
         cursor: move;
