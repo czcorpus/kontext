@@ -265,7 +265,7 @@ export function init(
             }
 
             return (
-                <div className={classes.join(' ')} style={this.props.customStyle} ref={this.resize}
+                <S.TooltipBox className={classes.join(' ')} style={this.props.customStyle} ref={this.resize}
                         onClick={this._handleAreaClick}
                         onKeyDown={this._handleKeyPress}>
                     <div className="header">
@@ -277,7 +277,7 @@ export function init(
                         <StatusIcon status={this.props.status} />
                     </div>
                     {this.props.children}
-                </div>
+                </S.TooltipBox>
             );
         }
     }
