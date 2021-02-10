@@ -39,10 +39,6 @@ export const QueryForm = styled.form`
             max-width: 60em;
             margin-top: 2.7em;
         }
-
-        .FilterTypeSelector {
-            margin-bottom: 1.3em;
-        }
     }
 
     .query-options {
@@ -78,16 +74,10 @@ export const QueryForm = styled.form`
         .AlignedCorpora .AlignedCorpBlock .form {
             max-width: auto;
         }
-
-        .TextTypesPanel {
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
     }
 `;
 
+// ---------------- <QueryHelp /> --------------------------------------
 
 export const QueryHelp = styled.div`
     #modal-overlay {
