@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
