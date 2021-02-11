@@ -24,6 +24,7 @@ import * as theme from '../theme/default';
 const closeIconImg = require('../../../img/close-icon.svg').default;
 const closeIconSImg = require('../../../img/close-icon_s.svg').default;
 const movableImg = require('../../../img/movable.svg').default;
+const externalLinkImg = require('../../../img/external-link.png').default;
 
 // ---------------- <ModalOverlay /> --------------------------------------
 
@@ -296,6 +297,51 @@ export const TooltipBox = styled.section`
             div.options {
                 margin-top: 1em;
                 margin-bottom: 1em;
+            }
+        }
+    }
+`;
+
+// ---------------- <InlineHelp /> --------------------------------------
+
+export const InlineHelp = styled.span`
+
+    > span { // => noSuperscript === true
+
+        display: inline-block;
+        height: 100%;
+
+        img {
+            width: 1em;
+            margin-top: 0.2em;
+            display: block;
+        }
+
+        a {
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    ${TooltipBox} {
+        font-weight: normal;
+        padding-bottom: 0.7em;
+
+        div.link {
+            margin: 0;
+            text-align: right;
+
+            a {
+                background-image: url(${externalLinkImg});
+                background-repeat: no-repeat;
+                background-position: 100% 0;
+                padding-right: 14px;
+                color: ${theme.colorLogoBlue};
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
             }
         }
     }

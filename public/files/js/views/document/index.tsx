@@ -396,7 +396,7 @@ export function init(
 
         render() {
             return (
-                <span className="InlineHelp">
+                <S.InlineHelp>
                     {this.props.noSuperscript ?
                         <span>{this._renderLink()}</span> :
                         <sup>{this._renderLink()}</sup>
@@ -414,7 +414,7 @@ export function init(
                                     </div> : null}
                             </PopupBox>
                             : null}
-                </span>
+                </S.InlineHelp>
             );
         }
     }
