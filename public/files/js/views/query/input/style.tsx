@@ -21,6 +21,10 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
+const warningIconImg = require('../../../../img/warning-icon.svg').default;
+const tokenHighlightImg = require('../../../../img/token_highlight.svg').default;
+const configIconPink = require('../../../../img/config-icon-pink.svg').default;
+
 // -------------------- <AdvancedFormFieldsetDesc /> ---------------------------
 
 export const AdvancedFormFieldsetDesc = styled.span`
@@ -72,7 +76,7 @@ export const AdvancedFormFieldset = styled.section`
         margin: 0 20pt;
         font-size: 80%;
         color: ${theme.colorLightText};
-        background-image: url(../../img/warning-icon.svg);
+        background-image: url(${warningIconImg});
         background-repeat: no-repeat;
         background-size: 1.5em 1.5em;
         line-height: 1.5;
@@ -442,7 +446,7 @@ export const QueryArea = styled.div`
             background-color: #CCE8F4;
             text-decoration-color: ${theme.colorLogoBlueShining};
             color: ${theme.colorDefaultText};
-            background-image: url('../../img/token_highlight.svg');
+            background-image: url(${tokenHighlightImg});
             background-repeat: no-repeat;
             background-position: calc(100% - .25em) 0.2em;
             background-size: 0.34em;
@@ -459,7 +463,7 @@ export const QueryArea = styled.div`
             text-decoration: none;
             background-color: #F9CFE6;
             color: ${theme.colorDefaultText};
-            background-image: url('../../img/config-icon-pink.svg');
+            background-image: url(${configIconPink});
             background-repeat: no-repeat;
             background-position: calc(100% - .2em) 0.2em;
             background-size: 0.6em;
