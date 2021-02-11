@@ -676,13 +676,13 @@ export function init(
      */
     const TabButton:CoreViews.TabButton.Component = (props) => {
         const cls = props.htmlClass ? 'util-button ' + props.htmlClass : 'util-button';
-        return <span className="TabButton">
+        return <S.TabButton>
                 <button type="button" className={cls} onClick={props.onClick}>
                     {props.label}
                 </button>
                 <br />
                 <span className={props.isActive ? 'underline' : 'underline hidden'}> </span>
-            </span>;
+            </S.TabButton>;
     };
 
     // ----------------- <TabView /> ---------------------------------------------
@@ -717,10 +717,10 @@ export function init(
 
     const PlusButton:CoreViews.PlusButton.Component = (props) => {
         const cls = props.htmlClass ? 'PlusButton util-button ' + props.htmlClass : 'PlusButton util-button';
-        return <button type="button" className={cls} title={props.mouseOverHint}
+        return <S.PlusButton type="button" className={cls} title={props.mouseOverHint}
                     onClick={props.onClick}>
                     <img src={he.createStaticUrl('img/plus.svg')} />
-                </button>;
+                </S.PlusButton>;
     }
 
     // -------------------------- <ExpandButton /> ----------------------------------------
