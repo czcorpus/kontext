@@ -222,7 +222,7 @@ class Backend(DatabaseBackend):
                        '{0} AS description, c.size '
                        'FROM corpora AS c '
                        'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-                       'WHERE c.active = 1 AND c.featured = 1'.format(desc_col))
+                       'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name'.format(desc_col))
         return cursor.fetchall()
 
     def load_registry_table(self, corpus_id, variant):
