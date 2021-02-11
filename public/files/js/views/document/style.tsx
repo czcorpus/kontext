@@ -25,6 +25,7 @@ const closeIconImg = require('../../../img/close-icon.svg').default;
 const closeIconSImg = require('../../../img/close-icon_s.svg').default;
 const movableImg = require('../../../img/movable.svg').default;
 const externalLinkImg = require('../../../img/external-link.png').default;
+const warningIconImg = require('../../../img/warning-icon.svg').default;
 
 // ---------------- <ModalOverlay /> --------------------------------------
 
@@ -240,7 +241,7 @@ export const TooltipBox = styled.section`
         }
         .message {
             margin: 0.6em;
-            background-image: url(../img/warning-icon.svg);
+            background-image: url(${warningIconImg});
             background-repeat: no-repeat;
             background-size: 1em;
             background-position: 0 0.2em;
