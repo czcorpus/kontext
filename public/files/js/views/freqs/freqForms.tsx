@@ -27,6 +27,8 @@ import { TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel, MLFreqFormModel
 import { Actions, ActionName } from '../../models/freqs/actions';
 import { AlignTypes } from '../../models/freqs/twoDimension/common';
 
+import * as S from './style';
+
 // -------------------------- exported component ----------
 
 export interface FreqFormsViews {
@@ -459,7 +461,7 @@ export function init(
         render() {
             const levels = List.map((_, i) => i, this.props.mlxattr);
             return (
-                <table className="MLFreqForm">
+                <S.MLFreqForm>
                     <tbody>
                         <tr>
                             <td>
@@ -520,7 +522,7 @@ export function init(
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                </S.MLFreqForm>
             );
         }
     }
