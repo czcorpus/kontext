@@ -248,13 +248,13 @@ export function init({
         };
 
         return (
-            <div className="TRQueryTypeField">
+            <S.TRQueryTypeField>
                 <label htmlFor={'query-switch-'+props.sourceId}><a>{he.translate('query__qt_advanced')}</a></label>
                 <layoutViews.ToggleSwitch
                     id={'query-switch-'+props.sourceId}
                     onChange={handleSelection}
                     checked={props.queryType === 'advanced'} />
-            </div>
+            </S.TRQueryTypeField>
         );
     };
 
@@ -299,13 +299,13 @@ export function init({
         };
 
         return (
-            <div className="TRIncludeEmptySelector">
+            <S.TRIncludeEmptySelector>
                 <label>
                     {he.translate('query__include_empty_aligned')}:{'\u00a0'}
                     <input type="checkbox" checked={props.value}
                         onChange={handleCheckbox} />
                 </label>
-            </div>
+            </S.TRIncludeEmptySelector>
         );
     };
 

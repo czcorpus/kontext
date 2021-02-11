@@ -26,6 +26,8 @@ import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInf
 import { Subscription } from 'rxjs';
 import { Actions, ActionName } from '../models/common/actions';
 
+import * as S from './style';
+
 
 export interface OverviewAreaProps {
 
@@ -301,7 +303,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const KeyboardShortcuts:React.SFC<{}> = (props) => {
         return (
-            <div className="KeyboardShortcuts">
+            <S.KeyboardShortcuts>
                 <h1>{he.translate('global__keyboard_shortcuts')}</h1>
                 <h2>{he.translate('global__keyboard_conc_view_section')}</h2>
                 <table>
@@ -402,7 +404,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </S.KeyboardShortcuts>
         );
     };
 

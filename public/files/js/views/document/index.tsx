@@ -78,7 +78,7 @@ export function init(
         render() {
             if (this.state.hasError) {
                 return (
-                    <div className="ErrorBoundary">
+                    <S.ErrorBoundary>
                         <p className="message">
                             <img src={he.createStaticUrl('img/error-icon.svg')}
                                     alt={he.translate('global__error_icon')}
@@ -92,7 +92,7 @@ export function init(
                         <p className="note">
                             {he.translate('global__failed_to_render_component_expl')}
                         </p>
-                    </div>
+                    </S.ErrorBoundary>
                 );
             }
             return this.props.children;
@@ -396,7 +396,7 @@ export function init(
 
         render() {
             return (
-                <span className="InlineHelp">
+                <S.InlineHelp>
                     {this.props.noSuperscript ?
                         <span>{this._renderLink()}</span> :
                         <sup>{this._renderLink()}</sup>
@@ -414,7 +414,7 @@ export function init(
                                     </div> : null}
                             </PopupBox>
                             : null}
-                </span>
+                </S.InlineHelp>
             );
         }
     }
@@ -435,7 +435,7 @@ export function init(
 
         render() {
             return (
-                <span className="Abbreviation" title={he.translate('global__click_to_see_def')} >
+                <S.Abbrevation title={he.translate('global__click_to_see_def')} >
                     <abbr onClick={this._clickHandler}>
                         {this.props.value}
                     </abbr>
@@ -454,7 +454,7 @@ export function init(
                             :
                         null
                     }
-                </span>
+                </S.Abbrevation>
             );
         }
     }
@@ -662,10 +662,10 @@ export function init(
     // ------------------------------------------------------------------------------------
 
     const ValidatedItem:CoreViews.ValidatedItem.Component = (props) => {
-        return <span className={`ValidatedItem${props.invalid ? ' invalid' : ''}`}>
+        return <S.ValidatedItem className={props.invalid ? 'invalid' : ''}>
             {props.children}
             {props.errorDesc ? <><br /><span className="error-desc">{props.errorDesc}</span></> : null}
-        </span>;
+        </S.ValidatedItem>;
     };
 
     // ----------------------- <TabButton /> ------------------------------------------------------
@@ -676,13 +676,13 @@ export function init(
      */
     const TabButton:CoreViews.TabButton.Component = (props) => {
         const cls = props.htmlClass ? 'util-button ' + props.htmlClass : 'util-button';
-        return <span className="TabButton">
+        return <S.TabButton>
                 <button type="button" className={cls} onClick={props.onClick}>
                     {props.label}
                 </button>
                 <br />
                 <span className={props.isActive ? 'underline' : 'underline hidden'}> </span>
-            </span>;
+            </S.TabButton>;
     };
 
     // ----------------- <TabView /> ---------------------------------------------
@@ -717,10 +717,10 @@ export function init(
 
     const PlusButton:CoreViews.PlusButton.Component = (props) => {
         const cls = props.htmlClass ? 'PlusButton util-button ' + props.htmlClass : 'PlusButton util-button';
-        return <button type="button" className={cls} title={props.mouseOverHint}
+        return <S.PlusButton type="button" className={cls} title={props.mouseOverHint}
                     onClick={props.onClick}>
                     <img src={he.createStaticUrl('img/plus.svg')} />
-                </button>;
+                </S.PlusButton>;
     }
 
     // -------------------------- <ExpandButton /> ----------------------------------------

@@ -21,6 +21,7 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
+// ---------------- <SortKeySelector /> --------------------------------------
 
 export const SortKeySelector = styled.table`
 
@@ -52,5 +53,83 @@ export const SortKeySelector = styled.table`
         a {
             color: #ffffff;
         }
+    }
+`;
+
+// ---------------- <MLSingleLevelFields /> --------------------------------------
+
+export const MLSingleLevelFields = styled.table`
+
+    border: 1px solid ${theme.colorLightFrame};
+    border-radius: ${theme.borderRadiusDefault};
+    border-spacing: 0;
+
+    > tbody > tr {
+        > th, > td {
+            padding: 0.4em 0.7em;
+        }
+
+        > th {
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        > th.level {
+            white-space: normal;
+        }
+    }
+
+    > tbody > tr:last-child {
+        td, th {
+            padding-bottom: 1em;
+        }
+    }
+
+    th.level {
+        background-color: ${theme.colorDefaultGreen};
+
+        .close-icon {
+            float: right;
+
+            img {
+                vertical-align: middle;
+                width: 1em;
+            }
+        }
+    }
+`;
+
+// ---------------- <MultiLevelSortForm /> --------------------------------------
+
+export const MultiLevelSortForm = styled.ul`
+
+    white-space: normal;
+    margin: 0;
+    list-style-type: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    li {
+        padding: 1em;
+        margin: 0;
+    }
+
+    li:last-child {
+        align-self: center;
+        justify-self: center;
+    }
+
+    li:nth-child(odd) {
+        grid-column-start: 1;
+        grid-column-end: 1;
+        grid-row-start: auto;
+        grid-row-end: auto;
+    }
+
+    li:nth-child(even) {
+        grid-column-start: 2;
+        grid-column-start: 2;
+        grid-row-start: auto;
+        grid-row-end: auto;
     }
 `;

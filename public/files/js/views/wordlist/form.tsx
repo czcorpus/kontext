@@ -28,6 +28,8 @@ import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/wordlist/actions';
 import { FileTarget, WlnumsTypes } from '../../models/wordlist/common';
 
+import * as S from './style';
+
 
 export interface WordlistFormViewArgs {
     dispatcher:IActionDispatcher;
@@ -364,7 +366,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     }> = (props) => {
         return (
-            <fieldset className="FieldsetOutputOptions">
+            <S.FieldsetOutputOptions>
                 <legend>
                     {he.translate('wordlist__out_opts_fieldset_legend')}
                 </legend>
@@ -377,7 +379,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                     allowsMultilevelWltype={props.allowsMultilevelWltype} />
                     </tbody>
                 </table>
-            </fieldset>
+            </S.FieldsetOutputOptions>
         );
     };
 
@@ -479,7 +481,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         return (
-            <td className="TDExistingFileOps">
+            <S.TDExistingFileOps>
                 <span className="active-file">{props.fileName}</span>
                 {'\u00a0'}
                 <a onClick={handleEditorEnableClick}>
@@ -489,7 +491,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 <a onClick={handleRemoveClick}>
                     {he.translate('global__remove')}
                 </a>
-            </td>
+            </S.TDExistingFileOps>
         );
     };
 
@@ -595,7 +597,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         return (
-            <tr className="TRIncludeNonWordsCheckbox">
+            <S.TRIncludeNonWordsCheckbox>
                 <td>
                     <label htmlFor="wl-include-non-words-checkbox">
                         {he.translate('wordlist__incl_non_word_label')}:
@@ -605,7 +607,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                     <input id="wl-include-non-words-checkbox" type="checkbox" checked={props.value}
                             onChange={handleChange} />
                 </td>
-            </tr>
+            </S.TRIncludeNonWordsCheckbox>
         );
     };
 
