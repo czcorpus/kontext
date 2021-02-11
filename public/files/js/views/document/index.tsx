@@ -31,6 +31,7 @@ import { init as calendarInit } from './calendar';
 import { init as kwicRangeInit } from './kwicRange';
 import { init as toggleSwitchInit } from './toggle';
 import { ImgWithMouseover } from './general';
+import * as S from './style';
 
 
 const calcAutoWidth = (val:CoreViews.AutoWidth|undefined):number => {
@@ -127,9 +128,9 @@ export function init(
                 style['overflow'] = 'auto';
             }
             return (
-                <div id="modal-overlay" style={style}>
+                <S.ModalOverlay id="modal-overlay" style={style}>
                     {this.props.children}
-                </div>
+                </S.ModalOverlay>
             );
         }
     }
@@ -264,7 +265,7 @@ export function init(
             }
 
             return (
-                <div className={classes.join(' ')} style={this.props.customStyle} ref={this.resize}
+                <S.TooltipBox className={classes.join(' ')} style={this.props.customStyle} ref={this.resize}
                         onClick={this._handleAreaClick}
                         onKeyDown={this._handleKeyPress}>
                     <div className="header">
@@ -276,7 +277,7 @@ export function init(
                         <StatusIcon status={this.props.status} />
                     </div>
                     {this.props.children}
-                </div>
+                </S.TooltipBox>
             );
         }
     }
@@ -346,8 +347,7 @@ export function init(
             const htmlClass = 'closeable-frame' + (this.props.customClass ? ` ${this.props.customClass}` : '');
 
             return (
-                <section className={htmlClass}
-                        ref={this.resizeFn}>
+                <S.CloseableFrame className={htmlClass} ref={this.resizeFn}>
                     <div className="heading">
                         <div className="control">
                             <ImgWithMouseover htmlClass="close-icon"
@@ -365,7 +365,7 @@ export function init(
                             {this.props.children}
                         </div>
                     </div>
-                </section>
+                </S.CloseableFrame>
             );
         }
     }

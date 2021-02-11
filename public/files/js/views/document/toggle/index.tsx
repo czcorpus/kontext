@@ -64,7 +64,7 @@ export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews
 
         render() {
             return (
-                <S.ToggleSwitch className={this.props.disabled ? "disabled" : ""}>
+                <S.ToggleSwitch className={this.props.disabled ? "ToggleSwitch disabled" : "ToggleSwitch"}>
                     <input id={this.props.id} type="checkbox" checked={this.state.checked}
                             onChange={this.clickHandler} disabled={this.props.disabled}/>
                     <span className="toggle-img" onClick={this.props.disabled ? null : this.clickHandler}>
