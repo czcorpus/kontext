@@ -376,7 +376,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
         render() {
             return (
-                <table className="MLSingleLevelFields">
+                <S.MLSingleLevelFields>
                     <tbody>
                         <tr>
                             <th colSpan={2} className="level">
@@ -453,7 +453,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                </S.MLSingleLevelFields>
             );
         }
     }
@@ -506,7 +506,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         render() {
             const levels = this.getLevelIndices();
             return (
-                <ul className="MultiLevelSortForm">
+                <S.MultiLevelSortForm>
                     {List.map(level => {
                         return (
                             <li key={`level_${level}`}>
@@ -536,7 +536,7 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
                         </li> :
                         null
                     }
-                </ul>
+                </S.MultiLevelSortForm>
             );
         }
     }
