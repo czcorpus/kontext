@@ -443,3 +443,47 @@ export const ValidatedItem = styled.span`
         background-color: #ffb4b4;
     }
 `;
+
+// ---------------- <TabButton /> --------------------------------------
+
+export const TabButton = styled.span`
+
+    &:not(:first-child) {
+        margin-left: 0.7em;
+    }
+
+    display: inline-block;
+    text-align: center;
+
+    button {
+        display: inline;
+    }
+
+    .underline {
+        margin-top: 0.6em;
+        margin-left: 0.1em;
+        margin-right: 0.1em;
+        display: block;
+        height: 0.15em;
+        border-radius: ${theme.inputBorderRadius};
+        background-color: ${theme.colorLogoBlue};
+    }
+
+    .underline.hidden {
+        visibility: hidden;
+    }
+`;
+
+// ---------------- <PlusButton /> --------------------------------------
+
+export const PlusButton = styled.button`
+
+    display: inline-block;
+
+    img {
+        display: block;
+        height: 1em;
+        width: 1em;
+        padding: 0.2em;
+    }
+`;
