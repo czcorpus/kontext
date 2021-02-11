@@ -113,7 +113,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         };
 
         return (
-            <div className="AttributesTweaks">
+            <S.AttributesTweaks>
                 <ul>
                     <li>
                         <label>
@@ -148,7 +148,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                         </label>
                     </li>
                 </ul>
-            </div>
+            </S.AttributesTweaks>
         );
     };
 
@@ -181,9 +181,9 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         };
 
         return (
-            <div className="AttributesCheckboxes">
+            <S.AttributesCheckboxes>
                 <h2 className="label">{helpers.translate('options__which_attrs_show_hd')}</h2>
-                <table className="attr-selection">
+                <S.AttrSelection>
                     <thead>
                         <tr>
                             <th />
@@ -212,12 +212,12 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                             <td />
                         </tr>
                     </tbody>
-                </table>
+                </S.AttrSelection>
                 <h2 className="label">
                     {helpers.translate('options__attr_apply_header')}
                 </h2>
                 <AttributesTweaks attrsVmode={props.attrsVmode} showConcToolbar={props.showConcToolbar} />
-            </div>
+            </S.AttributesCheckboxes>
         );
     };
 
@@ -426,7 +426,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
         return (
             <section>
-                <div className="Extensions">
+                <S.Extensions>
                     <dl>
                         <dt>
                             <label className="label" htmlFor="options-qs-switch">
@@ -453,7 +453,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                             </p>
                         </dd>
                     </dl>
-                </div>
+                </S.Extensions>
             </section>
         );
     };

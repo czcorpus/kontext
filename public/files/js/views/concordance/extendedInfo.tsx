@@ -30,6 +30,7 @@ import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/concordance/actions';
 import { Actions as HintActions, ActionName as HintActionName }
         from '../../models/usageTips/actions';
+import * as S from './style';
 
 
 export interface ConcExtendedInfoProps {
@@ -106,14 +107,14 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         }
 
         render() {
-            return <div className="UsageTips">
+            return <S.UsageTips>
                 {this.props.currentHints[UsageTipCategory.CONCORDANCE]}
                 {'\u00a0'}<span className="next-hint">
                 <a onClick={this.handleNextClick} title={he.translate('global__next_tip')}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
                             alt={he.translate('global__next_tip')} />
                 </a></span>
-            </div>
+            </S.UsageTips>
         };
     }
 

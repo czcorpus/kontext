@@ -101,7 +101,7 @@ export const CloseableFrame = styled.section`
         max-width: 90%;
     }
 
-    @media screen and (max-width: 479px) {
+    ${theme.mediaPhone} {
         max-width: 100%;
     }
 
@@ -485,5 +485,88 @@ export const PlusButton = styled.button`
         height: 1em;
         width: 1em;
         padding: 0.2em;
+    }
+`;
+
+// ---------------- <KwicRangeSelector /> --------------------------------------
+
+export const KwicRangeSelector = styled.button`
+
+    padding: 0.4em 0;
+
+    .items {
+        display: flex;
+        align-items: center;
+
+        .pos {
+            display: block;
+            border: 1px solid ${theme.colorDarkGreenText};
+            color: ${theme.colorDefaultText};
+
+            a, span {
+                display: block;
+                padding: 0.3em;
+                text-decoration: none;
+                color: ${theme.colorDefaultText};
+            }
+
+            a:hover {
+                color: ${theme.colorLogoBlue};
+            }
+        }
+
+        .pos:not(.kwic) {
+            width: 1.5em;
+        }
+
+        .pos.kwic {
+            a, span {
+                color: ${theme.colorLogoPink};
+            }
+        }
+
+        .pos.left-lim {
+            border-radius: 0.3em 0 0 0.3em;
+        }
+
+        .pos:not(.left-lim) {
+            border-left: none;
+        }
+
+        .pos.right-lim {
+            border-radius: 0 0.3em 0.3em 0;
+        }
+
+        .pos.selected a {
+            background-color: ${theme.colorLogoBlue};
+            color: ${theme.colorWhiteText};
+            font-weight: bold;
+        }
+
+        div {
+
+            input.manual-range {
+                border-radius: ${theme.inputBorderRadius};
+                width: 2em;
+                padding-top: 0.2em;
+                padding-bottom: 0.2em;
+            }
+
+            input.manual-range.invalid {
+                border: 1px solid red;
+            }
+
+            input.manual-range.invalid:focus {
+                outline: none;
+                border: 1px solid red;
+            }
+        }
+
+        div.selected {
+            input:not(.invalid) {
+                background-color: ${theme.colorLogoBlue};
+                color: ${theme.colorWhiteText};
+            }
+        }
     }
 `;

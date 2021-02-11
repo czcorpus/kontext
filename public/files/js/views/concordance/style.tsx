@@ -38,3 +38,11 @@ export const SyntaxViewPane = styled.div`
 
     }
 `;
+
+// ---------------- <UsageTips /> --------------------------------------
+
+export const UsageTips = styled.div`
+    .next-hint a {
+        text-decoration: none;
+    }
+`;
