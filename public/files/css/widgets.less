@@ -1,49 +1,5 @@
 @import "./shared/globals.less";
 
-.InlineHelp {
-
-    > span { // => noSuperscript === true
-
-        display: inline-block;
-        height: 100%;
-
-        img {
-            width: 1em;
-            margin-top: 0.2em;
-            display: block;
-        }
-
-        a {
-            display: flex;
-            align-items: center;
-        }
-    }
-
-    .tooltip-box {
-        font-weight: normal;
-        padding-bottom: 0.7em;
-
-        div.link {
-            margin: 0;
-            text-align: right;
-
-            a {
-                background-image: url('../img/external-link.png');
-                background-repeat: no-repeat;
-                background-position: 100% 0;
-                padding-right: 14px;
-                color: @color-logo-blue;
-                text-decoration: none;
-            }
-
-            a:hover {
-                text-decoration: underline;
-            }
-        }
-    }
-}
-
-
 table.MLSingleLevelFields {
 
     border: 1px solid @color-light-frame;
