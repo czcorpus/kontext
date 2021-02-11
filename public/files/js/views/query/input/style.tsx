@@ -215,7 +215,25 @@ export const AlignedCorpora = styled(AdvancedFormFieldset);
 
 // --------------------- <SelectedTextTypesLite /> ----------------------------
 
-export const SelectedTextTypesLite = styled(AdvancedFormFieldset);
+export const SelectedTextTypesLite = styled(AdvancedFormFieldset)`
+    font-size: 1.1em;
+
+    ul {
+        white-space: initial;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+            margin: 0;
+            padding: 0;
+
+            .attr-val {
+                color: ${theme.colorLogoGreen};
+            }
+        }
+    }
+`;
 
 // --------------------- <QueryHints /> ----------------------------
 

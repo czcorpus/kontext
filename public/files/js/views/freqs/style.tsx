@@ -123,3 +123,22 @@ export const MLFreqForm = styled.table`
         }
     }
 `;
+
+// ---------------- <MLMoveLevelControl /> --------------------------------------
+
+export const MLMoveLevelControl = styled.div`
+
+    a {
+        display: inline-block;
+
+        img {
+            width: 0.7em;
+            height: 0.7em;
+            display: block;
+        }
+    }
+
+    a:nth-child(2) {
+        margin-top: 0.1em;
+    }
+`;

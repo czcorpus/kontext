@@ -20,6 +20,7 @@
 
 import styled from 'styled-components';
 import * as theme from '../theme/default';
+import { CollMetricsSelection } from '../coll/style';
 
 // ---------------- <StructsAndAttrsForm /> --------------------------------------
 
@@ -161,3 +162,92 @@ export const GeneralOptions = styled.div`
         margin-top: 0.7em;
     }
 `;
+
+// ---------------- <AttributesTweaks /> --------------------------------------
+
+export const AttributesTweaks = styled.div`
+    margin-left: 1.5em;
+    margin-bottom: 1.2em;
+
+    h3 {
+        margin-bottom: 0.4em;
+    }
+
+    ul.switch {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+
+            margin: 0;
+            padding: 0.2em 0;
+
+            label {
+                input,
+                span {
+                    vertical-align: middle;
+                    display: inline-block;
+                }
+            }
+        }
+    }
+`;
+
+// ---------------- <Extensions /> --------------------------------------
+
+export const Extensions = styled.div`
+    
+    margin-left: 1.5em;
+    margin-bottom: 1.2em;
+
+    h3 {
+        margin-bottom: 0.4em;
+    }
+
+    ul.switch {
+        margin-top: 2em;
+    }
+
+    .configured-items span.item {
+        text-transform: lowercase;
+    }
+
+    ul {
+        list-style-type: none;
+        display: inline;
+
+        li {
+            display: inline;
+
+            label {
+                display: flex;
+
+                input,
+                span {
+                    padding: 0;
+                    margin: 0;
+                    display: block;
+                }
+
+                input {
+                    margin-right: 0.3em;
+                }
+            }
+        }
+    }
+`;
+
+// ---------------- <AttrSelection /> --------------------------------------
+
+export const AttrSelection = styled(CollMetricsSelection)`
+    margin-bottom: 1.3em;
+
+    th.attr {
+        color: ${theme.colorLogoPink};
+    }
+`;
+
+// ---------------- <AttributesCheckboxes /> --------------------------------------
+
+export const AttributesCheckboxes = styled.div``;
