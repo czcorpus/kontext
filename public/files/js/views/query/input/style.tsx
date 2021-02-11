@@ -478,3 +478,41 @@ export const QueryArea = styled.div`
         }
     }
 `;
+
+// ----------- <TRQueryTypeField /> ----------------------------
+
+export const TRQueryTypeField = styled.div`
+
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+
+
+    .ToggleSwitch {
+        margin-left: 0.3em;
+    }
+
+    .hint {
+        display: block;
+        margin-left: 2em;
+
+        img {
+            margin: 0;
+            padding: 0;
+            display: block;
+            width: 0.9em;
+        }
+    }
+`;
+
+// ----------- <TRIncludeEmptySelector /> ----------------------------
+
+export const TRIncludeEmptySelector = styled.div`
+
+    input {
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 0;
+    }
+`;

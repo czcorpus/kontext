@@ -45,6 +45,8 @@ import { Actions, ActionName } from '../../models/concordance/actions';
 import { LineSelectionModes, DrawLineSelectionChart, ViewConfiguration } from '../../models/concordance/common';
 import { Actions as UserActions, ActionName as UserActionName } from '../../models/user/actions';
 
+import * as S from './style';
+
 
 export class ViewPageModels {
     lineSelectionModel:LineSelectionModel;
@@ -527,14 +529,14 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick} isScrollable={true}>
                     <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
                             customClass="syntax-tree">
-                        <div id="syntax-view-pane" className="SyntaxViewPane">
+                        <S.SyntaxViewPane id="syntax-view-pane">
                             {this.props.isBusy ?
                                 (<div className="ajax-loader">
                                     <img src={he.createStaticUrl('img/ajax-loader.gif')}
                                             alt={he.translate('global__loading')} />
                                 </div>) : null
                             }
-                        </div>
+                        </S.SyntaxViewPane>
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>
             );
