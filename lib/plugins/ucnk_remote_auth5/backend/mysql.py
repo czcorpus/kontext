@@ -317,7 +317,7 @@ class Backend(DatabaseBackend):
                        '  FROM relation '
                        '  WHERE (relation.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
                        ') as ucp '
-                       'JOIN corpora AS c ON ucp.corpus_id = c.id AND c.name = %s',
+                       'JOIN corpora AS c ON ucp.corpus_id = c.id AND c.name = %s ORDER BY ucp.limited LIMIT 1',
                        (user_id, user_id, user_id, corpus_id))
         row = cursor.fetchone()
         if not row:
