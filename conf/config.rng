@@ -703,10 +703,12 @@
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="query_suggest">
-                        <a:documentation>A plug-in for providing misc. help based on the current query and
-                        available backends (Manatee, HTTP,...)</a:documentation>
-                        <ref name="plugin_common" />
-                        <ref name="customPluginConfiguration" />
+                        <optional>
+                            <a:documentation>A plug-in for providing misc. help based on the current query and
+                            available backends (Manatee, HTTP,...)</a:documentation>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
                     </element>
                     <element name="conc_persistence">
                         <a:documentation>Storing (possibly long) queries under a simple code</a:documentation>
