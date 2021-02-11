@@ -104,6 +104,43 @@ export const CloseableFrame = styled.section`
     @media screen and (max-width: 479px) {
         max-width: 100%;
     }
+
+    .PersistentConcordanceForm {
+
+        input {
+            font-size: 1.5em;
+            width: 30em;
+            display: inline-block;
+            margin-top: 0.4em;
+            margin-bottom: 1em;
+            color: ${theme.colorSuperlightText};
+        }
+
+        input.archived {
+            color: ${theme.colorDefaultText};
+        }
+
+    }
+
+    .QuerySaveAsForm,
+    .PersistentConcordanceForm {
+
+        p.hint {
+            width: 30em;
+            white-space: initial;
+            color: ${theme.colorDefaultText};
+
+            .icon {
+                display: inline-block;
+                vertical-align: middle;
+                margin-right: 0.4em;
+
+                img {
+                    width: 1.2em;
+                }
+            }
+        }
+    }
 `;
 
 // ---------------- <TooltipBox /> --------------------------------------
@@ -344,5 +381,65 @@ export const InlineHelp = styled.span`
                 text-decoration: underline;
             }
         }
+    }
+`;
+
+// ---------------- <Abbrevation /> --------------------------------------
+
+export const Abbrevation = styled.span`
+
+    display: inline-block;
+    text-decoration: none;
+    cursor: help;
+    border-color: ${theme.colorDefaultText};
+    border-style: dotted;
+    border-width: 0 0 1px 0;
+`;
+
+// ---------------- <ErrorBoundary /> --------------------------------------
+
+export const ErrorBoundary = styled.span`
+
+    padding: 1em;
+    border-width: 1pt;
+    border-radius: ${theme.borderRadiusDefault};
+    border-color: #adadad;
+    border-style: solid;
+    background-color: #ededed;
+
+    .message {
+        text-align: center;
+
+        img {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.7em;
+        }
+    }
+
+    .symbol {
+        text-align: center;
+    }
+
+    .note {
+        text-align: center;
+    }
+`;
+
+// ---------------- <ValidatedItem /> --------------------------------------
+
+export const ValidatedItem = styled.span`
+
+    .error-desc {
+        font-size: 80%;
+        background-color: ${theme.colorDefaultText};
+        color: #ffb4b4;
+        padding: 0.2em 2em;
+        border-radius: ${theme.inputBorderRadius};
+    }
+
+    &.invalid input,
+    &.invalid textarea {
+        background-color: #ffb4b4;
     }
 `;

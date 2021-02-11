@@ -72,3 +72,54 @@ padding-left: 1em;
         }
     }
 `;
+
+// ---------------- <MLFreqForm /> --------------------------------------
+
+export const MLFreqForm = styled.table`
+
+    tr:not(:last-child) td {
+        padding-bottom: 0.7em;
+    }
+
+    .multilevel-freq-params {
+
+        border-spacing: 0;
+        border: 1px solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
+
+        .add-level {
+            padding-top: 10px;
+            text-align: center;
+        }
+
+        td,
+        th {
+            padding: 0.3em 0.7em;
+        }
+
+        th {
+            white-space: nowrap;
+            color: ${theme.colorDefaultText};
+            background-color: ${theme.colorDataTableFooter};
+        }
+
+        tr:nth-child(2) td,
+        tr:nth-child(2) th {
+            padding-top: 0.7em;
+        }
+
+        tr:nth-child(odd):not(:first-child):not(:last-child) {
+            background-color: ${theme.colorLightGreen};
+        }
+
+        td.level {
+            text-align: center;
+            font-size: 120%;
+            font-weight: bold;
+        }
+
+        .PlusButton {
+            margin-bottom: 0.3em;
+        }
+    }
+`;

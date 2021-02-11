@@ -78,7 +78,7 @@ export function init(
         render() {
             if (this.state.hasError) {
                 return (
-                    <div className="ErrorBoundary">
+                    <S.ErrorBoundary>
                         <p className="message">
                             <img src={he.createStaticUrl('img/error-icon.svg')}
                                     alt={he.translate('global__error_icon')}
@@ -92,7 +92,7 @@ export function init(
                         <p className="note">
                             {he.translate('global__failed_to_render_component_expl')}
                         </p>
-                    </div>
+                    </S.ErrorBoundary>
                 );
             }
             return this.props.children;
@@ -435,7 +435,7 @@ export function init(
 
         render() {
             return (
-                <span className="Abbreviation" title={he.translate('global__click_to_see_def')} >
+                <S.Abbrevation title={he.translate('global__click_to_see_def')} >
                     <abbr onClick={this._clickHandler}>
                         {this.props.value}
                     </abbr>
@@ -454,7 +454,7 @@ export function init(
                             :
                         null
                     }
-                </span>
+                </S.Abbrevation>
             );
         }
     }
@@ -662,10 +662,10 @@ export function init(
     // ------------------------------------------------------------------------------------
 
     const ValidatedItem:CoreViews.ValidatedItem.Component = (props) => {
-        return <span className={`ValidatedItem${props.invalid ? ' invalid' : ''}`}>
+        return <S.ValidatedItem className={props.invalid ? 'invalid' : ''}>
             {props.children}
             {props.errorDesc ? <><br /><span className="error-desc">{props.errorDesc}</span></> : null}
-        </span>;
+        </S.ValidatedItem>;
     };
 
     // ----------------------- <TabButton /> ------------------------------------------------------
