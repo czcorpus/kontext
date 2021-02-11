@@ -23,23 +23,7 @@ accessible via get_instance() for individual plug-ins.
 
 This plug-in should be able to handle high-load installations without any problems.
 
-required XML:
-
-element db {
-  element module { "redis_db" }
-  element host {
-    attribute extension-by { "default" }
-    text #  Redis address
-  }
-  element port {
-    attribute extension-by { "default" }
-    xsd:integer
-  }
-  element id {
-    attribute extension-by { "default" }
-    xsd:integer
-  }
-}
+required XML: please see ./config.rng
 """
 
 import redis
@@ -101,6 +85,6 @@ def create_instance(conf):
     """
     db_conf = conf.get('plugins', 'db')
     return RedisDbManager(db_conf,
-                          host=db_conf['default:host'],
-                          port=int(db_conf['default:port']),
-                          default_shard_id=int(db_conf['default:id']))
+                          host=db_conf['host'],
+                          port=int(db_conf['port']),
+                          default_shard_id=int(db_conf['id']))
