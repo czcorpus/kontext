@@ -1,54 +1,5 @@
 @import "./shared/globals.less";
 
-@media screen and (max-width: 1366px) {
-    section.closeable-frame {
-        max-width: 90%;
-    }
-}
-
-@media screen and (max-width: 479px) {
-    section.closeable-frame {
-        max-width: 100%;
-    }
-}
-
-.tooltip-box.hint {
-    max-width: 35em;
-}
-
-.tooltip-box.metadata-detail {
-    ul {
-        margin: 0;
-        padding: 0;
-        list-style-type: none;
-
-        li {
-            padding: 0.1em 0;
-            margin: 0;
-        }
-    }
-    .message {
-        margin: 0.6em;
-        background-image: url(../img/warning-icon.svg);
-        background-repeat: no-repeat;
-        background-size: 1em;
-        background-position: 0 0.2em;
-
-        p:first-letter {
-            padding-left: 1.6em;
-        }
-    }
-}
-
-.tooltip-box.hidden {
-    display: none;
-}
-
-.tooltip-box.centered {
-    left: 19%;
-    right: 19%;
-}
-
 #tag-widget {
     margin-top: 10px;
     overflow: auto;
