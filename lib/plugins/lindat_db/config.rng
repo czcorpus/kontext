@@ -4,7 +4,7 @@
     <start>
         <element name="db">
             <element name="module">
-                <value>redis_db</value>
+                <value>lindat_db</value>
             </element>
             <element name="host">
                 <text />
