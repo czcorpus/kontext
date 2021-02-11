@@ -28,6 +28,8 @@ import { Actions, ActionName } from '../../models/options/actions';
 import { Actions as OptionsActions, ActionName as OptionsActionName } from '../../models/options/actions';
 import { List } from 'cnc-tskit';
 
+import * as S from './style';
+
 export interface StructsAttrsModuleArgs {
     dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
@@ -541,7 +543,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
             ])
 
             return (
-                <form className="StructsAndAttrsForm">
+                <S.StructsAndAttrsForm className="StructsAndAttrsForm">
                     <div>
                         <layoutViews.TabView
                             className="FieldsetsTabs"
@@ -579,7 +581,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                         }
                         <SubmitButtons isWaiting={props.isWaiting} />
                     </div>
-                </form>
+                </S.StructsAndAttrsForm>
             );
 
         } else {
