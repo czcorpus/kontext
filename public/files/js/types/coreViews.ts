@@ -402,6 +402,13 @@ export namespace CoreViews {
         export type Component = React.FC<Props>;
     }
 
+    export namespace UnsupportedRenderer {
+
+        export interface Props {}
+
+        export type Component = React.FC<Props>;
+    }
+
     export namespace KwicRangeSelector {
 
         export interface Props {
@@ -442,6 +449,7 @@ export namespace CoreViews {
         ExpandableArea:ExpandableArea.Component;
         KwicRangeSelector:KwicRangeSelector.Component;
         ToggleSwitch:ToggleSwitch.Component;
+        UnsupportedRenderer:UnsupportedRenderer.Component;
     }
 }
 
