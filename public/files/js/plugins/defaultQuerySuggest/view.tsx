@@ -71,7 +71,9 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
     // ------------- <UnsupportedRenderer /> -------------------------------
 
     const UnsupportedRenderer:React.FC<UnsupportedRendererProps> = (props) => {
-        return <div className="UnsupportedRenderer">Unsupported renderer {JSON.stringify(props.data)}</div>
+        return <layoutViews.UnsupportedRenderer>
+            Unsupported renderer {JSON.stringify(props.data)}
+        </layoutViews.UnsupportedRenderer>
     }
 
     // ------------- <ErrorRenderer /> -------------------------------

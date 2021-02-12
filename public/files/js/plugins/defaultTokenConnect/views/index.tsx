@@ -48,7 +48,8 @@ export interface Views {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) {
-
+    
+    const layoutViews = he.getLayoutViews();
     const FormattedTextRenderer = ftInit(he);
 
     // ------------- <RawHtmlRenderer /> -------------------------------
@@ -95,11 +96,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
     const UnsupportedRenderer:Views['UnsupportedRenderer'] = (props) => {
         return (
-            <div className="UnsupportedRenderer">
+            <layoutViews.UnsupportedRenderer>
                 <p className="note"><strong>{he.translate('defaultTD__unsupported_renderer')}</strong></p>
                 <p className="data-label">{he.translate('defaultTD__original_data')}:</p>
                 <pre>{JSON.stringify(props.data)}</pre>
-            </div>
+            </layoutViews.UnsupportedRenderer>
         );
     };
 

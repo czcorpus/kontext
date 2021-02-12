@@ -571,3 +571,21 @@ export const KwicRangeSelector = styled.button`
         }
     }
 `;
+
+// ---------------- <UnsupportedRenderer /> --------------------------------------
+
+export const UnsupportedRenderer = styled.div`
+    
+    .note {
+        text-align: center;
+    }
+
+    .data-label {
+        margin-bottom: 0;
+    }
+
+    pre {
+        font-size: 0.7em;
+        white-space: normal;
+    }    
+`;

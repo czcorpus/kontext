@@ -760,6 +760,17 @@ export function init(
         );
     }
 
+    // -------------------------- <UnsupportedRenderer /> ---------------------------------
+
+    const UnsupportedRenderer:CoreViews.UnsupportedRenderer.Component = (props) => {
+
+        return (
+            <S.UnsupportedRenderer>
+                {props.children}
+            </S.UnsupportedRenderer>
+        );
+    }
+
     // ------------------------------------------------------------------------------------
 
     return {
@@ -786,6 +797,7 @@ export function init(
         ExpandButton,
         ExpandableArea,
         KwicRangeSelector,
-        ToggleSwitch
+        ToggleSwitch,
+        UnsupportedRenderer
     };
 }
