@@ -79,8 +79,11 @@ class Control:
         self._conn = redis_conn
 
     def revoke(self, task_id, terminate=None, signal=None):
-        job = Job.fetch(task_id, connection=self._conn)
-        job.cancel()
+        try:
+            job = Job.fetch(task_id, connection=self._conn)
+            job.cancel()
+        except NoSuchJobError as ex:
+            raise CalcTaskNotFoundError(str(ex))
 
 
 class RqClient:
