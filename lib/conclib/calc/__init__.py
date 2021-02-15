@@ -33,6 +33,7 @@ from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
 from conclib.calc.errors import ConcCalculationStatusException, ConcNotFoundException, BrokenConcordanceException
 import bgcalc
+from bgcalc.errors import CalcTaskNotFoundError
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
@@ -75,7 +76,7 @@ def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str], q: T
             if status.task_id:
                 app = bgcalc.calc_backend_client(settings)
                 app.control.revoke(status.task_id, terminate=True, signal='SIGKILL')
-        except IOError:
+        except (IOError, CalcTaskNotFoundError):
             pass
     cache_map.del_entry(subchash, q)
     del_silent(cachefile)
