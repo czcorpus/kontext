@@ -13,7 +13,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, cast, Callable
+from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, Callable
 from main_menu import AbstractMenuItem
 from argmapping.query import ConcFormArgs
 from manatee import Corpus
@@ -35,7 +35,7 @@ import conclib
 from . import exposed
 from .errors import (UserActionException, ForbiddenException,
                      AlignedCorpusForbiddenException, NotFoundException,
-                     ImmediateRedirectException)
+                     ImmediateRedirectException, FunctionNotSupported)
 import plugins
 from plugins.abstract.corpora import BrokenCorpusInfo, CorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
@@ -1194,7 +1194,8 @@ class Kontext(Controller):
         self._session['async_tasks'] = [at.to_dict() for at in task_list]
 
     def _store_async_task(self, async_task_status):
-        at_list = self.get_async_tasks()
+        at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
+        self._mark_timeouted_tasks(*at_list)
         at_list.append(async_task_status)
         self._set_async_tasks(at_list)
 
@@ -1234,10 +1235,18 @@ class Kontext(Controller):
                 size=s))
         return {'Desc': out_list}
 
+    def _mark_timeouted_tasks(self, *tasks):
+        now = time.time()
+        task_limit = settings.get_int('calc_backend', 'task_time_limit')
+        for at in tasks:
+            if (at.status == 'PENDING' or at.status == 'STARTED') and now - at.created > task_limit:
+                at.status = 'FAILURE'
+                if not at.error:
+                    at.error = 'task time limit exceeded'
+
     @exposed(return_type='json', skip_corpus_init=True)
     def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
-        now = time.time()
         if backend in ('celery', 'rq'):
             import bgcalc
             app = bgcalc.calc_backend_client(settings)
@@ -1255,12 +1264,12 @@ class Kontext(Controller):
                 else:
                     at.status = 'FAILURE'
                     at.error = 'job not found'
-                if now - at.created < 1800:
-                    upd_list.append(at)
+                upd_list.append(at)
+            self._mark_timeouted_tasks(*upd_list)
             self._set_async_tasks(upd_list)
             return dict(data=[d.to_dict() for d in upd_list])
         else:
-            return dict(data=[])  # other backends are not supported
+            raise FunctionNotSupported(f'Backend {backend} does not support status checking')
 
     @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
     def remove_task_info(self, request: Request) -> Dict[str, Any]:
