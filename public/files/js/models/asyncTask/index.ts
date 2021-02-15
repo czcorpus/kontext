@@ -24,7 +24,7 @@ import { List, HTTP, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { IPluginApi } from '../../types/plugins';
-import { concatAll, concatMap, filter, map, repeat, take, takeUntil, takeWhile, tap, timeout } from 'rxjs/operators';
+import { concatAll, concatMap, map, repeat, take, takeWhile } from 'rxjs/operators';
 import { Actions, ActionName } from './actions';
 
 
@@ -230,7 +230,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             List.map(
                 curr => {
                     const ans = {...curr};
-                    const idx = List.findIndex(incom => incom.ident === curr.ident , incoming);
+                    const idx = List.findIndex(incom => incom.ident === curr.ident, incoming);
                     if (idx === -1) {
                         ans.status = "FAILURE";
                     }
@@ -269,9 +269,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     _ => this.checkForStatus()
                 ),
                 takeWhile(
-                    (ans, i) => {
-                        return this.getNumRunningTasks(ans.data) > 0 || i === 0;
-                    }
+                    (ans, i) => this.getNumRunningTasks(ans.data) > 0 || i === 0,
+                    true // inclusive
                 )
             );
 

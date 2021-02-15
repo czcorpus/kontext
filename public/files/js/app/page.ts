@@ -210,8 +210,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     /**
-     * Register a handler triggered each time an asynchronous
-     * server task is updated (typically finished)
+     * Register a handler triggered once at least one async. task
+     * is finished/failed.
      */
     addOnAsyncTaskUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
         this.asyncTaskChecker.addOnUpdate(fn);
