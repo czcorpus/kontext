@@ -466,7 +466,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             name: decodeURIComponent(item.name),
             corpname: item.corpname,
             usesubcorp: decodeURIComponent(item.usesubcorp),
-            origSubcName: decodeURIComponent(item.orig_subcname),
+            origSubcName: item.orig_subcname ? decodeURIComponent(item.orig_subcname) : null,
             deleted: item.deleted,
             size: item.size,
             cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
