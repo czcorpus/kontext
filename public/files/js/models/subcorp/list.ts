@@ -73,6 +73,7 @@ export interface SubcorpListModelState {
     actionBoxVisibleRow:number;
     actionBoxActionType:string;
     usesSubcRestore:boolean;
+    finishedTasks:{[taskId:string]:boolean};
 }
 
 export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
@@ -95,7 +96,8 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 actionBoxVisibleRow: -1,
                 actionBoxActionType: 'pub',
                 isBusy: false,
-                usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore')
+                usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
+                finishedTasks: {}
             }
         );
         this.layoutModel = layoutModel;
@@ -104,11 +106,34 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             state.unfinished = this.importProcessed(unfinished);
         })
 
-        this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
+        this.layoutModel.addOnAsyncTaskUpdate(itemList => {
             const subcTasks = itemList.filter(item => item.category === 'subcorpus');
             if (subcTasks.length > 0) {
-                this.layoutModel.showMessage('info',
-                    this.layoutModel.translate('task__type_subcorpus_done'));
+                List.forEach(
+                    task => {
+                        if (task.status === 'FAILURE') {
+                            if (!this.state.finishedTasks[task.ident]) {
+                                this.layoutModel.showMessage('error',
+                                    this.layoutModel.translate('task__type_subcorpus_failed_{subc}',
+                                    {subc: task.label}));
+                                this.changeState(state => {
+                                    state.finishedTasks[task.ident] = true;
+                                });
+                            }
+
+                        } else {
+                            if (!this.state.finishedTasks[task.ident]) {
+                                this.layoutModel.showMessage('info',
+                                this.layoutModel.translate('task__type_subcorpus_done_{subc}',
+                                    {subc: task.label}));
+                                this.changeState(state => {
+                                    state.finishedTasks[task.ident] = true;
+                                });
+                            }
+                        }
+                    },
+                    subcTasks
+                );
                 this.reloadItems().subscribe(
                     (data) => {
                         this.emitChange();
