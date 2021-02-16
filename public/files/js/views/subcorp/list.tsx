@@ -356,8 +356,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             this._handleSubmit = this._handleSubmit.bind(this);
             this._handleNameChange = this._handleNameChange.bind(this);
             this._handleCqlChange = this._handleCqlChange.bind(this);
+            const subcorpusName = this.props.data.origSubcName ? this.props.data.origSubcName : this.props.data.usesubcorp;
             this.state = {
-                newName: this.props.data.origSubcName + ' (' + he.translate('global__copy') + ')',
+                newName: `${subcorpusName} (${he.translate('global__copy')})`,
                 newCql: this.props.data.cql
             };
         }
