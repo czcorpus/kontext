@@ -148,8 +148,8 @@ function importUserQueries(
     data:QueryFormUserEntries,
     simpleQueryDefaultAttrs:{[sourceId:string]:Array<string|Array<string>>},
     attrList:Array<Kontext.AttrItem>
-
 ):{[corpus:string]:AnyQuery} {
+
     return pipe(
         corpora,
         List.filter(corpus => Dict.hasKey(corpus, data.currQueryTypes)),
@@ -807,6 +807,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 getTagBuilderSupport(this.getTagsets(state)),
                 state.isAnonymousUser
             );
+            state.simpleQueryDefaultAttrs[corpname] = state.simpleQueryDefaultAttrs[List.head(state.corpora)];
 
         } else {
             throw new Error(`adding unknown corpus ${corpname}`)

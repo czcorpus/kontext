@@ -235,15 +235,21 @@ export class QueryPage {
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
                 isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
                 suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
-                simpleQueryDefaultAttrs: {
-                    [this.layoutModel.getCorpusIdent().id]: pipe(
-                        this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                        List.map(v => v.n),
-                        this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs').length > 0 ?
-                            List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')) :
-                            id
-                    )
-                }
+                simpleQueryDefaultAttrs: pipe(
+                    this.layoutModel.getConf<Array<string>>('alignedCorpora'),
+                    List.push(this.layoutModel.getCorpusIdent().id),
+                    List.map(corp => tuple(
+                        corp,
+                        pipe(
+                            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                            List.map(v => v.n),
+                            this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs').length > 0 ?
+                                List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')) :
+                                id
+                        )
+                    )),
+                    Dict.fromEntries()
+                )
             }
         );
     }
