@@ -91,6 +91,6 @@ def create_instance(conf):
     pconf = conf.get('plugins', 'integration_db')
     return MySqlIntegrationDb(host=pconf['host'], database=pconf['db'], user=pconf['user'],
                               password=pconf['passwd'], pool_size=int(pconf['pool_size']),
-                              pool_name='kontext_pool', autocommit=False,
+                              pool_name='kontext_pool', autocommit=True,
                               retry_delay=int(pconf['retry_delay']),
                               retry_attempts=int(pconf['retry_attempts']))
