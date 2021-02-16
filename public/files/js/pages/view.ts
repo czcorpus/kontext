@@ -369,15 +369,20 @@ export class ViewPage {
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
             suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
-            simpleQueryDefaultAttrs: {
-                [List.head(this.getActiveCorpora())]: pipe(
-                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                    List.map(v => v.n),
-                    this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs').length > 0 ?
-                        List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')) :
-                        id
-                )
-            }
+            simpleQueryDefaultAttrs: pipe(
+                this.getActiveCorpora(),
+                List.map(corpus => tuple(
+                    corpus,
+                    pipe(
+                        this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                        List.map(v => v.n),
+                        this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs').length > 0 ?
+                            List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')) :
+                            id
+                    )
+                )),
+                Dict.fromEntries()
+            )
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel(
