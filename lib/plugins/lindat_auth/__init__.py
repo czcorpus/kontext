@@ -324,8 +324,12 @@ def _get_non_empty_header(ftor, *args):
 def create_instance(conf, db, sessions):
     auth_conf = conf.get('plugins', 'auth')
     corparch_conf = conf.get('plugins', 'corparch')
-    corplist_file = corparch_conf['lindat:file']
-    if not os.path.exists(corplist_file):
+    corplist_file = None
+    if 'lindat:file' in corparch_conf:
+        corplist_file = corparch_conf['lindat:file']
+    elif 'default:file' in corparch_conf:
+        corplist_file = corparch_conf['default:file']
+    if corplist_file is None or not os.path.exists(corplist_file):
         raise PluginException("Corplist file [%s] in lindat_auth does not exist!" % corplist_file)
     corplist = _load_corplist(corplist_file)
 
