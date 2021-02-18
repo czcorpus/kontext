@@ -29,7 +29,7 @@ from conclib.pyconc import PyConc
 from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker
 from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent
-from conclib.calc.errors import ConcCalculationStatusException
+from conclib.errors import ConcCalculationStatusException
 import bgcalc
 import manatee
 
