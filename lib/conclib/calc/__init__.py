@@ -330,6 +330,7 @@ class ConcSyncCalculation(GeneralWorker):
                 conc = self.compute_conc(self.corpus_obj, query[:1], samplesize)
                 conc.sync()
                 conc.save(calc_status.cachefile)
+                os.chmod(calc_status.cachefile, 0o664)
                 self.cache_map.update_calc_status(
                     subchash, query[:1], readable=True, finished=True, concsize=conc.size())
                 calc_from = 1
@@ -350,6 +351,7 @@ class ConcSyncCalculation(GeneralWorker):
                     raise NotImplementedError(f'Cannot run command {command} in background')  # TODO
                 calc_status = self.cache_map.get_calc_status(subchash, query[:act + 1])
                 conc.save(calc_status.cachefile)
+                os.chmod(calc_status.cachefile, 0o664)
                 self.cache_map.update_calc_status(
                     subchash, query[:act + 1], readable=True, finished=True, concsize=conc.size())
             except Exception as ex:
