@@ -36,6 +36,7 @@ import conclib
 from conclib.empty import InitialConc
 from conclib.search import get_conc
 from conclib.calc import cancel_conc_task, require_existing_conc, ConcNotFoundException
+from conclib.errors import UnknownConcordanceAction
 import corplib
 from bgcalc import freq_calc, coll_calc, calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
@@ -228,6 +229,8 @@ class Actions(Querying):
                     'error', translate('Syntax error. Please check the query and its type.'))
             else:
                 raise ex
+        except UnknownConcordanceAction as ex:
+            raise UserActionException(str(ex))
 
         if self.args.viewmode == 'sen':
             corplib.add_block_items(out['Lines'], block_size=1)

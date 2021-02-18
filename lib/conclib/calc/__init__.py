@@ -31,7 +31,7 @@ from conclib.empty import InitialConc
 import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
-from conclib.calc.errors import ConcCalculationStatusException, ConcNotFoundException, BrokenConcordanceException
+from conclib.errors import ConcCalculationStatusException, ConcNotFoundException, BrokenConcordanceException
 import bgcalc
 from bgcalc.errors import CalcTaskNotFoundError
 
