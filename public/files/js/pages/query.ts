@@ -175,10 +175,16 @@ export class QueryPage {
             }
         );
 
-        const liveAttrsViews:PluginInterfaces.LiveAttributes.Views = this.liveAttrsPlugin.getViews(
-            null, this.textTypesModel);
+        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
         if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
             this.textTypesModel.enableAutoCompleteSupport();
+
+        } else {
+            liveAttrsViews = {
+                LiveAttrsCustomTT: null,
+                LiveAttrsView: null
+            };
         }
         return {
             ...liveAttrsViews,
