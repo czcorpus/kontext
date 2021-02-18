@@ -1,6 +1,6 @@
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
-# Copyright (c) 2014 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
+# Copyright(c) 2021 Charles University in Prague, Faculty of Arts,
+#                   Institute of the Czech National Corpus
+# Copyright(c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +18,19 @@
 # 02110-1301, USA.
 
 
-class ConcCalculationStatusException(Exception):
+class ConcordanceException(Exception):
+    pass
+
+
+class EmptyParallelCorporaIntersection(ConcordanceException):
+    pass
+
+
+class UnknownConcordanceAction(ConcordanceException):
+    pass
+
+
+class ConcCalculationStatusException(ConcordanceException):
 
     def __init__(self, msg, orig_error=None):
         super(ConcCalculationStatusException, self).__init__('{0}: {1}'.format(msg, orig_error))
@@ -29,9 +41,9 @@ class ConcCalculationStatusException(Exception):
         return self._orig_error
 
 
-class ConcNotFoundException(Exception):
+class ConcNotFoundException(ConcordanceException):
     pass
 
 
-class BrokenConcordanceException(Exception):
+class BrokenConcordanceException(ConcordanceException):
     pass
