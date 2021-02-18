@@ -1,0 +1,43 @@
+version: '3.7'
+services:
+  kontext:
+    build: .
+    command: bash -c "./scripts/install/conf/docker/run.sh"
+    volumes:
+      - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
+      - kontext-files:/opt/kontext/public/files
+    networks:
+      - redis
+      - kontext
+    depends_on: 
+      - redis
+  redis:
+    image: redis:latest
+    networks:
+      - redis
+    ports:
+      - "16379:6379"
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./scripts/install/conf/docker/nginx.conf:/etc/nginx/conf.d/default.conf
+      - kontext-files:/opt/kontext/public/files
+    networks:
+      - kontext
+    depends_on:
+      - kontext
+  rq-scheduler:
+    build:
+      context: scripts/install/conf/docker
+      dockerfile: Dockerfile.rqscheduler
+    networks:
+      - redis
+    depends_on: 
+      - redis
+volumes:
+  kontext-files:
+networks:
+  redis: {}
+  kontext: {}
