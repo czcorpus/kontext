@@ -657,25 +657,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.FIRSTHITS) {
             return prepareFormData.pipe(
                 concatMap(
-                    () => {
-                        const targetUrl = this.firstHitsModel.getSubmitUrl(pipeOp.id, baseOnConcId);
-                        if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<AjaxConcResponse>(
-                                HTTP.Method.GET,
-                                targetUrl,
-                                {format: 'json'}
-                            );
-
-                        } else {
-                            return rxOf(null).pipe(
-                                tap(
-                                    () => {
-                                        this.firstHitsModel.submitForm(pipeOp.id, baseOnConcId);
-                                    }
-                                )
-                            );
-                        }
-                    }
+                    () => this.firstHitsModel.submitForm(pipeOp.id, baseOnConcId)
                 )
             );
 

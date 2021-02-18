@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
@@ -28,6 +28,9 @@ import { FirstHitsServerArgs } from './common';
 import { MultiDict } from '../../multidict';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
+import { AjaxConcResponse } from '../concordance/common';
+import { HTTP } from 'cnc-tskit';
 
 
 export interface FirstHitsModelState {
@@ -68,7 +71,25 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
         this.addActionHandler<Actions.FilterFirstHitsSubmit>(
             ActionName.FilterFirstHitsSubmit,
             action => {
-                this.submitForm(action.payload.opKey, action.payload.opKey);
+                const concId = this.layoutModel.getConcArgs().q.substr(1);
+                this.submitForm(action.payload.opKey, concId)
+                .subscribe(
+                    data => {
+                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
+                            payload: {
+                                concId: data.conc_persistence_op_id,
+                                data
+                            }
+                        });
+                    },
+                    error => {
+                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
+                            name: ConcActionName.AddedNewOperation,
+                            error
+                        });
+                    }
+                )
             }
         );
     }
@@ -76,12 +97,17 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
     getSubmitUrl(opKey:string, concId:string):string {
         const args = this.layoutModel.exportConcArgs() as MultiDict<FirstHitsServerArgs>;
         args.set('q', '~' + concId);
+        args.set('format', 'json');
         args.set('fh_struct', this.state.docStructValues[opKey]);
         return this.layoutModel.createActionUrl('filter_firsthits', args);
     }
 
-    submitForm(opKey:string, concId:string):void {
-        window.location.href = this.getSubmitUrl(opKey, concId);
+    submitForm(opKey:string, concId:string):Observable<AjaxConcResponse> {
+        return this.layoutModel.ajax$<AjaxConcResponse>(
+            HTTP.Method.POST,
+            this.getSubmitUrl(opKey, concId),
+            {}
+        );
     }
 
     syncFrom(fn:Observable<AjaxResponse.FirstHitsFormArgs>):Observable<AjaxResponse.FirstHitsFormArgs> {

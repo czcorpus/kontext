@@ -771,7 +771,7 @@ class Actions(Querying):
         return self.view(request)
 
     @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=False,
-             mutates_conc=True)
+             mutates_conc=True, http_method='POST')
     def filter_firsthits(self, request):
         if len(self._lines_groups) > 0:
             raise UserActionException(
