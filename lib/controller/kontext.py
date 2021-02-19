@@ -337,27 +337,28 @@ class Kontext(Controller):
             tosave = [(att.name, getattr(self.args, att.name))
                       for att in attr.fields(Args) if att.name in optlist]
 
-        def normalize_opts(opts):
+        def merge_incoming_opts_to(opts):
             if opts is None:
                 opts = {}
-            ans = {}
             excluded_attrs = self._get_save_excluded_attributes()
-            for k in opts.keys():
-                corp = k.split(':')[0] if ':' in k else None
-                if k not in excluded_attrs and selector != corp:
-                    ans[k] = opts[k]
-            ans.update(tosave)
-            return ans
+            for k, v in tosave:
+                items = k.split(':')
+                corp, attr = items if len(items) > 1 else (None, items[0])
+                if attr not in excluded_attrs and (selector and selector == corp or corp is None):
+                    opts[k] = v
 
         # data must be loaded (again) because in-memory settings are
         # in general a subset of the ones stored in db (and we want
         # to store (again) even values not used in this particular request)
         with plugins.runtime.SETTINGS_STORAGE as settings_storage:
             if self._user_has_persistent_settings():
-                options = normalize_opts(settings_storage.load(self.session_get('user', 'id')))
+                options = settings_storage.load(self.session_get('user', 'id'))
+                merge_incoming_opts_to(options)
                 settings_storage.save(self.session_get('user', 'id'), options)
             else:
-                options = normalize_opts(self.session_get('settings'))
+                options = {}
+                options.update(self.session_get('settings'))
+                merge_incoming_opts_to(options)
                 self._session['settings'] = options
 
     def _restore_prev_conc_params(self, form):
