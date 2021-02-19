@@ -70,5 +70,29 @@
         "ucnkLA__are_you_sure_to_reset": "Cołke zaznaczynie typu tekstu bydzie stracōne. Na isto chcesz wysnŏżyć?",
         "ucnkLA__are_you_sure_to_mod_align_lang": "Adding/removing of an aligned language will cause the whole selection to be lost. Are you sure to reset?",
         "ucnkLA__item_not_found": "Item not found"
+    },
+    "sl-SI": {
+        "ucnkLA__bib_list_warning": "Due to the large number of matching items, the list of individual titles will only be displayed after refining the selection. UNTRANSLATED",
+        "ucnkLA__num_positions":"{num_pos, number} positions UNTRANSLATED",
+        "ucnkLA__num_of_matching_items": "number of matching items UNTRANSLATED",
+        "ucnkLA__nothing_selected": "No matching items found. UNTRANSLATED",
+        "ucnkLA__at_least_one_required": "At least one numeric value is required. UNTRANSLATED",
+        "ucnkLA__no_matching_data": "No matching data found. UNTRANSLATED",
+        "ucnkLA__failed_to_calc_range": "Failed to calculate the range. Please try again later or contact system administrator. UNTRANSLATED",
+        "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Please note that subcorpora created with respect to language alignment take more time to process (up to several minutes). The task will run in the background and once it is finished, you will be notified. In between, you can use KonText in a normal way. UNTRANSLATED",
+        "ucnkLA__aligned_corpora": "Aligned corpora UNTRANSLATED",
+        "ucnkLA__subcorp_consider_aligned_corpora_auto": "Only texts found also in these corpora will be searched. UNTRANSLATED",
+        "ucnkLA__no_aligned_corpora_yet": "No items selected yet. The content is based on a selection of individual aligned corpora query forms. UNTRANSLATED",
+        "ucnkLA__subcorp_consider_aligned_corpora_manual": "Only texts found also in selected corpora will be included in the subcorpus. UNTRANSLATED",
+        "ucnkLA__refine_selection_btn": "Refine selection UNTRANSLATED",
+        "ucnkLA__undo_selection_btn": "Undo UNTRANSLATED",
+        "ucnkLA__reset_selection_btn": "Reset selection UNTRANSLATED",
+        "ucnkLA__start_writing_for_suggestions": "Start writing\u2026 UNTRANSLATED",
+        "ucnkLA__too_many_values_placeholder": "Vložte přesnou hodnotu UNTRANSLATED",
+        "ucnkLA__aligned_lang_cannot_be_set_here": "The list of aligned corpora in this box is determined automatically by corpora added to the query form UNTRANSLATED",
+        "ucnkLA__the_selection_is_empty_msg": "The current selection does not provide any result. UNTRANSLATED",
+        "ucnkLA__are_you_sure_to_reset": "The whole text type selection will be lost. Are you sure to reset? UNTRANSLATED",
+        "ucnkLA__are_you_sure_to_mod_align_lang": "Adding/removing of an aligned language will cause the whole selection to be lost. Are you sure to reset? UNTRANSLATED",
+        "ucnkLA__item_not_found": "Item not found UNTRANSLATED"
     }
 }

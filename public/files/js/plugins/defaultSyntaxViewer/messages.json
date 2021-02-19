@@ -7,5 +7,8 @@
   },
   "szl": {
       "syntaxViewer__click_to_see_the_tree": "Kliknij, żeby pokŏzać strōm składnie"
+  },
+  "sl-SI": {
+    "syntaxViewer__click_to_see_the_tree": "Click to see the syntax tree UNTRANSLATED"
   }
 }
