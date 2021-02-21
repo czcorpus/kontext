@@ -15,12 +15,8 @@ RUN python3 scripts/install/steps.py SetupManatee --step_args 2.167.8 scripts/in
 COPY ./pack*.json ./
 RUN npm install
 
-COPY . .
+COPY ./conf ./conf
 RUN python3 scripts/install/steps.py SetupKontext
-RUN npm start build:production
-
-RUN pip3 install gunicorn
-RUN mkdir /var/log/gunicorn
-RUN mkdir /var/log/gunicorn/kontext
-
 RUN mkdir /var/log/rq
+
+COPY . .

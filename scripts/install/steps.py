@@ -258,7 +258,7 @@ class SetupKontext(InstallationStep):
     def abort(self):
         pass
 
-    def run(self, use_celery):
+    def run(self, use_celery, build_production=True):
         print('Installing kontext...')
         subprocess.check_call(['cp', 'config.default.xml', 'config.xml'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
@@ -292,8 +292,9 @@ class SetupKontext(InstallationStep):
         create_directory('/var/log/kontext', WEBSERVER_USER, None)
         create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
 
-        subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout)
-        self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path)
+        if build_production:
+            subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout)
+            self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path)
 
 
 class SetupGunicorn(InstallationStep):
@@ -366,7 +367,7 @@ if __name__ == "__main__":
 
     if args.step_name == 'SetupKontext':
         obj = SetupKontext(*init_step_args)
-        obj.run(False)
+        obj.run(False, False)
     elif args.step_name == 'SetupDefaultUsers':
         obj = SetupDefaultUsers(*init_step_args, args.step_args[0], int(args.step_args[1]))
         obj.run()
