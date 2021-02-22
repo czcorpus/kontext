@@ -324,7 +324,7 @@ export function init({
             <layoutViews.PopupBox
                     onCloseClick={props.closeClickHandler}
                     customClass="tag-builder-widget"
-                    customStyle={{position: 'absolute', left: '0.3em', top: '2.2em'}}
+                    customStyle={{position: 'absolute', left: '-1em', top: '-4em'}}
                     takeFocus={true}>
                 <props.tagHelperView
                         sourceId={props.sourceId}
