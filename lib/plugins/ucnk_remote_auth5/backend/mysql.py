@@ -217,7 +217,8 @@ class Backend(DatabaseBackend):
 
     def load_featured_corpora(self, user_lang):
         cursor = self._db.cursor()
-        desc_col = 'c.description_{0}'.format(user_lang[:2])
+        lang_base = user_lang[:2]
+        desc_col = 'c.description_{}'.format(lang_base if lang_base == 'cs' else 'en')
         cursor.execute('SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
                        '{0} AS description, c.size '
                        'FROM corpora AS c '
