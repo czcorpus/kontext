@@ -12,8 +12,12 @@ COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 RUN python3 scripts/install/steps.py SetupManatee --step_args 2.167.8 scripts/install/ucnk-manatee-2.167.8.patch 0
 
+COPY ./pack*.json ./
+RUN npm install
+
 COPY . .
 RUN python3 scripts/install/steps.py SetupKontext
+RUN npm start build:production
 
 RUN pip3 install gunicorn
 RUN mkdir /var/log/gunicorn
