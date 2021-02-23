@@ -2,10 +2,11 @@ version: '3.7'
 services:
   kontext:
     build: .
-    command: bash -c "./scripts/install/conf/docker/run.sh"
+    command: gunicorn -c ./scripts/install/conf/docker/gunicorn-conf.py public.app:application
     volumes:
       - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
       - kontext-files:/opt/kontext/public/files
+      - corpora:/var/local/corpora
     networks:
       - redis
       - kontext
@@ -30,14 +31,27 @@ services:
       - kontext
   rq-scheduler:
     build:
-      context: scripts/install/conf/docker
+      context: .
       dockerfile: Dockerfile.rqscheduler
     networks:
       - redis
     depends_on: 
+      - kontext
+      - redis
+  rq-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.rqworker
+    volumes:
+      - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
+      - corpora:/var/local/corpora
+    networks:
+      - redis
+    depends_on:
       - redis
 volumes:
   kontext-files:
+  corpora:
 networks:
   redis: {}
   kontext: {}
