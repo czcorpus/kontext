@@ -130,6 +130,15 @@ def translat_filter(context, s):
     return ugettext(s)
 
 
+def get_protocol(environ):
+    if 'HTTP_X_FORWARDED_PROTO' in environ:
+        return environ['HTTP_X_FORWARDED_PROTO']
+    elif 'HTTP_X_FORWARDED_PROTOCOL' in environ:
+        return environ['HTTP_X_FORWARDED_PROTOCOL']
+    else:
+        return environ['wsgi.url_scheme']
+
+
 class Controller(object):
     """
     This object serves as a controller of the application. It handles action->method mapping,
@@ -356,12 +365,7 @@ class Controller(object):
             action_module_path = ''
         if len(action_module_path) > 0:  # => app is not installed in root path (e.g. http://127.0.0.1/app/)
             action_module_path = action_module_path[1:]
-        if 'HTTP_X_FORWARDED_PROTO' in self.environ:
-            protocol = self.environ['HTTP_X_FORWARDED_PROTO']
-        elif 'HTTP_X_FORWARDED_PROTOCOL' in self.environ:
-            protocol = self.environ['HTTP_X_FORWARDED_PROTOCOL']
-        else:
-            protocol = self.environ['wsgi.url_scheme']
+        protocol = get_protocol(self.environ)
         url_items = ('%s://%s' % (protocol, settings.get_str('global', 'http_host',
                                                              self.environ.get('HTTP_HOST'))),
                      settings.get_str('global', 'action_path_prefix', ''),
