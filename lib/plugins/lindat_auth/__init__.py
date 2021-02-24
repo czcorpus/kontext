@@ -20,20 +20,20 @@ from translation import ugettext as _
 _logger = logging.getLogger(__name__)
 
 
-def uni(str_str, encoding="utf-8"):
-    """ Try to get unicode without errors """
-    try:
-        if isinstance(str_str, str):
-            return str_str
-        elif isinstance(str_str, str):
-            return str(str_str, encoding)
-    except UnicodeError:
-        pass
-    try:
-        return str(str(str_str), encoding=encoding, errors='ignore')
-    except UnicodeError:
-        pass
-    return str_str.decode(encoding=encoding, errors="ignore")
+def uni(s):
+    """
+    Get a properly decoded utf-8 string.
+    
+    It seems that py3-based KonText versions along with
+    Apache-based Shibboleth service provider cause
+    improperly decoded utf-8 characters stored in respective
+    HTTP environment variables. E.g. the string
+    'Tomáš Machálek' is stored as 'TomÃ¡Å¡ MachÃ¡lek'.
+    """
+    s_int = [ord(x) for x in s]
+    if len(s_int) == 0 or max(s_int) > 255:
+        return s
+    return str(bytes(s_int), 'utf-8')
 
 
 @exposed(http_method=('GET', 'POST'), template='user/login.html', page_model='login')
@@ -97,7 +97,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         """
         if username is not None and 0 < len(username):
             if username == FederatedAuthWithFailover.RESERVED_USER:
-                _logger.warn("Reserved username used [%s]!", username)
+                _logger.warning(f'Reserved username used [{username}]!')
                 return self.anonymous_user()
             user_d = self._failover_auth.auth(self._db, username, password)
         else:
