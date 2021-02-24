@@ -19,14 +19,16 @@
  */
 
 import * as React from 'react';
-import { Kontext } from '../../types/common';
+import { Kontext } from '../../../types/common';
 import { Keyboard } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
-import { WordlistResultModel, WordlistResultModelState } from '../../models/wordlist/main';
-import { WordlistSaveViews } from './save';
-import { ActionName, Actions } from '../../models/wordlist/actions';
+import { WordlistResultModel, WordlistResultModelState } from '../../../models/wordlist/main';
+import { WordlistSaveViews } from '../save';
+import { ActionName, Actions } from '../../../models/wordlist/actions';
 import { List } from 'cnc-tskit';
-import { WordlistFormState } from '../../models/wordlist/form';
+import { WordlistFormState } from '../../../models/wordlist/form';
+import * as S from './style';
+
 
 export interface WordlistResultViewsArgs {
     dispatcher:IActionDispatcher;
@@ -283,16 +285,16 @@ export function init({dispatcher, utils, wordlistSaveViews,
     }> = (props) => {
         if (props.isError) {
             return (
-                <div className="WordlistResult_progress-message">
+                <S.CalculationStatus>
                     <img src={utils.createStaticUrl('img/crisis.svg')} style={{width: '1.5em'}}
                             alt={utils.translate('global__error_icon')} />
                     <p>{utils.translate('global__bg_calculation_failed')}</p>
-                </div>
+                </S.CalculationStatus>
             );
 
         } else {
             return (
-                <div className="WordlistResult_progress-message">
+                <S.CalculationStatus>
                     <div className="progress-info">
                         <p className="calc-info">
                             <layoutViews.ImgWithMouseover src={utils.createStaticUrl('img/info-icon.svg')}
@@ -306,7 +308,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
                                     title={`${props.progressPercent.toFixed()}%`} />
                         </div>
                     </div>
-                </div>
+                </S.CalculationStatus>
             );
         }
     };
@@ -369,17 +371,15 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     // ---------------------- <WordlistResult /> -------------------
 
-    const WordlistResult:React.FC<WordlistFormState> = (props) => {
-    return<div className="WordlistResult">
+    const WordlistResult:React.FC<WordlistFormState> = (props) => (
+        <S.WordlistResult>
             <BoundDataTable wlpat={props.wlpat} wlsort={props.wlsort} usesStructAttr={props.usesStructAttr} />
             <wordlistSaveViews.WordlistSaveForm />
-        </div>
-    };
-
-    const BoundWordlistResult = Bound(WordlistResult, wordlistFormModel);
+        </S.WordlistResult>
+    );
 
     return {
-        WordlistResult: BoundWordlistResult
+        WordlistResult: Bound(WordlistResult, wordlistFormModel)
     };
 
 }

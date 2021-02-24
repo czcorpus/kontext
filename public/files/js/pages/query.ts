@@ -45,11 +45,6 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import { HtmlHelpModel } from '../models/help/help';
 
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/firstForm.less');
-
-
 /**
  * ConfigWrapper ensures that actions we need to be bound
  * to the global app config trigger proper updates in the config.

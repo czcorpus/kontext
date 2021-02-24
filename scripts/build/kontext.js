@@ -105,46 +105,6 @@
     /**
      *
      */
-    module.exports.findThemeCss = function (doc, cssPath, themesPath) {
-        const ans = {
-            'custom-styles/theme.less': null,
-            'custom-styles/theme-mobile.less': null
-        };
-        const kontextNode = doc.getElementsByTagName('kontext')[0];
-        let themeNode = null;
-        for (let i = 0; i < kontextNode.childNodes.length; i += 1) {
-            if (kontextNode.childNodes[i].nodeName === 'theme') {
-                themeNode = kontextNode.childNodes[i];
-                 break;
-            }
-        }
-        let themeName = null;
-        let srch = themeNode.getElementsByTagName('name')[0];
-        if (srch) {
-            themeName = srch.textContent.trim();
-        }
-
-        function srchCSS(variant) {
-            const cssNode = themeNode.getElementsByTagName('css' + variant)[0];
-            if (cssNode) {
-                const css = cssNode.textContent.trim();
-                if (css) {
-                    return path.resolve(themesPath, themeName, css);
-                }
-            }
-            return path.resolve(cssPath, 'empty.less');
-        }
-
-        if (themeNode) {
-            ans['custom-styles/theme.less'] = srchCSS('');
-            ans['custom-styles/theme-mobile.less'] = srchCSS('_mobile');
-        }
-        return ans;
-    }
-
-    /**
-     *
-     */
     module.exports.findPluginExternalModules = function (confDoc, jsPath) {
         const pluginsPath = path.resolve(jsPath, 'plugins');
         const pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
@@ -184,8 +144,7 @@
             'vendor/cookies' : path.resolve(jsPath, 'vendor/cookies'),
             'cqlParser/parser': cqlParserPath,
             'misc/keyboardLayouts': path.resolve(jsPath, 'kb-layouts.json'),
-            'styles': cssPath,
-            ...module.exports.findThemeCss(confDoc, cssPath, themesPath)
+            'styles': cssPath
         };
         const pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
         for (let p in pluginBuildConf) {

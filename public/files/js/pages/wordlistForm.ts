@@ -30,9 +30,6 @@ import { WlnumsTypes, WlTypes } from '../models/wordlist/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 import createCorparch from 'plugins/corparch/init';
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/wordlistForm.less');
 
 /**
  *
