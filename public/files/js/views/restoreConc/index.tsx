@@ -20,31 +20,30 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Kontext } from '../types/common';
-import { ConcRestoreModel, ConcRestoreModelState } from '../models/concRestore';
+import { Kontext } from '../../types/common';
+import { ConcRestoreModel, ConcRestoreModelState } from '../../models/concRestore';
+import * as S from './style';
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:ConcRestoreModel) {
 
     const layoutViews = he.getLayoutViews();
 
-    const View:React.FC<ConcRestoreModelState> = (props) => {
-        return (
-            <div className="ConcRestore">
-                {props.isBusy ?
-                    <>
-                        <layoutViews.AjaxLoaderImage />
-                        <p>{he.translate('concRestore__please_wait_msg')}</p>
-                    </> :
-                    <div>
-                        <p>{he.translate('concRestore__conc_ready')}</p>
-                        <p>{he.translate('concRestore__result_link')}:<br />
-                        <a className="result-link" href={props.nextActionLink}>{props.nextActionLink}</a></p>
-                    </div>
-                }
-            </div>
-        );
-    };
+    const View:React.FC<ConcRestoreModelState> = (props) => (
+        <S.ConcRestore>
+            {props.isBusy ?
+                <>
+                    <layoutViews.AjaxLoaderImage />
+                    <p>{he.translate('concRestore__please_wait_msg')}</p>
+                </> :
+                <div>
+                    <p>{he.translate('concRestore__conc_ready')}</p>
+                    <p>{he.translate('concRestore__result_link')}:<br />
+                    <a className="result-link" href={props.nextActionLink}>{props.nextActionLink}</a></p>
+                </div>
+            }
+        </S.ConcRestore>
+    );
 
     return Bound(View, model);
 };

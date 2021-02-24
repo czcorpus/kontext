@@ -22,9 +22,11 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
-import { Kontext } from '../../../types/common';
-import { UserProfileModel, UserProfileState } from '../profile';
-import { Actions, ActionName } from '../actions';
+import { Kontext } from '../../../../types/common';
+import { UserProfileModel, UserProfileState } from '../../profile';
+import { Actions, ActionName } from '../../actions';
+import * as S from './style';
+
 
 export interface UserProfileViews {
     UserProfileView:React.ComponentClass;
@@ -280,7 +282,7 @@ export function init(
 
         render() {
             return (
-                <div className="UserProfileView">
+                <S.UserProfileView>
                     <form>
                         <fieldset>
                             <legend>
@@ -300,18 +302,18 @@ export function init(
                         currPasswd={this.state.currPasswd}
                         newPasswd={this.state.newPasswd}
                         newPasswd2={this.state.newPasswd2} />
-                </div>
+                </S.UserProfileView>
             );
         }
     }
 
     return {
-        UserProfileView: UserProfileView,
-        TRNewPasswdInput: TRNewPasswdInput,
-        TRNewPasswdInput2: TRNewPasswdInput2,
-        TrUserFirstNameInput: TrUserFirstNameInput,
-        TrUserLastNameInput: TrUserLastNameInput,
-        TrUserAffiliationInput: TrUserAffiliationInput,
-        TrUserEmailInput: TrUserEmailInput
+        UserProfileView,
+        TRNewPasswdInput,
+        TRNewPasswdInput2,
+        TrUserFirstNameInput,
+        TrUserLastNameInput,
+        TrUserAffiliationInput,
+        TrUserEmailInput
     };
 }

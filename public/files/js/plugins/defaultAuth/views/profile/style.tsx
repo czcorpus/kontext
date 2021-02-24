@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2021 Charles University, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,18 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../types/common';
-import { KontextPage } from '../app/main';
 
+import styled from 'styled-components';
 
-export function init(conf:Kontext.Conf):void {
-    const layoutModel = new KontextPage(conf);
+// ---------------- <UserProfileView /> --------------------------------------
 
-    layoutModel.init(true, [], () => {
-        layoutModel.renderReactComponent(
-            layoutModel.getAuthPlugin().getProfileView(),
-            document.getElementById('user-administration-mount'),
-            {}
-        );
-    });
-}
+export const UserProfileView = styled.div`
+
+    form:not(:first-child) {
+        margin-top: 2em;
+    }
+
+`;

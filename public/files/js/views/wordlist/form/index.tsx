@@ -22,13 +22,13 @@ import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 import { Keyboard } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
-import { WordlistFormModel, WordlistFormState } from '../../models/wordlist/form';
-import { PluginInterfaces } from '../../types/plugins';
-import { Actions, ActionName } from '../../models/wordlist/actions';
-import { FileTarget, WlnumsTypes } from '../../models/wordlist/common';
-
+import { Kontext } from '../../../types/common';
+import { WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
+import { PluginInterfaces } from '../../../types/plugins';
+import { Actions, ActionName } from '../../../models/wordlist/actions';
+import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
 import * as S from './style';
+import * as S2 from '../style';
 
 
 export interface WordlistFormViewArgs {
@@ -253,39 +253,41 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             });
         };
 
-        return <ul className="MultiLevelPosAttr">
+        return (
+            <S.MultiLevelPosAttr>
                 <li>
                     <OutTypeAttrSel attrList={props.attrList} position={1}
                             enabled={props.enabled} value={props.wposattrs[0]} />
                 </li>
-            {props.numWlPosattrLevels >= 2 ?
-                <li>
-                    <OutTypeAttrSel attrList={props.attrList} position={2}
-                        enabled={props.enabled} value={props.wposattrs[1]} />
-                </li> :
-                null
-            }
-            {props.numWlPosattrLevels >= 3 ?
-                <li>
-                    <OutTypeAttrSel attrList={props.attrList} position={3}
-                        enabled={props.enabled} value={props.wposattrs[2]} />
-                </li> :
-                null
-            }
-            {props.numWlPosattrLevels < 3 && props.enabled ?
-                <li>
-                    <layoutViews.PlusButton onClick={handleAddPosAttrLevelBtn}
-                        mouseOverHint={he.translate('wordlist__add_attr')} />
-                </li> :
-                null
-            }
-            {props.enabled ?
-                (<p className="hint">
-                    <img src={he.createStaticUrl('img/info-icon.svg')}
-                            alt={he.translate('global__info_icon')}
-                            style={{width: '1em', verticalAlign: 'middle', paddingRight: '0.4em'}} />
-                    {he.translate('wordlist__multiattr_warning')}</p>) : null}
-        </ul>;
+                {props.numWlPosattrLevels >= 2 ?
+                    <li>
+                        <OutTypeAttrSel attrList={props.attrList} position={2}
+                            enabled={props.enabled} value={props.wposattrs[1]} />
+                    </li> :
+                    null
+                }
+                {props.numWlPosattrLevels >= 3 ?
+                    <li>
+                        <OutTypeAttrSel attrList={props.attrList} position={3}
+                            enabled={props.enabled} value={props.wposattrs[2]} />
+                    </li> :
+                    null
+                }
+                {props.numWlPosattrLevels < 3 && props.enabled ?
+                    <li>
+                        <layoutViews.PlusButton onClick={handleAddPosAttrLevelBtn}
+                            mouseOverHint={he.translate('wordlist__add_attr')} />
+                    </li> :
+                    null
+                }
+                {props.enabled ?
+                    (<p className="hint">
+                        <img src={he.createStaticUrl('img/info-icon.svg')}
+                                alt={he.translate('global__info_icon')}
+                                style={{width: '1em', verticalAlign: 'middle', paddingRight: '0.4em'}} />
+                        {he.translate('wordlist__multiattr_warning')}</p>) : null}
+            </S.MultiLevelPosAttr>
+        );
     }
 
     // --------------------- <TROutputType /> -------------------------------
@@ -366,7 +368,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     }> = (props) => {
         return (
-            <S.FieldsetOutputOptions>
+            <S2.FieldsetOutputOptions>
                 <legend>
                     {he.translate('wordlist__out_opts_fieldset_legend')}
                 </legend>
@@ -379,7 +381,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                     allowsMultilevelWltype={props.allowsMultilevelWltype} />
                     </tbody>
                 </table>
-            </S.FieldsetOutputOptions>
+            </S2.FieldsetOutputOptions>
         );
     };
 
@@ -481,7 +483,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         return (
-            <S.TDExistingFileOps>
+            <S2.TDExistingFileOps>
                 <span className="active-file">{props.fileName}</span>
                 {'\u00a0'}
                 <a onClick={handleEditorEnableClick}>
@@ -491,7 +493,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 <a onClick={handleRemoveClick}>
                     {he.translate('global__remove')}
                 </a>
-            </S.TDExistingFileOps>
+            </S2.TDExistingFileOps>
         );
     };
 
@@ -597,7 +599,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         return (
-            <S.TRIncludeNonWordsCheckbox>
+            <S2.TRIncludeNonWordsCheckbox>
                 <td>
                     <label htmlFor="wl-include-non-words-checkbox">
                         {he.translate('wordlist__incl_non_word_label')}:
@@ -607,7 +609,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                     <input id="wl-include-non-words-checkbox" type="checkbox" checked={props.value}
                             onChange={handleChange} />
                 </td>
-            </S.TRIncludeNonWordsCheckbox>
+            </S2.TRIncludeNonWordsCheckbox>
         );
     };
 
@@ -679,7 +681,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         render() {
             return (
-                <form className="wordlist_form" onKeyDown={this._handleKeyPress}>
+                <S.WordListForm onKeyDown={this._handleKeyPress}>
                     {this.props.filterEditorData.target !== FileTarget.EMPTY ? <FileEditor data={this.props.filterEditorData} /> : null}
                     <table className="form">
                         <tbody>
@@ -725,7 +727,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                             {he.translate('wordlist__make_wl_btn')}
                         </button>
                     </div>
-                </form>
+                </S.WordListForm>
             );
         }
     }
