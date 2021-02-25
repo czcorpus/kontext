@@ -4,3 +4,5 @@ docker-compose.yml
 Dockerfile
 docker-compose.dev.yml
 Dockerfile.dev
+public/files/dist
+public/files/js/.compiled

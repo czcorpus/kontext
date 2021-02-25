@@ -34,12 +34,14 @@ services:
       - kontext-dev
   rq-scheduler:
     build:
-      context: scripts/install/conf/docker
+      context: .
       dockerfile: Dockerfile.rqscheduler
     networks:
       - redis
     depends_on: 
       - redis
+volumes:
+  dist:
 networks:
   redis: {}
   kontext: {}
