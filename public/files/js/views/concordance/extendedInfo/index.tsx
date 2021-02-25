@@ -21,15 +21,16 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
 
-import { Kontext} from '../../types/common';
-import { init as ttOverviewInit } from './ttOverview';
-import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
-import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
-import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../models/usageTips';
-import { PluginInterfaces } from '../../types/plugins';
-import { Actions, ActionName } from '../../models/concordance/actions';
+import { Kontext} from '../../../types/common';
+import { init as ttOverviewInit } from '../ttOverview';
+import { TextTypesDistModel } from '../../../models/concordance/ttDistModel';
+import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard';
+import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
+import { PluginInterfaces } from '../../../types/plugins';
+import { Actions, ActionName } from '../../../models/concordance/actions';
 import { Actions as HintActions, ActionName as HintActionName }
-        from '../../models/usageTips/actions';
+        from '../../../models/usageTips/actions';
+import * as S2 from '../style';
 import * as S from './style';
 
 
@@ -76,18 +77,18 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         };
 
         if (props.minimized) {
-            return <a className="MinimizeIcon" onClick={handleClick} title={he.translate('global__restore')}>
+            return <S.MinimizeIcon onClick={handleClick} title={he.translate('global__restore')}>
                 <layoutViews.ImgWithMouseover
                         src={he.createStaticUrl('img/maximize-icon-vert.svg')}
                         alt={he.translate('global__restore_dashboard')} />
-            </a>;
+            </S.MinimizeIcon>;
 
         } else {
-            return <a className="MinimizeIcon" onClick={handleClick} title={he.translate('global__minimize')}>
+            return <S.MinimizeIcon onClick={handleClick} title={he.translate('global__minimize')}>
                 <layoutViews.ImgWithMouseover
                         src={he.createStaticUrl('img/minimize-icon-vert.svg')}
                         alt={he.translate('global__minimize')} />
-            </a>;
+            </S.MinimizeIcon>;
         }
     }
 
@@ -107,14 +108,14 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         }
 
         render() {
-            return <S.UsageTips>
+            return <S2.UsageTips>
                 {this.props.currentHints[UsageTipCategory.CONCORDANCE]}
                 {'\u00a0'}<span className="next-hint">
                 <a onClick={this.handleNextClick} title={he.translate('global__next_tip')}>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/next-page.svg')}
                             alt={he.translate('global__next_tip')} />
                 </a></span>
-            </S.UsageTips>
+            </S2.UsageTips>
         };
     }
 
@@ -143,7 +144,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
         render() {
             return (
-                <div className="ConcExtendedInfo">
+                <S.ConcExtendedInfo>
                     <header>
                         <MinimizeIcon minimized={!this.props.expanded} />
                     </header>
@@ -171,7 +172,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
                         </div> :
                         <div></div>
                     }
-                </div>
+                </S.ConcExtendedInfo>
             );
         }
     }

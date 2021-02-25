@@ -26,12 +26,10 @@ import { Kontext } from '../../../types/common';
 import { PluginInterfaces } from '../../../types/plugins';
 import { init as initSpeechViews } from './speech';
 import { ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
-import { ConcordanceModel } from '../../../models/concordance/main';
 import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordance/refsDetail';
 import { Actions, ActionName } from '../../../models/concordance/actions';
 import { DetailExpandPositions } from '../../../models/concordance/common';
-
-
+import * as S from './style';
 
 
 export interface RefDetailProps {
@@ -61,6 +59,32 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
 
     const layoutViews = he.getLayoutViews();
     const SpeechView = initSpeechViews(dispatcher, he, concDetailModel);
+
+    // ------------------------- <CustomPopupBox /> ---------------------------
+
+    const CustomPopupBox:React.FC<{
+        customClass:string;
+        customStyle?:React.CSSProperties;
+        takeFocus:boolean;
+        onCloseClick:()=>void;
+
+    }> = (props) => {
+        const baseCSS:React.CSSProperties = {
+            position: 'fixed',
+            bottom: '1em',
+            left: '50%',
+            transform: 'translate(-50%, 0)'
+        };
+        return (
+            <layoutViews.PopupBox
+                    onCloseClick={props.onCloseClick}
+                    customClass={props.customClass}
+                    customStyle={{...baseCSS, ...props.customStyle}}
+                    takeFocus={props.takeFocus}>
+                {props.children}
+            </layoutViews.PopupBox>
+        );
+    };
 
     // ------------------------- <RefValue /> ---------------------------
 
@@ -138,12 +162,12 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
         }
 
         return (
-            <layoutViews.PopupBox onCloseClick={props.closeClickHandler} customClass="refs-detail"
+            <CustomPopupBox onCloseClick={props.closeClickHandler} customClass="refs-detail"
                     takeFocus={true}>
-                <div className="wrapper">
+                <S.RefsDetail>
                     {renderContents()}
-                </div>
-            </layoutViews.PopupBox>
+                </S.RefsDetail>
+            </CustomPopupBox>
         );
     }
 
@@ -478,11 +502,11 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
             const kwicViewRenders = List.filter(r => r.isKwicView, this.props.tokenConnectData.renders);
             const customCSS:React.CSSProperties = {overflowY: 'auto'};
             return (
-                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler}
+                <CustomPopupBox onCloseClick={this.props.closeClickHandler}
                         customClass={`conc-detail${kwicViewRenders.length > 0 ? ' custom' : ''}`}
                         customStyle={customCSS}
                         takeFocus={true}>
-                    <div>
+                    <S.ConcordanceDetail>
                         <ConcDetailMenu supportsSpeechView={ConcDetailModel.supportsSpeechView(this.props)} mode={this.props.mode}
                                 tcData={kwicViewRenders} />
                         {this._renderContents()}
@@ -492,8 +516,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
                         {concDetailModel.supportsTokenConnect() || this.props.tokenConnectIsBusy ?
                             <TokenExternalInfo tokenConnectData={this.props.tokenConnectData}
                                 tokenConnectIsBusy={this.props.tokenConnectIsBusy} /> : null}
-                    </div>
-                </layoutViews.PopupBox>
+                    </S.ConcordanceDetail>
+                </CustomPopupBox>
             );
         }
     }

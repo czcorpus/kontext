@@ -23,10 +23,11 @@ import { IActionDispatcher } from 'kombo';
 import { Keyboard } from 'cnc-tskit';
 import { Subscription } from 'rxjs';
 
-import {ConcordanceModel} from '../../models/concordance/main';
-import {Actions, ActionName} from '../../models/concordance/actions'
-import { Kontext } from '../../types/common';
-import { PaginationActions } from '../../models/concordance/common';
+import {ConcordanceModel} from '../../../models/concordance/main';
+import {Actions, ActionName} from '../../../models/concordance/actions'
+import { Kontext } from '../../../types/common';
+import { PaginationActions } from '../../../models/concordance/common';
+import * as S from './style';
 
 
 export interface PaginatorProps {
@@ -79,7 +80,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         return (
-            <div className="jump-to">
+            <S.JumpTo>
                 {he.translate('concview__sort_jump_to')}
                 {'\u00A0'}
                 <select onChange={selectChangeHandler}>
@@ -88,7 +89,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 value={item.page}>{item.label}</option>;
                 })}
                 </select>
-            </div>
+            </S.JumpTo>
         );
     };
 

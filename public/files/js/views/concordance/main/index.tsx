@@ -23,28 +23,28 @@ import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
 import { Subscription } from 'rxjs';
 import { tuple } from 'cnc-tskit';
 
-import { Kontext, ViewOptions } from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
-import { init as lineSelViewsInit } from './lineSelection';
-import { init as paginatorViewsInit } from './paginator';
-import { init as linesViewInit } from './lines';
-import { init as concDetailViewsInit } from './detail/index';
-import { init as concSaveViewsInit } from './save';
-import { init as extendedInfoViewsInit } from './extendedInfo';
+import { Kontext, ViewOptions } from '../../../types/common';
+import { PluginInterfaces } from '../../../types/plugins';
+import { init as lineSelViewsInit } from '../lineSelection';
+import { init as paginatorViewsInit } from '../paginator';
+import { init as linesViewInit } from '../lines';
+import { init as concDetailViewsInit } from '../detail/index';
+import { init as concSaveViewsInit } from '../save';
+import { init as extendedInfoViewsInit } from '../extendedInfo';
 import { LineSelectionModel, LineSelectionModelState }
-    from '../../models/concordance/lineSelection';
-import { ConcordanceModel, ConcordanceModelState } from '../../models/concordance/main';
-import { ConcDetailModel } from '../../models/concordance/detail';
-import { RefsDetailModel } from '../../models/concordance/refsDetail';
-import { CollFormModel } from '../../models/coll/collForm';
-import { TextTypesDistModel } from '../../models/concordance/ttDistModel';
-import { ConcDashboard, ConcDashboardState } from '../../models/concordance/dashboard';
-import { UsageTipsModel } from '../../models/usageTips';
-import { MainMenuModelState } from '../../models/mainMenu';
-import { Actions, ActionName } from '../../models/concordance/actions';
-import { LineSelectionModes, DrawLineSelectionChart, ViewConfiguration } from '../../models/concordance/common';
-import { Actions as UserActions, ActionName as UserActionName } from '../../models/user/actions';
-
+    from '../../../models/concordance/lineSelection';
+import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
+import { ConcDetailModel } from '../../../models/concordance/detail';
+import { RefsDetailModel } from '../../../models/concordance/refsDetail';
+import { CollFormModel } from '../../../models/coll/collForm';
+import { TextTypesDistModel } from '../../../models/concordance/ttDistModel';
+import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard';
+import { UsageTipsModel } from '../../../models/usageTips';
+import { MainMenuModelState } from '../../../models/mainMenu';
+import { Actions, ActionName } from '../../../models/concordance/actions';
+import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
+import { Actions as UserActions, ActionName as UserActionName } from '../../../models/user/actions';
+import * as S2 from '../style';
 import * as S from './style';
 
 
@@ -529,14 +529,14 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick} isScrollable={true}>
                     <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
                             customClass="syntax-tree">
-                        <S.SyntaxViewPane id="syntax-view-pane">
+                        <S2.SyntaxViewPane id="syntax-view-pane">
                             {this.props.isBusy ?
                                 (<div className="ajax-loader">
                                     <img src={he.createStaticUrl('img/ajax-loader.gif')}
                                             alt={he.translate('global__loading')} />
                                 </div>) : null
                             }
-                        </S.SyntaxViewPane>
+                        </S2.SyntaxViewPane>
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>
             );
@@ -549,7 +549,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
     // ------------------------- <ConcordanceView /> ---------------------------
 
     class ConcordanceView extends React.PureComponent<
-    ConcordanceDashboardProps['concViewProps'] & ConcordanceModelState> {
+            ConcordanceDashboardProps['concViewProps'] & ConcordanceModelState> {
 
         constructor(props) {
             super(props);
@@ -588,7 +588,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         render() {
             return (
-                <div className="ConcordanceView">
+                <S.ConcordanceView>
                     {this.props.syntaxViewVisible ?
                         <BoundSyntaxViewPane onCloseClick={this._handleSyntaxBoxClose} /> : null}
                     {this.props.kwicDetailVisible ?
@@ -597,7 +597,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                     {this.props.refDetailVisible ?
                         <concDetailViews.RefDetail closeClickHandler={this._handleRefsDetailCloseClick} />
                         : null}
-                    <div id="conc-top-bar">
+                    <S.ConcTopBar>
                         <div className="info-level">
                             <ConcSummary {...this.props.concSummary}
                                     corpname={this.props.baseCorpname}
@@ -619,8 +619,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 onChartFrameReady={this.props.onLineSelChartFrameReady} />
                         {this.props.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
-                    </div>
-                    <div id="conclines-wrapper">
+                    </S.ConcTopBar>
+                    <S.ConclinesWrapper>
                         {this.props.lines.length === 0 && this.props.unfinishedCalculation ?
                             <div className="no-data">
                                 <p>{he.translate('concview__waiting_for_data')}</p>
@@ -629,15 +629,15 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                             </div> :
                             <linesViews.ConcLines {...this.props} />
                         }
-                    </div>
-                    <div id="conc-bottom-bar">
+                    </S.ConclinesWrapper>
+                    <S.ConcBottomBar>
                         <div className="info-level">
                             <div style={{flexGrow: 3}} />
                             <paginationViews.Paginator {...this.props} />
                         </div>
-                    </div>
+                    </S.ConcBottomBar>
                     {this.props.saveFormVisible ? <concSaveViews.ConcSaveForm /> : null}
-                </div>
+                </S.ConcordanceView>
             );
         }
     }
@@ -663,7 +663,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         render() {
             return (
-                <div className={`ConcordanceDashboard${this.getModClass()}`}>
+                <S.ConcordanceDashboard className={this.getModClass()}>
                     {this.props.showFreqInfo || this.props.showKwicConnect ?
                         <extendedInfoViews.ConcExtendedInfo kwicConnectView={this.props.kwicConnectView} /> :
                         null
@@ -679,14 +679,15 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         ShowConcToolbar={this.props.concViewProps.ShowConcToolbar}
                         anonymousUserConcLoginPrompt={this.props.concViewProps.anonymousUserConcLoginPrompt}
                         onLineSelChartFrameReady={this.props.concViewProps.onLineSelChartFrameReady} />
-                </div>
+                </S.ConcordanceDashboard>
             );
         }
     };
 
 
     return {
-        ConcordanceDashboard: BoundWithProps(ConcordanceDashboard, dashboardModel)
+        ConcordanceDashboard: BoundWithProps<ConcordanceDashboardProps, ConcDashboardState>(
+            ConcordanceDashboard, dashboardModel)
     };
 
 }

@@ -20,11 +20,11 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Kontext } from '../../types/common';
-import { LineSelectionModel, LineSelectionModelState } from '../../models/concordance/lineSelection';
-import { ActionName, Actions } from '../../models/concordance/actions';
-import { ActionName as UserActionName, Actions as UserActions } from '../../models/user/actions';
-import { LineSelectionModes, DrawLineSelectionChart } from '../../models/concordance/common';
+import { Kontext } from '../../../types/common';
+import { LineSelectionModel, LineSelectionModelState } from '../../../models/concordance/lineSelection';
+import { ActionName, Actions } from '../../../models/concordance/actions';
+import { ActionName as UserActionName, Actions as UserActions } from '../../../models/user/actions';
+import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
 
 
 export interface LockedLineGroupsMenuProps {
@@ -35,7 +35,7 @@ export interface LockedLineGroupsMenuProps {
 }
 
 export interface LineSelectionViews {
-    UnsavedLineSelectionMenu:React.SFC<{mode:LineSelectionModes; isBusy:boolean}>;
+    UnsavedLineSelectionMenu:React.FC<{mode:LineSelectionModes; isBusy:boolean}>;
     LockedLineGroupsMenu:React.ComponentClass<LockedLineGroupsMenuProps>;
 }
 
@@ -45,7 +45,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
 
-    const SimpleSelectionModeSwitch:React.SFC<{
+    const SimpleSelectionModeSwitch:React.FC<{
         initialAction:string;
         switchHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
 
@@ -64,7 +64,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <GroupsSelectionModelSwitch /> --------------------------
 
-    const GroupsSelectionModelSwitch:React.SFC<{
+    const GroupsSelectionModelSwitch:React.FC<{
         initialAction:string;
         switchHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
 
@@ -82,7 +82,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <UnsavedLineSelectionMenu /> --------------------------
 
-    const UnsavedLineSelectionMenu:React.SFC<{mode:LineSelectionModes; isBusy:boolean}> = (props) => {
+    const UnsavedLineSelectionMenu:React.FC<{mode:LineSelectionModes; isBusy:boolean}> = (props) => {
 
         const actionChangeHandler = (evt:React.ChangeEvent<{value:string}>) => {
             switch (evt.target.value) {
@@ -144,7 +144,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // --------------------------- <EmailDialog /> ----------------------------
 
-    const EmailDialog:React.SFC<{
+    const EmailDialog:React.FC<{
         defaultEmail:string;
         emailChangeHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
         handleEmailDialogButton:(evt:React.FormEvent<{value:string}>)=>void;
@@ -241,7 +241,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <ActionSwitch /> ------------------------------
 
-    const ActionSwitch:React.SFC<{
+    const ActionSwitch:React.FC<{
         changeHandler:(evt:React.ChangeEvent<{value:string}>)=>void;
         waiting:boolean;
 
@@ -267,7 +267,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <SelectionLinkAndTools /> ------------------------------
 
-    const SelectionLinkAndTools:React.SFC<{
+    const SelectionLinkAndTools:React.FC<{
         canSendEmail:boolean;
         lastCheckpointUrl:string;
         emailDialogCredentials:Kontext.UserCredentials;
@@ -307,7 +307,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <LockedLineGroupsChart /> -----------------------------
 
-    const LockedLineGroupsChart:React.SFC<{
+    const LockedLineGroupsChart:React.FC<{
         corpusId:string;
         onReady:DrawLineSelectionChart;
 

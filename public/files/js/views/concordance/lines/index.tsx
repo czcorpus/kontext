@@ -22,16 +22,17 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import { Kontext, ViewOptions } from '../../types/common';
-import { init as lineExtrasViewsInit } from './lineExtras';
-import { ConcordanceModel, ConcordanceModelState } from '../../models/concordance/main';
+import { Kontext, ViewOptions } from '../../../types/common';
+import { init as lineExtrasViewsInit } from '../lineExtras';
+import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
 import { LineSelectionModel, LineSelectionModelState }
-    from '../../models/concordance/lineSelection';
-import { ConcDetailModel } from '../../models/concordance/detail';
-import { Actions, ActionName } from '../../models/concordance/actions';
+    from '../../../models/concordance/lineSelection';
+import { ConcDetailModel } from '../../../models/concordance/detail';
+import { Actions, ActionName } from '../../../models/concordance/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName }
-    from '../../models/mainMenu/actions';
-import { ConcToken, KWICSection, LineSelectionModes, TextChunk, Line as ConcLine } from '../../models/concordance/common';
+    from '../../../models/mainMenu/actions';
+import { ConcToken, KWICSection, LineSelectionModes, TextChunk, Line as ConcLine } from '../../../models/concordance/common';
+import * as S from './style';
 
 
 export interface LinesModuleArgs {
@@ -772,7 +773,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 this.props.corporaColumns
             );
             return (
-                <table id="conclines" className={this.props.useSafeFont ? 'safe' : null}>
+                <S.ConcLines className={this.props.useSafeFont ? 'safe' : null}>
                     <tbody>
                         {this.props.corporaColumns.length > 1 ?
                             <ConcColsHeading cols={this.props.corporaColumns}
@@ -782,7 +783,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         }
                         <BoundLinesWithSelection {...this.props} />
                     </tbody>
-                </table>
+                </S.ConcLines>
             );
         }
     }

@@ -22,10 +22,11 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
-import { Kontext } from '../../types/common';
-import { ConcordanceModel } from '../../models/concordance/main';
-import { AudioPlayerStatus } from '../../models/concordance/media';
-import { Actions, ActionName } from '../../models/concordance/actions';
+import { Kontext } from '../../../types/common';
+import { ConcordanceModel } from '../../../models/concordance/main';
+import { AudioPlayerStatus } from '../../../models/concordance/media';
+import { Actions, ActionName } from '../../../models/concordance/actions';
+import * as S from './style';
 
 
 export interface AudioPlayerProps {
@@ -40,7 +41,7 @@ export interface MediaViews {
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             lineModel:ConcordanceModel):MediaViews {
 
-    // ------------------------- <ConcColsHeading /> ---------------------------
+    // ------------------------- <AudioPlayer /> ---------------------------
 
     class AudioPlayer extends React.Component<AudioPlayerProps, {playerStatus:AudioPlayerStatus}> {
 
@@ -110,13 +111,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div id="audio-wrapper" ref={(elm) => elm ? this._position(elm) : null}>
+                <S.AudioPlayer id="audio-wrapper" ref={(elm) => elm ? this._position(elm) : null}>
                     <div className="audio-controls">
                         <a onClick={this._handleControlClick.bind(this, 'play')} className={this._autoSetHtmlClass('play')}></a>
                         <a onClick={this._handleControlClick.bind(this, 'pause')} className={this._autoSetHtmlClass('pause')}></a>
                         <a onClick={this._handleControlClick.bind(this, 'stop')} className={this._autoSetHtmlClass('stop')}></a>
                     </div>
-                </div>
+                </S.AudioPlayer>
             );
         }
     }
