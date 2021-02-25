@@ -239,27 +239,6 @@ export const ListPublic = styled.div`
 
     margin-top: 1em;
 
-    fieldset.Filter {
-
-        border: none;
-
-        label {
-            display :inline-block;
-        }
-
-        input[type="text"] {
-            font-size: 1.5em;
-        }
-
-        .CodePrefixInput {
-            font-size: 120%;
-        }
-
-        p.note {
-            margin-bottom: 0;
-        }
-    }
-
     .disclaimer {
 
         max-width: 50em;
@@ -283,79 +262,107 @@ export const ListPublic = styled.div`
             display: inline-block;
         }
     }
+`;
 
-    .DataList {
+// ---------------- <DataList /> --------------------------------------
 
-        margin: 0;
-        padding: 0;
-        list-style-type: none;
-        border: 1px solid ${theme.colorDefaultGreen};
-        background-color: ${theme.colorWhiteText};
+export const DataList = styled.ul`
 
-        .no-result {
-            text-align: center;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    border: 1px solid ${theme.colorDefaultGreen};
+    background-color: ${theme.colorWhiteText};
+
+    .no-result {
+        text-align: center;
+    }
+`;
+
+// ---------------- <DataRow /> --------------------------------------
+
+export const DataRow = styled.li`
+
+    margin: 0;
+    padding: 0.7em 1em 0.3em 1em;
+
+    button.use-in-query {
+        float: right;
+    }
+
+    h3 {
+        font-size: 1.3em;
+        font-weight: normal;
+        margin: 0 0 0.2em 0;
+
+        .code {
+            color: ${theme.colorLightText};
         }
+    }
 
-        li.DataRow {
+    table.props {
 
-            margin: 0;
-            padding: 0.7em 1em 0.3em 1em;
-
-            button.use-in-query {
-                float: right;
-            }
-
-            h3 {
-                font-size: 1.3em;
-                font-weight: normal;
-                margin: 0 0 0.2em 0;
-
-                .code {
-                    color: ${theme.colorLightText};
-                }
-            }
-
-            a.DetailExpandSwitch {
-                display: inline-block;
-                margin-top: 0.7em;
-                text-decoration: none;
-                color: ${theme.colorLightText};
-
-                img {
-                    vertical-align: middle;
-                    display: inline-block;
-                    margin-right: 0.2em;
-                }
-            }
-
-            a.DetailExpandSwitch:hover {
-                text-decoration: underline;
-                color: ${theme.colorLogoPink};
-            }
-
-            table.props {
-
-                th {
-                    text-transform: lowercase;
-                }
-            }
-
-            .description {
-                font-family: ${theme.condensedFontFamily};
-                margin-top: 0.7em;
-                margin-left: 0.25em;
-                margin-bottom: 0.7em;
-                padding: 0.7em 1em;
-                border-color: ${theme.colorLightText};
-                border-style: dashed;
-                border-width: 0 0 0 1px;
-            }
-
+        th {
+            text-transform: lowercase;
         }
+    }
 
-        li.DataRow:nth-child(2n) {
-            background-color: ${theme.colorTableEvenBg};
-        }
+    .description {
+        font-family: ${theme.condensedFontFamily};
+        margin-top: 0.7em;
+        margin-left: 0.25em;
+        margin-bottom: 0.7em;
+        padding: 0.7em 1em;
+        border-color: ${theme.colorLightText};
+        border-style: dashed;
+        border-width: 0 0 0 1px;
+    }
 
+    &:nth-child(2n) {
+        background-color: ${theme.colorTableEvenBg};
+    }
+`;
+
+// ---------------- <DetailExpandSwitch /> --------------------------------------
+
+export const DetailExpandSwitch = styled.a`
+
+    display: inline-block;
+    margin-top: 0.7em;
+    text-decoration: none;
+    color: ${theme.colorLightText};
+
+    img {
+        vertical-align: middle;
+        display: inline-block;
+        margin-right: 0.2em;
+    }
+
+    &:hover {
+        text-decoration: underline;
+        color: ${theme.colorLogoPink};
+    }
+`;
+
+// ---------------- <Filter /> --------------------------------------
+
+export const Filter = styled.fieldset`
+
+    border: none;
+
+    label {
+        display :inline-block;
+    }
+
+    input[type="text"] {
+        font-size: 1.5em;
+    }
+
+    .CodePrefixInput {
+        font-size: 120%;
+    }
+
+    p.note {
+        margin-bottom: 0;
     }
 `;
