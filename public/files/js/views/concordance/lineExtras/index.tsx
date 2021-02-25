@@ -21,12 +21,13 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { ConcordanceModel } from '../../models/concordance/main';
-import { ConcLinesStorage } from '../../models/concordance/selectionStorage';
-import { init as initMediaViews } from './media';
-import { Actions, ActionName } from '../../models/concordance/actions'
-import { LineSelectionModes, TextChunk } from '../../models/concordance/common';
+import { Kontext } from '../../../types/common';
+import { ConcordanceModel } from '../../../models/concordance/main';
+import { ConcLinesStorage } from '../../../models/concordance/selectionStorage';
+import { init as initMediaViews } from '../media';
+import { Actions, ActionName } from '../../../models/concordance/actions'
+import { LineSelectionModes, TextChunk } from '../../../models/concordance/common';
+import * as S from './style';
 
 
 export interface LineExtrasViews {
@@ -104,7 +105,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 && props.chunks[props.chunks.length - 1].showAudioPlayer) {
             return (
                 <span>
-                    <a className="speech-link" onClick={handleClick}>{getChar()}</a>
+                    <S.AudioLink onClick={handleClick}>{getChar()}</S.AudioLink>
                     <mediaViews.AudioPlayer />
                 </span>
             );

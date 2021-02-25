@@ -90,10 +90,6 @@ import { HtmlHelpModel } from '../models/help/help';
 import { HitReloader } from '../models/concordance/concStatus';
 
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/view.less');
-
 export class QueryModels {
     queryModel:FirstQueryFormModel;
     filterModel:FilterFormModel;

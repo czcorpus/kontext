@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/d3-color.d.ts" />
+/// <reference path="../../../vendor.d.ts/d3-color.d.ts" />
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { TextTypesDistModel, FreqItem, FreqBlock, TextTypesDistModelState } from '../../models/concordance/ttDistModel';
-import { Actions, ActionName } from '../../models/concordance/actions';
+import { Kontext } from '../../../types/common';
+import { TextTypesDistModel, FreqItem, FreqBlock, TextTypesDistModelState } from '../../../models/concordance/ttDistModel';
+import { Actions, ActionName } from '../../../models/concordance/actions';
+import * as S from './style';
 
 
 export interface TtOverviewViews {
@@ -43,7 +44,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                             {abs: he.formatNumber(v.abs), ipm: he.formatNumber(v.ipm)});
 
         return (
-            <div className="FreqBar">
+            <S.FreqBar>
                 <div className="legend">
                     <strong>{props.label}:</strong>
                     {props.items.map((item, i) =>
@@ -58,7 +59,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                         style={{backgroundColor: item.color, width: `${item.barWidth}px`}}
                                         title={`${item.value}, ${mkTitle(item)}`}></div>)}
                 </div>
-            </div>
+            </S.FreqBar>
         );
     };
 
