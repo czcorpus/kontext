@@ -38,12 +38,8 @@ import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
-import { ActionName, Actions } from '../models/coll/actions';
+import { ActionName } from '../models/coll/actions';
 
-
-declare var require:any;
-// weback - ensure an individual style (even empty one) is created for the page
-require('styles/coll.less');
 
 /**
  *

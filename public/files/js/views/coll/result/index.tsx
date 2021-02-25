@@ -21,12 +21,13 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { Keyboard } from 'cnc-tskit';import { init as initSaveViews } from './save';
-import { CollResultModel, CollResultModelState } from '../../models/coll/result';
-import { CollResultsSaveModel } from '../../models/coll/save';
-import { CollResultRow, CollResultHeadingCell } from '../../models/coll/common';
-import { Actions, ActionName } from '../../models/coll/actions';
+import { Kontext } from '../../../types/common';
+import { Keyboard } from 'cnc-tskit';import { init as initSaveViews } from '../save';
+import { CollResultModel, CollResultModelState } from '../../../models/coll/result';
+import { CollResultsSaveModel } from '../../../models/coll/save';
+import { CollResultRow, CollResultHeadingCell } from '../../../models/coll/common';
+import { Actions, ActionName } from '../../../models/coll/actions';
+import * as S from './style';
 
 
 export interface CollResultViewProps {
@@ -49,7 +50,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <TDPosNegFilterLink /> ------------------------
 
-    const TDPosNegFilterLink:React.SFC<{
+    const TDPosNegFilterLink:React.FC<{
         pfilter:Array<[string, string]>;
         nfilter:Array<[string, string]>;
 
@@ -80,7 +81,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <DataRow /> ------------------------
 
-    const DataRow:React.SFC<{
+    const DataRow:React.FC<{
         idx:number;
         data:CollResultRow;
     }> = (props) => {
@@ -103,7 +104,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <THSortable /> ------------------------
 
-    const THSortable:React.SFC<{
+    const THSortable:React.FC<{
         sortFn:string;
         isActive:boolean;
         label:string;
@@ -141,7 +142,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <TRDataHeading /> ------------------------
 
-    const TRDataHeading:React.SFC<{
+    const TRDataHeading:React.FC<{
         cattr:string;
         sortFn:string;
         data:Array<CollResultHeadingCell>;
@@ -160,7 +161,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <DataTable /> ------------------------
 
-    const DataTable:React.SFC<{
+    const DataTable:React.FC<{
         heading:Array<CollResultHeadingCell>;
         sortFn:string;
         cattr:string;
@@ -180,7 +181,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <PageInput /> ------------------------
 
-    const PageInput:React.SFC<{
+    const PageInput:React.FC<{
         isWaiting:boolean;
         currPageInput:string;
 
@@ -215,7 +216,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <PrevPageLink /> ------------------------
 
-    const PrevPageLink:React.SFC<{}> = (props) => {
+    const PrevPageLink:React.FC<{}> = (props) => {
 
         const handleClick = (props) => {
             dispatcher.dispatch<Actions.ResultGetPrevPage>({
@@ -235,7 +236,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <NextPageLink /> ------------------------
 
-    const NextPageLink:React.SFC<{}> = (props) => {
+    const NextPageLink:React.FC<{}> = (props) => {
 
         const handleClick = (props) => {
             dispatcher.dispatch<Actions.ResultGetNextPage>({
@@ -255,7 +256,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     // ---------------- <Pagination /> ------------------------
 
-    const Pagination:React.SFC<{
+    const Pagination:React.FC<{
         isWaiting:boolean;
         currPage:number;
         hasNextPage:boolean;
@@ -274,7 +275,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
         };
 
         return (
-            <form className="ktx-pagination" onKeyDown={handleKeyPress}>
+            <S.Pagination className="ktx-pagination" onKeyDown={handleKeyPress}>
                 <fieldset className="float">
                     {props.currPage > 1 ? <PrevPageLink /> : null}
                     <div className="ktx-pagination-core">
@@ -282,18 +283,18 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
                     </div>
                     {props.hasNextPage ? <NextPageLink /> : null}
                 </fieldset>
-            </form>
+            </S.Pagination>
         );
     }
 
     // ---------------- <CalcStatusBar /> ------------------------
 
-    const CalcStatusBar:React.SFC<{
+    const CalcStatusBar:React.FC<{
         status:number;
 
     }> = (props) => {
         return (
-            <div id="progress_message">
+            <S.CalcStatusBar>
                 <div className="progress-info">
                     <div>
                         {utils.translate('global__calculating')}
@@ -305,7 +306,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
                         <div id="processbar" style={{width: `${props.status}%`}} />
                     </div>
                 </div>
-            </div>
+            </S.CalcStatusBar>
         );
     };
 
@@ -326,7 +327,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
         render() {
             return (
-                <div className="CollResultView">
+                <S.CollResultView>
                     {this.props.saveFormVisible ?
                         <saveViews.SaveCollForm onClose={this._handleSaveFormClose} saveLinesLimit={this.props.saveLinesLimit} />
                         : null
@@ -342,7 +343,7 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
                                     cattr={this.props.cattr} />
                         </div>)
                     }
-                </div>
+                </S.CollResultView>
             );
         }
     }

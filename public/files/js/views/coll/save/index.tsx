@@ -21,10 +21,11 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { SaveData } from '../../app/navigation';
-import { CollResultsSaveModel } from '../../models/coll/save';
-import { Actions, ActionName } from '../../models/coll/actions';
+import { Kontext } from '../../../types/common';
+import { SaveData } from '../../../app/navigation';
+import { CollResultsSaveModel } from '../../../models/coll/save';
+import { Actions, ActionName } from '../../../models/coll/actions';
+import * as S from './style';
 
 
 export interface SaveModuleArgs {
@@ -62,7 +63,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
     // --------------- <TRSaveFormatSelect /> ------------------------
 
-    const TRSaveFormatSelect:React.SFC<{
+    const TRSaveFormatSelect:React.FC<{
         value:string;
 
     }> = (props) => {
@@ -93,7 +94,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
     // --------------- <TRIncludeHeadingCheckbox /> ------------------------
 
-    const TRIncludeHeadingCheckbox:React.SFC<{
+    const TRIncludeHeadingCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -119,7 +120,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
     // --------------- <TRColHeadersCheckbox /> ------------------------
 
-    const TRColHeadersCheckbox:React.SFC<{
+    const TRColHeadersCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -145,7 +146,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
     // --------------- <TRSelLineRangeInputs /> ------------------------
 
-    const TRSelLineRangeInputs:React.SFC<{
+    const TRSelLineRangeInputs:React.FC<{
         fromValue:Kontext.FormValue<string>;
         toValue:Kontext.FormValue<string>;
         lineLimitHintVisible:boolean;
@@ -173,7 +174,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
         };
 
         return (
-            <tr>
+            <S.TRSelLineRangeInputs>
                 <th style={{verticalAlign: 'top'}}>
                     {utils.translate('coll__save_form_lines_to_store')}:
                 </th>
@@ -204,7 +205,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                         }
                     </div>
                 </td>
-            </tr>
+            </S.TRSelLineRangeInputs>
         )
     };
 
@@ -249,7 +250,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.onClose}>
                     <layoutViews.CloseableFrame onCloseClick={this.props.onClose} label={utils.translate('coll__save_form_label')}>
-                        <form className="SaveCollForm">
+                        <S.SaveCollForm>
                             <table className="form">
                                 <tbody>
                                     <TRSaveFormatSelect value={this.props.saveformat} />
@@ -266,7 +267,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                                     onClick={this._handleSubmitClick}>
                                 {utils.translate('coll__save_form_submit_btn')}
                             </button>
-                        </form>
+                        </S.SaveCollForm>
                     </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>
             );
@@ -274,7 +275,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }
 
     return {
-        SaveCollForm: SaveCollForm
+        SaveCollForm
     };
 
 }
