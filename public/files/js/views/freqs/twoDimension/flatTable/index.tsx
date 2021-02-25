@@ -21,11 +21,13 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
-import { Kontext } from '../../../types/common';
-import { Freq2DFlatViewModel, Freq2DFlatViewModelState } from '../../../models/freqs/twoDimension/flatTable';
-import { GeneralFreq2DModel } from '../../../models/freqs/twoDimension/generalDisplay';
-import { init as ctViewOptsFactory } from './viewOpts';
-import { Actions, ActionName } from '../../../models/freqs/actions';
+import { Kontext } from '../../../../types/common';
+import { Freq2DFlatViewModel, Freq2DFlatViewModelState } from '../../../../models/freqs/twoDimension/flatTable';
+import { GeneralFreq2DModel } from '../../../../models/freqs/twoDimension/generalDisplay';
+import { init as ctViewOptsFactory } from '../viewOpts';
+import { Actions, ActionName } from '../../../../models/freqs/actions';
+import * as S from './style';
+
 
 // ----------------------- exported types ------------------------------------
 
@@ -148,7 +150,7 @@ export function init(
 
         render() {
             return (
-                <div className="CTFlatFreqResultView">
+                <S.CTFlatFreqResultView>
                     <div className="toolbar">
                         <form>
                             <fieldset>
@@ -198,7 +200,7 @@ export function init(
                                         canProvideIpm={GeneralFreq2DModel.canProvideIpm(this.props)} />)}
                         </tbody>
                     </table>
-                </div>
+                </S.CTFlatFreqResultView>
             );
         }
     }

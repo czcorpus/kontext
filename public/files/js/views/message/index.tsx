@@ -20,10 +20,11 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Kontext } from '../types/common';
-import { MessageModel, MessageModelState } from '../models/common/layout';
-import { ConcServerArgs } from '../models/concordance/common';
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { Kontext } from '../../types/common';
+import { MessageModel, MessageModelState } from '../../models/common/layout';
+import { ConcServerArgs } from '../../models/concordance/common';
+import { Dict } from 'cnc-tskit';
+import * as S from './style';
 
 
 export interface MessageViewProps {
@@ -80,7 +81,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         return (
-            <div className="MessagePageHelp">
+            <S.MessagePageHelp>
                 <div className="messages">
                     {props.messages.map(message => {
                         return <Message key={message.messageId} status={message.messageType} text={message.messageText} />;
@@ -112,7 +113,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         null
                     }
                 </ul>
-            </div>
+            </S.MessagePageHelp>
         );
     };
 

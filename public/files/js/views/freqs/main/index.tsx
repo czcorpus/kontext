@@ -19,13 +19,14 @@
  */
 
 import * as React from 'react';
-import { Kontext } from '../../types/common';
+import { Kontext } from '../../../types/common';
 import { Keyboard, List } from 'cnc-tskit';
-import { init as dataRowsInit } from './dataRows';
-import { init as initSaveViews } from './save';
-import { FreqDataRowsModel, FreqDataRowsModelState } from '../../models/freqs/dataRows';
+import { init as dataRowsInit } from '../dataRows';
+import { init as initSaveViews } from '../save';
+import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs/dataRows';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions, ActionName } from '../../models/freqs/actions';
+import { Actions, ActionName } from '../../../models/freqs/actions';
+import * as S from './style';
 
 // --------------------------- exported types --------------------------------------
 
@@ -186,13 +187,13 @@ export function init(
         };
 
         return (
-            <form className="FilterForm" action="freqs">
+            <S.FilterForm action="freqs">
                 <MinFreqInput minFreqVal={props.minFreqVal} />
                 {'\u00a0'}
                 <button type="button" className="util-button" onClick={handleApplyClick}>
                     {he.translate('global__apply_btn')}
                 </button>
-            </form>
+            </S.FilterForm>
         );
     };
 

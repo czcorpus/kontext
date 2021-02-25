@@ -22,16 +22,17 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Color, pipe, Maths, Dict, List } from 'cnc-tskit';
 
-import { Kontext, TextTypes } from '../../../types/common';
-import { init as ctFlatResultFactory } from './flatTable';
-import { init as ctViewOptsFactory } from './viewOpts';
-import { Freq2DFlatViewModel } from '../../../models/freqs/twoDimension/flatTable';
-import { Freq2DTableModel, Data2DTable, ColorMappings, TableInfo, Freq2DTableModelState } from '../../../models/freqs/twoDimension/table2d';
-import { FreqFilterQuantities, Dimensions, FreqQuantities } from '../../../models/freqs/twoDimension/common';
-import { CTFreqCell } from '../../../models/freqs/twoDimension/generalDisplay';
-import { DataPoint } from '../../../charts/confIntervals';
-import { Actions, ActionName } from '../../../models/freqs/actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../../models/mainMenu/actions';
+import { Kontext, TextTypes } from '../../../../types/common';
+import { init as ctFlatResultFactory } from '../flatTable';
+import { init as ctViewOptsFactory } from '../viewOpts';
+import { Freq2DFlatViewModel } from '../../../../models/freqs/twoDimension/flatTable';
+import { Freq2DTableModel, Data2DTable, ColorMappings, TableInfo, Freq2DTableModelState } from '../../../../models/freqs/twoDimension/table2d';
+import { FreqFilterQuantities, Dimensions, FreqQuantities } from '../../../../models/freqs/twoDimension/common';
+import { CTFreqCell } from '../../../../models/freqs/twoDimension/generalDisplay';
+import { DataPoint } from '../../../../charts/confIntervals';
+import { Actions, ActionName } from '../../../../models/freqs/actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../../../models/mainMenu/actions';
+import * as S from './style';
 
 
 const enum TableViewMode {
@@ -317,7 +318,7 @@ export function init(
                         initialExpanded={true}
                         label={he.translate('freq__ct_combo_actions_legend')}>
                     <fieldset>
-                        <ul className="ComboActionsSelector">
+                        <S.ComboActionsSelectorUL>
                             {props.canProvideIpm ?
                                 <li>
                                     <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
@@ -333,7 +334,7 @@ export function init(
                             <li>
                                 <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
                             </li>
-                        </ul>
+                        </S.ComboActionsSelectorUL>
                     </fieldset>
                 </layoutViews.ExpandableArea>
             </div>
@@ -682,7 +683,7 @@ export function init(
         render() {
             return (
                 <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} takeFocus={true}>
-                    <div id="confidence-intervals-frame" className="IntervalGroupVisualisation">
+                    <S.IntervalGroupVisualisation id="confidence-intervals-frame">
                         <h2 className="top" />
                         <div className="chart-wrapper">
                             <svg width={this.props.d3PaneWidth} height={this.props.d3PaneHeight} />
@@ -695,7 +696,7 @@ export function init(
                                     {he.translate('freq__ct_ipm_x_axis_hint_{prob}', {prob: (100 * (1 - this.props.alphaLevel)).toFixed(2)})}
                                 </span>
                             </div>
-                    </div>
+                    </S.IntervalGroupVisualisation>
                 </layoutViews.PopupBox>
             );
         }
@@ -970,9 +971,9 @@ export function init(
 
         render() {
             return (
-                <div className="CT2dFreqResultView">
+                <S.CT2dFreqResultView>
                     <div className="toolbar">
-                        <form className="CTTableModForm">
+                        <S.CTTableModForm>
                             <FieldsetBasicOptions
                                     transposeIsChecked={this.props.isTransposed}
                                     quickFreqMode={Freq2DTableModel.determineQuickFreqMode(this.props)}
@@ -989,7 +990,7 @@ export function init(
                                     confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn}
                                     colorMapping={this.props.colorMapping}
                                     canProvideIpm={Freq2DTableModel.canProvideIpm(this.props)}  />
-                        </form>
+                        </S.CTTableModForm>
                     </div>
                     {this.props.highlightedGroup[0] !== null || this.props.highlightedGroup[1] !== null ?
                         <IntervalGroupVisualisation highlightedGroup={this.props.highlightedGroup}
@@ -1019,7 +1020,7 @@ export function init(
                                 usesAdHocSubcorpus={this.props.usesAdHocSubcorpus}
                                 concSelectedTextTypes={this.props.selectedTextTypes} />
                     }
-                </div>
+                </S.CT2dFreqResultView>
             );
         }
     }
@@ -1065,7 +1066,7 @@ export function init(
 
         render() {
             return (
-                <div className="CTFreqResultView">
+                <S.CTFreqResultView>
                     <p className="mode-switch">
                         <label>
                             {he.translate('freq__ct_view_mode')}:{'\u00a0'}
@@ -1076,13 +1077,13 @@ export function init(
                         </label>
                     </p>
                     {this._renderContents()}
-                </div>
+                </S.CTFreqResultView>
             );
         }
     }
 
     return {
-        CTFreqResultView: CTFreqResultView
+        CTFreqResultView
     };
 
 }

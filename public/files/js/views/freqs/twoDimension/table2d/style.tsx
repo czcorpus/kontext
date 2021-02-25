@@ -1,6 +1,29 @@
-@import './shared/globals.less';
+/*
+ * Copyright (c) 2021 Charles University, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * dated June, 1991.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
 
-.IntervalGroupVisualisation {
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+import styled from 'styled-components';
+import * as theme from '../../../theme/default';
+
+// ---------------- <IntervalGroupVisualisation /> ---------------------------------
+
+export const IntervalGroupVisualisation = styled.div`
 
     .grid line {
         stroke: lightgrey;
@@ -15,10 +38,10 @@
 
     .tooltip {
         position: absolute;
-        background-color: @color-logo-blue;
+        background-color: ${theme.colorLogoBlue};
         color: #FFFFFF;
-        box-shadow: @portal-box-shadow;
-        border-radius: @input-border-radius;
+        box-shadow: ${theme.portalBoxShadow};
+        border-radius: ${theme.inputBorderRadius};
         padding: 0.1em 1em;
         opacity: 0.4;
     }
@@ -33,21 +56,11 @@
             vertical-align: top;
         }
     }
-}
+`;
 
+// ---------------- <CT2dFreqResultView /> ---------------------------------
 
-
-.warn() {
-    float: left;
-    font-weight: bold;
-    background-image: url(../img/warning-icon.svg);
-    background-repeat: no-repeat;
-    background-size: 1.1em 1.1em;
-    width: 1.1em;
-}
-
-
-div.CT2dFreqResultView {
+export const CT2dFreqResultView = styled.div`
 
     table.ct-data {
 
@@ -56,13 +69,13 @@ div.CT2dFreqResultView {
 
         th {
             padding: 0.3em 0.7em;
-            background-color: @color-default-green;
+            background-color: ${theme.colorDefaultGreen};
             font-weight: normal;
         }
 
         th.highlighted {
-            color: @color-default-text;
-            background-color: @color-green-bg-highlighted;
+            color: ${theme.colorDefaultText};
+            background-color: ${theme.colorGreenBgHighlighted};
         }
 
         th.vert.highlighted {
@@ -92,7 +105,7 @@ div.CT2dFreqResultView {
         }
 
         td.icon {
-            background-color: @color-default-green;
+            background-color: ${theme.colorDefaultGreen};
             text-align: center;
         }
 
@@ -105,7 +118,7 @@ div.CT2dFreqResultView {
         }
 
         td {
-            border: 1px solid @color-light-frame;
+            border: 1px solid ${theme.colorLightFrame};
             padding: 0.3em 0.7em;
         }
 
@@ -126,7 +139,12 @@ div.CT2dFreqResultView {
             }
 
             .warn {
-                .warn();
+                float: left;
+                font-weight: bold;
+                background-image: url(../img/warning-icon.svg);
+                background-repeat: no-repeat;
+                background-size: 1.1em 1.1em;
+                width: 1.1em;
             }
 
             .menu {
@@ -139,13 +157,13 @@ div.CT2dFreqResultView {
                     }
 
                     td input {
-                        background-color: @color-bg-light-blue;
-                        border: @input-border-style;
-                        border-radius: @input-border-radius;
+                        background-color: ${theme.colorBgLightBlue};
+                        border: ${theme.inputBorderStyle};
+                        border-radius: ${theme.inputBorderRadius};
                     }
 
                     td input.highlighted {
-                        color: @color-logo-pink;
+                        color: ${theme.colorLogoPink};
                         font-weight: normal;
                     }
                 }
@@ -153,11 +171,11 @@ div.CT2dFreqResultView {
         }
 
         td.data-cell.highlighted a {
-            color: @color-default-text;
+            color: ${theme.colorDefaultText};
         }
 
         td.highlighted {
-            background-color: @color-green-bg-highlighted;
+            background-color: ${theme.colorGreenBgHighlighted};
             color: #ffffff;
             font-weight: normal;
         }
@@ -173,7 +191,7 @@ div.CT2dFreqResultView {
             font-size: 110%;
 
             a {
-                color: @color-default-text;
+                color: ${theme.colorDefaultText};
                 text-decoration: none;
             }
 
@@ -194,35 +212,11 @@ div.CT2dFreqResultView {
             margin-right: 0.3em;
         }
     }
-}
+`;
 
-div.CTFlatFreqResultView {
+// --------------- <CTTableModForm /> ------------------------
 
-    th.sort-col {
-
-        white-space: nowrap;
-
-        a {
-            text-decoration: underline;
-
-            img {
-                margin-left: 0.7em;
-            }
-        }
-
-        a:hover {
-            text-decoration: none;
-        }
-
-    }
-
-    td strong.warn {
-        .warn();
-    }
-
-}
-
-.CTTableModForm {
+export const CTTableModForm = styled.form`
 
     fieldset {
         margin-top: 0.7em;
@@ -233,9 +227,12 @@ div.CTFlatFreqResultView {
     p, ul {
         line-height: normal;
     }
-}
+`;
 
-div.CTFreqResultView {
+// --------- <CTFreqResultView /> ----------------------------
+
+export const CTFreqResultView = styled.div`
+
     margin: 1em;
 
     .mode-switch {
@@ -244,7 +241,7 @@ div.CTFreqResultView {
         font-size: 110%;
 
         a {
-            color: @color-logo-blue;
+            color: ${theme.colorLogoBlue};
             text-decoration: none;
         }
 
@@ -263,7 +260,7 @@ div.CTFreqResultView {
         .options {
             a {
                 margin-left: 0.7em;
-                color: @color-logo-blue;
+                color: ${theme.colorLogoBlue};
                 text-decoration: none;
             }
 
@@ -305,10 +302,12 @@ div.CTFreqResultView {
         }
         cursor: pointer;
     }
-}
+`;
 
+// ------------------- <ComboActionsSelectorUL /> -----------------
 
-ul.ComboActionsSelector {
+export const ComboActionsSelectorUL = styled.ul`
+
     list-style: none;
     margin: 0;
     padding: 0;
@@ -317,16 +316,4 @@ ul.ComboActionsSelector {
         display: inline-block;
         margin-right: 1em;
     }
-}
-
-.bar {
-    background-color: @color-logo-blue;
-}
-
-.FreqResultView .FilterForm {
-    button {
-        margin-left: 0.7em;
-    }
-}
-
-@import "./layoutMobile.less";
+`;

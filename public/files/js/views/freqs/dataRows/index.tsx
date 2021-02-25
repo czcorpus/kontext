@@ -18,12 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../types/common';
+import { Kontext } from '../../../types/common';
 import * as React from 'react';
-import { FreqDataRowsModel, ResultHeader, ResultItem } from '../../models/freqs/dataRows';
+import { ResultHeader, ResultItem } from '../../../models/freqs/dataRows';
 import { IActionDispatcher } from 'kombo';
-import { Actions, ActionName } from '../../models/freqs/actions';
+import { Actions, ActionName } from '../../../models/freqs/actions';
 import { List } from 'cnc-tskit';
+import * as S from './style';
+
 
 interface DataTableProps {
     head:Array<ResultHeader>;
@@ -97,7 +99,7 @@ export function init(
     const DataRow:React.FC<DataRowProps> = (props) => {
 
         return (
-            <tr>
+            <S.DataRowTR>
                 <td className="num">{props.data.idx + 1}</td>
                 <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
                 {props.data.Word.map((w, i) => <td key={i}>{w}</td>)}
@@ -106,7 +108,7 @@ export function init(
                 <td>
                     <div className="bar" style={{height: '10px', width: `${props.data.relbar}px`}} />
                 </td>
-            </tr>
+            </S.DataRowTR>
         );
     };
 
