@@ -26,6 +26,9 @@ import { CoreViews } from '../../types/coreViews';
 import { List } from 'cnc-tskit';
 import { Actions, ActionName } from '../../models/subcorp/actions';
 
+import * as S from './style';
+
+
 
 export interface SubcorpListProps {
 
@@ -668,7 +671,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div className="SubcorpList">
+                <S.SubcorpList>
                     <section className="inner">
                         <FilterForm filter={this.props.filter} relatedCorpora={this.props.relatedCorpora}
                                 usesSubcRestore={this.props.usesSubcRestore} />
@@ -684,7 +687,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         lines={this.props.lines}
                         sortKey={this.props.sortKey}
                         unfinished={this.props.unfinished} />
-                </div>
+                </S.SubcorpList>
             );
         }
     }

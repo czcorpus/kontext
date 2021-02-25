@@ -106,3 +106,24 @@ export const TRWithinBuilderWrapper = styled.div`
         background-color: ${theme.colorLogoBlueShining};
     }
 `;
+
+// ---------------- <SubcorpList /> --------------------------------------
+
+export const SubcorpList = styled.div`
+    .ActionMenu {
+        display: inline-block;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+            display: inline-block;
+            margin: 0;
+            padding: 0;
+        }
+
+        li:not(last-child) {
+            margin-right: 0.7em;
+        }
+    }
+`;
