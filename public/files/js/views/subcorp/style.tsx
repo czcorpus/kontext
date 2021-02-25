@@ -126,6 +126,111 @@ export const SubcorpList = styled.div`
             margin-right: 0.7em;
         }
     }
+
+    div.mass-op {
+        margin: 0.4em 0;
+        overflow: hidden;
+
+        label.show-deleted {
+            float: right;
+        }
+    }
+
+    table td.action-link {
+        text-align: center;
+
+        a {
+            border-radius: 3px;
+            padding-left: 0.2em;
+            padding-right: 0.2em;
+            background-color: ${theme.colorLogoBlue};
+            color: #FFFFFF;
+            text-transform: lowercase;
+            text-decoration:  none;
+        }
+    }
+
+    table td.processing {
+        color: ${theme.colorLogoPink};
+    }
+
+    .delete-subc {
+        font-size: 1.7em;
+    }
+
+    form.filter {
+
+        legend {
+            font-weight: bold;
+        }
+
+        fieldset > div {
+            margin-top: 0.7em;
+        }
+
+        input {
+            vertical-align: middle;
+        }
+    }
+
+    #modal-overlay {
+
+        .subcorp-actions {
+
+            > div {
+                padding-top: 0.7em;
+            }
+
+            .loader-wrapper {
+                display: inline-block;
+            }
+
+
+            form.subc-action {
+                margin-top: 1em;
+
+                fieldset legend img {
+                    margin-left: 0.4em;
+                    margin-right: 0.4em;
+                }
+
+                > fieldset > div {
+                    margin-top: 1em;
+                }
+
+                label {
+                    color: ${theme.colorLightText};
+                    display: block;
+                    padding-bottom: 0.3em;
+                }
+
+                textarea.desc, textarea.cql {
+                    width: 30em;
+                }
+
+                p.note {
+                    margin-top: 0;
+                }
+
+                dl.public-code {
+
+                    dt, dd {
+                        display: inline-block;
+                        margin: 0;
+                    }
+
+                    dd {
+                        margin-left: 1em;
+                    }
+
+                    input[type="text"] {
+                        font-size: 1.5em;
+                        width: 7em;
+                    }
+                }
+            }
+        }
+    }
 `;
 
 // ---------------- <ListPublic /> --------------------------------------
