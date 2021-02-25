@@ -25,6 +25,8 @@ import {PublicSubcorpListState, PublicSubcorpListModel, DataItem} from '../../mo
 import {Actions, ActionName} from '../../models/subcorp/actions';
 import { List, tuple } from 'cnc-tskit';
 
+import * as S from './style';
+
 export interface Views {
     ListPublic:React.ComponentClass<ListPublicProps>;
 }
@@ -235,7 +237,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div className="List">
+                <S.ListPublic>
                     <form>
                         <fieldset>
                             <legend>{he.translate('pubsubclist__filter_legend')}</legend>
@@ -251,7 +253,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
                         {he.translate('pubsubclist__operator_disclaimer')}
                     </p>
-                </div>
+                </S.ListPublic>
             );
         }
     }
