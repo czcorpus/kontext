@@ -32,10 +32,12 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
-        return {
+        ans = {
             'view': 'form',
-            'corpname': self.args.corpname
+            'corpname': self.args.corpname,
         }
+        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
+        return ans
 
     @exposed(http_method='POST', page_model='pquery', return_type='json')
     def submit(self, request):
@@ -46,5 +48,6 @@ class ParadigmaticQuery(Kontext):
     def result(self, request):
         return {
             'view': 'result',
-            'corpname': self.args.corpname
+            'corpname': self.args.corpname,
+            'SubcorpList': []
         }
