@@ -542,3 +542,6 @@ msgstr "Prohlédnout na GitHubu"
 
 msgid "Concordance regeneration"
 msgstr "Obnovení konkordance"
+
+msgid "Paradigmatic query"
+msgstr "Paradigmatický dotaz"
