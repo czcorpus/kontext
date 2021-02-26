@@ -20,7 +20,7 @@
 
 import { Kontext} from '../../types/common';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { CorplistWidgetModel, CorplistWidgetModelState, CorplistWidgetModelCorpusSwitchPreserve } from './widget';
+import { CorplistWidgetModel } from './widget';
 import { CorplistPage, CorplistServerData } from './corplist';
 import { init as viewInit } from './corplistView';
 import { init as widgetInit } from './widgetView';
@@ -28,9 +28,6 @@ import { init as overviewViewInit } from '../../views/overview';
 import { CorplistTableModel } from './corplist';
 import { SearchEngine } from './search';
 import { ServerFavlistItem } from './common';
-
-declare var require:any;
-require('./style.less'); // webpack
 
 
 export class Plugin implements PluginInterfaces.Corparch.IPlugin {

@@ -17,14 +17,15 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {init as defaultViewInit} from '../defaultCorparch/corplistView';
-import { corplistItemIsUcnk } from './common';
-import { CorplistTableModel, CorplistTableModelState } from './corplist';
+import {Kontext} from '../../../types/common';
+import {init as defaultViewInit} from '../../defaultCorparch/corplistView';
+import { corplistItemIsUcnk } from '../common';
+import { CorplistTableModel, CorplistTableModelState } from '../corplist';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { CorplistItem } from '../defaultCorparch/common';
-import { Actions as DefaultActions, ActionName as DefaultActionName } from '../defaultCorparch/actions';
-import { Actions, ActionName } from './actions';
+import { CorplistItem } from '../../defaultCorparch/common';
+import { Actions as DefaultActions, ActionName as DefaultActionName } from '../../defaultCorparch/actions';
+import { Actions, ActionName } from '../actions';
+import * as S from './style';
 
 export interface ViewModuleArgs {
     dispatcher:IActionDispatcher;
@@ -89,7 +90,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
 
         render() {
             return (
-                <form>
+                <S.RequestForm>
                     <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/envelope.svg')}
                             src2={he.createStaticUrl('img/envelope.svg')}
                             htmlClass="message-icon" alt={he.translate('ucnkCorparch__message_icon')} />
@@ -107,7 +108,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
                         <button className="default-button" type="button"
                                 onClick={this._submitHandler}>{he.translate('ucnkCorparch__send')}</button>
                     </p>
-                </form>
+                </S.RequestForm>
             );
         }
     }
@@ -346,7 +347,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
             });
 
             return (
-                <div>
+                <S.CorplistTable>
                     {this._renderDetailBox()}
                     <table className="data corplist">
                         <tbody>
@@ -358,12 +359,13 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
                             }
                         </tbody>
                     </table>
-                </div>
+                </S.CorplistTable>
             );
         }
     }
 
-    const BoundCorplistTable = BoundWithProps(CorplistTable, listModel);
+    const BoundCorplistTable = BoundWithProps<CorplistTableProps, CorplistTableModelState>(
+            CorplistTable, listModel);
 
     // --------------------- <ListExpansion /> ----------------------------
 
