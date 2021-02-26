@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { HTTP, tuple } from 'cnc-tskit';
+import { Dict, HTTP, List, tuple } from 'cnc-tskit';
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { PageModel } from '../../app/page';
@@ -28,6 +28,7 @@ import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { NonQueryCorpusSelectionModel } from '../corpsel';
+import { AdvancedQuery } from '../query/query';
 
 
 interface HTTPSubmitArgs {
@@ -43,10 +44,15 @@ export interface PqueryFormModelState {
     isBusy:boolean;
     corpname:string;
     usesubcorp:string;
+    queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
 }
 
 interface PqueryFormModelSwitchPreserve {
 
+}
+
+export function generatePqueryName(i:number):string {
+    return `pqitem_${i}`;
 }
 
 
@@ -126,6 +132,51 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             QueryActionName.QueryInputSelectSubcorp,
             (state, action) => {
                 state.usesubcorp = action.payload.subcorp;
+            }
+        );
+
+        this.addActionHandler<Actions.AddQueryItem>(
+            ActionName.AddQueryItem,
+            (state, action) => {
+                const size = Dict.size(state.queries);
+                state.queries[generatePqueryName(size)] = {
+                    corpname: state.corpname,
+                    qtype: 'advanced',
+                    query: '',
+                    queryHtml: '',
+                    rawAnchorIdx: 0,
+                    rawFocusIdx: 0,
+                    parsedAttrs: [],
+                    focusedAttr: undefined,
+                    pcq_pos_neg: 'pos',
+                    include_empty: false,
+                    default_attr: null
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.RemoveQueryItem>(
+            ActionName.RemoveQueryItem,
+            (state, action) => {
+                state.queries = Dict.fromEntries(
+                    List.reduce((acc, [k, v]) => {
+                            if (k !== action.payload.sourceId) {
+                                acc.push([generatePqueryName(List.size(acc)), v])
+                            }
+                            return acc;
+                        },
+                        [],
+                        Dict.toEntries(state.queries)
+                    )
+                );
+            }
+        );
+
+        this.addActionHandler<Actions.QueryChange>(
+            ActionName.QueryChange,
+            (state, action) => {
+                state.queries[action.payload.sourceId].query = action.payload.query;
+                state.queries[action.payload.sourceId].queryHtml = action.payload.query;                
             }
         );
     }

@@ -26,6 +26,7 @@ import { Kontext } from '../../../types/common';
 import { PqueryFormModel, PqueryFormModelState } from '../../../models/pquery/form';
 import { Actions, ActionName } from '../../../models/pquery/actions';
 import * as S from './style';
+import { Dict } from 'cnc-tskit';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -52,11 +53,42 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             });
         };
 
+        const addQueryHandler = () => {
+            dispatcher.dispatch<Actions.AddQueryItem>({
+                name: ActionName.AddQueryItem,
+                payload: {}
+            });
+        };
+
+        const removeQueryHandler = (sourceId) => {
+            dispatcher.dispatch<Actions.RemoveQueryItem>({
+                name: ActionName.RemoveQueryItem,
+                payload: {sourceId: sourceId}
+            });
+        };
+        
+        const handleQueryChange = (sourceId, query) => {
+            dispatcher.dispatch<Actions.QueryChange>({
+                name: ActionName.QueryChange,
+                payload: {
+                    sourceId: sourceId,
+                    query: query
+                }
+            });
+        };
+
         return (
             <S.PqueryForm>
                 <props.corparchWidget />
                 <form>
                     <p>Pquery form TODO</p>
+                    {Dict.mapEntries(([k, v]) => <fieldset id={k} key={k}>
+                            <textarea name={k} onChange={x => handleQueryChange(k, x.target.value)} value={v.query} />
+                            {Dict.size(props.queries) > 1 ? <button type="button" onClick={x => removeQueryHandler(k)}>x</button> : null}
+                        </fieldset>,
+                        props.queries
+                    )}
+                    <button type="button" onClick={addQueryHandler}>+</button>
                     <button type="button" onClick={handleSubmit}>Submit</button>
                 </form>
             </S.PqueryForm>
