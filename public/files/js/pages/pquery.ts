@@ -24,6 +24,10 @@ import { KontextPage } from '../app/main';
 import { Kontext } from '../types/common';
 import { init as formViewInit } from '../views/pquery/form';
 import { PqueryFormModel } from '../models/pquery/form';
+import { PluginInterfaces } from '../types/plugins';
+import corplistComponent from 'plugins/corparch/init';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
+import { tuple } from 'cnc-tskit';
 
 
 class ParadigmaticQueryFormPage {
@@ -34,6 +38,27 @@ class ParadigmaticQueryFormPage {
         this.layoutModel = layoutModel;
     }
 
+    private initCorplistComponent():[React.ComponentClass, PluginInterfaces.Corparch.IPlugin] {
+        const plg = corplistComponent(this.layoutModel.pluginApi());
+        return tuple(
+            plg.createWidget(
+                'query',
+                {
+                    itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                        this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
+                            name: GlobalActionName.SwitchCorpus,
+                            payload: {
+                                corpora,
+                                subcorpus: subcorpId
+                            }
+                        });
+                    }
+                }
+            ),
+            plg
+        );
+    }
+
     init():void {
         this.layoutModel.init(true, [], () => {
 
@@ -42,7 +67,8 @@ class ParadigmaticQueryFormPage {
                 this.layoutModel.dispatcher,
                 {
                     isBusy: false,
-                    corpname: this.layoutModel.getCorpusIdent().id
+                    corpname: this.layoutModel.getCorpusIdent().id,
+                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp
                 },
                 this.layoutModel
             );
@@ -51,12 +77,24 @@ class ParadigmaticQueryFormPage {
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
                 model
-            })
+            });
+            const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
             this.layoutModel.renderReactComponent(
                 formView,
                 window.document.getElementById('pquery-form-mount'),
                 {
+                    corparchWidget
                 }
+            );
+
+            this.layoutModel.registerCorpusSwitchAwareModels(
+                () => {
+                    this.layoutModel.unmountReactComponent(
+                        window.document.getElementById('pquery-form-mount'));
+                    this.init();
+                },
+                model,
+                corparchPlg
             );
 
             console.log('init query page done'); // TODO
