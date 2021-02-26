@@ -19,8 +19,7 @@
  */
 
 import * as React from 'react';
-import { Subscription } from 'rxjs';
-import { IActionDispatcher, IModel } from 'kombo';
+import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { ActionName, Actions } from '../../models/query/actions';

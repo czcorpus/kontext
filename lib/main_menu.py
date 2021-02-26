@@ -329,6 +329,14 @@ class MenuGenerator(object):
             .mark_indirect()
         )
 
+        self.pquery = (
+            MenuItemInternal(MainMenu.NEW_QUERY('paradigmatic-query'), te('Paradigmatic query'), 'pquery')
+            .add_args(
+                ('corpname', self._args['corpname']),
+                ('usesubcorp', self._args['usesubcorp']))
+            .mark_indirect()
+        )
+
         self.word_list = (
             HideOnCustomCondItem(MainMenu.NEW_QUERY('wordlist'), te('Word List'), 'wordlist/form')
             .add_args(
@@ -573,7 +581,7 @@ class MenuGenerator(object):
             (MainMenu.NEW_QUERY.name, dict(
                 label=te('Query'),
                 fallback_action='query',
-                items=exp(MainMenu.NEW_QUERY, self.new_query, self.recent_queries, self.word_list),
+                items=exp(MainMenu.NEW_QUERY, self.new_query, self.recent_queries, self.pquery, self.word_list),
                 disabled=is_disabled(MainMenu.NEW_QUERY)
             )),
             (MainMenu.CORPORA.name, dict(

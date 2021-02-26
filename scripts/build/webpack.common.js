@@ -46,6 +46,7 @@ module.exports = {
             corplist: mkpath('js/pages/corplist.ts'),
             fcs: mkpath('js/pages/fcs.ts'),
             query: mkpath('js/pages/query.ts'),
+            pquery: mkpath('js/pages/pquery.ts'),
             freq: mkpath('js/pages/freq.ts'),
             message: mkpath('js/pages/message.ts'),
             subcorpForm: mkpath('js/pages/subcorpForm.ts'),
