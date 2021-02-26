@@ -37,7 +37,7 @@ export function init(conf:Kontext.Conf, corplistData:any):void {
 
         layoutModel.renderReactComponent(
             pagePlugin.getList(),
-            document.getElementById('corplist'),
+            document.getElementById('corplist-mount-point'),
             {
                 anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
             }

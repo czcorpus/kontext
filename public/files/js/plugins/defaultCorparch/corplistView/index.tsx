@@ -18,15 +18,16 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Actions, ActionName } from './actions';
+import { Actions, ActionName } from '../actions';
 import { pipe, List } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
-import { CorplistTableModel, CorplistTableModelState, KeywordInfo } from './corplist';
-import { CorplistItem, Filters } from './common';
-import { CorpusInfoBoxProps } from '../../views/overview';
-import { CorpusInfoType } from '../../models/common/layout';
-import { Action } from 'rxjs/internal/scheduler/Action';
+import { Kontext } from '../../../types/common';
+import { CorplistTableModel, CorplistTableModelState, KeywordInfo } from '../corplist';
+import { CorplistItem, Filters } from '../common';
+import { CorpusInfoBoxProps } from '../../../views/overview';
+import { CorpusInfoType } from '../../../models/common/layout';
+import * as S from './style';
+import * as S2 from '../commonStyle';
 
 
 export interface CorplistViews {
@@ -242,7 +243,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 null;
 
             return (
-                <div>
+                <S.CorplistTable>
+                    xxx
                     {this._renderDetailBox()}
                     <table className="data corplist">
                         <tbody>
@@ -251,7 +253,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                             {expansion}
                         </tbody>
                     </table>
-                </div>
+                </S.CorplistTable>
             );
         }
     }
@@ -276,9 +278,9 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         };
 
         return (
-            <a className="keyword" onClick={handleClick}>
+            <S2.KeywordLink onClick={handleClick}>
                 <span className="overlay">{props.label}</span>
-            </a>
+            </S2.KeywordLink>
         );
     };
 
@@ -313,24 +315,24 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         if (!props.keyword.selected) {
             const link = he.createActionLink('corplist', [['keyword', props.keyword.ident]]);
             return (
-                <a className={`keyword${props.iconFile ? ' iconized' : ''}`} href={link}
+                <S2.KeywordLink className={props.iconFile ? ' iconized' : ''} href={link}
                         onClick={handleClickFn(true)}>
                     <span className="overlay" style={style}>
                         {props.iconFile ? <img className="icon" src={props.iconFile} /> : null}
                         {props.keyword.label}
                     </span>
-                </a>
+                </S2.KeywordLink>
             );
 
         } else {
             return (
-                <span className={`keyword selected${props.iconFile ? ' iconized' : ''}`}
+                <S2.KeywordLink className={props.iconFile ? 'selected iconized' : 'selected'}
                             onClick={handleClickFn(false)}>
                     <span className="overlay" style={style}>
                         {props.iconFile ? <img className="icon" src={props.iconFile} /> : null}
                         {props.keyword.label}
                     </span>
-                </span>
+                </S2.KeywordLink>
             );
         }
     }
@@ -541,7 +543,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         render() {
             return (
-                <section className="inner">
+                <S.FilterForm className="inner">
                     <div style={{height: '1em'}}>
                         {this._renderLoader()}
                     </div>
@@ -552,16 +554,16 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                         anonymousUser={this.props.anonymousUser}/>
                     <FilterInputFieldset
                         filters={this.props.filters} />
-                </section>
+                </S.FilterForm>
             )
         }
     }
 
     return {
         CorplistTable: Bound(CorplistTable, listModel),
-        CorplistHeader: CorplistHeader,
+        CorplistHeader,
         FilterForm: Bound(FilterForm, listModel),
-        FavStar: FavStar,
-        CorpKeywordLink: CorpKeywordLink
+        FavStar,
+        CorpKeywordLink
     };
 }

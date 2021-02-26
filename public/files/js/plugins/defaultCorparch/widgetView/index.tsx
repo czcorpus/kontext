@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2017 Institute of the Czech National Corpus
+ * Copyright (c) 2017 Charles University, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,14 +21,16 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from './widget';
-import { CorplistItem } from './common';
-import { SearchKeyword, SearchResultRow } from './search';
-import { Actions, ActionName } from './actions';
+import { Kontext } from '../../../types/common';
+import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from '../widget';
+import { CorplistItem } from '../common';
+import { SearchKeyword, SearchResultRow } from '../search';
+import { Actions, ActionName } from '../actions';
 import { Keyboard, Strings, List } from 'cnc-tskit';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../../models/query/actions';
+import { CorpusSwitchModel, CorpusSwitchModelState } from '../../../models/common/corpusSwitch';
+import * as S from './style';
+import * as S2 from '../commonStyle';
 
 
 export interface WidgetViewModuleArgs {
@@ -52,7 +56,7 @@ export function init({
 
     // ----------------------- <FavStar /> --------------------------------------
 
-    const FavStar:React.SFC<{
+    const FavStar:React.FC<{
         ident:string;
         trashTTL:number;
 
@@ -93,7 +97,7 @@ export function init({
 
     // -------------------------- <TRFavoriteItem /> ----------------------------------
 
-    const TRFavoriteItem:React.SFC<{
+    const TRFavoriteItem:React.FC<{
         data:FavListItem;
         isActive:boolean;
 
@@ -142,7 +146,7 @@ export function init({
 
     // -------------------------- <FavoritesBox /> ---------------------
 
-    const FavoritesBox:React.SFC<{
+    const FavoritesBox:React.FC<{
         data:Array<FavListItem>;
         anonymousUser:boolean;
         activeIdx:number;
@@ -181,7 +185,7 @@ export function init({
 
     // --------------------------- <TRFeaturedItem /> --------------------------------
 
-    const TRFeaturedItem:React.SFC<{
+    const TRFeaturedItem:React.FC<{
         data:CorplistItem;
         isActive:boolean;
 
@@ -214,7 +218,7 @@ export function init({
 
     // ---------------------------------- <FeaturedBox /> --------------------------------
 
-    const FeaturedBox:React.SFC<{
+    const FeaturedBox:React.FC<{
         data:Array<CorplistItem>;
         activeIdx:number;
 
@@ -237,7 +241,7 @@ export function init({
 
     // ------------------------- <StarComponent /> ------------------------
 
-    const StarComponent:React.SFC<{
+    const StarComponent:React.FC<{
         currFavitemId:string;
 
     }> = (props) => {
@@ -277,7 +281,7 @@ export function init({
 
     // --------------------------- <TabMenu /> ------------------------------
 
-    const TabMenu:React.SFC<{
+    const TabMenu:React.FC<{
         activeTab:number;
         onItemClick:(v:number)=>void;
         onEscKey:()=>void;
@@ -309,7 +313,7 @@ export function init({
 
     // ----------------------------- <ListsTab /> -------------------------------
 
-    const ListsTab:React.SFC<{
+    const ListsTab:React.FC<{
         dataFav:Array<FavListItem>;
         dataFeat:Array<CorplistItem>;
         anonymousUser:boolean;
@@ -364,7 +368,7 @@ export function init({
 
     // -------------------------- <SearchKeyword /> ---------------------
 
-    const SearchKeyword:React.SFC<{
+    const SearchKeyword:React.FC<{
         key:string;
         id:string;
         label:string;
@@ -384,27 +388,23 @@ export function init({
             });
         };
 
-        const htmlClass = ['keyword'];
-        if (props.selected) {
-            htmlClass.push('selected');
-        }
         const style = {
             backgroundColor: props.color,
             borderColor: props.color
         };
 
         return (
-            <a className={htmlClass.join(' ')} onClick={handleClick}>
+            <S2.KeywordLink className={props.selected ? 'selected' : undefined} onClick={handleClick}>
                 <span className="overlay" style={style}>
                     {props.label}
                 </span>
-            </a>
+            </S2.KeywordLink>
         );
     };
 
    // ----------------------------- <ResetKeyword /> ----------------------------------
 
-    const ResetKeyword:React.SFC<{}> = (props) => {
+    const ResetKeyword:React.FC<{}> = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch<Actions.KeywordResetClicked>({
@@ -423,7 +423,7 @@ export function init({
 
     // ------------------------- <SearchInput /> ---------------------------------------
 
-    const SearchInput:React.SFC<{
+    const SearchInput:React.FC<{
         value:string;
         handleTab:()=>void;
 
@@ -476,7 +476,7 @@ export function init({
 
     // ------------------------- <SearchResultRow /> ------------------------
 
-    const SearchResultRow:React.SFC<{
+    const SearchResultRow:React.FC<{
         data:SearchResultRow;
         hasFocus:boolean;
 
@@ -515,7 +515,7 @@ export function init({
 
     // ---------------------------- <SearchLoaderBar /> --------------------------
 
-    const SearchLoaderBar:React.SFC<{
+    const SearchLoaderBar:React.FC<{
         isActive:boolean;
 
     }> = (props) => {
@@ -534,7 +534,7 @@ export function init({
 
     // ---------------------------- <SearchTab /> -----------------------------------
 
-    const SearchTab:React.SFC<{
+    const SearchTab:React.FC<{
         availSearchKeywords:Array<SearchKeyword>;
         isWaitingForSearchResults:boolean;
         currSearchResult:Array<SearchResultRow>;
@@ -546,7 +546,7 @@ export function init({
     }> = (props) => {
         return (
             <div>
-                <div className="labels">
+                <div>
                     {List.map(
                         item => <SearchKeyword key={item.id} {...item} />,
                         props.availSearchKeywords
@@ -560,11 +560,13 @@ export function init({
                     <SearchInput value={props.currSearchPhrase} handleTab={props.handleTab} />
                     <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
                     {props.currSearchResult.length > 0 ?
-                        (<div className="tt-menu">
+                        <S.TTMenu>
                             {props.currSearchResult.map((item, i) =>
                                     <SearchResultRow key={item.id} data={item}
                                             hasFocus={i === props.focusedRowIdx} />)}
-                        </div>) : null}
+                        </S.TTMenu> :
+                        null
+                    }
                 </div>
             </div>
         );
@@ -578,7 +580,7 @@ export function init({
         onClick:()=>void;
     }
 
-    const CorpusButton:React.SFC<CorpusSwitchModelState & CorpusButtonProps> = (props) => {
+    const CorpusButton:React.FC<CorpusSwitchModelState & CorpusButtonProps> = (props) => {
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
             if (evt.key === Keyboard.Value.ENTER || evt.key === Keyboard.Value.ESC) {
@@ -609,7 +611,7 @@ export function init({
 
     // ------------------------------- <SubcorpSelection /> -----------------------------
 
-    const SubcorpSelection:React.SFC<{
+    const SubcorpSelection:React.FC<{
         currSubcorpus:string;
         origSubcorpName:string;
         availSubcorpora:Array<Kontext.SubcorpListItem>;
@@ -717,7 +719,7 @@ export function init({
 
         _renderWidget() {
             return (
-                <layoutViews.PopupBox customClass="corplist-widget"
+                <layoutViews.PopupBox customClass="active-widget"
                         onCloseClick={this._handleCloseClick}
                         onAreaClick={this._handleAreaClick}
                         keyPressHandler={this._handleKeypress}>
@@ -749,7 +751,7 @@ export function init({
 
         render() {
             return (
-                <div className="CorplistWidget">
+                <S.CorplistWidget>
                     <div>
                         <BoundCorpusButton
                             corpusIdent={this.props.corpusIdent}
@@ -770,7 +772,7 @@ export function init({
                             null
                         }
                     </div>
-                </div>
+                </S.CorplistWidget>
             );
         }
     }

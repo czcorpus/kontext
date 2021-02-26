@@ -46,7 +46,7 @@ export function init({
 
     // ----------------------- <FavStar /> --------------------------------------
 
-    const FavStar:React.SFC<{
+    const FavStar:React.FC<{
         ident:string;
         trashTTL:number;
 
@@ -79,7 +79,7 @@ export function init({
 
     // -------------------------- <TRFavoriteItem /> ----------------------------------
 
-    const TRFavoriteItem:React.SFC<{
+    const TRFavoriteItem:React.FC<{
         data:FavListItem;
         isActive:boolean;
 
@@ -125,7 +125,7 @@ export function init({
 
     // -------------------------- <FavoritesBox /> ---------------------
 
-    const FavoritesBox:React.SFC<{
+    const FavoritesBox:React.FC<{
         data:Array<FavListItem>;
         anonymousUser:boolean;
         activeIdx:number;
@@ -158,7 +158,7 @@ export function init({
 
     // --------------------------- <TRFeaturedItem /> --------------------------------
 
-    const TRFeaturedItem:React.SFC<{
+    const TRFeaturedItem:React.FC<{
         data:CorplistItem;
         isActive:boolean;
 
@@ -191,7 +191,7 @@ export function init({
 
     // ---------------------------------- <FeaturedBox /> --------------------------------
 
-    const FeaturedBox:React.SFC<{
+    const FeaturedBox:React.FC<{
         data:Array<CorplistItem>;
         activeIdx:number;
 
@@ -215,7 +215,7 @@ export function init({
 
     // ------------------------- <StarComponent /> ------------------------
 
-    const StarComponent:React.SFC<{
+    const StarComponent:React.FC<{
         currFavitemId:string;
 
     }> = (props) => {
@@ -255,7 +255,7 @@ export function init({
 
     // --------------------------- <TabMenu /> ------------------------------
 
-    const TabMenu:React.SFC<{
+    const TabMenu:React.FC<{
         activeTab:number;
         onItemClick:(v:number)=>void;
         onEscKey:()=>void;
@@ -287,7 +287,7 @@ export function init({
 
     // ----------------------------- <ListsTab /> -------------------------------
 
-    const ListsTab:React.SFC<{
+    const ListsTab:React.FC<{
         dataFav:Array<FavListItem>;
         dataFeat:Array<CorplistItem>;
         anonymousUser:boolean;
@@ -336,7 +336,7 @@ export function init({
 
     // -------------------------- <SearchKeyword /> ---------------------
 
-    const SearchKeyword:React.SFC<{
+    const SearchKeyword:React.FC<{
         key:string;
         id:string;
         label:string;
@@ -376,7 +376,7 @@ export function init({
 
    // ----------------------------- <ResetKeyword /> ----------------------------------
 
-    const ResetKeyword:React.SFC<{}> = (props) => {
+    const ResetKeyword:React.FC<{}> = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch<Actions.WidgetKeywordResetClick>({
@@ -396,7 +396,7 @@ export function init({
 
     // ------------------------- <SearchInput /> ---------------------------------------
 
-    const SearchInput:React.SFC<{
+    const SearchInput:React.FC<{
         value:string;
         handleTab:()=>void;
 
@@ -450,7 +450,7 @@ export function init({
 
     // ------------------------- <SearchResultRow /> ------------------------
 
-    const SearchResultRow:React.SFC<{
+    const SearchResultRow:React.FC<{
         data:SearchResultRow;
         hasFocus:boolean;
 
@@ -489,7 +489,7 @@ export function init({
 
     // ---------------------------- <SearchLoaderBar /> --------------------------
 
-    const SearchLoaderBar:React.SFC<{
+    const SearchLoaderBar:React.FC<{
         isActive:boolean;
 
     }> = (props) => {
@@ -508,7 +508,7 @@ export function init({
 
     // ---------------------------- <SearchTab /> -----------------------------------
 
-    const SearchTab:React.SFC<{
+    const SearchTab:React.FC<{
         availSearchKeywords:Array<SearchKeyword>;
         isWaitingForSearchResults:boolean;
         currSearchResult:Array<SearchResultRow>;
@@ -550,7 +550,7 @@ export function init({
         onClick:()=>void;
     }
 
-    const CorpusButton:React.SFC<CorpusSwitchModelState & CorpusButtonProps> = (props) => {
+    const CorpusButton:React.FC<CorpusSwitchModelState & CorpusButtonProps> = (props) => {
 
         const handleKeyDown = (evt:React.KeyboardEvent) => {
             if (evt.key === Keyboard.Value.ENTER || evt.key === Keyboard.Value.ESC) {
@@ -576,7 +576,7 @@ export function init({
 
     // ------------------------------- <SubcorpSelection /> -----------------------------
 
-    const SubcorpSelection:React.SFC<{
+    const SubcorpSelection:React.FC<{
         currSubcorpus:string;
         origSubcorpName:string;
         availSubcorpora:Array<Kontext.SubcorpListItem>;
