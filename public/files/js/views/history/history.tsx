@@ -27,6 +27,8 @@ import { PluginInterfaces } from '../../types/plugins';
 import { Actions, ActionName } from '../../models/query/actions';
 import { QueryType } from '../../models/query/query';
 
+import * as S from './style';
+
 
 export interface HistoryViews {
     RecentQueriesPageList:React.ComponentClass<{}>;
@@ -524,7 +526,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const RecentQueriesPageList:React.FC<PluginInterfaces.QueryStorage.ModelState> = (props) => {
         return (
-            <div className="RecentQueriesPageList">
+            <S.RecentQueriesPageList>
                 <FilterForm queryType={props.queryType}
                         currentCorpusOnly={props.currentCorpusOnly}
                         archivedOnly={props.archivedOnly} />
@@ -536,7 +538,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             editingQueryId={props.editingQueryId}
                             editingQueryName={props.editingQueryName} />
                 }
-            </div>
+            </S.RecentQueriesPageList>
         );
     }
 

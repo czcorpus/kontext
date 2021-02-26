@@ -25,6 +25,8 @@ import { Kontext } from '../../types/common';
 import { GeneralViewOptionsModelState } from '../../models/options/general';
 import { Actions, ActionName } from '../../models/options/actions';
 
+import * as S from './style';
+
 
 export interface GeneralViews {
     GeneralOptions:React.ComponentClass<{}>;
@@ -417,7 +419,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div className="GeneralOptions">
+                <S.GeneralOptions>
                     <p>
                         {he.translate('options__this_applies_for_all_the_corpora')}
                     </p>
@@ -451,7 +453,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <SubmitButton modelIsBusy={this.props.isBusy} />
                         </div>
                     </form>
-                </div>
+                </S.GeneralOptions>
             );
         }
     }

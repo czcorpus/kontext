@@ -1069,10 +1069,6 @@ table.results-range-and-paging {
     td {
         padding: 3pt 0;
     }
-
-    .ToggleSwitch {
-        font-size: 1.5em;
-    }
 }
 
 a.context-help {
@@ -1170,7 +1166,7 @@ button.util-button:hover {
             margin-top: 1em;
             font-size: 1.5em;
         }
-    
+
         h3 {
             margin-left: 0;
             font-size: 1.2em;
@@ -1331,72 +1327,6 @@ p.boxed-par {
     }
 }
 
-.ToggleSwitch {
-
-    display: inline-block;
-    vertical-align: middle;
-    width: 1.5em;
-    height: 0.85em;
-
-    input {
-        position: absolute;
-        visibility: hidden;
-        height: 0;
-        width: 0;
-    }
-
-    .toggle-img {
-        display: block;
-        width: 100%;
-        height: 100%;
-
-        a {
-            display: block;
-            width: 100%;
-            height: 100%;
-            padding: 2%;
-            background-repeat: no-repeat;
-            background-size: contain;
-            background-position-y: 0%;
-        }
-
-        a.on {
-            background-image: url(../img/toggle_on.svg);
-        }
-
-        a.off {
-            background-image: url(../img/toggle_off.svg);
-        }
-
-        a.switch-on {
-            animation: switchingOn 0.1s steps(2, end);
-        }
-
-        a.switch-off {
-            animation: switchingOff 0.1s steps(2, end);
-        }
-
-        @keyframes switchingOn {
-            0%, 50% {
-                background-image: url(../img/toggle_off_1.svg);
-            }
-
-            50%, 100% {
-                background-image: url(../img/toggle_off_2.svg);
-            }
-        }
-
-        @keyframes switchingOff {
-            0%, 50% {
-                background-image: url(../img/toggle_off_2.svg);
-            }
-
-            50%, 100% {
-                background-image: url(../img/toggle_off_1.svg);
-            }
-        }
-    }
-}
 
 .disabled {
 
@@ -1520,5 +1450,12 @@ ul.tabs {
     }
 }
 
+#wordlist-result-mount {
+    margin: 0;
+}
+
+#coll-view-mount {
+    margin: 0;
+}
+
 @import "./layoutMobile.less";
-@import "~custom-styles/theme.less";

@@ -27,6 +27,8 @@ import { TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel, MLFreqFormModel
 import { Actions, ActionName } from '../../models/freqs/actions';
 import { AlignTypes } from '../../models/freqs/twoDimension/common';
 
+import * as S from './style';
+
 // -------------------------- exported component ----------
 
 export interface FreqFormsViews {
@@ -351,7 +353,7 @@ export function init(
 
         const iconStyle = {cursor: 'pointer'};
         return (
-            <div className="MLMoveLevelControl">
+            <S.MLMoveLevelControl>
                 {props.levelIdx > 0 ?
                     <a onClick={handleClick.bind(null, 'up')}>
                         <layoutViews.ImgWithMouseover
@@ -370,7 +372,7 @@ export function init(
                     </a> :
                     <img src={he.createStaticUrl('img/sort_desc_grey.svg')}  />
                 }
-            </div>
+            </S.MLMoveLevelControl>
         );
     };
 
@@ -459,7 +461,7 @@ export function init(
         render() {
             const levels = List.map((_, i) => i, this.props.mlxattr);
             return (
-                <table className="MLFreqForm">
+                <S.MLFreqForm>
                     <tbody>
                         <tr>
                             <td>
@@ -520,7 +522,7 @@ export function init(
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                </S.MLFreqForm>
             );
         }
     }

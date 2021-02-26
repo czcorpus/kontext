@@ -26,10 +26,6 @@ import { ActionName, Actions } from '../models/concRestore/actions';
 import { Kontext } from '../types/common';
 import { init as viewInit } from '../views/restoreConc';
 
-declare var require:any;
-// weback - ensure an individual style (even empty one) is created for the page
-require('styles/restoreConc.less');
-
 
 class ConcRestorePage {
 
