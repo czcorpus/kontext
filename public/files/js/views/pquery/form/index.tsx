@@ -20,7 +20,7 @@
  */
 
 import * as React from 'react';
-import { Bound, IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { PqueryFormModel, PqueryFormModelState } from '../../../models/pquery/form';
@@ -33,10 +33,17 @@ export interface PqueryFormViewsArgs {
     model:PqueryFormModel;
 }
 
-export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{}> {
+interface PqueryFormProps {
+    corparchWidget:React.ComponentClass;
+}
 
 
-    const PqueryForm:React.FC<PqueryFormModelState> = (props) => {
+export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{
+    corparchWidget:React.ComponentClass
+}> {
+
+
+    const PqueryForm:React.FC<PqueryFormModelState & PqueryFormProps> = (props) => {
 
         const handleSubmit = () => {
             dispatcher.dispatch<Actions.SubmitQuery>({
@@ -47,14 +54,14 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
 
         return (
             <S.PqueryForm>
+                <props.corparchWidget />
                 <form>
                     <p>Pquery form TODO</p>
-
                     <button type="button" onClick={handleSubmit}>Submit</button>
                 </form>
             </S.PqueryForm>
         )
     };
 
-    return Bound(PqueryForm, model);
+    return BoundWithProps<PqueryFormProps, PqueryFormModelState>(PqueryForm, model);
 }

@@ -24,6 +24,10 @@ import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { NonQueryCorpusSelectionModel } from '../corpsel';
 
 
 interface HTTPSubmitArgs {
@@ -38,10 +42,15 @@ interface HTTPSubmitResponse {
 export interface PqueryFormModelState {
     isBusy:boolean;
     corpname:string;
+    usesubcorp:string;
+}
+
+interface PqueryFormModelSwitchPreserve {
+
 }
 
 
-export class PqueryFormModel extends StatelessModel<PqueryFormModelState> {
+export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implements IUnregistrable {
 
     private readonly layoutModel:PageModel;
 
@@ -80,6 +89,65 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> {
                 state.isBusy = false;
             }
         );
+
+        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
+            GlobalActionName.CorpusSwitchModelRestore,
+            (state, action) => {
+                if (!action.error) {
+                    this.deserialize(
+                        state,
+                        action.payload.data[this.getRegistrationId()] as
+                            PqueryFormModelSwitchPreserve,
+                        action.payload.corpora
+                    );
+                }
+            }
+        );
+
+        this.addActionHandler<GlobalActions.SwitchCorpus>(
+            GlobalActionName.SwitchCorpus,
+            (state, action) => {
+                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<
+                        PqueryFormModelSwitchPreserve>>({
+                    name: GlobalActionName.SwitchCorpusReady,
+                    payload: {
+                        modelId: this.getRegistrationId(),
+                        data: this.serialize(
+                            state,
+                            action.payload.corpora,
+                            action.payload.newPrimaryCorpus
+                        )
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
+            QueryActionName.QueryInputSelectSubcorp,
+            (state, action) => {
+                state.usesubcorp = action.payload.subcorp;
+            }
+        );
+    }
+
+
+    private deserialize(
+        state:PqueryFormModelState,
+        data:PqueryFormModelSwitchPreserve,
+        corpora:Array<[string, string]>
+    ):void {
+
+        if (data) {
+            console.log('should deserialize ', corpora)
+        }
+    }
+
+    private serialize(
+        state:PqueryFormModelState,
+        newCorpora:Array<string>,
+        newPrimaryCorpus:string|undefined
+    ):PqueryFormModelSwitchPreserve {
+        return {};
     }
 
     private submitForm(state:PqueryFormModelState):Observable<HTTPSubmitResponse> {
@@ -87,10 +155,14 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> {
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'pquery/submit',
-                [tuple('corpname', state.corpname)]
+                [tuple('corpname', state.corpname), tuple('usesubcorp', state.usesubcorp)]
             ),
             {}
         );
+    }
+
+    getRegistrationId():string {
+        return 'paradigmatic-query-form-model';
     }
 
 }

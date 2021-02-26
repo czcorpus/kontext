@@ -330,7 +330,7 @@ class MenuGenerator(object):
         )
 
         self.pquery = (
-            MenuItemInternal(MainMenu.NEW_QUERY('paradigmatic-query'), te('Paradigmatic query'), 'pquery')
+            MenuItemInternal(MainMenu.NEW_QUERY('paradigmatic-query'), te('Paradigmatic query'), 'pquery/index')
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('usesubcorp', self._args['usesubcorp']))

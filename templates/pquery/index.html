@@ -28,6 +28,7 @@ KonText - {{ "Paradigmatic query"|_}}
 
 {% block bodyonload %}
 __conf.View = {{view|to_json}};
+__conf.SubcorpList = {{SubcorpList|to_json}};
 pqueryPage.init(__conf);
 {% endblock %}
 
