@@ -25,6 +25,13 @@ import * as translations from 'translations';
 import * as IntlMessageFormat from '../vendor/intl-messageformat';
 import { ITranslator } from 'kombo';
 
+
+interface DateTimeFormatOpts {
+    year:'numeric'|'2-digit';
+    month:'numeric'|'2-digit';
+    day:'numeric'|'2-digit';
+}
+
 /**
  * L10n provides a set of essential localization functions.
  */
@@ -82,7 +89,7 @@ export class L10n implements ITranslator {
      *  (hours, minutes and seconds are always in 2-digit format)
      */
     formatDate(d:Date, timeFormat:number=0):string {
-        const opts = {year: 'numeric', month: '2-digit', day: '2-digit'};
+        const opts:DateTimeFormatOpts = {year: 'numeric', month: '2-digit', day: '2-digit'};
 
         if (timeFormat > 0) {
             opts['hour'] = '2-digit';
