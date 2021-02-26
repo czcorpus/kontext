@@ -25,7 +25,10 @@ import { Action } from 'kombo';
 export enum ActionName {
 
     SubmitQuery = 'PQUERY_SUBMIT_QUERY',
-    SubmitQueryDone = 'PQUERY_SUBMIT_QUERY_DONE'
+    SubmitQueryDone = 'PQUERY_SUBMIT_QUERY_DONE',
+    AddQueryItem = 'PQUERY_ADD_QUERY_ITEM',
+    RemoveQueryItem = 'PQUERY_REMOVE_QUERY_ITEM',
+    QueryChange = 'PQUERY_QUERY_CHANGE'
 }
 
 
@@ -43,4 +46,22 @@ export namespace Actions {
         name: ActionName.SubmitQueryDone;
     }
 
+    export interface AddQueryItem extends Action<{
+
+    }> {
+        name: ActionName.AddQueryItem;
+    }
+
+    export interface RemoveQueryItem extends Action<{
+        sourceId: string;
+    }> {
+        name: ActionName.RemoveQueryItem;
+    }
+
+    export interface QueryChange extends Action<{
+        sourceId: string;
+        query: string;
+    }> {
+        name: ActionName.QueryChange;
+    }
 }

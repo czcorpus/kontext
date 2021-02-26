@@ -23,7 +23,7 @@ import { PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import { Kontext } from '../types/common';
 import { init as formViewInit } from '../views/pquery/form';
-import { PqueryFormModel } from '../models/pquery/form';
+import { generatePqueryName, PqueryFormModel } from '../models/pquery/form';
 import { PluginInterfaces } from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
@@ -68,7 +68,20 @@ class ParadigmaticQueryFormPage {
                 {
                     isBusy: false,
                     corpname: this.layoutModel.getCorpusIdent().id,
-                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp
+                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                    queries: {[generatePqueryName(0)]: {
+                        corpname: this.layoutModel.getCorpusIdent().id,
+                        qtype: 'advanced',
+                        query: '',
+                        parsedAttrs: [],
+                        focusedAttr: undefined,
+                        rawAnchorIdx: 0,
+                        rawFocusIdx: 0,
+                        queryHtml: '',
+                        pcq_pos_neg: 'pos',
+                        include_empty: true,
+                        default_attr: null
+                    }}
                 },
                 this.layoutModel
             );
