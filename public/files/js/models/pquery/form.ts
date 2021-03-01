@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, HTTP, List, tuple } from 'cnc-tskit';
+import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Observable, of } from 'rxjs';
 import { PageModel } from '../../app/page';
@@ -252,7 +252,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                     ml: 0,
                     flimit: 0,
                     freq_sort: 'freq',
-                    fmaxitems: 1000,
+                    fmaxitems: 10000,
                     format: 'json'
                 }
 
@@ -263,16 +263,14 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 )
             }),
             reduce((acc, value, index) => {
-                List.forEach(item => {
-                    const word = item.Word[0].n;
-                    if (acc[word]) {
-                        acc[word] += item.freq;
-
-                    } else {
-                        acc[word] = item.freq;
-                    }
-                }, value.Blocks[0].Items);
-                return acc;
+                const newData = pipe(
+                    value.Blocks[0].Items,
+                    List.map(item => tuple(item.Word[0].n, item.freq)),
+                    List.filter(([k, v]) => index === 0 ? true : Dict.hasKey(k, acc)),
+                    Dict.fromEntries()
+                );
+                acc = Dict.filter((v, k) => Dict.hasKey(k, newData), acc);
+                return Dict.mergeDict((oldVal, newVal, key) => oldVal + newVal, newData, acc);
             }, {}),
             map(data => Dict.filter(v => v >= state.minFreq, data))
         ).subscribe({
