@@ -20,7 +20,7 @@ from xml.sax.saxutils import escape
 class DummyGlobals(object):
 
     def export(self):
-        return []
+        return {}
 
 
 class StateGlobals(object):

@@ -21,15 +21,19 @@
 
 import { Dict, HTTP, List, tuple } from 'cnc-tskit';
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { NonQueryCorpusSelectionModel } from '../corpsel';
-import { AdvancedQuery } from '../query/query';
-import { Kontext } from '../../types/common';
+import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
+import { Kontext, TextTypes } from '../../types/common';
+import { ConcQueryResponse } from '../concordance/common';
+import { map, mergeMap, reduce, tap } from 'rxjs/operators';
+import { ConcQueryArgs, QueryContextArgs } from '../query/common';
+import { FreqResultResponse } from '../../types/ajaxResponses';
 
 
 interface HTTPSubmitArgs {
@@ -76,7 +80,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.submitForm(state).subscribe(
+                this.submitForm(state, false).subscribe(
                     (resp) => {
                         dispatch<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
@@ -199,6 +203,13 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 state.position = action.payload.value;
             }
         );
+
+        this.addActionHandler<Actions.AttrChange>(
+            ActionName.AttrChange,
+            (state, action) => {
+                state.attr = action.payload.value;
+            }
+        );
     }
 
 
@@ -221,7 +232,53 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         return {};
     }
 
-    private submitForm(state:PqueryFormModelState):Observable<HTTPSubmitResponse> {
+    private submitForm(state:PqueryFormModelState, async:boolean):Observable<HTTPSubmitResponse> {
+        of(...Dict.toEntries(state.queries)).pipe(
+            mergeMap(([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
+                HTTP.Method.POST,
+                this.layoutModel.createActionUrl(
+                    'query_submit',
+                    [tuple('format', 'json')]
+                ),
+                this.createConcSubmitArgs(state, query, async),
+                {contentType: 'application/json'}
+            )),
+            tap(resp => console.log(`Concordance generated: ${resp.conc_persistence_op_id}`)),
+            mergeMap(resp => {
+                const freqArgs = {
+                    ...resp.conc_args,
+                    q: `~${resp.conc_persistence_op_id}`,
+                    fcrit: `${state.attr} ${state.position}`,
+                    ml: 0,
+                    flimit: 0,
+                    freq_sort: 'freq',
+                    fmaxitems: 1000,
+                    format: 'json'
+                }
+
+                return this.layoutModel.ajax$<FreqResultResponse.FreqResultResponse>(
+                    HTTP.Method.GET,
+                    this.layoutModel.createActionUrl('freqs'),
+                    freqArgs
+                )
+            }),
+            reduce((acc, value, index) => {
+                List.forEach(item => {
+                    const word = item.Word[0].n;
+                    if (acc[word]) {
+                        acc[word] += item.freq;
+
+                    } else {
+                        acc[word] = item.freq;
+                    }
+                }, value.Blocks[0].Items);
+                return acc;
+            }, {}),
+            map(data => Dict.filter(v => v >= state.minFreq, data))
+        ).subscribe({
+            next: resp => console.log(`Frequencies calculated: ${JSON.stringify(resp)}`)
+        });
+
         return this.layoutModel.ajax$<HTTPSubmitResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
@@ -234,6 +291,42 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
 
     getRegistrationId():string {
         return 'paradigmatic-query-form-model';
+    }
+
+    exportQuery(query:AdvancedQuery):AdvancedQuerySubmit {
+        return {
+            qtype: 'advanced',
+            corpname: query.corpname,
+            query: query.query.trim().normalize(),
+            pcq_pos_neg: query.pcq_pos_neg,
+            include_empty: query.include_empty,
+            default_attr: !Array.isArray(query.default_attr) ?
+                                query.default_attr : ''
+        };
+    }
+
+    createConcSubmitArgs(state:PqueryFormModelState, query:AdvancedQuery, async:boolean):ConcQueryArgs {
+
+        const currArgs = this.layoutModel.getConcArgs();
+        return {
+            type: 'concQueryArgs',
+            maincorp: state.corpname,
+            usesubcorp: state.usesubcorp || null,
+            viewmode: 'kwic',
+            pagesize: currArgs.pagesize,
+            attrs: [],
+            attr_vmode: currArgs.attr_vmode,
+            base_viewattr: currArgs.base_viewattr,
+            ctxattrs: null,
+            structs: null,
+            refs: null,
+            fromp: 0,
+            shuffle: 0,
+            queries: [this.exportQuery(query)],
+            text_types: {} as TextTypes.ExportedSelection,
+            context: {} as QueryContextArgs,
+            async
+        };
     }
 
 }
