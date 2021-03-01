@@ -460,7 +460,7 @@ class Kontext(Controller):
     def _save_query_to_history(self, query_id, conc_data):
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_STORAGE as qh:
-                qh.write(user_id=self.session_get('user', 'id'), query_id=query_id)
+                qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='conc')
 
     def _store_conc_params(self) -> List[str]:
         """

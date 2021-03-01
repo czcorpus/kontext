@@ -314,7 +314,7 @@ class MenuGenerator(object):
         # -------------------------- menu-new-query -------------------------------------
 
         self.new_query = (
-            MenuItemInternal(MainMenu.NEW_QUERY('new-query'), te('Enter new query'), 'query')
+            MenuItemInternal(MainMenu.NEW_QUERY('new-query'), te('Concordance query'), 'query')
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('usesubcorp', self._args['usesubcorp']),
@@ -581,7 +581,7 @@ class MenuGenerator(object):
             (MainMenu.NEW_QUERY.name, dict(
                 label=te('Query'),
                 fallback_action='query',
-                items=exp(MainMenu.NEW_QUERY, self.new_query, self.recent_queries, self.pquery, self.word_list),
+                items=exp(MainMenu.NEW_QUERY, self.new_query, self.pquery, self.word_list, self.recent_queries),
                 disabled=is_disabled(MainMenu.NEW_QUERY)
             )),
             (MainMenu.CORPORA.name, dict(

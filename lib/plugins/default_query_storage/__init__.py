@@ -28,7 +28,7 @@ from plugins import inject
 import plugins
 from manatee import Corpus
 from fallback_corpus import EmptyCorpus
-
+import pquery
 
 class CorpusCache:
 
@@ -69,6 +69,7 @@ class QueryStorage(AbstractQueryStorage):
         self._conc_persistence = conc_persistence
         self._auth = auth
         self._page_num_records = int(conf.get('plugins', 'query_storage')['page_num_records'])
+        self._pquery_storage = pquery.Storage()
 
     def _current_timestamp(self):
         return int(time.time())
@@ -79,7 +80,7 @@ class QueryStorage(AbstractQueryStorage):
     def _mk_tmp_key(self, user_id):
         return 'query_history:user:%d:new' % user_id
 
-    def write(self, user_id, query_id):
+    def write(self, user_id, query_id, qtype):
         """
         stores information about a query; from time
         to time also check remove too old records
@@ -87,7 +88,7 @@ class QueryStorage(AbstractQueryStorage):
         arguments:
         see the super class
         """
-        item = dict(created=self._current_timestamp(), query_id=query_id, name=None)
+        item = dict(created=self._current_timestamp(), query_id=query_id, name=None, qtype=qtype)
         self.db.list_append(self._mk_key(user_id), item)
         if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(user_id)
@@ -181,8 +182,23 @@ class QueryStorage(AbstractQueryStorage):
 
         for item in data:
             if 'query_id' in item:
-                tmp = self._merge_conc_data(item)
-                if tmp:
+                qtype = item.get('qtype')
+                if qtype is None or qtype == 'conc':
+                    tmp = self._merge_conc_data(item)
+                    if not tmp:
+                        continue
+                    tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
+                    for ac in tmp['aligned']:
+                        ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
+                    full_data.append(tmp)
+                elif qtype == 'pquery':
+                    stored = self._pquery_storage.load(item['query_id'])
+                    if not stored:
+                        continue
+                    tmp = {}
+                    tmp.update(item)
+                    tmp.update(stored)
+                    logging.getLogger(__name__).debug('TMP: {}'.format(tmp))
                     full_data.append(tmp)
             else:
                 # deprecated type of record (this will vanish soon as there
@@ -227,9 +243,7 @@ class QueryStorage(AbstractQueryStorage):
         tmp = [v for v in reversed(full_data)][offset:(offset + limit)]
         for i, item in enumerate(tmp):
             item['idx'] = offset + i
-            item['human_corpname'] = corpora.corpus(item['corpname']).get_conf('NAME')
-            for ac in item['aligned']:
-                ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
+
         return tmp
 
     def find_by_qkey(self, query_key):
