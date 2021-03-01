@@ -29,6 +29,7 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../com
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { NonQueryCorpusSelectionModel } from '../corpsel';
 import { AdvancedQuery } from '../query/query';
+import { Kontext } from '../../types/common';
 
 
 interface HTTPSubmitArgs {
@@ -45,6 +46,11 @@ export interface PqueryFormModelState {
     corpname:string;
     usesubcorp:string;
     queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
+    minFreq:number;
+    position:string;
+    attr:string;
+    attrs:Array<Kontext.AttrItem>;
+    structAttrs:Array<Kontext.AttrItem>;
 }
 
 interface PqueryFormModelSwitchPreserve {
@@ -177,6 +183,20 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             (state, action) => {
                 state.queries[action.payload.sourceId].query = action.payload.query;
                 state.queries[action.payload.sourceId].queryHtml = action.payload.query;                
+            }
+        );
+
+        this.addActionHandler<Actions.FreqChange>(
+            ActionName.FreqChange,
+            (state, action) => {
+                state.minFreq = parseInt(action.payload.value) || state.minFreq;
+            }
+        );
+
+        this.addActionHandler<Actions.PositionChange>(
+            ActionName.PositionChange,
+            (state, action) => {
+                state.position = action.payload.value;
             }
         );
     }

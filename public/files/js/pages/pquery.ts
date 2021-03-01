@@ -81,7 +81,12 @@ class ParadigmaticQueryFormPage {
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null
-                    }}
+                    }},
+                    minFreq: 5,
+                    position: '0<0',
+                    attr: undefined,
+                    attrs: this.layoutModel.getConf('AttrList'),
+                    structAttrs: this.layoutModel.getConf('StructAttrList')
                 },
                 this.layoutModel
             );

@@ -28,7 +28,10 @@ export enum ActionName {
     SubmitQueryDone = 'PQUERY_SUBMIT_QUERY_DONE',
     AddQueryItem = 'PQUERY_ADD_QUERY_ITEM',
     RemoveQueryItem = 'PQUERY_REMOVE_QUERY_ITEM',
-    QueryChange = 'PQUERY_QUERY_CHANGE'
+    QueryChange = 'PQUERY_QUERY_CHANGE',
+    FreqChange = 'PQUERY_FREQ_CHANGE',
+    PositionChange = 'PQUERY_POSITION_CHANGE',
+    AttrChange = 'PQUERY_ATTR_CHANGE',
 }
 
 
@@ -63,5 +66,23 @@ export namespace Actions {
         query: string;
     }> {
         name: ActionName.QueryChange;
+    }
+
+    export interface FreqChange extends Action<{
+        value: string;
+    }> {
+        name: ActionName.FreqChange;
+    }
+
+    export interface PositionChange extends Action<{
+        value: string;
+    }> {
+        name: ActionName.PositionChange;
+    }
+
+    export interface AttrChange extends Action<{
+        value: string;
+    }> {
+        name: ActionName.AttrChange;
     }
 }

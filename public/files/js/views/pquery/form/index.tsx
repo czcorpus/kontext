@@ -26,7 +26,7 @@ import { Kontext } from '../../../types/common';
 import { PqueryFormModel, PqueryFormModelState } from '../../../models/pquery/form';
 import { Actions, ActionName } from '../../../models/pquery/actions';
 import * as S from './style';
-import { Dict } from 'cnc-tskit';
+import { Dict, List } from 'cnc-tskit';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -77,6 +77,33 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             });
         };
 
+        const handleFreqChange = (e) => {
+            dispatcher.dispatch<Actions.FreqChange>({
+                name: ActionName.FreqChange,
+                payload: {
+                    value: e.target.value
+                }
+            });
+        };
+
+        const handlePositionChange = (e) => {
+            dispatcher.dispatch<Actions.PositionChange>({
+                name: ActionName.PositionChange,
+                payload: {
+                    value: e.target.value
+                }
+            });
+        };
+
+        const handleAttrChange = (e) => {
+            dispatcher.dispatch<Actions.AttrChange>({
+                name: ActionName.AttrChange,
+                payload: {
+                    value: e.target.value
+                }
+            });
+        };
+
         return (
             <S.PqueryForm>
                 <props.corparchWidget />
@@ -89,6 +116,17 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                         props.queries
                     )}
                     <button type="button" onClick={addQueryHandler}>+</button>
+                    <fieldset>
+                        <label htmlFor="freq">Min. fq</label>
+                        <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
+                        <label htmlFor="pos">Position</label>
+                        <input id="pos" onChange={handlePositionChange} value={props.position}/>
+                        <label htmlFor="attr">Attribute</label>
+                        <select id="attr" value={props.attr} onChange={handleAttrChange}>
+                            {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
+                            {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
+                        </select>
+                    </fieldset>
                     <button type="button" onClick={handleSubmit}>Submit</button>
                 </form>
             </S.PqueryForm>
