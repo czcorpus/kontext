@@ -84,7 +84,7 @@ class ParadigmaticQueryFormPage {
                     }},
                     minFreq: 5,
                     position: '0<0',
-                    attr: undefined,
+                    attr: this.layoutModel.getConf('AttrList')[0].n,
                     attrs: this.layoutModel.getConf('AttrList'),
                     structAttrs: this.layoutModel.getConf('StructAttrList')
                 },
