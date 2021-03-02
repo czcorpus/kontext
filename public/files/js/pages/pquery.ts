@@ -86,13 +86,14 @@ class ParadigmaticQueryPage {
                         queryHtml: '',
                         pcq_pos_neg: 'pos',
                         include_empty: true,
-                        default_attr: null
+                        default_attr: null,
                     }},
                     minFreq: 5,
                     position: '0<0',
                     attr: this.layoutModel.getConf('AttrList')[0].n,
                     attrs: this.layoutModel.getConf('AttrList'),
-                    structAttrs: this.layoutModel.getConf('StructAttrList')
+                    structAttrs: this.layoutModel.getConf('StructAttrList'),
+                    receivedResults: false
                 },
                 this.layoutModel
             );

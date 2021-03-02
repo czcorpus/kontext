@@ -42,7 +42,7 @@ interface PqueryFormProps {
 export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{
     corparchWidget:React.ComponentClass
 }> {
-
+    const layoutViews = he.getLayoutViews();
 
     const PqueryForm:React.FC<PqueryFormModelState & PqueryFormProps> = (props) => {
 
@@ -60,19 +60,19 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             });
         };
 
-        const removeQueryHandler = (sourceId) => {
+        const removeQueryHandler = (sourceId) => () => {
             dispatcher.dispatch<Actions.RemoveQueryItem>({
                 name: ActionName.RemoveQueryItem,
                 payload: {sourceId: sourceId}
             });
         };
         
-        const handleQueryChange = (sourceId, query) => {
+        const handleQueryChange = (sourceId) => (e) => {
             dispatcher.dispatch<Actions.QueryChange>({
                 name: ActionName.QueryChange,
                 payload: {
                     sourceId: sourceId,
-                    query: query
+                    query: e.target.value
                 }
             });
         };
@@ -104,31 +104,48 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             });
         };
 
-        return (
-            <S.PqueryForm>
-                <props.corparchWidget />
-                <form>
-                    <p>Pquery form TODO</p>
-                    {Dict.mapEntries(([k, v]) => <fieldset id={k} key={k}>
-                            <textarea name={k} onChange={x => handleQueryChange(k, x.target.value)} value={v.query} />
-                            {Dict.size(props.queries) > 1 ? <button type="button" onClick={x => removeQueryHandler(k)}>x</button> : null}
-                        </fieldset>,
+        const _renderForm = () => <>
+            <props.corparchWidget />
+            <form>
+                <fieldset>
+                    {Dict.mapEntries(([k, v]) =>
+                        <div key={k}>
+                            <textarea name={k} onChange={handleQueryChange(k)} value={v.query} />
+                            {Dict.size(props.queries) > 1 ?
+                                <layoutViews.DelItemIcon title="Remove query" onClick={removeQueryHandler(k)} /> :
+                                null
+                            }
+                        </div>,
                         props.queries
                     )}
-                    <button type="button" onClick={addQueryHandler}>+</button>
-                    <fieldset>
-                        <label htmlFor="freq">Min. fq</label>
-                        <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
-                        <label htmlFor="pos">Position</label>
-                        <input id="pos" onChange={handlePositionChange} value={props.position}/>
-                        <label htmlFor="attr">Attribute</label>
-                        <select id="attr" value={props.attr} onChange={handleAttrChange}>
-                            {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
-                            {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
-                        </select>
-                    </fieldset>
-                    <button type="button" onClick={handleSubmit}>Submit</button>
-                </form>
+                    <button type="button" onClick={addQueryHandler}>Add query</button>
+                </fieldset>
+                <fieldset>
+                    <label htmlFor="freq">Min. fq</label>
+                    <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
+                    <label htmlFor="pos">Position</label>
+                    <input id="pos" onChange={handlePositionChange} value={props.position}/>
+                    <label htmlFor="attr">Attribute</label>
+                    <select id="attr" value={props.attr} onChange={handleAttrChange}>
+                        {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
+                        {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
+                    </select>
+                </fieldset>
+                <button type="button" onClick={handleSubmit}>Submit</button>
+                {props.isBusy ? <layoutViews.AjaxLoaderBarImage/> : null}
+            </form>
+        </>
+
+        return (
+            <S.PqueryForm>
+                {props.receivedResults ?
+                    <layoutViews.ExpandableArea initialExpanded={false} label="Edit query">
+                        <fieldset>
+                            {_renderForm()}
+                        </fieldset>
+                    </layoutViews.ExpandableArea> :
+                    _renderForm()
+                }
             </S.PqueryForm>
         )
     };

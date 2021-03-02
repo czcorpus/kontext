@@ -57,6 +57,7 @@ export interface PqueryFormModelState {
     attr:string;
     attrs:Array<Kontext.AttrItem>;
     structAttrs:Array<Kontext.AttrItem>;
+    receivedResults:boolean;
 }
 
 interface PqueryFormModelSwitchPreserve {
@@ -100,6 +101,16 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                         });
                     }
                 )
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitQueryDone>(
+            ActionName.SubmitQueryDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.receivedResults = true;
+                }
             }
         );
 
