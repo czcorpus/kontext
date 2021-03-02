@@ -22,11 +22,7 @@ Plug-in requires openpyxl library.
 """
 from io import BytesIO
 from openpyxl import Workbook
-try:
-    from openpyxl.utils import get_column_letter
-except ImportError:
-    # older versions of openpyxl
-    from openpyxl.cell import get_column_letter
+from openpyxl.cell import WriteOnlyCell
 
 from . import AbstractExport, lang_row_to_list, ExportPluginException
 from translation import ugettext as _
@@ -35,10 +31,9 @@ from translation import ugettext as _
 class XLSXExport(AbstractExport):
 
     def __init__(self, subtype):
-        self._wb = Workbook()
-        self._sheet = self._wb.active
+        self._wb = Workbook(write_only=True)
+        self._sheet = self._wb.create_sheet()
         self._col_types = ()
-        self._curr_line = 1
         if subtype == 'concordance':
             self._sheet.title = _('concordance')
             self._import_row = lang_row_to_list
@@ -64,19 +59,17 @@ class XLSXExport(AbstractExport):
         self._curr_line = 1
         if type(data) is dict:
             data = ['%s: %s' % (k, v) for (k, v) in list(data.items())]
-        for i in range(1, len(data) + 1):
-            col = get_column_letter(i)
-            self._sheet['%s%s' % (col, self._curr_line)].value = data[i - 1]
-        self._curr_line += 2
+        self._sheet.append(data)
+        self._sheet.append([])
 
     def write_ref_headings(self, data):
-        for i in range(1, len(data) + 1):
-            col = get_column_letter(i)
-            cell = self._sheet['%s%s' % (col, self._curr_line)]
+        cells = []
+        for d in data:
+            cell = WriteOnlyCell(self._sheet, d)
             cell.font = cell.font.copy(bold=True)
-            cell.value = data[i - 1]
-        self._curr_line += 1
-        self._sheet.merge_cells('A1:G1')
+            cells.append(cell)
+        self._sheet.append(cells)
+        self._sheet.merged_cells.ranges.append('A1:G1')
 
     def set_col_types(self, *types):
         self._col_types = types
@@ -104,13 +97,12 @@ class XLSXExport(AbstractExport):
             row.append(line_num)
         for lang_row in lang_rows:
             row += self._import_row(lang_row)
-        for i in range(1, len(row) + 1):
-            col = get_column_letter(i)
-            value, cell_format = self._import_value(row[i - 1], i - 1)
-            cell = self._sheet['%s%s' % (col, self._curr_line)]
-            cell.value = value
-            cell.number_format = cell_format
-        self._curr_line += 1
+        self._sheet.append([self._get_cell(*self._import_value(d, i)) for i, d in enumerate(row)])
+
+    def _get_cell(self, value, cell_format):
+        cell = WriteOnlyCell(self._sheet, value)
+        cell.number_format = cell_format
+        return cell
 
 
 def create_instance(subtype):
