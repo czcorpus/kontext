@@ -122,23 +122,25 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                 </fieldset>
                 <S.ParametersFieldset>
                     <S.ParameterField>
-                        <label htmlFor="freq">Min. fq</label>
+                        <label htmlFor="freq">Min. fq:</label>
                         <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
                     </S.ParameterField>
                     <S.ParameterField>
-                        <label htmlFor="pos">Position</label>
+                        <label htmlFor="pos">Position:</label>
                         <input id="pos" onChange={handlePositionChange} value={props.position}/>
                     </S.ParameterField>
                     <S.ParameterField>
-                        <label htmlFor="attr">Attribute</label>
+                        <label htmlFor="attr">Attribute:</label>
                         <select id="attr" value={props.attr} onChange={handleAttrChange}>
                             {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
                             {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
                         </select>
                     </S.ParameterField>
                 </S.ParametersFieldset>
-                <button type="button" onClick={handleSubmit}>Submit</button>
-                {props.isBusy ? <layoutViews.AjaxLoaderBarImage htmlClass="loader"/> : null}
+                <div>
+                    <button type="button" onClick={handleSubmit}>Submit</button>
+                    {props.isBusy ? <layoutViews.AjaxLoaderBarImage htmlClass="loader"/> : null}
+                </div>
             </form>
         </>
 
