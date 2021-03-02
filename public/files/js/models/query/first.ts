@@ -42,6 +42,7 @@ import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSi
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
 import { ajaxErrorMapped } from '../../app/navigation';
 import { AttrHelper } from './cqleditor/attrs';
+import { highlightSyntaxStatic } from './cqleditor/parser';
 
 
 export interface QueryFormUserEntries {
@@ -164,16 +165,23 @@ function importUserQueries(
             const query = data.currQueries[corpus] || '';
 
             if (qtype === 'advanced') {
+                const [queryHtml, parsedAttrs] = highlightSyntaxStatic(
+                    query,
+                    'advanced',
+                    {
+                        translate: (s:string, values?:any) => s
+                    }
+                );
                 return tuple<string, AdvancedQuery>(
                     corpus,
                     {
                         corpname: corpus,
                         qtype: 'advanced',
                         query,
-                        queryHtml: query,
+                        queryHtml,
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
-                        parsedAttrs: [],
+                        parsedAttrs,
                         focusedAttr: undefined,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
