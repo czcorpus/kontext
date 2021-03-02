@@ -21,19 +21,19 @@
 
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { Observable, of } from 'rxjs';
+import { Observable, of as rxOf, forkJoin } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
-import { NonQueryCorpusSelectionModel } from '../corpsel';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
 import { map, mergeMap, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { FreqResultResponse } from '../../types/ajaxResponses';
+import { PquerySubmitArgs } from './common';
 
 
 interface HTTPSubmitArgs {
@@ -44,6 +44,9 @@ interface HTTPSubmitResponse {
 
 }
 
+interface HTTPSaveQueryResponse {
+
+}
 
 export interface PqueryFormModelState {
     isBusy:boolean;
@@ -80,7 +83,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.submitForm(state, false).subscribe(
+                this.submitForm(state).subscribe(
                     (resp) => {
                         dispatch<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
@@ -186,7 +189,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             ActionName.QueryChange,
             (state, action) => {
                 state.queries[action.payload.sourceId].query = action.payload.query;
-                state.queries[action.payload.sourceId].queryHtml = action.payload.query;                
+                state.queries[action.payload.sourceId].queryHtml = action.payload.query;
             }
         );
 
@@ -232,59 +235,103 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         return {};
     }
 
-    private submitForm(state:PqueryFormModelState, async:boolean):Observable<HTTPSubmitResponse> {
-        of(...Dict.toEntries(state.queries)).pipe(
-            mergeMap(([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
-                HTTP.Method.POST,
-                this.layoutModel.createActionUrl(
-                    'query_submit',
-                    [tuple('format', 'json')]
-                ),
-                this.createConcSubmitArgs(state, query, async),
-                {contentType: 'application/json'}
-            )),
-            tap(resp => console.log(`Concordance generated: ${resp.conc_persistence_op_id}`)),
-            mergeMap(resp => {
-                const freqArgs = {
-                    ...resp.conc_args,
-                    q: `~${resp.conc_persistence_op_id}`,
-                    fcrit: `${state.attr} ${state.position}`,
-                    ml: 0,
-                    flimit: 0,
-                    freq_sort: 'freq',
-                    fmaxitems: 10000,
-                    format: 'json'
-                }
-
-                return this.layoutModel.ajax$<FreqResultResponse.FreqResultResponse>(
-                    HTTP.Method.GET,
-                    this.layoutModel.createActionUrl('freqs'),
-                    freqArgs
+    private runCalculation(state:PqueryFormModelState):Observable<HTTPSubmitResponse> {
+        return rxOf(...Dict.toEntries(state.queries)).pipe(
+            mergeMap(
+                ([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
+                    HTTP.Method.POST,
+                    this.layoutModel.createActionUrl(
+                        'query_submit',
+                        [tuple('format', 'json')]
+                    ),
+                    this.createConcSubmitArgs(state, query, false),
+                    {contentType: 'application/json'}
                 )
-            }),
-            reduce((acc, value, index) => {
-                const newData = pipe(
-                    value.Blocks[0].Items,
-                    List.map(item => tuple(item.Word[0].n, item.freq)),
-                    List.filter(([k, v]) => index === 0 ? true : Dict.hasKey(k, acc)),
-                    Dict.fromEntries()
-                );
-                acc = Dict.filter((v, k) => Dict.hasKey(k, newData), acc);
-                return Dict.mergeDict((oldVal, newVal, key) => oldVal + newVal, newData, acc);
-            }, {}),
-            map(data => Dict.filter(v => v >= state.minFreq, data))
-        ).subscribe({
-            next: resp => console.log(`Frequencies calculated: ${JSON.stringify(resp)}`)
-        });
-
-        return this.layoutModel.ajax$<HTTPSubmitResponse>(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl(
-                'pquery/submit',
-                [tuple('corpname', state.corpname), tuple('usesubcorp', state.usesubcorp)]
             ),
-            {}
+            tap(
+                resp => console.log(`Concordance generated: ${resp.conc_persistence_op_id}`)),
+            mergeMap(
+                resp => {
+                    const freqArgs = {
+                        ...resp.conc_args,
+                        q: `~${resp.conc_persistence_op_id}`,
+                        fcrit: `${state.attr} ${state.position}`,
+                        ml: 0,
+                        flimit: 0,
+                        freq_sort: 'freq',
+                        fmaxitems: 10000,
+                        format: 'json'
+                    }
+
+                    return this.layoutModel.ajax$<FreqResultResponse.FreqResultResponse>(
+                        HTTP.Method.GET,
+                        this.layoutModel.createActionUrl('freqs'),
+                        freqArgs
+                    )
+                }
+            ),
+            tap(
+                resp => console.log('freq response: ', resp.Blocks)
+            ),
+            reduce(
+                (acc, value, index) => {
+                    const newData = pipe(
+                        value.Blocks[0].Items,
+                        List.map(item => tuple(item.Word[0].n, item.freq)),
+                        List.filter(([k, v]) => index === 0 ? true : Dict.hasKey(k, acc)),
+                        Dict.fromEntries()
+                    );
+                    acc = Dict.filter((v, k) => Dict.hasKey(k, newData), acc);
+                    return Dict.mergeDict((oldVal, newVal, key) => oldVal + newVal, newData, acc);
+                },
+                {}
+            ),
+            map(data => Dict.filter(v => v >= state.minFreq, data))
         );
+    }
+
+    private saveQuery(state:PqueryFormModelState):Observable<HTTPSaveQueryResponse> {
+        const args:PquerySubmitArgs = {
+            usesubcorp: state.usesubcorp,
+            min_freq: state.minFreq,
+            position: state.position,
+            attr: state.attr,
+            queries: pipe(
+                state.queries,
+                Dict.toEntries(),
+                List.map(
+                    ([,query]) => ({
+                        corpname: state.corpname,
+                        qtype: 'advanced',
+                        query: query.query,
+                        pcq_pos_neg: 'pos',
+                        include_empty: false,
+                        default_attr: query.default_attr
+                    })
+                )
+            )
+        };
+        return this.layoutModel.ajax$<HTTPSaveQueryResponse>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('pquery/save_query'),
+            args,
+            {contentType: 'application/json'}
+        );
+    }
+
+    private submitForm(state:PqueryFormModelState):Observable<any> { // TODO type
+        return forkJoin([
+            this.runCalculation(state),
+            this.saveQuery(state)
+
+        ]).pipe(
+            tap(
+                ([calcResp, saveResp]) => {
+                    console.log('calcResp: ', calcResp)
+                    console.log('saveResp: ', saveResp)
+                }
+            )
+        )
     }
 
     getRegistrationId():string {

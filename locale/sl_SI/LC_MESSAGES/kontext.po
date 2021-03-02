@@ -443,8 +443,8 @@ msgstr "Syntax error. Please check the query and its type. UNTRANSLATED"
 msgid "No alignment available for the selected languages"
 msgstr "No alignment available for the selected languages UNTRANSLATED"
 
-msgid "Enter new query"
-msgstr "Enter new query UNTRANSLATED"
+msgid "Concordance query"
+msgstr "Concordance query UNTRANSLATED"
 
 msgid "pre-installed on Windows 10"
 msgstr "pre-installed on Windows 10 UNTRANSLATED"

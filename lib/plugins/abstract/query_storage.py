@@ -26,13 +26,17 @@ import abc
 class AbstractQueryStorage(abc.ABC):
 
     @abc.abstractmethod
-    def write(self, user_id, query_id):
+    def write(self, user_id: int, query_id: str, qtype: str):
         """
         Write data as a new saved query
 
         arguments:
         user_id -- a numeric ID of a user
         query_id -- a query identifier as produced by query_storage plug-in
+        qtype -- a type of the query -
+            conc - concordance (for backward compatibility reasons, None means also 'conc')
+            wlist - word list
+            pquery - paradigmatic query
 
         returns:
         an ID of the query (either new or existing)
