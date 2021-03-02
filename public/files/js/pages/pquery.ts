@@ -28,9 +28,15 @@ import { PluginInterfaces } from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 import { tuple } from 'cnc-tskit';
+import { PqueryResultModel } from '../models/pquery/result';
+import { init as resultViewInit } from '../views/pquery/result';
 
 
-class ParadigmaticQueryFormPage {
+/**
+ * This page model controls both query form and a respective result
+ * for paradigmatic queries.
+ */
+class ParadigmaticQueryPage {
 
     private readonly layoutModel:PageModel;
 
@@ -63,7 +69,7 @@ class ParadigmaticQueryFormPage {
         this.layoutModel.init(true, [], () => {
 
 
-            const model = new PqueryFormModel(
+            const formModel = new PqueryFormModel(
                 this.layoutModel.dispatcher,
                 {
                     isBusy: false,
@@ -91,10 +97,12 @@ class ParadigmaticQueryFormPage {
                 this.layoutModel
             );
 
+            // qquery form
+
             const formView = formViewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
-                model
+                model: formModel
             });
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
             this.layoutModel.renderReactComponent(
@@ -105,49 +113,47 @@ class ParadigmaticQueryFormPage {
                 }
             );
 
+            // pquery result
+
+            const resultModel = new PqueryResultModel(
+                this.layoutModel.dispatcher,
+                {
+                    isBusy: false,
+                    isVisible: false,
+                    data: [],
+                    queryId: undefined
+                },
+                this.layoutModel
+            );
+
+            const resultView = resultViewInit({
+                dispatcher: this.layoutModel.dispatcher,
+                he: this.layoutModel.getComponentHelpers(),
+                model: resultModel
+            })
+
+            this.layoutModel.renderReactComponent(
+                resultView,
+                window.document.getElementById('pquery-result-mount')
+            );
+
+            // ---
+
             this.layoutModel.registerCorpusSwitchAwareModels(
                 () => {
                     this.layoutModel.unmountReactComponent(
                         window.document.getElementById('pquery-form-mount'));
                     this.init();
                 },
-                model,
+                formModel,
                 corparchPlg
             );
 
-            console.log('init query page done'); // TODO
-        });
-    }
-}
-
-
-class ParadigmaticQueryResultPage {
-
-    private readonly layoutModel:PageModel;
-
-    constructor(layoutModel:PageModel) {
-        this.layoutModel = layoutModel;
-    }
-
-    init():void {
-        this.layoutModel.init(true, [], () => {
-            console.log('init result page done'); // TODO
         });
     }
 }
 
 
 export function init(conf:Kontext.Conf):void {
-    const layout = new KontextPage(conf);
-    const view = layout.getConf<string>('View');
-    switch (view) {
-        case 'form':
-            new ParadigmaticQueryFormPage(layout).init();
-            break;
-        case 'result':
-            new ParadigmaticQueryResultPage(layout).init();
-            break;
-        default:
-            layout.showMessage('error', `Invalid view specified: ${view}`);
-    }
+    new ParadigmaticQueryPage(new KontextPage(conf)).init();
 }

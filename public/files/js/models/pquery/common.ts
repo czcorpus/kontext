@@ -28,3 +28,7 @@ export interface PquerySubmitArgs {
     attr:string;
     queries:Array<AdvancedQuerySubmit>;
 }
+
+export type AttrIntersectionFreqs = {[word:string]:number};
+
+export type PqueryResult = Array<[string, number]>;

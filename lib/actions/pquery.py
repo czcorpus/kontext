@@ -42,7 +42,6 @@ class ParadigmaticQuery(Kontext):
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
         ans = {
-            'view': 'form',
             'corpname': self.args.corpname,
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
@@ -60,12 +59,4 @@ class ParadigmaticQuery(Kontext):
         query_id = self._storage.save(args)
         with plugins.runtime.QUERY_STORAGE as qh:
             qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
-        return {}
-
-    @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
-    def result(self, request):
-        return {
-            'view': 'result',
-            'corpname': self.args.corpname,
-            'SubcorpList': []
-        }
+        return dict(ok=True, query_id=query_id)

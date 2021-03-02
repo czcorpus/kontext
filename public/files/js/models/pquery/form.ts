@@ -33,21 +33,20 @@ import { ConcQueryResponse } from '../concordance/common';
 import { map, mergeMap, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { FreqResultResponse } from '../../types/ajaxResponses';
-import { PquerySubmitArgs } from './common';
+import { AttrIntersectionFreqs, PqueryResult, PquerySubmitArgs } from './common';
 
 
-interface HTTPSubmitArgs {
-
-}
-
-interface HTTPSubmitResponse {
-
-}
-
+/**
+ *
+ */
 interface HTTPSaveQueryResponse {
-
+    queryId:string;
+    messages:Array<[string, string]>;
 }
 
+/**
+ *
+ */
 export interface PqueryFormModelState {
     isBusy:boolean;
     corpname:string;
@@ -84,28 +83,23 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             },
             (state, action, dispatch) => {
                 this.submitForm(state).subscribe(
-                    (resp) => {
+                    ([result, queryId]) => {
                         dispatch<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
-                            payload: {},
+                            payload: {
+                                result,
+                                queryId
+                            },
                         });
                     },
                     (error) => {
                         this.layoutModel.showMessage('error', error);
                         dispatch<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
-                            payload: {},
                             error
                         });
                     }
                 )
-            }
-        );
-
-        this.addActionHandler<Actions.SubmitQueryDone>(
-            ActionName.SubmitQueryDone,
-            (state, action) => {
-                state.isBusy = false;
             }
         );
 
@@ -235,7 +229,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         return {};
     }
 
-    private runCalculation(state:PqueryFormModelState):Observable<HTTPSubmitResponse> {
+    private runCalculation(state:PqueryFormModelState):Observable<PqueryResult> {
         return rxOf(...Dict.toEntries(state.queries)).pipe(
             mergeMap(
                 ([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
@@ -273,12 +267,12 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             tap(
                 resp => console.log('freq response: ', resp.Blocks)
             ),
-            reduce(
+            reduce<FreqResultResponse.FreqResultResponse, {[word:string]:number}>(
                 (acc, value, index) => {
                     const newData = pipe(
-                        value.Blocks[0].Items,
-                        List.map(item => tuple(item.Word[0].n, item.freq)),
-                        List.filter(([k, v]) => index === 0 ? true : Dict.hasKey(k, acc)),
+                        List.head(value.Blocks).Items,
+                        List.map(item => tuple(List.head(item.Word).n, item.freq)),
+                        List.filter(([k,]) => index === 0 ? true : Dict.hasKey(k, acc)),
                         Dict.fromEntries()
                     );
                     acc = Dict.filter((v, k) => Dict.hasKey(k, newData), acc);
@@ -286,11 +280,21 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 },
                 {}
             ),
-            map(data => Dict.filter(v => v >= state.minFreq, data))
+            map(
+                data => pipe(
+                    data,
+                    Dict.filter(v => v >= state.minFreq),
+                    Dict.toEntries(),
+                    List.sortedBy(([,freq]) => freq)
+                )
+            )
         );
     }
 
-    private saveQuery(state:PqueryFormModelState):Observable<HTTPSaveQueryResponse> {
+    /**
+     * Save query and return a new ID of the query
+     */
+    private saveQuery(state:PqueryFormModelState):Observable<string> {
         const args:PquerySubmitArgs = {
             usesubcorp: state.usesubcorp,
             min_freq: state.minFreq,
@@ -316,22 +320,17 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             this.layoutModel.createActionUrl('pquery/save_query'),
             args,
             {contentType: 'application/json'}
+
+        ).pipe(
+            map(resp => resp.queryId)
         );
     }
 
-    private submitForm(state:PqueryFormModelState):Observable<any> { // TODO type
+    private submitForm(state:PqueryFormModelState):Observable<[PqueryResult, string]> {
         return forkJoin([
             this.runCalculation(state),
             this.saveQuery(state)
-
-        ]).pipe(
-            tap(
-                ([calcResp, saveResp]) => {
-                    console.log('calcResp: ', calcResp)
-                    console.log('saveResp: ', saveResp)
-                }
-            )
-        )
+        ]);
     }
 
     getRegistrationId():string {
