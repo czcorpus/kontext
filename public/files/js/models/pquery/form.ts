@@ -33,14 +33,14 @@ import { ConcQueryResponse } from '../concordance/common';
 import { map, mergeMap, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { FreqResultResponse } from '../../types/ajaxResponses';
-import { AttrIntersectionFreqs, PqueryResult, PquerySubmitArgs } from './common';
+import { PqueryResult, PquerySubmitArgs } from './common';
 
 
 /**
  *
  */
 interface HTTPSaveQueryResponse {
-    queryId:string;
+    query_id:string;
     messages:Array<[string, string]>;
 }
 
@@ -88,8 +88,10 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                         dispatch<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
                             payload: {
-                                result,
-                                queryId
+                                corpname: state.corpname,
+                                usesubcorp: state.usesubcorp,
+                                queryId,
+                                result
                             },
                         });
                     },
@@ -328,7 +330,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             {contentType: 'application/json'}
 
         ).pipe(
-            map(resp => resp.queryId)
+            map(resp => resp.query_id)
         );
     }
 

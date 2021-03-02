@@ -27,9 +27,11 @@ import { generatePqueryName, PqueryFormModel } from '../models/pquery/form';
 import { PluginInterfaces } from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
+import { Actions, ActionName } from '../models/pquery/actions';
 import { tuple } from 'cnc-tskit';
 import { PqueryResultModel } from '../models/pquery/result';
 import { init as resultViewInit } from '../views/pquery/result';
+import { MultiDict } from '../multidict';
 
 
 /**
@@ -151,6 +153,23 @@ class ParadigmaticQueryPage {
                 corparchPlg
             );
 
+            this.layoutModel.dispatcher.registerActionListener(
+                (action, dispatch) => {
+                    const args = new MultiDict();
+                    console.log('qqq: ',  action.payload);
+                    if (Actions.isSubmitQueryDone(action)) {
+                        args.set('corpname', action.payload.corpname);
+                        args.set('usesubcorp', action.payload.usesubcorp);
+                        args.set('query_id', action.payload.queryId);
+                        this.layoutModel.getHistory().replaceState(
+                            'pquery/index',
+                            args,
+                            {},
+                            window.document.title
+                        );
+                    }
+                }
+            );
         });
     }
 }

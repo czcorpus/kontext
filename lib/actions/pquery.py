@@ -23,7 +23,6 @@ from argmapping.pquery import PqueryFormArgs
 from werkzeug import Request
 import plugins
 from texttypes import TextTypesCache
-from pquery import Storage
 
 """
 This module contains HTTP actions for the "Paradigmatic query" functionality
@@ -34,15 +33,20 @@ class ParadigmaticQuery(Kontext):
 
     def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
         super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
-        self._storage = Storage()
 
     def get_mapping_url_prefix(self):
         return '/pquery/'
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
+        query_id = request.args.get('query_id')
+        data = None
+        if query_id:
+            with plugins.runtime.QUERY_PERSISTENCE as qs:
+                data = qs.open(query_id)
         ans = {
             'corpname': self.args.corpname,
+            'form_data': data
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans
@@ -56,7 +60,7 @@ class ParadigmaticQuery(Kontext):
     def save_query(self, request):
         args = PqueryFormArgs()
         args.update_by_user_query(request.json)
-        query_id = self._storage.save(args)
-        with plugins.runtime.QUERY_STORAGE as qh:
+        with plugins.runtime.QUERY_STORAGE as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
+            query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_dict())
             qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
         return dict(ok=True, query_id=query_id)

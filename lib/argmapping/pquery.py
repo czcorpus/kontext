@@ -23,6 +23,7 @@ class PqueryFormArgs(object):
         self.min_freq = 0
         self.position = ''
         self.queries = []
+        self.form_type = 'pquery'
 
     def update_by_user_query(self, data):
         self.usesubcorp = data.get('usesubcorp')
