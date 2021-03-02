@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { List } from 'cnc-tskit';
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
@@ -30,6 +31,12 @@ export interface PqueryResultModelState {
     isVisible:boolean;
     data:PqueryResult;
     queryId:string|undefined;
+    sortKey:SortKey;
+}
+
+export interface SortKey {
+    name:string;
+    reverse:boolean;
 }
 
 
@@ -57,7 +64,26 @@ export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
                 state.isBusy = false;
                 state.isVisible = true;
                 state.queryId = action.payload.queryId;
-                state.data = action.payload.result;
+                state.data = List.sortBy(v => v[1], action.payload.result).reverse();
+                state.sortKey = {name: 'freq', reverse: true};
+            }
+        );
+
+        this.addActionHandler<Actions.SortLines>(
+            ActionName.SortLines,
+            (state, action) => {
+                switch (action.payload.name) {
+                    case 'value':
+                        state.data = List.sortAlphaBy(v => v[0], state.data);
+                        break;
+                    case 'freq':
+                        state.data = List.sortBy(v => v[1], state.data);
+                        break;
+                }
+                if (action.payload.reverse) {
+                    state.data = List.reverse(state.data);
+                }
+                state.sortKey = action.payload;
             }
         );
     }

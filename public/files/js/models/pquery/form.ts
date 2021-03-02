@@ -253,8 +253,6 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                     {contentType: 'application/json'}
                 )
             ),
-            tap(
-                resp => console.log(`Concordance generated: ${resp.conc_persistence_op_id}`)),
             mergeMap(
                 resp => {
                     const freqArgs = {
@@ -274,9 +272,6 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                         freqArgs
                     )
                 }
-            ),
-            tap(
-                resp => console.log('freq response: ', resp.Blocks)
             ),
             reduce<FreqResultResponse.FreqResultResponse, {[word:string]:number}>(
                 (acc, value, index) => {

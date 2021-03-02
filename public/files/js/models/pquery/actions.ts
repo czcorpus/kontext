@@ -33,6 +33,7 @@ export enum ActionName {
     FreqChange = 'PQUERY_FREQ_CHANGE',
     PositionChange = 'PQUERY_POSITION_CHANGE',
     AttrChange = 'PQUERY_ATTR_CHANGE',
+    SortLines = 'PQUERY_RESULTS_SORT_LINES',
 }
 
 
@@ -87,5 +88,12 @@ export namespace Actions {
         value: string;
     }> {
         name: ActionName.AttrChange;
+    }
+
+    export interface SortLines extends Action<{
+        name: string;
+        reverse: boolean;
+    }> {
+        name: ActionName.SortLines;
     }
 }

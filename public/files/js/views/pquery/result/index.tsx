@@ -23,7 +23,8 @@ import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
-import { PqueryResultModel, PqueryResultModelState } from '../../../models/pquery/result';
+import { PqueryResultModel, PqueryResultModelState, SortKey } from '../../../models/pquery/result';
+import { ActionName, Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import { List } from 'cnc-tskit';
 
@@ -40,19 +41,85 @@ interface PqueryFormProps {
 
 export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{}> {
 
+    // ------------------------ <ThSortable /> --------------------------
+
+    const ThSortable:React.FC<{
+        ident:string;
+        sortKey:SortKey;
+        label:string;
+
+    }> = (props) => {
+
+        const renderSortFlag = () => {
+            if (props.sortKey) {
+                if (props.sortKey.reverse) {
+                    return <img className="sort-flag" src={he.createStaticUrl('img/sort_desc.svg')} />;
+
+                } else {
+                    return <img className="sort-flag" src={he.createStaticUrl('img/sort_asc.svg')} />;
+                }
+
+            } else {
+                return null;
+            }
+        };
+
+        const handleSortClick = () => {
+            dispatcher.dispatch<Actions.SortLines>({
+                name: ActionName.SortLines,
+                payload: {
+                    name: props.ident,
+                    reverse: props.sortKey ? !props.sortKey.reverse : false
+                }
+            });
+        };
+
+        const getTitle = () => {
+            if (props.sortKey) {
+                return he.translate('global__sorted_click_change');
+            }
+            return he.translate('global__click_to_sort');
+        };
+
+        return (
+            <th>
+                <a onClick={handleSortClick} title={getTitle()}>
+                    {props.label}
+                    {renderSortFlag()}
+                </a>
+            </th>
+        );
+    };
+
     // ---------------- <PqueryResultSection /> ----------------------------
 
     const PqueryResultSection:React.FC<PqueryResultModelState> = (props) => {
+        
+        const _exportSortKey = (name) => {
+            if (name === props.sortKey.name) {
+                return props.sortKey;
+            }
+            return null;
+        }
 
         return props.isVisible ?
             (
                 <S.PqueryResultSection>
-                    <h2>Pquery result</h2>
-                    <table>
+                    <h2>Pquery result</h2>                    
+                    <table className="data">
                         <tbody>
+                            <tr>
+                                <th />
+                                <ThSortable ident="value" sortKey={_exportSortKey("value")} label="Value"/>
+                                <ThSortable ident="freq" sortKey={_exportSortKey("freq")} label="Freq"/>
+                            </tr>
                             {List.map(
                                 ([word, freq], i) => (
-                                    <tr key={`${i}:${word}`}><td>{word}</td><td className="num">{freq}</td></tr>
+                                    <tr key={`${i}:${word}`}>
+                                        <td className="num">{i+1}</td>
+                                        <td>{word}</td>
+                                        <td className="num">{freq}</td>
+                                    </tr>
                                 ),
                                 props.data
                             )}
