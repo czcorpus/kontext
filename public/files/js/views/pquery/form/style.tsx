@@ -24,6 +24,36 @@ import styled from 'styled-components';
 // ---------------- <PqueryForm /> -------------
 
 export const PqueryForm = styled.div`
+    form >* {
+        margin-top: 1em;
+    }
 
+    .loader {
+        margin-left: 1em;
+    }
+`;
 
+export const QueryField = styled.div`
+    width: 100%;
+    display: flex;
+    align-items: center;
+
+    textarea {
+        flex-grow: 1;
+    }
+`;
+
+export const ParametersFieldset = styled.fieldset`
+    display: flex;
+    align-items: center;
+
+    & >* {
+        flex-grow: 1;
+    }
+`;
+
+export const ParameterField = styled.span`
+    label {
+        margin: 0 0.5em;
+    }
 `;
