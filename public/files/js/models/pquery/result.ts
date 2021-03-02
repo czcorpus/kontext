@@ -19,14 +19,46 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatelessModel } from 'kombo';
+import { IActionDispatcher, StatelessModel } from 'kombo';
+import { PageModel } from '../../app/page';
+import { Actions, ActionName } from './actions';
+import { PqueryResult } from './common';
 
 
 export interface PqueryResultModelState {
     isBusy:boolean;
+    isVisible:boolean;
+    data:PqueryResult;
+    queryId:string|undefined;
 }
 
 
 export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
 
+
+    private readonly layoutModel:PageModel;
+
+    constructor(dispatcher:IActionDispatcher, initState:PqueryResultModelState, layoutModel:PageModel) {
+        super(dispatcher, initState);
+        this.layoutModel = layoutModel;
+
+        this.addActionHandler<Actions.SubmitQuery>(
+            ActionName.SubmitQuery,
+            (state, action) => {
+                state.isBusy = true;
+                state.isVisible = true;
+                state.data = [];
+            }
+        );
+
+        this.addActionHandler<Actions.SubmitQueryDone>(
+            ActionName.SubmitQueryDone,
+            (state, action) => {
+                state.isBusy = false;
+                state.isVisible = true;
+                state.queryId = action.payload.queryId;
+                state.data = action.payload.result;
+            }
+        );
+    }
 }
