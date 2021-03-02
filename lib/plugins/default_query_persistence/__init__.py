@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A simple implementation of conc_persistence plug-in based on KeyValueStorage
+A simple implementation of query_persistence plug-in based on KeyValueStorage
 as a back-end.
 
 required config.xml entries: please see config.rng
@@ -34,7 +34,7 @@ import time
 from typing import Dict, Any, List
 from manatee import Corpus
 
-from plugins.abstract.conc_persistence import AbstractConcPersistence
+from plugins.abstract.query_persistence import AbstractQueryPersistence
 import plugins
 from plugins import inject
 from controller.errors import ForbiddenException, UserActionException
@@ -107,7 +107,7 @@ class Sqlite3ArchBackend(object):
     def _init_archive(self):
         if not os.path.exists(self._archive_path):
             logging.getLogger(__name__).warning(
-                'Concordance persistence archive database does not exist - creating one at {0}'.format(self._archive_path))
+                'Query persistence archive database does not exist - creating one at {0}'.format(self._archive_path))
             conn = sqlite3.connect(self._archive_path)
             c = conn.cursor()
             c.execute('CREATE TABLE conc_archive ('
@@ -176,7 +176,7 @@ class DbPluginArchBackend(object):
         return self._db.get_ttl(db_key) == -1
 
 
-class ConcPersistence(AbstractConcPersistence):
+class DefaultQueryPersistence(AbstractQueryPersistence):
     """
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
@@ -296,7 +296,7 @@ def create_instance(settings, db, auth):
     """
     Creates a plugin instance.
     """
-    plugin_conf = settings.get('plugins', 'conc_persistence')
+    plugin_conf = settings.get('plugins', 'query_persistence')
     archive_dir = plugin_conf.get('default:archive_dir', None)
     ttl_days = int(plugin_conf.get('default:ttl_days', DEFAULT_TTL_DAYS))
     anonymous_ttl_days = int(plugin_conf.get('default:ttl_days', DEFAULT_ANONYMOUS_USER_TTL_DAYS))
@@ -311,7 +311,7 @@ def create_instance(settings, db, auth):
         backend = DbPluginArchBackend(db=db, ttl=ttl_days * 24 * 3600,
                                       anonymous_ttl=anonymous_ttl_days * 24 * 3600)
 
-    return ConcPersistence(db=db, auth=auth,
-                           ttl_days=ttl_days,
-                           anonymous_ttl_days=anonymous_ttl_days,
-                           archive_backend=backend)
+    return DefaultQueryPersistence(db=db, auth=auth,
+                                   ttl_days=ttl_days,
+                                   anonymous_ttl_days=anonymous_ttl_days,
+                                   archive_backend=backend)

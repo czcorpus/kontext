@@ -44,13 +44,13 @@ class MySQLConf(object):
     def __init__(self, conf):
         self.pool_name = 'kontext_mysql_pool'
         self.autocommit = True
-        self.host = conf.get('plugins', 'conc_persistence')['mysql_host']
-        self.database = conf.get('plugins', 'conc_persistence')['mysql_db']
-        self.user = conf.get('plugins', 'conc_persistence')['mysql_user']
-        self.password = conf.get('plugins', 'conc_persistence')['mysql_passwd']
-        self.pool_size = int(conf.get('plugins', 'conc_persistence')['mysql_pool_size'])
-        self.conn_retry_delay = int(conf.get('plugins', 'conc_persistence')['mysql_retry_delay'])
-        self.conn_retry_attempts = int(conf.get('plugins', 'conc_persistence')['mysql_retry_attempts'])
+        self.host = conf.get('plugins', 'query_persistence')['mysql_host']
+        self.database = conf.get('plugins', 'query_persistence')['mysql_db']
+        self.user = conf.get('plugins', 'query_persistence')['mysql_user']
+        self.password = conf.get('plugins', 'query_persistence')['mysql_passwd']
+        self.pool_size = int(conf.get('plugins', 'query_persistence')['mysql_pool_size'])
+        self.conn_retry_delay = int(conf.get('plugins', 'query_persistence')['mysql_retry_delay'])
+        self.conn_retry_attempts = int(conf.get('plugins', 'query_persistence')['mysql_retry_attempts'])
 
     @property
     def conn_dict(self):

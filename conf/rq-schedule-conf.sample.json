@@ -1,6 +1,6 @@
 [
     {
-        "task": "conc_persistence__archive_concordance",
+        "task": "query_persistence__archive_concordance",
         "schedule": "0 */1 * * *",
         "kwargs": {
             "cron_interval": 20,

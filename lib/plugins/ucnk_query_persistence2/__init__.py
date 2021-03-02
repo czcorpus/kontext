@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A custom implementation of conc_persistence where:
+A custom implementation of query_persistence where:
 
 1) primary storage is in Redis with different TTL for public and registered users
 2) secondary storage is a list of SQLite3 databases. The config.xml contains only the current
@@ -50,8 +50,8 @@ import os
 import logging
 
 import plugins
-from plugins.abstract.conc_persistence import AbstractConcPersistence
-from plugins.abstract.conc_persistence.common import generate_uniq_id
+from plugins.abstract.query_persistence import AbstractQueryPersistence
+from plugins.abstract.query_persistence.common import generate_uniq_id
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 
@@ -80,7 +80,7 @@ def mk_key(code):
     return 'concordance:%s' % (code, )
 
 
-class ConcPersistence(AbstractConcPersistence):
+class UcnkQueryPersistence2(AbstractQueryPersistence):
     """
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
@@ -90,11 +90,11 @@ class ConcPersistence(AbstractConcPersistence):
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
 
     def __init__(self, settings, db, auth):
-        plugin_conf = settings.get('plugins', 'conc_persistence')
-        ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
+        plugin_conf = settings.get('plugins', 'query_persistence')
+        ttl_days = int(plugin_conf.get('default:ttl_days', UcnkQueryPersistence2.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
         self._anonymous_user_ttl_days = int(plugin_conf.get(
-            'default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+            'default:anonymous_user_ttl_days', UcnkQueryPersistence2.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
         self._archive_queue_key = plugin_conf['ucnk:archive_queue_key']
         self.db = db
         self._auth = auth
@@ -127,7 +127,7 @@ class ConcPersistence(AbstractConcPersistence):
                 dbs.append((item, sqlite3.connect(os.path.join(root_dir, item))))
         dbs = [(curr_file, curr_db)] + sorted(dbs, reverse=True)
         logging.getLogger(__name__).info(
-            'using conc_persistence archives {0}'.format([x[0] for x in dbs]))
+            'using query_persistence archives {0}'.format([x[0] for x in dbs]))
         return [x[1] for x in dbs]
 
     @property
@@ -298,4 +298,4 @@ def create_instance(settings, db, auth):
     """
     Creates a plugin instance.
     """
-    return ConcPersistence(settings, db, auth)
+    return UcnkQueryPersistence2(settings, db, auth)

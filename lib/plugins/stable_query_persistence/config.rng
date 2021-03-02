@@ -2,9 +2,9 @@
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
     <start>
-        <element name="conc_persistence">
+        <element name="query_persistence">
             <element name="module">
-                <value>stable_conc_persistence</value>
+                <value>stable_query_persistence</value>
             </element>
             <element name="ttl_days">
                 <attribute name="extension-by">

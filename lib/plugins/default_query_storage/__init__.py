@@ -51,7 +51,7 @@ class QueryStorage(AbstractQueryStorage):
 
     DEFAULT_TTL_DAYS = 10
 
-    def __init__(self, conf, db, conc_persistence, auth):
+    def __init__(self, conf, db, query_persistence, auth):
         """
         arguments:
         conf -- the 'settings' module (or some compatible object)
@@ -66,7 +66,7 @@ class QueryStorage(AbstractQueryStorage):
                 'QueryStorage - ttl_days not set, using default value {0} day(s) for query history records'.format(
                     self.ttl_days))
         self.db = db
-        self._conc_persistence = conc_persistence
+        self._query_persistence = query_persistence
         self._auth = auth
         self._page_num_records = int(conf.get('plugins', 'query_storage')['page_num_records'])
         self._pquery_storage = pquery.Storage()
@@ -100,7 +100,7 @@ class QueryStorage(AbstractQueryStorage):
             if item.get('query_id', None) == query_id:
                 item['name'] = name
                 self.db.list_set(k, i, item)
-                self._conc_persistence.archive(user_id, query_id)
+                self._query_persistence.archive(user_id, query_id)
                 return True
         return False
 
@@ -116,12 +116,12 @@ class QueryStorage(AbstractQueryStorage):
 
     def _is_paired_with_conc(self, data):
         q_id = data['query_id']
-        edata = self._conc_persistence.open(q_id)
+        edata = self._query_persistence.open(q_id)
         return edata and 'lastop_form' in edata
 
     def _merge_conc_data(self, data):
         q_id = data['query_id']
-        edata = self._conc_persistence.open(q_id)
+        edata = self._query_persistence.open(q_id)
 
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
@@ -283,11 +283,11 @@ class QueryStorage(AbstractQueryStorage):
         return {'page_num_records': self._page_num_records}
 
 
-@inject(plugins.runtime.DB, plugins.runtime.CONC_PERSISTENCE, plugins.runtime.AUTH)
-def create_instance(settings, db, conc_persistence, auth):
+@inject(plugins.runtime.DB, plugins.runtime.QUERY_PERSISTENCE, plugins.runtime.AUTH)
+def create_instance(settings, db, query_persistence, auth):
     """
     arguments:
     settings -- the settings.py module
     db -- a 'db' plugin implementation
     """
-    return QueryStorage(settings, db, conc_persistence, auth)
+    return QueryStorage(settings, db, query_persistence, auth)
