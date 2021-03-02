@@ -99,11 +99,11 @@
             <module>default_conc_cache</module>
             <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
         </conc_cache>
-        <conc_persistence>
-            <module>default_conc_persistence</module>
+        <query_persistence>
+            <module>default_query_persistence</module>
             <ttl_days extension-by="default">100</ttl_days>
             <archive_dir extension-by="default">/var/local/corpora/conc_persistence</archive_dir>
-        </conc_persistence>
+        </query_persistence>
         <corparch>
             <module>default_corparch</module>
             <js_module>defaultCorparch</js_module>

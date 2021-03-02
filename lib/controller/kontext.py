@@ -198,7 +198,7 @@ class Kontext(Controller):
 
         self._plugin_api: PluginApi = PluginApi(self, self._request, self._cookies)
 
-        # conc_persistence plugin related attributes
+        # query_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
 
         # data of the previous operation are stored here
@@ -365,7 +365,7 @@ class Kontext(Controller):
         """
         Restores previously stored concordance query data using an ID found in request arg 'q'.
         To even begin the search, two conditions must be met:
-        1. conc_persistence plugin is installed
+        1. query_persistence plugin is installed
         2. request arg 'q' contains a string recognized as a valid ID of a stored concordance query
            at the position 0 (other positions may contain additional regular query operations
            (shuffle, filter,...)
@@ -373,17 +373,17 @@ class Kontext(Controller):
         Restored values will be stored in 'form' instance as forced ones preventing 'form'
         from returning its original values (no matter what is there).
 
-        In case the conc_persistence is installed and invalid ID is encountered
+        In case the query_persistence is installed and invalid ID is encountered
         UserActionException will be raised.
 
         arguments:
             form -- RequestArgsProxy
         """
         url_q = form.getlist('q')[:]
-        with plugins.runtime.CONC_PERSISTENCE as conc_persistence:
-            if len(url_q) > 0 and conc_persistence.is_valid_id(url_q[0]):
+        with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
+            if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
-                self._prev_q_data = conc_persistence.open(self._q_code)
+                self._prev_q_data = query_persistence.open(self._q_code)
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._prev_q_data is not None:
@@ -464,13 +464,13 @@ class Kontext(Controller):
 
     def _store_conc_params(self) -> List[str]:
         """
-        Stores concordance operation if the conc_persistence plugin is installed
+        Stores concordance operation if the query_persistence plugin is installed
         (otherwise nothing is done).
 
         returns:
         string ID of the stored operation (or the current ID of nothing was stored)
         """
-        with plugins.runtime.CONC_PERSISTENCE as cp:
+        with plugins.runtime.QUERY_PERSISTENCE as cp:
             prev_data = self._prev_q_data if self._prev_q_data is not None else {}
             curr_data = self.get_saveable_conc_data()
             ans = [cp.store(self.session_get('user', 'id'),
@@ -515,7 +515,7 @@ class Kontext(Controller):
         op_id -- unique operation ID
         tpl_data -- a dictionary used along with HTML template to render the output
         """
-        if plugins.runtime.CONC_PERSISTENCE.exists:
+        if plugins.runtime.QUERY_PERSISTENCE.exists:
             if op_id:
                 tpl_data['Q'] = [f'~{op_id}']
                 tpl_data['conc_persistence_op_id'] = op_id
@@ -1060,7 +1060,7 @@ class Kontext(Controller):
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
         result['can_send_mail'] = bool(settings.get('mailing'))
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
-        result['conc_url_ttl_days'] = plugins.runtime.CONC_PERSISTENCE.instance.get_conc_ttl_days(
+        result['conc_url_ttl_days'] = plugins.runtime.QUERY_PERSISTENCE.instance.get_conc_ttl_days(
             self.session_get('user', 'id'))
 
         self._attach_plugin_exports(result, direct=False)

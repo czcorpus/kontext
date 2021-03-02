@@ -20,9 +20,9 @@ import abc
 from typing import Dict, Optional, Tuple, Any
 
 
-class AbstractConcPersistence(abc.ABC):
+class AbstractQueryPersistence(abc.ABC):
     """
-    Custom conc_persistence plug-in implementations should inherit from this class.
+    Custom query_persistence plug-in implementations should inherit from this class.
 
     Concordance persistence plug-in is expected to store current query and provide
     access to it via a string identifier.

@@ -37,8 +37,8 @@ import logging
 
 from plugins import inject
 import plugins
-from plugins.abstract.conc_persistence import AbstractConcPersistence
-from plugins.abstract.conc_persistence.common import generate_idempotent_hex_id
+from plugins.abstract.query_persistence import AbstractQueryPersistence
+from plugins.abstract.query_persistence.common import generate_idempotent_hex_id
 from controller.errors import ForbiddenException, NotFoundException
 
 QUERY_KEY = 'q'
@@ -50,11 +50,11 @@ def mk_key(code):
     return 'concordance:%s' % (code, )
 
 
-class StableConcPersistence(AbstractConcPersistence):
+class StableQueryPersistence(AbstractQueryPersistence):
 
     def __init__(self, db, settings):
         self.db = db
-        plugin_conf = settings.get('plugins', 'conc_persistence')
+        plugin_conf = settings.get('plugins', 'query_persistence')
         self._ttl_days = int(plugin_conf.get('default:ttl_days', DEFAULT_TTL_DAYS))
         self._archive_db_path = plugin_conf.get('default:archive_db_path')
         self._archives = self._open_archives() if self._archive_db_path else []
@@ -216,4 +216,4 @@ class StableConcPersistence(AbstractConcPersistence):
 
 @inject(plugins.runtime.DB)
 def create_instance(settings, db):
-    return StableConcPersistence(db=db, settings=settings)
+    return StableQueryPersistence(db=db, settings=settings)

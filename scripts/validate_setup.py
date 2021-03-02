@@ -407,11 +407,11 @@ def test_17(finfo):
     return _test_plugin_common('settings_storage', conf)
 
 
-@test('[conc_persistence] is present',
+@test('[query_persistence] is present',
       '... and a respective module is set and exists')
 def test_18(finfo):
-    conf = settings.get('plugins', 'conc_persistence')
-    return _test_plugin_common('conc_persistence', conf)
+    conf = settings.get('plugins', 'query_persistence')
+    return _test_plugin_common('query_persistence', conf)
 
 
 @test('[conc_cache] is present',

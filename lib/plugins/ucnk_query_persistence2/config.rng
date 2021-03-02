@@ -2,9 +2,9 @@
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
     <start>
-        <element name="conc_persistence">
+        <element name="query_persistence">
             <element name="module">
-                <value>ucnk_conc_persistence2</value>
+                <value>ucnk_query_persistence2</value>
             </element>
             <element name="archive_db_path">
                 <attribute name="extension-by">

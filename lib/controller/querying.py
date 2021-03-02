@@ -176,8 +176,8 @@ class Querying(Kontext):
     def load_pipeline_ops(self, last_id: str) -> List[ConcFormArgs]:
         ans = []
         # here checking if instance exists -> we can ignore type check error cp.open does not exist on None
-        if plugins.runtime.CONC_PERSISTENCE.exists:
-            with plugins.runtime.CONC_PERSISTENCE as cp:
+        if plugins.runtime.QUERY_PERSISTENCE.exists:
+            with plugins.runtime.QUERY_PERSISTENCE as cp:
                 data = cp.open(last_id)  # type: ignore
                 if data is not None:
                     form_data = upgrade_stored_record(data.get('lastop_form', {}),

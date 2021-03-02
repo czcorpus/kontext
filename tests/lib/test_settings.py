@@ -157,7 +157,7 @@ class SettingsSampleTest(unittest.TestCase):
         self.assertTrue(settings.contains('plugins', 'application_bar'))
         self.assertTrue(settings.contains('plugins', 'auth'))
         self.assertTrue(settings.contains('plugins', 'conc_cache'))
-        self.assertTrue(settings.contains('plugins', 'conc_persistence'))
+        self.assertTrue(settings.contains('plugins', 'query_persistence'))
         self.assertTrue(settings.contains('plugins', 'corparch'))
         self.assertTrue(settings.contains('plugins', 'db'))
         self.assertTrue(settings.contains('plugins', 'export'))

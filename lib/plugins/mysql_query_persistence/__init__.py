@@ -67,8 +67,8 @@ import re
 import json
 
 import plugins
-from plugins.abstract.conc_persistence import AbstractConcPersistence
-from plugins.abstract.conc_persistence.common import generate_idempotent_id
+from plugins.abstract.query_persistence import AbstractQueryPersistence
+from plugins.abstract.query_persistence.common import generate_idempotent_id
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 import logging
@@ -95,7 +95,7 @@ def mk_key(code):
     return 'concordance:%s' % (code, )
 
 
-class MySqlConcPersistence(AbstractConcPersistence):
+class MySqlQueryPersistence(AbstractQueryPersistence):
     """
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
@@ -105,17 +105,17 @@ class MySqlConcPersistence(AbstractConcPersistence):
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
 
     def __init__(self, settings, db, integration_db, auth):
-        plugin_conf = settings.get('plugins', 'conc_persistence')
-        ttl_days = int(plugin_conf.get('ttl_days', MySqlConcPersistence.DEFAULT_TTL_DAYS))
+        plugin_conf = settings.get('plugins', 'query_persistence')
+        ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
         self._anonymous_user_ttl_days = int(plugin_conf.get(
-            'anonymous_user_ttl_days', MySqlConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+            'anonymous_user_ttl_days', MySqlQueryPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
         self._archive_queue_key = plugin_conf['archive_queue_key']
         self.db = db
         self._auth = auth
         if integration_db.is_active:
             self._archive = integration_db
-            logging.getLogger(__name__).info(f'mysql_conc_perstistence uses integration_db[{integration_db.info}]')
+            logging.getLogger(__name__).info(f'mysql_query_persistence uses integration_db[{integration_db.info}]')
         else:
             self._archive = MySQLOps(MySQLConf(settings))
         self._settings = settings
@@ -291,4 +291,4 @@ def create_instance(settings, db, integration_db, auth):
     """
     Creates a plugin instance.
     """
-    return MySqlConcPersistence(settings, db, integration_db, auth)
+    return MySqlQueryPersistence(settings, db, integration_db, auth)

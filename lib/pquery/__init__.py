@@ -19,7 +19,7 @@
 
 from argmapping.pquery import PqueryFormArgs
 import plugins
-from plugins.abstract.conc_persistence.common import generate_idempotent_hex_id
+from plugins.abstract.query_persistence.common import generate_idempotent_hex_id
 from typing import Union, Dict
 
 
