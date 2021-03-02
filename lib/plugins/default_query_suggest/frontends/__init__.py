@@ -45,6 +45,8 @@ class BasicFrontend(AbstractFrontend):
 
 class PosAttrPairRelFrontend(AbstractFrontend):
 
+    MAX_ATTR2_VARIANTS = 30
+
     def __init__(self, conf):
         super().__init__(conf, 'posAttrPairRel')
         self.on_item_click = conf.get('onItemClick', None)
@@ -53,8 +55,8 @@ class PosAttrPairRelFrontend(AbstractFrontend):
     def export_data(self, data: Dict[str, Any], value, ui_lang):
         data_norm = data['data']
         for k, v in data['data'].items():
-            data_norm[k] = v[:10]
-            if len(v) > 20:
+            data_norm[k] = v[:self.MAX_ATTR2_VARIANTS]
+            if len(v) > self.MAX_ATTR2_VARIANTS:
                 data_norm[k].append(None)
         data['data'] = data_norm
         response = super().export_data(data_norm, value, ui_lang)
