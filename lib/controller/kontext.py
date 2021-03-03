@@ -112,6 +112,7 @@ class AsyncTaskStatus(object):
         status (str): one of
     """
     CATEGORY_SUBCORPUS = 'subcorpus'
+    CATEGORY_PQUERY = 'pquery'
 
     def __init__(self, ident: str, label: str, status: int, category: str, args: Dict[str, Any], created: Optional[float] = None, error: Optional[str] = None) -> None:
         self.ident: str = ident
