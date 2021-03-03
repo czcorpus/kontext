@@ -28,7 +28,7 @@ from plugins import inject
 import plugins
 from manatee import Corpus
 from fallback_corpus import EmptyCorpus
-import pquery
+
 
 class CorpusCache:
 
@@ -69,7 +69,6 @@ class QueryStorage(AbstractQueryStorage):
         self._query_persistence = query_persistence
         self._auth = auth
         self._page_num_records = int(conf.get('plugins', 'query_storage')['page_num_records'])
-        self._pquery_storage = pquery.Storage()
 
     def _current_timestamp(self):
         return int(time.time())
@@ -192,7 +191,7 @@ class QueryStorage(AbstractQueryStorage):
                         ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
                     full_data.append(tmp)
                 elif qtype == 'pquery':
-                    stored = self._pquery_storage.load(item['query_id'])
+                    stored = self._query_persistence.open(item['query_id'])
                     if not stored:
                         continue
                     tmp = {}

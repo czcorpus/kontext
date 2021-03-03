@@ -46,15 +46,26 @@ class ParadigmaticQuery(Kontext):
                 data = qs.open(query_id)
         ans = {
             'corpname': self.args.corpname,
-            'form_data': data
+            'form_data': data,
+            'calculate': False
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans
 
-    @exposed(http_method='POST', return_type='json')
-    def submit(self, request):
-        self._status = 201
-        return {}
+    @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
+    def result(self, request):
+        query_id = request.args.get('query_id')
+        data = None
+        if query_id:
+            with plugins.runtime.QUERY_PERSISTENCE as qs:
+                data = qs.open(query_id)
+        ans = {
+            'corpname': self.args.corpname,
+            'form_data': data,
+            'calculate': True
+        }
+        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
+        return ans
 
     @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
     def save_query(self, request):

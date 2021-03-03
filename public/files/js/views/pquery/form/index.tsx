@@ -23,10 +23,12 @@ import * as React from 'react';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
-import { PqueryFormModel, PqueryFormModelState } from '../../../models/pquery/form';
+import { PqueryFormModel } from '../../../models/pquery/form';
 import { Actions, ActionName } from '../../../models/pquery/actions';
 import * as S from './style';
 import { Dict, List } from 'cnc-tskit';
+import { PqueryFormModelState } from '../../../models/pquery/common';
+import { UtilButton } from '../../theme/default';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -66,7 +68,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                 payload: {sourceId: sourceId}
             });
         };
-        
+
         const handleQueryChange = (sourceId) => (e) => {
             dispatcher.dispatch<Actions.QueryChange>({
                 name: ActionName.QueryChange,
@@ -105,7 +107,6 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         };
 
         const _renderForm = () => <>
-            <props.corparchWidget />
             <form>
                 <fieldset>
                     {Dict.mapEntries(([k, v]) =>
@@ -138,7 +139,9 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                     </S.ParameterField>
                 </S.ParametersFieldset>
                 <div>
-                    <button type="button" onClick={handleSubmit}>Submit</button>
+                    <button type="button" className="default-button" onClick={handleSubmit}>
+                        {he.translate('query__search_btn')}
+                    </button>
                     {props.isBusy ? <layoutViews.AjaxLoaderBarImage htmlClass="loader"/> : null}
                 </div>
             </form>
@@ -146,6 +149,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
 
         return (
             <S.PqueryForm>
+                <props.corparchWidget />
                 {props.receivedResults ?
                     <layoutViews.ExpandableArea initialExpanded={false} label="Edit query">
                         <fieldset>

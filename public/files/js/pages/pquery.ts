@@ -23,7 +23,7 @@ import { PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import { Kontext } from '../types/common';
 import { init as formViewInit } from '../views/pquery/form';
-import { generatePqueryName, PqueryFormModel } from '../models/pquery/form';
+import { PqueryFormModel } from '../models/pquery/form';
 import { PluginInterfaces } from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
@@ -32,6 +32,7 @@ import { tuple } from 'cnc-tskit';
 import { PqueryResultModel } from '../models/pquery/result';
 import { init as resultViewInit } from '../views/pquery/result';
 import { MultiDict } from '../multidict';
+import { newModelState, StoredPqueryForm, storedQueryToModel } from '../models/pquery/common';
 
 
 /**
@@ -70,33 +71,22 @@ class ParadigmaticQueryPage {
     init():void {
         this.layoutModel.init(true, [], () => {
 
+            const storedForm = this.layoutModel.getConf<StoredPqueryForm>('FormData');
 
             const formModel = new PqueryFormModel(
                 this.layoutModel.dispatcher,
-                {
-                    isBusy: false,
-                    corpname: this.layoutModel.getCorpusIdent().id,
-                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                    queries: {[generatePqueryName(0)]: {
-                        corpname: this.layoutModel.getCorpusIdent().id,
-                        qtype: 'advanced',
-                        query: '',
-                        parsedAttrs: [],
-                        focusedAttr: undefined,
-                        rawAnchorIdx: 0,
-                        rawFocusIdx: 0,
-                        queryHtml: '',
-                        pcq_pos_neg: 'pos',
-                        include_empty: true,
-                        default_attr: null,
-                    }},
-                    minFreq: 5,
-                    position: '0<0',
-                    attr: this.layoutModel.getConf('AttrList')[0].n,
-                    attrs: this.layoutModel.getConf('AttrList'),
-                    structAttrs: this.layoutModel.getConf('StructAttrList'),
-                    receivedResults: false
-                },
+                storedForm ?
+                    storedQueryToModel(
+                        this.layoutModel.getConf<StoredPqueryForm>('FormData'),
+                        this.layoutModel.getConf('AttrList'),
+                        this.layoutModel.getConf('StructAttrList')
+                    ) :
+                    newModelState(
+                        this.layoutModel.getCorpusIdent().id,
+                        this.layoutModel.getCorpusIdent().usesubcorp,
+                        this.layoutModel.getConf('AttrList'),
+                        this.layoutModel.getConf('StructAttrList')
+                    ),
                 this.layoutModel
             );
 
@@ -156,13 +146,12 @@ class ParadigmaticQueryPage {
             this.layoutModel.dispatcher.registerActionListener(
                 (action, dispatch) => {
                     const args = new MultiDict();
-                    console.log('qqq: ',  action.payload);
                     if (Actions.isSubmitQueryDone(action)) {
                         args.set('corpname', action.payload.corpname);
                         args.set('usesubcorp', action.payload.usesubcorp);
                         args.set('query_id', action.payload.queryId);
                         this.layoutModel.getHistory().replaceState(
-                            'pquery/index',
+                            'pquery/result',
                             args,
                             {},
                             window.document.title
@@ -170,6 +159,23 @@ class ParadigmaticQueryPage {
                     }
                 }
             );
+
+            // ----
+
+            if (this.layoutModel.getConf<boolean>('Calculate')) {
+                if (storedForm) {
+                    window.setTimeout(() => {
+                        this.layoutModel.dispatcher.dispatch<Actions.SubmitQuery>({
+                            name: ActionName.SubmitQuery
+                        })
+                    });
+
+                } else {
+                    this.layoutModel.showMessage(
+                        'error',
+                        this.layoutModel.translate('pquery__no_form_data_to_restore'))
+                }
+            }
         });
     }
 }

@@ -783,6 +783,7 @@
         "wordlist__add_attr": "Add attribute UNTRANSLATED",
         "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\" UNTRANSLATED",
         "wordlist__create_filter_list": "Create UNTRANSLATED",
-        "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER UNTRANSLATED"
+        "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER UNTRANSLATED",
+        "pquery__no_form_data_to_restore": "No result - the URL address refers to invalid input data. UNTRANSLATED"
     }
 }

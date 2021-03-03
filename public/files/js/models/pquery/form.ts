@@ -33,7 +33,7 @@ import { ConcQueryResponse } from '../concordance/common';
 import { map, mergeMap, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { FreqResultResponse } from '../../types/ajaxResponses';
-import { PqueryResult, PquerySubmitArgs } from './common';
+import { generatePqueryName, PqueryFormModelState, PqueryResult, PquerySubmitArgs } from './common';
 
 
 /**
@@ -44,29 +44,11 @@ interface HTTPSaveQueryResponse {
     messages:Array<[string, string]>;
 }
 
-/**
- *
- */
-export interface PqueryFormModelState {
-    isBusy:boolean;
-    corpname:string;
-    usesubcorp:string;
-    queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
-    minFreq:number;
-    position:string;
-    attr:string;
-    attrs:Array<Kontext.AttrItem>;
-    structAttrs:Array<Kontext.AttrItem>;
-    receivedResults:boolean;
-}
-
 interface PqueryFormModelSwitchPreserve {
 
 }
 
-export function generatePqueryName(i:number):string {
-    return `pqitem_${i}`;
-}
+
 
 
 export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implements IUnregistrable {
