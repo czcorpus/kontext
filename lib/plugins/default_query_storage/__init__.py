@@ -197,7 +197,6 @@ class QueryStorage(AbstractQueryStorage):
                     tmp = {}
                     tmp.update(item)
                     tmp.update(stored)
-                    logging.getLogger(__name__).debug('TMP: {}'.format(tmp))
                     full_data.append(tmp)
             else:
                 # deprecated type of record (this will vanish soon as there

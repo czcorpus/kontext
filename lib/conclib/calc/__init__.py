@@ -144,6 +144,7 @@ def require_existing_conc(corp: manatee.Corpus, q: Tuple[str, ...]) -> manatee.C
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     subchash = getattr(corp, 'subchash', None)
+    logging.getLogger(__name__).warning('require_existing_conc, subch: {}, q: {}'.format(subchash, q))
     status = cache_map.get_calc_status(subchash, q)
     if status is None:
         raise ConcNotFoundException('Concordance not found.')

@@ -20,7 +20,7 @@
  */
 
 import { Action } from 'kombo';
-import { PqueryResult } from './common';
+import { QueryCalcStatus } from './common';
 
 
 export enum ActionName {
@@ -46,10 +46,10 @@ export namespace Actions {
     }
 
     export interface SubmitQueryDone extends Action<{
+        queryId:string;
         corpname:string;
         usesubcorp:string;
-        queryId:string;
-        result:PqueryResult;
+        tasks:Array<[string, QueryCalcStatus]>; // [sourceId, taskInfo]
 
     }> {
         name: ActionName.SubmitQueryDone;

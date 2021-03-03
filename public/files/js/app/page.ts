@@ -39,7 +39,7 @@ import { UserInfo } from '../models/user/info';
 import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
 import { GeneralViewOptionsModel, GeneralViewOptionsModelState } from '../models/options/general';
 import { L10n } from './l10n';
-import { AsyncTaskChecker, AsyncTaskStatus } from '../models/asyncTask';
+import { AsyncTaskChecker } from '../models/asyncTask';
 import { UserSettings } from './userSettings';
 import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu';
 import { AppNavigation } from './navigation';
@@ -275,7 +275,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     name: ATActionName.InboxUpdateAsyncTask,
                     payload: {
                         ident: taskId,
-                        status: AsyncTaskStatus.SUCCESS
+                        status: 'SUCCESS'
                     }
                 });
             },
@@ -284,7 +284,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     name: ATActionName.InboxUpdateAsyncTask,
                     payload: {
                         ident: taskId,
-                        status: AsyncTaskStatus.FAILURE
+                        status: 'FAILURE'
                     }
                 });
             }

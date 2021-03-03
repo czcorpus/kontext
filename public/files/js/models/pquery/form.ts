@@ -20,20 +20,21 @@
  */
 
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
-import { IActionDispatcher, StatelessModel } from 'kombo';
-import { Observable, of as rxOf, forkJoin } from 'rxjs';
+import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
+import { Observable, forkJoin } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as ACActions, ActionName as ACActionName } from '../../models/asyncTask/actions';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
-import { TextTypes } from '../../types/common';
+import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
-import { concatMap, map, mergeMap, reduce } from 'rxjs/operators';
+import { concatMap, map, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
-import { FreqResultResponse } from '../../types/ajaxResponses';
-import { FreqIntersectionArgs, generatePqueryName, PqueryFormModelState, PquerySubmitArgs } from './common';
+import { asyncTaskIsPquery, FreqIntersectionArgs, FreqIntersectionResponse, generatePqueryName,
+    importTaskInfo, PqueryFormModelState, PquerySubmitArgs, QueryCalcStatus } from './common';
 
 
 /**
@@ -49,6 +50,36 @@ interface PqueryFormModelSwitchPreserve {
     minFreq:number;
     position:string;
     attr:string;
+}
+
+function filterTasks(
+    tasks:Array<Kontext.AsyncTaskInfo<unknown>>,
+    srcAndConcIds:Array<[string, string]>
+
+):Array<[string, QueryCalcStatus]> {
+    const ourTasks:Array<[string, QueryCalcStatus]> = [];
+    List.forEach(
+        item => {
+            if (asyncTaskIsPquery(item) &&
+                    List.some(
+                        ([,cid]) => cid === item.args.conc_id, srcAndConcIds)) {
+                ourTasks.push(importTaskInfo(item));
+            }
+        },
+        tasks,
+    );
+    return ourTasks;
+}
+
+
+function updateTask(baseTask:QueryCalcStatus, updTask:QueryCalcStatus):QueryCalcStatus {
+    return {
+        concId: baseTask.concId,
+        startTs: baseTask.startTs,
+        finishTs: updTask.finishTs,
+        error: updTask.error,
+        status: updTask.status
+    };
 }
 
 
@@ -68,15 +99,15 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.submitForm(state).subscribe(
-                    ([result, queryId]) => {
+                this.submitForm(state, dispatch).subscribe(
+                    ([queryId, tasks]) => {
                         dispatch<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
                             payload: {
                                 corpname: state.corpname,
                                 usesubcorp: state.usesubcorp,
                                 queryId,
-                                result
+                                tasks
                             },
                         });
                     },
@@ -96,7 +127,8 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
-                    state.receivedResults = true;
+                    //state.receivedResults = true;
+                    state.queriesCalc = Dict.fromEntries(action.payload.tasks);
                 }
             }
         );
@@ -205,6 +237,35 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 state.attr = action.payload.value;
             }
         );
+
+        this.addActionHandler<ACActions.AsyncTasksChecked>(
+            ACActionName.AsyncTasksChecked,
+            (state, action) => {
+                const incomingTasks = Dict.fromEntries(filterTasks(
+                    action.payload.tasks,
+                    pipe(
+                        state.queriesCalc,
+                        Dict.toEntries(),
+                        List.map(
+                            ([sourceId, info]) => tuple(sourceId, info.concId)
+                        )
+                    )
+                ));
+                state.queriesCalc = Dict.map(
+                    (task, sourceId) => {
+                        const incoming = incomingTasks[sourceId];
+                        if (!incoming) {
+                            // ERROR - server ignores one of our tasks?
+                            return task;
+
+                        } else {
+                            return updateTask(task, incoming);
+                        }
+                    },
+                    state.queriesCalc
+                );
+            }
+        )
     }
 
 
@@ -246,60 +307,11 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         };
     }
 
-    private submitForm(state:PqueryFormModelState):Observable<any> {
+    private submitForm(state:PqueryFormModelState, dispatch:SEDispatcher):Observable<[string, Array<[string, QueryCalcStatus]>]> {
         return forkJoin(pipe(
             state.queries,
             Dict.toEntries(),
             List.map(
-                ([,query]) => this.layoutModel.ajax$<ConcQueryResponse>(
-                    HTTP.Method.POST,
-                    this.layoutModel.createActionUrl(
-                        'query_submit',
-                        [tuple('format', 'json')]
-                    ),
-                    this.createConcSubmitArgs(state, query, false),
-                    {contentType: 'application/json'}
-                )
-            )
-        )).pipe(
-            concatMap(
-                (concResponses) => forkJoin([
-                    this.saveQuery(state),
-                    this.submitFreqIntersection(
-                        state,
-                        List.map(
-                            conc => conc.conc_persistence_op_id,
-                            concResponses
-                        )
-                    )
-                ])
-            )
-        );
-    }
-
-    private submitFreqIntersection(state:PqueryFormModelState, concIds:Array<string>):Observable<any> { // TODO type
-        const args:FreqIntersectionArgs = {
-            corpname: state.corpname,
-            usesubcorp: state.usesubcorp,
-            conc_ids: concIds,
-            min_freq: state.minFreq,
-            attr: state.attr,
-            position: state.position
-        };
-        return this.layoutModel.ajax$<any>( // TODO type
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl(
-                'pquery/freq_intersection',
-                []
-            ),
-            args,
-            {contentType: 'application/json'}
-        );
-    }
-
-    private submitForm_OLD(state:PqueryFormModelState):Observable<any> {
-        return rxOf(...Dict.toEntries(state.queries)).pipe(
-            mergeMap(
                 ([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl(
@@ -308,49 +320,72 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                     ),
                     this.createConcSubmitArgs(state, query, false),
                     {contentType: 'application/json'}
-                )
-            ),
-            mergeMap(
-                resp => {
-                    const freqArgs = {
-                        ...resp.conc_args,
-                        q: `~${resp.conc_persistence_op_id}`,
-                        fcrit: `${state.attr} ${state.position}`,
-                        ml: 0,
-                        flimit: 0,
-                        freq_sort: 'freq',
-                        fmaxitems: 10000,
-                        format: 'json'
-                    }
 
-                    return this.layoutModel.ajax$<FreqResultResponse.FreqResultResponse>(
-                        HTTP.Method.GET,
-                        this.layoutModel.createActionUrl('freqs'),
-                        freqArgs
-                    )
-                }
-            ),
-            reduce<FreqResultResponse.FreqResultResponse, {[word:string]:number}>(
-                (acc, value, index) => {
-                    const newData = pipe(
-                        List.head(value.Blocks).Items,
-                        List.map(item => tuple(List.head(item.Word).n, item.freq)),
-                        List.filter(([k,]) => index === 0 ? true : Dict.hasKey(k, acc)),
-                        Dict.fromEntries()
-                    );
-                    acc = Dict.filter((v, k) => Dict.hasKey(k, newData), acc);
-                    return Dict.mergeDict((oldVal, newVal, key) => oldVal + newVal, newData, acc);
-                },
-                {}
-            ),
-            map(
-                data => pipe(
-                    data,
-                    Dict.filter(v => v >= state.minFreq),
-                    Dict.toEntries(),
-                    List.sortedBy(([,freq]) => freq)
+                ).pipe(
+                    map(resp => tuple(sourceId, resp))
                 )
             )
+        )).pipe(
+            concatMap(
+                (concResponses) => {
+                    const srcAndConcIds = List.map(
+                        ([sourceId, conc]) => tuple(sourceId, conc.conc_persistence_op_id),
+                        concResponses
+                    );
+                    return forkJoin([
+                        this.saveQuery(state),
+                        this.submitFreqIntersection(
+                            state, srcAndConcIds
+
+                        ).pipe(
+                            map(resp => tuple(srcAndConcIds, resp))
+                        )
+                    ]);
+                }
+            ),
+            tap(
+                ([queryId, [srcAndConcIds, fiResponse]]) => {
+                    List.forEach(
+                        task => {
+                            dispatch<ACActions.InboxAddAsyncTask>({
+                                name: ACActionName.InboxAddAsyncTask,
+                                payload: task
+                            })
+                        },
+                        fiResponse.tasks
+                    );
+                }
+            ),
+            map(
+                ([queryId, [srcAndConcIds, fiResponse]]) => {
+                    const ourTasks = filterTasks(fiResponse.tasks, srcAndConcIds);
+                    return tuple(queryId, ourTasks);
+                }
+            )
+        );
+    }
+
+    private submitFreqIntersection(
+        state:PqueryFormModelState,
+        srcAndConcIds:Array<[string, string]>
+    ):Observable<FreqIntersectionResponse> {
+
+        const args:FreqIntersectionArgs = {
+            corpname: state.corpname,
+            usesubcorp: state.usesubcorp,
+            source__and_conc_ids: srcAndConcIds,
+            min_freq: state.minFreq,
+            attr: state.attr,
+            position: state.position
+        };
+        return this.layoutModel.ajax$<FreqIntersectionResponse>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl(
+                'pquery/freq_intersection',
+                []
+            ),
+            args,
+            {contentType: 'application/json'}
         );
     }
 

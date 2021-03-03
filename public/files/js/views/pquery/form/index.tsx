@@ -27,7 +27,7 @@ import { PqueryFormModel } from '../../../models/pquery/form';
 import { Actions, ActionName } from '../../../models/pquery/actions';
 import * as S from './style';
 import { Dict, List } from 'cnc-tskit';
-import { PqueryFormModelState } from '../../../models/pquery/common';
+import { PqueryFormModelState, QueryCalcStatus, TaskStatus } from '../../../models/pquery/common';
 import { UtilButton } from '../../theme/default';
 
 export interface PqueryFormViewsArgs {
@@ -46,6 +46,35 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
 }> {
     const layoutViews = he.getLayoutViews();
 
+
+    // ---------------- <QueryStatusIcon /> --------------------------
+
+    const QueryStatusIcon:React.FC<{
+        sourceId:string;
+        concLoadingStatus:QueryCalcStatus|undefined;
+        numQueries:number;
+
+    }> = (props) => {
+
+        const removeQueryHandler = (sourceId) => () => {
+            dispatcher.dispatch<Actions.RemoveQueryItem>({
+                name: ActionName.RemoveQueryItem,
+                payload: {sourceId: sourceId}
+            });
+        };
+
+        if (!props.concLoadingStatus && props.numQueries > 1) {
+            return <layoutViews.DelItemIcon title="Remove query"
+                        onClick={removeQueryHandler(props.sourceId)} />;
+
+        } else if (props.concLoadingStatus && props.concLoadingStatus.status === 'running') {
+            return <layoutViews.AjaxLoaderBarImage />;
+
+        } else if (props.concLoadingStatus && props.concLoadingStatus.status === 'finished') {
+            return <span>{'\u2713'}</span>
+        }
+    }
+
     const PqueryForm:React.FC<PqueryFormModelState & PqueryFormProps> = (props) => {
 
         const handleSubmit = () => {
@@ -59,13 +88,6 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             dispatcher.dispatch<Actions.AddQueryItem>({
                 name: ActionName.AddQueryItem,
                 payload: {}
-            });
-        };
-
-        const removeQueryHandler = (sourceId) => () => {
-            dispatcher.dispatch<Actions.RemoveQueryItem>({
-                name: ActionName.RemoveQueryItem,
-                payload: {sourceId: sourceId}
             });
         };
 
@@ -109,16 +131,17 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         const _renderForm = () => <>
             <form>
                 <fieldset>
-                    {Dict.mapEntries(([k, v]) =>
-                        <S.QueryField key={k}>
-                            <textarea name={k} onChange={handleQueryChange(k)} value={v.query} />
-                            {Dict.size(props.queries) > 1 ?
-                                <layoutViews.DelItemIcon title="Remove query" onClick={removeQueryHandler(k)} /> :
-                                null
-                            }
-                        </S.QueryField>,
-                        props.queries
-                    )}
+                    {Dict.mapEntries(
+                        ([sourceId, query]) =>
+                            <S.QueryField key={sourceId}>
+                                <textarea name={sourceId} onChange={handleQueryChange(sourceId)} value={query.query} />
+                                <QueryStatusIcon numQueries={Dict.size(props.queries)}
+                                        concLoadingStatus={props.queriesCalc[sourceId]}
+                                        sourceId={sourceId} />
+                            </S.QueryField>,
+                            props.queries
+                        )
+                    }
                     <button type="button" onClick={addQueryHandler}>Add query</button>
                 </fieldset>
                 <S.ParametersFieldset>
