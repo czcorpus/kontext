@@ -45,7 +45,10 @@ interface HTTPSaveQueryResponse {
 }
 
 interface PqueryFormModelSwitchPreserve {
-
+    queries:string;
+    minFreq:number;
+    position:string;
+    attr:string;
 }
 
 
@@ -204,15 +207,29 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         );
     }
 
-
+    
     private deserialize(
         state:PqueryFormModelState,
         data:PqueryFormModelSwitchPreserve,
         corpora:Array<[string, string]>
     ):void {
-
+        state.attrs = this.layoutModel.getConf('AttrList')
+        state.structAttrs = this.layoutModel.getConf('StructAttrList')
+        state.corpname = corpora[0][1]
+        state.receivedResults = false;
         if (data) {
-            console.log('should deserialize ', corpora)
+            state.queries = Dict.map(v => {
+                v.corpname = state.corpname;
+                return v;
+            }, JSON.parse(data.queries) as {[sourceId:string]:AdvancedQuery});
+            state.minFreq = data.minFreq;
+            state.position = data.position;
+            state.attr = data.attr;
+            state.attr = List.some(v => v.n === data.attr, state.attrs) || List.some(v => v.n === data.attr, state.structAttrs) ?
+                         data.attr :
+                         state.attrs[0].n
+        } else {
+            state.attr = state.attrs[0].n
         }
     }
 
@@ -221,7 +238,12 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         newCorpora:Array<string>,
         newPrimaryCorpus:string|undefined
     ):PqueryFormModelSwitchPreserve {
-        return {};
+        return {
+            queries: JSON.stringify(state.queries),
+            attr: state.attr,
+            minFreq: state.minFreq,
+            position: state.position
+        };
     }
 
     private runCalculation(state:PqueryFormModelState):Observable<PqueryResult> {
