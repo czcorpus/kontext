@@ -28,12 +28,12 @@ import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
-import { Kontext, TextTypes } from '../../types/common';
+import { TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
-import { map, mergeMap, reduce, tap } from 'rxjs/operators';
+import { concatMap, map, mergeMap, reduce } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { FreqResultResponse } from '../../types/ajaxResponses';
-import { generatePqueryName, PqueryFormModelState, PqueryResult, PquerySubmitArgs } from './common';
+import { FreqIntersectionArgs, generatePqueryName, PqueryFormModelState, PquerySubmitArgs } from './common';
 
 
 /**
@@ -207,7 +207,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         );
     }
 
-    
+
     private deserialize(
         state:PqueryFormModelState,
         data:PqueryFormModelSwitchPreserve,
@@ -246,7 +246,58 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         };
     }
 
-    private runCalculation(state:PqueryFormModelState):Observable<PqueryResult> {
+    private submitForm(state:PqueryFormModelState):Observable<any> {
+        return forkJoin(pipe(
+            state.queries,
+            Dict.toEntries(),
+            List.map(
+                ([,query]) => this.layoutModel.ajax$<ConcQueryResponse>(
+                    HTTP.Method.POST,
+                    this.layoutModel.createActionUrl(
+                        'query_submit',
+                        [tuple('format', 'json')]
+                    ),
+                    this.createConcSubmitArgs(state, query, false),
+                    {contentType: 'application/json'}
+                )
+            )
+        )).pipe(
+            concatMap(
+                (concResponses) => forkJoin([
+                    this.saveQuery(state),
+                    this.submitFreqIntersection(
+                        state,
+                        List.map(
+                            conc => conc.conc_persistence_op_id,
+                            concResponses
+                        )
+                    )
+                ])
+            )
+        );
+    }
+
+    private submitFreqIntersection(state:PqueryFormModelState, concIds:Array<string>):Observable<any> { // TODO type
+        const args:FreqIntersectionArgs = {
+            corpname: state.corpname,
+            usesubcorp: state.usesubcorp,
+            conc_ids: concIds,
+            min_freq: state.minFreq,
+            attr: state.attr,
+            position: state.position
+        };
+        return this.layoutModel.ajax$<any>( // TODO type
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl(
+                'pquery/freq_intersection',
+                []
+            ),
+            args,
+            {contentType: 'application/json'}
+        );
+    }
+
+    private submitForm_OLD(state:PqueryFormModelState):Observable<any> {
         return rxOf(...Dict.toEntries(state.queries)).pipe(
             mergeMap(
                 ([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
@@ -336,13 +387,6 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         ).pipe(
             map(resp => resp.query_id)
         );
-    }
-
-    private submitForm(state:PqueryFormModelState):Observable<[PqueryResult, string]> {
-        return forkJoin([
-            this.runCalculation(state),
-            this.saveQuery(state)
-        ]);
     }
 
     getRegistrationId():string {
