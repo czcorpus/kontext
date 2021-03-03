@@ -20,9 +20,14 @@
 from controller import exposed
 from controller.kontext import Kontext
 from argmapping.pquery import PqueryFormArgs
+from controller.kontext import AsyncTaskStatus
 from werkzeug import Request
 import plugins
 from texttypes import TextTypesCache
+import bgcalc
+import settings
+import re
+
 
 """
 This module contains HTTP actions for the "Paradigmatic query" functionality
@@ -83,7 +88,62 @@ class ParadigmaticQuery(Kontext):
         attr:string;
         position:string;
         """
-        return {}
+        def is_non_structural_attr(criteria):
+            crit_attrs = set(re.findall(r'(\w+)/\s+-?[0-9]+[<>][0-9]+\s*', criteria))
+            if len(crit_attrs) == 0:
+                crit_attrs = set(re.findall(r'(\w+\.\w+)\s+[0-9]+', criteria))
+            attr_list = set(self.corp.get_conf('ATTRLIST').split(','))
+            return crit_attrs <= attr_list
+
+        app = bgcalc.calc_backend_client(settings)
+        corp_info = self.get_corpus_info(self.args.corpname)
+        fcrit = f'{request.json.get("attr")} {request.json.get("position")}'
+        if is_non_structural_attr(fcrit):
+            rel_mode = 1
+        else:
+            rel_mode = 0
+
+        task_ids = {}
+        for conc_id in request.json.get('conc_ids'):
+            args = bgcalc.freq_calc.FreqCalsArgs()
+            args.corpname = self.corp.corpname
+            args.subcname = getattr(self.corp, 'subcname', None)
+            args.subcpath = self.subcpath
+            args.user_id = self.session_get('user', 'id')
+            args.q = [f'~{conc_id}']
+            args.fromp = 0
+            args.pagesize = 50
+            args.samplesize = 0
+            args.flimit = 0
+            args.fcrit = fcrit
+            args.freq_sort = 'freq'
+            args.ftt_include_empty = False
+            args.rel_mode = rel_mode
+            args.collator_locale = corp_info.collator_locale
+            args.fmaxitems = 10000
+            args.fpage = 0
+
+            res = app.send_task(
+                'calculate_freqs',
+                args=(args.to_dict(),),
+                time_limit=60
+            )
+            self._store_async_task(AsyncTaskStatus(
+                status=res.status,
+                ident=res.id,
+                category=AsyncTaskStatus.CATEGORY_PQUERY,
+                label=f'{fcrit}:{conc_id}',
+                args={
+                    'corpname': request.json.get('corpname'),
+                    'usesubcorp': request.json.get('usesubcorp'),
+                    'conc_id': conc_id,
+                    'attr': request.json.get('attr'),
+                    'position': request.json.get('position')
+                }
+            ))
+            task_ids[conc_id] = res.id
+
+        return task_ids
 
     @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
     def save_query(self, request):
