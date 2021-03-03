@@ -68,12 +68,20 @@ class ParadigmaticQuery(Kontext):
         return ans
 
     @exposed(http_method='POST', return_type='json')
-    def freq_intersection(self):
+    def freq_intersection(self, request):
         """
         TODO
         1) create N async task for freq. calculation
         2) store task IDs using _store_async_task and AsyncTaskStatus
         3) return task ids (i.e. do not wait for the task to complete)
+
+        JSON:
+        corpname:string;
+        usesubcorp:string;
+        conc_ids:Array<string>;
+        min_freq:number;
+        attr:string;
+        position:string;
         """
         return {}
 

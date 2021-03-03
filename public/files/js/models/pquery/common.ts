@@ -48,6 +48,15 @@ export interface StoredPqueryForm {
     persist_level:1;
 }
 
+export interface FreqIntersectionArgs {
+    corpname:string;
+    usesubcorp:string;
+    conc_ids:Array<string>;
+    min_freq:number;
+    attr:string;
+    position:string;
+}
+
 export interface PqueryFormModelState {
     isBusy:boolean;
     corpname:string;
