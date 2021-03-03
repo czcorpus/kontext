@@ -64,7 +64,7 @@ export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
                 state.isBusy = false;
                 state.isVisible = true;
                 state.queryId = action.payload.queryId;
-                state.data = List.sortBy(v => v[1], action.payload.result).reverse();
+                // TODO no data yet here; state.data = List.sortBy(v => v[1], action.payload.result).reverse();
                 state.sortKey = {name: 'freq', reverse: true};
             }
         );

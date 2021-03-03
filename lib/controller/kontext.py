@@ -1195,11 +1195,12 @@ class Kontext(Controller):
     def _set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
         self._session['async_tasks'] = [at.to_dict() for at in task_list]
 
-    def _store_async_task(self, async_task_status):
+    def _store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
         at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
         self._mark_timeouted_tasks(*at_list)
         at_list.append(async_task_status)
         self._set_async_tasks(at_list)
+        return at_list
 
     @exposed(return_type='json')
     def concdesc_json(self, _: Optional[Request] = None) -> Dict[str, List[Dict[str, Any]]]:

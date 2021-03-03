@@ -50,7 +50,7 @@ class FreqCalsArgs(FixedDict):
     collator_locale = None
     subcname = None
     subcpath = None
-    fromp = None  # ??
+    fromp = 0
     pagesize = None  # ??
     fpage = None  # ??
     save = 0
