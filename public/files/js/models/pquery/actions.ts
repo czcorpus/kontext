@@ -46,11 +46,17 @@ export namespace Actions {
     }
 
     export interface SubmitQueryDone extends Action<{
-        result:PqueryResult;
+        corpname:string;
+        usesubcorp:string;
         queryId:string;
+        result:PqueryResult;
 
     }> {
         name: ActionName.SubmitQueryDone;
+    }
+
+    export function isSubmitQueryDone(a:Action):a is SubmitQueryDone {
+        return a.name === ActionName.SubmitQueryDone;
     }
 
     export interface AddQueryItem extends Action<{
