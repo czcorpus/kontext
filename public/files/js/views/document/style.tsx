@@ -261,81 +261,79 @@ export const TooltipBox = styled.section`
         right: 19%;
     }
 
-    ${ModalOverlay} {
-        > & {
-            position: absolute;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%,-30%);
-            min-width: 70%;
-            box-shadow: 3px 3px 4px #444;
-            background-color: ${theme.colorSectionBg};
+    ${ModalOverlay} > & {
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%,-30%);
+        min-width: 70%;
+        box-shadow: 3px 3px 4px #444;
+        background-color: ${theme.colorSectionBg};
+    }
+
+    ${ModalOverlay} > &.async-task-list {
+        width: 90%;
+        font-size: 0.8em;
+
+        table {
+            border-spacing: 0;
+
+            td, th {
+                text-align: left;
+                padding: 0.3em 0.7em 0.3em 0.8em;
+                border-color: ${theme.colorDefaultGreen};
+                border-width: 0 1pt 0 0;
+                border-style: solid;
+            }
+
+            td {
+                min-width: 10em;
+                max-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            td.status {
+                width: 5%;
+                img {
+                    width: 1em;
+                    margin-left: 0.4em;
+                }
+            }
+
+            td.task-type {
+                width: 15%;
+            }
+
+            td.label {
+                width: 20%;
+            }
+
+            td.datetime {
+                width: 15%;
+            }
+
+            td.msg {
+                width: 45%;
+            }
+
+            th {
+                color: ${theme.colorDefaultText};
+                background-color: ${theme.colorDefaultGreen};
+                font-weight: bold;
+                padding-top: 1em;
+                padding-bottom: 0.5em;
+            }
+
+            tr:nth-child(odd) {
+                background-color: ${theme.colorLightGreen};
+            }
         }
 
-        &.async-task-list {
-            width: 90%;
-            font-size: 0.8em;
-
-            table {
-                border-spacing: 0;
-
-                td, th {
-                    text-align: left;
-                    padding: 0.3em 0.7em 0.3em 0.8em;
-                    border-color: ${theme.colorDefaultGreen};
-                    border-width: 0 1pt 0 0;
-                    border-style: solid;
-                }
-
-                td {
-                    min-width: 10em;
-                    max-width: 0;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-                td.status {
-                    width: 5%;
-                    img {
-                        width: 1em;
-                        margin-left: 0.4em;
-                    }
-                }
-
-                td.task-type {
-                    width: 15%;
-                }
-
-                td.label {
-                    width: 20%;
-                }
-
-                td.datetime {
-                    width: 15%;
-                }
-
-                td.msg {
-                    width: 45%;
-                }
-
-                th {
-                    color: ${theme.colorDefaultText};
-                    background-color: ${theme.colorDefaultGreen};
-                    font-weight: bold;
-                    padding-top: 1em;
-                    padding-bottom: 0.5em;
-                }
-
-                tr:nth-child(odd) {
-                    background-color: ${theme.colorLightGreen};
-                }
-            }
-
-            div.options {
-                margin-top: 1em;
-                margin-bottom: 1em;
-            }
+        div.options {
+            margin-top: 1em;
+            margin-bottom: 1em;
         }
     }
 `;
