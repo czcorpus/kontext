@@ -67,6 +67,16 @@ class ParadigmaticQuery(Kontext):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans
 
+    @exposed(http_method='POST', return_type='json')
+    def freq_intersection(self):
+        """
+        TODO
+        1) create N async task for freq. calculation
+        2) store task IDs using _store_async_task and AsyncTaskStatus
+        3) return task ids (i.e. do not wait for the task to complete)
+        """
+        return {}
+
     @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
     def save_query(self, request):
         args = PqueryFormArgs()
