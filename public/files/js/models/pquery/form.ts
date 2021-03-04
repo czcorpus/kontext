@@ -33,8 +33,8 @@ import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
 import { concatMap, map, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
-import { asyncTaskIsPquery, FreqIntersectionArgs, FreqIntersectionResponse, generatePqueryName,
-    importTaskInfo, PqueryFormModelState, PquerySubmitArgs, QueryCalcStatus } from './common';
+import { AsyncTaskArgs, asyncTaskIsPquery, FreqIntersectionArgs, FreqIntersectionResponse, generatePqueryName,
+    PqueryFormModelState, PquerySubmitArgs } from './common';
 
 
 /**
@@ -52,38 +52,6 @@ interface PqueryFormModelSwitchPreserve {
     attr:string;
 }
 
-function filterTasks(
-    tasks:Array<Kontext.AsyncTaskInfo<unknown>>,
-    srcAndConcIds:Array<[string, string]>
-
-):Array<[string, QueryCalcStatus]> {
-    const ourTasks:Array<[string, QueryCalcStatus]> = [];
-    List.forEach(
-        item => {
-            if (asyncTaskIsPquery(item) &&
-                    List.some(
-                        ([,cid]) => cid === item.args.conc_id, srcAndConcIds)) {
-                ourTasks.push(importTaskInfo(item));
-            }
-        },
-        tasks,
-    );
-    return ourTasks;
-}
-
-
-function updateTask(baseTask:QueryCalcStatus, updTask:QueryCalcStatus):QueryCalcStatus {
-    return {
-        concId: baseTask.concId,
-        startTs: baseTask.startTs,
-        finishTs: updTask.finishTs,
-        error: updTask.error,
-        status: updTask.status
-    };
-}
-
-
-
 
 export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implements IUnregistrable {
 
@@ -100,15 +68,14 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             },
             (state, action, dispatch) => {
                 this.submitForm(state, dispatch).subscribe(
-                    ([queryId, tasks]) => {
+                    ([queryId, task]) => {
                         dispatch<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
                             payload: {
                                 corpname: state.corpname,
                                 usesubcorp: state.usesubcorp,
                                 queryId,
-                                tasks
-                            },
+                                task                            },
                         });
                     },
                     (error) => {
@@ -128,7 +95,8 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 state.isBusy = false;
                 if (!action.error) {
                     //state.receivedResults = true;
-                    state.queriesCalc = Dict.fromEntries(action.payload.tasks);
+                    // state.concWait TODO
+                    state.task = action.payload.task;
                 }
             }
         );
@@ -241,29 +209,50 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         this.addActionHandler<ACActions.AsyncTasksChecked>(
             ACActionName.AsyncTasksChecked,
             (state, action) => {
-                const incomingTasks = Dict.fromEntries(filterTasks(
-                    action.payload.tasks,
-                    pipe(
-                        state.queriesCalc,
-                        Dict.toEntries(),
-                        List.map(
-                            ([sourceId, info]) => tuple(sourceId, info.concId)
-                        )
-                    )
-                ));
-                state.queriesCalc = Dict.map(
-                    (task, sourceId) => {
-                        const incoming = incomingTasks[sourceId];
-                        if (!incoming) {
-                            // ERROR - server ignores one of our tasks?
-                            return task;
+                if (state.task) {
+                    const task = List.find(
+                        t => t.ident === state.task.ident,
+                        action.payload.tasks
+                    );
+                    if (!task) {
+                        // TODO ERROR
+                    } else {
+                        state.task = task as Kontext.AsyncTaskInfo<AsyncTaskArgs>;
+                    }
+                }
+            },
+            (state, action, dispatch) => {
+                if (state.task && state.task.status === 'SUCCESS') {
+                    this.layoutModel.ajax$<{result: Array<[string, number]>}>(
+                        HTTP.Method.GET,
+                        'get_task_result',
+                        {task_id: state.task.ident}
 
-                        } else {
-                            return updateTask(task, incoming);
+                    ).subscribe(
+                        resp => {
+                            dispatch<Actions.AsyncResultRecieved>({
+                                name: ActionName.AsyncResultRecieved,
+                                payload: {
+                                    data: resp.result
+                                }
+                            })
+                        },
+                        error => {
+                            dispatch<Actions.AsyncResultRecieved>({
+                                name: ActionName.AsyncResultRecieved,
+                                error: error
+                            })
+                            this.layoutModel.showMessage('error', error);
                         }
-                    },
-                    state.queriesCalc
-                );
+                    )
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.AsyncResultRecieved>(
+            ActionName.AsyncResultRecieved,
+            (state, action) => {
+                state.receivedResults = true;
             }
         )
     }
@@ -307,7 +296,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         };
     }
 
-    private submitForm(state:PqueryFormModelState, dispatch:SEDispatcher):Observable<[string, Array<[string, QueryCalcStatus]>]> {
+    private submitForm(state:PqueryFormModelState, dispatch:SEDispatcher):Observable<[string, Kontext.AsyncTaskInfo<AsyncTaskArgs>]> {
         return forkJoin(pipe(
             state.queries,
             Dict.toEntries(),
@@ -322,44 +311,43 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                     {contentType: 'application/json'}
 
                 ).pipe(
-                    map(resp => tuple(sourceId, resp))
+                    tap(
+                        resp => {
+                            // TODO update conc query textareas status icons ("conc - ready")
+                        }
+                    )
                 )
             )
         )).pipe(
             concatMap(
                 (concResponses) => {
-                    const srcAndConcIds = List.map(
-                        ([sourceId, conc]) => tuple(sourceId, conc.conc_persistence_op_id),
+                    const concIds = List.map(
+                        resp => resp.conc_persistence_op_id,
                         concResponses
                     );
                     return forkJoin([
                         this.saveQuery(state),
                         this.submitFreqIntersection(
-                            state, srcAndConcIds
+                            state, concIds
 
                         ).pipe(
-                            map(resp => tuple(srcAndConcIds, resp))
+                            map(resp => tuple(concIds, resp))
                         )
                     ]);
                 }
             ),
             tap(
-                ([queryId, [srcAndConcIds, fiResponse]]) => {
-                    List.forEach(
-                        task => {
-                            dispatch<ACActions.InboxAddAsyncTask>({
-                                name: ACActionName.InboxAddAsyncTask,
-                                payload: task
-                            })
-                        },
-                        fiResponse.tasks
-                    );
+                ([queryId, [concIds, fiResponse]]) => {
+                    dispatch<ACActions.InboxAddAsyncTask>({
+                        name: ACActionName.InboxAddAsyncTask,
+                        payload: fiResponse.task
+                    })
                 }
             ),
             map(
-                ([queryId, [srcAndConcIds, fiResponse]]) => {
-                    const ourTasks = filterTasks(fiResponse.tasks, srcAndConcIds);
-                    return tuple(queryId, ourTasks);
+                ([queryId, [,fiResponse]]) => {
+                    return tuple(queryId,
+                        fiResponse.task as Kontext.AsyncTaskInfo<AsyncTaskArgs>) // TODO Type always OK?
                 }
             )
         );
@@ -367,13 +355,13 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
 
     private submitFreqIntersection(
         state:PqueryFormModelState,
-        srcAndConcIds:Array<[string, string]>
+        concIds:Array<string>
     ):Observable<FreqIntersectionResponse> {
 
         const args:FreqIntersectionArgs = {
             corpname: state.corpname,
             usesubcorp: state.usesubcorp,
-            source__and_conc_ids: srcAndConcIds,
+            conc_ids: concIds,
             min_freq: state.minFreq,
             attr: state.attr,
             position: state.position

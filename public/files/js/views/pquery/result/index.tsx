@@ -94,7 +94,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
     // ---------------- <PqueryResultSection /> ----------------------------
 
     const PqueryResultSection:React.FC<PqueryResultModelState> = (props) => {
-        
+
         const _exportSortKey = (name) => {
             if (name === props.sortKey.name) {
                 return props.sortKey;
@@ -105,7 +105,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         return props.isVisible ?
             (
                 <S.PqueryResultSection>
-                    <h2>Pquery result</h2>                    
+                    <h2>Pquery result</h2>
                     <table className="data">
                         <tbody>
                             <tr>

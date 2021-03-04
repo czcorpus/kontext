@@ -51,6 +51,7 @@ from .plg import PluginApi
 from templating import DummyGlobals
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy
 from texttypes import TextTypes, TextTypesCache
+import bgcalc
 
 
 JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
@@ -1251,7 +1252,6 @@ class Kontext(Controller):
     def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
         if backend in ('celery', 'rq'):
-            import bgcalc
             app = bgcalc.calc_backend_client(settings)
             at_list = self.get_async_tasks()
             upd_list = []
@@ -1273,6 +1273,12 @@ class Kontext(Controller):
             return dict(data=[d.to_dict() for d in upd_list])
         else:
             raise FunctionNotSupported(f'Backend {backend} does not support status checking')
+
+    @exposed(return_type='json', skip_corpus_init=True)
+    def get_task_result(self, request):
+        app = bgcalc.calc_backend_client(settings)
+        result = app.AsyncResult(request.args.get('task_id'))
+        return dict(result=result.get())
 
     @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
     def remove_task_info(self, request: Request) -> Dict[str, Any]:

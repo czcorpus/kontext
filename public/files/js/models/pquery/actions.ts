@@ -20,7 +20,8 @@
  */
 
 import { Action } from 'kombo';
-import { QueryCalcStatus } from './common';
+import { Kontext } from '../../types/common';
+import { AsyncTaskArgs, PqueryResult } from './common';
 
 
 export enum ActionName {
@@ -34,6 +35,7 @@ export enum ActionName {
     PositionChange = 'PQUERY_POSITION_CHANGE',
     AttrChange = 'PQUERY_ATTR_CHANGE',
     SortLines = 'PQUERY_RESULTS_SORT_LINES',
+    AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED'
 }
 
 
@@ -49,7 +51,7 @@ export namespace Actions {
         queryId:string;
         corpname:string;
         usesubcorp:string;
-        tasks:Array<[string, QueryCalcStatus]>; // [sourceId, taskInfo]
+        task:Kontext.AsyncTaskInfo<AsyncTaskArgs>;
 
     }> {
         name: ActionName.SubmitQueryDone;
@@ -101,5 +103,11 @@ export namespace Actions {
         reverse: boolean;
     }> {
         name: ActionName.SortLines;
+    }
+
+    export interface AsyncResultRecieved extends Action<{
+        data:PqueryResult;
+    }> {
+        name: ActionName.AsyncResultRecieved
     }
 }

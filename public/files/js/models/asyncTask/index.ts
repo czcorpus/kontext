@@ -141,18 +141,23 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         this.addActionHandler<Actions.InboxAddAsyncTask>(
             ActionName.InboxAddAsyncTask,
             action => {
-                this.changeState(state => {
-                    state.asyncTasks.push({
-                        status: action.payload.status ? action.payload.status : 'PENDING',
-                        ident: action.payload.ident,
-                        created: action.payload.created ? action.payload.created : new Date().getTime() / 1000,
-                        label: action.payload.label,
-                        category: action.payload.category,
-                        error: action.payload.error,
-                        args: action.payload.args ? action.payload.args : {}
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.asyncTasks.push({
+                            status: action.payload.status ? action.payload.status : 'PENDING',
+                            ident: action.payload.ident,
+                            created: action.payload.created ? action.payload.created : new Date().getTime() / 1000,
+                            label: action.payload.label,
+                            category: action.payload.category,
+                            error: action.payload.error,
+                            args: action.payload.args ? action.payload.args : {}
+                        });
                     });
-                });
-                this.init();
+                    this.init();
+
+                } else {
+                    this.pageModel.showMessage('error', action.error);
+                }
             }
         );
 
@@ -262,13 +267,11 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     init():void {
         if (!List.empty(this.state.asyncTasks)) {
             this.emitChange();
+            if (this.timer$) {
+                this.timer$.complete();
+            }
             this.timer$ = taskCheckTimer();
             this.checker$ = this.timer$.pipe(
-                tap(
-                    v => {
-                        console.log('timer: ', v);
-                    }
-                ),
                 concatMap(
                     _ => this.checkForStatus()
                 ),

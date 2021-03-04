@@ -51,7 +51,7 @@ export interface StoredPqueryForm {
 export interface FreqIntersectionArgs {
     corpname:string;
     usesubcorp:string;
-    source__and_conc_ids:Array<[string, string]>;
+    conc_ids:Array<string>;
     min_freq:number;
     attr:string;
     position:string;
@@ -59,48 +59,28 @@ export interface FreqIntersectionArgs {
 
 export interface AsyncTaskArgs {
     conc_id:string;
-    source_id:string;
     last_update:number;
 }
 
 export interface FreqIntersectionResponse {
-    tasks:Array<Kontext.AsyncTaskInfo<unknown>>;
+    task:Kontext.AsyncTaskInfo<unknown>;
 }
 
 export function asyncTaskIsPquery(t:Kontext.AsyncTaskInfo):t is Kontext.AsyncTaskInfo<AsyncTaskArgs> {
     return t.category === 'pquery' && t.args['conc_id'] !== undefined;
 }
 
-export type TaskStatus = 'none'|'running'|'finished';
+export type ConcStatus = 'none'|'running'|'finished';
 
-export interface QueryCalcStatus {
-    concId:string|undefined;
-    startTs:number;
-    finishTs:number|undefined;
-    error:string|undefined;
-    status:TaskStatus;
-}
 
-export function importTaskInfo(t:Kontext.AsyncTaskInfo<AsyncTaskArgs>):[string, QueryCalcStatus] {
-    return tuple(
-        t.args.source_id,
-        {
-            concId: t.args.conc_id,
-            startTs: t.args.last_update,
-            finishTs: undefined,
-            error: t.error || undefined,
-            status: t.status === 'STARTED' || t.status === 'PENDING' ?
-                'running' : 'finished'
-        }
-    );
-}
 
 export interface PqueryFormModelState {
     isBusy:boolean;
     corpname:string;
     usesubcorp:string;
     queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
-    queriesCalc:{[sourceId:string]:QueryCalcStatus|undefined};
+    concWait:{[sourceId:string]:ConcStatus};
+    task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
     minFreq:number;
     position:string;
     attr:string;
@@ -137,7 +117,8 @@ export function newModelState(
             include_empty: true,
             default_attr: null,
         }},
-        queriesCalc: {[generatePqueryName(0)]: undefined},
+        concWait: {[generatePqueryName(0)]: 'none'},
+        task: undefined,
         minFreq: 5,
         position: '0<0',
         attr: List.head(attrs).n,
@@ -179,13 +160,14 @@ export function storedQueryToModel(
             ),
             Dict.fromEntries()
         ),
-        queriesCalc: pipe(
+        concWait: pipe(
             sq.queries,
-            List.map(
-                (v, i) => tuple(generatePqueryName(i), undefined)
+            List.map<AdvancedQuerySubmit, [string, ConcStatus]>(
+                (v, i) => tuple(generatePqueryName(i), 'none')
             ),
             Dict.fromEntries()
         ),
+        task: undefined,
         minFreq: sq.min_freq,
         position: sq.position,
         attr: sq.attr,

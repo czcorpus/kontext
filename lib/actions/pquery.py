@@ -90,39 +90,25 @@ class ParadigmaticQuery(Kontext):
         attr:string;
         position:string;
         """
-        tasks = []
+        app = bgcalc.calc_backend_client(settings)
         corp_info = self.get_corpus_info(self.args.corpname)
-        for source_id, conc_id in request.json.get('source__and_conc_ids'):
 
-            with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
-                raw_query = query_persistence.open(conc_id)['q']
-            args = FreqCalsArgs()
-            attr = request.json.get('attr')
-            args.fcrit = f'{attr} {request.json.get("position")}'
-            args.corpname = request.json['corpname']
-            args.subcname = request.json['usesubcorp']
-            args.subcpath = self.subcpath
-            args.user_id = self.session_get('user', 'id')
-            args.freq_sort = 'freq'
-            args.pagesize = 50 # TODO
-            args.samplesize = 0
-            args.flimit = 0
-            args.q = raw_query
-            args.collator_locale = corp_info.collator_locale
-            args.rel_mode = 0 if '.' in attr else 1
-            args.ftt_include_empty = False
-            args.fmaxitems = 10000
-            app = bgcalc.calc_backend_client(settings)
-            res = app.send_task('calculate_freqs', args=(args.to_dict(),),
-                                time_limit=TASK_TIME_LIMIT)
-            task_args = dict(conc_id=conc_id, source_id=source_id, last_update=time.time())
-            async_task = AsyncTaskStatus(status=res.status, ident=res.id,
-                                         category=AsyncTaskStatus.CATEGORY_PQUERY,
-                                         label=f'{args.corpname}/{args.subcname}',
-                                         args=task_args)
-            self._store_async_task(async_task)
-            tasks.append(async_task)
-        return dict(tasks=[t.to_dict() for t in tasks])
+        raw_queries = dict()
+        with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
+            for conc_id in request.json.get('conc_ids'):
+                raw_queries[conc_id] = query_persistence.open(conc_id)['q']
+        calc_args = (
+            request.json, raw_queries, self.subcpath, self.session_get('user', 'id'),
+            corp_info.collator_locale if corp_info.collator_locale else 'en_US')
+        res = app.send_task('calc_merged_freqs', args=calc_args,
+                            time_limit=TASK_TIME_LIMIT)
+        task_args = dict(conc_id=conc_id, last_update=time.time())
+        async_task = AsyncTaskStatus(status=res.status, ident=res.id,
+                                     category=AsyncTaskStatus.CATEGORY_PQUERY,
+                                     label=f'{corp_info.name} - pquery',
+                                     args=task_args)
+        self._store_async_task(async_task)
+        return dict(task=async_task.to_dict())
 
     @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
     def save_query(self, request):

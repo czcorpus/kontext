@@ -141,6 +141,10 @@ def clean_freqs_cache():
     return general.clean_freqs_cache()
 
 
+@app.task(name='calc_merged_freqs')
+def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
+    return general.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
+
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 

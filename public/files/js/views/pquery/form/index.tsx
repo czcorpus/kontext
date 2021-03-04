@@ -27,8 +27,7 @@ import { PqueryFormModel } from '../../../models/pquery/form';
 import { Actions, ActionName } from '../../../models/pquery/actions';
 import * as S from './style';
 import { Dict, List } from 'cnc-tskit';
-import { PqueryFormModelState, QueryCalcStatus, TaskStatus } from '../../../models/pquery/common';
-import { UtilButton } from '../../theme/default';
+import { ConcStatus, PqueryFormModelState } from '../../../models/pquery/common';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -51,7 +50,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
 
     const QueryStatusIcon:React.FC<{
         sourceId:string;
-        concLoadingStatus:QueryCalcStatus|undefined;
+        concLoadingStatus:ConcStatus|undefined;
         numQueries:number;
 
     }> = (props) => {
@@ -63,16 +62,17 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             });
         };
 
-        if (!props.concLoadingStatus && props.numQueries > 1) {
+        if (props.concLoadingStatus === 'none' && props.numQueries > 1) {
             return <layoutViews.DelItemIcon title="Remove query"
                         onClick={removeQueryHandler(props.sourceId)} />;
 
-        } else if (props.concLoadingStatus && props.concLoadingStatus.status === 'running') {
+        } else if (props.concLoadingStatus && props.concLoadingStatus === 'running') {
             return <layoutViews.AjaxLoaderBarImage />;
 
-        } else if (props.concLoadingStatus && props.concLoadingStatus.status === 'finished') {
+        } else if (props.concLoadingStatus && props.concLoadingStatus === 'finished') {
             return <span>{'\u2713'}</span>
         }
+        return null;
     }
 
     const PqueryForm:React.FC<PqueryFormModelState & PqueryFormProps> = (props) => {
@@ -136,7 +136,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                             <S.QueryField key={sourceId}>
                                 <textarea name={sourceId} onChange={handleQueryChange(sourceId)} value={query.query} />
                                 <QueryStatusIcon numQueries={Dict.size(props.queries)}
-                                        concLoadingStatus={props.queriesCalc[sourceId]}
+                                        concLoadingStatus={props.concWait[sourceId]}
                                         sourceId={sourceId} />
                             </S.QueryField>,
                             props.queries

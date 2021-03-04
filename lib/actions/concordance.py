@@ -909,7 +909,6 @@ class Actions(Querying):
         args.subcpath = self.subcpath
         args.user_id = self.session_get('user', 'id')
         args.q = self.args.q
-        args.fromp = self.args.fromp
         args.pagesize = self.args.pagesize
         args.save = self.args.save
         args.samplesize = 0
