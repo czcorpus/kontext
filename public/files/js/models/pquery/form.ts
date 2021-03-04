@@ -207,36 +207,42 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                         action.payload.tasks
                     );
                     if (!task) {
-                        // TODO ERROR
+                        layoutModel.showMessage('error', 'Paradigmatic query task not found!');
                     } else {
                         state.task = task as Kontext.AsyncTaskInfo<AsyncTaskArgs>;
                     }
                 }
             },
             (state, action, dispatch) => {
-                if (state.task && state.task.status === 'SUCCESS') {
-                    this.layoutModel.ajax$<{result: Array<[string, number]>}>(
-                        HTTP.Method.GET,
-                        'get_task_result',
-                        {task_id: state.task.ident}
+                if (state.task) {
+                    if (state.task.status === 'SUCCESS') {
+                        this.layoutModel.ajax$<{result: Array<[string, number]>}>(
+                            HTTP.Method.GET,
+                            'get_task_result',
+                            {task_id: state.task.ident}
 
-                    ).subscribe(
-                        resp => {
-                            dispatch<Actions.AsyncResultRecieved>({
-                                name: ActionName.AsyncResultRecieved,
-                                payload: {
-                                    data: resp.result
-                                }
-                            })
-                        },
-                        error => {
-                            dispatch<Actions.AsyncResultRecieved>({
-                                name: ActionName.AsyncResultRecieved,
-                                error: error
-                            })
-                            this.layoutModel.showMessage('error', error);
-                        }
-                    )
+                        ).subscribe(
+                            resp => {
+                                dispatch<Actions.AsyncResultRecieved>({
+                                    name: ActionName.AsyncResultRecieved,
+                                    payload: {
+                                        data: resp.result
+                                    }
+                                })
+                            },
+                            error => {
+                                dispatch<Actions.AsyncResultRecieved>({
+                                    name: ActionName.AsyncResultRecieved,
+                                    error: error
+                                })
+                            }
+                        )
+                    } else if (state.task.status === 'FAILURE') {
+                        dispatch<Actions.AsyncResultRecieved>({
+                            name: ActionName.AsyncResultRecieved,
+                            error: Error('Paradigmatic query task failed!')
+                        });
+                    }
                 }
             }
         );
@@ -245,7 +251,11 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             ActionName.AsyncResultRecieved,
             (state, action) => {
                 state.isBusy = false;
-                state.receivedResults = true;
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+                } else {
+                    state.receivedResults = true;
+                }
             }
         )
 
