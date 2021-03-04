@@ -101,7 +101,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         return props.isVisible ?
             (
                 <S.PqueryResultSection>
-                    <h2>Pquery result</h2>
+                    <h2>{he.translate('pquery__results')}</h2>
                     <table className="data">
                         <tbody>
                             <tr>

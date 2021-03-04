@@ -31,6 +31,14 @@ export const PqueryForm = styled.div`
     .loader {
         margin: 0 1em;
     }
+
+    .add {
+        img {
+            margin-right: 0.5em;
+            width: 1em;
+            height: 1em;
+        }
+    }
 `;
 
 export const QueryField = styled.div`
