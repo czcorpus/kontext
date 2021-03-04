@@ -19,42 +19,65 @@ from collections import defaultdict
 from bgcalc.freq_calc import FreqCalsArgs, calc_freqs_bg
 import l10n
 from multiprocessing import Pool
+from functools import wraps
+from typing import Dict, Any
+import settings
+
+"""
+This module contains function for calculating Paradigmatic queries
+out of existing concordances.
+"""
 
 
-class PqueryCache:
+def cached(f):
+    """
+    A decorator for caching freq merge results (using "pickle" serialization)
+    """
+    @wraps(f)
+    def wrapper(request_json, raw_queries, subcpath, user_id, collator_locale):
+        corpname = request_json['corpname']
+        subcname = request_json['usesubcorp']
+        attr = request_json['attr']
+        position = request_json['position']
+        min_freq = request_json['min_freq']
+        conc_ids = ':'.join(request_json['conc_ids'])
 
-    def __init__(self, root_path):
-        self._root_path = root_path
-
-    def _mk_path(self, corpname, subcname, queries, position, attr, min_freq):
-        ident = f'{corpname}:{subcname}:{queries}:{position}:{attr}:{min_freq}'
-        return 'pquery_{}.pkl'.format(hashlib.sha1(ident.encode('utf-8')).hexdigest())
-
-    def get(self, corpname, subcname, queries, position, attr, min_freq):
-        path = self._mk_path(corpname, subcname, queries, position, attr, min_freq)
-        if os.path.isfile(path):
-            with open(path, 'wb') as f:
-                return pickle.load(f)
-        return None
-
-    def set(self, corpname, subcname, queries, position, attr, min_freq, data):
-        path = self._mk_path(corpname, subcname, queries, position, attr, min_freq, data)
+        key = f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}'
+        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'),
+                            'pquery_{}.pkl'.format(hashlib.sha1(key.encode('utf-8')).hexdigest()))
+        if os.path.exists(path):
+            with open(path, 'rb') as fr:
+                return pickle.load(fr)
+        ans = f(request_json, raw_queries, subcpath, user_id, collator_locale)
         with open(path, 'wb') as fw:
-            pickle.dump(data, fw)
-
-
-def task(args: FreqCalsArgs):
-    return calc_freqs_bg(args)
+            pickle.dump(ans, fw)
+        return ans
+    return wrapper
 
 
 def _extract_freqs(freqs):
+    """
+    Extract value and freq information out of complex freq. response data type
+    """
     ans = []
     for item in freqs.get('freqs', [{'Items': []}])[0].get('Items'):
         ans.append((item['Word'][0]['n'], item['freq']))
     return ans
 
 
-def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
+@cached
+def calc_merged_freqs(request_json: Dict[str, Any], raw_queries: Dict[str, str], subcpath: str, user_id: int,
+                      collator_locale: str):
+    """
+    Calculate paradigmatic query providing existing concordances.
+
+    request_json -- submit data as received by the client (see
+                    models.pquery.common.FreqIntersectionArgs)
+    raw_queries -- a mapping between conc_id and actual query understood by Manatee
+    subcpath -- a root path to user subcorpora
+    user_id -- user ID
+    collator_locale -- a locale used for collation within the current corpus
+    """
     tasks = []
     num_tasks = len(request_json.get('conc_ids', []))
     for conc_id in request_json.get('conc_ids', []):
@@ -67,17 +90,17 @@ def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_loc
         args.user_id = user_id
         args.freq_sort = 'freq'
         args.pagesize = 10000  # TODO
+        args.fmaxitems = 10000
         args.samplesize = 0
-        args.flimit = 0
+        args.flimit = request_json['min_freq']
         args.q = raw_queries[conc_id]
         args.collator_locale = collator_locale
         args.rel_mode = 0 if '.' in attr else 1
         args.ftt_include_empty = False
-        args.fmaxitems = 10000
         tasks.append(args)
 
     with Pool(processes=num_tasks) as pool:
-        done = pool.map(task, tasks)
+        done = pool.map(calc_freqs_bg, tasks)
 
     merged = defaultdict(lambda: [])
     for freq_table in done:

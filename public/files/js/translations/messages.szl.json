@@ -599,6 +599,7 @@
         "task__type_coll_download": "Ściōnganie listy kolokacyji",
         "task__type_wordlist_download": "Ściōnganie listy słōw",
         "task__type_line_selection_download": "Ściōnganie przeglōndu wyboru liniji",
+        "task__type_pquery": "Paradigmatic query UNTRANSLATED",
         "task__status_PENDING": "Running",
         "task__status_STARTED": "Running",
         "task__status_RETRY": "Prōbowanie zaś",

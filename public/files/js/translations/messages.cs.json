@@ -600,6 +600,7 @@
         "task__type_coll_download": "Stažení seznamu kolokací",
         "task__type_wordlist_download": "Stažení seznamu slov",
         "task__type_line_selection_download": "Stažení přehledu o výběru řádků",
+        "task__type_pquery": "Paradigmatický dotaz",
         "task__status_PENDING": "Běží",
         "task__status_STARTED": "Běží",
         "task__status_RETRY": "Opakování po chybě",

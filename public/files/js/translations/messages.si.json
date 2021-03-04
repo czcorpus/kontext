@@ -611,6 +611,7 @@
         "task__type_coll_download": "Collocations list download UNTRANSLATED",
         "task__type_wordlist_download": "Word list download UNTRANSLATED",
         "task__type_line_selection_download": "Line selection overview download UNTRANSLATED",
+        "task__type_pquery": "Paradigmatic query UNTRANSLATED",
         "coll__form_heading": "Collocations UNTRANSLATED",
         "coll__to": "to UNTRANSLATED",
         "coll__invalid_number_value": "Invalid number value UNTRANSLATED",

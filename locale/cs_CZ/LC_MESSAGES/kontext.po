@@ -545,3 +545,6 @@ msgstr "Obnovení konkordance"
 
 msgid "Paradigmatic query"
 msgstr "Paradigmatický dotaz"
+
+msgid "Paradigmatic query calculation"
+msgstr "Výpočet paradigmatického dotazu"

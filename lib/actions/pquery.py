@@ -24,10 +24,10 @@ from werkzeug import Request
 import plugins
 from texttypes import TextTypesCache
 import bgcalc
-from bgcalc.freq_calc import FreqCalsArgs
 import settings
 from controller.kontext import AsyncTaskStatus
 import time
+from translation import ugettext as translate
 
 """
 This module contains HTTP actions for the "Paradigmatic query" functionality
@@ -77,18 +77,9 @@ class ParadigmaticQuery(Kontext):
     @exposed(http_method='POST', return_type='json')
     def freq_intersection(self, request):
         """
-        TODO
-        1) create N async task for freq. calculation
-        2) store task IDs using _store_async_task and AsyncTaskStatus
-        3) return task ids (i.e. do not wait for the task to complete)
+        Run a paradigmatic query out of existing concordances.
 
-        JSON:
-        corpname:string;
-        usesubcorp:string;
-        conc__and_source_ids:Array<[string, string]>;
-        min_freq:number;
-        attr:string;
-        position:string;
+        submitted JSON structure - see models.pquery.common.FreqIntersectionArgs
         """
         app = bgcalc.calc_backend_client(settings)
         corp_info = self.get_corpus_info(self.args.corpname)
@@ -98,14 +89,17 @@ class ParadigmaticQuery(Kontext):
             for conc_id in request.json.get('conc_ids'):
                 raw_queries[conc_id] = query_persistence.open(conc_id)['q']
         calc_args = (
-            request.json, raw_queries, self.subcpath, self.session_get('user', 'id'),
+            request.json,
+            raw_queries,
+            self.subcpath,
+            self.session_get('user', 'id'),
             corp_info.collator_locale if corp_info.collator_locale else 'en_US')
         res = app.send_task('calc_merged_freqs', args=calc_args,
                             time_limit=TASK_TIME_LIMIT)
         task_args = dict(conc_id=conc_id, last_update=time.time())
         async_task = AsyncTaskStatus(status=res.status, ident=res.id,
                                      category=AsyncTaskStatus.CATEGORY_PQUERY,
-                                     label=f'{corp_info.name} - pquery',
+                                     label=translate('Paradigmatic query calculation'),
                                      args=task_args)
         self._store_async_task(async_task)
         return dict(task=async_task.to_dict())
