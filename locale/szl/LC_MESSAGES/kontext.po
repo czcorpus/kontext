@@ -212,8 +212,8 @@ msgstr ""
 msgid "logout"
 msgstr "wyloguj"
 
-msgid "Enter new query"
-msgstr "Wkludź nowe zapytanie"
+msgid "Concordance query"
+msgstr "Concordance query UNTRANSLATED"
 
 msgid "Recent queries"
 msgstr "Ôstatnie zapytania"
@@ -459,3 +459,6 @@ msgstr "unspecified"
 
 msgid "Concordance regeneration"
 msgstr "Concordance regeneration"
+
+msgid "Paradigmatic query calculation"
+msgstr "Paradigmatic query calculation UNTRANSLATED"

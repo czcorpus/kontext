@@ -26,7 +26,7 @@ def fix_new_lines(data):
 
 
 def get_sqlite_conn():
-    conf = autoconf.settings.get('plugins', 'conc_persistence')
+    conf = autoconf.settings.get('plugins', 'query_persistence')
     db_path = conf.get(DB_CONF_ENTRY, None)
     if db_path:
         return sqlite3.connect(db_path)

@@ -19,33 +19,27 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { interval, Observable, of as rxOf } from 'rxjs';
+import { Observable, of as rxOf, Subject } from 'rxjs';
 import { List, HTTP, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { IPluginApi } from '../../types/plugins';
-import { concatAll, concatMap, map, repeat, take, takeWhile } from 'rxjs/operators';
+import { concatMap, map, takeWhile, tap } from 'rxjs/operators';
 import { Actions, ActionName } from './actions';
+import { taskCheckTimer } from './common';
 
 
 function taskIsActive(t:Kontext.AsyncTaskInfo):boolean {
-    return t.status === AsyncTaskStatus.STARTED || t.status === AsyncTaskStatus.PENDING;
+    return t.status === 'STARTED' || t.status === 'PENDING';
 }
 
 function taskIsFinished(t:Kontext.AsyncTaskInfo):boolean {
-    return t.status === AsyncTaskStatus.SUCCESS || t.status === AsyncTaskStatus.FAILURE;
+    return t.status === 'SUCCESS' || t.status === 'FAILURE';
 }
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
     data:Array<Kontext.AsyncTaskInfo>;
-}
-
-export enum AsyncTaskStatus {
-    PENDING = 'PENDING',
-    STARTED = 'STARTED',
-    SUCCESS = 'SUCCESS',
-    FAILURE = 'FAILURE'
 }
 
 export interface AsyncTaskCheckerState {
@@ -73,6 +67,10 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private checker$:Observable<AsyncTaskResponse>;
 
+    private timer$:Subject<number>;
+
+    private triggerUpdateAction:(resp:AsyncTaskResponse)=>void;
+
     constructor(
         dispatcher:IFullActionControl,
         pageModel:IPluginApi,
@@ -89,6 +87,14 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         );
         this.pageModel = pageModel;
         this.onUpdate = [];
+        this.triggerUpdateAction = (resp:AsyncTaskResponse) => {
+            dispatcher.dispatch<Actions.AsyncTasksChecked>({
+                name: ActionName.AsyncTasksChecked,
+                payload: {
+                    tasks: resp.data
+                }
+            })
+        };
 
         this.addActionHandler<Actions.InboxToggleOverviewVisibility>(
             ActionName.InboxToggleOverviewVisibility,
@@ -135,17 +141,23 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         this.addActionHandler<Actions.InboxAddAsyncTask>(
             ActionName.InboxAddAsyncTask,
             action => {
-                this.changeState(state => {
-                    state.asyncTasks.push({
-                        status: AsyncTaskStatus.PENDING,
-                        ident: action.payload.ident,
-                        created: new Date().getTime() / 1000,
-                        label: action.payload.label,
-                        category: action.payload.category,
-                        error: null,
-                        args: {}
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.asyncTasks.push({
+                            status: action.payload.status ? action.payload.status : 'PENDING',
+                            ident: action.payload.ident,
+                            created: action.payload.created ? action.payload.created : new Date().getTime() / 1000,
+                            label: action.payload.label,
+                            category: action.payload.category,
+                            error: action.payload.error,
+                            args: action.payload.args ? action.payload.args : {}
+                        });
                     });
-                });
+                    this.init();
+
+                } else {
+                    this.pageModel.showMessage('error', action.error);
+                }
             }
         );
 
@@ -164,10 +176,9 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                             status: action.payload.status,
                             ident: action.payload.ident,
                         };
-                        if ((old.status === AsyncTaskStatus.PENDING ||
-                                old.status === AsyncTaskStatus.STARTED)
-                                && (state.asyncTasks[srchIdx].status === AsyncTaskStatus.FAILURE ||
-                                    state.asyncTasks[srchIdx].status === AsyncTaskStatus.SUCCESS)) {
+                        if ((old.status === 'PENDING' || old.status === 'STARTED')
+                                && (state.asyncTasks[srchIdx].status === 'FAILURE' ||
+                                    state.asyncTasks[srchIdx].status === 'SUCCESS')) {
                             state.overviewVisible = true;
                         }
                     }
@@ -256,21 +267,22 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     init():void {
         if (!List.empty(this.state.asyncTasks)) {
             this.emitChange();
-            this.checker$ = rxOf(
-                rxOf(1, 1, 1, 1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4,
-                    1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 2, 2.5, 3, 3.5, 4, 4.5),
-                rxOf(5).pipe(repeat(100))
-            ).pipe(
-                concatAll(),
-                concatMap(
-                    v => interval(v * 1000).pipe(take(1))
-                ),
+            if (this.timer$) {
+                this.timer$.complete();
+            }
+            this.timer$ = taskCheckTimer();
+            this.checker$ = this.timer$.pipe(
                 concatMap(
                     _ => this.checkForStatus()
                 ),
                 takeWhile(
                     (ans, i) => this.getNumRunningTasks(ans.data) > 0 || i === 0,
                     true // inclusive
+                ),
+                tap(
+                    (data) => {
+                        this.triggerUpdateAction(data)
+                    }
                 )
             );
 
@@ -284,11 +296,14 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                             });
                         }
                     });
+
                 },
                 (err) => {
                     this.pageModel.showMessage('error', err);
                 }
             );
+
+
         }
     }
 }

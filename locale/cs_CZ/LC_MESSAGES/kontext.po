@@ -222,8 +222,8 @@ msgstr ""
 msgid "logout"
 msgstr "Odhlásit se"
 
-msgid "Enter new query"
-msgstr "Zadat nový dotaz"
+msgid "Concordance"
+msgstr "Konkordance"
 
 msgid "Recent queries"
 msgstr "Předchozí dotazy"
@@ -231,8 +231,8 @@ msgstr "Předchozí dotazy"
 msgid "Word List"
 msgstr "Seznam slov"
 
-msgid "Concordance"
-msgstr "Konkordance"
+msgid "Concordance query"
+msgstr "Dotaz na konkordanci"
 
 msgid "Current concordance"
 msgstr "Aktuální konkordance"
@@ -542,3 +542,9 @@ msgstr "Prohlédnout na GitHubu"
 
 msgid "Concordance regeneration"
 msgstr "Obnovení konkordance"
+
+msgid "Paradigmatic query"
+msgstr "Paradigmatický dotaz"
+
+msgid "Paradigmatic query calculation"
+msgstr "Výpočet paradigmatického dotazu"

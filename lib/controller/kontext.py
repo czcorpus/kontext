@@ -51,6 +51,7 @@ from .plg import PluginApi
 from templating import DummyGlobals
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy
 from texttypes import TextTypes, TextTypesCache
+import bgcalc
 
 
 JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
@@ -112,6 +113,7 @@ class AsyncTaskStatus(object):
         status (str): one of
     """
     CATEGORY_SUBCORPUS = 'subcorpus'
+    CATEGORY_PQUERY = 'pquery'
 
     def __init__(self, ident: str, label: str, status: int, category: str, args: Dict[str, Any], created: Optional[float] = None, error: Optional[str] = None) -> None:
         self.ident: str = ident
@@ -198,7 +200,7 @@ class Kontext(Controller):
 
         self._plugin_api: PluginApi = PluginApi(self, self._request, self._cookies)
 
-        # conc_persistence plugin related attributes
+        # query_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
 
         # data of the previous operation are stored here
@@ -365,7 +367,7 @@ class Kontext(Controller):
         """
         Restores previously stored concordance query data using an ID found in request arg 'q'.
         To even begin the search, two conditions must be met:
-        1. conc_persistence plugin is installed
+        1. query_persistence plugin is installed
         2. request arg 'q' contains a string recognized as a valid ID of a stored concordance query
            at the position 0 (other positions may contain additional regular query operations
            (shuffle, filter,...)
@@ -373,17 +375,17 @@ class Kontext(Controller):
         Restored values will be stored in 'form' instance as forced ones preventing 'form'
         from returning its original values (no matter what is there).
 
-        In case the conc_persistence is installed and invalid ID is encountered
+        In case the query_persistence is installed and invalid ID is encountered
         UserActionException will be raised.
 
         arguments:
             form -- RequestArgsProxy
         """
         url_q = form.getlist('q')[:]
-        with plugins.runtime.CONC_PERSISTENCE as conc_persistence:
-            if len(url_q) > 0 and conc_persistence.is_valid_id(url_q[0]):
+        with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
+            if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
-                self._prev_q_data = conc_persistence.open(self._q_code)
+                self._prev_q_data = query_persistence.open(self._q_code)
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._prev_q_data is not None:
@@ -460,17 +462,17 @@ class Kontext(Controller):
     def _save_query_to_history(self, query_id, conc_data):
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
-                qh.write(user_id=self.session_get('user', 'id'), query_id=query_id)
+                qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='conc')
 
     def _store_conc_params(self) -> List[str]:
         """
-        Stores concordance operation if the conc_persistence plugin is installed
+        Stores concordance operation if the query_persistence plugin is installed
         (otherwise nothing is done).
 
         returns:
         string ID of the stored operation (or the current ID of nothing was stored)
         """
-        with plugins.runtime.CONC_PERSISTENCE as cp:
+        with plugins.runtime.QUERY_PERSISTENCE as cp:
             prev_data = self._prev_q_data if self._prev_q_data is not None else {}
             curr_data = self.get_saveable_conc_data()
             ans = [cp.store(self.session_get('user', 'id'),
@@ -515,7 +517,7 @@ class Kontext(Controller):
         op_id -- unique operation ID
         tpl_data -- a dictionary used along with HTML template to render the output
         """
-        if plugins.runtime.CONC_PERSISTENCE.exists:
+        if plugins.runtime.QUERY_PERSISTENCE.exists:
             if op_id:
                 tpl_data['Q'] = [f'~{op_id}']
                 tpl_data['conc_persistence_op_id'] = op_id
@@ -1060,7 +1062,7 @@ class Kontext(Controller):
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
         result['can_send_mail'] = bool(settings.get('mailing'))
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
-        result['conc_url_ttl_days'] = plugins.runtime.CONC_PERSISTENCE.instance.get_conc_ttl_days(
+        result['conc_url_ttl_days'] = plugins.runtime.QUERY_PERSISTENCE.instance.get_conc_ttl_days(
             self.session_get('user', 'id'))
 
         self._attach_plugin_exports(result, direct=False)
@@ -1194,11 +1196,12 @@ class Kontext(Controller):
     def _set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
         self._session['async_tasks'] = [at.to_dict() for at in task_list]
 
-    def _store_async_task(self, async_task_status):
+    def _store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
         at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
         self._mark_timeouted_tasks(*at_list)
         at_list.append(async_task_status)
         self._set_async_tasks(at_list)
+        return at_list
 
     @exposed(return_type='json')
     def concdesc_json(self, _: Optional[Request] = None) -> Dict[str, List[Dict[str, Any]]]:
@@ -1249,7 +1252,6 @@ class Kontext(Controller):
     def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
         if backend in ('celery', 'rq'):
-            import bgcalc
             app = bgcalc.calc_backend_client(settings)
             at_list = self.get_async_tasks()
             upd_list = []
@@ -1271,6 +1273,12 @@ class Kontext(Controller):
             return dict(data=[d.to_dict() for d in upd_list])
         else:
             raise FunctionNotSupported(f'Backend {backend} does not support status checking')
+
+    @exposed(return_type='json', skip_corpus_init=True)
+    def get_task_result(self, request):
+        app = bgcalc.calc_backend_client(settings)
+        result = app.AsyncResult(request.args.get('task_id'))
+        return dict(result=result.get())
 
     @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')
     def remove_task_info(self, request: Request) -> Dict[str, Any]:

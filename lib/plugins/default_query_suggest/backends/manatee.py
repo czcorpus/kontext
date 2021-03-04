@@ -40,7 +40,6 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         args.subcname = getattr(corp, 'subcname', None)
         args.subcpath = ''  # TODO xx
         args.user_id = user_id
-        args.fromp = 0
         args.pagesize = 100
         args.save = False
         args.samplesize = 0

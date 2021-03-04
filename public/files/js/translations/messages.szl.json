@@ -599,6 +599,7 @@
         "task__type_coll_download": "Ściōnganie listy kolokacyji",
         "task__type_wordlist_download": "Ściōnganie listy słōw",
         "task__type_line_selection_download": "Ściōnganie przeglōndu wyboru liniji",
+        "task__type_pquery": "Paradigmatic query UNTRANSLATED",
         "task__status_PENDING": "Running",
         "task__status_STARTED": "Running",
         "task__status_RETRY": "Prōbowanie zaś",
@@ -782,6 +783,13 @@
         "wordlist__add_attr": "Przidej atrybut",
         "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\"",
         "wordlist__create_filter_list": "Create",
-        "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER"
+        "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER",
+        "pquery__no_form_data_to_restore": "No result - the URL address refers to invalid input data. UNTRANSLATED",
+        "pquery__add_btn": "--TODO--",
+        "pquery__remove_btn": "--TODO--",
+        "pquery__attr_input": "--TODO--",
+        "pquery__min_fq_input": "--TODO--",
+        "pquery__pos_input": "--TODO--",
+        "pquery__results": "--TODO--"
     }
 }

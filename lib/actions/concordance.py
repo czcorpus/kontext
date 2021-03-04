@@ -124,7 +124,7 @@ class Actions(Querying):
 
     def _apply_linegroups(self, conc):
         """
-        Applies user-defined line groups stored in conc_persistence
+        Applies user-defined line groups stored via query_persistence
         to the provided concordance instance.
         """
         if self._lines_groups.is_defined():
@@ -312,7 +312,7 @@ class Actions(Querying):
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def archive_concordance(self, request):
-        with plugins.runtime.CONC_PERSISTENCE as cp:
+        with plugins.runtime.QUERY_PERSISTENCE as cp:
             revoke = bool(int(request.args['revoke']))
             cn, row = cp.archive(self.session_get('user', 'id'),
                                  request.args['code'], revoke=revoke)
@@ -320,7 +320,7 @@ class Actions(Querying):
 
     @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def get_stored_conc_archived_status(self, request):
-        with plugins.runtime.CONC_PERSISTENCE as cp:
+        with plugins.runtime.QUERY_PERSISTENCE as cp:
             return dict(is_archived=cp.is_archived(request.args['code']))
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
@@ -909,7 +909,6 @@ class Actions(Querying):
         args.subcpath = self.subcpath
         args.user_id = self.session_get('user', 'id')
         args.q = self.args.q
-        args.fromp = self.args.fromp
         args.pagesize = self.args.pagesize
         args.save = self.args.save
         args.samplesize = 0

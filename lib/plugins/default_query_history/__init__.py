@@ -51,7 +51,7 @@ class QueryHistory(AbstractQueryHistory):
 
     DEFAULT_TTL_DAYS = 10
 
-    def __init__(self, conf, db, conc_persistence, auth):
+    def __init__(self, conf, db, query_persistence, auth):
         """
         arguments:
         conf -- the 'settings' module (or some compatible object)
@@ -66,7 +66,7 @@ class QueryHistory(AbstractQueryHistory):
                 'QueryHistory - ttl_days not set, using default value {0} day(s) for query history records'.format(
                     self.ttl_days))
         self.db = db
-        self._conc_persistence = conc_persistence
+        self._query_persistence = query_persistence
         self._auth = auth
         self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
@@ -79,7 +79,7 @@ class QueryHistory(AbstractQueryHistory):
     def _mk_tmp_key(self, user_id):
         return 'query_history:user:%d:new' % user_id
 
-    def write(self, user_id, query_id):
+    def write(self, user_id, query_id, qtype):
         """
         stores information about a query; from time
         to time also check remove too old records
@@ -87,7 +87,7 @@ class QueryHistory(AbstractQueryHistory):
         arguments:
         see the super class
         """
-        item = dict(created=self._current_timestamp(), query_id=query_id, name=None)
+        item = dict(created=self._current_timestamp(), query_id=query_id, name=None, qtype=qtype)
         self.db.list_append(self._mk_key(user_id), item)
         if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(user_id)
@@ -99,7 +99,7 @@ class QueryHistory(AbstractQueryHistory):
             if item.get('query_id', None) == query_id:
                 item['name'] = name
                 self.db.list_set(k, i, item)
-                self._conc_persistence.archive(user_id, query_id)
+                self._query_persistence.archive(user_id, query_id)
                 return True
         return False
 
@@ -115,12 +115,12 @@ class QueryHistory(AbstractQueryHistory):
 
     def _is_paired_with_conc(self, data):
         q_id = data['query_id']
-        edata = self._conc_persistence.open(q_id)
+        edata = self._query_persistence.open(q_id)
         return edata and 'lastop_form' in edata
 
     def _merge_conc_data(self, data):
         q_id = data['query_id']
-        edata = self._conc_persistence.open(q_id)
+        edata = self._query_persistence.open(q_id)
 
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
@@ -181,8 +181,22 @@ class QueryHistory(AbstractQueryHistory):
 
         for item in data:
             if 'query_id' in item:
-                tmp = self._merge_conc_data(item)
-                if tmp:
+                qtype = item.get('qtype')
+                if qtype is None or qtype == 'conc':
+                    tmp = self._merge_conc_data(item)
+                    if not tmp:
+                        continue
+                    tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
+                    for ac in tmp['aligned']:
+                        ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
+                    full_data.append(tmp)
+                elif qtype == 'pquery':
+                    stored = self._query_persistence.open(item['query_id'])
+                    if not stored:
+                        continue
+                    tmp = {}
+                    tmp.update(item)
+                    tmp.update(stored)
                     full_data.append(tmp)
             else:
                 # deprecated type of record (this will vanish soon as there
@@ -227,9 +241,7 @@ class QueryHistory(AbstractQueryHistory):
         tmp = [v for v in reversed(full_data)][offset:(offset + limit)]
         for i, item in enumerate(tmp):
             item['idx'] = offset + i
-            item['human_corpname'] = corpora.corpus(item['corpname']).get_conf('NAME')
-            for ac in item['aligned']:
-                ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
+
         return tmp
 
     def find_by_qkey(self, query_key):
@@ -269,11 +281,11 @@ class QueryHistory(AbstractQueryHistory):
         return {'page_num_records': self._page_num_records}
 
 
-@inject(plugins.runtime.DB, plugins.runtime.CONC_PERSISTENCE, plugins.runtime.AUTH)
-def create_instance(settings, db, conc_persistence, auth):
+@inject(plugins.runtime.DB, plugins.runtime.QUERY_PERSISTENCE, plugins.runtime.AUTH)
+def create_instance(settings, db, query_persistence, auth):
     """
     arguments:
     settings -- the settings.py module
     db -- a 'db' plugin implementation
     """
-    return QueryHistory(settings, db, conc_persistence, auth)
+    return QueryHistory(settings, db, query_persistence, auth)

@@ -132,11 +132,11 @@
             <page_append_records>5</page_append_records>
             <num_kept_records>10</num_kept_records>
         </query_history>
-        <conc_persistence>
-            <module>default_conc_persistence</module>
+        <query_persistence>
+            <module>default_query_persistence</module>
             <ttl_days extension-by="default">100</ttl_days>
             <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
-        </conc_persistence>
+        </query_persistence>
         <locking>
             <module>redis_locking</module>
             <ttl extension-by="default">20</ttl>

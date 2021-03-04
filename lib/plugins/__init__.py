@@ -22,7 +22,7 @@ from secure_cookie.session import Session
 from .abstract.general_storage import KeyValueStorage
 from .abstract.integration_db import IntegrationDatabase
 from .abstract.settings_storage import AbstractSettingsStorage
-from .abstract.conc_persistence import AbstractConcPersistence
+from .abstract.query_persistence import AbstractQueryPersistence
 from .abstract.conc_cache import AbstractCacheMappingFactory
 from .export import Loader
 from .export_freq2d import Loader as LoaderFreq2d
@@ -141,7 +141,7 @@ class _Names(object):
     SESSIONS: _ID[Session] = _ID('sessions')
     SETTINGS_STORAGE: _ID[AbstractSettingsStorage] = _ID('settings_storage')
     AUTH: _ID['AbstractAuth'] = _ID('auth')
-    CONC_PERSISTENCE: _ID[AbstractConcPersistence] = _ID('conc_persistence')
+    QUERY_PERSISTENCE: _ID[AbstractQueryPersistence] = _ID('query_persistence')
     CONC_CACHE: _ID[AbstractCacheMappingFactory] = _ID('conc_cache')
     EXPORT: _ID[Loader] = _ID('export')
     EXPORT_FREQ2D: _ID[LoaderFreq2d] = _ID('export_freq2d')
@@ -168,7 +168,7 @@ class _Names(object):
 
     def __iter__(self) -> Iterator[_ID]:
         return iter([self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
-                     self.CONC_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
+                     self.QUERY_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
                      self.MENU_ITEMS, self.GETLANG, self.CORPARCH, self.QUERY_HISTORY, self.APPLICATION_BAR,
                      self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER,
                      self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
