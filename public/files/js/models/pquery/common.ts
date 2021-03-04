@@ -23,7 +23,15 @@ import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 
-export interface PquerySubmitArgs {
+/**
+ * PqueryFormArgs represents paradigmatic query form values
+ * as stored on server. Due to specific nature of the whole
+ * calculation process, the type is not used directly
+ * to start a calculation.
+ */
+export interface PqueryFormArgs {
+    id?:string; // if undefined then the form is not serialized yet
+    corpname:string;
     usesubcorp:string;
     min_freq:number;
     position:string;
@@ -31,22 +39,11 @@ export interface PquerySubmitArgs {
     queries:Array<AdvancedQuerySubmit>;
 }
 
-export type AttrIntersectionFreqs = {[word:string]:number};
-
+/**
+ * PqueryResult is a result of a Paradigmatic query
+ */
 export type PqueryResult = Array<[string, number]>;
 
-
-export interface StoredPqueryForm {
-    id:string;
-    corpora:Array<string>,
-    usesubcorp?:string;
-    min_freq:number;
-    position:string;
-    attr:string;
-    queries:Array<AdvancedQuerySubmit>;
-    form_type:'pquery';
-    persist_level:1;
-}
 
 export interface FreqIntersectionArgs {
     corpname:string;
@@ -80,6 +77,7 @@ export interface PqueryFormModelState {
     usesubcorp:string;
     queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
     concWait:{[sourceId:string]:ConcStatus};
+    queryId:string|undefined;
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
     minFreq:number;
     position:string;
@@ -119,6 +117,7 @@ export function newModelState(
         }},
         concWait: {[generatePqueryName(0)]: 'none'},
         task: undefined,
+        queryId: undefined,
         minFreq: 5,
         position: '0<0',
         attr: List.head(attrs).n,
@@ -129,14 +128,14 @@ export function newModelState(
 }
 
 export function storedQueryToModel(
-    sq:StoredPqueryForm,
+    sq:PqueryFormArgs,
     attrs:Array<Kontext.AttrItem>,
     structAttrs:Array<Kontext.AttrItem>
 ):PqueryFormModelState {
 
     return {
         isBusy: false,
-        corpname: List.head(sq.corpora),
+        corpname: sq.corpname,
         usesubcorp: sq.usesubcorp,
         queries: pipe(
             sq.queries,
@@ -168,6 +167,7 @@ export function storedQueryToModel(
             Dict.fromEntries()
         ),
         task: undefined,
+        queryId: sq.id,
         minFreq: sq.min_freq,
         position: sq.position,
         attr: sq.attr,

@@ -21,7 +21,7 @@
 
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of as rxOf } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
@@ -33,8 +33,8 @@ import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
 import { concatMap, map, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
-import { AsyncTaskArgs, asyncTaskIsPquery, FreqIntersectionArgs, FreqIntersectionResponse, generatePqueryName,
-    PqueryFormModelState, PquerySubmitArgs } from './common';
+import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, generatePqueryName,
+    PqueryFormModelState, PqueryFormArgs } from './common';
 
 
 /**
@@ -94,8 +94,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
-                    //state.receivedResults = true;
-                    // state.concWait TODO
+                    state.queryId = action.payload.queryId;
                     state.task = action.payload.task;
                 }
             }
@@ -332,7 +331,9 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                         concResponses
                     );
                     return forkJoin([
-                        this.saveQuery(state),
+                        state.queryId ?
+                            rxOf(state.queryId) :
+                            this.saveQuery(state),
                         this.submitFreqIntersection(
                             state, concIds
 
@@ -387,7 +388,8 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
      * Save query and return a new ID of the query
      */
     private saveQuery(state:PqueryFormModelState):Observable<string> {
-        const args:PquerySubmitArgs = {
+        const args:PqueryFormArgs = {
+            corpname: state.corpname,
             usesubcorp: state.usesubcorp,
             min_freq: state.minFreq,
             position: state.position,
