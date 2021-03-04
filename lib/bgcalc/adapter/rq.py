@@ -19,7 +19,7 @@ from rq.job import Job
 from rq.exceptions import NoSuchJobError
 from redis import Redis
 from rq_scheduler import Scheduler
-from .errors import CalcTaskNotFoundError, CalcBackendError
+from bgcalc.errors import CalcTaskNotFoundError, CalcBackendError
 from controller.errors import UserActionException
 import json
 

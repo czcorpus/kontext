@@ -66,7 +66,7 @@ translation.activate('en_US')  # background jobs do not need localization
 
 import conclib.calc
 import conclib.calc.base
-from bgcalc import (freq_calc, subc_calc, coll_calc)
+from bgcalc import (freq_calc, subc_calc, coll_calc, pquery)
 
 stderr_redirector = get_stderr_redirector(settings)
 
@@ -249,6 +249,9 @@ def calculate_freqs_ct(args):
 def clean_freqs_cache():
     return freq_calc.clean_freqs_cache()
 
+
+def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
+    return pquery.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 

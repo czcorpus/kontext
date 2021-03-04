@@ -86,5 +86,12 @@ export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
                 state.sortKey = action.payload;
             }
         );
+
+        this.addActionHandler<Actions.AsyncResultRecieved>(
+            ActionName.AsyncResultRecieved,
+            (state, action) => {
+                state.data = action.payload.data;
+            }
+        )
     }
 }
