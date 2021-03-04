@@ -15,10 +15,10 @@
 import pickle
 import hashlib
 import os.path
-import asyncio
 from collections import defaultdict
 from bgcalc.freq_calc import FreqCalsArgs, calc_freqs_bg
 import l10n
+from multiprocessing import Pool
 
 
 class PqueryCache:
@@ -43,7 +43,7 @@ class PqueryCache:
             pickle.dump(data, fw)
 
 
-async def task(args: FreqCalsArgs):
+def task(args: FreqCalsArgs):
     return calc_freqs_bg(args)
 
 
@@ -54,7 +54,7 @@ def _extract_freqs(freqs):
     return ans
 
 
-async def _all_ops(request_json, raw_queries, subcpath, user_id, collator_locale):
+def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
     tasks = []
     num_tasks = len(request_json.get('conc_ids', []))
     for conc_id in request_json.get('conc_ids', []):
@@ -74,20 +74,16 @@ async def _all_ops(request_json, raw_queries, subcpath, user_id, collator_locale
         args.rel_mode = 0 if '.' in attr else 1
         args.ftt_include_empty = False
         args.fmaxitems = 10000
+        tasks.append(args)
 
-        tasks.append(task(args))
-    done, pending = await asyncio.wait(tasks)
+    with Pool(processes=num_tasks) as pool:
+        done = pool.map(task, tasks)
+
     merged = defaultdict(lambda: [])
     for freq_table in done:
-        freq_info = _extract_freqs(freq_table.result())
+        freq_info = _extract_freqs(freq_table)
         for word, freq in freq_info:
             merged[word].append(freq)
     items = list((w, sum(freq)) for w, freq in merged.items() if len(freq) == num_tasks)
     return l10n.sort(items, collator_locale, key=lambda v: v[0])
 
-
-def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
-    loop = asyncio.get_event_loop()
-    ans = loop.run_until_complete(asyncio.gather(_all_ops(request_json, raw_queries, subcpath, user_id, collator_locale)))
-    loop.close()
-    return ans[0]
