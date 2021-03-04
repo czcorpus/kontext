@@ -256,6 +256,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 } else {
                     state.receivedResults = true;
                 }
+                state.concWait = Dict.map(v => 'none', state.concWait);
             }
         )
 

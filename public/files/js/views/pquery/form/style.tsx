@@ -29,7 +29,7 @@ export const PqueryForm = styled.div`
     }
 
     .loader {
-        margin-left: 1em;
+        margin: 0 1em;
     }
 `;
 
@@ -56,4 +56,13 @@ export const ParameterField = styled.span`
     label {
         margin: 0 0.5em;
     }
+`;
+
+export const BorderlessFieldset = styled.fieldset`
+    border: none;
+    padding: 0px;
+`;
+
+export const StylelessFieldset = styled(BorderlessFieldset)`
+    margin: 0px;
 `;

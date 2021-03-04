@@ -34,8 +34,10 @@ export interface PqueryResultModelState {
     sortKey:SortKey;
 }
 
+export type SortColumn = 'freq'|'value';
+
 export interface SortKey {
-    name:string;
+    column:SortColumn;
     reverse:boolean;
 }
 
@@ -83,7 +85,7 @@ export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
     }
 
     private sortData(state:PqueryResultModelState) {
-        switch (state.sortKey.name) {
+        switch (state.sortKey.column) {
             case 'value':
                 state.data = List.sortAlphaBy(v => v[0], state.data);
                 break;
