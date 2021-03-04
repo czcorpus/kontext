@@ -111,7 +111,7 @@ export class QueryModels {
 interface RenderLinesDeps {
     ttModel:TextTypesModel;
     lvprops:ViewConfiguration;
-    qs:PluginInterfaces.QueryStorage.IPlugin;
+    qs:PluginInterfaces.QueryHistory.IPlugin;
     tagh:PluginInterfaces.TagHelper.IPlugin;
 }
 
@@ -592,7 +592,7 @@ export class ViewPage {
      *
      */
     initQueryOverviewArea(taghelperPlugin:PluginInterfaces.TagHelper.IPlugin,
-                    queryStoragePlugin:PluginInterfaces.QueryStorage.IPlugin):void {
+                    queryHistoryPlugin:PluginInterfaces.QueryHistory.IPlugin):void {
         this.queryModels.queryReplayModel = new QueryReplayModel({
             dispatcher: this.layoutModel.dispatcher,
             pageModel: this.layoutModel,
@@ -649,7 +649,7 @@ export class ViewPage {
                                         'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
-                    queryStorageView: queryStoragePlugin.getWidgetView(),
+                    queryHistoryView: queryHistoryPlugin.getWidgetView(),
                     corpname: this.layoutModel.getCorpusIdent().id
                 },
                 filterFormProps: {
@@ -663,7 +663,7 @@ export class ViewPage {
                                     'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
-                    queryStorageView: queryStoragePlugin.getWidgetView(),
+                    queryHistoryView: queryHistoryPlugin.getWidgetView(),
                     filterId: '__new__',
                     corpname: this.layoutModel.getCorpusIdent().id
                 },
@@ -1053,7 +1053,7 @@ export class ViewPage {
             this.initSortForm();
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);
-            this.initQueryOverviewArea(tagHelperPlg, this.layoutModel.qstorPlugin);
+            this.initQueryOverviewArea(tagHelperPlg, this.layoutModel.qhistPlugin);
             this.initAnalysisViews(ttModel);
             this.initKeyShortcuts();
             this.updateHistory();
@@ -1069,7 +1069,7 @@ export class ViewPage {
                 {
                     ttModel,
                     lvprops: lineViewProps,
-                    qs: this.layoutModel.qstorPlugin,
+                    qs: this.layoutModel.qhistPlugin,
                     tagh: tagHelperPlg
                 },
                 this.layoutModel.pluginTypeIsActive(PluginName.KWIC_CONNECT) ?

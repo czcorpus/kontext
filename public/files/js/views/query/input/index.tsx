@@ -53,7 +53,7 @@ export interface TRQueryInputFieldProps {
     corpname:string;
     lposValue:string;
     wPoSList:Array<{n:string; v:string}>;
-    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
+    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
     tagHelperView:PluginInterfaces.TagHelper.View;
     widgets:Array<string>;
     inputLanguage:string;
@@ -451,12 +451,12 @@ export function init({
         sourceId:string;
         formType:QueryFormType;
         onCloseTrigger:()=>void;
-        queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
+        queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
 
     }> = (props) => {
         return (
             <div className="history-widget">
-                <props.queryStorageView
+                <props.queryHistoryView
                         sourceId={props.sourceId}
                         onCloseTrigger={props.onCloseTrigger}
                         formType={props.formType} />
@@ -1130,7 +1130,7 @@ export function init({
                         <div style={{position: 'relative'}}>
                             {this.props.historyVisible[this.props.sourceId] ?
                                 <HistoryWidget
-                                        queryStorageView={this.props.queryStorageView}
+                                        queryHistoryView={this.props.queryHistoryView}
                                         sourceId={this.props.sourceId}
                                         onCloseTrigger={this._toggleHistoryWidget}
                                         formType={this.props.formType}/>

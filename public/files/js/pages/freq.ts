@@ -242,7 +242,7 @@ class FreqPage {
                     formType: Kontext.ConcFormTypes.QUERY,
                     allowCorpusSelection: false,
                     tagHelperViews: {},
-                    queryStorageView: null,
+                    queryHistoryView: null,
                     LiveAttrsView: null,
                     LiveAttrsCustomTT: null
                 },
@@ -251,7 +251,7 @@ class FreqPage {
                     filterId: null,
                     corpname: this.layoutModel.getCorpusIdent().id,
                     tagHelperView: null,
-                    queryStorageView: null
+                    queryHistoryView: null
                 },
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,

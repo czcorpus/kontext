@@ -17,13 +17,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-Query storage plug-in works as a backend for the 'recent queries' function.
+Query history plug-in works as a backend for the 'recent queries' function.
 """
 
 import abc
 
 
-class AbstractQueryStorage(abc.ABC):
+class AbstractQueryHistory(abc.ABC):
 
     @abc.abstractmethod
     def write(self, user_id, query_id):
@@ -32,7 +32,7 @@ class AbstractQueryStorage(abc.ABC):
 
         arguments:
         user_id -- a numeric ID of a user
-        query_id -- a query identifier as produced by query_storage plug-in
+        query_id -- a query identifier as produced by query_history plug-in
 
         returns:
         an ID of the query (either new or existing)
@@ -54,7 +54,7 @@ class AbstractQueryStorage(abc.ABC):
     @abc.abstractmethod
     def delete(self, user_id, query_id):
         """
-        Delete a named query from the storage.
+        Delete a named query from history.
 
         arguments:
         user_id -- a user ID

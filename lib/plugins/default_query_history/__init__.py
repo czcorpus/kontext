@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 """
-A plugin providing a storage for user's queries for services such as 'query history'.
+A plugin providing a history for user's queries for services such as 'query history'.
 
 Required config.xml/plugins entries: please see config.rng
 """
@@ -23,7 +23,7 @@ import time
 import random
 import logging
 
-from plugins.abstract.query_storage import AbstractQueryStorage
+from plugins.abstract.query_history import AbstractQueryHistory
 from plugins import inject
 import plugins
 from manatee import Corpus
@@ -44,7 +44,7 @@ class CorpusCache:
         return self._corpora[cname]
 
 
-class QueryStorage(AbstractQueryStorage):
+class QueryHistory(AbstractQueryHistory):
 
     # we define a 10% chance that on write there will be a check for old records
     PROB_DELETE_OLD_RECORDS = 0.1
@@ -55,20 +55,20 @@ class QueryStorage(AbstractQueryStorage):
         """
         arguments:
         conf -- the 'settings' module (or some compatible object)
-        db -- default_db storage backend
+        db -- default_db history backend
         """
-        tmp = conf.get('plugins', 'query_storage').get('default:ttl_days', None)
+        tmp = conf.get('plugins', 'query_history').get('default:ttl_days', None)
         if tmp:
             self.ttl_days = int(tmp)
         else:
             self.ttl_days = self.DEFAULT_TTL_DAYS
             logging.getLogger(__name__).warning(
-                'QueryStorage - ttl_days not set, using default value {0} day(s) for query history records'.format(
+                'QueryHistory - ttl_days not set, using default value {0} day(s) for query history records'.format(
                     self.ttl_days))
         self.db = db
         self._conc_persistence = conc_persistence
         self._auth = auth
-        self._page_num_records = int(conf.get('plugins', 'query_storage')['page_num_records'])
+        self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
     def _current_timestamp(self):
         return int(time.time())
@@ -89,7 +89,7 @@ class QueryStorage(AbstractQueryStorage):
         """
         item = dict(created=self._current_timestamp(), query_id=query_id, name=None)
         self.db.list_append(self._mk_key(user_id), item)
-        if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
+        if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(user_id)
 
     def make_persistent(self, user_id, query_id, name):
@@ -236,7 +236,7 @@ class QueryStorage(AbstractQueryStorage):
         if query_key:
             items = query_key.split(':')
             # The timestamp info (the stuff atfter the colon char) is formal here.
-            # The plug-in should work if only a query storage ID is provided too.
+            # The plug-in should work if only a query history ID is provided too.
             return self.db.get(f'concordance:{items[0]}')
         return None
 
@@ -276,4 +276,4 @@ def create_instance(settings, db, conc_persistence, auth):
     settings -- the settings.py module
     db -- a 'db' plugin implementation
     """
-    return QueryStorage(settings, db, conc_persistence, auth)
+    return QueryHistory(settings, db, conc_persistence, auth)

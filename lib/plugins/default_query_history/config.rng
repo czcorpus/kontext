@@ -3,12 +3,12 @@
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
 
     <start>
-        <element name="query_storage">
+        <element name="query_history">
             <element name="module">
-                <value>default_query_storage</value>
+                <value>default_query_history</value>
             </element>
             <element name="js_module">
-                <value>defaultQueryStorage</value>
+                <value>defaultQueryHistory</value>
             </element>
             <element name="page_num_records">
                 <data type="positiveInteger" />

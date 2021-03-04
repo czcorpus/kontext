@@ -145,12 +145,12 @@
             <module>default_menu_items</module>
             <data_path extension-by="default">/opt/kontext/conf/main-menu.sample.json</data_path>
         </menu_items>
-        <query_storage>
-            <module>default_query_storage</module>
-            <js_module>defaultQueryStorage</js_module>
+        <query_history>
+            <module>default_query_history</module>
+            <js_module>defaultQueryHistory</js_module>
             <page_num_records>10</page_num_records>
             <ttl_days extension-by="default">10</ttl_days>
-        </query_storage>
+        </query_history>
         <query_suggest />
         <settings_storage>
             <module>default_settings_storage</module>

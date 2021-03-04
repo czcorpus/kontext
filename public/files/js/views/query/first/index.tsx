@@ -61,7 +61,7 @@ export interface QueryFormProps {
     formType:Kontext.ConcFormTypes.QUERY;
     allowCorpusSelection:boolean;
     tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
-    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
+    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
     LiveAttrsView:PluginInterfaces.LiveAttributes.View;
     LiveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
 }
@@ -72,7 +72,7 @@ export interface QueryFormLiteProps {
     operationIdx?:number;
     formType:Kontext.ConcFormTypes.QUERY;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
+    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
 }
 
 
@@ -199,7 +199,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     attrList={this.props.attrList}
                                     tagHelperView={this.props.tagHelperViews[primaryCorpname]}
                                     tagsets={this.props.tagsets[primaryCorpname]}
-                                    queryStorageView={this.props.queryStorageView}
+                                    queryHistoryView={this.props.queryHistoryView}
                                     inputLanguage={this.props.inputLanguages[primaryCorpname]}
                                     onEnterKey={this._handleSubmit}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
@@ -220,7 +220,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     forcedAttr={this.props.forcedAttr}
                                     attrList={this.props.attrList}
                                     inputLanguages={this.props.inputLanguages}
-                                    queryStorageView={this.props.queryStorageView}
+                                    queryHistoryView={this.props.queryHistoryView}
                                     hasLemmaAttr={this.props.hasLemma}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
                                     tagHelperViews={this.props.tagHelperViews}
@@ -423,7 +423,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 forcedAttr={this.props.forcedAttr}
                                 attrList={this.props.attrList}
                                 tagHelperView={this.props.tagHelperView}
-                                queryStorageView={this.props.queryStorageView}
+                                queryHistoryView={this.props.queryHistoryView}
                                 inputLanguage={this.props.inputLanguages[this.props.corpname]}
                                 onEnterKey={this._handleSubmit}
                                 useRichQueryEditor={this.props.useRichQueryEditor}

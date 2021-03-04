@@ -170,9 +170,9 @@ class User(Kontext):
             return ans
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, corpname, archived_only):
-        if plugins.runtime.QUERY_STORAGE.exists:
-            with plugins.runtime.QUERY_STORAGE as qs:
-                rows = qs.get_user_queries(
+        if plugins.runtime.QUERY_HISTORY.exists:
+            with plugins.runtime.QUERY_HISTORY as qh:
+                rows = qh.get_user_queries(
                     self.session_get('user', 'id'),
                     self.cm,
                     offset=offset, limit=limit,

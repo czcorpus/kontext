@@ -459,7 +459,7 @@ class Kontext(Controller):
 
     def _save_query_to_history(self, query_id, conc_data):
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
-            with plugins.runtime.QUERY_STORAGE as qh:
+            with plugins.runtime.QUERY_HISTORY as qh:
                 qh.write(user_id=self.session_get('user', 'id'), query_id=query_id)
 
     def _store_conc_params(self) -> List[str]:
@@ -726,8 +726,8 @@ class Kontext(Controller):
         if len(form.corpora) > 0:
             cn = form.corpora[0]
         elif not self.user_is_anonymous():
-            with plugins.runtime.QUERY_STORAGE as qs:
-                queries = qs.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
+            with plugins.runtime.QUERY_HISTORY as qh:
+                queries = qh.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
                 if len(queries) > 0:
                     cn = queries[0].get('corpname', '')
                     redirect = True
@@ -1282,8 +1282,8 @@ class Kontext(Controller):
     def message(self, *args, **kwargs):
         kwargs['last_used_corp'] = dict(corpname=None, human_corpname=None)
         if self.cm:
-            with plugins.runtime.QUERY_STORAGE as qs:
-                queries = qs.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
+            with plugins.runtime.QUERY_HISTORY as qh:
+                queries = qh.get_user_queries(self.session_get('user', 'id'), self.cm, limit=1)
                 if len(queries) > 0:
                     kwargs['last_used_corp'] = dict(corpname=queries[0].get('corpname', None),
                                                     human_corpname=queries[0].get('human_corpname', None))

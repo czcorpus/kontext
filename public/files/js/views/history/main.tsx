@@ -30,7 +30,7 @@ import { PluginInterfaces } from '../../types/plugins';
 export interface MainModuleArgs {
     dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
-    recentQueriesModel:IModel<PluginInterfaces.QueryStorage.ModelState>;
+    recentQueriesModel:IModel<PluginInterfaces.QueryHistory.ModelState>;
     mainMenuModel:IModel<MainMenuModelState>;
 }
 

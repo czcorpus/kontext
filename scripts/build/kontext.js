@@ -120,7 +120,7 @@
 
     /**
      * Produces mapping for modules with 'fake' (= non filesystem) paths.
-     * E.g. 'plugins/queryStorage' maps to 'plugins/myCoolQueryStorage'.
+     * E.g. 'plugins/queryHistory' maps to 'plugins/myCoolQueryStorage'.
      *
      * @param {string} confDoc - parsed KonText XML config
      * @param {string} jsPath - a path to JS/TS plug-ins implementations
