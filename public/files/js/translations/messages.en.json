@@ -600,6 +600,7 @@
         "task__type_coll_download": "Collocations list download",
         "task__type_wordlist_download": "Word list download",
         "task__type_line_selection_download": "Line selection overview download",
+        "task__type_pquery": "Paradigmatic query",
         "task__status_PENDING": "Running",
         "task__status_STARTED": "Running",
         "task__status_RETRY": "Retrying",
