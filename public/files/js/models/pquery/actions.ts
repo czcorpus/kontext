@@ -35,7 +35,8 @@ export enum ActionName {
     PositionChange = 'PQUERY_POSITION_CHANGE',
     AttrChange = 'PQUERY_ATTR_CHANGE',
     SortLines = 'PQUERY_RESULTS_SORT_LINES',
-    AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED'
+    AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED',
+    ConcordanceReady = 'PQUERY_ASYNC_CONC_READY'
 }
 
 
@@ -109,5 +110,11 @@ export namespace Actions {
         data:PqueryResult;
     }> {
         name: ActionName.AsyncResultRecieved
+    }
+
+    export interface ConcordanceReady extends Action<{
+        sourceId:string;
+    }> {
+        name: ActionName.ConcordanceReady
     }
 }
