@@ -32,7 +32,7 @@ import { tuple } from 'cnc-tskit';
 import { PqueryResultModel } from '../models/pquery/result';
 import { init as resultViewInit } from '../views/pquery/result';
 import { MultiDict } from '../multidict';
-import { newModelState, StoredPqueryForm, storedQueryToModel } from '../models/pquery/common';
+import { newModelState, PqueryFormArgs, storedQueryToModel } from '../models/pquery/common';
 
 
 /**
@@ -71,13 +71,13 @@ class ParadigmaticQueryPage {
     init():void {
         this.layoutModel.init(true, [], () => {
 
-            const storedForm = this.layoutModel.getConf<StoredPqueryForm>('FormData');
+            const storedForm = this.layoutModel.getConf<PqueryFormArgs>('FormData');
 
             const formModel = new PqueryFormModel(
                 this.layoutModel.dispatcher,
                 storedForm ?
                     storedQueryToModel(
-                        this.layoutModel.getConf<StoredPqueryForm>('FormData'),
+                        this.layoutModel.getConf<PqueryFormArgs>('FormData'),
                         this.layoutModel.getConf('AttrList'),
                         this.layoutModel.getConf('StructAttrList')
                     ) :

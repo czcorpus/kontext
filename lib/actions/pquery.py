@@ -44,13 +44,20 @@ class ParadigmaticQuery(Kontext):
     def get_mapping_url_prefix(self):
         return '/pquery/'
 
-    @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
-    def index(self, request):
+    def _init_page_data(self, request):
         query_id = request.args.get('query_id')
         data = None
         if query_id:
             with plugins.runtime.QUERY_PERSISTENCE as qs:
                 data = qs.open(query_id)
+        if data is not None:
+            data['corpname'] = data['corpora'][0]
+            del data['corpora']
+        return data
+
+    @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
+    def index(self, request):
+        data = self._init_page_data(request)
         ans = {
             'corpname': self.args.corpname,
             'form_data': data,
@@ -61,11 +68,7 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def result(self, request):
-        query_id = request.args.get('query_id')
-        data = None
-        if query_id:
-            with plugins.runtime.QUERY_PERSISTENCE as qs:
-                data = qs.open(query_id)
+        data = self._init_page_data(request)
         ans = {
             'corpname': self.args.corpname,
             'form_data': data,
