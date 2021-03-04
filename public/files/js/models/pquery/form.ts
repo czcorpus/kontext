@@ -144,6 +144,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             ActionName.AddQueryItem,
             (state, action) => {
                 const size = Dict.size(state.queries);
+                state.concWait[generatePqueryName(size)] = 'none';
                 state.queries[generatePqueryName(size)] = {
                     corpname: state.corpname,
                     qtype: 'advanced',
@@ -163,17 +164,8 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         this.addActionHandler<Actions.RemoveQueryItem>(
             ActionName.RemoveQueryItem,
             (state, action) => {
-                state.queries = Dict.fromEntries(
-                    List.reduce((acc, [k, v]) => {
-                            if (k !== action.payload.sourceId) {
-                                acc.push([generatePqueryName(List.size(acc)), v])
-                            }
-                            return acc;
-                        },
-                        [],
-                        Dict.toEntries(state.queries)
-                    )
-                );
+                state.queries = this.removeItem(state.queries, action.payload.sourceId);
+                state.concWait = this.removeItem(state.concWait, action.payload.sourceId);
             }
         );
 
@@ -255,6 +247,20 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                 state.receivedResults = true;
             }
         )
+    }
+
+    private removeItem(data:{[sourceId:string]:any}, removeId:string):{[sourceId:string]:any} {
+        return Dict.fromEntries(
+            List.reduce((acc, [k, v]) => {
+                    if (k !== removeId) {
+                        acc.push([generatePqueryName(List.size(acc)), v])
+                    }
+                    return acc;
+                },
+                [],
+                Dict.toEntries(data)
+            )
+        );
     }
 
 
