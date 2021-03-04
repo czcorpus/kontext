@@ -30,7 +30,7 @@ from .abstract.user_items import AbstractUserItems
 from .abstract.menu_items import AbstractMenuItems
 from .abstract.getlang import AbstractGetLang
 from .abstract.corpora import AbstractCorporaArchive
-from .abstract.query_storage import AbstractQueryStorage
+from .abstract.query_history import AbstractQueryHistory
 from .abstract.appbar import AbstractApplicationBar
 from .abstract.footer_bar import AbstractFootbar
 from .abstract.live_attributes import AbstractLiveAttributes
@@ -150,7 +150,7 @@ class _Names(object):
 
     GETLANG: _ID[AbstractGetLang] = _ID('getlang', optional=True)
     CORPARCH: _ID[AbstractCorporaArchive] = _ID('corparch')
-    QUERY_STORAGE: _ID[AbstractQueryStorage] = _ID('query_storage', optional=True)
+    QUERY_HISTORY: _ID[AbstractQueryHistory] = _ID('query_history', optional=True)
     APPLICATION_BAR: _ID[AbstractApplicationBar] = _ID('application_bar', optional=True)
     FOOTER_BAR: _ID[AbstractFootbar] = _ID('footer_bar', optional=True)
     LIVE_ATTRIBUTES: _ID[AbstractLiveAttributes] = _ID('live_attributes', optional=True)
@@ -169,7 +169,7 @@ class _Names(object):
     def __iter__(self) -> Iterator[_ID]:
         return iter([self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
                      self.CONC_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
-                     self.MENU_ITEMS, self.GETLANG, self.CORPARCH, self.QUERY_STORAGE, self.APPLICATION_BAR,
+                     self.MENU_ITEMS, self.GETLANG, self.CORPARCH, self.QUERY_HISTORY, self.APPLICATION_BAR,
                      self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER,
                      self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
                      self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])

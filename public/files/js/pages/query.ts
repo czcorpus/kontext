@@ -185,7 +185,7 @@ export class QueryPage {
             ...liveAttrsViews,
             formType: Kontext.ConcFormTypes.QUERY,
             tagHelperViews: {},
-            queryStorageView: null,
+            queryHistoryView: null,
             allowCorpusSelection: null
         };
     }
@@ -344,7 +344,7 @@ export class QueryPage {
             );
             const ttAns = this.createTTViews(queryFormArgs);
 
-            ttAns.queryStorageView = this.layoutModel.qstorPlugin.getWidgetView();
+            ttAns.queryHistoryView = this.layoutModel.qhistPlugin.getWidgetView();
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,

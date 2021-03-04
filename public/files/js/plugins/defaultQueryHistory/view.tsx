@@ -23,13 +23,13 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard, List, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
-import { QueryStorageModel, InputBoxHistoryItem } from './models';
+import { QueryHistoryModel, InputBoxHistoryItem } from './models';
 import { Actions as QueryActions, ActionName as QueryActionName, QueryFormType } from '../../models/query/actions';
 import { Actions, ActionName } from './actions';
 import { PluginInterfaces } from '../../types/plugins';
 
 
-export interface QueryStorageProps {
+export interface QueryHistoryProps {
     formType:QueryFormType;
     sourceId:string;
     onCloseTrigger:()=>void;
@@ -37,15 +37,15 @@ export interface QueryStorageProps {
 
 
 export interface Views {
-    QueryStorage:React.ComponentClass<QueryStorageProps>;
+    QueryHistory:React.ComponentClass<QueryHistoryProps>;
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, queryStorageModel:QueryStorageModel) {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, queryHistoryModel:QueryHistoryModel) {
 
     const layoutViews = he.getLayoutViews();
 
-    class QueryStorage extends React.Component<QueryStorageProps & PluginInterfaces.QueryStorage.ModelState> {
+    class QueryHistory extends React.Component<QueryHistoryProps & PluginInterfaces.QueryHistory.ModelState> {
 
         constructor(props) {
             super(props);
@@ -183,7 +183,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }
 
     return {
-        QueryStorage: BoundWithProps(QueryStorage, queryStorageModel)
+        QueryHistory: BoundWithProps(QueryHistory, queryHistoryModel)
     };
 
 }

@@ -50,7 +50,7 @@ const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) =>
 };
 
 
-export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStorage.ModelState> {
+export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHistory.ModelState> {
 
     private pluginApi:IPluginApi;
 
@@ -85,8 +85,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             action => {this.changeState(state => {state.currentItem = action.payload.value})}
         );
 
-        this.addActionHandler<QueryActions.StorageSetCurrentCorpusOnly>(
-            QueryActionName.StorageSetCurrentCorpusOnly,
+        this.addActionHandler<QueryActions.HistorySetCurrentCorpusOnly>(
+            QueryActionName.HistorySetCurrentCorpusOnly,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -96,8 +96,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.StorageSetQueryType>(
-            QueryActionName.StorageSetQueryType,
+        this.addActionHandler<QueryActions.HistorySetQueryType>(
+            QueryActionName.HistorySetQueryType,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -107,8 +107,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.StorageSetArchivedOnly>(
-            QueryActionName.StorageSetArchivedOnly,
+        this.addActionHandler<QueryActions.HistorySetArchivedOnly>(
+            QueryActionName.HistorySetArchivedOnly,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -118,8 +118,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.StorageLoadMore>(
-            QueryActionName.StorageLoadMore,
+        this.addActionHandler<QueryActions.HistoryLoadMore>(
+            QueryActionName.HistoryLoadMore,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -139,16 +139,16 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.StorageOpenQueryForm>(
-            QueryActionName.StorageOpenQueryForm,
+        this.addActionHandler<QueryActions.HistoryOpenQueryForm>(
+            QueryActionName.HistoryOpenQueryForm,
             action => {
                 this.openQueryForm(action.payload.idx);
                 // page leaves here
             }
         );
 
-        this.addActionHandler<QueryActions.StorageSetEditingQueryId>(
-            QueryActionName.StorageSetEditingQueryId,
+        this.addActionHandler<QueryActions.HistorySetEditingQueryId>(
+            QueryActionName.HistorySetEditingQueryId,
             action => {
                 this.changeState(state => {
                     state.editingQueryId = action.payload.value;
@@ -160,8 +160,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.StorageClearEditingQueryID>(
-            QueryActionName.StorageClearEditingQueryID,
+        this.addActionHandler<QueryActions.HistoryClearEditingQueryID>(
+            QueryActionName.HistoryClearEditingQueryID,
             action => {
                 this.changeState(state => {
                     state.editingQueryId = null;
@@ -170,13 +170,13 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.StorageEditorSetName>(
-            QueryActionName.StorageEditorSetName,
+        this.addActionHandler<QueryActions.HistoryEditorSetName>(
+            QueryActionName.HistoryEditorSetName,
             action => {this.changeState(state => {state.editingQueryName = action.payload.value})}
         );
 
-        this.addActionHandler<QueryActions.StorageDoNotArchive>(
-            QueryActionName.StorageDoNotArchive,
+        this.addActionHandler<QueryActions.HistoryDoNotArchive>(
+            QueryActionName.HistoryDoNotArchive,
             action => {
                 this.saveItem(action.payload.queryId, null).subscribe(
                     (msg) => {
@@ -191,8 +191,8 @@ export class QueryStorageModel extends StatefulModel<PluginInterfaces.QueryStora
             }
         );
 
-        this.addActionHandler<QueryActions.StorageEditorClickSave>(
-            QueryActionName.StorageEditorClickSave,
+        this.addActionHandler<QueryActions.HistoryEditorClickSave>(
+            QueryActionName.HistoryEditorClickSave,
             action => {
                 if (!this.state.editingQueryName) {
                     this.pluginApi.showMessage('error',

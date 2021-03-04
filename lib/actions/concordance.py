@@ -325,15 +325,15 @@ class Actions(Querying):
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def save_query(self, request):
-        with plugins.runtime.QUERY_STORAGE as qs:
-            ans = qs.make_persistent(self.session_get('user', 'id'), request.form['query_id'],
+        with plugins.runtime.QUERY_HISTORY as qh:
+            ans = qh.make_persistent(self.session_get('user', 'id'), request.form['query_id'],
                                      request.form['name'])
         return dict(saved=ans)
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def delete_query(self, request):
-        with plugins.runtime.QUERY_STORAGE as qs:
-            ans = qs.delete(self.session_get('user', 'id'), request.form['query_id'])
+        with plugins.runtime.QUERY_HISTORY as qh:
+            ans = qh.delete(self.session_get('user', 'id'), request.form['query_id'])
         return dict(deleted=ans)
 
     @exposed()
@@ -359,8 +359,8 @@ class Actions(Querying):
         last_op = self.session_get('last_submitted_op')
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
             active_only=False), persist=False)
-        with plugins.runtime.QUERY_STORAGE as qs:
-            qdata = qs.find_by_qkey(last_op)
+        with plugins.runtime.QUERY_HISTORY as qh:
+            qdata = qh.find_by_qkey(last_op)
             if qdata is not None:
                 prev_corpora = qdata.get('corpora', [])
                 curr_corpora = [self.args.corpname] + self.args.align
@@ -375,7 +375,7 @@ class Actions(Querying):
                         curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
                 except Exception as ex:
                     logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
-            qdata = qs.find_by_qkey(request.args.get('qkey'))
+            qdata = qh.find_by_qkey(request.args.get('qkey'))
             if qdata is not None:
                 qf_args = qf_args.updated(qdata.get('lastop_form', {}), request.args.get('qkey'))
         # TODO xx reuse selections from last submit

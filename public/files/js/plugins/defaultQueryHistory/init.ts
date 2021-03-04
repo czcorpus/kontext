@@ -20,19 +20,19 @@ import { IModel } from 'kombo';
  */
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { QueryStorageModel } from './models';
+import { QueryHistoryModel } from './models';
 import { init as viewsInit } from './view';
 
 declare var require:any;
 require('./style.less'); // webpack
 
-export class QueryStoragePlugin implements PluginInterfaces.QueryStorage.IPlugin {
+export class QueryHistoryPlugin implements PluginInterfaces.QueryHistory.IPlugin {
 
     private pluginApi:IPluginApi;
 
-    private model:QueryStorageModel;
+    private model:QueryHistoryModel;
 
-    constructor(pluginApi:IPluginApi, model:QueryStorageModel) {
+    constructor(pluginApi:IPluginApi, model:QueryHistoryModel) {
         this.pluginApi = pluginApi;
         this.model = model;
     }
@@ -41,22 +41,22 @@ export class QueryStoragePlugin implements PluginInterfaces.QueryStorage.IPlugin
         return true;
     }
 
-    getWidgetView():PluginInterfaces.QueryStorage.WidgetView {
+    getWidgetView():PluginInterfaces.QueryHistory.WidgetView {
         return viewsInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
             this.model
-        ).QueryStorage;
+        ).QueryHistory;
     }
 
-    getModel():IModel<PluginInterfaces.QueryStorage.ModelState> {
+    getModel():IModel<PluginInterfaces.QueryHistory.ModelState> {
         return this.model;
     }
 
 }
 
-const create:PluginInterfaces.QueryStorage.Factory = (pluginApi, offset, limit, pageSize) => {
-    return new QueryStoragePlugin(pluginApi, new QueryStorageModel(pluginApi, offset, limit, pageSize));
+const create:PluginInterfaces.QueryHistory.Factory = (pluginApi, offset, limit, pageSize) => {
+    return new QueryHistoryPlugin(pluginApi, new QueryHistoryModel(pluginApi, offset, limit, pageSize));
 };
 
 export default create;

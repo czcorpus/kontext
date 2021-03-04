@@ -51,7 +51,7 @@ export interface FilterFormProps {
     corpname:string;
     operationIdx?:number;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
+    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
 }
 
 // ---------
@@ -318,7 +318,7 @@ export function init({
                                     attrList={this.props.attrList}
                                     tagHelperView={this.props.tagHelperView}
                                     tagsets={this.props.tagsets}
-                                    queryStorageView={this.props.queryStorageView}
+                                    queryHistoryView={this.props.queryHistoryView}
                                     inputLanguage={this.props.inputLanguage}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
                                     onEnterKey={this._handleSubmit}
@@ -376,7 +376,7 @@ export function init({
                                     attrList={this.props.attrList}
                                     tagHelperView={this.props.tagHelperView}
                                     tagsets={this.props.tagsets}
-                                    queryStorageView={this.props.queryStorageView}
+                                    queryHistoryView={this.props.queryHistoryView}
                                     inputLanguage={this.props.inputLanguage}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
                                     onEnterKey={this._handleSubmit}

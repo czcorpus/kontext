@@ -22,7 +22,7 @@ import { Action } from 'kombo';
 
 
 export enum ActionName {
-    SelectItem = 'QUERY_STORAGE_SELECT_CURRENT_ITEM',
+    SelectItem = 'QUERY_HISTORY_SELECT_CURRENT_ITEM',
 }
 
 
