@@ -115,7 +115,7 @@ class ParadigmaticQueryPage {
                     isVisible: false,
                     data: [],
                     queryId: undefined,
-                    sortKey: {name: 'freq', reverse: true}
+                    sortKey: {column: 'freq', reverse: true}
                 },
                 this.layoutModel
             );

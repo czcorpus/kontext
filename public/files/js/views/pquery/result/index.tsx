@@ -23,7 +23,7 @@ import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
-import { PqueryResultModel, PqueryResultModelState, SortKey } from '../../../models/pquery/result';
+import { PqueryResultModel, PqueryResultModelState, SortColumn, SortKey } from '../../../models/pquery/result';
 import { ActionName, Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import { List } from 'cnc-tskit';
@@ -32,10 +32,6 @@ export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     model:PqueryResultModel;
-}
-
-interface PqueryFormProps {
-    corparchWidget:React.ComponentClass;
 }
 
 
@@ -68,7 +64,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             dispatcher.dispatch<Actions.SortLines>({
                 name: ActionName.SortLines,
                 payload: {
-                    name: props.ident,
+                    column: props.ident as SortColumn,
                     reverse: props.sortKey ? !props.sortKey.reverse : false
                 }
             });
@@ -96,7 +92,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
     const PqueryResultSection:React.FC<PqueryResultModelState> = (props) => {
 
         const _exportSortKey = (name) => {
-            if (name === props.sortKey.name) {
+            if (name === props.sortKey.column) {
                 return props.sortKey;
             }
             return null;
@@ -105,7 +101,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         return props.isVisible ?
             (
                 <S.PqueryResultSection>
-                    <h2>Pquery result</h2>
+                    <h2>{he.translate('pquery__results')}</h2>
                     <table className="data">
                         <tbody>
                             <tr>

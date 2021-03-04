@@ -34,14 +34,15 @@ export interface PqueryResultModelState {
     sortKey:SortKey;
 }
 
+export type SortColumn = 'freq'|'value';
+
 export interface SortKey {
-    name:string;
+    column:SortColumn;
     reverse:boolean;
 }
 
 
 export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
-
 
     private readonly layoutModel:PageModel;
 
@@ -53,7 +54,6 @@ export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
             ActionName.SubmitQuery,
             (state, action) => {
                 state.isBusy = true;
-                state.isVisible = true;
                 state.data = [];
             }
         );
@@ -62,28 +62,15 @@ export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
             ActionName.SubmitQueryDone,
             (state, action) => {
                 state.isBusy = false;
-                state.isVisible = true;
                 state.queryId = action.payload.queryId;
-                // TODO no data yet here; state.data = List.sortBy(v => v[1], action.payload.result).reverse();
-                state.sortKey = {name: 'value', reverse: false};
             }
         );
 
         this.addActionHandler<Actions.SortLines>(
             ActionName.SortLines,
             (state, action) => {
-                switch (action.payload.name) {
-                    case 'value':
-                        state.data = List.sortAlphaBy(v => v[0], state.data);
-                        break;
-                    case 'freq':
-                        state.data = List.sortBy(v => v[1], state.data);
-                        break;
-                }
-                if (action.payload.reverse) {
-                    state.data = List.reverse(state.data);
-                }
                 state.sortKey = action.payload;
+                this.sortData(state);
             }
         );
 
@@ -91,7 +78,23 @@ export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
             ActionName.AsyncResultRecieved,
             (state, action) => {
                 state.data = action.payload.data;
+                this.sortData(state)
+                state.isVisible = true;
             }
         )
+    }
+
+    private sortData(state:PqueryResultModelState) {
+        switch (state.sortKey.column) {
+            case 'value':
+                state.data = List.sortAlphaBy(v => v[0], state.data);
+                break;
+            case 'freq':
+                state.data = List.sortBy(v => v[1], state.data);
+                break;
+        }
+        if (state.sortKey.reverse) {
+            state.data = List.reverse(state.data);
+        }
     }
 }

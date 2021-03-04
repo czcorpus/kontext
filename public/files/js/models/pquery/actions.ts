@@ -22,6 +22,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AsyncTaskArgs, PqueryResult } from './common';
+import { SortKey } from './result';
 
 
 export enum ActionName {
@@ -35,7 +36,8 @@ export enum ActionName {
     PositionChange = 'PQUERY_POSITION_CHANGE',
     AttrChange = 'PQUERY_ATTR_CHANGE',
     SortLines = 'PQUERY_RESULTS_SORT_LINES',
-    AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED'
+    AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED',
+    ConcordanceReady = 'PQUERY_ASYNC_CONC_READY'
 }
 
 
@@ -98,10 +100,7 @@ export namespace Actions {
         name: ActionName.AttrChange;
     }
 
-    export interface SortLines extends Action<{
-        name: string;
-        reverse: boolean;
-    }> {
+    export interface SortLines extends Action<SortKey> {
         name: ActionName.SortLines;
     }
 
@@ -109,5 +108,11 @@ export namespace Actions {
         data:PqueryResult;
     }> {
         name: ActionName.AsyncResultRecieved
+    }
+
+    export interface ConcordanceReady extends Action<{
+        sourceId:string;
+    }> {
+        name: ActionName.ConcordanceReady
     }
 }

@@ -65,6 +65,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             ActionName.SubmitQuery,
             (state, action) => {
                 state.isBusy = true;
+                state.concWait = Dict.map(v => 'running', state.concWait);
             },
             (state, action, dispatch) => {
                 this.submitForm(state, dispatch).subscribe(
@@ -75,7 +76,8 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                                 corpname: state.corpname,
                                 usesubcorp: state.usesubcorp,
                                 queryId,
-                                task                            },
+                                task
+                            },
                         });
                     },
                     (error) => {
@@ -92,7 +94,6 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         this.addActionHandler<Actions.SubmitQueryDone>(
             ActionName.SubmitQueryDone,
             (state, action) => {
-                state.isBusy = false;
                 if (!action.error) {
                     state.queryId = action.payload.queryId;
                     state.task = action.payload.task;
@@ -206,36 +207,42 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                         action.payload.tasks
                     );
                     if (!task) {
-                        // TODO ERROR
+                        layoutModel.showMessage('error', 'Paradigmatic query task not found!');
                     } else {
                         state.task = task as Kontext.AsyncTaskInfo<AsyncTaskArgs>;
                     }
                 }
             },
             (state, action, dispatch) => {
-                if (state.task && state.task.status === 'SUCCESS') {
-                    this.layoutModel.ajax$<{result: Array<[string, number]>}>(
-                        HTTP.Method.GET,
-                        'get_task_result',
-                        {task_id: state.task.ident}
+                if (state.task) {
+                    if (state.task.status === 'SUCCESS') {
+                        this.layoutModel.ajax$<{result: Array<[string, number]>}>(
+                            HTTP.Method.GET,
+                            'get_task_result',
+                            {task_id: state.task.ident}
 
-                    ).subscribe(
-                        resp => {
-                            dispatch<Actions.AsyncResultRecieved>({
-                                name: ActionName.AsyncResultRecieved,
-                                payload: {
-                                    data: resp.result
-                                }
-                            })
-                        },
-                        error => {
-                            dispatch<Actions.AsyncResultRecieved>({
-                                name: ActionName.AsyncResultRecieved,
-                                error: error
-                            })
-                            this.layoutModel.showMessage('error', error);
-                        }
-                    )
+                        ).subscribe(
+                            resp => {
+                                dispatch<Actions.AsyncResultRecieved>({
+                                    name: ActionName.AsyncResultRecieved,
+                                    payload: {
+                                        data: resp.result
+                                    }
+                                })
+                            },
+                            error => {
+                                dispatch<Actions.AsyncResultRecieved>({
+                                    name: ActionName.AsyncResultRecieved,
+                                    error: error
+                                })
+                            }
+                        )
+                    } else if (state.task.status === 'FAILURE') {
+                        dispatch<Actions.AsyncResultRecieved>({
+                            name: ActionName.AsyncResultRecieved,
+                            error: Error('Paradigmatic query task failed!')
+                        });
+                    }
                 }
             }
         );
@@ -243,22 +250,35 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         this.addActionHandler<Actions.AsyncResultRecieved>(
             ActionName.AsyncResultRecieved,
             (state, action) => {
-                state.receivedResults = true;
+                state.isBusy = false;
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+                } else {
+                    state.receivedResults = true;
+                }
+                state.concWait = Dict.map(v => 'none', state.concWait);
+            }
+        )
+
+        this.addActionHandler<Actions.ConcordanceReady>(
+            ActionName.ConcordanceReady,
+            (state, action) => {
+                state.concWait[action.payload.sourceId] = 'finished';
             }
         )
     }
 
     private removeItem(data:{[sourceId:string]:any}, removeId:string):{[sourceId:string]:any} {
-        return Dict.fromEntries(
+        return pipe(
+            data,
+            Dict.toEntries(),
             List.reduce((acc, [k, v]) => {
-                    if (k !== removeId) {
-                        acc.push([generatePqueryName(List.size(acc)), v])
-                    }
-                    return acc;
-                },
-                [],
-                Dict.toEntries(data)
-            )
+                if (k !== removeId) {
+                    acc.push([generatePqueryName(List.size(acc)), v])
+                }
+                return acc;
+            }, []),
+            Dict.fromEntries()
         );
     }
 
@@ -317,8 +337,11 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
 
                 ).pipe(
                     tap(
-                        resp => {
-                            // TODO update conc query textareas status icons ("conc - ready")
+                        _ => {                            
+                            dispatch<Actions.ConcordanceReady>({
+                                name: ActionName.ConcordanceReady,
+                                payload: {sourceId}
+                            })
                         }
                     )
                 )

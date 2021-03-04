@@ -63,11 +63,11 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         };
 
         if (props.concLoadingStatus === 'none' && props.numQueries > 1) {
-            return <layoutViews.DelItemIcon title="Remove query"
+            return <layoutViews.DelItemIcon title={he.translate('pquery__remove_btn')}
                         onClick={removeQueryHandler(props.sourceId)} />;
 
         } else if (props.concLoadingStatus && props.concLoadingStatus === 'running') {
-            return <layoutViews.AjaxLoaderBarImage />;
+            return <layoutViews.AjaxLoaderBarImage htmlClass="loader"/>;
 
         } else if (props.concLoadingStatus && props.concLoadingStatus === 'finished') {
             return <span>{'\u2713'}</span>
@@ -128,47 +128,48 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             });
         };
 
-        const _renderForm = () => <>
-            <form>
-                <fieldset>
-                    {Dict.mapEntries(
-                        ([sourceId, query]) =>
-                            <S.QueryField key={sourceId}>
-                                <textarea name={sourceId} onChange={handleQueryChange(sourceId)} value={query.query} />
-                                <QueryStatusIcon numQueries={Dict.size(props.queries)}
-                                        concLoadingStatus={props.concWait[sourceId]}
-                                        sourceId={sourceId} />
-                            </S.QueryField>,
-                            props.queries
-                        )
-                    }
-                    <button type="button" onClick={addQueryHandler}>Add query</button>
-                </fieldset>
-                <S.ParametersFieldset>
-                    <S.ParameterField>
-                        <label htmlFor="freq">Min. fq:</label>
-                        <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
-                    </S.ParameterField>
-                    <S.ParameterField>
-                        <label htmlFor="pos">Position:</label>
-                        <input id="pos" onChange={handlePositionChange} value={props.position}/>
-                    </S.ParameterField>
-                    <S.ParameterField>
-                        <label htmlFor="attr">Attribute:</label>
-                        <select id="attr" value={props.attr} onChange={handleAttrChange}>
-                            {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
-                            {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
-                        </select>
-                    </S.ParameterField>
-                </S.ParametersFieldset>
-                <div>
-                    <button type="button" className="default-button" onClick={handleSubmit}>
-                        {he.translate('query__search_btn')}
-                    </button>
-                    {props.isBusy ? <layoutViews.AjaxLoaderBarImage htmlClass="loader"/> : null}
-                </div>
-            </form>
-        </>
+        const _renderForm = () => <form><S.StylelessFieldset disabled={props.isBusy}>
+            <fieldset>
+                {Dict.mapEntries(
+                    ([sourceId, query]) =>
+                        <S.QueryField key={sourceId}>
+                            <textarea name={sourceId} onChange={handleQueryChange(sourceId)} value={query.query} />
+                            <QueryStatusIcon numQueries={Dict.size(props.queries)}
+                                    concLoadingStatus={props.concWait[sourceId]}
+                                    sourceId={sourceId} />
+                        </S.QueryField>,
+                        props.queries
+                    )
+                }
+                <button type="button" className="util-button add" onClick={addQueryHandler}>
+                    <img src={he.createStaticUrl('img/plus.svg')} />
+                    {he.translate('pquery__add_btn')}
+                </button>
+            </fieldset>
+            <S.ParametersFieldset>
+                <S.ParameterField>
+                    <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
+                    <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
+                </S.ParameterField>
+                <S.ParameterField>
+                    <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
+                    <input id="pos" onChange={handlePositionChange} value={props.position}/>
+                </S.ParameterField>
+                <S.ParameterField>
+                    <label htmlFor="attr">{he.translate('pquery__attr_input')}:</label>
+                    <select id="attr" value={props.attr} onChange={handleAttrChange}>
+                        {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
+                        {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
+                    </select>
+                </S.ParameterField>
+            </S.ParametersFieldset>
+            <S.BorderlessFieldset>
+                <button type="button" className="default-button submit" onClick={handleSubmit}>
+                    {he.translate('query__search_btn')}
+                </button>
+                {props.isBusy ? <layoutViews.AjaxLoaderBarImage htmlClass="loader"/> : null}
+            </S.BorderlessFieldset>
+        </S.StylelessFieldset></form>
 
         return (
             <S.PqueryForm>

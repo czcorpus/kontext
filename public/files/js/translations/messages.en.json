@@ -785,6 +785,12 @@
         "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\"",
         "wordlist__create_filter_list": "Create",
         "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER",
-        "pquery__no_form_data_to_restore": "No result - the URL address refers to invalid input data."
+        "pquery__no_form_data_to_restore": "No result - the URL address refers to invalid input data.",
+        "pquery__add_btn": "Add query",
+        "pquery__remove_btn": "Remove query",
+        "pquery__attr_input": "Attribute",
+        "pquery__min_fq_input": "Min. fq.",
+        "pquery__pos_input": "Position",
+        "pquery__results": "Query results"
     }
 }
