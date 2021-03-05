@@ -694,7 +694,7 @@
                             <ref name="customPluginConfiguration" />
                         </optional>
                     </element>
-                    <element name="query_storage">
+                    <element name="query_history">
                         <a:documentation>A plug-in for storing current queries for later retrieval</a:documentation>
                         <ref name="plugin_common" />
                         <element name="page_num_records">
