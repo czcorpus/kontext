@@ -793,6 +793,7 @@
         "pquery__pos_input": "Position UNTRANSLATED",
         "pquery__results": "Query results UNTRANSLATED",
         "pquery__query_form_hd": "Query form UNTRANSLATED",
-        "pquery__node_start_at": "(Node) start at UNTRANSLATED"
+        "pquery__node_start_at": "(Node) start at UNTRANSLATED",
+        "pquery__all_the_queries_must_be_filled": "One or more queries is empty UNTRANSLATED"
     }
 }

@@ -36,8 +36,8 @@ export interface PqueryFormArgs {
     corpname:string;
     usesubcorp:string;
     min_freq:number;
-    posIndex:number;
-    posAlign:AlignTypes;
+    pos_index:number;
+    pos_align:AlignTypes;
     attr:string;
     queries:Array<AdvancedQuerySubmit>;
 }
@@ -72,6 +72,13 @@ export function asyncTaskIsPquery(t:Kontext.AsyncTaskInfo):t is Kontext.AsyncTas
 
 export type ConcStatus = 'none'|'running'|'finished';
 
+export interface HistoryArgs {
+    corpname:string;
+    usesubcorp:string;
+    queryId:string;
+    sort:string;
+    page:number;
+}
 
 
 export interface PqueryFormModelState {
@@ -94,16 +101,23 @@ export interface PqueryFormModelState {
     receivedResults:boolean;
 }
 
-export function generatePqueryName(i:number):string {
+/**
+ *
+ */
+export function createSourceId(i:number):string {
     return `pqitem_${i}`;
 }
 
+/**
+ * Returns a state with empty queries and default param selections
+ */
 export function newModelState(
     corpname:string,
     usesubcorp:string,
     attrs:Array<Kontext.AttrItem>,
     structAttrs:Array<Kontext.AttrItem>,
-    useRichQueryEditor:boolean
+    useRichQueryEditor:boolean,
+    defaultAttr:string
 ):PqueryFormModelState {
 
     return {
@@ -113,7 +127,7 @@ export function newModelState(
         queries: pipe(
             List.repeat<[string, AdvancedQuery]>(
                 idx => tuple(
-                    generatePqueryName(idx),
+                    createSourceId(idx),
                     {
                         corpname,
                         qtype: 'advanced',
@@ -133,16 +147,16 @@ export function newModelState(
             Dict.fromEntries()
         ),
         downArrowTriggersHistory: pipe(
-            List.repeat(idx => tuple(generatePqueryName(idx), false), 2),
+            List.repeat(idx => tuple(createSourceId(idx), false), 2),
             Dict.fromEntries()
         ),
         cqlEditorMessages: pipe(
-            List.repeat(idx => tuple(generatePqueryName(idx), ''), 2),
+            List.repeat(idx => tuple(createSourceId(idx), ''), 2),
             Dict.fromEntries()
         ),
         useRichQueryEditor,
         concWait: pipe(
-            List.repeat<[string, ConcStatus]>(idx => tuple(generatePqueryName(idx), 'none'), 2),
+            List.repeat<[string, ConcStatus]>(idx => tuple(createSourceId(idx), 'none'), 2),
             Dict.fromEntries()
         ),
         task: undefined,
@@ -150,7 +164,7 @@ export function newModelState(
         minFreq: 5,
         posIndex: 6,
         posAlign: AlignTypes.LEFT,
-        attr: List.head(attrs).n,
+        attr: defaultAttr,
         attrs,
         structAttrs,
         receivedResults: false
@@ -181,7 +195,7 @@ export function storedQueryToModel(
                     );
 
                     return tuple(
-                        generatePqueryName(i),
+                        createSourceId(i),
                         {
                             corpname: query.corpname,
                             qtype: 'advanced',
@@ -202,27 +216,27 @@ export function storedQueryToModel(
         ),
         downArrowTriggersHistory: pipe(
             sq.queries,
-            List.map((q, i) => tuple(generatePqueryName(i), false)),
+            List.map((q, i) => tuple(createSourceId(i), false)),
             Dict.fromEntries()
         ),
         cqlEditorMessages: pipe(
             sq.queries,
-            List.map((q, i) => tuple(generatePqueryName(i), '')),
+            List.map((q, i) => tuple(createSourceId(i), '')),
             Dict.fromEntries()
         ),
         useRichQueryEditor,
         concWait: pipe(
             sq.queries,
             List.map<AdvancedQuerySubmit, [string, ConcStatus]>(
-                (v, i) => tuple(generatePqueryName(i), 'none')
+                (v, i) => tuple(createSourceId(i), 'none')
             ),
             Dict.fromEntries()
         ),
         task: undefined,
         queryId: sq.id,
         minFreq: sq.min_freq,
-        posIndex: sq.posIndex,
-        posAlign: sq.posAlign,
+        posIndex: sq.pos_index,
+        posAlign: sq.pos_align,
         attr: sq.attr,
         attrs,
         structAttrs,

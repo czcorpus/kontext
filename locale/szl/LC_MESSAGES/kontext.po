@@ -212,9 +212,6 @@ msgstr ""
 msgid "logout"
 msgstr "wyloguj"
 
-msgid "Concordance query"
-msgstr "Concordance query UNTRANSLATED"
-
 msgid "Recent queries"
 msgstr "Ôstatnie zapytania"
 

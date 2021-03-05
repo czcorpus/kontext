@@ -28,7 +28,8 @@ import { CollFormModel } from '../../models/coll/collForm';
 import { MultiDict } from '../../multidict';
 import { Actions, ActionName } from './actions';
 import { HTTP, List } from 'cnc-tskit';
-import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell, AjaxResponse, CollServerArgs, HistoryState, CollSaveServerArgs } from './common';
+import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell,
+    AjaxResponse, CollServerArgs, CollSaveServerArgs } from './common';
 import { CalcWatchdog } from './calc';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 

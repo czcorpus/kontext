@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 
 from typing import Dict, Any
-import logging
 
 
 class PqueryFormArgs(object):
@@ -22,8 +21,8 @@ class PqueryFormArgs(object):
         self.corpora = []
         self.usesubcorp = None
         self.min_freq = 0
-        self.posIndex = 0
-        self.posAlign = 'left'
+        self.pos_index = 0
+        self.pos_align = 'left'
         self.queries = []
         self.attr = None
         self.form_type = 'pquery'
@@ -32,12 +31,10 @@ class PqueryFormArgs(object):
         self.corpora = [data['queries'][0]['corpname']]
         self.usesubcorp = data.get('usesubcorp')
         self.min_freq = data['min_freq']
-        self.posIndex = data['posIndex']
-        self.posAlign = data['posAlign']
+        self.pos_index = data['pos_index']
+        self.pos_align = data['pos_align']
         self.queries = data['queries']
         self.attr = data['attr']
-
-        logging.getLogger(__name__).debug('data: {}'.format(data))
 
     def to_dict(self) -> Dict[str, Any]:
         tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}

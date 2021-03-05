@@ -93,7 +93,8 @@ class ParadigmaticQueryPage {
                         this.layoutModel.getCorpusIdent().usesubcorp,
                         this.layoutModel.getConf('AttrList'),
                         this.layoutModel.getConf('StructAttrList'),
-                        this.layoutModel.getConf<boolean>('UseRichQueryEditor')
+                        this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
+                        this.layoutModel.getConf<string>('DefaultAttr')
                     ),
                 this.layoutModel,
                 attrHelper
@@ -152,6 +153,8 @@ class ParadigmaticQueryPage {
                 corparchPlg
             );
 
+            // history
+
             this.layoutModel.dispatcher.registerActionListener(
                 (action, dispatch) => {
                     const args = new MultiDict();
@@ -168,6 +171,13 @@ class ParadigmaticQueryPage {
                     }
                 }
             );
+
+            this.layoutModel.getHistory().setOnPopState((event) => {
+                console.log('event state ', event.state);
+                if (event.state['onPopStateAction']) {
+                    this.layoutModel.dispatcher.dispatch(event.state['onPopStateAction']);
+                }
+            });
 
             // ----
 

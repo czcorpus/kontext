@@ -20,7 +20,7 @@
  */
 
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
-import { IActionDispatcher, IFullActionControl, SEDispatcher, StatefulModel, StatelessModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, forkJoin, of as rxOf } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
@@ -33,11 +33,12 @@ import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
 import { concatMap, map, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
-import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, generatePqueryName,
+import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
     PqueryFormModelState, PqueryFormArgs } from './common';
 import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
+import { MultiDict } from '../../multidict';
 
 
 /**
@@ -54,6 +55,10 @@ interface PqueryFormModelSwitchPreserve {
     attr:string;
     posIndex:number;
     posAlign:AlignTypes;
+}
+
+interface HistoryState {
+    onPopStateAction:Actions.PopHistory;
 }
 
 
@@ -83,10 +88,27 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         this.addActionHandler<Actions.SubmitQuery>(
             ActionName.SubmitQuery,
             action => {
+                const validationErr = this.validateQueries();
+                if (validationErr) {
+                    this.layoutModel.showMessage('error', validationErr);
+                    return;
+                }
+                const prevQueryId = this.state.queryId;
                 this.changeState(state => {
                     state.isBusy = true;
                     state.concWait = Dict.map(v => 'running', state.concWait);
+                    state.queryId = undefined;
                 });
+
+                if (prevQueryId) {
+                    this.dispatchSideEffect<Actions.StatePushToHistory>({
+                        name: ActionName.StatePushToHistory,
+                        payload: {
+                            queryId: prevQueryId
+                        }
+                    });
+                }
+
                 this.submitForm(this.state).subscribe(
                     ([queryId, task]) => {
                         this.dispatchSideEffect<Actions.SubmitQueryDone>({
@@ -170,8 +192,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             action => {
                 this.changeState(state => {
                     const size = Dict.size(state.queries);
-                    state.concWait[generatePqueryName(size)] = 'none';
-                    state.queries[generatePqueryName(size)] = {
+                    state.concWait[createSourceId(size)] = 'none';
+                    state.queries[createSourceId(size)] = {
                         corpname: state.corpname,
                         qtype: 'advanced',
                         query: '',
@@ -256,6 +278,20 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 this.changeState(state => {
                     state.attr = action.payload.value;
                 });
+            }
+        );
+
+        this.addActionHandler<Actions.StatePushToHistory>(
+            ActionName.StatePushToHistory,
+            action => {
+                this.pushStateToHistory(this.state, action.payload.queryId);
+            }
+        );
+
+        this.addActionHandler<Actions.PopHistory>(
+            ActionName.PopHistory,
+            action => {
+                console.log('pop history: ', action);
             }
         );
 
@@ -349,7 +385,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             Dict.toEntries(),
             List.reduce((acc, [k, v]) => {
                 if (k !== removeId) {
-                    acc.push([generatePqueryName(List.size(acc)), v])
+                    acc.push([createSourceId(List.size(acc)), v])
                 }
                 return acc;
             }, []),
@@ -357,6 +393,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         );
     }
 
+    private validateQueries():Error|undefined {
+        const empty = Dict.find(q => q.query.trim() === '', this.state.queries);
+        return empty ? new Error(this.layoutModel.translate('pquery__all_the_queries_must_be_filled')) : undefined;
+    }
 
     private deserialize(
         state:PqueryFormModelState,
@@ -489,8 +529,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             corpname: state.corpname,
             usesubcorp: state.usesubcorp,
             min_freq: state.minFreq,
-            posIndex: state.posIndex,
-            posAlign: state.posAlign,
+            pos_index: state.posIndex,
+            pos_align: state.posAlign,
             attr: state.attr,
             queries: pipe(
                 state.queries,
@@ -655,6 +695,30 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(queryObj);
 
         this.reparseAdvancedQuery(queryObj, sourceId, true);
+    }
+
+    private pushStateToHistory(state:PqueryFormModelState, queryId:string):void {
+        const args = new MultiDict();
+        args.set('corpname', state.corpname);
+        args.set('usesubcorp', state.usesubcorp);
+        args.set('query_id', queryId);
+        this.layoutModel.getHistory().pushState<{}, HistoryState>(
+            'pquery/result',
+            args,
+            {
+                onPopStateAction: {
+                    name: ActionName.PopHistory,
+                    payload: {
+                        corpname: state.corpname,
+                        usesubcorp: state.usesubcorp,
+                        page: 1, // TODO
+                        queryId,
+                        sort: undefined // this concerns the result model
+                    }
+                }
+            },
+            window.document.title
+        )
     }
 
 }

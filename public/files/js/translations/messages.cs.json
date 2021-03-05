@@ -793,6 +793,7 @@
         "pquery__pos_input": "Pozice",
         "pquery__results": "Výsledek hledání",
         "pquery__query_form_hd": "Formulář dotazu",
-        "pquery__node_start_at": "(Node) začít od"
+        "pquery__node_start_at": "(Node) začít od",
+        "pquery__all_the_queries_must_be_filled": "Jeden či více dotazů není vyplněno."
     }
 }

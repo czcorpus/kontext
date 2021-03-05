@@ -55,6 +55,12 @@ export const QueryRowDiv = styled.div`
 
     display: flex;
     flex-direction: row;
+    align-items: center;
+
+    img.loader {
+        width: 1em;
+        height: 1em;
+    }
 `;
 
 
@@ -78,6 +84,15 @@ export const ParameterField = styled.span`
 
     label {
         margin: 0 0.5em;
+    }
+`;
+
+//  --------------- <MinFreqField /> ----------------
+
+export const MinFreqField = styled(ParameterField)`
+
+    input {
+        width: 3em;
     }
 `;
 
