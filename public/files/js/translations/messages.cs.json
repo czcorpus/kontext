@@ -791,6 +791,7 @@
         "pquery__attr_input": "Atribut",
         "pquery__min_fq_input": "Min. fq.",
         "pquery__pos_input": "Pozice",
-        "pquery__results": "Výsledek hledání"
+        "pquery__results": "Výsledek hledání",
+        "pquery__query_form_hd": "Formulář dotazu"
     }
 }

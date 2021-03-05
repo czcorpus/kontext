@@ -21,9 +21,9 @@
 
 import styled from 'styled-components';
 
-// ---------------- <PqueryForm /> -------------
+// ---------------- <PqueryFormSection /> -------------
 
-export const PqueryForm = styled.div`
+export const PqueryFormSection = styled.section`
     form >* {
         margin-top: 1em;
     }
@@ -41,35 +41,62 @@ export const PqueryForm = styled.div`
     }
 `;
 
-export const QueryField = styled.div`
-    width: 100%;
-    display: flex;
-    align-items: center;
+// ------------------ <PqueryForm /> --------------------------
 
-    textarea {
-        flex-grow: 1;
-    }
+export const PqueryForm = styled.form`
+
+    margin-top: 1.5em;
+
 `;
+
+// ---------------- <QueryRowDiv /> -------------
+
+export const QueryRowDiv = styled.div`
+
+    display: flex;
+    flex-direction: row;
+`;
+
+
+// ---------------- <ParametersFieldset /> -------------
 
 export const ParametersFieldset = styled.fieldset`
     display: flex;
     align-items: center;
+    border: none;
 
     & >* {
         flex-grow: 1;
     }
 `;
 
+// ---------------- <ParameterField /> -------------
+
 export const ParameterField = styled.span`
+
+    border: none;
+
     label {
         margin: 0 0.5em;
     }
 `;
 
+// ---------------- <BorderlessFieldset /> -------------
+
 export const BorderlessFieldset = styled.fieldset`
     border: none;
     padding: 0px;
 `;
+
+
+// ---------------- <EditorFieldset /> -------------
+
+export const EditorFieldset = styled.fieldset`
+    border: none;
+`;
+
+
+// ---------------- <StylelessFieldset /> -------------
 
 export const StylelessFieldset = styled(BorderlessFieldset)`
     margin: 0px;

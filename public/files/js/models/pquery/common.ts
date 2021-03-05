@@ -21,6 +21,7 @@
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
+import { highlightSyntaxStatic } from '../query/cqleditor/parser';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 
 /**
@@ -76,6 +77,9 @@ export interface PqueryFormModelState {
     corpname:string;
     usesubcorp:string;
     queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
+    downArrowTriggersHistory:{[sourceId:string]:boolean};
+    cqlEditorMessages:{[sourceId:string]:string};
+    useRichQueryEditor:boolean;
     concWait:{[sourceId:string]:ConcStatus};
     queryId:string|undefined;
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
@@ -95,27 +99,49 @@ export function newModelState(
     corpname:string,
     usesubcorp:string,
     attrs:Array<Kontext.AttrItem>,
-    structAttrs:Array<Kontext.AttrItem>
+    structAttrs:Array<Kontext.AttrItem>,
+    useRichQueryEditor:boolean
 ):PqueryFormModelState {
 
     return {
         isBusy: false,
         corpname,
         usesubcorp,
-        queries: {[generatePqueryName(0)]: {
-            corpname,
-            qtype: 'advanced',
-            query: '',
-            parsedAttrs: [],
-            focusedAttr: undefined,
-            rawAnchorIdx: 0,
-            rawFocusIdx: 0,
-            queryHtml: '',
-            pcq_pos_neg: 'pos',
-            include_empty: true,
-            default_attr: null,
-        }},
-        concWait: {[generatePqueryName(0)]: 'none'},
+        queries: pipe(
+            List.repeat<[string, AdvancedQuery]>(
+                idx => tuple(
+                    generatePqueryName(idx),
+                    {
+                        corpname,
+                        qtype: 'advanced',
+                        query: '',
+                        parsedAttrs: [],
+                        focusedAttr: undefined,
+                        rawAnchorIdx: 0,
+                        rawFocusIdx: 0,
+                        queryHtml: '',
+                        pcq_pos_neg: 'pos',
+                        include_empty: true,
+                        default_attr: null,
+                    }
+                ),
+                2
+            ),
+            Dict.fromEntries()
+        ),
+        downArrowTriggersHistory: pipe(
+            List.repeat(idx => tuple(generatePqueryName(idx), false), 2),
+            Dict.fromEntries()
+        ),
+        cqlEditorMessages: pipe(
+            List.repeat(idx => tuple(generatePqueryName(idx), ''), 2),
+            Dict.fromEntries()
+        ),
+        useRichQueryEditor,
+        concWait: pipe(
+            List.repeat<[string, ConcStatus]>(idx => tuple(generatePqueryName(idx), 'none'), 2),
+            Dict.fromEntries()
+        ),
         task: undefined,
         queryId: undefined,
         minFreq: 5,
@@ -130,7 +156,8 @@ export function newModelState(
 export function storedQueryToModel(
     sq:PqueryFormArgs,
     attrs:Array<Kontext.AttrItem>,
-    structAttrs:Array<Kontext.AttrItem>
+    structAttrs:Array<Kontext.AttrItem>,
+    useRichQueryEditor:boolean
 ):PqueryFormModelState {
 
     return {
@@ -140,25 +167,46 @@ export function storedQueryToModel(
         queries: pipe(
             sq.queries,
             List.map<AdvancedQuerySubmit, [string, AdvancedQuery]>(
-                (q, i) => tuple(
-                    generatePqueryName(i),
-                    {
-                        corpname: q.corpname,
-                        qtype: 'advanced',
-                        query: q.query,
-                        parsedAttrs: [],
-                        focusedAttr: null,
-                        rawAnchorIdx: 0,
-                        rawFocusIdx: 0,
-                        queryHtml: q.query, // TODO
-                        pcq_pos_neg: 'pos',
-                        include_empty: q.include_empty,
-                        default_attr: q.default_attr
-                    }
-                )
+                (query, i) => {
+                    const [queryHtml, parsedAttrs] = highlightSyntaxStatic(
+                        query.query,
+                        'advanced',
+                        {
+                            translate: (s:string, values?:any) => s
+                        }
+                    );
+
+                    return tuple(
+                        generatePqueryName(i),
+                        {
+                            corpname: query.corpname,
+                            qtype: 'advanced',
+                            query: query.query,
+                            parsedAttrs: parsedAttrs,
+                            focusedAttr: null,
+                            rawAnchorIdx: 0,
+                            rawFocusIdx: 0,
+                            queryHtml,
+                            pcq_pos_neg: 'pos',
+                            include_empty: query.include_empty,
+                            default_attr: query.default_attr
+                        }
+                    )
+                }
             ),
             Dict.fromEntries()
         ),
+        downArrowTriggersHistory: pipe(
+            sq.queries,
+            List.map((q, i) => tuple(generatePqueryName(i), false)),
+            Dict.fromEntries()
+        ),
+        cqlEditorMessages: pipe(
+            sq.queries,
+            List.map((q, i) => tuple(generatePqueryName(i), '')),
+            Dict.fromEntries()
+        ),
+        useRichQueryEditor,
         concWait: pipe(
             sq.queries,
             List.map<AdvancedQuerySubmit, [string, ConcStatus]>(

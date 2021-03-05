@@ -27,7 +27,9 @@ import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
 import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
 import { ContentEditable } from './contentEditable';
-import { findTokenIdxByFocusIdx, strictEqualParsedQueries } from '../../models/query/query';
+import { AdvancedQuery, findTokenIdxByFocusIdx, SimpleQuery, strictEqualParsedQueries } from '../../models/query/query';
+import { PqueryFormModel } from '../../models/pquery/form';
+import { PqueryFormModelState } from '../../models/pquery/common';
 
 
 export interface CQLEditorProps {
@@ -57,9 +59,15 @@ export interface CQLEditorViews {
     CQLEditor:React.ComponentClass;
 }
 
+interface CQLEditorCoreState {
+    queries:{[sourceId:string]:AdvancedQuery|SimpleQuery}; // pquery block -> query
+    downArrowTriggersHistory:{[sourceId:string]:boolean};
+    cqlEditorMessages:{[sourceId:string]:string};
+}
+
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            queryModel:QueryFormModel<QueryFormModelState>) {
+            queryModel:QueryFormModel<QueryFormModelState>|PqueryFormModel) {
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
@@ -128,7 +136,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------- <CQLEditor /> -----------------------------
 
-    class CQLEditor extends React.PureComponent<CQLEditorProps & QueryFormModelState> {
+    class CQLEditor extends React.PureComponent<(CQLEditorProps & CQLEditorCoreState)> {
 
         private readonly contentEditable:ContentEditable<HTMLPreElement>;
 
@@ -380,10 +388,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
-    const BoundEditor = BoundWithProps<CQLEditorProps, QueryFormModelState>(CQLEditor, queryModel);
+    const BoundEditor = queryModel instanceof QueryFormModel ?
+        BoundWithProps<CQLEditorProps, CQLEditorCoreState>(CQLEditor, queryModel) :
+        BoundWithProps<CQLEditorProps, CQLEditorCoreState>(CQLEditor, queryModel);
 
-    const BoundFallbackEditor = BoundWithProps<CQLEditorFallbackProps,
-            QueryFormModelState>(CQLEditorFallback, queryModel);
+    const BoundFallbackEditor = queryModel instanceof QueryFormModel ?
+        BoundWithProps<CQLEditorFallbackProps, CQLEditorCoreState>(CQLEditorFallback, queryModel) :
+        BoundWithProps<CQLEditorFallbackProps, CQLEditorCoreState>(CQLEditorFallback, queryModel);
 
     return {
         CQLEditor: BoundEditor,

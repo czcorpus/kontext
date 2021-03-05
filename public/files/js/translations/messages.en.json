@@ -791,6 +791,7 @@
         "pquery__attr_input": "Attribute",
         "pquery__min_fq_input": "Min. fq.",
         "pquery__pos_input": "Position",
-        "pquery__results": "Query results"
+        "pquery__results": "Query results",
+        "pquery__query_form_hd": "Query form"
     }
 }

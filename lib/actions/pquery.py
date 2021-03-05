@@ -55,13 +55,20 @@ class ParadigmaticQuery(Kontext):
             del data['corpora']
         return data
 
+    def _get_tagsets(self):
+        corp_info = self.get_corpus_info(self.args.corpname)
+        return [dict(ident=tagset.tagset_name, posAttr=tagset.pos_attr, featAttr=tagset.feat_attr,
+                     docUrlLocal=tagset.doc_url_local, docUrlEn=tagset.doc_url_en)
+                for tagset in corp_info.tagsets]
+
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
         data = self._init_page_data(request)
         ans = {
             'corpname': self.args.corpname,
             'form_data': data,
-            'calculate': False
+            'calculate': False,
+            'tagsets': self._get_tagsets()
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans
@@ -72,7 +79,8 @@ class ParadigmaticQuery(Kontext):
         ans = {
             'corpname': self.args.corpname,
             'form_data': data,
-            'calculate': True
+            'calculate': True,
+            'tagsets': self._get_tagsets()
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans
