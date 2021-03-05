@@ -38,12 +38,11 @@ def cached(f):
         corpname = request_json['corpname']
         subcname = request_json['usesubcorp']
         attr = request_json['attr']
-        posIndex = request_json['posIndex']
-        posAlign = request_json['posAlign']
+        position = request_json['position']
         min_freq = request_json['min_freq']
         conc_ids = ':'.join(request_json['conc_ids'])
 
-        key = f'{corpname}:{subcname}:{conc_ids}:{posIndex}:{posAlign}:{attr}:{min_freq}'
+        key = f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}'
         path = os.path.join(settings.get('corpora', 'freqs_cache_dir'),
                             'pquery_{}.pkl'.format(hashlib.sha1(key.encode('utf-8')).hexdigest()))
         if os.path.exists(path):
