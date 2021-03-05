@@ -791,6 +791,7 @@
         "pquery__min_fq_input": "Min. fq. UNTRANSLATED",
         "pquery__pos_input": "Position UNTRANSLATED",
         "pquery__results": "Query results UNTRANSLATED",
-        "pquery__query_form_hd": "Query form UNTRANSLATED"
+        "pquery__query_form_hd": "Query form UNTRANSLATED",
+        "pquery__node_start_at": "(Node) zacznij ôd"
     }
 }

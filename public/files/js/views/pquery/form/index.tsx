@@ -30,6 +30,7 @@ import * as QS from '../../query/input/style';
 import { Dict, List } from 'cnc-tskit';
 import { ConcStatus, PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
+import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -78,7 +79,6 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         return null;
     }
 
-
     // ------------ <EditorDiv /> -------------------------------------
 
     const EditorDiv:React.FC<{
@@ -124,7 +124,53 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
     };
 
 
-    // ------------ <PqueryForm /> ---------------------------------------
+    // ---------------------- <PositionSelect /> ---------------------
+
+    const PositionSelect:React.FC<{
+        positionIndex:number;
+        positionRangeLabels:Array<string>;
+    }> = (props) => {
+
+        const handleSelection = (evt) => {
+            dispatcher.dispatch<Actions.SetPositionIndex>({
+                name: ActionName.SetPositionIndex,
+                payload: {value: evt.target.value}
+            });
+        };
+
+        return (
+            <select onChange={handleSelection} value={props.positionIndex}>
+                {props.positionRangeLabels.map((item, i) => {
+                    return <option key={`opt_${i}`} value={i}>{item}</option>;
+                })}
+            </select>
+        );
+    };
+
+
+    // ---------------------- <PosAlignmentSelect /> ---------------------
+
+    const PosAlignmentSelect:React.FC<{
+        alignType:AlignTypes
+    }> = (props) => {
+
+        const handleSelection = (evt) => {
+            dispatcher.dispatch<Actions.SetAlignType>({
+                name: ActionName.SetAlignType,
+                payload: {value: evt.target.value}
+            });
+        };
+
+        return (
+            <select className="kwic-alignment" value={props.alignType}
+                    onChange={handleSelection}>
+                <option value={AlignTypes.LEFT}>{he.translate('freq__align_type_left')}</option>
+                <option value={AlignTypes.RIGHT}>{he.translate('freq__align_type_right')}</option>
+            </select>
+        );
+    };
+
+    // ---------------------- <PqueryForm /> ---------------------
 
     const PqueryForm:React.FC<PqueryFormModelState & PqueryFormProps> = (props) => {
 
@@ -145,15 +191,6 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         const handleFreqChange = (e) => {
             dispatcher.dispatch<Actions.FreqChange>({
                 name: ActionName.FreqChange,
-                payload: {
-                    value: e.target.value
-                }
-            });
-        };
-
-        const handlePositionChange = (e) => {
-            dispatcher.dispatch<Actions.PositionChange>({
-                name: ActionName.PositionChange,
                 payload: {
                     value: e.target.value
                 }
@@ -188,19 +225,21 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                 </S.EditorFieldset>
                 <S.ParametersFieldset>
                     <S.ParameterField>
-                        <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
-                        <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
-                    </S.ParameterField>
-                    <S.ParameterField>
-                        <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
-                        <input id="pos" onChange={handlePositionChange} value={props.position}/>
-                    </S.ParameterField>
-                    <S.ParameterField>
                         <label htmlFor="attr">{he.translate('pquery__attr_input')}:</label>
                         <select id="attr" value={props.attr} onChange={handleAttrChange}>
                             {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
                             {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
                         </select>
+                    </S.ParameterField>
+                    <S.ParameterField>
+                        <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
+                        <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
+                    </S.ParameterField>
+                    <S.ParameterField>
+                        <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
+                        <PositionSelect positionIndex={props.posIndex} positionRangeLabels={model.getPositionRangeLabels()}/>
+                        <label htmlFor="align">{he.translate('pquery__node_start_at')}</label>
+                        <PosAlignmentSelect alignType={props.posAlign}/>
                     </S.ParameterField>
                 </S.ParametersFieldset>
                 <S.BorderlessFieldset>
