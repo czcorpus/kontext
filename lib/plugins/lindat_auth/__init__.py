@@ -15,27 +15,28 @@ from controller import exposed
 from controller.errors import ImmediateRedirectException
 from plugins.abstract.auth import AbstractSemiInternalAuth
 from plugins.errors import PluginException
+from translation import ugettext as _
 
 _logger = logging.getLogger(__name__)
 
 
-def uni(str_str, encoding="utf-8"):
-    """ Try to get unicode without errors """
-    try:
-        if isinstance(str_str, str):
-            return str_str
-        elif isinstance(str_str, str):
-            return str(str_str, encoding)
-    except UnicodeError:
-        pass
-    try:
-        return str(str(str_str), encoding=encoding, errors='ignore')
-    except UnicodeError:
-        pass
-    return str_str.decode(encoding=encoding, errors="ignore")
+def uni(s):
+    """
+    Get a properly decoded utf-8 string.
+
+    It seems that py3-based KonText versions along with
+    Apache-based Shibboleth service provider cause
+    improperly decoded utf-8 characters stored in respective
+    HTTP environment variables. E.g. the string
+    'Tomáš Machálek' is stored as 'TomÃ¡Å¡ MachÃ¡lek'.
+    """
+    s_int = [ord(x) for x in s]
+    if len(s_int) == 0 or max(s_int) > 255:
+        return s
+    return str(bytes(s_int), 'utf-8')
 
 
-@exposed(http_method=('GET', 'POST'))
+@exposed(http_method=('GET', 'POST'), template='user/login.html', page_model='login')
 def lindat_login(self, request):
     with plugins.runtime.AUTH as auth:
         ans = {}
@@ -96,7 +97,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         """
         if username is not None and 0 < len(username):
             if username == FederatedAuthWithFailover.RESERVED_USER:
-                _logger.warn("Reserved username used [%s]!", username)
+                _logger.warning(f'Reserved username used [{username}]!')
                 return self.anonymous_user()
             user_d = self._failover_auth.auth(self._db, username, password)
         else:
@@ -324,8 +325,12 @@ def _get_non_empty_header(ftor, *args):
 def create_instance(conf, db, sessions):
     auth_conf = conf.get('plugins', 'auth')
     corparch_conf = conf.get('plugins', 'corparch')
-    corplist_file = corparch_conf['lindat:file']
-    if not os.path.exists(corplist_file):
+    corplist_file = None
+    if 'lindat:file' in corparch_conf:
+        corplist_file = corparch_conf['lindat:file']
+    elif 'default:file' in corparch_conf:
+        corplist_file = corparch_conf['default:file']
+    if corplist_file is None or not os.path.exists(corplist_file):
         raise PluginException("Corplist file [%s] in lindat_auth does not exist!" % corplist_file)
     corplist = _load_corplist(corplist_file)
 

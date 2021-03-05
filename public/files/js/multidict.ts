@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Dict, List } from 'cnc-tskit';
 import { Kontext } from './types/common';
 
 
@@ -44,9 +45,12 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
 
     static fromDict<U>(data:{[k in keyof U]:U[keyof U]}):MultiDict<U> {
         const ans = new MultiDict<U>();
-        for (let k in data) {
-            ans.set(k, data[k]);
-        }
+        Dict.forEach(
+            (v, k) => {
+                ans.set(k as keyof U, v); // TODO probably not the best solution
+            },
+            data
+        );
         return ans;
     }
 

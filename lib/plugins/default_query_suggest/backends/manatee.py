@@ -23,6 +23,7 @@ from plugins.abstract.query_suggest import AbstractBackend
 import manatee
 from strings import re_escape
 import logging
+import l10n
 
 
 class PosAttrPairRelManateeBackend(AbstractBackend):
@@ -39,7 +40,6 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         args.subcname = getattr(corp, 'subcname', None)
         args.subcpath = ''  # TODO xx
         args.user_id = user_id
-        args.fromp = 0
         args.pagesize = 100
         args.save = False
         args.samplesize = 0
@@ -95,4 +95,5 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             if 'syntax error' not in msg:
                 raise ex
         return dict(attrs=(self._conf['attr1'], self._conf['attr2']),
-                    data=dict((k, list(v)) for k, v in rels.items()))
+                    data=dict((k, l10n.sort(v, ui_lang, key=lambda itm: itm, reverse=False))
+                              for k, v in rels.items()))

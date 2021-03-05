@@ -385,7 +385,7 @@ def build_conc_form_args(corpora: List[str], data: Dict[str, Any], op_key: str) 
     """
     A factory method to create a conc form args
     instance based on deserialized data from
-    conc_persistence database.
+    query_persistence database.
     """
     tp = data['form_type']
     if tp == 'query':

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+    <start>
+        <element name="query_persistence">
+            <element name="module">
+                <value>default_query_persistence</value>
+            </element>
+            <element name="ttl_days">
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <data type="nonNegativeInteger" />
+            </element>
+            <element name="archive_dir">
+                <a:documentation>
+                  define the following if you want this plug-in to handle storing persistent
+                  concordances via a Sqlite3 database. This is very recommended in case you
+                  use redis_db as main key-value storage (in such case, the archived items
+                  would end-up in RAM which is not very effective).
+                </a:documentation>
+                <attribute name="extension-by">
+                    <value>default</value>
+                </attribute>
+                <text />
+            </element>
+            <optional>
+                <element name="handle_legacy_records">
+                    <choice>
+                        <value>false</value>
+                        <value>true</value>
+                        <value>0</value>
+                        <value>1</value>
+                    </choice>
+                </element>
+            </optional>
+        </element>
+    </start>
+</grammar>

@@ -123,7 +123,6 @@ export function cutLongResult<T>(
 ):QuerySuggestion<unknown> {
 
     if (isPosAttrPairRelFrontend(data)) {
-        const maxAttrs2Len = 10;
         const maxAttr1Variants = 5;
 
         const tmpData = pipe(
@@ -138,10 +137,10 @@ export function cutLongResult<T>(
         const hasLongAttrList = pipe(
             tmpData,
             Dict.toEntries(),
-            List.some(([,attrs]) => attrs.length > maxAttrs2Len)
+            List.some(([,attrs]) => List.last(attrs) === null)
         );
         const newData = Dict.map(
-            attrs2 => List.slice(0, maxAttrs2Len, attrs2),
+            attrs2 => List.filter(v => v !== null, attrs2),
             tmpData
         );
         return {

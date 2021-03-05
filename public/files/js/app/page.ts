@@ -39,7 +39,7 @@ import { UserInfo } from '../models/user/info';
 import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
 import { GeneralViewOptionsModel, GeneralViewOptionsModelState } from '../models/options/general';
 import { L10n } from './l10n';
-import { AsyncTaskChecker, AsyncTaskStatus } from '../models/asyncTask';
+import { AsyncTaskChecker } from '../models/asyncTask';
 import { UserSettings } from './userSettings';
 import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu';
 import { AppNavigation } from './navigation';
@@ -54,7 +54,7 @@ import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import querySuggestPlugin from 'plugins/querySuggest/init';
-import queryStoragePlugin from 'plugins/queryStorage/init';
+import queryHistoryPlugin from 'plugins/queryHistory/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
@@ -122,7 +122,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 
-    qstorPlugin:PluginInterfaces.QueryStorage.IPlugin;
+    qhistPlugin:PluginInterfaces.QueryHistory.IPlugin;
 
     /**
      * This is intended for React components to make them able register key
@@ -275,7 +275,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     name: ATActionName.InboxUpdateAsyncTask,
                     payload: {
                         ident: taskId,
-                        status: AsyncTaskStatus.SUCCESS
+                        status: 'SUCCESS'
                     }
                 });
             },
@@ -284,7 +284,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     name: ATActionName.InboxUpdateAsyncTask,
                     payload: {
                         ident: taskId,
-                        status: AsyncTaskStatus.FAILURE
+                        status: 'FAILURE'
                     }
                 });
             }
@@ -770,16 +770,16 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.getConf<boolean>('anonymousUser')
             );
 
-            this.qstorPlugin = queryStoragePlugin(
+            this.qhistPlugin = queryHistoryPlugin(
                 this.pluginApi(),
                 0,
-                this.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records'),
-                this.getNestedConf<number>('pluginData', 'query_storage', 'page_num_records')
+                this.getNestedConf<number>('pluginData', 'query_history', 'page_num_records'),
+                this.getNestedConf<number>('pluginData', 'query_history', 'page_num_records')
             );
             const qhViews = initQueryHistoryViews({
                 dispatcher: this.dispatcher,
                 helpers: this.getComponentHelpers(),
-                recentQueriesModel: this.qstorPlugin.getModel(),
+                recentQueriesModel: this.qhistPlugin.getModel(),
                 mainMenuModel: this.mainMenuModel
             });
 

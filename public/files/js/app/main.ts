@@ -33,7 +33,6 @@ import { Dict, List } from 'cnc-tskit';
 
 declare var require:any; // webpack's require
 require('styles/layout.less');
-require('styles/widgets.less');
 
 /**
  * KontextConf handles current page configuration as

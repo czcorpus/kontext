@@ -41,7 +41,7 @@ import plugins
 import plugins.export
 import settings
 import translation
-from controller import KonTextCookie
+from controller import KonTextCookie, get_protocol
 from initializer import setup_plugins
 from texttypes.cache import TextTypesCache
 
@@ -156,6 +156,9 @@ class WsgiApp(object):
         elif path_info.startswith('/corpora'):
             from actions.corpora import Corpora
             return Corpora(request, ui_lang, self._tt_cache)
+        elif path_info.startswith('/pquery'):
+            from actions.pquery import ParadigmaticQuery
+            return ParadigmaticQuery(request, ui_lang, self._tt_cache)
         elif path_info.startswith('/wordlist'):
             from actions.wordlist import Wordlist
             return Wordlist(request, ui_lang, self._tt_cache)
@@ -210,6 +213,13 @@ class KonTextWsgiApp(WsgiApp):
         signal.signal(signal.SIGUSR1, signal_handler)
         self._tt_cache = TextTypesCache(plugins.runtime.DB.instance)
 
+    @staticmethod
+    def _root_url(environ):
+        protocol = get_protocol(environ)
+        host = settings.get_str('global', 'http_host', environ.get('HTTP_HOST'))
+        app_url_prefix = settings.get_str('global', 'action_path_prefix', '/')
+        return f'{protocol}://{host}{app_url_prefix}/'
+
     def __call__(self, environ, start_response):
         ui_lang = self.get_lang(environ)
         translation.activate(ui_lang)
@@ -232,7 +242,7 @@ class KonTextWsgiApp(WsgiApp):
             if not url.endswith('/'):
                 url += '/'
             status = '303 See Other'
-            headers = [('Location', f'{url}query')]
+            headers = [('Location', f'{self._root_url(environ)}query')]
             body = ''
         # old-style (CGI version) URLs are redirected to new ones
         elif '/run.cgi/' in environ['REQUEST_URI']:

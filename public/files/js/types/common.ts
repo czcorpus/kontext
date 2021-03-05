@@ -317,14 +317,16 @@ export namespace Kontext {
         accept?:string;
     }
 
-    export interface AsyncTaskInfo {
+    export type AsyncTaskStatus = 'PENDING'|'STARTED'|'SUCCESS'|'FAILURE';
+
+    export interface AsyncTaskInfo<T=GeneralProps> {
         ident:string;
         label:string;
         category:string;
-        status:'PENDING'|'STARTED'|'RETRY'|'FAILURE'|'SUCCESS';
+        status:AsyncTaskStatus;
         created:number;
         error:string; // = Celery's "result" property in case status == 'FAILURE'
-        args:GeneralProps;
+        args:T;
     }
 
     export interface AsyncTaskOnUpdate {

@@ -1,0 +1,18 @@
+{
+    "en-US": {
+        "ucnkQS__recent_queries": "Recent queries",
+        "ucnkQS__only_current_corpus": "Only queries on the current corpus"
+    },
+    "cs-CZ": {
+        "ucnkQS__recent_queries": "Předchozí dotazy",
+        "ucnkQS__only_current_corpus": "Pouze dotazy do aktuálního korpusu"
+    },
+    "szl": {
+        "ucnkQS__recent_queries": "Ôstatnie zapytania",
+        "ucnkQS__only_current_corpus": "Ino zapytania we terŏźnym korpusie"
+    },
+    "sl-SI": {
+        "ucnkQS__recent_queries": "Recent queries UNTRANSLATED",
+        "ucnkQS__only_current_corpus": "Only queries on the current corpus UNTRANSLATED"
+    }
+}

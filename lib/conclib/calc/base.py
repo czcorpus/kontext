@@ -26,7 +26,7 @@ from typing import Tuple, Optional,  Dict, Any
 from corplib import is_subcorpus, CorpusManager
 from plugins.abstract.conc_cache import CalcStatus
 import plugins
-from conclib.calc.errors import ConcCalculationStatusException
+from conclib.errors import ConcCalculationStatusException
 from conclib.pyconc import PyConc
 import manatee
 import settings

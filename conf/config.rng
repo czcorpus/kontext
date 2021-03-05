@@ -323,7 +323,7 @@
                             <ref name="boolValues" />
                             <a:documentation>If true then KonText shows menu item and a button providing a
                                 function -make concordance link persistent-. This is linked
-                                to the conc_persistence.archive() function.
+                                to the query_persistence.archive() function.
                             </a:documentation>
                         </element>
                     </optional>
@@ -654,7 +654,7 @@
                     </element>
                     <element name="integration_db">
                         <a:documentation>A plugin providing connection to an existing database KonText needs to
-                        be integrated with. Typically - corparch, conc_persistence, auth plug-ins may support
+                        be integrated with. Typically - corparch, query_persistence, auth plug-ins may support
                         integration db which allows configuring and utilizing a single connection (pool) instead
                         of using multiple similar connections and configurations.</a:documentation>
                         <ref name="plugin_common" />
@@ -710,7 +710,7 @@
                             <ref name="customPluginConfiguration" />
                         </optional>
                     </element>
-                    <element name="conc_persistence">
+                    <element name="query_persistence">
                         <a:documentation>Storing (possibly long) queries under a simple code</a:documentation>
                         <ref name="plugin_common" />
                         <ref name="customPluginConfiguration" />

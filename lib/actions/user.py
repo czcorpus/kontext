@@ -36,27 +36,36 @@ class User(Kontext):
     def _is_anonymous_id(user_id):
         return plugins.runtime.AUTH.instance.is_anonymous(user_id)
 
+    @exposed(skip_corpus_init=True, template='user/login.html', http_method='GET')
+    def loginx(self, request):
+        """
+        This method is used by some of the installations with Shibboleth-based authentication.
+        So for compatibility reasons, let's keep this.
+        """
+        with plugins.runtime.AUTH as auth:
+            self._session['user'] = auth.validate_user(self._plugin_api, None, None)
+        if request.args.get('return_url', None):
+            self.redirect(request.args.get('return_url'))
+        return {}
+
     @exposed(skip_corpus_init=True, template='user/login.html', http_method='POST')
     def login(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
-        if request.method == 'GET':
-            return {}
-        elif request.method == 'POST':
-            with plugins.runtime.AUTH as auth:
-                ans = {}
-                self._session['user'] = auth.validate_user(self._plugin_api,
-                                                           request.form['username'],
-                                                           request.form['password'])
-                if not auth.is_anonymous(self._session['user'].get('id', None)):
-                    if request.args.get('return_url', None):
-                        self.redirect(request.args.get('return_url'))
-                    else:
-                        self.redirect(self.create_url('query', {}))
+        with plugins.runtime.AUTH as auth:
+            ans = {}
+            self._session['user'] = auth.validate_user(self._plugin_api,
+                                                       request.form['username'],
+                                                       request.form['password'])
+            if not auth.is_anonymous(self._session['user'].get('id', None)):
+                if request.args.get('return_url', None):
+                    self.redirect(request.args.get('return_url'))
                 else:
-                    self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
-                    self.add_system_message('error', _('Incorrect username or password'))
-                self.refresh_session_id()
-                return ans
+                    self.redirect(self.create_url('query', {}))
+            else:
+                self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
+                self.add_system_message('error', _('Incorrect username or password'))
+            self.refresh_session_id()
+            return ans
 
     @exposed(access_level=1, template='user/login.html', skip_corpus_init=True, page_model='login', http_method='POST')
     def logoutx(self, request):
@@ -161,9 +170,9 @@ class User(Kontext):
             return ans
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, corpname, archived_only):
-        if plugins.runtime.QUERY_STORAGE.exists:
-            with plugins.runtime.QUERY_STORAGE as qs:
-                rows = qs.get_user_queries(
+        if plugins.runtime.QUERY_HISTORY.exists:
+            with plugins.runtime.QUERY_HISTORY as qh:
+                rows = qh.get_user_queries(
                     self.session_get('user', 'id'),
                     self.cm,
                     offset=offset, limit=limit,

@@ -29,6 +29,7 @@ from strings import escape_attr_val
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as translate
 from functools import reduce
+from .errors import EmptyParallelCorporaIntersection, UnknownConcordanceAction, ConcordanceException
 
 
 def get_conc_labelmap(infopath):
@@ -61,10 +62,6 @@ def lngrp_sortstr(lab, separator='.'):
     return '|'.join([f[c] % s for c, s in lngrp_sortcrit(lab, separator)])
 
 
-class EmptyParallelCorporaIntersection(Exception):
-    pass
-
-
 class PyConc(manatee.Concordance):
     selected_grps: List[int] = []
 
@@ -94,10 +91,11 @@ class PyConc(manatee.Concordance):
                     self.pycorp._conc_dir, corp.corpname, params + '.conc')
                 manatee.Concordance.__init__(self, corp, self._conc_file)
             else:
-                raise RuntimeError(translate('Unknown concordance action: %s') % action)
+                raise UnknownConcordanceAction(translate('Unknown concordance action: %s') % action)
         except UnicodeEncodeError:
-            raise RuntimeError('Character encoding of this corpus ({0}) does not support one or more characters in the query.'
-                               .format(self.corpus_encoding))
+            raise ConcordanceException(
+                'Character encoding of this corpus ({0}) does not support one or more characters in the query.'
+                .format(self.corpus_encoding))
 
     def get_conc_file(self):
         return self._conc_file

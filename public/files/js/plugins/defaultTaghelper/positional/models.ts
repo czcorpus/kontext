@@ -20,14 +20,13 @@
 
 import { Observable, of as rxOf } from 'rxjs';
 import { List, pipe, HTTP, Dict } from 'cnc-tskit';
-import { StatelessModel, IActionDispatcher, StatefulModel, IFullActionControl } from 'kombo';
+import { StatefulModel, IFullActionControl } from 'kombo';
 
 import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
 import { Actions, ActionName } from '../actions';
 import { Actions as QueryActions,
     ActionName as QueryActionName } from '../../../models/query/actions';
-import { timestamp } from 'rxjs/operators';
 
 
 type RawTagValues = Array<Array<[string, string]>>;

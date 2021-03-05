@@ -37,6 +37,7 @@ import { Actions as HintActions,
 import { QueryType, TokenSuggestions } from '../../../models/query/query';
 import { init as queryStructureInit } from '../structure';
 import * as S from './style';
+import * as SC from '../style';
 
 
 export interface InputModuleViews {
@@ -52,7 +53,7 @@ export interface TRQueryInputFieldProps {
     corpname:string;
     lposValue:string;
     wPoSList:Array<{n:string; v:string}>;
-    queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
+    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
     tagHelperView:PluginInterfaces.TagHelper.View;
     widgets:Array<string>;
     inputLanguage:string;
@@ -171,9 +172,9 @@ export function init({
         htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
 
         return (
-            <section className={`AdvancedFormFieldset${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
+            <S.AdvancedFormFieldset className={`${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
                     role="group" aria-labelledby={props.uniqId}>
-                <h2 id={props.uniqId}>
+                <SC.ExpandableSectionLabel id={props.uniqId}>
                     <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
                         <a onClick={props.handleClick}>{props.title}</a>
                     {props.formVisible ? null : props.closedStateHint}
@@ -181,14 +182,14 @@ export function init({
                         null :
                         <AdvancedFormFieldsetDesc html={props.closedStateDesc} />
                     }
-                </h2>
+                </SC.ExpandableSectionLabel>
                 {props.formVisible ?
                     <div className="contents">
                         {props.children}
                     </div> :
                     null
                 }
-            </section>
+            </S.AdvancedFormFieldset>
         );
     };
 
@@ -247,13 +248,13 @@ export function init({
         };
 
         return (
-            <div className="TRQueryTypeField">
+            <S.TRQueryTypeField>
                 <label htmlFor={'query-switch-'+props.sourceId}><a>{he.translate('query__qt_advanced')}</a></label>
                 <layoutViews.ToggleSwitch
                     id={'query-switch-'+props.sourceId}
                     onChange={handleSelection}
                     checked={props.queryType === 'advanced'} />
-            </div>
+            </S.TRQueryTypeField>
         );
     };
 
@@ -298,13 +299,13 @@ export function init({
         };
 
         return (
-            <div className="TRIncludeEmptySelector">
+            <S.TRIncludeEmptySelector>
                 <label>
                     {he.translate('query__include_empty_aligned')}:{'\u00a0'}
                     <input type="checkbox" checked={props.value}
                         onChange={handleCheckbox} />
                 </label>
-            </div>
+            </S.TRIncludeEmptySelector>
         );
     };
 
@@ -324,7 +325,7 @@ export function init({
             <layoutViews.PopupBox
                     onCloseClick={props.closeClickHandler}
                     customClass="tag-builder-widget"
-                    customStyle={{position: 'absolute', left: '0.3em', top: '2.2em'}}
+                    customStyle={{position: 'absolute', left: '-1em', top: '-4em'}}
                     takeFocus={true}>
                 <props.tagHelperView
                         sourceId={props.sourceId}
@@ -407,34 +408,36 @@ export function init({
                 <layoutViews.PopupBox
                         onCloseClick={this.props.closeClickHandler}
                         customStyle={{position: 'absolute', left: '0.3em', top: '2.2em'}}>
-                    <div onKeyDown={this._handleKeyDown}>
-                        <h3>{he.translate('query__create_within')}</h3>
-                        {this.props.isBusy ?
-                            <layoutViews.AjaxLoaderImage /> :
-                            <>
-                                <div className="within-widget">
-                                    <select onChange={this._handleAttrChange} value={this.props.currAttrIdx}>
-                                        {List.map(
-                                            ([struct, attr], i) => (
-                                                <option key={`${struct}-${attr}`} value={i}>{WithinBuilderModel.ithValue(this.props, i)}</option>
-                                            ),
-                                            this.props.data
-                                        )}
-                                    </select>
-                                    {'\u00a0'}={'\u00a0'}
-                                    <input type="text" value={this.props.query} onChange={this._handleInputChange}
-                                            ref={item => item ? item.focus() : null} />
-                                    {'\u00a0'}
-                                </div>
-                                <p>
-                                    <button type="button" className="util-button"
-                                            onClick={this._handleInsert}>
-                                        {he.translate('query__insert_within')}
-                                    </button>
-                                </p>
-                            </>
-                        }
-                    </div>
+                    <S.WithinWidget>
+                        <div onKeyDown={this._handleKeyDown}>
+                            <h3>{he.translate('query__create_within')}</h3>
+                            {this.props.isBusy ?
+                                <layoutViews.AjaxLoaderImage /> :
+                                <>
+                                    <div className="within-widget">
+                                        <select onChange={this._handleAttrChange} value={this.props.currAttrIdx}>
+                                            {List.map(
+                                                ([struct, attr], i) => (
+                                                    <option key={`${struct}-${attr}`} value={i}>{WithinBuilderModel.ithValue(this.props, i)}</option>
+                                                ),
+                                                this.props.data
+                                            )}
+                                        </select>
+                                        {'\u00a0'}={'\u00a0'}
+                                        <input type="text" value={this.props.query} onChange={this._handleInputChange}
+                                                ref={item => item ? item.focus() : null} />
+                                        {'\u00a0'}
+                                    </div>
+                                    <p>
+                                        <button type="button" className="util-button"
+                                                onClick={this._handleInsert}>
+                                            {he.translate('query__insert_within')}
+                                        </button>
+                                    </p>
+                                </>
+                            }
+                        </div>
+                    </S.WithinWidget>
                 </layoutViews.PopupBox>
             );
         }
@@ -448,12 +451,12 @@ export function init({
         sourceId:string;
         formType:QueryFormType;
         onCloseTrigger:()=>void;
-        queryStorageView:PluginInterfaces.QueryStorage.WidgetView;
+        queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
 
     }> = (props) => {
         return (
             <div className="history-widget">
-                <props.queryStorageView
+                <props.queryHistoryView
                         sourceId={props.sourceId}
                         onCloseTrigger={props.onCloseTrigger}
                         formType={props.formType} />
@@ -669,7 +672,7 @@ export function init({
 
         render() {
             return (
-                <div className="query-toolbox">
+                <S.QueryToolbox>
                     {this._renderWidget()}
                     <ul>
                         <li>
@@ -687,7 +690,7 @@ export function init({
                             null
                         }
                     </ul>
-                </div>
+                </S.QueryToolbox>
             );
         }
     }
@@ -1018,6 +1021,7 @@ export function init({
         _renderInputOptions() {
             const customOpts = this.props.customOptions || [];
             const query = this.props.queries[this.props.sourceId];
+
             switch (query.qtype) {
                 case 'simple':
                     return (
@@ -1112,7 +1116,7 @@ export function init({
 
             return (
                 <div>
-                    <div className="query-area">
+                    <S.QueryArea>
                         <BoundQueryToolbox
                             widgets={this.props.widgets}
                             tagHelperView={this.props.tagHelperView}
@@ -1126,7 +1130,7 @@ export function init({
                         <div style={{position: 'relative'}}>
                             {this.props.historyVisible[this.props.sourceId] ?
                                 <HistoryWidget
-                                        queryStorageView={this.props.queryStorageView}
+                                        queryHistoryView={this.props.queryHistoryView}
                                         sourceId={this.props.sourceId}
                                         onCloseTrigger={this._toggleHistoryWidget}
                                         formType={this.props.formType}/>
@@ -1144,7 +1148,7 @@ export function init({
                             }
                         </div>
                         <BoundQueryHints queryType={queryObj.qtype} />
-                    </div>
+                    </S.QueryArea>
                     <AdvancedFormFieldset
                             uniqId="query-options-section"
                             formVisible={this.props.queryOptionsVisible[this.props.sourceId]}
@@ -1166,9 +1170,9 @@ export function init({
 
     return {
         TRQueryInputField: BoundTRQueryInputField,
-        TRPcqPosNegField: TRPcqPosNegField,
-        TRIncludeEmptySelector: TRIncludeEmptySelector,
-        AdvancedFormFieldset: AdvancedFormFieldset
+        TRPcqPosNegField,
+        TRIncludeEmptySelector,
+        AdvancedFormFieldset
     };
 
 }

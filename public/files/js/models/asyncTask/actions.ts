@@ -27,7 +27,8 @@ export enum ActionName {
     InboxToggleRemoveFinishedOnSubmit = 'INBOX_TOGGLE_REMOVE_FINISHED_ON_SUBMIT',
     InboxCloseTaskOverview = 'INBOX_CLOSE_TASK_OVERVIEW',
     InboxAddAsyncTask = 'INBOX_ADD_ASYNC_TASK',
-    InboxUpdateAsyncTask = 'INBOX_UPDATE_ASYNC_TASK'
+    InboxUpdateAsyncTask = 'INBOX_UPDATE_ASYNC_TASK',
+    AsyncTasksChecked = 'ASYNC_TASKS_CHECKED'
 }
 
 export namespace Actions {
@@ -51,10 +52,18 @@ export namespace Actions {
         ident:string;
         label:string;
         category:string;
+        status?:Kontext.AsyncTaskStatus;
+        created?:number;
+        args?:unknown;
+        error?:string;
     }> {
         name: ActionName.InboxAddAsyncTask;
     }
 
+    /**
+     * Update externally a task. This can be used to unify some
+     * async operation with the ones handled naturally by the AsyncTaskModel
+     */
     export interface InboxUpdateAsyncTask extends Action<{
         ident:string;
         status:Kontext.AsyncTaskInfo['status'];
@@ -62,5 +71,11 @@ export namespace Actions {
         name: ActionName.InboxUpdateAsyncTask;
     }
 
+
+    export interface AsyncTasksChecked extends Action<{
+        tasks:Array<Kontext.AsyncTaskInfo<unknown>>;
+    }> {
+        name: ActionName.AsyncTasksChecked
+    }
 
 }

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatefulModel} from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError, of as rxOf } from 'rxjs';
 import { tap, concatMap } from 'rxjs/operators';
 
@@ -26,7 +26,6 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
-import { AsyncTaskStatus } from '../asyncTask';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
 
@@ -480,12 +479,12 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
     private importProcessed(data:Array<Kontext.AsyncTaskInfo>):Array<UnfinishedSubcorp> {
         return pipe(
             data,
-            List.filter(v => v.status !== AsyncTaskStatus.SUCCESS),
+            List.filter(v => v.status !== 'SUCCESS'),
             List.map(item => ({
                 ident: item.ident,
                 name: item.label,
                 created: new Date(item.created * 1000),
-                failed: item.status === AsyncTaskStatus.FAILURE
+                failed: item.status === 'FAILURE'
             }))
         )
     }

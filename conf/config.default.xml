@@ -99,11 +99,11 @@
             <module>default_conc_cache</module>
             <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
         </conc_cache>
-        <conc_persistence>
-            <module>default_conc_persistence</module>
+        <query_persistence>
+            <module>default_query_persistence</module>
             <ttl_days extension-by="default">100</ttl_days>
             <archive_dir extension-by="default">/var/local/corpora/conc_persistence</archive_dir>
-        </conc_persistence>
+        </query_persistence>
         <corparch>
             <module>default_corparch</module>
             <js_module>defaultCorparch</js_module>
@@ -145,12 +145,12 @@
             <module>default_menu_items</module>
             <data_path extension-by="default">/opt/kontext/conf/main-menu.sample.json</data_path>
         </menu_items>
-        <query_storage>
-            <module>default_query_storage</module>
-            <js_module>defaultQueryStorage</js_module>
+        <query_history>
+            <module>default_query_history</module>
+            <js_module>defaultQueryHistory</js_module>
             <page_num_records>10</page_num_records>
             <ttl_days extension-by="default">10</ttl_days>
-        </query_storage>
+        </query_history>
         <query_suggest />
         <settings_storage>
             <module>default_settings_storage</module>

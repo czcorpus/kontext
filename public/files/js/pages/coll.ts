@@ -38,12 +38,8 @@ import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
-import { ActionName, Actions } from '../models/coll/actions';
+import { ActionName } from '../models/coll/actions';
 
-
-declare var require:any;
-// weback - ensure an individual style (even empty one) is created for the page
-require('styles/coll.less');
 
 /**
  *
@@ -258,7 +254,7 @@ export class CollPage {
                     formType: Kontext.ConcFormTypes.QUERY,
                     allowCorpusSelection: false,
                     tagHelperViews: {},
-                    queryStorageView: null,
+                    queryHistoryView: null,
                     LiveAttrsView: null,
                     LiveAttrsCustomTT: null
                 },
@@ -267,7 +263,7 @@ export class CollPage {
                     filterId: null,
                     corpname: this.layoutModel.getCorpusIdent().id,
                     tagHelperView: null,
-                    queryStorageView: null
+                    queryHistoryView: null
                 },
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,

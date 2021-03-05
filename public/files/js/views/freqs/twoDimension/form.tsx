@@ -26,6 +26,8 @@ import { FreqFilterQuantities, Dimensions, isStructAttr } from '../../../models/
 import { Freq2DFormModel, Freq2DFormModelState } from '../../../models/freqs/twoDimension/form';
 import { Actions, ActionName } from '../../../models/freqs/actions';
 
+import * as S from './style';
+
 
 
 interface ExportedComponents {
@@ -198,7 +200,7 @@ export function init(
 
         render() {
             return (
-                <div className="CTFreqForm">
+                <S.CTFreqForm>
                     <div className="toolbar">
                             <CTFreqFormMinFreqInput value={this.props.minFreq} freqType={this.props.minFreqType}
                                     hint={this.props.minFreqHint} />
@@ -256,7 +258,7 @@ export function init(
                         </tbody>
                     </table>
                     {this._renderWarning()}
-                </div>
+                </S.CTFreqForm>
             );
         }
     }

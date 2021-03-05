@@ -245,9 +245,9 @@ export namespace PluginInterfaces {
     }
 
     // ------------------------------------------------------------------------
-    // ------------------------ [query_storage] plug-in -----------------------
+    // ------------------------ [query_history] plug-in -----------------------
 
-    export namespace QueryStorage {
+    export namespace QueryHistory {
 
         export interface WidgetProps {
             sourceId:string;

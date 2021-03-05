@@ -22,7 +22,7 @@ from secure_cookie.session import Session
 from .abstract.general_storage import KeyValueStorage
 from .abstract.integration_db import IntegrationDatabase
 from .abstract.settings_storage import AbstractSettingsStorage
-from .abstract.conc_persistence import AbstractConcPersistence
+from .abstract.query_persistence import AbstractQueryPersistence
 from .abstract.conc_cache import AbstractCacheMappingFactory
 from .export import Loader
 from .export_freq2d import Loader as LoaderFreq2d
@@ -30,7 +30,7 @@ from .abstract.user_items import AbstractUserItems
 from .abstract.menu_items import AbstractMenuItems
 from .abstract.getlang import AbstractGetLang
 from .abstract.corpora import AbstractCorporaArchive
-from .abstract.query_storage import AbstractQueryStorage
+from .abstract.query_history import AbstractQueryHistory
 from .abstract.appbar import AbstractApplicationBar
 from .abstract.footer_bar import AbstractFootbar
 from .abstract.live_attributes import AbstractLiveAttributes
@@ -141,7 +141,7 @@ class _Names(object):
     SESSIONS: _ID[Session] = _ID('sessions')
     SETTINGS_STORAGE: _ID[AbstractSettingsStorage] = _ID('settings_storage')
     AUTH: _ID['AbstractAuth'] = _ID('auth')
-    CONC_PERSISTENCE: _ID[AbstractConcPersistence] = _ID('conc_persistence')
+    QUERY_PERSISTENCE: _ID[AbstractQueryPersistence] = _ID('query_persistence')
     CONC_CACHE: _ID[AbstractCacheMappingFactory] = _ID('conc_cache')
     EXPORT: _ID[Loader] = _ID('export')
     EXPORT_FREQ2D: _ID[LoaderFreq2d] = _ID('export_freq2d')
@@ -150,7 +150,7 @@ class _Names(object):
 
     GETLANG: _ID[AbstractGetLang] = _ID('getlang', optional=True)
     CORPARCH: _ID[AbstractCorporaArchive] = _ID('corparch')
-    QUERY_STORAGE: _ID[AbstractQueryStorage] = _ID('query_storage', optional=True)
+    QUERY_HISTORY: _ID[AbstractQueryHistory] = _ID('query_history', optional=True)
     APPLICATION_BAR: _ID[AbstractApplicationBar] = _ID('application_bar', optional=True)
     FOOTER_BAR: _ID[AbstractFootbar] = _ID('footer_bar', optional=True)
     LIVE_ATTRIBUTES: _ID[AbstractLiveAttributes] = _ID('live_attributes', optional=True)
@@ -168,8 +168,8 @@ class _Names(object):
 
     def __iter__(self) -> Iterator[_ID]:
         return iter([self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
-                     self.CONC_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
-                     self.MENU_ITEMS, self.GETLANG, self.CORPARCH, self.QUERY_STORAGE, self.APPLICATION_BAR,
+                     self.QUERY_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
+                     self.MENU_ITEMS, self.GETLANG, self.CORPARCH, self.QUERY_HISTORY, self.APPLICATION_BAR,
                      self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER,
                      self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
                      self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])

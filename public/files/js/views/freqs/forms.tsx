@@ -28,6 +28,8 @@ import { Actions, ActionName } from '../../models/freqs/actions';
 import { init as ctFreqFormFactory } from './twoDimension/form';
 import { Freq2DFormModel } from '../../models/freqs/twoDimension/form';
 
+import * as S from './style';
+
 // -------------------------- exported component ----------
 
 interface FrequencyFormProps {
@@ -98,7 +100,7 @@ export function init(
             ];
 
             return (
-                <div className="FrequencyForm">
+                <S.FrequencyForm>
                     <form className="freq-form">
                         <layoutViews.TabView
                             className="FreqFormSelector"
@@ -117,7 +119,7 @@ export function init(
                             </button>
                         </div>
                     </form>
-                </div>
+                </S.FrequencyForm>
             );
         }
     }

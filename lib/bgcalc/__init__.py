@@ -24,7 +24,7 @@ def _init_backend_app(conf, fn_prefix):
     app_type = conf.get('calc_backend', 'type')
     app_conf = conf.get('calc_backend', 'conf')
     if app_type == 'celery':
-        from bgcalc.celery import Config, CeleryClient
+        from bgcalc.adapter.celery import Config, CeleryClient
         import celery
 
         if app_conf:
@@ -41,7 +41,7 @@ def _init_backend_app(conf, fn_prefix):
         app.config_from_object(cconf)
         return CeleryClient(app)
     elif app_type == 'rq':
-        from bgcalc.rq import RqClient, RqConfig
+        from bgcalc.adapter.rq import RqClient, RqConfig
         rqconf = RqConfig()
         rqconf.HOST = conf.get('calc_backend', 'rq_redis_host')
         rqconf.PORT = conf.get('calc_backend', 'rq_redis_port')

@@ -20,9 +20,6 @@ import { Kontext } from '../types/common';
 import { KontextPage } from '../app/main';
 import corparch from 'plugins/corparch/init';
 
-declare var require:any;
- // weback - ensure a style (even empty one) is created for the page
-require('styles/corplist.less');
 
 /**
  * Initializes a corplist.tmpl page model.
@@ -40,7 +37,7 @@ export function init(conf:Kontext.Conf, corplistData:any):void {
 
         layoutModel.renderReactComponent(
             pagePlugin.getList(),
-            document.getElementById('corplist'),
+            document.getElementById('corplist-mount-point'),
             {
                 anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
             }

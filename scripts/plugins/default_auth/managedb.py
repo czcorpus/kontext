@@ -11,7 +11,7 @@ from plugins import redis_db
 plugins.install_plugin('db', redis_db, autoconf.settings)
 
 from plugins import default_query_storage
-plugins.install_plugin('query_storage', default_query_storage, autoconf.settings)
+plugins.install_plugin('query_history', default_query_history, autoconf.settings)
 
 if __name__ == '__main__':
     import argparse
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         src_data = [x for x in src_data if x.get('id', None) == args.specific_id]
 
     if len(src_data) > 0:
-        query_storage = plugins.runtime.QUERY_STORAGE.instance
+        query_history = plugins.runtime.QUERY_HISTORY.instance
         db = plugins.runtime.DB.instance
 
         for item in src_data:

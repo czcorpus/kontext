@@ -114,16 +114,16 @@ export enum ActionName {
     GetConcArchivedStatusDone = 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
     MakeConcordancePermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
     MakeConcordancePermanentDone = 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
-    StorageSetQueryType = 'QUERY_STORAGE_SET_QUERY_TYPE',
-    StorageSetCurrentCorpusOnly = 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY',
-    StorageSetArchivedOnly = 'QUERY_STORAGE_SET_ARCHIVED_ONLY',
-    StorageSetEditingQueryId = 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
-    StorageDoNotArchive = 'QUERY_STORAGE_DO_NOT_ARCHIVE',
-    StorageEditorSetName = 'QUERY_STORAGE_EDITOR_SET_NAME',
-    StorageEditorClickSave = 'QUERY_STORAGE_EDITOR_CLICK_SAVE',
-    StorageClearEditingQueryID = 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID',
-    StorageOpenQueryForm = 'QUERY_STORAGE_OPEN_QUERY_FORM',
-    StorageLoadMore = 'QUERY_STORAGE_LOAD_MORE',
+    HistorySetQueryType = 'QUERY_HISTORY_SET_QUERY_TYPE',
+    HistorySetCurrentCorpusOnly = 'QUERY_HISTORY_SET_CURRENT_CORPUS_ONLY',
+    HistorySetArchivedOnly = 'QUERY_HISTORY_SET_ARCHIVED_ONLY',
+    HistorySetEditingQueryId = 'QUERY_HISTORY_SET_EDITING_QUERY_ID',
+    HistoryDoNotArchive = 'QUERY_HISTORY_DO_NOT_ARCHIVE',
+    HistoryEditorSetName = 'QUERY_HISTORY_EDITOR_SET_NAME',
+    HistoryEditorClickSave = 'QUERY_HISTORY_EDITOR_CLICK_SAVE',
+    HistoryClearEditingQueryID = 'QUERY_HISTORY_CLEAR_EDITING_QUERY_ID',
+    HistoryOpenQueryForm = 'QUERY_HISTORY_OPEN_QUERY_FORM',
+    HistoryLoadMore = 'QUERY_HISTORY_LOAD_MORE',
     QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN'
 }
 
@@ -714,61 +714,61 @@ export namespace Actions {
         name:ActionName.MakeConcordancePermanentDone
     }
 
-    export interface StorageSetQueryType extends Action<{
+    export interface HistorySetQueryType extends Action<{
         value:string;
     }> {
-        name:ActionName.StorageSetQueryType;
+        name:ActionName.HistorySetQueryType;
     }
 
-    export interface StorageSetCurrentCorpusOnly extends Action<{
+    export interface HistorySetCurrentCorpusOnly extends Action<{
         value:boolean;
     }> {
-        name:ActionName.StorageSetCurrentCorpusOnly;
+        name:ActionName.HistorySetCurrentCorpusOnly;
     }
 
-    export interface StorageSetArchivedOnly extends Action<{
+    export interface HistorySetArchivedOnly extends Action<{
         value:boolean;
     }> {
-        name:ActionName.StorageSetArchivedOnly;
+        name:ActionName.HistorySetArchivedOnly;
     }
 
-    export interface StorageSetEditingQueryId extends Action<{
+    export interface HistorySetEditingQueryId extends Action<{
         value:string;
     }> {
-        name:ActionName.StorageSetEditingQueryId;
+        name:ActionName.HistorySetEditingQueryId;
     }
 
-    export interface StorageDoNotArchive extends Action<{
+    export interface HistoryDoNotArchive extends Action<{
         queryId:string;
     }> {
-        name:ActionName.StorageDoNotArchive;
+        name:ActionName.HistoryDoNotArchive;
     }
 
-    export interface StorageEditorSetName extends Action<{
+    export interface HistoryEditorSetName extends Action<{
         value:string;
     }> {
-        name:ActionName.StorageEditorSetName;
+        name:ActionName.HistoryEditorSetName;
     }
 
-    export interface StorageEditorClickSave extends Action<{
+    export interface HistoryEditorClickSave extends Action<{
     }> {
-        name:ActionName.StorageEditorClickSave;
+        name:ActionName.HistoryEditorClickSave;
     }
 
-    export interface StorageClearEditingQueryID extends Action<{
+    export interface HistoryClearEditingQueryID extends Action<{
     }> {
-        name:ActionName.StorageClearEditingQueryID;
+        name:ActionName.HistoryClearEditingQueryID;
     }
 
-    export interface StorageOpenQueryForm extends Action<{
+    export interface HistoryOpenQueryForm extends Action<{
         idx:number;
     }> {
-        name:ActionName.StorageOpenQueryForm;
+        name:ActionName.HistoryOpenQueryForm;
     }
 
-    export interface StorageLoadMore extends Action<{
+    export interface HistoryLoadMore extends Action<{
     }> {
-        name:ActionName.StorageLoadMore;
+        name:ActionName.HistoryLoadMore;
     }
 
     /**

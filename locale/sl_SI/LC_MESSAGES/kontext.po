@@ -1,0 +1,657 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-04-04 12:38+0200\n"
+"PO-Revision-Date: 2017-12-14 17:15+0100\n"
+"Last-Translator: Tomaž Erjavec <tomaz.erjavec@ijs.si>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.7\n"
+
+#: lib/plugins/ucnk_auth.py:69
+msgid "anonymous"
+msgstr "anonimni"
+
+#: lib/conclib.py:1374
+msgid "enabled"
+msgstr "omogočeno"
+
+#: lib/conclib.py:1448 lib/actions.py:325
+msgid "Token number"
+msgstr "Številka pojavnice"
+
+#: lib/CGIPublisher.py:491 lib/CGIPublisher.py:549
+msgid ""
+"Failed to process your request. Please try again later or contact system "
+"support."
+msgstr ""
+"Zahteve ni bilo mogoče procesirati. Poskusite kasneje ali stopite v stik s "
+"tehnično podporo."
+
+#: lib/corplib.py:75
+#, python-format
+msgid "Subcorpus \"%s\" not found"
+msgstr "Podkorpus \"%s\" ni bil najden"
+
+#: lib/actions.py:41 lib/actions.py:48
+msgid "This function is disabled."
+msgstr "Ta funkcija je onemogočena."
+
+#: lib/actions.py:58
+msgid "New password and its confirmation do not match."
+msgstr "Gesli se ne ujemata."
+
+#: lib/actions.py:84
+msgid "Incorrect username or password"
+msgstr "Neveljavno uporabniško ime ali geslo."
+
+#: lib/actions.py:182 cmpltmpl/wordlist.py:311 cmpltmpl/document.py:2213
+#: cmpltmpl/document.py:2325 cmpltmpl/document.py:2355
+msgid "Custom"
+msgstr "Po meri"
+
+#: lib/actions.py:333
+msgid "Document number"
+msgstr "Številka dokumenta"
+
+#: lib/actions.py:352
+#, python-format
+msgid ""
+"Value [%s] cannot be used as a context width. Please use numbers 0,1,2,..."
+msgstr ""
+"Vrednost [%s] ne more biti uporabljena za širino konteksta. Prosimo, "
+"uporabite številke 0, 1, 2 ..."
+
+#: lib/actions.py:475 lib/actions.py:776
+msgid "No query entered."
+msgstr "Poizvedba ni bila vnesena."
+
+#: lib/actions.py:519
+msgid "Undefined lemma PoS"
+msgstr "Neznana besedna vrsta leme"
+
+#: lib/actions.py:528 lib/actions.py:547
+msgid "Undefined word form PoS"
+msgstr "Neznana besedna vrsta besede"
+
+#: lib/actions.py:551
+msgid "No char entered"
+msgstr "Noben znak ni bil vnesen"
+
+#: lib/actions.py:765
+msgid "Select Positive or Negative filter type"
+msgstr "Izberite pozitivni ali negativni filter"
+
+#: lib/actions.py:874
+msgid "Empty list"
+msgstr "Prazen seznam"
+
+#: lib/actions.py:1054
+msgid "No text type selected"
+msgstr "Vrsta besedila ni bila izbrana"
+
+#: lib/actions.py:1403
+#, fuzzy
+msgid "Text types are limited to Simple output"
+msgstr "Vrste besedil so omejene na enostaven prikaz"
+
+#: lib/actions.py:1542
+msgid "No output attribute specified"
+msgstr "Izhodni atribut ni bil izbran"
+
+#: lib/actions.py:1693
+msgid "Document counts"
+msgstr "Število dokumentov"
+
+#: lib/actions.py:1694
+msgid "Tokens"
+msgstr "Pojavnice"
+
+#: lib/actions.py:1702
+msgid "Word counts"
+msgstr "Število besed"
+
+#: lib/actions.py:1811
+msgid "No subcorpus name specified!"
+msgstr "Ime podkorpusa ni določeno!"
+
+#: lib/actions.py:1841
+msgid "Nothing specified!"
+msgstr "Nič ni določeno!"
+
+#: lib/actions.py:1850
+msgid "Empty subcorpus!"
+msgstr "Prazen podkorpus!"
+
+#: lib/actions.py:2016
+msgid "Invalid data"
+msgstr "Neveljavni podatki"
+
+#: lib/actions.py:2033
+msgid "Unknown export data type"
+msgstr "Neznan izvozni format"
+
+#: lib/actions.py:2089
+msgid "Failed to load"
+msgstr "Napaka pri nalaganju"
+
+#: lib/actions.py:2119
+#, python-format
+msgid "Corpus %s is not supported by this widget."
+msgstr "Ta gradnik (widget) ne podpira korpusa %s."
+
+#: lib/taghelper.py:111
+msgid "no description"
+msgstr "ni opisa"
+
+#: lib/conccgi.py:378 cmpltmpl/document.py:535
+msgid "whole corpus"
+msgstr "celotnega korpusa"
+
+#: cmpltmpl/subcorp.py:246 cmpltmpl/first_form.py:407
+#: cmpltmpl/first_form.py:553
+msgid "tokens"
+msgstr "pojavnic"
+
+#: cmpltmpl/subcorp_form.py:191
+msgid "New subcorpus"
+msgstr "Nov podkorpus"
+
+#: cmpltmpl/filter_form.py:126 cmpltmpl/filter_form.py:341
+#: cmpltmpl/document.py:2307
+msgid "Text Types"
+msgstr "Vrste besedil"
+
+#: cmpltmpl/filter_form.py:231 cmpltmpl/document.py:2176
+#: cmpltmpl/lngroupinfo.py:205 cmpltmpl/stats.py:192
+msgid "Filter"
+msgstr "Filter"
+
+#: cmpltmpl/filter_form.py:242
+msgid "positive"
+msgstr "pozitivni"
+
+#: cmpltmpl/filter_form.py:253
+msgid "negative"
+msgstr "negativni"
+
+#: cmpltmpl/user_password_form.py:159
+msgid ""
+"After a successful password update, you will be logged out and prompted to "
+"enter your new credentials."
+msgstr ""
+"Po uspešni posodobitvi gesla boste odjavljeni in pozvani k prijavi s svojim "
+"novim geslom."
+
+#: cmpltmpl/user_password_form.py:165 cmpltmpl/wordlist.py:224
+#: cmpltmpl/collx.py:180 cmpltmpl/freqs.py:156 cmpltmpl/document.py:1991
+#: cmpltmpl/view.py:208
+msgid "Save"
+msgstr "Shrani"
+
+#: cmpltmpl/wordlist.py:88 cmpltmpl/wordlist.py:520
+#: cmpltmpl/wordlist_form.py:227
+msgid "Word list"
+msgstr "Seznam besed"
+
+#: cmpltmpl/login.py:121
+msgid "username"
+msgstr "uporabniško ime"
+
+#: cmpltmpl/login.py:127
+msgid "password"
+msgstr "geslo"
+
+#: cmpltmpl/first_form.py:227 cmpltmpl/document.py:1855
+msgid "User"
+msgstr "Uporabnik"
+
+#: cmpltmpl/first_form.py:269
+msgid "Search in the corpus"
+msgstr "Išči v korpusu"
+
+#: cmpltmpl/collx.py:88 cmpltmpl/document.py:2342
+msgid "Collocations"
+msgstr "Kolokacije"
+
+#: cmpltmpl/collx.py:381 cmpltmpl/document.py:2337 cmpltmpl/coll.py:152
+msgid "Collocation candidates"
+msgstr "Kolokacijski kandidati"
+
+#: cmpltmpl/freqs.py:89 cmpltmpl/freqs.py:343
+msgid "Frequency list"
+msgstr "Frekvenčni seznam"
+
+#: cmpltmpl/subcorp_list.py:89
+msgid "List of my subcorpora"
+msgstr "Seznam mojih podkorpusov"
+
+#: cmpltmpl/subcorp_list.py:150 cmpltmpl/document.py:1979
+msgid "My subcorpora"
+msgstr ""
+
+msgid "Last name not valid"
+msgstr "Last name not valid UNTRANSLATED"
+
+msgid "General view options"
+msgstr "General view options UNTRANSLATED"
+
+msgid "The application is under maintenance. Sorry for inconvenience."
+msgstr ""
+"The application is under maintenance. Sorry for inconvenience. UNTRANSLATED"
+
+msgid "Shuffle"
+msgstr "Shuffle UNTRANSLATED"
+
+msgid "Failed to sign up user"
+msgstr "Failed to sign up user UNTRANSLATED"
+
+msgid ""
+"To verify your new account {username} (full name: {firstname} {lastname}) "
+"please click the link below"
+msgstr ""
+"To verify your new account {username} (full name: {firstname} {lastname}) "
+"please click the link below UNTRANSLATED"
+
+msgid "First hits in documents"
+msgstr "First hits in documents UNTRANSLATED"
+
+msgid ""
+"Please note that KonText is not compatible with Microsoft Internet Explorer "
+"browser which has been discontinued by Microsoft in favour of the Edge "
+"browser in 2015."
+msgstr ""
+"Please note that KonText is not compatible with Microsoft Internet Explorer "
+"browser which has been discontinued by Microsoft in favour of the Edge "
+"browser in 2015. UNTRANSLATED"
+
+msgid "version"
+msgstr "version UNTRANSLATED"
+
+msgid "Attribute not found."
+msgstr "Attribute not found. UNTRANSLATED"
+
+msgid "Switch KWIC"
+msgstr "Switch KWIC UNTRANSLATED"
+
+msgid "Query"
+msgstr "Query UNTRANSLATED"
+
+msgid "thank you for using KonText at {url}."
+msgstr "thank you for using KonText at {url}. UNTRANSLATED"
+
+msgid "Application outage"
+msgstr "Application outage UNTRANSLATED"
+
+msgid "No access to corpus {0}"
+msgstr "No access to corpus {0} UNTRANSLATED"
+
+msgid "Query overview"
+msgstr "Query overview UNTRANSLATED"
+
+msgid "%s Please make sure the query and selected query type are correct."
+msgstr ""
+"%s Please make sure the query and selected query type are correct. "
+"UNTRANSLATED"
+
+msgid "Recent queries"
+msgstr "Recent queries UNTRANSLATED"
+
+msgid "Positive filter (excluding KWIC)"
+msgstr "Positive filter (excluding KWIC) UNTRANSLATED"
+
+msgid "Subcorpus already exists"
+msgstr "Subcorpus already exists UNTRANSLATED"
+
+msgid "Invalid or expired query"
+msgstr "Invalid or expired query UNTRANSLATED"
+
+msgid "Two-attribute interrelationship"
+msgstr "Two-attribute interrelationship UNTRANSLATED"
+
+msgid "Query failed: Syntax error at position %s."
+msgstr "Query failed: Syntax error at position %s. UNTRANSLATED"
+
+msgid "Username not available"
+msgstr "Username not available UNTRANSLATED"
+
+msgid "Positive filter"
+msgstr "Positive filter UNTRANSLATED"
+
+msgid "Permanent link"
+msgstr "Permanent link UNTRANSLATED"
+
+msgid "Sorting"
+msgstr "Sorting UNTRANSLATED"
+
+msgid "Corpus-specific settings"
+msgstr "Corpus-specific settings UNTRANSLATED"
+
+msgid "Negative filter (excluding KWIC)"
+msgstr "Negative filter (excluding KWIC) UNTRANSLATED"
+
+msgid "confirmed"
+msgstr "confirmed UNTRANSLATED"
+
+msgid "Failed to open corpus {0}"
+msgstr "Failed to open corpus {0} UNTRANSLATED"
+
+msgid "Verification key confirmation"
+msgstr "Verification key confirmation UNTRANSLATED"
+
+msgid "Subcorpus created but there was a problem saving a backup copy."
+msgstr ""
+"Subcorpus created but there was a problem saving a backup copy. UNTRANSLATED"
+
+msgid ""
+"Missing display configuration of structural attributes (SUBCORPATTRS or "
+"FULLREF)."
+msgstr ""
+"Missing display configuration of structural attributes (SUBCORPATTRS or "
+"FULLREF). UNTRANSLATED"
+
+msgid "Login options"
+msgstr "Login options UNTRANSLATED"
+
+msgid "logDice"
+msgstr "logDice UNTRANSLATED"
+
+msgid "Cannot change status of a concordance belonging to another user"
+msgstr ""
+"Cannot change status of a concordance belonging to another user UNTRANSLATED"
+
+msgid "Undo"
+msgstr "Undo UNTRANSLATED"
+
+msgid "Remove nested matches"
+msgstr "Remove nested matches UNTRANSLATED"
+
+msgid "Word List"
+msgstr "Word List UNTRANSLATED"
+
+msgid "Negative filter"
+msgstr "Negative filter UNTRANSLATED"
+
+msgid "translation not available"
+msgstr "translation not available UNTRANSLATED"
+
+msgid "User profile"
+msgstr "User profile UNTRANSLATED"
+
+msgid "Password not valid"
+msgstr "Password not valid UNTRANSLATED"
+
+msgid ""
+"Cannot calculate yet - source concordance not finished. Please try again "
+"later."
+msgstr ""
+"Cannot calculate yet - source concordance not finished. Please try again "
+"later. UNTRANSLATED"
+
+msgid "No corpus selected"
+msgstr "No corpus selected UNTRANSLATED"
+
+msgid "frequency distribution"
+msgstr "frequency distribution UNTRANSLATED"
+
+msgid "Help"
+msgstr "Help UNTRANSLATED"
+
+msgid "Attribute \"%s\" not found."
+msgstr "Attribute \"%s\" not found. UNTRANSLATED"
+
+msgid "MI"
+msgstr "MI UNTRANSLATED"
+
+msgid "Current concordance"
+msgstr "Current concordance UNTRANSLATED"
+
+msgid "Word List Form"
+msgstr "Word List Form UNTRANSLATED"
+
+msgid "logout"
+msgstr "logout UNTRANSLATED"
+
+msgid "Invalid page number"
+msgstr "Invalid page number UNTRANSLATED"
+
+msgid "T-score"
+msgstr "T-score UNTRANSLATED"
+
+msgid "Username not valid"
+msgstr "Username not valid UNTRANSLATED"
+
+msgid "Sign in"
+msgstr "Sign in UNTRANSLATED"
+
+msgid "Invalid user or password"
+msgstr "Invalid user or password UNTRANSLATED"
+
+msgid "MI.log_f"
+msgstr "MI.log_f UNTRANSLATED"
+
+msgid "Query failed: Syntax error."
+msgstr "Query failed: Syntax error. UNTRANSLATED"
+
+msgid "Syntax error. Please check the query and its type."
+msgstr "Syntax error. Please check the query and its type. UNTRANSLATED"
+
+msgid "No alignment available for the selected languages"
+msgstr "No alignment available for the selected languages UNTRANSLATED"
+
+msgid "Concordance query"
+msgstr "Concordance query UNTRANSLATED"
+
+msgid "pre-installed on Windows 10"
+msgstr "pre-installed on Windows 10 UNTRANSLATED"
+
+msgid "min. sensitivity"
+msgstr "min. sensitivity UNTRANSLATED"
+
+msgid "Doc IDs"
+msgstr "Doc IDs UNTRANSLATED"
+
+msgid "pre-installed on Apple macOS"
+msgstr "pre-installed on Apple macOS UNTRANSLATED"
+
+msgid "Node forms"
+msgstr "Node forms UNTRANSLATED"
+
+msgid "new subcorpora in your library: %s"
+msgstr "new subcorpora in your library: %s UNTRANSLATED"
+
+msgid "Public subcorpora"
+msgstr "Public subcorpora UNTRANSLATED"
+
+msgid "The confirmation link will expire on %m/%d/%Y at %H:%M"
+msgstr "The confirmation link will expire on %m/%d/%Y at %H:%M UNTRANSLATED"
+
+msgid "Corpora"
+msgstr "Corpora UNTRANSLATED"
+
+msgid "MI3"
+msgstr "MI3 UNTRANSLATED"
+
+msgid "KonText feedback from user {0} for {1}"
+msgstr "KonText feedback from user {0} for {1} UNTRANSLATED"
+
+msgid ""
+"Query type <em>basic</em> is suitable for getting to know the corpus. It "
+"searches for the input expression as a word form case-insensitively; if it "
+"is also a canonical dictionary form (lemma), all its word forms are searched"
+" as well."
+msgstr ""
+"Query type <em>basic</em> is suitable for getting to know the corpus. It "
+"searches for the input expression as a word form case-insensitively; if it "
+"is also a canonical dictionary form (lemma), all its word forms are searched"
+" as well. UNTRANSLATED"
+
+msgid "case insensitive"
+msgstr "case insensitive UNTRANSLATED"
+
+msgid "Confirmation key not found"
+msgstr "Confirmation key not found UNTRANSLATED"
+
+msgid "Concordance regeneration"
+msgstr "Concordance regeneration UNTRANSLATED"
+
+msgid "Frequency"
+msgstr "Frequency UNTRANSLATED"
+
+msgid ""
+"Failed to send a confirmation e-mail. Please check that you entered a valid "
+"e-mail and try again. Alternatively you can report a problem."
+msgstr ""
+"Failed to send a confirmation e-mail. Please check that you entered a valid "
+"e-mail and try again. Alternatively you can report a problem. UNTRANSLATED"
+
+msgid "First name not valid"
+msgstr "First name not valid UNTRANSLATED"
+
+msgid "Access forbidden - please log-in."
+msgstr "Access forbidden - please log-in. UNTRANSLATED"
+
+msgid "Loading..."
+msgstr "Loading... UNTRANSLATED"
+
+msgid "Report an error"
+msgstr "Report an error UNTRANSLATED"
+
+msgid "KWIC/Sentence"
+msgstr "KWIC/Sentence UNTRANSLATED"
+
+msgid "Find a published subcorpus"
+msgstr "Find a published subcorpus UNTRANSLATED"
+
+msgid "View on GitHub"
+msgstr "View on GitHub UNTRANSLATED"
+
+msgid "browser info"
+msgstr "browser info UNTRANSLATED"
+
+msgid "Hello"
+msgstr "Hello UNTRANSLATED"
+
+msgid "The string must be at least %s characters long."
+msgstr "The string must be at least %s characters long. UNTRANSLATED"
+
+msgid "Unknown concordance action: %s"
+msgstr "Unknown concordance action: %s UNTRANSLATED"
+
+msgid "log likelihood"
+msgstr "log likelihood UNTRANSLATED"
+
+msgid "KonText sign up confirmation"
+msgstr "KonText sign up confirmation UNTRANSLATED"
+
+msgid "user interface languages"
+msgstr "user interface languages UNTRANSLATED"
+
+msgid "Lemmas"
+msgstr "Lemmas UNTRANSLATED"
+
+msgid "Continue as anonymous user"
+msgstr "Continue as anonymous user UNTRANSLATED"
+
+msgid "To use KonText please install any modern web browser. E.g."
+msgstr ""
+"To use KonText please install any modern web browser. E.g. UNTRANSLATED"
+
+msgid "Compatibility notice"
+msgstr "Compatibility notice UNTRANSLATED"
+
+msgid "Positive"
+msgstr "Positive UNTRANSLATED"
+
+msgid "Archive query"
+msgstr "Archive query UNTRANSLATED"
+
+msgid "KonText feedback from user {0}"
+msgstr "KonText feedback from user {0} UNTRANSLATED"
+
+msgid "Sample"
+msgstr "Sample UNTRANSLATED"
+
+msgid ""
+"The value must be at least %s characters long and must contain only a..z, "
+"A..Z, 0..9, _, - characters"
+msgstr ""
+"The value must be at least %s characters long and must contain only a..z, "
+"A..Z, 0..9, _, - characters UNTRANSLATED"
+
+msgid "Subcorpus %s has been deleted permanently."
+msgstr "Subcorpus %s has been deleted permanently. UNTRANSLATED"
+
+msgid "instances per million positions (refers to the respective category)"
+msgstr ""
+"instances per million positions (refers to the respective category) "
+"UNTRANSLATED"
+
+msgid ""
+"Failed to get the syntax tree due to limited KWIC context (too long "
+"sentence)."
+msgstr ""
+"Failed to get the syntax tree due to limited KWIC context (too long "
+"sentence). UNTRANSLATED"
+
+msgid "Unknown action [%s]"
+msgstr "Unknown action [%s] UNTRANSLATED"
+
+msgid "Available corpora"
+msgstr "Available corpora UNTRANSLATED"
+
+msgid "Concordance"
+msgstr "Concordance UNTRANSLATED"
+
+msgid ""
+"Character encoding of this corpus ({0}) does not support one or more "
+"characters in the query."
+msgstr ""
+"Character encoding of this corpus ({0}) does not support one or more "
+"characters in the query. UNTRANSLATED"
+
+msgid "E-mail not valid"
+msgstr "E-mail not valid UNTRANSLATED"
+
+msgid ""
+"No result. Please make sure the query and selected query type are correct."
+msgstr ""
+"No result. Please make sure the query and selected query type are correct. "
+"UNTRANSLATED"
+
+msgid ""
+"This e-mail has been generated automatically - please do not reply to it."
+msgstr ""
+"This e-mail has been generated automatically - please do not reply to it. "
+"UNTRANSLATED"
+
+msgid "Saves at most {0} items. Use \"Custom\" for more options."
+msgstr "Saves at most {0} items. Use \"Custom\" for more options. UNTRANSLATED"
+
+msgid "Click to enter a new query"
+msgstr "Click to enter a new query UNTRANSLATED"
+
+msgid "Negative"
+msgstr "Negative UNTRANSLATED"
+
+msgid "View"
+msgstr "View UNTRANSLATED"
+
+msgid "Random sample"
+msgstr "Random sample UNTRANSLATED"
+
+msgid ""
+"Failed to evaluate the query. Please check the syntax and used attributes."
+msgstr ""
+"Failed to evaluate the query. Please check the syntax and used attributes. "
+"UNTRANSLATED"
+
+msgid "Create new subcorpus"
+msgstr "Create new subcorpus UNTRANSLATED"
+
+msgid "Paradigmatic query calculation"
+msgstr "Paradigmatic query calculation UNTRANSLATED"

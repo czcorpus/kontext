@@ -45,11 +45,6 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import { HtmlHelpModel } from '../models/help/help';
 
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/firstForm.less');
-
-
 /**
  * ConfigWrapper ensures that actions we need to be bound
  * to the global app config trigger proper updates in the config.
@@ -175,16 +170,22 @@ export class QueryPage {
             }
         );
 
-        const liveAttrsViews:PluginInterfaces.LiveAttributes.Views = this.liveAttrsPlugin.getViews(
-            null, this.textTypesModel);
+        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
         if (this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
             this.textTypesModel.enableAutoCompleteSupport();
+
+        } else {
+            liveAttrsViews = {
+                LiveAttrsCustomTT: null,
+                LiveAttrsView: null
+            };
         }
         return {
             ...liveAttrsViews,
             formType: Kontext.ConcFormTypes.QUERY,
             tagHelperViews: {},
-            queryStorageView: null,
+            queryHistoryView: null,
             allowCorpusSelection: null
         };
     }
@@ -343,7 +344,7 @@ export class QueryPage {
             );
             const ttAns = this.createTTViews(queryFormArgs);
 
-            ttAns.queryStorageView = this.layoutModel.qstorPlugin.getWidgetView();
+            ttAns.queryHistoryView = this.layoutModel.qhistPlugin.getWidgetView();
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,
