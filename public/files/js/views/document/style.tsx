@@ -489,7 +489,7 @@ export const PlusButton = styled.button`
 
 // ---------------- <KwicRangeSelector /> --------------------------------------
 
-export const KwicRangeSelector = styled.button`
+export const KwicRangeSelector = styled.div`
 
     padding: 0.4em 0;
 
