@@ -33,6 +33,7 @@ import { PqueryResultModel } from '../models/pquery/result';
 import { init as resultViewInit } from '../views/pquery/result';
 import { MultiDict } from '../multidict';
 import { newModelState, PqueryFormArgs, storedQueryToModel } from '../models/pquery/common';
+import { AttrHelper } from '../models/query/cqleditor/attrs';
 
 
 /**
@@ -72,22 +73,30 @@ class ParadigmaticQueryPage {
         this.layoutModel.init(true, [], () => {
 
             const storedForm = this.layoutModel.getConf<PqueryFormArgs>('FormData');
-
+            const attrHelper = new AttrHelper(
+                this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                this.layoutModel.getConf<Array<string>>('StructList'),
+                this.layoutModel.getConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('Tagsets')
+            );
             const formModel = new PqueryFormModel(
                 this.layoutModel.dispatcher,
                 storedForm ?
                     storedQueryToModel(
                         this.layoutModel.getConf<PqueryFormArgs>('FormData'),
                         this.layoutModel.getConf('AttrList'),
-                        this.layoutModel.getConf('StructAttrList')
+                        this.layoutModel.getConf('StructAttrList'),
+                        this.layoutModel.getConf<boolean>('UseRichQueryEditor')
                     ) :
                     newModelState(
                         this.layoutModel.getCorpusIdent().id,
                         this.layoutModel.getCorpusIdent().usesubcorp,
                         this.layoutModel.getConf('AttrList'),
-                        this.layoutModel.getConf('StructAttrList')
+                        this.layoutModel.getConf('StructAttrList'),
+                        this.layoutModel.getConf<boolean>('UseRichQueryEditor')
                     ),
-                this.layoutModel
+                this.layoutModel,
+                attrHelper
             );
 
             // qquery form

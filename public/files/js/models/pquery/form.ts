@@ -20,7 +20,7 @@
  */
 
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
-import { IActionDispatcher, SEDispatcher, StatelessModel } from 'kombo';
+import { IActionDispatcher, IFullActionControl, SEDispatcher, StatefulModel, StatelessModel } from 'kombo';
 import { Observable, forkJoin, of as rxOf } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
@@ -35,6 +35,8 @@ import { concatMap, map, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, generatePqueryName,
     PqueryFormModelState, PqueryFormArgs } from './common';
+import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
+import { AttrHelper } from '../query/cqleditor/attrs';
 
 
 /**
@@ -53,28 +55,37 @@ interface PqueryFormModelSwitchPreserve {
 }
 
 
-export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implements IUnregistrable {
+export class PqueryFormModel extends StatefulModel<PqueryFormModelState> implements IUnregistrable {
 
     private readonly layoutModel:PageModel;
 
-    constructor(dispatcher:IActionDispatcher, initState:PqueryFormModelState, layoutModel:PageModel) {
+    private readonly attrHelper:AttrHelper;
+
+    constructor(
+        dispatcher:IFullActionControl,
+        initState:PqueryFormModelState,
+        layoutModel:PageModel,
+        attrHelper:AttrHelper
+    ) {
         super(dispatcher, initState);
         this.layoutModel = layoutModel;
+        this.attrHelper = attrHelper;
+        this.hintListener = this.hintListener.bind(this);
 
         this.addActionHandler<Actions.SubmitQuery>(
             ActionName.SubmitQuery,
-            (state, action) => {
-                state.isBusy = true;
-                state.concWait = Dict.map(v => 'running', state.concWait);
-            },
-            (state, action, dispatch) => {
-                this.submitForm(state, dispatch).subscribe(
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                    state.concWait = Dict.map(v => 'running', state.concWait);
+                });
+                this.submitForm(this.state).subscribe(
                     ([queryId, task]) => {
-                        dispatch<Actions.SubmitQueryDone>({
+                        this.dispatchSideEffect<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
                             payload: {
-                                corpname: state.corpname,
-                                usesubcorp: state.usesubcorp,
+                                corpname: this.state.corpname,
+                                usesubcorp: this.state.usesubcorp,
                                 queryId,
                                 task
                             },
@@ -82,7 +93,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                     },
                     (error) => {
                         this.layoutModel.showMessage('error', error);
-                        dispatch<Actions.SubmitQueryDone>({
+                        this.dispatchSideEffect<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
                             error
                         });
@@ -93,38 +104,42 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
 
         this.addActionHandler<Actions.SubmitQueryDone>(
             ActionName.SubmitQueryDone,
-            (state, action) => {
+            action => {
                 if (!action.error) {
-                    state.queryId = action.payload.queryId;
-                    state.task = action.payload.task;
+                    this.changeState(state => {
+                        state.queryId = action.payload.queryId;
+                        state.task = action.payload.task;
+                    });
                 }
             }
         );
 
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
-            (state, action) => {
+            action => {
                 if (!action.error) {
-                    this.deserialize(
-                        state,
-                        action.payload.data[this.getRegistrationId()] as
-                            PqueryFormModelSwitchPreserve,
-                        action.payload.corpora
-                    );
+                    this.changeState(state => {
+                        this.deserialize(
+                            state,
+                            action.payload.data[this.getRegistrationId()] as
+                                PqueryFormModelSwitchPreserve,
+                            action.payload.corpora
+                        );
+                    });
                 }
             }
         );
 
         this.addActionHandler<GlobalActions.SwitchCorpus>(
             GlobalActionName.SwitchCorpus,
-            (state, action) => {
+            action => {
                 dispatcher.dispatch<GlobalActions.SwitchCorpusReady<
                         PqueryFormModelSwitchPreserve>>({
                     name: GlobalActionName.SwitchCorpusReady,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: this.serialize(
-                            state,
+                            this.state,
                             action.payload.corpora,
                             action.payload.newPrimaryCorpus
                         )
@@ -135,95 +150,123 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
 
         this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
             QueryActionName.QueryInputSelectSubcorp,
-            (state, action) => {
-                state.usesubcorp = action.payload.subcorp;
+            action => {
+                this.changeState(state => {
+                    state.usesubcorp = action.payload.subcorp;
+                });
             }
         );
 
         this.addActionHandler<Actions.AddQueryItem>(
             ActionName.AddQueryItem,
-            (state, action) => {
-                const size = Dict.size(state.queries);
-                state.concWait[generatePqueryName(size)] = 'none';
-                state.queries[generatePqueryName(size)] = {
-                    corpname: state.corpname,
-                    qtype: 'advanced',
-                    query: '',
-                    queryHtml: '',
-                    rawAnchorIdx: 0,
-                    rawFocusIdx: 0,
-                    parsedAttrs: [],
-                    focusedAttr: undefined,
-                    pcq_pos_neg: 'pos',
-                    include_empty: false,
-                    default_attr: null
-                }
+            action => {
+                this.changeState(state => {
+                    const size = Dict.size(state.queries);
+                    state.concWait[generatePqueryName(size)] = 'none';
+                    state.queries[generatePqueryName(size)] = {
+                        corpname: state.corpname,
+                        qtype: 'advanced',
+                        query: '',
+                        queryHtml: '',
+                        rawAnchorIdx: 0,
+                        rawFocusIdx: 0,
+                        parsedAttrs: [],
+                        focusedAttr: undefined,
+                        pcq_pos_neg: 'pos',
+                        include_empty: false,
+                        default_attr: null
+                    }
+                });
             }
         );
 
         this.addActionHandler<Actions.RemoveQueryItem>(
             ActionName.RemoveQueryItem,
-            (state, action) => {
-                state.queries = this.removeItem(state.queries, action.payload.sourceId);
-                state.concWait = this.removeItem(state.concWait, action.payload.sourceId);
+            action => {
+                this.changeState(state => {
+                    state.queries = this.removeItem(state.queries, action.payload.sourceId);
+                    state.concWait = this.removeItem(state.concWait, action.payload.sourceId);
+                });
             }
         );
 
-        this.addActionHandler<Actions.QueryChange>(
-            ActionName.QueryChange,
-            (state, action) => {
-                state.queries[action.payload.sourceId].query = action.payload.query;
-                state.queries[action.payload.sourceId].queryHtml = action.payload.query;
+
+        this.addActionHandler<QueryActions.QueryInputSetQuery>(
+            QueryActionName.QueryInputSetQuery,
+            action => {
+                this.changeState(state => {
+                    const queryObj = state.queries[action.payload.sourceId];
+
+                    if (action.payload.rawAnchorIdx !== undefined &&
+                            action.payload.rawFocusIdx !== undefined) {
+                        queryObj.rawAnchorIdx = action.payload.rawAnchorIdx ||
+                            action.payload.query.length;
+                            queryObj.rawFocusIdx = action.payload.rawFocusIdx ||
+                            action.payload.query.length;
+                    }
+                    this.setRawQuery(
+                        state,
+                        queryObj,
+                        action.payload.sourceId,
+                        action.payload.query,
+                        action.payload.insertRange
+                    );
+                });
             }
         );
 
         this.addActionHandler<Actions.FreqChange>(
             ActionName.FreqChange,
-            (state, action) => {
-                state.minFreq = parseInt(action.payload.value) || state.minFreq;
+            action => {
+                this.changeState(state => {
+                    state.minFreq = parseInt(action.payload.value) || state.minFreq;
+                });
             }
         );
 
         this.addActionHandler<Actions.PositionChange>(
             ActionName.PositionChange,
-            (state, action) => {
-                state.position = action.payload.value;
+            action => {
+                this.changeState(state => {
+                    state.position = action.payload.value;
+                });
             }
         );
 
         this.addActionHandler<Actions.AttrChange>(
             ActionName.AttrChange,
-            (state, action) => {
-                state.attr = action.payload.value;
+            action => {
+                this.changeState(state => {
+                    state.attr = action.payload.value;
+                });
             }
         );
 
         this.addActionHandler<ACActions.AsyncTasksChecked>(
             ACActionName.AsyncTasksChecked,
-            (state, action) => {
-                if (state.task) {
+            action => {
+                if (this.state.task) {
                     const task = List.find(
-                        t => t.ident === state.task.ident,
+                        t => t.ident === this.state.task.ident,
                         action.payload.tasks
                     );
                     if (!task) {
                         layoutModel.showMessage('error', 'Paradigmatic query task not found!');
+
                     } else {
-                        state.task = task as Kontext.AsyncTaskInfo<AsyncTaskArgs>;
+                        this.changeState(state => {
+                            state.task = task as Kontext.AsyncTaskInfo<AsyncTaskArgs>;
+                        });
                     }
-                }
-            },
-            (state, action, dispatch) => {
-                if (state.task) {
-                    if (state.task.status === 'SUCCESS') {
+                    if (this.state.task.status === 'SUCCESS') {
                         this.layoutModel.ajax$<{result: Array<[string, number]>}>(
                             HTTP.Method.GET,
                             'get_task_result',
-                            {task_id: state.task.ident}
+                            {task_id: this.state.task.ident}
 
                         ).subscribe(
                             resp => {
-                                dispatch<Actions.AsyncResultRecieved>({
+                                this.dispatchSideEffect<Actions.AsyncResultRecieved>({
                                     name: ActionName.AsyncResultRecieved,
                                     payload: {
                                         data: resp.result
@@ -231,14 +274,14 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                                 })
                             },
                             error => {
-                                dispatch<Actions.AsyncResultRecieved>({
+                                this.dispatchSideEffect<Actions.AsyncResultRecieved>({
                                     name: ActionName.AsyncResultRecieved,
                                     error: error
                                 })
                             }
                         )
-                    } else if (state.task.status === 'FAILURE') {
-                        dispatch<Actions.AsyncResultRecieved>({
+                    } else if (this.state.task.status === 'FAILURE') {
+                        this.dispatchSideEffect<Actions.AsyncResultRecieved>({
                             name: ActionName.AsyncResultRecieved,
                             error: Error('Paradigmatic query task failed!')
                         });
@@ -249,21 +292,26 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
 
         this.addActionHandler<Actions.AsyncResultRecieved>(
             ActionName.AsyncResultRecieved,
-            (state, action) => {
-                state.isBusy = false;
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
-                } else {
-                    state.receivedResults = true;
-                }
-                state.concWait = Dict.map(v => 'none', state.concWait);
+            action => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                    if (action.error) {
+                        this.layoutModel.showMessage('error', action.error);
+
+                    } else {
+                        state.receivedResults = true;
+                    }
+                    state.concWait = Dict.map(v => 'none', state.concWait);
+                });
             }
         )
 
         this.addActionHandler<Actions.ConcordanceReady>(
             ActionName.ConcordanceReady,
-            (state, action) => {
-                state.concWait[action.payload.sourceId] = 'finished';
+            action => {
+                this.changeState(state => {
+                    state.concWait[action.payload.sourceId] = 'finished';
+                });
             }
         )
     }
@@ -321,7 +369,7 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
         };
     }
 
-    private submitForm(state:PqueryFormModelState, dispatch:SEDispatcher):Observable<[string, Kontext.AsyncTaskInfo<AsyncTaskArgs>]> {
+    private submitForm(state:PqueryFormModelState):Observable<[string, Kontext.AsyncTaskInfo<AsyncTaskArgs>]> {
         return forkJoin(pipe(
             state.queries,
             Dict.toEntries(),
@@ -337,8 +385,8 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
 
                 ).pipe(
                     tap(
-                        _ => {                            
-                            dispatch<Actions.ConcordanceReady>({
+                        _ => {
+                            this.dispatchSideEffect<Actions.ConcordanceReady>({
                                 name: ActionName.ConcordanceReady,
                                 payload: {sourceId}
                             })
@@ -359,23 +407,20 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
                             this.saveQuery(state),
                         this.submitFreqIntersection(
                             state, concIds
-
-                        ).pipe(
-                            map(resp => tuple(concIds, resp))
                         )
                     ]);
                 }
             ),
             tap(
-                ([queryId, [concIds, fiResponse]]) => {
-                    dispatch<ACActions.InboxAddAsyncTask>({
+                ([,fiResponse]) => {
+                    this.dispatchSideEffect<ACActions.InboxAddAsyncTask>({
                         name: ACActionName.InboxAddAsyncTask,
                         payload: fiResponse.task
                     })
                 }
             ),
             map(
-                ([queryId, [,fiResponse]]) => {
+                ([queryId, fiResponse]) => {
                     return tuple(queryId,
                         fiResponse.task as Kontext.AsyncTaskInfo<AsyncTaskArgs>) // TODO Type always OK?
                 }
@@ -481,6 +526,105 @@ export class PqueryFormModel extends StatelessModel<PqueryFormModelState> implem
             context: {} as QueryContextArgs,
             async
         };
+    }
+
+
+    private hintListener(sourceId:string, msg:string):void {
+        this.changeState(state => {
+            state.cqlEditorMessages[sourceId] = msg;
+        });
+    }
+
+    /**
+     *
+     * @todo duplicated code (models/query/common)
+     */
+    private findFocusedAttr(queryObj:AdvancedQuery):ParsedAttr|undefined {
+        return List.find(
+            (v, i) => v.rangeAll[0] <= queryObj.rawFocusIdx && (
+                queryObj.rawFocusIdx <= v.rangeAll[1]),
+            queryObj.parsedAttrs
+        );
+    }
+
+    /**
+     *
+     * @todo partially duplicated code (models/query/common)
+     */
+    private reparseAdvancedQuery(
+        queryObj:AdvancedQuery,
+        sourceId:string,
+        updateCurrAttrs:boolean
+    ):void {
+
+        let newAttrs:Array<ParsedAttr>;
+        [queryObj.queryHtml, newAttrs] = highlightSyntax(
+            queryObj.query,
+            'advanced',
+            this.layoutModel.getComponentHelpers(),
+            this.attrHelper,
+            (startIdx, endIdx) => {
+                const matchingAttr = updateCurrAttrs ?
+                    undefined :
+                    List.find(
+                        attr => attr.rangeVal[0] === startIdx && attr.rangeVal[1] === endIdx,
+                        queryObj.parsedAttrs
+                    );
+                if (matchingAttr && matchingAttr.suggestions) {
+                    const activeSugg = List.find(s => s.isActive, matchingAttr.suggestions.data);
+                    return tuple(
+                        `<a class="sugg" data-type="sugg" data-leftIdx="${startIdx}" data-rightIdx="${endIdx}" data-providerId="${activeSugg.providerId}">`, '</a>'
+                    )
+                }
+                return tuple(null, null);
+            },
+            (msg) => this.hintListener(sourceId, msg)
+        );
+        queryObj.focusedAttr = this.findFocusedAttr(queryObj);
+
+        if (updateCurrAttrs) {
+            queryObj.parsedAttrs = newAttrs;
+        }
+    }
+
+    /**
+     *
+     * @todo duplicated code (models/query/common)
+     */
+    private shouldDownArrowTriggerHistory(queryObj:AdvancedQuery):boolean {
+        if (queryObj.rawAnchorIdx === queryObj.rawFocusIdx) {
+            return queryObj.query.substr(queryObj.rawAnchorIdx+1).search(/[\n\r]/) === -1;
+
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param range in case we want to insert a CQL snippet into an existing code;
+     *              if undefined then whole query is replaced
+     *
+     * @todo partially duplicated code (models/query/common)
+     */
+    protected setRawQuery(
+        state:PqueryFormModelState,
+        queryObj:AdvancedQuery,
+        sourceId:string,
+        query:string,
+        insertRange:[number, number]|null
+
+    ):void {
+        if (insertRange !== null) {
+            queryObj.query = queryObj.query.substring(0, insertRange[0]) + query +
+                    queryObj.query.substr(insertRange[1]);
+
+        } else {
+            queryObj.query = query;
+        }
+
+        state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(queryObj);
+
+        this.reparseAdvancedQuery(queryObj, sourceId, true);
     }
 
 }
