@@ -111,7 +111,7 @@ class ParadigmaticQuery(Kontext):
     def save_query(self, request):
         args = PqueryFormArgs()
         args.update_by_user_query(request.json)
-        with plugins.runtime.QUERY_STORAGE as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
+        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
             query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_dict())
             qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
         return dict(ok=True, query_id=query_id)

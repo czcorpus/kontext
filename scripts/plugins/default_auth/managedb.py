@@ -10,7 +10,7 @@ import plugins
 from plugins import redis_db
 plugins.install_plugin('db', redis_db, autoconf.settings)
 
-from plugins import default_query_storage
+from plugins import default_query_history
 plugins.install_plugin('query_history', default_query_history, autoconf.settings)
 
 if __name__ == '__main__':
