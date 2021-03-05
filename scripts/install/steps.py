@@ -186,7 +186,7 @@ class SetupManatee(InstallationStep):
     def abort(self):
         pass
 
-    def run(self, manatee_version: str, patch_path: str = None):
+    def run(self, manatee_version: str, patch_path: str = None, make_symlinks: bool = True):
         # install manatee with ucnk patch
         print('Installing manatee...')
 
@@ -217,16 +217,17 @@ class SetupManatee(InstallationStep):
             ['make', 'install'], cwd=f'/usr/local/src/manatee-open-{manatee_version}', stdout=self.stdout)
         subprocess.check_call(['ldconfig'], stdout=self.stdout)
 
-        lib_path = [path for path in sys.path if path.startswith(
-            '/usr/local/lib/python3') and path.endswith('dist-packages')][0]
-        make_simlink(os.path.join(lib_path, '../site-packages/manatee.py'),
-                     os.path.join(lib_path, 'manatee.py'))
-        make_simlink(os.path.join(lib_path, '../site-packages/_manatee.a'),
-                     os.path.join(lib_path, '_manatee.a'))
-        make_simlink(os.path.join(lib_path, '../site-packages/_manatee.la'),
-                     os.path.join(lib_path, '_manatee.la'))
-        make_simlink(os.path.join(lib_path, '../site-packages/_manatee.so'),
-                     os.path.join(lib_path, '_manatee.so'))
+        if make_symlinks:
+            lib_path = [path for path in sys.path if path.startswith(
+                '/usr/local/lib/python3') and path.endswith('dist-packages')][0]
+            make_simlink(os.path.join(lib_path, '../site-packages/manatee.py'),
+                        os.path.join(lib_path, 'manatee.py'))
+            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.a'),
+                        os.path.join(lib_path, '_manatee.a'))
+            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.la'),
+                        os.path.join(lib_path, '_manatee.la'))
+            make_simlink(os.path.join(lib_path, '../site-packages/_manatee.so'),
+                        os.path.join(lib_path, '_manatee.so'))
 
         # install susanne corpus
         subprocess.check_call(wget_cmd('https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2', self._ncc),
@@ -257,7 +258,7 @@ class SetupKontext(InstallationStep):
     def abort(self):
         pass
 
-    def run(self, use_celery):
+    def run(self, use_celery, build_production=True):
         print('Installing kontext...')
         subprocess.check_call(['cp', 'config.default.xml', 'config.xml'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
@@ -291,8 +292,9 @@ class SetupKontext(InstallationStep):
         create_directory('/var/log/kontext', WEBSERVER_USER, None)
         create_directory('/tmp/kontext-upload', WEBSERVER_USER, None, 0o775)
 
-        subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout)
-        self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path)
+        if build_production:
+            subprocess.check_call(['npm', 'install'], cwd=self.kontext_path, stdout=self.stdout)
+            self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path)
 
 
 class SetupGunicorn(InstallationStep):
@@ -318,9 +320,9 @@ class SetupGunicorn(InstallationStep):
 
 
 class SetupDefaultUsers(InstallationStep):
-    def __init__(self, kontext_path: str, stdout: str, stderr: str):
+    def __init__(self, kontext_path: str, stdout: str, stderr: str, redis_host: str = 'localhost', redis_port = 6379):
         super().__init__(kontext_path, stdout, stderr)
-        self.redis_client = redis.Redis(host='localhost', port=6379, db=1)
+        self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=1)
 
     def is_done(self):
         redis_keys = self.redis_client.keys()
@@ -351,3 +353,29 @@ class SetupDefaultUsers(InstallationStep):
                 password: {password}
             {bcolors.ENDC}{bcolors.ENDC}
         ''')
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser('Run step')
+    parser.add_argument('step_name', metavar='NAME', type=str, help='Step name')
+    parser.add_argument('--step_args', metavar='ARGS', type=str, nargs='+', help='Step arguments', default=[])
+    args = parser.parse_args()
+
+    kontext_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+    init_step_args = (kontext_path, None, None)
+
+    if args.step_name == 'SetupKontext':
+        obj = SetupKontext(*init_step_args)
+        obj.run(False, False)
+    elif args.step_name == 'SetupDefaultUsers':
+        obj = SetupDefaultUsers(*init_step_args, args.step_args[0], int(args.step_args[1]))
+        obj.run()
+    elif args.step_name == 'SetupManatee':
+        obj = SetupManatee(*init_step_args, True)
+        obj.run(args.step_args[0], args.step_args[1], bool(int(args.step_args[2])))
+    else:
+        raise Exception(f'Unknown action: {args.step_name}')
+    
+    for msg in obj.final_messages:
+        print(msg)
