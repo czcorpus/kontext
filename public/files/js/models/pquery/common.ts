@@ -22,6 +22,7 @@
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { highlightSyntaxStatic } from '../query/cqleditor/parser';
+import { AlignTypes } from '../freqs/twoDimension/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 
 /**
@@ -35,7 +36,8 @@ export interface PqueryFormArgs {
     corpname:string;
     usesubcorp:string;
     min_freq:number;
-    position:string;
+    posIndex:number;
+    posAlign:AlignTypes;
     attr:string;
     queries:Array<AdvancedQuerySubmit>;
 }
@@ -84,7 +86,8 @@ export interface PqueryFormModelState {
     queryId:string|undefined;
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
     minFreq:number;
-    position:string;
+    posIndex:number;
+    posAlign:AlignTypes;
     attr:string;
     attrs:Array<Kontext.AttrItem>;
     structAttrs:Array<Kontext.AttrItem>;
@@ -145,7 +148,8 @@ export function newModelState(
         task: undefined,
         queryId: undefined,
         minFreq: 5,
-        position: '0<0',
+        posIndex: 6,
+        posAlign: AlignTypes.LEFT,
         attr: List.head(attrs).n,
         attrs,
         structAttrs,
@@ -217,7 +221,8 @@ export function storedQueryToModel(
         task: undefined,
         queryId: sq.id,
         minFreq: sq.min_freq,
-        position: sq.position,
+        posIndex: sq.posIndex,
+        posAlign: sq.posAlign,
         attr: sq.attr,
         attrs,
         structAttrs,

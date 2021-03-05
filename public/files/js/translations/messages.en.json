@@ -792,6 +792,7 @@
         "pquery__min_fq_input": "Min. fq.",
         "pquery__pos_input": "Position",
         "pquery__results": "Query results",
-        "pquery__query_form_hd": "Query form"
+        "pquery__query_form_hd": "Query form",
+        "pquery__node_start_at": "(Node) start at"
     }
 }

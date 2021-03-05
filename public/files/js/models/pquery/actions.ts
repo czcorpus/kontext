@@ -21,6 +21,7 @@
 
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
+import { AlignTypes } from '../freqs/twoDimension/common';
 import { AsyncTaskArgs, PqueryResult } from './common';
 import { SortKey } from './result';
 
@@ -32,7 +33,8 @@ export enum ActionName {
     AddQueryItem = 'PQUERY_ADD_QUERY_ITEM',
     RemoveQueryItem = 'PQUERY_REMOVE_QUERY_ITEM',
     FreqChange = 'PQUERY_FREQ_CHANGE',
-    PositionChange = 'PQUERY_POSITION_CHANGE',
+    SetPositionIndex = 'PQUERY_SET_POSITION_IDX',
+    SetAlignType = 'PQUERY_SET_ALIGN_TYPE',
     AttrChange = 'PQUERY_ATTR_CHANGE',
     SortLines = 'PQUERY_RESULTS_SORT_LINES',
     AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED',
@@ -80,10 +82,16 @@ export namespace Actions {
         name: ActionName.FreqChange;
     }
 
-    export interface PositionChange extends Action<{
-        value: string;
+    export interface SetPositionIndex extends Action<{
+        value: number;
     }> {
-        name: ActionName.PositionChange;
+        name: ActionName.SetPositionIndex;
+    }
+
+    export interface SetAlignType extends Action<{
+        value: AlignTypes;
+    }> {
+        name: ActionName.SetAlignType;
     }
 
     export interface AttrChange extends Action<{

@@ -792,6 +792,7 @@
         "pquery__min_fq_input": "Min. fq.",
         "pquery__pos_input": "Pozice",
         "pquery__results": "Výsledek hledání",
-        "pquery__query_form_hd": "Formulář dotazu"
+        "pquery__query_form_hd": "Formulář dotazu",
+        "pquery__node_start_at": "(Node) začít od"
     }
 }

@@ -37,6 +37,7 @@ import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, generate
     PqueryFormModelState, PqueryFormArgs } from './common';
 import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
+import { AlignTypes } from '../freqs/twoDimension/common';
 
 
 /**
@@ -50,8 +51,9 @@ interface HTTPSaveQueryResponse {
 interface PqueryFormModelSwitchPreserve {
     queries:string;
     minFreq:number;
-    position:string;
     attr:string;
+    posIndex:number;
+    posAlign:AlignTypes;
 }
 
 
@@ -60,6 +62,12 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     private readonly layoutModel:PageModel;
 
     private readonly attrHelper:AttrHelper;
+
+    private static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
+
+    private static POSITION_RA = ['-6>0', '-5>0', '-4>0', '-3>0', '-2>0', '-1>0', '0>0', '1>0', '2>0', '3>0', '4>0', '5>0', '6>0'];
+
+    private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
     constructor(
         dispatcher:IFullActionControl,
@@ -224,11 +232,20 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.PositionChange>(
-            ActionName.PositionChange,
+        this.addActionHandler<Actions.SetPositionIndex>(
+            ActionName.SetPositionIndex,
             action => {
                 this.changeState(state => {
-                    state.position = action.payload.value;
+                    state.posIndex = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.SetAlignType>(
+            ActionName.SetAlignType,
+            action => {
+                this.changeState(state => {
+                    state.posAlign = action.payload.value;
                 });
             }
         );
@@ -316,6 +333,16 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         )
     }
 
+    getPositionRangeLabels():Array<string> {
+        return PqueryFormModel.POSITION_LABELS;
+    }
+
+    private getPosition(state:PqueryFormModelState):string {
+        return state.posAlign === AlignTypes.LEFT ?
+            PqueryFormModel.POSITION_LA[state.posIndex] :
+            PqueryFormModel.POSITION_RA[state.posIndex];
+    }
+
     private removeItem(data:{[sourceId:string]:any}, removeId:string):{[sourceId:string]:any} {
         return pipe(
             data,
@@ -346,7 +373,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 return v;
             }, JSON.parse(data.queries) as {[sourceId:string]:AdvancedQuery});
             state.minFreq = data.minFreq;
-            state.position = data.position;
+            state.posIndex = data.posIndex;
+            state.posAlign = data.posAlign;
             state.attr = data.attr;
             state.attr = List.some(v => v.n === data.attr, state.attrs) || List.some(v => v.n === data.attr, state.structAttrs) ?
                          data.attr :
@@ -365,7 +393,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             queries: JSON.stringify(state.queries),
             attr: state.attr,
             minFreq: state.minFreq,
-            position: state.position
+            posIndex: state.posIndex,
+            posAlign: state.posAlign
         };
     }
 
@@ -439,7 +468,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             conc_ids: concIds,
             min_freq: state.minFreq,
             attr: state.attr,
-            position: state.position
+            position: this.getPosition(state)
         };
         return this.layoutModel.ajax$<FreqIntersectionResponse>(
             HTTP.Method.POST,
@@ -460,7 +489,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             corpname: state.corpname,
             usesubcorp: state.usesubcorp,
             min_freq: state.minFreq,
-            position: state.position,
+            posIndex: state.posIndex,
+            posAlign: state.posAlign,
             attr: state.attr,
             queries: pipe(
                 state.queries,
