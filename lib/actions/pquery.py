@@ -61,6 +61,10 @@ class ParadigmaticQuery(Kontext):
                      docUrlLocal=tagset.doc_url_local, docUrlEn=tagset.doc_url_en)
                 for tagset in corp_info.tagsets]
 
+    def _get_default_attr(self):
+        attrs = self.corp.get_conf('ATTRLIST').split(',')
+        return 'lemma' if 'lemma' in attrs else attrs[0]
+
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
         data = self._init_page_data(request)
@@ -68,7 +72,8 @@ class ParadigmaticQuery(Kontext):
             'corpname': self.args.corpname,
             'form_data': data,
             'calculate': False,
-            'tagsets': self._get_tagsets()
+            'tagsets': self._get_tagsets(),
+            'pquery_default_attr': self._get_default_attr()
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans
@@ -80,7 +85,8 @@ class ParadigmaticQuery(Kontext):
             'corpname': self.args.corpname,
             'form_data': data,
             'calculate': True,
-            'tagsets': self._get_tagsets()
+            'tagsets': self._get_tagsets(),
+            'pquery_default_attr': self._get_default_attr()
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans

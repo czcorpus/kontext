@@ -231,9 +231,6 @@ msgstr "Předchozí dotazy"
 msgid "Word List"
 msgstr "Seznam slov"
 
-msgid "Concordance query"
-msgstr "Dotaz na konkordanci"
-
 msgid "Current concordance"
 msgstr "Aktuální konkordance"
 

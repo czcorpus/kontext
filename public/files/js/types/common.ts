@@ -374,9 +374,9 @@ export namespace Kontext {
     }
 
     export interface IHistory {
-        pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any,
+        pushState<T, U={}>(action:string, args:Kontext.IMultiDict<T>, stateData?:U,
             title?:string):void;
-        replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any,
+        replaceState<T, U={}>(action:string, args:Kontext.IMultiDict<T>, stateData?:U,
             title?:string):void;
         setOnPopState(fn:(event:PopStateEvent)=>void):void;
     }

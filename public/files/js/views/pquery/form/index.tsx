@@ -231,10 +231,10 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                             {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
                         </select>
                     </S.ParameterField>
-                    <S.ParameterField>
+                    <S.MinFreqField>
                         <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
                         <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
-                    </S.ParameterField>
+                    </S.MinFreqField>
                     <S.ParameterField>
                         <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
                         <PositionSelect positionIndex={props.posIndex} positionRangeLabels={model.getPositionRangeLabels()}/>

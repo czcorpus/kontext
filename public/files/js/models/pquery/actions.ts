@@ -22,7 +22,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AlignTypes } from '../freqs/twoDimension/common';
-import { AsyncTaskArgs, PqueryResult } from './common';
+import { AsyncTaskArgs, HistoryArgs, PqueryResult } from './common';
 import { SortKey } from './result';
 
 
@@ -38,7 +38,9 @@ export enum ActionName {
     AttrChange = 'PQUERY_ATTR_CHANGE',
     SortLines = 'PQUERY_RESULTS_SORT_LINES',
     AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED',
-    ConcordanceReady = 'PQUERY_ASYNC_CONC_READY'
+    ConcordanceReady = 'PQUERY_ASYNC_CONC_READY',
+    StatePushToHistory = 'PQUERY_STATE_PUSH_TO_HISTORY',
+    PopHistory = 'PQUERY_POP_HISTORY'
 }
 
 
@@ -114,5 +116,15 @@ export namespace Actions {
         sourceId:string;
     }> {
         name: ActionName.ConcordanceReady
+    }
+
+    export interface StatePushToHistory extends Action<{
+        queryId:string;
+    }> {
+        name: ActionName.StatePushToHistory;
+    }
+
+    export interface PopHistory extends Action<HistoryArgs> {
+        name: ActionName.PopHistory;
     }
 }

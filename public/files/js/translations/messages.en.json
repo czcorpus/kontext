@@ -793,6 +793,7 @@
         "pquery__pos_input": "Position",
         "pquery__results": "Query results",
         "pquery__query_form_hd": "Query form",
-        "pquery__node_start_at": "(Node) start at"
+        "pquery__node_start_at": "(Node) start at",
+        "pquery__all_the_queries_must_be_filled": "One or more queries is empty"
     }
 }
