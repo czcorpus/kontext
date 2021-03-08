@@ -312,7 +312,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         });
                     }
                     if (this.state.task.status === 'SUCCESS') {
-                        this.layoutModel.ajax$<{result:string}>(
+                        this.layoutModel.ajax$<{result:{resultId:string; numLines:number;}}>(
                             HTTP.Method.GET,
                             'get_task_result',
                             {task_id: this.state.task.ident}
@@ -322,7 +322,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                                 this.dispatchSideEffect<Actions.AsyncResultRecieved>({
                                     name: ActionName.AsyncResultRecieved,
                                     payload: {
-                                        resultId: resp.result
+                                        resultId: resp.result.resultId,
+                                        numLines: resp.result.numLines
                                     }
                                 })
                             },

@@ -126,7 +126,7 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(http_method='GET', return_type='json', skip_corpus_init=True)
     def get_results(self, request):
-        page = int(request.args['page'])
+        page_id = int(request.args['page']) - 1
         page_size = int(request.args['page_size'])
         sort = request.args['sort']
         reverse = bool(int(request.args['reverse']))
@@ -140,7 +140,7 @@ class ParadigmaticQuery(Kontext):
                     data = sorted([row for row in csv_reader], key=lambda x: int(x[1]), reverse=reverse)
                 elif sort == 'value':
                     data = sorted([row for row in csv_reader], key=lambda x: x[0], reverse=reverse)
-            return data[page*page_size:(page+1)*page_size]
+            return data[page_id*page_size:(page_id+1)*page_size]
         
         raise NotFoundException(f'Pquery calculation is lost')        
 

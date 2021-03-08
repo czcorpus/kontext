@@ -43,16 +43,26 @@ def cached(f):
         conc_ids = ':'.join(request_json['conc_ids'])
 
         key = f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}'
-        resultId = hashlib.sha1(key.encode('utf-8')).hexdigest()
-        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{resultId}.csv')
+        result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
+        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{result_id}.csv')
 
-        if not os.path.exists(path):
+        if os.path.exists(path):
+            with open(path, 'r') as fr:
+                csv_reader = csv.reader(fr)
+                num_lines = 0
+                for _ in csv_reader:
+                    num_lines += 1
+        else:
             ans = f(request_json, raw_queries, subcpath, user_id, collator_locale)
+            num_lines = len(ans)
             with open(path, 'w') as fw:
                 csv_writer = csv.writer(fw)
                 csv_writer.writerows(ans)
 
-        return resultId
+        return {
+            'resultId': result_id,
+            'numLines': num_lines
+        }
 
     return wrapper
 

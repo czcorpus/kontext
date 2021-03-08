@@ -126,7 +126,10 @@ class ParadigmaticQueryPage {
                     data: [],
                     queryId: undefined,
                     sortKey: {column: 'freq', reverse: true},
-                    resultId: undefined
+                    resultId: undefined,
+                    numLines: undefined,
+                    page: 1,
+                    pageSize: 5
                 },
                 this.layoutModel
             );

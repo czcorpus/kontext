@@ -33,6 +33,9 @@ export interface PqueryResultModelState {
     queryId:string|undefined;
     sortKey:SortKey;
     resultId:string|undefined;
+    numLines:number|undefined;
+    page:number;
+    pageSize:number;
 }
 
 export type SortColumn = 'freq'|'value';
@@ -56,6 +59,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             action => this.changeState(state => {
                 state.isBusy = true;
                 state.data = [];
+                state.resultId = undefined;
+                state.numLines = undefined;
             })
         );
 
@@ -77,21 +82,35 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             }
         );
 
+        this.addActionHandler<Actions.SetPage>(
+            ActionName.SetPage,
+            action => {
+                this.changeState(state => {
+                    state.page = action.payload.value;
+                });
+                this.reloadData();
+            }
+        );
+
         this.addActionHandler<Actions.AsyncResultRecieved>(
             ActionName.AsyncResultRecieved,
             action => {
-                this.changeState(state => {
-                    state.resultId = action.payload.resultId;
-                });
-                this.reloadData();
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.resultId = action.payload.resultId;
+                        state.numLines = action.payload.numLines;
+                        state.page = 1;
+                    });
+                    this.reloadData();
+                }
             }
         );
     }
 
     reloadData():void {
         const args = {
-            page: 0,
-            page_size: 5,
+            page: this.state.page,
+            page_size: this.state.pageSize,
             sort: this.state.sortKey.column,
             reverse: this.state.sortKey.reverse ? 1 : 0,
             resultId: this.state.resultId
