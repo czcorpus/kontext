@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List } from 'cnc-tskit';
-import { IActionDispatcher, StatelessModel } from 'kombo';
+import { HTTP } from 'cnc-tskit';
+import { IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { PqueryResult } from './common';
@@ -32,6 +32,7 @@ export interface PqueryResultModelState {
     data:PqueryResult;
     queryId:string|undefined;
     sortKey:SortKey;
+    resultId:string|undefined;
 }
 
 export type SortColumn = 'freq'|'value';
@@ -42,59 +43,70 @@ export interface SortKey {
 }
 
 
-export class PqueryResultModel extends StatelessModel<PqueryResultModelState> {
+export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
     private readonly layoutModel:PageModel;
 
-    constructor(dispatcher:IActionDispatcher, initState:PqueryResultModelState, layoutModel:PageModel) {
+    constructor(dispatcher:IFullActionControl, initState:PqueryResultModelState, layoutModel:PageModel) {
         super(dispatcher, initState);
         this.layoutModel = layoutModel;
 
         this.addActionHandler<Actions.SubmitQuery>(
             ActionName.SubmitQuery,
-            (state, action) => {
+            action => this.changeState(state => {
                 state.isBusy = true;
                 state.data = [];
-            }
+            })
         );
 
         this.addActionHandler<Actions.SubmitQueryDone>(
             ActionName.SubmitQueryDone,
-            (state, action) => {
-                state.isBusy = false;
+            action => this.changeState(state => {
                 state.queryId = action.payload.queryId;
-            }
+            })
         );
 
         this.addActionHandler<Actions.SortLines>(
             ActionName.SortLines,
-            (state, action) => {
-                state.sortKey = action.payload;
-                this.sortData(state);
+            action => {
+                this.changeState(state => {
+                    state.sortKey = action.payload;
+                    state.isBusy = true;
+                });
+                this.reloadData();
             }
         );
 
         this.addActionHandler<Actions.AsyncResultRecieved>(
             ActionName.AsyncResultRecieved,
-            (state, action) => {
-                state.data = action.payload.data;
-                this.sortData(state)
-                state.isVisible = true;
+            action => {
+                this.changeState(state => {
+                    state.resultId = action.payload.resultId;
+                });
+                this.reloadData();
             }
-        )
+        );
     }
 
-    private sortData(state:PqueryResultModelState) {
-        switch (state.sortKey.column) {
-            case 'value':
-                state.data = List.sortAlphaBy(v => v[0], state.data);
-                break;
-            case 'freq':
-                state.data = List.sortBy(v => v[1], state.data);
-                break;
-        }
-        if (state.sortKey.reverse) {
-            state.data = List.reverse(state.data);
-        }
+    reloadData():void {
+        const args = {
+            page: 0,
+            page_size: 5,
+            sort: this.state.sortKey.column,
+            reverse: this.state.sortKey.reverse ? 1 : 0,
+            resultId: this.state.resultId
+        };
+
+        this.layoutModel.ajax$<PqueryResult>(
+            HTTP.Method.GET,
+            'get_results',
+            args
+        ).subscribe(
+            results => this.changeState(state => {
+                state.data = results;
+                state.isBusy = false;
+                state.isVisible = true;
+            })
+        );
     }
 }

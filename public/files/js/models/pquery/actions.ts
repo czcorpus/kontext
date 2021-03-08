@@ -107,7 +107,7 @@ export namespace Actions {
     }
 
     export interface AsyncResultRecieved extends Action<{
-        data:PqueryResult;
+        resultId:string;
     }> {
         name: ActionName.AsyncResultRecieved
     }
