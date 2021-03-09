@@ -28,6 +28,9 @@ import settings
 from controller.kontext import AsyncTaskStatus
 import time
 from translation import ugettext as translate
+import os
+import csv
+from controller.errors import NotFoundException
 
 """
 This module contains HTTP actions for the "Paradigmatic query" functionality
@@ -120,6 +123,26 @@ class ParadigmaticQuery(Kontext):
                                      args=task_args)
         self._store_async_task(async_task)
         return dict(task=async_task.to_dict())
+
+    @exposed(http_method='GET', return_type='json', skip_corpus_init=True)
+    def get_results(self, request):
+        page_id = int(request.args['page']) - 1
+        page_size = int(request.args['page_size'])
+        sort = request.args['sort']
+        reverse = bool(int(request.args['reverse']))
+        resultId = request.args['resultId']
+
+        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{resultId}.csv')
+        if os.path.exists(path):
+            with open(path, 'r') as fr:
+                csv_reader = csv.reader(fr)
+                if sort == 'freq':
+                    data = sorted([row for row in csv_reader], key=lambda x: int(x[1]), reverse=reverse)
+                elif sort == 'value':
+                    data = sorted([row for row in csv_reader], key=lambda x: x[0], reverse=reverse)
+            return data[page_id*page_size:(page_id+1)*page_size]
+        
+        raise NotFoundException(f'Pquery calculation is lost')        
 
     @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
     def save_query(self, request):

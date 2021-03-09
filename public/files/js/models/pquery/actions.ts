@@ -40,7 +40,8 @@ export enum ActionName {
     AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED',
     ConcordanceReady = 'PQUERY_ASYNC_CONC_READY',
     StatePushToHistory = 'PQUERY_STATE_PUSH_TO_HISTORY',
-    PopHistory = 'PQUERY_POP_HISTORY'
+    PopHistory = 'PQUERY_POP_HISTORY',
+    SetPage = 'PQUERY_SET_PAGE',
 }
 
 
@@ -107,7 +108,8 @@ export namespace Actions {
     }
 
     export interface AsyncResultRecieved extends Action<{
-        data:PqueryResult;
+        resultId:string;
+        numLines:number;
     }> {
         name: ActionName.AsyncResultRecieved
     }
@@ -126,5 +128,11 @@ export namespace Actions {
 
     export interface PopHistory extends Action<HistoryArgs> {
         name: ActionName.PopHistory;
+    }
+
+    export interface SetPage extends Action<{
+        value: number;
+    }> {
+        name: ActionName.SetPage;
     }
 }

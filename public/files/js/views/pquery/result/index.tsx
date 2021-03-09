@@ -37,6 +37,36 @@ export interface PqueryFormViewsArgs {
 
 export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{}> {
 
+    // ------------------------ <PageCounter /> --------------------------
+
+    const PageCounter:React.FC<{
+        maxPage:number;
+        currPage:number;
+
+    }> = (props) => {
+
+        const setPage = (page) => () => {
+            dispatcher.dispatch<Actions.SetPage>({
+                name: ActionName.SetPage,
+                payload: {
+                    value: page
+                }
+            });
+        };
+
+        return <S.PageCounter>
+            <a className={props.currPage === 1 ? "inactive" : null} onClick={props.currPage > 1 ? setPage(props.currPage-1) : null}>
+                <img src={he.createStaticUrl('img/prev-page.svg')} />
+            </a>
+            <span className="num-input">
+                <input type="text" value={props.currPage} onChange={e => setPage(e.target.value)} /> / {props.maxPage}
+            </span>
+            <a className={props.currPage === props.maxPage ? "inactive" : null} onClick={props.currPage < props.maxPage ? setPage(props.currPage+1) : null}>
+                <img src={he.createStaticUrl('img/next-page.svg')} />
+            </a>
+        </S.PageCounter>
+    };
+
     // ------------------------ <ThSortable /> --------------------------
 
     const ThSortable:React.FC<{
@@ -102,6 +132,8 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             (
                 <S.PqueryResultSection>
                     <h2>{he.translate('pquery__results')}</h2>
+                    <p>{he.translate('pquery__avail_label')}: {props.numLines}</p>
+                    <PageCounter maxPage={Math.ceil(props.numLines/props.pageSize)} currPage={props.page} />
                     <table className="data">
                         <tbody>
                             <tr>
@@ -112,7 +144,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                             {List.map(
                                 ([word, freq], i) => (
                                     <tr key={`${i}:${word}`}>
-                                        <td className="num">{i+1}</td>
+                                        <td className="num">{(props.page-1)*props.pageSize+i+1}</td>
                                         <td>{word}</td>
                                         <td className="num">{freq}</td>
                                     </tr>

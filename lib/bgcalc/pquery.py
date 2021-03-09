@@ -12,7 +12,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import pickle
 import hashlib
 import os.path
 from collections import defaultdict
@@ -22,6 +21,7 @@ from multiprocessing import Pool
 from functools import wraps
 from typing import Dict, Any
 import settings
+import csv
 
 """
 This module contains function for calculating Paradigmatic queries
@@ -43,15 +43,27 @@ def cached(f):
         conc_ids = ':'.join(request_json['conc_ids'])
 
         key = f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}'
-        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'),
-                            'pquery_{}.pkl'.format(hashlib.sha1(key.encode('utf-8')).hexdigest()))
+        result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
+        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{result_id}.csv')
+
         if os.path.exists(path):
-            with open(path, 'rb') as fr:
-                return pickle.load(fr)
-        ans = f(request_json, raw_queries, subcpath, user_id, collator_locale)
-        with open(path, 'wb') as fw:
-            pickle.dump(ans, fw)
-        return ans
+            with open(path, 'r') as fr:
+                csv_reader = csv.reader(fr)
+                num_lines = 0
+                for _ in csv_reader:
+                    num_lines += 1
+        else:
+            ans = f(request_json, raw_queries, subcpath, user_id, collator_locale)
+            num_lines = len(ans)
+            with open(path, 'w') as fw:
+                csv_writer = csv.writer(fw)
+                csv_writer.writerows(ans)
+
+        return {
+            'resultId': result_id,
+            'numLines': num_lines
+        }
+
     return wrapper
 
 
