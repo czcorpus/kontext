@@ -86,7 +86,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             ActionName.SetPage,
             action => {
                 this.changeState(state => {
-                    state.page = action.payload.value;
+                    state.page = isNaN(action.payload.value) ? state.page : action.payload.value;
                 });
                 this.reloadData();
             }
