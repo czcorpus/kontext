@@ -867,10 +867,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                                 payload: {
                                     ...args,
                                     timeReq: new Date().getTime(),
-                                    corpora: List.concat(
-                                        this.pageModel.getConf<Array<string>>('alignedCorpora'),
-                                        [this.pageModel.getCorpusIdent().id]
-                                    ),
+                                    corpora: [...this.pageModel.getConf<Array<string>>('alignedCorpora'),
+                                              this.pageModel.getCorpusIdent().id],
                                     subcorpus: this.state.currentSubcorp,
                                     valueType: 'unspecified',
                                     valueSubformat: this.determineSuggValueType(sourceId),
