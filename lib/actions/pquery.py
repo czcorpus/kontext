@@ -17,6 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import Optional
 from controller import exposed
 from controller.kontext import Kontext
 from argmapping.pquery import PqueryFormArgs
@@ -31,6 +32,7 @@ from translation import ugettext as translate
 import os
 import csv
 from controller.errors import NotFoundException
+from main_menu import MainMenu, EventTriggeringItem
 
 """
 This module contains HTTP actions for the "Paradigmatic query" functionality
@@ -40,6 +42,8 @@ TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
 class ParadigmaticQuery(Kontext):
+
+    PQUERY_QUICK_SAVE_MAX_LINES = 10000
 
     def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
         super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
@@ -79,6 +83,7 @@ class ParadigmaticQuery(Kontext):
             'pquery_default_attr': self._get_default_attr()
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
+        self._add_save_menu()
         return ans
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
@@ -92,6 +97,7 @@ class ParadigmaticQuery(Kontext):
             'pquery_default_attr': self._get_default_attr()
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
+        self._add_save_menu()
         return ans
 
     @exposed(http_method='POST', return_type='json')
@@ -137,12 +143,13 @@ class ParadigmaticQuery(Kontext):
             with open(path, 'r') as fr:
                 csv_reader = csv.reader(fr)
                 if sort == 'freq':
-                    data = sorted([row for row in csv_reader], key=lambda x: int(x[1]), reverse=reverse)
+                    data = sorted([row for row in csv_reader],
+                                  key=lambda x: int(x[1]), reverse=reverse)
                 elif sort == 'value':
                     data = sorted([row for row in csv_reader], key=lambda x: x[0], reverse=reverse)
-            return data[page_id*page_size:(page_id+1)*page_size]
-        
-        raise NotFoundException(f'Pquery calculation is lost')        
+            return data[page_id * page_size:(page_id + 1) * page_size]
+
+        raise NotFoundException(f'Pquery calculation is lost')
 
     @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
     def save_query(self, request):
@@ -152,3 +159,27 @@ class ParadigmaticQuery(Kontext):
             query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_dict())
             qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
         return dict(ok=True, query_id=query_id)
+
+    def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
+        if save_format is None:
+            event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
+            self._save_menu.append(
+                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83, key_mod='shift',
+                                    hint=hint).mark_indirect())  # key = 's'
+
+        else:
+            event_name = 'MAIN_MENU_DIRECT_SAVE'
+            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
+                                                       ).add_args(('saveformat', save_format)))
+    
+    def _add_save_menu(self):
+        self._add_save_menu_item('CSV', save_format='csv',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.PQUERY_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XLSX', save_format='xlsx',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.PQUERY_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XML', save_format='xml',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.PQUERY_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item(translate('Custom'))
