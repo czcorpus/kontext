@@ -653,7 +653,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             queries: pipe(
                 commonCorps,
                 List.map(
-                    ([oldCorp, newCorp]) => tuple(newCorp, state.queries[getSrcCorp(oldCorp)])
+                    // here we force new corpname to otherwise old query to make
+                    // the deserialization easier (no need to know the prev. corpus
+                    // when restoring model; there were even some problems with using prev. corpname)
+                    ([oldCorp, newCorp]) => tuple(
+                        newCorp,
+                        {...state.queries[getSrcCorp(oldCorp)], corpname: newCorp}
+                    )
                 ),
                 Dict.fromEntries()
             ),

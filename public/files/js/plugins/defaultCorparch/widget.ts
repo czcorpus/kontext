@@ -177,7 +177,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             activeTab: 0,
             activeListItem: tuple(null, null),
             corpusIdent,
-            alignedCorpora: pluginApi.getConf<Array<string>>('alignedCorpora') || [],
+            alignedCorpora: [...(pluginApi.getConf<Array<string>>('alignedCorpora') || [])],
             anonymousUser,
             dataFav: dataFavImp,
             dataFeat: [...dataFeat],
@@ -187,10 +187,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 {
                     subcorpus_id: currCorp.usesubcorp,
                     subcorpus_orig_id: currCorp.origSubcorpName,
-                    corpora: List.concat(
-                        pluginApi.getConf<Array<string>>('alignedCorpora') || [],
-                        [currCorp.id]
-                    ),
+                    corpora: [...(pluginApi.getConf<Array<string>>('alignedCorpora') || []),
+                            currCorp.id]
                 }
             ),
             isWaitingForSearchResults: false,
@@ -609,12 +607,17 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
                 if (!action.error) {
-                    const storedData = action.payload.data[this.getRegistrationId()];
+                    const storedData:CorplistWidgetModelCorpusSwitchPreserve = action.payload.data[this.getRegistrationId()];
                     if (storedData) {
                         state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
                         state.currFavitemId = findCurrFavitemId(
                             state.dataFav,
                             this.getFullCorpusSelection(state)
+                        );
+                        state.alignedCorpora = pipe(
+                            action.payload.corpora,
+                            List.tail(),
+                            List.map(([,newCorp]) => newCorp)
                         );
                     }
                 }
@@ -704,7 +707,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             subcorpus_orig_id: state.corpusIdent.origSubcorpName ?
                     `#${state.corpusIdent.origSubcorpName}` :
                     state.corpusIdent.usesubcorp,
-            corpora: [state.corpusIdent.id].concat(state.alignedCorpora)
+            corpora: [state.corpusIdent.id, ...state.alignedCorpora]
         };
     };
 

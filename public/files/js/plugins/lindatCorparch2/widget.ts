@@ -585,6 +585,11 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                             state.dataFav,
                             this.getFullCorpusSelection(state)
                         );
+                        state.alignedCorpora = pipe(
+                            action.payload.corpora,
+                            List.tail(),
+                            List.map(([,newCorp]) => newCorp)
+                        );
                     }
                 }
             }
