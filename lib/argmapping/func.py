@@ -21,7 +21,8 @@ def _action_defaults(fun: Callable[..., Dict[str, Any]]) -> Dict[str, Any]:
     return dict(list(zip(default_varnames[fun.__code__.co_argcount - len(default_vals):], default_vals)))
 
 
-def convert_func_mapping_types(args: Dict[str, Any], fun: Callable[..., Dict[str, Any]], del_nondef: bool = False, selector: int = 0) -> Dict[str, Any]:
+def convert_func_mapping_types(args: Dict[str, Any], fun: Callable[..., Dict[str, Any]], del_nondef: bool = False
+                               ) -> Dict[str, Any]:
     """
     Converts string values as received from GET/POST data into types
     defined by actions' parameters (type is inferred from function's default
@@ -30,12 +31,7 @@ def convert_func_mapping_types(args: Dict[str, Any], fun: Callable[..., Dict[str
     corr_func: Dict[Any, Callable[[Any], Any]] = {type(0): int, type(0.0): float, tuple: lambda x: [x]}
     ans = {}
     ans.update(_action_defaults(fun))
-    for full_k, value in args.items():
-        if selector:
-            k = full_k.split(':')[-1]  # filter out selector
-        else:
-            k = full_k
-
+    for k, value in args.items():
         if k.startswith('_') or type(ans.get(k, None)) is MethodType:
             continue
         if k in list(ans.keys()):
@@ -49,7 +45,7 @@ def convert_func_mapping_types(args: Dict[str, Any], fun: Callable[..., Dict[str
                     ans[k] = corr_func.get(default_type, lambda x: x)(value)
                 except ValueError as e:
                     raise werkzeug.exceptions.BadRequest(
-                        description='Failed to process parameter "{0}": {1}'.format(full_k, e))
+                        description='Failed to process parameter "{0}": {1}'.format(k, e))
             else:
                 ans[k] = value
         elif not del_nondef:

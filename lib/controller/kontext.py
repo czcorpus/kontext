@@ -1118,8 +1118,7 @@ class Kontext(Controller):
         curr_subcorp -- current subcorpus (even a public foreign one)
         out -- a dictionary used by templating system
         """
-        basecorpname = corpname.split(':')[0]
-        subcorp_list = l10n.sort(self.user_subc_names(basecorpname),
+        subcorp_list = l10n.sort(self.user_subc_names(corpname),
                                  loc=self.ui_lang, key=lambda x: x['n'])
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:

@@ -330,9 +330,6 @@ class CorpusManager(object):
                           wants to see a continuous text (e.g. kwic context) we must make sure he
                           sees only a 'legal' chunk.
         """
-        if ':' in corpname:
-            corpname, subcname = corpname.split(':', 1)
-
         public_subcname = self.get_subc_public_name(corpname, subcname)
         cache_key = (corpname, corp_variant, subcname, public_subcname)
         if cache_key in self._cache:
