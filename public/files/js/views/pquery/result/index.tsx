@@ -59,7 +59,7 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                 <img src={he.createStaticUrl('img/prev-page.svg')} />
             </a>
             <span className="num-input">
-                <input type="text" value={props.currPage} onChange={e => setPage(e.target.value)} /> / {props.maxPage}
+                <input type="text" value={props.currPage} onChange={e => setPage(e.target.value)()} /> / {props.maxPage}
             </span>
             <a className={props.currPage === props.maxPage ? "inactive" : null} onClick={props.currPage < props.maxPage ? setPage(props.currPage+1) : null}>
                 <img src={he.createStaticUrl('img/next-page.svg')} />

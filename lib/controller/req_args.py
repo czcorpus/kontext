@@ -84,8 +84,11 @@ class RequestArgsProxy:
         else:
             return tmp
 
-    def set_forced_arg(self, k, *v: List[str]) -> None:
-        self._forced[k] = list(v)
+    def set_forced_arg(self, k, v: Union[str, List[str]]) -> None:
+        if type(v) is list:
+            self._forced[k] = v
+        else:
+            self._forced[k] = [v]
 
     def add_forced_arg(self, k, *v: List[str]) -> List[str]:
         """
