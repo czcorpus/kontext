@@ -174,10 +174,9 @@ class Subcorpus(Querying):
         if data.publish and not data.description:
             raise UserActionException(translate('No description specified'))
 
-        basecorpname = self.args.corpname.split(':')[0]
-        path = self.prepare_subc_path(basecorpname, data.subcname, publish=False)
+        path = self.prepare_subc_path(self.args.corpname, data.subcname, publish=False)
         publish_path = self.prepare_subc_path(
-            basecorpname, data.subcname, publish=True) if data.publish else None
+            self.args.corpname, data.subcname, publish=True) if data.publish else None
 
         if len(tt_query) == 1 and not data.has_aligned_corpora():
             result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
@@ -192,8 +191,9 @@ class Subcorpus(Querying):
                                 time_limit=TASK_TIME_LIMIT)
             self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                    category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
-                                                   label=f'{basecorpname}:{data.subcname}',
-                                                   args=dict(subcname=data.subcname, corpname=basecorpname)))
+                                                   label=f'{self.args.corpname}/{data.subcname}',
+                                                   args=dict(subcname=data.subcname,
+                                                             corpname=self.args.corpname)))
             result = {}
         else:
             raise UserActionException(translate('Nothing specified!'))

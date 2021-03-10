@@ -20,35 +20,34 @@
 The 'settings storage' plug-in works as a backend for storing and
 loading user settings.
 """
-
+from typing import Union, Dict, Any, Optional
 import abc
 
 
 class AbstractSettingsStorage(abc.ABC):
 
     @abc.abstractmethod
-    def save(self, user_id, data):
+    def save(self, user_id: int, corpus_id: Union[str, None], data: Dict[str, Any]):
         """
-        Save user settings. Old user settings are expected to be rewritten.
+        Save either general (if corpus_id is None) or corpus specific settings.
+        Old user settings are expected to be rewritten.
 
         arguments:
         user_id -- user identifier
+        corpus_id -- if provided then the 'data' are treated as corpus settings
         data -- a dictionary containing user settings
         """
 
-    @abc.abstractmethod
-    def load(self, user_id, current_settings=None):
+    def load(self, user_id: int, corpus_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Loads user individual settings.
+        Load either general (if corpus_id is None) or corpus-specific settings
 
         arguments:
         user_id -- an ID of the user
-        current_settings -- dict-like object (JSON serializable); if provided then instead
-                            of returning new dictionary the method updates this one by loaded
-                            values and returns the same reference
+        corpus_id -- if provided than corpus-related settings are loaded
 
         returns:
-        new or updated settings dictionary provided as a parameter
+        a dict containing user settings
         """
 
     def get_excluded_users(self):

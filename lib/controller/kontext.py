@@ -254,109 +254,68 @@ class Kontext(Controller):
         """
         return [getattr(self.args, 'corpname')] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
 
-    def _get_valid_settings(self):
+    def _load_general_settings(self) -> Dict[str, Any]:
         """
-        Return all the settings valid for actual
-        KonText version (i.e. deprecated values
-        are filtered out).
         """
         if self._user_has_persistent_settings():
-            data = plugins.runtime.SETTINGS_STORAGE.instance.load(self.session_get('user', 'id'))
+            with plugins.runtime.SETTINGS_STORAGE as settings_plg:
+                return settings_plg.load(self.session_get('user', 'id'))
         else:
             data = self.session_get('settings')
             if not data:
                 data = {}
-        return [x for x in data.items() if x[0] != 'queryselector']
+            return data
 
-    def _load_user_settings(self, options: Dict[str, Any], corp_options: Dict[str, Any]):
+    def _load_corpus_settings(self, corpus_id):
         """
-        Loads user settings via settings_storage plugin. The settings are divided
-        into two groups:
-        1. corpus independent (e.g. listing page sizes)
-        2. corpus dependent (e.g. selected attributes to be presented on concordance page)
-
-        returns:
-        2-tuple of dicts ([general settings], [corpus dependent settings])
         """
-        for k, v in self._get_valid_settings():
-            if ':' not in k:
-                options[k] = v
-            else:
-                corp_options[k] = v
-        return options, corp_options
-
-    def _apply_general_user_settings(self, options, actions=None):
-        """
-        Applies general user settings (see self._load_user_settings()) to
-        the controller's attributes. This produces a default configuration
-        which can (and often is) be overwritten by URL parameters.
-
-        arguments:
-        options -- a dictionary containing user settings
-        actions -- a custom action to be applied to options (default is None)
-        """
-        if callable(actions):
-            actions(options)
-        self.args.map_args_to_attrs(options)
-        self._setup_user_paths()
-
-    def _apply_corpus_user_settings(self, options, corpname):
-        """
-        Applies corpus-dependent settings in the similar way
-        to self._apply_general_user_settings. But in this case,
-        a corpus name must be provided to be able to filter out
-        settings of other corpora. Otherwise, no action is performed.
-        """
-        ans = {}
-        ans.update(self.get_corpus_info(corpname).default_view_opts)
-        for k, v in options.items():
-            # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
-            tokens = k.rsplit(':', 1)
-            if len(tokens) == 2:
-                if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
-                    ans[tokens[1]] = v
-        self.args.map_args_to_attrs(ans)
+        if self._user_has_persistent_settings():
+            with plugins.runtime.SETTINGS_STORAGE as settings_plg:
+                return settings_plg.load(self.session_get('user', 'id'), corpus_id)
+        else:
+            data = self.session_get('corpus_settings')
+            if not data:
+                data = {}
+            return data
 
     @staticmethod
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
         return 'corpname', Kontext.SCHEDULED_ACTIONS_KEY
 
-    def _save_options(self, optlist: Optional[Iterable] = None, selector: str = ''):
+    def _save_options(self, optlist: Optional[Iterable] = None, corpus_id: Union[str, None] = None):
         """
         Saves user's options to a storage
 
         Arguments:
         optlist -- a list of options/arguments to be saved
-        selector -- a 'namespace' prefix (typically, a corpus name) used
-                    to attach an option to a specific corpus
+        corpus_id --
         """
         if optlist is None:
             optlist = []
-        if selector:
-            tosave = [(selector + ':' + att.name, getattr(self.args, att.name))
-                      for att in attr.fields(Args) if att.name in optlist]
-        else:
-            tosave = [(att.name, getattr(self.args, att.name))
-                      for att in attr.fields(Args) if att.name in optlist]
+        tosave = [(att.name, getattr(self.args, att.name))
+                  for att in attr.fields(Args) if att.name in optlist]
 
         def merge_incoming_opts_to(opts):
             if opts is None:
                 opts = {}
             excluded_attrs = self._get_save_excluded_attributes()
-            for k, v in tosave:
-                items = k.split(':')
-                corp, attr = items if len(items) > 1 else (None, items[0])
-                if attr not in excluded_attrs and (selector and selector == corp or corp is None):
-                    opts[k] = v
+            for attr, val in tosave:
+                if attr not in excluded_attrs:
+                    opts[attr] = val
 
         # data must be loaded (again) because in-memory settings are
         # in general a subset of the ones stored in db (and we want
         # to store (again) even values not used in this particular request)
         with plugins.runtime.SETTINGS_STORAGE as settings_storage:
             if self._user_has_persistent_settings():
-                options = settings_storage.load(self.session_get('user', 'id'))
-                merge_incoming_opts_to(options)
-                settings_storage.save(self.session_get('user', 'id'), options)
+                if corpus_id:
+                    options = settings_storage.load(self.session_get('user', 'id'), corpus_id)
+                    merge_incoming_opts_to(options)
+                    settings_storage.save(self.session_get('user', 'id'), corpus_id, options)
+                else:
+                    options = settings_storage.load(self.session_get('user', 'id'))
+                    merge_incoming_opts_to(options)
+                    settings_storage.save(self.session_get('user', 'id'), None, options)
             else:
                 options = {}
                 options.update(self.session_get('settings'))
@@ -569,7 +528,7 @@ class Kontext(Controller):
                     action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
 
-    def _check_corpus_access(self, action_name, form, action_metadata):
+    def _check_corpus_access(self, action_name, form, action_metadata) -> Tuple[Union[str, None], str]:
         """
         Args:
             action_name:
@@ -598,7 +557,7 @@ class Kontext(Controller):
                     if not al_access or al_variant != variant:
                         raise AlignedCorpusForbiddenException(al_corp, al_variant)
             else:
-                corpname = ''
+                corpname = None
                 variant = ''
             return corpname, variant
 
@@ -625,29 +584,37 @@ class Kontext(Controller):
             self.add_validator(validate_corpus)
 
         options = {}
-        corp_options = {}
-        self._load_user_settings(options, corp_options)
         self._scheduled_actions(options)
+
         # only general setting can be applied now because
         # we do not know final corpus name yet
-        self._apply_general_user_settings(options, self._init_default_settings)
+        self._init_default_settings(options)
+        options.update(self._load_general_settings())
+        self.args.map_args_to_attrs(options)
 
+        self._setup_user_paths()
         self.cm = corplib.CorpusManager(self.subcpath)
 
         self._restore_prev_conc_params(req_args)
         # corpus access check and modify path in case user cannot access currently requested corp.
-        corpname, corpus_variant = self._check_corpus_access(action_name, req_args, action_metadata)
+        corpname, self._corpus_variant = self._check_corpus_access(action_name, req_args, action_metadata)
 
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
-        if len(corpname) > 0:
-            self._apply_corpus_user_settings(corp_options, corpname)
+        if corpname is None:
+            req_args.set_forced_arg('corpname', '')  # make sure no unwanted corpname arg is used
+        else:
+            corpus_options = {}
+            corpus_options.update(self.get_corpus_info(corpname).default_view_opts)
+            corpus_options.update(self._load_corpus_settings(corpname))
+            self.args.map_args_to_attrs(corpus_options)
+            req_args.set_forced_arg('corpname', corpname)
 
         # always prefer corpname returned by _check_corpus_access()
-        req_args.set_forced_arg('corpname', corpname)  # TODO we should reflect align here if corpus has changed
+        # TODO we should reflect align here if corpus has changed
+
         # now we apply args from URL (highest priority)
         self.args.map_args_to_attrs(req_args)
-        self._corpus_variant = corpus_variant
 
         # return url (for 3rd party pages etc.)
         args = {}
@@ -656,9 +623,8 @@ class Kontext(Controller):
         if self.get_http_method() == 'GET':
             self.return_url = self.updated_current_url(args)
         else:
-            self.return_url = '%squery?%s' % (self.get_root_url(),
-                                              '&'.join(['%s=%s' % (k, v)
-                                                        for k, v in list(args.items())]))
+            self.return_url = '{}query?{}'.format(self.get_root_url(),
+                                                  '&'.join([f'{k}={v}' for k, v in list(args.items())]))
         # by default, each action is public
         access_level = action_metadata['access_level']
         if access_level and self.user_is_anonymous():
@@ -1152,8 +1118,7 @@ class Kontext(Controller):
         curr_subcorp -- current subcorpus (even a public foreign one)
         out -- a dictionary used by templating system
         """
-        basecorpname = corpname.split(':')[0]
-        subcorp_list = l10n.sort(self.user_subc_names(basecorpname),
+        subcorp_list = l10n.sort(self.user_subc_names(corpname),
                                  loc=self.ui_lang, key=lambda x: x['n'])
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:

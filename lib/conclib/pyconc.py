@@ -46,8 +46,7 @@ def get_conc_labelmap(infopath):
 
 
 def get_stored_conc(corp, concname, conc_dir):
-    basecorpname = corp.corpname.split(':')[0]
-    conc_dir = os.path.join(conc_dir, basecorpname)
+    conc_dir = os.path.join(conc_dir, corp.corpname)
     if not os.path.isdir(conc_dir):
         os.makedirs(conc_dir)
     cpath = os.path.join(conc_dir, concname)

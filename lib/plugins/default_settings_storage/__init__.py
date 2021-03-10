@@ -19,6 +19,8 @@ A simple settings storage which relies on default_db plug-in.
 import plugins
 from plugins.abstract.settings_storage import AbstractSettingsStorage
 from plugins import inject
+from collections import defaultdict
+import logging
 
 
 class SettingsStorage(AbstractSettingsStorage):
@@ -34,37 +36,40 @@ class SettingsStorage(AbstractSettingsStorage):
         self._excluded_users = excluded_users
 
     def _mk_key(self, user_id):
-        return 'settings:user:%d' % user_id
+        return f'settings:user:{user_id}'
 
-    def save(self, user_id, data):
-        """
-        saves user settings
+    def _mk_corp_key(self, user_id):
+        return f'corpus_settings:user:{user_id}'
 
-        arguments:
-        user_id -- a numeric ID of a user
-        data -- a dictionary containing user data
-        """
-        self.db.set(self._mk_key(user_id), data)
-
-    def load(self, user_id, current_settings=None):
-        """
-        Loads user individual settings.
-
-        arguments:
-        current_settings -- if provided then instead of returning new dictionary method updates
-        this one and returns it
-
-        returns:
-        new or updated settings dictionary provided as a parameter
-        """
-        data = self.db.get(self._mk_key(user_id))
-        if data is None:
-            data = {}
-        if current_settings is not None:
-            current_settings.update(data)
-            return current_settings
+    def save(self, user_id, corpus_id, data):
+        if corpus_id:
+            self.db.hash_set(self._mk_corp_key(user_id), corpus_id, data)
         else:
-            return data
+            self.db.set(self._mk_key(user_id), data)
+
+    def _upgrade_general_settings(self, data, user_id):
+        if data is None:
+            return {}
+        corp_set = defaultdict(lambda: {})
+        gen = {}
+        for k, v in data.items():
+            tmp = k.split(':')
+            if len(tmp) > 1:
+                corp_set[tmp[0]][tmp[1]] = v
+            else:
+                gen[k] = v
+        for corp, cs in corp_set.items():
+            self.db.hash_set(self._mk_corp_key(user_id), corp, cs)
+        if len(gen) < len(data):
+            logging.getLogger(__name__).warning('Upgraded legacy format settings for user {}'.format(user_id))
+            self.db.set(self._mk_key(user_id), gen)
+        return gen
+
+    def load(self, user_id, corpus_id=None):
+        if corpus_id:
+            return self.db.hash_get(self._mk_corp_key(user_id), corpus_id)
+        else:
+            return self._upgrade_general_settings(self.db.get(self._mk_key(user_id)), user_id)
 
     def get_excluded_users(self):
         return self._excluded_users
