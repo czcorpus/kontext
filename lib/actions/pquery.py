@@ -30,6 +30,7 @@ from controller.kontext import AsyncTaskStatus
 import time
 from translation import ugettext as translate
 import os
+import sys
 import csv
 from controller.errors import NotFoundException
 from main_menu import MainMenu, EventTriggeringItem
@@ -134,22 +135,12 @@ class ParadigmaticQuery(Kontext):
     def get_results(self, request):
         page_id = int(request.args['page']) - 1
         page_size = int(request.args['page_size'])
-        sort = request.args['sort']
-        reverse = bool(int(request.args['reverse']))
-        resultId = request.args['resultId']
 
-        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{resultId}.csv')
-        if os.path.exists(path):
-            with open(path, 'r') as fr:
-                csv_reader = csv.reader(fr)
-                if sort == 'freq':
-                    data = sorted([row for row in csv_reader],
-                                  key=lambda x: int(x[1]), reverse=reverse)
-                elif sort == 'value':
-                    data = sorted([row for row in csv_reader], key=lambda x: x[0], reverse=reverse)
-            return data[page_id * page_size:(page_id + 1) * page_size]
-
-        raise NotFoundException(f'Pquery calculation is lost')
+        return self._get_cached_data(
+            request.args['resultId'],
+            request.args['sort'],
+            bool(int(request.args['reverse']))
+        )[page_id * page_size:(page_id + 1) * page_size]
 
     @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
     def save_query(self, request):
@@ -159,6 +150,38 @@ class ParadigmaticQuery(Kontext):
             query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_dict())
             qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
         return dict(ok=True, query_id=query_id)
+
+    @exposed(access_level=1, func_arg_mapped=True, skip_corpus_init=True, return_type='plain')
+    def downloadpquery(self, resultId='', sort='value', reverse='0', saveformat='', from_line=0, to_line='', colheaders=0, heading=0):
+        """
+        dawnload a paradigmatic query results
+        """
+        from_line = int(from_line)
+        to_line = int(to_line) if to_line else sys.maxsize
+
+        data = self._get_cached_data(
+            resultId,
+            sort,
+            bool(int(reverse))
+        )[from_line:to_line]
+
+        output = None
+        def mkfilename(suffix): return f'{self.args.corpname}-pquery.{suffix}'
+        writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='pquery')
+
+        writer.set_col_types(int, str, float)
+
+        self._headers['Content-Type'] = writer.content_type()
+        self._headers['Content-Disposition'] = f'attachment; filename="{mkfilename(saveformat)}"'
+
+        if colheaders or heading:
+            writer.writeheading(['', 'value', 'freq'])
+
+        for (i, row) in enumerate(data):
+            writer.writerow(i + 1, row)
+
+        output = writer.raw_content()
+        return output
 
     def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
@@ -171,7 +194,7 @@ class ParadigmaticQuery(Kontext):
             event_name = 'MAIN_MENU_DIRECT_SAVE'
             self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
                                                        ).add_args(('saveformat', save_format)))
-    
+
     def _add_save_menu(self):
         self._add_save_menu_item('CSV', save_format='csv',
                                  hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
@@ -183,3 +206,17 @@ class ParadigmaticQuery(Kontext):
                                  hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.PQUERY_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item(translate('Custom'))
+
+    def _get_cached_data(self, resultId, sort, reverse):
+        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{resultId}.csv')
+        if os.path.exists(path):
+            with open(path, 'r') as fr:
+                csv_reader = csv.reader(fr)
+                if sort == 'freq':
+                    data = sorted([row for row in csv_reader],
+                                  key=lambda x: int(x[1]), reverse=reverse)
+                elif sort == 'value':
+                    data = sorted([row for row in csv_reader], key=lambda x: x[0], reverse=reverse)
+            return data
+
+        raise NotFoundException('Pquery calculation is lost')

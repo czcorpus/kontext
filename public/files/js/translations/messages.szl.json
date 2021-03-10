@@ -599,6 +599,7 @@
         "task__type_coll_download": "Ściōnganie listy kolokacyji",
         "task__type_wordlist_download": "Ściōnganie listy słōw",
         "task__type_line_selection_download": "Ściōnganie przeglōndu wyboru liniji",
+        "task__type_pquery_download": "Paradigmatic query results download UNTRANSLATED",
         "task__type_pquery": "Paradigmatic query UNTRANSLATED",
         "task__status_PENDING": "Running",
         "task__status_STARTED": "Running",
@@ -794,6 +795,7 @@
         "pquery__query_form_hd": "Query form UNTRANSLATED",
         "pquery__node_start_at": "(Node) zacznij ôd UNTRANSLATED",
         "pquery__all_the_queries_must_be_filled": "One or more queries is empty UNTRANSLATED",
-        "pquery__avail_label": "Społym"
+        "pquery__avail_label": "Społym",
+        "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED"
     }
 }

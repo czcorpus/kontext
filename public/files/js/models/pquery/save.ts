@@ -99,7 +99,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
                     ).subscribe(
                         (action) => {
                             this.submit(
-                                (action as Actions.SaveFormPrepareSubmitArgsDone).payload.data);
+                                (action as Actions.SaveFormPrepareSubmitArgsDone).payload);
                         }
                     )
                 }
@@ -151,7 +151,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
                     }).subscribe(
                         (action) => {
                             this.submit(
-                                (action as Actions.SaveFormPrepareSubmitArgsDone).payload.data);
+                                (action as Actions.SaveFormPrepareSubmitArgsDone).payload);
                         }
                     )
                 }
@@ -184,18 +184,20 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
         return false;
     }
 
-    private submit(dataRowsArgs:MultiDict):void {
+    private submit(pqueryResultArgs:{resultId:string; sort:string; reverse:number}):void {
         const args = new MultiDict();
-        dataRowsArgs.items().forEach(([k, v]) => args.add(k, v));
+        args.set('resultId', pqueryResultArgs.resultId);
+        args.set('sort', pqueryResultArgs.sort);
+        args.set('reverse', pqueryResultArgs.reverse);
         args.set('saveformat', this.state.saveformat);
         args.set('colheaders', this.state.includeColHeaders ? '1' : '0');
         args.set('heading', this.state.includeHeading ? '1' : '0');
         args.set('from_line', this.state.fromLine.value);
-        args.set('to_line', this.state.toLine.value);
+        args.set('to_line', isNaN(parseInt(this.state.toLine.value)) ? '' : this.state.toLine.value);
         args.remove('format'); // cannot risk 'json' here
         this.saveLinkFn(
             `pquery.${SaveData.formatToExt(this.state.saveformat)}`,
-            this.layoutModel.createActionUrl('savepquery', args.items())
+            this.layoutModel.createActionUrl('pquery/downloadpquery', args.items())
         );
     }
 }

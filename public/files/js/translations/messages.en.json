@@ -600,6 +600,7 @@
         "task__type_coll_download": "Collocations list download",
         "task__type_wordlist_download": "Word list download",
         "task__type_line_selection_download": "Line selection overview download",
+        "task__type_pquery_download": "Paradigmatic query results download",
         "task__type_pquery": "Paradigmatic query",
         "task__status_PENDING": "Running",
         "task__status_STARTED": "Running",
@@ -795,6 +796,7 @@
         "pquery__query_form_hd": "Query form",
         "pquery__node_start_at": "(Node) start at",
         "pquery__all_the_queries_must_be_filled": "One or more queries is empty",
-        "pquery__avail_label": "Total"
+        "pquery__avail_label": "Total",
+        "pquery__save_form_label": "Save paradigmatic query results"
     }
 }

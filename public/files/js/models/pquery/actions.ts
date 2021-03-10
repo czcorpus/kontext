@@ -181,7 +181,9 @@ export namespace Actions {
     }
 
     export interface SaveFormPrepareSubmitArgsDone extends Action<{
-        data;
+        resultId:string;
+        sort:string;
+        reverse:number;
     }> {
         name:ActionName.SaveFormPrepareSubmitArgsDone;
     }

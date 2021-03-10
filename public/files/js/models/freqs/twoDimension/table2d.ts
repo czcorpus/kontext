@@ -22,7 +22,6 @@ import { Observable, of as rxOf } from 'rxjs';
 import { Maths, HTTP, pipe, List, tuple, Dict } from 'cnc-tskit';
 
 import { PageModel, DownloadType } from '../../../app/page';
-import { FreqResultResponse } from '../../../types/ajaxResponses';
 import { MultiDict } from '../../../multidict';
 import { GeneralFreq2DModel, CTFreqCell, importAvailAlphaLevels, GeneralFreq2DModelState } from './generalDisplay';
 import { DataPoint, ConfIntervals } from '../../../charts/confIntervals';

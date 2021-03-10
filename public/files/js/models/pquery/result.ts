@@ -20,7 +20,7 @@
  */
 
 import { HTTP } from 'cnc-tskit';
-import { IFullActionControl, StatefulModel } from 'kombo';
+import { IActionDispatcher, IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
@@ -135,6 +135,16 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                 });
             }
         );
+
+        this.addActionHandler<Actions.SaveFormSubmit>(
+            ActionName.SaveFormSubmit,
+            action => {this.sendSaveArgs(dispatcher)}
+        );
+
+        this.addActionHandler<MainMenuActions.DirectSave>(
+            MainMenuActionName.DirectSave,
+            action => {this.sendSaveArgs(dispatcher)}
+        );
     }
 
     reloadData():void {
@@ -161,5 +171,16 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
     getSaveModel():PqueryResultsSaveModel {
         return this.saveModel;
+    }
+
+    sendSaveArgs(dispatcher:IFullActionControl):void {
+        dispatcher.dispatchSideEffect<Actions.SaveFormPrepareSubmitArgsDone>({
+            name: ActionName.SaveFormPrepareSubmitArgsDone,
+            payload: {
+                resultId: this.state.resultId,
+                sort: this.state.sortKey.column,
+                reverse: this.state.sortKey.reverse ? 1 : 0
+            }
+        });
     }
 }

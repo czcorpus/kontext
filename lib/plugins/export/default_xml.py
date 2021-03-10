@@ -206,6 +206,26 @@ class ConcDocument(GeneralDocument):
             self._append_lang(parline_elm, lang_row)
 
 
+class PqueryDocument(GeneralDocument):
+
+    def __init__(self):
+        super(PqueryDocument, self).__init__('pquery_results')
+        self._items = etree.SubElement(self._root, 'items')
+
+    def add_line(self, data, line_num=None):
+        item_elm = etree.SubElement(self._items, 'item')
+        if line_num is not None:
+            line_num_elm = etree.SubElement(item_elm, 'num')
+            line_num_elm.text = str(line_num)
+        str_elm = etree.SubElement(item_elm, 'str')
+        str_elm.text = data[0]
+        freq_elm = etree.SubElement(item_elm, 'freq')
+        freq_elm.text = str(data[1])
+
+    def add_heading(self, data):
+        self._auto_add_heading(data)
+
+
 class XMLExport(AbstractExport):
     """
     The plug-in itself
@@ -214,7 +234,8 @@ class XMLExport(AbstractExport):
         'concordance': ConcDocument,
         'freq': FreqDocument,
         'wordlist': WordlistDocument,
-        'coll': CollDocument
+        'coll': CollDocument,
+        'pquery': PqueryDocument
     }
 
     def __init__(self, subtype):
