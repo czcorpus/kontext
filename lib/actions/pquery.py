@@ -20,23 +20,44 @@
 from controller import exposed
 from controller.kontext import Kontext
 from argmapping.pquery import PqueryFormArgs
+from argmapping.query import QueryFormArgs
 from werkzeug import Request
 import plugins
 from texttypes import TextTypesCache
 import bgcalc
+from bgcalc.pquery import require_existing_pquery
+from bgcalc.pquery.errors import PqueryResultNotFound
 import settings
 from controller.kontext import AsyncTaskStatus
 import time
 from translation import ugettext as translate
-import os
-import csv
-from controller.errors import NotFoundException
+from typing import Union, Dict, List
+from controller.errors import UserActionException
+
+PAGE_SIZE = 10
 
 """
 This module contains HTTP actions for the "Paradigmatic query" functionality
 """
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
+
+
+def _load_conc_queries(conc_ids: List[str], corpus_id: str):
+    ans = []
+    with plugins.runtime.QUERY_PERSISTENCE as qs:
+        for conc_id in conc_ids:
+            data = qs.open(conc_id)
+            if data is None:
+                raise UserActionException('Source concordance query does not exist: {}'.format(conc_id))
+            fdata = data.get('lastop_form', {})
+            if fdata['form_type'] != 'query':
+                raise UserActionException('Invalid source query used: {}'.format(conc_id))
+            args = QueryFormArgs(corpora=[corpus_id], persist=True)
+            tmp = args.updated(fdata, conc_id).to_dict()
+            tmp['query_id'] = args.op_key
+            ans.append(tmp)
+    return ans
 
 
 class ParadigmaticQuery(Kontext):
@@ -46,17 +67,6 @@ class ParadigmaticQuery(Kontext):
 
     def get_mapping_url_prefix(self):
         return '/pquery/'
-
-    def _init_page_data(self, request):
-        query_id = request.args.get('query_id')
-        data = None
-        if query_id:
-            with plugins.runtime.QUERY_PERSISTENCE as qs:
-                data = qs.open(query_id)
-        if data is not None:
-            data['corpname'] = data['corpora'][0]
-            del data['corpora']
-        return data
 
     def _get_tagsets(self):
         corp_info = self.get_corpus_info(self.args.corpname)
@@ -70,26 +80,52 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
-        data = self._init_page_data(request)
+        if 'query_id' in request.args:
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                data = qp.open(request.args['query_id'])
+                form = PqueryFormArgs()
+                form.update_by_user_query(data)
+        else:
+            form = None
         ans = {
             'corpname': self.args.corpname,
-            'form_data': data,
-            'calculate': False,
+            'form_data': form.to_dict() if form is not None else None,
             'tagsets': self._get_tagsets(),
             'pquery_default_attr': self._get_default_attr()
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans
 
-    @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
+    @exposed(template='pquery/result.html', http_method='GET', page_model='pqueryResult')
     def result(self, request):
-        data = self._init_page_data(request)
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            stored_pq = qp.open(request.args.get('query_id'))
+            pquery = PqueryFormArgs()
+            pquery.update_by_user_query(stored_pq)
+        pagesize = PAGE_SIZE  # TODO
+        page = 1
+        offset = (page - 1) * pagesize
+        corp_info = self.get_corpus_info(self.args.corpname)
+        conc_queries = _load_conc_queries(pquery.conc_ids, self.args.corpname)
+        try:
+            total_num_lines, freqs = require_existing_pquery(
+                pquery, offset, pagesize, corp_info.collator_locale, 'freq', True)
+            data_ready = True
+        except PqueryResultNotFound:
+            total_num_lines = 0
+            freqs = []
+            data_ready = False
         ans = {
             'corpname': self.args.corpname,
-            'form_data': data,
-            'calculate': True,
-            'tagsets': self._get_tagsets(),
-            'pquery_default_attr': self._get_default_attr()
+            'usesubcorp': self.args.usesubcorp,
+            'query_id': request.args.get('query_id'),
+            'freqs': freqs,
+            'page': page,
+            'pagesize': pagesize,
+            'form_data': pquery.to_dict(),
+            'conc_queries': conc_queries,
+            'total_num_lines': total_num_lines,
+            'data_ready': data_ready
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         return ans
@@ -104,19 +140,25 @@ class ParadigmaticQuery(Kontext):
         app = bgcalc.calc_backend_client(settings)
         corp_info = self.get_corpus_info(self.args.corpname)
 
+        args = PqueryFormArgs()
+        args.update_by_user_query(request.json)
+        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
+            query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_qp())
+            qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
+
         raw_queries = dict()
         with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
             for conc_id in request.json.get('conc_ids'):
                 raw_queries[conc_id] = query_persistence.open(conc_id)['q']
         calc_args = (
-            request.json,
+            args,
             raw_queries,
             self.subcpath,
             self.session_get('user', 'id'),
             corp_info.collator_locale if corp_info.collator_locale else 'en_US')
         res = app.send_task('calc_merged_freqs', args=calc_args,
                             time_limit=TASK_TIME_LIMIT)
-        task_args = dict(conc_id=conc_id, last_update=time.time())
+        task_args = dict(query_id=query_id, last_update=time.time())
         async_task = AsyncTaskStatus(status=res.status, ident=res.id,
                                      category=AsyncTaskStatus.CATEGORY_PQUERY,
                                      label=translate('Paradigmatic query calculation'),
@@ -127,28 +169,16 @@ class ParadigmaticQuery(Kontext):
     @exposed(http_method='GET', return_type='json', skip_corpus_init=True)
     def get_results(self, request):
         page_id = int(request.args['page']) - 1
-        page_size = int(request.args['page_size'])
         sort = request.args['sort']
         reverse = bool(int(request.args['reverse']))
-        resultId = request.args['resultId']
+        offset = page_id * PAGE_SIZE
 
-        path = os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{resultId}.csv')
-        if os.path.exists(path):
-            with open(path, 'r') as fr:
-                csv_reader = csv.reader(fr)
-                if sort == 'freq':
-                    data = sorted([row for row in csv_reader], key=lambda x: int(x[1]), reverse=reverse)
-                elif sort == 'value':
-                    data = sorted([row for row in csv_reader], key=lambda x: x[0], reverse=reverse)
-            return data[page_id*page_size:(page_id+1)*page_size]
-        
-        raise NotFoundException(f'Pquery calculation is lost')        
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            stored_pq = qp.open(request.args.get('query_id'))
+        pquery = PqueryFormArgs()
+        pquery.update_by_user_query(stored_pq)
+        corp_info = self.get_corpus_info(self.args.corpname)
+        total_num_lines, freqs = require_existing_pquery(
+            pquery, offset, PAGE_SIZE, corp_info.collator_locale, sort, reverse)
+        return dict(rows=freqs)
 
-    @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
-    def save_query(self, request):
-        args = PqueryFormArgs()
-        args.update_by_user_query(request.json)
-        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-            query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_dict())
-            qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
-        return dict(ok=True, query_id=query_id)

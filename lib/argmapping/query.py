@@ -47,7 +47,7 @@ class ConcFormArgs(object):
         instance.
         """
         for k, v in attrs.items():
-            if k in vars(self):
+            if hasattr(self, k):
                 setattr(self, k, v)
         self._op_key = op_key
         return self

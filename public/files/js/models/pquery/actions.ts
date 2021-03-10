@@ -22,7 +22,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AlignTypes } from '../freqs/twoDimension/common';
-import { AsyncTaskArgs, HistoryArgs, PqueryResult } from './common';
+import { AsyncTaskArgs, HistoryArgs } from './common';
 import { SortKey } from './result';
 
 
@@ -37,11 +37,11 @@ export enum ActionName {
     SetAlignType = 'PQUERY_SET_ALIGN_TYPE',
     AttrChange = 'PQUERY_ATTR_CHANGE',
     SortLines = 'PQUERY_RESULTS_SORT_LINES',
-    AsyncResultRecieved = 'PQUERY_ASYNC_RESULT_RECIEVED',
     ConcordanceReady = 'PQUERY_ASYNC_CONC_READY',
     StatePushToHistory = 'PQUERY_STATE_PUSH_TO_HISTORY',
     PopHistory = 'PQUERY_POP_HISTORY',
     SetPage = 'PQUERY_SET_PAGE',
+    ToggleModalForm = 'PQUERY_TOGGLE_MODAL_FORM'
 }
 
 
@@ -54,7 +54,6 @@ export namespace Actions {
     }
 
     export interface SubmitQueryDone extends Action<{
-        queryId:string;
         corpname:string;
         usesubcorp:string;
         task:Kontext.AsyncTaskInfo<AsyncTaskArgs>;
@@ -107,13 +106,6 @@ export namespace Actions {
         name: ActionName.SortLines;
     }
 
-    export interface AsyncResultRecieved extends Action<{
-        resultId:string;
-        numLines:number;
-    }> {
-        name: ActionName.AsyncResultRecieved
-    }
-
     export interface ConcordanceReady extends Action<{
         sourceId:string;
     }> {
@@ -134,5 +126,11 @@ export namespace Actions {
         value: number;
     }> {
         name: ActionName.SetPage;
+    }
+
+    export interface ToggleModalForm extends Action<{
+        visible:boolean;
+    }> {
+        name: ActionName.ToggleModalForm;
     }
 }

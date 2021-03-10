@@ -41,8 +41,8 @@ export interface QueryOverviewTableProps {
 
 
 export interface BasicOverviewViews {
-    EmptyQueryOverviewBar:React.SFC<EmptyQueryOverviewBarProps>;
-    QueryOverviewTable:React.SFC<QueryOverviewTableProps>;
+    EmptyQueryOverviewBar:React.FC<EmptyQueryOverviewBarProps>;
+    QueryOverviewTable:React.FC<QueryOverviewTableProps>;
 }
 
 
@@ -60,7 +60,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
 
-    const EmptyQueryOverviewBar:React.SFC<EmptyQueryOverviewBarProps> = (props) => (
+    const EmptyQueryOverviewBar:React.FC<EmptyQueryOverviewBarProps> = (props) => (
         <div>
             <ul id="query-overview-bar">
                 <layoutViews.CorpnameInfoTrigger
@@ -69,13 +69,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         usesubcorp={props.usesubcorp}
                         origSubcorpName={props.origSubcorpName}
                         foreignSubcorp={props.foreignSubcorp} />
+                {props.children}
             </ul>
         </div>
     );
 
     // ----------------------------- <QueryOverviewTable /> --------------------------
 
-    const QueryOverviewTable:React.SFC<QueryOverviewTableProps> = (props) => {
+    const QueryOverviewTable:React.FC<QueryOverviewTableProps> = (props) => {
 
         const handleCloseClick = () => {
             dispatcher.dispatch<Actions.ClearQueryOverviewData>({

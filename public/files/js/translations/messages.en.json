@@ -791,10 +791,11 @@
         "pquery__attr_input": "Attribute",
         "pquery__min_fq_input": "Min. fq.",
         "pquery__pos_input": "Position",
-        "pquery__results": "Query results",
-        "pquery__query_form_hd": "Query form",
+        "pquery__query_form_hd": "Query",
         "pquery__node_start_at": "(Node) start at",
         "pquery__all_the_queries_must_be_filled": "One or more queries is empty",
-        "pquery__avail_label": "Total"
+        "pquery__avail_label": "Total",
+        "pquery__no_result": "The search has no result. Please check your queries and query parameters.",
+        "pquery_overview_title": "Paradigmatic query"
     }
 }

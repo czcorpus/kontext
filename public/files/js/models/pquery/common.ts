@@ -24,23 +24,8 @@ import { Kontext } from '../../types/common';
 import { highlightSyntaxStatic } from '../query/cqleditor/parser';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
+import { AjaxResponse } from '../../types/ajaxResponses';
 
-/**
- * PqueryFormArgs represents paradigmatic query form values
- * as stored on server. Due to specific nature of the whole
- * calculation process, the type is not used directly
- * to start a calculation.
- */
-export interface PqueryFormArgs {
-    id?:string; // if undefined then the form is not serialized yet
-    corpname:string;
-    usesubcorp:string;
-    min_freq:number;
-    pos_index:number;
-    pos_align:AlignTypes;
-    attr:string;
-    queries:Array<AdvancedQuerySubmit>;
-}
 
 /**
  * PqueryResult is a result of a Paradigmatic query
@@ -54,11 +39,23 @@ export interface FreqIntersectionArgs {
     conc_ids:Array<string>;
     min_freq:number;
     attr:string;
+    pos_index:number;
+    pos_align:AlignTypes;
     position:string;
 }
 
-export interface AsyncTaskArgs {
+export interface StoredAdvancedQuery extends AdvancedQuerySubmit {
     conc_id:string;
+}
+
+export interface StoredQueryFormArgs extends AjaxResponse.QueryFormArgs {
+    conc_id:string;
+}
+
+export type ConcQueries = Array<StoredAdvancedQuery>;
+
+export interface AsyncTaskArgs {
+    query_id:string;
     last_update:number;
 }
 
@@ -83,6 +80,7 @@ export interface HistoryArgs {
 
 export interface PqueryFormModelState {
     isBusy:boolean;
+    modalVisible:boolean;
     corpname:string;
     usesubcorp:string;
     queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
@@ -90,7 +88,6 @@ export interface PqueryFormModelState {
     cqlEditorMessages:{[sourceId:string]:string};
     useRichQueryEditor:boolean;
     concWait:{[sourceId:string]:ConcStatus};
-    queryId:string|undefined;
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
     minFreq:number;
     posIndex:number;
@@ -98,7 +95,6 @@ export interface PqueryFormModelState {
     attr:string;
     attrs:Array<Kontext.AttrItem>;
     structAttrs:Array<Kontext.AttrItem>;
-    receivedResults:boolean;
 }
 
 /**
@@ -122,6 +118,7 @@ export function newModelState(
 
     return {
         isBusy: false,
+        modalVisible: false,
         corpname,
         usesubcorp,
         queries: pipe(
@@ -160,19 +157,18 @@ export function newModelState(
             Dict.fromEntries()
         ),
         task: undefined,
-        queryId: undefined,
         minFreq: 5,
         posIndex: 6,
         posAlign: AlignTypes.LEFT,
         attr: defaultAttr,
         attrs,
-        structAttrs,
-        receivedResults: false
+        structAttrs
     };
 }
 
 export function storedQueryToModel(
-    sq:PqueryFormArgs,
+    sq:FreqIntersectionArgs,
+    concQueries:ConcQueries,
     attrs:Array<Kontext.AttrItem>,
     structAttrs:Array<Kontext.AttrItem>,
     useRichQueryEditor:boolean
@@ -180,10 +176,11 @@ export function storedQueryToModel(
 
     return {
         isBusy: false,
+        modalVisible: false,
         corpname: sq.corpname,
         usesubcorp: sq.usesubcorp,
         queries: pipe(
-            sq.queries,
+            concQueries,
             List.map<AdvancedQuerySubmit, [string, AdvancedQuery]>(
                 (query, i) => {
                     const [queryHtml, parsedAttrs] = highlightSyntaxStatic(
@@ -215,31 +212,52 @@ export function storedQueryToModel(
             Dict.fromEntries()
         ),
         downArrowTriggersHistory: pipe(
-            sq.queries,
+            concQueries,
             List.map((q, i) => tuple(createSourceId(i), false)),
             Dict.fromEntries()
         ),
         cqlEditorMessages: pipe(
-            sq.queries,
+            concQueries,
             List.map((q, i) => tuple(createSourceId(i), '')),
             Dict.fromEntries()
         ),
         useRichQueryEditor,
         concWait: pipe(
-            sq.queries,
+            concQueries,
             List.map<AdvancedQuerySubmit, [string, ConcStatus]>(
                 (v, i) => tuple(createSourceId(i), 'none')
             ),
             Dict.fromEntries()
         ),
         task: undefined,
-        queryId: sq.id,
         minFreq: sq.min_freq,
         posIndex: sq.pos_index,
         posAlign: sq.pos_align,
         attr: sq.attr,
         attrs,
-        structAttrs,
-        receivedResults: false
+        structAttrs
     }
+}
+
+export function importConcQueries(args:Array<StoredQueryFormArgs>):Array<StoredAdvancedQuery> {
+    return pipe(
+        args,
+        List.flatMap(
+            formArgs => pipe(
+                formArgs.curr_queries,
+                Dict.toEntries(),
+                List.map(
+                    ([corpname, query]) => ({
+                        corpname,
+                        qtype: 'advanced',
+                        query,
+                        pcq_pos_neg: 'pos',
+                        include_empty: false,
+                        default_attr:  formArgs.curr_default_attr_values[corpname],
+                        conc_id: formArgs.conc_id
+                    })
+                )
+            )
+        )
+    );
 }

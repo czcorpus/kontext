@@ -31,7 +31,6 @@ import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
 import { QueryContextModel } from '../models/query/context';
 import { UsageTipsModel } from '../models/usageTips';
 import { init as queryFormInit, QueryFormProps } from '../views/query/first';
-import { init as corpnameLinkInit } from '../views/overview';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
 import { PluginInterfaces } from '../types/plugins';
 import { PluginName } from '../app/plugin';
@@ -291,11 +290,6 @@ export class QueryPage {
     }
 
     private initCorpnameLink():void {
-        const corpInfoViews = corpnameLinkInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.layoutModel.getModels().corpusInfoModel
-        );
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers()

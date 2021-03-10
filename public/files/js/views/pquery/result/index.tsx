@@ -37,6 +37,8 @@ export interface PqueryFormViewsArgs {
 
 export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{}> {
 
+    const layoutViews = he.getLayoutViews();
+
     // ------------------------ <PageCounter /> --------------------------
 
     const PageCounter:React.FC<{
@@ -128,34 +130,43 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             return null;
         }
 
-        return props.isVisible ?
-            (
-                <S.PqueryResultSection>
-                    <h2>{he.translate('pquery__results')}</h2>
-                    <p>{he.translate('pquery__avail_label')}: {props.numLines}</p>
-                    <PageCounter maxPage={Math.ceil(props.numLines/props.pageSize)} currPage={props.page} />
-                    <table className="data">
-                        <tbody>
-                            <tr>
-                                <th />
-                                <ThSortable ident="value" sortKey={_exportSortKey("value")} label="Value"/>
-                                <ThSortable ident="freq" sortKey={_exportSortKey("freq")} label="Freq"/>
-                            </tr>
-                            {List.map(
-                                ([word, freq], i) => (
-                                    <tr key={`${i}:${word}`}>
-                                        <td className="num">{(props.page-1)*props.pageSize+i+1}</td>
-                                        <td>{word}</td>
-                                        <td className="num">{freq}</td>
-                                    </tr>
-                                ),
-                                props.data
-                            )}
-                        </tbody>
-                    </table>
-                </S.PqueryResultSection>
-            ) :
-            null
+        const renderContent = () => {
+            if (props.isBusy) {
+                return <layoutViews.AjaxLoaderImage />;
+
+            } else if (props.numLines === 0) {
+                return <S.NoResultPar>{he.translate('pquery__no_result')}</S.NoResultPar>;
+
+            } else {
+                return (
+                    <>
+                        <p>{he.translate('pquery__avail_label')}: {props.numLines}</p>
+                        <PageCounter maxPage={Math.ceil(props.numLines/props.pageSize)} currPage={props.page} />
+                        <table className="data">
+                            <tbody>
+                                <tr>
+                                    <th />
+                                    <ThSortable ident="value" sortKey={_exportSortKey("value")} label="Value"/>
+                                    <ThSortable ident="freq" sortKey={_exportSortKey("freq")} label="Freq"/>
+                                </tr>
+                                {List.map(
+                                    ([word, freq], i) => (
+                                        <tr key={`${i}:${word}`}>
+                                            <td className="num">{(props.page-1)*props.pageSize+i+1}</td>
+                                            <td>{word}</td>
+                                            <td className="num">{freq}</td>
+                                        </tr>
+                                    ),
+                                    props.data
+                                )}
+                            </tbody>
+                        </table>
+                    </>
+                );
+            }
+        };
+
+        return <S.PqueryResultSection>{renderContent()}</S.PqueryResultSection>;
     };
 
     return Bound(PqueryResultSection, model);
