@@ -27,6 +27,7 @@ import { PqueryResultModel, PqueryResultModelState, SortColumn, SortKey } from '
 import { ActionName, Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import { List } from 'cnc-tskit';
+import { init as initSaveViews } from './save';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -38,6 +39,8 @@ export interface PqueryFormViewsArgs {
 export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{}> {
 
     // ------------------------ <PageCounter /> --------------------------
+
+    const saveViews = initSaveViews(dispatcher, he, model.getSaveModel());
 
     const PageCounter:React.FC<{
         maxPage:number;
@@ -128,6 +131,12 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             return null;
         }
 
+        const _handleSaveFormClose = () => {
+            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
+                name: ActionName.ResultCloseSaveForm
+            })
+        }
+
         return props.isVisible ?
             (
                 <S.PqueryResultSection>
@@ -153,6 +162,11 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                             )}
                         </tbody>
                     </table>
+
+                    {props.saveFormActive ?
+                        <saveViews.SavePqueryForm onClose={_handleSaveFormClose} /> :
+                        null
+                    }
                 </S.PqueryResultSection>
             ) :
             null

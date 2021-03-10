@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../app/page';
+import { DownloadType, PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import { Kontext } from '../types/common';
 import { init as formViewInit } from '../views/pquery/form';
@@ -129,9 +129,12 @@ class ParadigmaticQueryPage {
                     resultId: undefined,
                     numLines: undefined,
                     page: 1,
-                    pageSize: 5
+                    pageSize: 5,
+                    saveFormActive: false
                 },
-                this.layoutModel
+                this.layoutModel,
+                this.setDownloadLink.bind(this),
+                this.layoutModel.getConf<number>('QuickSaveRowLimit')
             );
 
             const resultView = resultViewInit({
@@ -200,6 +203,10 @@ class ParadigmaticQueryPage {
                 }
             }
         });
+    }
+
+    setDownloadLink(filename:string, url:string) {
+        this.layoutModel.bgDownload(filename, DownloadType.PQUERY, url);
     }
 }
 

@@ -23,7 +23,9 @@ import { HTTP } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { PqueryResult } from './common';
+import { PqueryResultsSaveModel } from './save';
 
 
 export interface PqueryResultModelState {
@@ -36,6 +38,7 @@ export interface PqueryResultModelState {
     numLines:number|undefined;
     page:number;
     pageSize:number;
+    saveFormActive:boolean;
 }
 
 export type SortColumn = 'freq'|'value';
@@ -50,9 +53,18 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
     private readonly layoutModel:PageModel;
 
-    constructor(dispatcher:IFullActionControl, initState:PqueryResultModelState, layoutModel:PageModel) {
+    private saveModel:PqueryResultsSaveModel;
+
+    constructor(dispatcher:IFullActionControl, initState:PqueryResultModelState, layoutModel:PageModel, saveLinkFn:(file:string, url:string)=>void, quickSaveRowLimit:number) {
         super(dispatcher, initState);
         this.layoutModel = layoutModel;
+
+        this.saveModel = new PqueryResultsSaveModel({
+            dispatcher: dispatcher,
+            layoutModel: layoutModel,
+            saveLinkFn: saveLinkFn,
+            quickSaveRowLimit: quickSaveRowLimit
+        });
 
         this.addActionHandler<Actions.SubmitQuery>(
             ActionName.SubmitQuery,
@@ -105,6 +117,24 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                 }
             }
         );
+
+        this.addActionHandler<Actions.ResultCloseSaveForm>(
+            ActionName.ResultCloseSaveForm,
+            action => {
+                this.changeState(state => {
+                    state.saveFormActive = false;
+                });
+            }
+        );
+        
+        this.addActionHandler<MainMenuActions.ShowSaveForm>(
+            MainMenuActionName.ShowSaveForm,
+            action => {
+                this.changeState(state => {
+                    state.saveFormActive = true;
+                });
+            }
+        );
     }
 
     reloadData():void {
@@ -127,5 +157,9 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                 state.isVisible = true;
             })
         );
+    }
+
+    getSaveModel():PqueryResultsSaveModel {
+        return this.saveModel;
     }
 }
