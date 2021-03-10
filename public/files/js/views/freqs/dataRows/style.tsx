@@ -24,7 +24,7 @@ import * as theme from '../../theme/default';
 
 // -------------- <DataRowTR /> --------------
 
-export const DataRowTR = styled.form`
+export const DataRowTR = styled.tr`
 
     .bar {
         background-color: ${theme.colorLogoBlue};
