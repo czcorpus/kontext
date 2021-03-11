@@ -47,6 +47,7 @@ export namespace AjaxResponse {
         orig_subcname:string;
         created:number;
         cql:string;
+        cqlAvailable:boolean;
         human_corpname:string;
         corpname:string;
         size:number;

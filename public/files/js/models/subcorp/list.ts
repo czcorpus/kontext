@@ -28,6 +28,7 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
+import { SubcorpusInfoResponse } from '../common/layout';
 
 
 
@@ -44,6 +45,7 @@ export interface SubcorpListItem {
     origSubcName:string;
     deleted:boolean;
     created:Date;
+    cqlAvailable:boolean;
     cql:string;
     size:number;
     published:boolean;
@@ -205,9 +207,38 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         this.addActionHandler<Actions.SetActionBoxType>(
             ActionName.SetActionBoxType,
-            action => this.changeState(state => {
-                state.actionBoxActionType = action.payload.value;
-            })
+            action => {
+                this.changeState(state => {
+                    state.actionBoxActionType = action.payload.value;
+                });
+
+                if (action.payload.value === 'reuse') {
+                    const line = this.state.lines[action.payload.row];
+                    if (line.cql === undefined && line.cqlAvailable) {
+                        this.changeState(state => {
+                            state.isBusy = true;
+                        });
+
+                        this.layoutModel.ajax$<SubcorpusInfoResponse>(
+                            HTTP.Method.GET,
+                            this.layoutModel.createActionUrl('subcorpus/ajax_subcorp_info'),
+                            {
+                                'corpname': line.corpname,
+                                'subcname': line.usesubcorp
+                            }
+                        ).subscribe(
+                            data => {
+                                if (data.extended_info) {
+                                    this.changeState(state => {
+                                        state.lines[action.payload.row].cql = data.extended_info.cql;
+                                        state.isBusy = false;
+                                    })
+                                }
+                            }
+                        );
+                    }
+                }
+            }
         );
 
         this.addActionHandler<Actions.WipeSubcorpus>(
@@ -344,6 +375,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 origSubcName: data.origSubcName,
                 deleted: data.deleted,
                 created: data.created,
+                cqlAvailable: data.cqlAvailable,
                 cql: data.cql,
                 size: data.size,
                 published: data.published,
@@ -384,6 +416,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         origSubcName: data.origSubcName,
                         deleted: data.deleted,
                         created: data.created,
+                        cqlAvailable: data.cqlAvailable,
                         cql: data.cql,
                         size: data.size,
                         published: true,
@@ -468,6 +501,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             origSubcName: item.orig_subcname ? decodeURIComponent(item.orig_subcname) : null,
             deleted: item.deleted,
             size: item.size,
+            cqlAvailable: item.cqlAvailable,
             cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
             created: new Date(item.created * 1000),
             selected: false,

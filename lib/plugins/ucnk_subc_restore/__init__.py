@@ -104,7 +104,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         else:
             return None
 
-    def extend_subc_list(self, plugin_api, subc_list, filter_args, from_idx, to_idx=None):
+    def extend_subc_list(self, plugin_api, subc_list, filter_args, from_idx, to_idx=None, include_cql=False):
         """
         Enriches KonText's original subcorpora list by the information about queries which
         produced these subcorpora. It it also able to insert an information about deleted
@@ -117,6 +117,8 @@ class UCNKSubcRestore(AbstractSubcRestore):
             filter_args (dict): support for 'show_deleted': 0/1 and 'corpname': str
             from_idx (int): 0..(num_items-1) list offset
             to_idx (int): last item index (None by default)
+            include_cql (boolean): total amount of cqls can be quite large, include it into data,
+                otherwise leave it empty (False by default)
 
         Returns:
             list of dict: a new list containing both the original subc_list and also the extended part
@@ -155,7 +157,8 @@ class UCNKSubcRestore(AbstractSubcRestore):
                         'human_corpname': corpus_info.name,
                         'corpname': subc_queries_map[dk]['corpname'],
                         'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
-                        'cql': urllib.parse.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
+                        'cql': urllib.parse.quote(subc_queries_map[dk]['cql']).encode('utf-8') if include_cql else None,
+                        'cqlAvailable': bool(urllib.parse.quote(subc_queries_map[dk]['cql'])),
                         'deleted': True,
                         'published': False})
             except Exception as ex:
@@ -163,8 +166,11 @@ class UCNKSubcRestore(AbstractSubcRestore):
         for subc in subc_list:
             key = (subc['corpname'], get_user_subcname(subc))
             if key in subc_queries_map:
-                subc['cql'] = urllib.parse.quote(subc_queries_map[key]['cql'].encode('utf-8'))
+                subc['cqlAvailable'] = bool(urllib.parse.quote(subc_queries_map[key]['cql']))
+                subc['cql'] = urllib.parse.quote(subc_queries_map[dk]['cql']).encode(
+                    'utf-8') if include_cql else None
             else:
+                subc['cqlAvailable'] = False
                 subc['cql'] = None
             subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])
         return subc_list + deleted_items
