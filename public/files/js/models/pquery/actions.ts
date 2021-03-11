@@ -24,6 +24,7 @@ import { Kontext } from '../../types/common';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AsyncTaskArgs, HistoryArgs } from './common';
 import { SortKey } from './result';
+import {SaveData} from '../../app/navigation';
 
 
 export enum ActionName {
@@ -41,7 +42,15 @@ export enum ActionName {
     StatePushToHistory = 'PQUERY_STATE_PUSH_TO_HISTORY',
     PopHistory = 'PQUERY_POP_HISTORY',
     SetPage = 'PQUERY_SET_PAGE',
-    ToggleModalForm = 'PQUERY_TOGGLE_MODAL_FORM'
+    ToggleModalForm = 'PQUERY_TOGGLE_MODAL_FORM',
+    SaveFormSetFormat = 'PQUERY_SAVE_FORM_SET_FORMAT',
+    SaveFormSetFromLine = 'PQUERY_SAVE_FORM_SET_FROM_LINE',
+    SaveFormSetToLine = 'PQUERY_SAVE_FORM_SET_TO_LINE',
+    SaveFormSetIncludeHeading = 'PQUERY_SAVE_FORM_SET_INCLUDE_HEADING',
+    SaveFormSetIncludeColHeading = 'PQUERY_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
+    SaveFormSubmit = 'PQUERY_SAVE_FORM_SUBMIT',
+    SaveFormPrepareSubmitArgsDone = 'PQUERY_SAVE_FORM_PREPARE_SUBMIT_ARGS_DONE',
+    ResultCloseSaveForm = 'PQUERY_RESULT_CLOSE_SAVE_FORM',
 }
 
 
@@ -132,5 +141,53 @@ export namespace Actions {
         visible:boolean;
     }> {
         name: ActionName.ToggleModalForm;
+    }
+
+    export interface SaveFormSetFormat extends Action<{
+        value:SaveData.Format;
+    }> {
+        name: ActionName.SaveFormSetFormat;
+    }
+
+    export interface SaveFormSetFromLine extends Action<{
+        value:string;
+    }> {
+        name: ActionName.SaveFormSetFromLine;
+    }
+
+    export interface SaveFormSetToLine extends Action<{
+        value:string;
+    }> {
+        name: ActionName.SaveFormSetToLine;
+    }
+
+    export interface SaveFormSetIncludeHeading extends Action<{
+        value:boolean;
+    }> {
+        name: ActionName.SaveFormSetIncludeHeading;
+    }
+
+    export interface SaveFormSetIncludeColHeading extends Action<{
+        value:boolean;
+    }> {
+        name: ActionName.SaveFormSetIncludeColHeading;
+    }
+
+    export interface SaveFormSubmit extends Action<{
+    }> {
+        name: ActionName.SaveFormSubmit;
+    }
+
+    export interface SaveFormPrepareSubmitArgsDone extends Action<{
+        queryId:string;
+        sort:string;
+        reverse:number;
+    }> {
+        name:ActionName.SaveFormPrepareSubmitArgsDone;
+    }
+
+    export interface ResultCloseSaveForm extends Action<{
+    }> {
+        name: ActionName.ResultCloseSaveForm;
     }
 }

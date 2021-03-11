@@ -600,6 +600,7 @@
         "task__type_coll_download": "Stažení seznamu kolokací",
         "task__type_wordlist_download": "Stažení seznamu slov",
         "task__type_line_selection_download": "Stažení přehledu o výběru řádků",
+        "task__type_pquery_download": "Stažení výsledků paradigmatického dotazu",
         "task__type_pquery": "Paradigmatický dotaz",
         "task__status_PENDING": "Běží",
         "task__status_STARTED": "Běží",
@@ -796,6 +797,7 @@
         "pquery__all_the_queries_must_be_filled": "Jeden či více dotazů není vyplněno.",
         "pquery__avail_label": "Celkem",
         "pquery__no_result": "Hledání nemá žádný výsledek. Zkontrolujte prosím jednotlivé dotazy a parametry.",
-        "pquery_overview_title": "Paradigmatický dotaz"
+        "pquery_overview_title": "Paradigmatický dotaz",
+        "pquery__save_form_label": "Uložit výsledky paradigmatického dotazu"
     }
 }

@@ -46,6 +46,9 @@ class XLSXExport(AbstractExport):
         elif subtype == 'coll':
             self._sheet.title = _('collocations')
             self._import_row = lambda x: x
+        elif subtype == 'pquery':
+            self._sheet.title = _('paradigmatic query')
+            self._import_row = lambda x: x
 
     def content_type(self):
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

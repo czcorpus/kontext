@@ -27,19 +27,24 @@ import { PqueryResultModel, PqueryResultModelState, SortColumn, SortKey } from '
 import { ActionName, Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import { List } from 'cnc-tskit';
+import { init as initSaveViews } from './save';
+import { PqueryResultsSaveModel } from '../../../models/pquery/save';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    model:PqueryResultModel;
+    resultModel:PqueryResultModel;
+    saveModel:PqueryResultsSaveModel;
 }
 
 
-export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{}> {
+export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArgs):React.ComponentClass<{}> {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------------------ <PageCounter /> --------------------------
+
+    const saveViews = initSaveViews(dispatcher, he, saveModel);
 
     const PageCounter:React.FC<{
         maxPage:number;
@@ -128,7 +133,13 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                 return props.sortKey;
             }
             return null;
-        }
+        };
+
+        const _handleSaveFormClose = () => {
+            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
+                name: ActionName.ResultCloseSaveForm
+            })
+        };
 
         const renderContent = () => {
             if (props.isBusy) {
@@ -161,13 +172,16 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                                 )}
                             </tbody>
                         </table>
+                        {props.saveFormActive ?
+                        <saveViews.SavePqueryForm onClose={_handleSaveFormClose} /> :
+                        null
+                    }
                     </>
                 );
             }
         };
-
         return <S.PqueryResultSection>{renderContent()}</S.PqueryResultSection>;
     };
 
-    return Bound(PqueryResultSection, model);
+    return Bound(PqueryResultSection, resultModel);
 }

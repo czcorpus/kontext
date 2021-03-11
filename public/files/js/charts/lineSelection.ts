@@ -23,13 +23,10 @@
 
 import * as d3 from 'vendor/d3';
 import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
-import { of as rxOf } from 'rxjs';
-import { tap } from 'rxjs/operators';
 
 import { MultiDict } from '../multidict';
 import { PageModel, DownloadType } from '../app/page';
 import { Kontext } from '../types/common';
-import { color } from 'vendor/d3-color';
 import { attachColorsToIds } from '../models/concordance/common';
 
 export interface LineGroupChartItem {

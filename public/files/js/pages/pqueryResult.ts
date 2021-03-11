@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../app/page';
+import { DownloadType, PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import { Kontext } from '../types/common';
 import { PqueryFormModel } from '../models/pquery/form';
@@ -32,6 +32,7 @@ import { MultiDict } from '../multidict';
 import { PqueryResult, FreqIntersectionArgs, importConcQueries, StoredQueryFormArgs,
     storedQueryToModel } from '../models/pquery/common';
 import { AttrHelper } from '../models/query/cqleditor/attrs';
+import { PqueryResultsSaveModel } from '../models/pquery/save';
 
 
 
@@ -96,16 +97,29 @@ class ParadigmaticQueryPage {
                     sortKey: {column: 'freq', reverse: true},
                     numLines: this.layoutModel.getConf<number>('TotalNumLines'),
                     page: 1,
-                    pageSize: this.layoutModel.getConf<number>('Pagesize')
+                    pageSize: this.layoutModel.getConf<number>('Pagesize'),
+                    saveFormActive: false
                 },
                 this.layoutModel
             );
 
+            const saveModel = new PqueryResultsSaveModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                saveLinkFn: (filename:string, url:string) => {
+                    this.layoutModel.bgDownload(filename, DownloadType.PQUERY, url);
+                },
+                quickSaveRowLimit: 10000 // TODO
+            });
+
             const resultView = resultViewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
-                model: resultModel
-            })
+                resultModel,
+                saveModel
+            });
+
+            //
 
             this.layoutModel.renderReactComponent(
                 resultView,

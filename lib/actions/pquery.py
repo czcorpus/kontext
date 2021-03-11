@@ -17,6 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import Optional
 from controller import exposed
 from controller.kontext import Kontext
 from argmapping.pquery import PqueryFormArgs
@@ -31,8 +32,11 @@ import settings
 from controller.kontext import AsyncTaskStatus
 import time
 from translation import ugettext as translate
-from typing import Union, Dict, List
+from typing import List
 from controller.errors import UserActionException
+import sys
+from main_menu import MainMenu, EventTriggeringItem
+
 
 PAGE_SIZE = 10
 
@@ -61,6 +65,8 @@ def _load_conc_queries(conc_ids: List[str], corpus_id: str):
 
 
 class ParadigmaticQuery(Kontext):
+
+    PQUERY_QUICK_SAVE_MAX_LINES = 10000
 
     def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
         super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
@@ -94,6 +100,7 @@ class ParadigmaticQuery(Kontext):
             'pquery_default_attr': self._get_default_attr()
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
+        self._add_save_menu()
         return ans
 
     @exposed(template='pquery/result.html', http_method='GET', page_model='pqueryResult')
@@ -128,6 +135,7 @@ class ParadigmaticQuery(Kontext):
             'data_ready': data_ready
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
+        self._add_save_menu()
         return ans
 
     @exposed(http_method='POST', return_type='json')
@@ -181,4 +189,72 @@ class ParadigmaticQuery(Kontext):
         total_num_lines, freqs = require_existing_pquery(
             pquery, offset, PAGE_SIZE, corp_info.collator_locale, sort, reverse)
         return dict(rows=freqs)
+
+    @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
+    def save_query(self, request):
+        args = PqueryFormArgs()
+        args.update_by_user_query(request.json)
+        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
+            query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_dict())
+            qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
+        return dict(ok=True, query_id=query_id)
+
+    @exposed(access_level=1, func_arg_mapped=True, skip_corpus_init=True, return_type='plain')
+    def download(self, query_id='', sort='value', reverse='0', saveformat='', from_line=1, to_line='',
+                 colheaders=0, heading=0):
+        """
+        dawnload a paradigmatic query results
+        """
+        from_line = int(from_line) - 1
+        to_line = int(to_line) if to_line else sys.maxsize
+
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            stored_pq = qp.open(query_id)
+        pquery = PqueryFormArgs()
+        pquery.update_by_user_query(stored_pq)
+        corp_info = self.get_corpus_info(self.args.corpname)
+        _, freqs = require_existing_pquery(
+            pquery, from_line, to_line - from_line, corp_info.collator_locale, sort, bool(int(reverse)))
+
+        def mkfilename(suffix):
+            return f'{self.args.corpname}-pquery.{suffix}'
+
+        writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='pquery')
+        writer.set_col_types(int, str, float)
+
+        self._headers['Content-Type'] = writer.content_type()
+        self._headers['Content-Disposition'] = f'attachment; filename="{mkfilename(saveformat)}"'
+
+        if colheaders or heading:
+            writer.writeheading(['', 'value', 'freq'])
+
+        for (i, row) in enumerate(freqs):
+            writer.writerow(i + 1, row)
+
+        output = writer.raw_content()
+        return output
+
+    def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
+        if save_format is None:
+            event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
+            self._save_menu.append(
+                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83, key_mod='shift',
+                                    hint=hint).mark_indirect())  # key = 's'
+
+        else:
+            event_name = 'MAIN_MENU_DIRECT_SAVE'
+            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
+                                                       ).add_args(('saveformat', save_format)))
+
+    def _add_save_menu(self):
+        self._add_save_menu_item('CSV', save_format='csv',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.PQUERY_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XLSX', save_format='xlsx',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.PQUERY_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XML', save_format='xml',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.PQUERY_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item(translate('Custom'))
 

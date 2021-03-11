@@ -66,7 +66,8 @@ export enum DownloadType {
     FREQ2D = 'freq2d_download',
     COLL = 'coll_download',
     WORDLIST = 'wordlist_download',
-    LINE_SELECTION = 'line_selection_download'
+    LINE_SELECTION = 'line_selection_download',
+    PQUERY = 'pquery_download'
 }
 
 

@@ -23,6 +23,7 @@ import { HTTP, List } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { PqueryResult } from './common';
 import { Actions as MMActions, ActionName as MMActionName } from '../mainMenu/actions';
 
@@ -35,6 +36,7 @@ export interface PqueryResultModelState {
     numLines:number;
     page:number;
     pageSize:number;
+    saveFormActive:boolean;
 }
 
 export type SortColumn = 'freq'|'value';
@@ -73,6 +75,34 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                 this.reloadData();
             }
         );
+
+        this.addActionHandler<Actions.ResultCloseSaveForm>(
+            ActionName.ResultCloseSaveForm,
+            action => {
+                this.changeState(state => {
+                    state.saveFormActive = false;
+                });
+            }
+        );
+
+        this.addActionHandler<MainMenuActions.ShowSaveForm>(
+            MainMenuActionName.ShowSaveForm,
+            action => {
+                this.changeState(state => {
+                    state.saveFormActive = true;
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.SaveFormSubmit>(
+            ActionName.SaveFormSubmit,
+            action => {this.sendSaveArgs(dispatcher)}
+        );
+
+        this.addActionHandler<MainMenuActions.DirectSave>(
+            MainMenuActionName.DirectSave,
+            action => {this.sendSaveArgs(dispatcher)}
+        );
     }
 
     reloadData():void {
@@ -103,5 +133,16 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                 })
             }
         );
+    }
+
+    sendSaveArgs(dispatcher:IFullActionControl):void {
+        dispatcher.dispatchSideEffect<Actions.SaveFormPrepareSubmitArgsDone>({
+            name: ActionName.SaveFormPrepareSubmitArgsDone,
+            payload: {
+                queryId: this.state.queryId,
+                sort: this.state.sortKey.column,
+                reverse: this.state.sortKey.reverse ? 1 : 0
+            }
+        });
     }
 }

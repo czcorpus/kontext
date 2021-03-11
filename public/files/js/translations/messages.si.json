@@ -611,6 +611,7 @@
         "task__type_coll_download": "Collocations list download UNTRANSLATED",
         "task__type_wordlist_download": "Word list download UNTRANSLATED",
         "task__type_line_selection_download": "Line selection overview download UNTRANSLATED",
+        "task__type_pquery_download": "Paradigmatic query results download UNTRANSLATED",
         "task__type_pquery": "Paradigmatic query UNTRANSLATED",
         "coll__form_heading": "Collocations UNTRANSLATED",
         "coll__to": "to UNTRANSLATED",
@@ -796,6 +797,7 @@
         "pquery__all_the_queries_must_be_filled": "One or more queries is empty UNTRANSLATED",
         "pquery__avail_label": "Total UNTRANSLATED",
         "pquery__no_result": "The search has no result. Please check your queries and query parameters. UNTRANSLATED",
-        "pquery_overview_title": "Paradigmatic query UNTRANSLATED"
+        "pquery_overview_title": "Paradigmatic query UNTRANSLATED",
+        "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED"
     }
 }

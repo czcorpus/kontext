@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../app/page';
+import { DownloadType, PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
 import { Kontext } from '../types/common';
 import { init as formViewInit } from '../views/pquery/form';
@@ -27,9 +27,10 @@ import { PqueryFormModel } from '../models/pquery/form';
 import { PluginInterfaces } from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { tuple } from 'cnc-tskit';
 import { init as queryOverviewInit } from '../views/pquery/overview';
-import { FreqIntersectionArgs, importConcQueries, newModelState, StoredAdvancedQuery, StoredQueryFormArgs, storedQueryToModel } from '../models/pquery/common';
+import { FreqIntersectionArgs, importConcQueries, newModelState, StoredQueryFormArgs,
+    storedQueryToModel } from '../models/pquery/common';
 import { AttrHelper } from '../models/query/cqleditor/attrs';
 
 
@@ -147,6 +148,10 @@ class ParadigmaticQueryPage {
 
             this.initCorpnameLink(formModel);
         });
+    }
+
+    setDownloadLink(filename:string, url:string) {
+        this.layoutModel.bgDownload(filename, DownloadType.PQUERY, url);
     }
 }
 
