@@ -19,21 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { PqueryResult } from './common';
+import { Actions as MMActions, ActionName as MMActionName } from '../mainMenu/actions';
 
 
 export interface PqueryResultModelState {
     isBusy:boolean;
-    isVisible:boolean;
     data:PqueryResult;
-    queryId:string|undefined;
+    queryId:string;
     sortKey:SortKey;
-    resultId:string|undefined;
-    numLines:number|undefined;
+    numLines:number;
     page:number;
     pageSize:number;
 }
@@ -53,23 +52,6 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
     constructor(dispatcher:IFullActionControl, initState:PqueryResultModelState, layoutModel:PageModel) {
         super(dispatcher, initState);
         this.layoutModel = layoutModel;
-
-        this.addActionHandler<Actions.SubmitQuery>(
-            ActionName.SubmitQuery,
-            action => this.changeState(state => {
-                state.isBusy = true;
-                state.data = [];
-                state.resultId = undefined;
-                state.numLines = undefined;
-            })
-        );
-
-        this.addActionHandler<Actions.SubmitQueryDone>(
-            ActionName.SubmitQueryDone,
-            action => this.changeState(state => {
-                state.queryId = action.payload.queryId;
-            })
-        );
 
         this.addActionHandler<Actions.SortLines>(
             ActionName.SortLines,
@@ -91,41 +73,35 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                 this.reloadData();
             }
         );
-
-        this.addActionHandler<Actions.AsyncResultRecieved>(
-            ActionName.AsyncResultRecieved,
-            action => {
-                if (!action.error) {
-                    this.changeState(state => {
-                        state.resultId = action.payload.resultId;
-                        state.numLines = action.payload.numLines;
-                        state.page = 1;
-                    });
-                    this.reloadData();
-                }
-            }
-        );
     }
 
     reloadData():void {
         const args = {
+            query_id: this.state.queryId,
             page: this.state.page,
-            page_size: this.state.pageSize,
             sort: this.state.sortKey.column,
-            reverse: this.state.sortKey.reverse ? 1 : 0,
-            resultId: this.state.resultId
+            reverse: this.state.sortKey.reverse ? 1 : 0
         };
 
-        this.layoutModel.ajax$<PqueryResult>(
+        this.layoutModel.ajax$<{rows: PqueryResult}>(
             HTTP.Method.GET,
             'get_results',
             args
+
         ).subscribe(
-            results => this.changeState(state => {
-                state.data = results;
-                state.isBusy = false;
-                state.isVisible = true;
-            })
+            resp => {
+                this.dispatchSideEffect<MMActions.ToggleDisabled>({
+                    name: MMActionName.ToggleDisabled,
+                    payload: {
+                        menuId: 'menu-save',
+                        disabled: List.empty(resp.rows)
+                    }
+                });
+                this.changeState(state => {
+                    state.data = resp.rows;
+                    state.isBusy = false;
+                })
+            }
         );
     }
 }

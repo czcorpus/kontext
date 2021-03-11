@@ -20,6 +20,8 @@
  */
 
 import styled from 'styled-components';
+import * as theme from '../../theme/default';
+
 
 // ---------------- <PqueryFormSection /> -------------
 
@@ -46,6 +48,12 @@ export const PqueryFormSection = styled.section`
 export const PqueryForm = styled.form`
 
     margin-top: 1.5em;
+
+    .ExpandableArea > fieldset {
+        margin-top: 1em;
+        border: 1px solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
+    }
 
 `;
 

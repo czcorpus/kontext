@@ -256,6 +256,18 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
+        this.addActionHandler<Actions.ToggleDisabled>(
+            ActionName.ToggleDisabled,
+            (state, action) => {
+                this.toggleMenuItem(
+                    state,
+                    action.payload.menuId,
+                    action.payload.submenuId,
+                    action.payload.disabled
+                );
+            }
+        );
+
         this.addActionHandler<GeneralOptsActions.GeneralSubmitDone>(
             GeneralOptsActionName.GeneralSubmitDone,
             (state, action) => {
@@ -269,6 +281,29 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 state.concArgs = action.payload.args
             }
         );
+    }
+
+    private toggleMenuItem(
+        state:MainMenuModelState,
+        menuId:string,
+        submenuId:string|undefined,
+        disabled:boolean
+    ):void {
+
+        const srchIdx = List.findIndex(([id,]) => id === menuId, state.data);
+        if (srchIdx > -1) {
+            const [,submenu] = state.data[srchIdx];
+            if (submenuId) {
+                const subSrchIdx = List.findIndex(
+                    v => v.ident === submenuId, submenu.items);
+                if (subSrchIdx > -1) {
+                    submenu.items[subSrchIdx].disabled = disabled;
+                }
+
+            } else {
+                submenu.disabled = disabled;
+            }
+        }
     }
 
     exportKeyShortcutActions():Kontext.IMainMenuShortcutMapper {

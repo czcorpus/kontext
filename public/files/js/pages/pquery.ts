@@ -27,13 +27,11 @@ import { PqueryFormModel } from '../models/pquery/form';
 import { PluginInterfaces } from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
-import { Actions, ActionName } from '../models/pquery/actions';
-import { tuple } from 'cnc-tskit';
-import { PqueryResultModel } from '../models/pquery/result';
-import { init as resultViewInit } from '../views/pquery/result';
-import { MultiDict } from '../multidict';
-import { newModelState, PqueryFormArgs, storedQueryToModel } from '../models/pquery/common';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { init as queryOverviewInit } from '../views/pquery/overview';
+import { FreqIntersectionArgs, importConcQueries, newModelState, StoredAdvancedQuery, StoredQueryFormArgs, storedQueryToModel } from '../models/pquery/common';
 import { AttrHelper } from '../models/query/cqleditor/attrs';
+
 
 
 /**
@@ -69,10 +67,26 @@ class ParadigmaticQueryPage {
         );
     }
 
+    private initCorpnameLink(model:PqueryFormModel):void {
+        const queryOverviewViews = queryOverviewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.getComponentHelpers(),
+            model
+        );
+        this.layoutModel.renderReactComponent(
+            queryOverviewViews,
+            window.document.getElementById('query-overview-mount'),
+            {
+                currCorpus: this.layoutModel.getCorpusIdent(),
+                queryId: undefined
+            }
+        );
+    }
+
     init():void {
         this.layoutModel.init(true, [], () => {
 
-            const storedForm = this.layoutModel.getConf<PqueryFormArgs>('FormData');
+            const storedForm = this.layoutModel.getConf<FreqIntersectionArgs>('FormData');
             const attrHelper = new AttrHelper(
                 this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                 this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
@@ -83,7 +97,8 @@ class ParadigmaticQueryPage {
                 this.layoutModel.dispatcher,
                 storedForm ?
                     storedQueryToModel(
-                        this.layoutModel.getConf<PqueryFormArgs>('FormData'),
+                        this.layoutModel.getConf<FreqIntersectionArgs>('FormData'),
+                        importConcQueries(this.layoutModel.getConf<Array<StoredQueryFormArgs>>('ConcQueries')),
                         this.layoutModel.getConf('AttrList'),
                         this.layoutModel.getConf('StructAttrList'),
                         this.layoutModel.getConf<boolean>('UseRichQueryEditor')
@@ -116,35 +131,6 @@ class ParadigmaticQueryPage {
                 }
             );
 
-            // pquery result
-
-            const resultModel = new PqueryResultModel(
-                this.layoutModel.dispatcher,
-                {
-                    isBusy: false,
-                    isVisible: false,
-                    data: [],
-                    queryId: undefined,
-                    sortKey: {column: 'freq', reverse: true},
-                    resultId: undefined,
-                    numLines: undefined,
-                    page: 1,
-                    pageSize: 5
-                },
-                this.layoutModel
-            );
-
-            const resultView = resultViewInit({
-                dispatcher: this.layoutModel.dispatcher,
-                he: this.layoutModel.getComponentHelpers(),
-                model: resultModel
-            })
-
-            this.layoutModel.renderReactComponent(
-                resultView,
-                window.document.getElementById('pquery-result-mount')
-            );
-
             // ---
 
             this.layoutModel.registerCorpusSwitchAwareModels(
@@ -157,48 +143,9 @@ class ParadigmaticQueryPage {
                 corparchPlg
             );
 
-            // history
+            // ---
 
-            this.layoutModel.dispatcher.registerActionListener(
-                (action, dispatch) => {
-                    const args = new MultiDict();
-                    if (Actions.isSubmitQueryDone(action)) {
-                        args.set('corpname', action.payload.corpname);
-                        args.set('usesubcorp', action.payload.usesubcorp);
-                        args.set('query_id', action.payload.queryId);
-                        this.layoutModel.getHistory().replaceState(
-                            'pquery/result',
-                            args,
-                            {},
-                            window.document.title
-                        );
-                    }
-                }
-            );
-
-            this.layoutModel.getHistory().setOnPopState((event) => {
-                console.log('event state ', event.state);
-                if (event.state['onPopStateAction']) {
-                    this.layoutModel.dispatcher.dispatch(event.state['onPopStateAction']);
-                }
-            });
-
-            // ----
-
-            if (this.layoutModel.getConf<boolean>('Calculate')) {
-                if (storedForm) {
-                    window.setTimeout(() => {
-                        this.layoutModel.dispatcher.dispatch<Actions.SubmitQuery>({
-                            name: ActionName.SubmitQuery
-                        })
-                    });
-
-                } else {
-                    this.layoutModel.showMessage(
-                        'error',
-                        this.layoutModel.translate('pquery__no_form_data_to_restore'))
-                }
-            }
+            this.initCorpnameLink(formModel);
         });
     }
 }

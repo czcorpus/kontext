@@ -237,6 +237,10 @@ def calc_freqs_bg(args: FreqCalsArgs):
     freqs = [conc.xfreq_dist(cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode,
                              args.collator_locale)
              for cr in args.fcrit]
+    for item in freqs:
+        if 'Items' not in item:
+            item['Items'] = []
+            item['Total'] = len(item['Items'])
     return dict(freqs=freqs, conc_size=conc.size())
 
 
@@ -262,6 +266,7 @@ def calculate_freqs(args: FreqCalsArgs):
     data = calc_result['freqs']
     conc_size = calc_result['conc_size']
     lastpage = None
+
     if len(data) == 1:  # a single block => pagination
         total_length = len(data[0]['Items']) if 'Items' in data[0] else 0
         items_per_page = args.fmaxitems

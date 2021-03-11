@@ -47,6 +47,7 @@ export enum ActionName {
     DirectSave = 'MAIN_MENU_DIRECT_SAVE',
     ShowSwitchMc = 'MAIN_MENU_SHOW_SWITCHMC',
     ShowQueryHistory = 'MAIN_MENU_SHOW_QUERY_HISTORY',
+    ToggleDisabled = 'MAIN_MENU_TOGGLE_DISABLED',
 }
 
 
@@ -178,4 +179,16 @@ export namespace Actions {
         name: ActionName.ShowQueryHistory;
     }
 
+    /**
+     * note: in case submenuId is not specified
+     * the whole section should be disabled/enabled
+     */
+    export interface ToggleDisabled extends Action<{
+        menuId:string;
+        submenuId?:string;
+        disabled:boolean;
+
+    }> {
+        name: ActionName.ToggleDisabled;
+    }
 }

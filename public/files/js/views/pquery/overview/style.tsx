@@ -20,41 +20,7 @@
  */
 
 import styled from 'styled-components';
-import * as theme from '../../theme/default';
 
-
-// ---------------- <PqueryResultSection /> ----------------------------
-
-export const PqueryResultSection = styled.section`
-
-    border: 1px solid ${theme.colorBgLightBlue};
-
-`;
-
-// ---------------- <PageCounter /> ----------------------------
-
-export const PageCounter = styled.section`
-
-    margin: 0.5em 0;
-
-    .num-input {
-        margin: 0 1em;
-
-        input {
-            width: 2em;
-        }
-    }
-
-    .inactive {
-        opacity: 0.5;
-        cursor: default;
-    }
-`;
-
-// ----------------- <NoResultPar /> -------------------------------
-
-export const NoResultPar = styled.p`
-
-    font-size: 1.2em;
+export const Overview = styled.div`
 
 `;

@@ -18,26 +18,34 @@ from typing import Dict, Any
 class PqueryFormArgs(object):
 
     def __init__(self):
-        self.corpora = []
+        self.corpname = None
         self.usesubcorp = None
         self.min_freq = 0
         self.pos_index = 0
         self.pos_align = 'left'
-        self.queries = []
+        self.position = None
         self.attr = None
         self.form_type = 'pquery'
+        self.conc_ids = []
 
     def update_by_user_query(self, data):
-        self.corpora = [data['queries'][0]['corpname']]
+        self.corpname = data['corpname'] if 'corpname' in data else data['corpora'][0]
         self.usesubcorp = data.get('usesubcorp')
         self.min_freq = data['min_freq']
         self.pos_index = data['pos_index']
         self.pos_align = data['pos_align']
-        self.queries = data['queries']
+        self.position = data['position']
         self.attr = data['attr']
+        self.conc_ids = data['conc_ids']
 
     def to_dict(self) -> Dict[str, Any]:
         tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
+        return tmp
+
+    def to_qp(self) -> Dict[str, Any]:
+        tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
+        tmp['corpora'] = [tmp['corpname']]
+        del tmp['corpname']
         return tmp
 
     def from_dict(self, data):

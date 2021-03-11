@@ -48,7 +48,7 @@ export interface CorpusInfoBoxProps {
 
 export interface OverviewViews {
     OverviewArea:React.ComponentClass<OverviewAreaProps>;
-    CorpusInfoBox:React.SFC<CorpusInfoBoxProps>;
+    CorpusInfoBox:React.FC<CorpusInfoBoxProps>;
 }
 
 
@@ -59,7 +59,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ---------------------------- <ItemAndNumRow /> -----------------------------
 
-    const ItemAndNumRow:React.SFC<{
+    const ItemAndNumRow:React.FC<{
         brackets:boolean;
         label:string;
         value:number;
@@ -86,7 +86,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ---------------------------- <AttributeList /> -----------------------------
 
-    const AttributeList:React.SFC<{
+    const AttributeList:React.FC<{
         rows:Array<{name:string; size:number}>|{error:boolean};
 
     }> = (props) => {
@@ -117,7 +117,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ---------------------------- <StructureList /> -----------------------------
 
-    const StructureList:React.SFC<{
+    const StructureList:React.FC<{
         rows:Array<{name:string; size:number}>;
 
     }> = (props) => {
@@ -137,7 +137,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ---------------------- <CorpusInfoBox /> ------------------------------------
 
-    const CorpusInfoBox:React.SFC<CorpusInfoBoxProps> = (props) => {
+    const CorpusInfoBox:React.FC<CorpusInfoBoxProps> = (props) => {
 
         const renderWebLink = () => {
             if (props.data.web_url) {
@@ -211,7 +211,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // --------------------- <SubcorpusInfo /> -------------------------------------
 
-    const SubcorpusInfo:React.SFC<{
+    const SubcorpusInfo:React.FC<{
         data:SubcorpusInfo;
     }> = (props) => {
 
@@ -265,7 +265,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ---------------------- <CorpusReference /> ------------------------------------
 
-    const CorpusReference:React.SFC<{
+    const CorpusReference:React.FC<{
         data:CitationInfo;
 
     }> = (props) => {
@@ -301,7 +301,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <KeyboardShortcuts /> --------------------------
 
-    const KeyboardShortcuts:React.SFC<{}> = (props) => {
+    const KeyboardShortcuts:React.FC<{}> = (props) => {
         return (
             <S.KeyboardShortcuts>
                 <h1>{he.translate('global__keyboard_shortcuts')}</h1>
