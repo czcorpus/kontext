@@ -93,6 +93,7 @@ export namespace Actions {
 
     export interface SetActionBoxType extends Action<{
         value:string;
+        row:number;
     }> {
         name:ActionName.SetActionBoxType
     }

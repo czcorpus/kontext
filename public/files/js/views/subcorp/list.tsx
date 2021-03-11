@@ -150,7 +150,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     }
                 </td>
                 <td className="action-link">
-                    {props.item.cql ?
+                    {props.item.cqlAvailable ?
                         <a onClick={()=>props.actionButtonHandle(props.idx)}
                                 title={he.translate('subclist__click_to_access_the_backup')}>{'\u2713'}</a> :
                         null
@@ -593,7 +593,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         handleActionSelect(action) {
             dispatcher.dispatch<Actions.SetActionBoxType>({
                 name: ActionName.SetActionBoxType,
-                payload: {value: action}
+                payload: {value: action, row: this.props.idx}
             });
         }
 
@@ -606,7 +606,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     description={this.props.data.description} rowIdx={this.props.idx}
                     publicCode={this.props.data.published ? this.props.data.usesubcorp : null} />)
             }
-            if (!!this.props.data.cql) {
+            if (!!this.props.data.cqlAvailable) {
                 items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
                 children.push(<FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />);
             }
