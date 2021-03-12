@@ -28,13 +28,28 @@ def update_1(doc):
     if qh is not None:
         qh.tag = 'query_history'
 
-    srch = qh.find('module')
-    if srch is not None and srch.text == 'default_query_storage':
-        srch.text = 'default_query_history'
+        srch = qh.find('module')
+        if srch is not None and srch.text == 'default_query_storage':
+            srch.text = 'default_query_history'
 
-    srch = qh.find('js_module')
-    if srch is not None and srch.text == 'defaultQueryStorage':
-        srch.text = 'defaultQueryHistory'
+        srch = qh.find('js_module')
+        if srch is not None and srch.text == 'defaultQueryStorage':
+            srch.text = 'defaultQueryHistory'
+
+
+def update_2(doc):
+    qh = doc.find('/plugins/conc_persistence')
+    if qh is not None:
+        qh.tag = 'query_persistence'
+
+        srch = qh.find('module')
+        if srch is not None:
+            if srch.text == 'stable_conc_persistence':
+                srch.text = 'stable_query_persistence'
+            elif srch.text == 'mysql_conc_persistence':
+                srch.text = 'mysql_query_persistence'
+            elif srch.text == 'ucnk_conc_perstistence2':
+                srch.text = 'ucnk_query_persistence'
 
 
 if __name__ == '__main__':
