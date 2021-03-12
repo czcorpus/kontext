@@ -29,6 +29,7 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
     wlpagesize:number;
     fmaxitems:number;
     citemsperpage:number;
+    pqueryitemsperpage:number;
     tt_overview:number;
     rich_query_editor:boolean;
 }
@@ -40,4 +41,5 @@ export interface GeneralOptionsShared {
     wlpagesize:number;
     fmaxitems:number;
     citemsperpage:number;
+    pqueryitemsperpage:number;
 }

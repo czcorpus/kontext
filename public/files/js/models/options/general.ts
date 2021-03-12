@@ -39,6 +39,7 @@ interface GeneralOptionsArgsSubmit {
     wlpagesize:number;
     fmaxitems:number;
     citemsperpage:number;
+    pqueryitemsperpage:number;
     rich_query_editor:boolean;
 }
 
@@ -53,6 +54,8 @@ export interface GeneralViewOptionsModelState {
     fmaxitems:Kontext.FormValue<number>;
 
     citemsperpage:Kontext.FormValue<number>;
+
+    pqueryitemsperpage:Kontext.FormValue<number>;
 
     ctxUnit:string;
 
@@ -94,6 +97,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 wlpagesize: Kontext.newFormValue(0, true),
                 fmaxitems: Kontext.newFormValue(0, true),
                 citemsperpage: Kontext.newFormValue(0, true),
+                pqueryitemsperpage: Kontext.newFormValue(0, true),
                 isBusy: false,
                 loaded: false,
             }
@@ -142,6 +146,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                     state.wlpagesize = {value: action.payload.data.wlpagesize, isInvalid: false, isRequired: true};
                     state.fmaxitems = {value: action.payload.data.fmaxitems, isInvalid: false, isRequired: true};
                     state.citemsperpage = {value: action.payload.data.citemsperpage, isInvalid: false, isRequired: true};
+                    state.pqueryitemsperpage = {value: action.payload.data.pqueryitemsperpage, isInvalid: false, isRequired: true};
                     state.useRichQueryEditor = action.payload.data.rich_query_editor;
                 }
             }
@@ -203,6 +208,13 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             }
         );
 
+        this.addActionHandler<Actions.GeneralSetPQueryitemsPerPage>(
+            ActionName.GeneralSetPQueryitemsPerPage,
+            (state, action) => {
+                state.pqueryitemsperpage.value = action.payload.value;
+            }
+        );
+
         this.addActionHandler<Actions.GeneralSubmit>(
             ActionName.GeneralSubmit,
             (state, action) => {
@@ -229,7 +241,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                                     newCtxSize: state.newCtxSize.value,
                                     wlpagesize: state.wlpagesize.value,
                                     fmaxitems: state.fmaxitems.value,
-                                    citemsperpage: state.citemsperpage.value
+                                    citemsperpage: state.citemsperpage.value,
+                                    pqueryitemsperpage: state.pqueryitemsperpage.value
                                 }
                             });
                             List.forEach(fn => fn(this), this.submitResponseHandlers);
@@ -320,6 +333,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             wlpagesize: state.wlpagesize.value,
             fmaxitems: state.fmaxitems.value,
             citemsperpage: state.citemsperpage.value,
+            pqueryitemsperpage: state.pqueryitemsperpage.value,
             rich_query_editor: state.useRichQueryEditor
         };
     }

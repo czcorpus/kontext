@@ -26,7 +26,7 @@ class Options(Kontext):
 
     def _set_new_viewopts(self, pagesize=0, newctxsize=0, ctxunit='',
                           line_numbers=False, shuffle=False, wlpagesize=0,
-                          fmaxitems=0, citemsperpage=0, rich_query_editor=False):
+                          fmaxitems=0, citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False):
         self.args.pagesize = pagesize
         if ctxunit == '@pos':
             ctxunit = ''
@@ -39,6 +39,7 @@ class Options(Kontext):
         self.args.wlpagesize = wlpagesize
         self.args.fmaxitems = fmaxitems
         self.args.citemsperpage = citemsperpage
+        self.args.pqueryitemsperpage = pqueryitemsperpage
         self.args.rich_query_editor = rich_query_editor
 
     def _set_new_corp_options(self, attrs=(), attr_vmode='', structs=(), refs=(),
@@ -141,6 +142,7 @@ class Options(Kontext):
             wlpagesize=self.args.wlpagesize,
             fmaxitems=self.args.fmaxitems,
             citemsperpage=self.args.citemsperpage,
+            pqueryitemsperpage=self.args.pqueryitemsperpage,
             rich_query_editor=self.args.rich_query_editor
         )
 
@@ -155,6 +157,7 @@ class Options(Kontext):
             wlpagesize=request.json.get('wlpagesize'),
             fmaxitems=request.json.get('fmaxitems'),
             citemsperpage=request.json.get('citemsperpage'),
+            pqueryitemsperpage=request.json.get('pqueryitemsperpage'),
             rich_query_editor=request.json.get('rich_query_editor')
         )
         self._save_options(self.GENERAL_OPTIONS)
