@@ -801,6 +801,7 @@
         "pquery__avail_label": "Total UNTRANSLATED",
         "pquery__no_result": "The search has no result. Please check your queries and query parameters. UNTRANSLATED",
         "pquery_overview_title": "Paradigmatic query UNTRANSLATED",
-        "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED"
+        "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED",
+        "pquery__parameters_form": "Paradigmatic query parameters UNTRANSLATED"
     }
 }

@@ -95,6 +95,7 @@ export interface PqueryFormModelState {
     attr:string;
     attrs:Array<Kontext.AttrItem>;
     structAttrs:Array<Kontext.AttrItem>;
+    paramsVisible:boolean;
 }
 
 /**
@@ -162,7 +163,8 @@ export function newModelState(
         posAlign: AlignTypes.LEFT,
         attr: defaultAttr,
         attrs,
-        structAttrs
+        structAttrs,
+        paramsVisible: true,
     };
 }
 
@@ -235,7 +237,8 @@ export function storedQueryToModel(
         posAlign: sq.pos_align,
         attr: sq.attr,
         attrs,
-        structAttrs
+        structAttrs,
+        paramsVisible: true,
     }
 }
 

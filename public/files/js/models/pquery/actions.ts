@@ -51,6 +51,7 @@ export enum ActionName {
     SaveFormSubmit = 'PQUERY_SAVE_FORM_SUBMIT',
     SaveFormPrepareSubmitArgsDone = 'PQUERY_SAVE_FORM_PREPARE_SUBMIT_ARGS_DONE',
     ResultCloseSaveForm = 'PQUERY_RESULT_CLOSE_SAVE_FORM',
+    ParamsToggleForm = 'PQUERY_PARAMS_TOGGLE_FORM',
 }
 
 
@@ -189,5 +190,10 @@ export namespace Actions {
     export interface ResultCloseSaveForm extends Action<{
     }> {
         name: ActionName.ResultCloseSaveForm;
+    }
+    
+    export interface ParamsToggleForm extends Action<{
+    }> {
+        name: ActionName.ParamsToggleForm;
     }
 }
