@@ -33,6 +33,7 @@ import { PqueryResult, FreqIntersectionArgs, importConcQueries, StoredQueryFormA
     storedQueryToModel } from '../models/pquery/common';
 import { AttrHelper } from '../models/query/cqleditor/attrs';
 import { PqueryResultsSaveModel } from '../models/pquery/save';
+import { HtmlHelpModel } from '../models/help/help';
 
 
 
@@ -48,11 +49,12 @@ class ParadigmaticQueryPage {
         this.layoutModel = layoutModel;
     }
 
-    private initCorpnameLink(model:PqueryFormModel):void {
+    private initCorpnameLink(model:PqueryFormModel, helpModel:HtmlHelpModel):void {
         const queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            model
+            model,
+            helpModel
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews,
@@ -84,6 +86,10 @@ class ParadigmaticQueryPage {
                 ),
                 this.layoutModel,
                 attrHelper
+            );
+            const helpModel = new HtmlHelpModel(
+                this.layoutModel,
+                this.layoutModel.dispatcher
             );
 
             // pquery result
@@ -154,7 +160,7 @@ class ParadigmaticQueryPage {
 
             // ---
 
-            this.initCorpnameLink(formModel);
+            this.initCorpnameLink(formModel, helpModel);
 
             // ---
             if (!this.layoutModel.getConf<boolean>('DataReady')) {

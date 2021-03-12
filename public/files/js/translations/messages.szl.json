@@ -406,7 +406,8 @@
         "query__interpretation_subhead": "Once submitted, the query will be interpreted as follows",
         "query__interpretation_note": "In case this is not what you expect to be searched, please try to change default search attribute or use an advanced query.",
         "query__interpretation_qs_note": "If you don't want to apply the extended specification of one or more words, please use the button below to return to the default interpretation.",
-        "query__help": "Query form instructions",
+        "query__help": "Query form instructions UNTRANSLATED",
+        "pquery__help": "Paradigmatic query form instructions UNTRANSLATED",
         "qhistory__attached_text_types": "Typy tekstu",
         "qhistory__curr_corp_only_label": "zawiyrŏ prawie używany korpus",
         "qhistory__query_type_sel": "zawiyrŏ typ zapytaniŏ",
@@ -799,6 +800,7 @@
         "pquery__avail_label": "Społym",
         "pquery__no_result": "The search has no result. Please check your queries and query parameters. UNTRANSLATED",
         "pquery_overview_title": "Paradigmatic query UNTRANSLATED",
-        "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED"
+        "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED",
+        "pquery__parameters_form": "Paradigmatic query parameters UNTRANSLATED"
     }
 }

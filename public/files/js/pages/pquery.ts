@@ -32,6 +32,7 @@ import { init as queryOverviewInit } from '../views/pquery/overview';
 import { FreqIntersectionArgs, importConcQueries, newModelState, StoredQueryFormArgs,
     storedQueryToModel } from '../models/pquery/common';
 import { AttrHelper } from '../models/query/cqleditor/attrs';
+import { HtmlHelpModel } from '../models/help/help';
 
 
 
@@ -68,11 +69,12 @@ class ParadigmaticQueryPage {
         );
     }
 
-    private initCorpnameLink(model:PqueryFormModel):void {
+    private initCorpnameLink(model:PqueryFormModel, helpModel:HtmlHelpModel):void {
         const queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            model
+            model,
+            helpModel
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews,
@@ -115,21 +117,32 @@ class ParadigmaticQueryPage {
                 this.layoutModel,
                 attrHelper
             );
+            const helpModel = new HtmlHelpModel(
+                this.layoutModel,
+                this.layoutModel.dispatcher
+            );
 
             // qquery form
 
-            const formView = formViewInit({
+            const pqueryView = formViewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 he: this.layoutModel.getComponentHelpers(),
-                model: formModel
+                model: formModel,
+                helpModel
             });
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
             this.layoutModel.renderReactComponent(
-                formView,
+                pqueryView.PqueryForm,
                 window.document.getElementById('pquery-form-mount'),
                 {
                     corparchWidget
                 }
+            );
+
+            this.layoutModel.renderReactComponent(
+                pqueryView.PqueryHelp,
+                window.document.getElementById('topbar-help-mount'),
+                {}
             );
 
             // ---
@@ -146,7 +159,7 @@ class ParadigmaticQueryPage {
 
             // ---
 
-            this.initCorpnameLink(formModel);
+            this.initCorpnameLink(formModel, helpModel);
         });
     }
 

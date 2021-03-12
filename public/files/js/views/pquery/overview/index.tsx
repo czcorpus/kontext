@@ -29,6 +29,7 @@ import * as React from 'react';
 import { Dict, List, pipe, Strings } from 'cnc-tskit';
 import * as S from './style';
 import { ActionName, Actions } from '../../../models/pquery/actions';
+import { HtmlHelpModel } from '../../../models/help/help';
 
 
 export interface OverviewProps {
@@ -37,10 +38,10 @@ export interface OverviewProps {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:PqueryFormModel):React.ComponentClass<OverviewProps> {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:PqueryFormModel, helpModel:HtmlHelpModel):React.ComponentClass<OverviewProps> {
 
     const basicOverview = basicOverviewViewsInit(dispatcher, he);
-    const QueryForm = formInit({dispatcher, he, model});
+    const PqueryViews = formInit({dispatcher, he, model, helpModel});
     const layoutViews = he.getLayoutViews();
 
     const Overview:React.FC<PqueryFormModelState & OverviewProps> = (props) => {
@@ -87,7 +88,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <layoutViews.ModalOverlay onCloseKey={handleModalClose}>
                             <layoutViews.CloseableFrame onCloseClick={handleModalClose}
                                     label={he.translate('pquery_overview_title')}>
-                                <QueryForm corparchWidget={undefined} />
+                                <PqueryViews.PqueryForm corparchWidget={undefined} />
                             </layoutViews.CloseableFrame>
                         </layoutViews.ModalOverlay> :
                         null

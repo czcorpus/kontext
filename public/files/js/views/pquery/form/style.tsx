@@ -123,4 +123,8 @@ export const EditorFieldset = styled.fieldset`
 
 export const StylelessFieldset = styled(BorderlessFieldset)`
     margin: 0px;
+
+    > *:not(:first-child) {
+        margin-top: 1em;
+    }
 `;

@@ -283,6 +283,15 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
+        this.addActionHandler<Actions.ParamsToggleForm>(
+            ActionName.ParamsToggleForm,
+            action => {
+                this.changeState(state => {
+                    state.paramsVisible = !state.paramsVisible;
+                });
+            }
+        );
+
         this.addActionHandler<ACActions.AsyncTasksChecked>(
             ACActionName.AsyncTasksChecked,
             action => {

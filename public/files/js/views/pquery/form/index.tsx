@@ -27,28 +27,93 @@ import { PqueryFormModel } from '../../../models/pquery/form';
 import { Actions, ActionName } from '../../../models/pquery/actions';
 import * as S from './style';
 import * as QS from '../../query/input/style';
+import * as SC from '../../query/style';
 import { Dict, List } from 'cnc-tskit';
 import { ConcStatus, PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
 import { AlignTypes } from '../../../models/freqs/twoDimension/common';
+import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
+import { Actions as HelpActions, ActionName as HelpActionName } from '../../../models/help/actions';
+import { AdvancedFormFieldsetProps } from '../../query/input';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     model:PqueryFormModel;
+    helpModel:HtmlHelpModel;
 }
 
 interface PqueryFormProps {
     corparchWidget:React.ComponentClass;
 }
 
+interface PqueryHelpProps {
+}
 
-export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{
-    corparchWidget:React.ComponentClass
-}> {
+export interface PqueryViews {
+    PqueryForm:React.ComponentClass<PqueryFormProps>;
+    PqueryHelp:React.ComponentClass<PqueryHelpProps>;
+}
+
+export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):PqueryViews {
     const layoutViews = he.getLayoutViews();
     const cqlEditorViews = cqlEditoInit(dispatcher, he, model);
 
+    // ------------------- <AdvancedFormFieldsetDesc /> -----------------------------
+
+    const AdvancedFormFieldsetDesc:React.FC<{
+        html:string;
+    }> = (props) => {
+
+        const [opened, setOpened] = React.useState(false);
+
+        const handleClick = () => {
+            setOpened(!opened);
+        }
+
+        return (
+            <QS.AdvancedFormFieldsetDesc>
+                <a onClick={handleClick}><layoutViews.StatusIcon status="info" inline={true} /></a>
+                {opened ?
+                    <layoutViews.PopupBox onCloseClick={handleClick}>
+                        <div className="html-code">
+                            <div dangerouslySetInnerHTML={{__html: props.html}} />
+                        </div>
+                    </layoutViews.PopupBox> :
+                    null
+                }
+            </QS.AdvancedFormFieldsetDesc>
+        );
+    };
+
+    // ------------------- <AdvancedFormFieldset /> -----------------------------
+
+    const AdvancedFormFieldset:React.FC<AdvancedFormFieldsetProps> = (props) => {
+
+        const htmlClasses = [];
+        htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
+
+        return (
+            <QS.AdvancedFormFieldset className={`${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
+                    role="group" aria-labelledby={props.uniqId}>
+                <SC.ExpandableSectionLabel id={props.uniqId}>
+                    <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
+                        <a onClick={props.handleClick}>{props.title}</a>
+                    {props.formVisible ? null : props.closedStateHint}
+                    {props.formVisible || !props.closedStateDesc ?
+                        null :
+                        <AdvancedFormFieldsetDesc html={props.closedStateDesc} />
+                    }
+                </SC.ExpandableSectionLabel>
+                {props.formVisible ?
+                    <div className="contents">
+                        {props.children}
+                    </div> :
+                    null
+                }
+            </QS.AdvancedFormFieldset>
+        );
+    };
 
     // ---------------- <QueryStatusIcon /> --------------------------
 
@@ -206,6 +271,12 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
             });
         };
 
+        const handleParamsFormVisibility = () => {
+            dispatcher.dispatch<Actions.ParamsToggleForm>({
+                name: ActionName.ParamsToggleForm
+            });
+        }
+
         const _renderMainFieldset = () => (
             <S.StylelessFieldset disabled={props.isBusy}>
                 <S.EditorFieldset>
@@ -223,25 +294,34 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
                         {he.translate('pquery__add_btn')}
                     </button>
                 </S.EditorFieldset>
-                <S.ParametersFieldset>
-                    <S.ParameterField>
-                        <label htmlFor="attr">{he.translate('pquery__attr_input')}:</label>
-                        <select id="attr" value={props.attr} onChange={handleAttrChange}>
-                            {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
-                            {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
-                        </select>
-                    </S.ParameterField>
-                    <S.MinFreqField>
-                        <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
-                        <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
-                    </S.MinFreqField>
-                    <S.ParameterField>
-                        <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
-                        <PositionSelect positionIndex={props.posIndex} positionRangeLabels={model.getPositionRangeLabels()}/>
-                        <label htmlFor="align">{he.translate('pquery__node_start_at')}</label>
-                        <PosAlignmentSelect alignType={props.posAlign}/>
-                    </S.ParameterField>
-                </S.ParametersFieldset>
+
+                <AdvancedFormFieldset
+                    uniqId="section-pquery-params"
+                    formVisible={props.paramsVisible}
+                    title={he.translate('pquery__parameters_form')}
+                    handleClick={handleParamsFormVisibility}
+                >   
+                    <S.ParametersFieldset>
+                        <S.ParameterField>
+                            <label htmlFor="attr">{he.translate('pquery__attr_input')}:</label>
+                            <select id="attr" value={props.attr} onChange={handleAttrChange}>
+                                {List.map(item => <option key={item.n}>{item.n}</option>, props.attrs)}
+                                {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
+                            </select>
+                        </S.ParameterField>
+                        <S.MinFreqField>
+                            <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
+                            <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
+                        </S.MinFreqField>
+                        <S.ParameterField>
+                            <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
+                            <PositionSelect positionIndex={props.posIndex} positionRangeLabels={model.getPositionRangeLabels()}/>
+                            <label htmlFor="align">{he.translate('pquery__node_start_at')}</label>
+                            <PosAlignmentSelect alignType={props.posAlign}/>
+                        </S.ParameterField>
+                    </S.ParametersFieldset>
+                </AdvancedFormFieldset>
+
                 <S.BorderlessFieldset>
                     <button type="button" className="default-button submit" onClick={handleSubmit}>
                         {he.translate('query__search_btn')}
@@ -261,5 +341,48 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         )
     };
 
-    return BoundWithProps<PqueryFormProps, PqueryFormModelState>(PqueryForm, model);
+    // ------------------- <PqueryHelp /> -----------------------------
+
+    const PqueryHelp:React.FC<PqueryHelpProps & HtmlHelpModelState> = (props) => {
+
+        const [visible, changeState] = React.useState(false);
+
+        const toggleHelp = () => {
+            if (!visible) {
+                dispatcher.dispatch<HelpActions.HelpRequested>({
+                    name: HelpActionName.HelpRequested,
+                    payload: {
+                        section: 'query'
+                    }
+                });
+            };
+            changeState(!visible);
+        };
+
+        return (
+            <div className="QueryHelp topbar-help-icon">
+                <a className="icon" onClick={toggleHelp}>
+                    <layoutViews.ImgWithMouseover
+                        htmlClass="over-img"
+                        src={he.createStaticUrl('img/question-mark.svg')}
+                        alt={he.translate('global__click_to_see_help')} />
+                </a>
+                {visible ?
+                    <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} customClass="block-help" label={he.translate('pquery__help')}>
+                            <a href="https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf">
+                                https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf
+                            </a>
+                        </layoutViews.CloseableFrame>
+                    </layoutViews.ModalOverlay> :
+                    null
+                }
+            </div>
+        );
+    };
+
+    return {
+        PqueryForm: BoundWithProps<PqueryFormProps, PqueryFormModelState>(PqueryForm, model),
+        PqueryHelp: BoundWithProps<PqueryHelpProps, HtmlHelpModelState>(PqueryHelp, helpModel),
+    }
 }

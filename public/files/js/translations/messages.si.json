@@ -468,6 +468,7 @@
         "query__interpretation_note": "In case this is not what you expect to be searched, please try to change default search attribute or use an advanced query. UNTRANSLATED",
         "query__interpretation_qs_note": "If you don't want to apply the extended specification of one or more words, please use the button below to return to the default interpretation. UNTRANSLATED",
         "query__help": "Query form instructions UNTRANSLATED",
+        "pquery__help": "Paradigmatic query form instructions UNTRANSLATED",
         "qhistory__attached_text_types": "Text types UNTRANSLATED",
         "qhistory__curr_corp_only_label": "contains currently used corpus UNTRANSLATED",
         "qhistory__query_type_sel": "contains query type UNTRANSLATED",
@@ -800,6 +801,7 @@
         "pquery__avail_label": "Total UNTRANSLATED",
         "pquery__no_result": "The search has no result. Please check your queries and query parameters. UNTRANSLATED",
         "pquery_overview_title": "Paradigmatic query UNTRANSLATED",
-        "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED"
+        "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED",
+        "pquery__parameters_form": "Paradigmatic query parameters UNTRANSLATED"
     }
 }
