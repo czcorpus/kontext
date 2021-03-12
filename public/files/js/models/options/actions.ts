@@ -33,6 +33,7 @@ export enum ActionName {
     GeneralSetWlPageSize = 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE',
     GeneralSetFmaxItems = 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS',
     GeneralSetCitemsPerPage = 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE',
+    GeneralSetPQueryitemsPerPage = 'GENERAL_VIEW_OPTIONS_SET_PQUERYITEMSPERPAGE',
     GeneralSubmit = 'GENERAL_VIEW_OPTIONS_SUBMIT',
     GeneralSubmitDone = 'GENERAL_VIEW_OPTIONS_SUBMIT_DONE',
     LoadDataDone = 'VIEW_OPTIONS_LOAD_DATA_DONE',
@@ -106,6 +107,12 @@ export namespace Actions {
         value:number;
     }> {
         name:ActionName.GeneralSetCitemsPerPage;
+    }
+
+    export interface GeneralSetPQueryitemsPerPage extends Action<{
+        value:number;
+    }> {
+        name:ActionName.GeneralSetPQueryitemsPerPage;
     }
 
     export interface GeneralSubmit extends Action<{

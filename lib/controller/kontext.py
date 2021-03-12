@@ -162,7 +162,7 @@ class Kontext(Controller):
                            MainMenu.CORPORA('create-subcorpus'))
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
-                       'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers',
+                       'shuffle', 'citemsperpage', 'pqueryitemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers',
                        'rich_query_editor')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
@@ -597,7 +597,8 @@ class Kontext(Controller):
 
         self._restore_prev_conc_params(req_args)
         # corpus access check and modify path in case user cannot access currently requested corp.
-        corpname, self._corpus_variant = self._check_corpus_access(action_name, req_args, action_metadata)
+        corpname, self._corpus_variant = self._check_corpus_access(
+            action_name, req_args, action_metadata)
 
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known

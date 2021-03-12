@@ -149,6 +149,7 @@ class Args(object):
     pagesize: int = def_attr(40, persistent=Persistence.PERSISTENT)
     wlpagesize: int = def_attr(25, persistent=Persistence.PERSISTENT)
     citemsperpage: int = def_attr(50, persistent=Persistence.PERSISTENT)
+    pqueryitemsperpage: int = def_attr(50, persistent=Persistence.PERSISTENT)
     multiple_copy: int = def_attr(0, persistent=Persistence.PERSISTENT)  # TODO do we need this?
     wlsendmail: str = def_attr('')
     cup_hl: str = def_attr('q', persistent=Persistence.PERSISTENT)

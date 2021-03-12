@@ -385,6 +385,57 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ------------- <TRPQueryitemsPerPageInput /> ---------------------
+
+    const TRPQueryitemsPerPageInput:React.FC<{
+        value:Kontext.FormValue<number>;
+
+    }> = (props) => {
+
+        const handleInputChange = (evt) => {
+            dispatcher.dispatch<Actions.GeneralSetPQueryitemsPerPage>({
+                name: ActionName.GeneralSetPQueryitemsPerPage,
+                payload: {
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <tr>
+                <th>
+                    {he.translate('options__pquery_page_size')}:
+                </th>
+                <td>
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="number" value={props.value.value} onChange={handleInputChange}
+                                style={{width: '2em'}} min={0} />
+                    </layoutViews.ValidatedItem>
+                </td>
+            </tr>
+        );
+    }
+
+    // ------------- <FieldsetPquery /> ---------------------
+
+    const FieldsetPquery:React.FC<{
+        resultsPerPage:Kontext.FormValue<number>;
+
+    }> = (props) => {
+        return (
+            <fieldset className="FieldsetPquery">
+                <legend>
+                    {he.translate('options__pquery_fieldset_heading')}
+                </legend>
+                <table className="results-range-and-paging">
+                    <tbody>
+                        <TRPQueryitemsPerPageInput value={props.resultsPerPage} />
+                    </tbody>
+                </table>
+            </fieldset>
+        );
+    };
+
     // --------------------- <SubmitButton /> -------------------------
 
     const SubmitButton:React.FC<{
@@ -434,6 +485,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
                                 <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems} />
                                 <FieldsetColl citemsPerPage={this.props.citemsperpage} />
+                                <FieldsetPquery resultsPerPage={this.props.pqueryitemsperpage} />
                             </> :
                             <p className='data-loader'>
                                 <img src={he.createStaticUrl('img/ajax-loader.gif')}
