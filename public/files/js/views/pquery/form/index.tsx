@@ -31,21 +31,29 @@ import { Dict, List } from 'cnc-tskit';
 import { ConcStatus, PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
 import { AlignTypes } from '../../../models/freqs/twoDimension/common';
+import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
+import { Actions as HelpActions, ActionName as HelpActionName } from '../../../models/help/actions';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
     model:PqueryFormModel;
+    helpModel:HtmlHelpModel;
 }
 
 interface PqueryFormProps {
     corparchWidget:React.ComponentClass;
 }
 
+interface PqueryHelpProps {
+}
 
-export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.ComponentClass<{
-    corparchWidget:React.ComponentClass
-}> {
+export interface PqueryViews {
+    PqueryForm:React.ComponentClass<PqueryFormProps>;
+    PqueryHelp:React.ComponentClass<PqueryHelpProps>;
+}
+
+export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):PqueryViews {
     const layoutViews = he.getLayoutViews();
     const cqlEditorViews = cqlEditoInit(dispatcher, he, model);
 
@@ -261,5 +269,48 @@ export function init({dispatcher, he, model}:PqueryFormViewsArgs):React.Componen
         )
     };
 
-    return BoundWithProps<PqueryFormProps, PqueryFormModelState>(PqueryForm, model);
+    // ------------------- <PqueryHelp /> -----------------------------
+
+    const PqueryHelp:React.FC<PqueryHelpProps & HtmlHelpModelState> = (props) => {
+
+        const [visible, changeState] = React.useState(false);
+
+        const toggleHelp = () => {
+            if (!visible) {
+                dispatcher.dispatch<HelpActions.HelpRequested>({
+                    name: HelpActionName.HelpRequested,
+                    payload: {
+                        section: 'query'
+                    }
+                });
+            };
+            changeState(!visible);
+        };
+
+        return (
+            <div className="QueryHelp topbar-help-icon">
+                <a className="icon" onClick={toggleHelp}>
+                    <layoutViews.ImgWithMouseover
+                        htmlClass="over-img"
+                        src={he.createStaticUrl('img/question-mark.svg')}
+                        alt={he.translate('global__click_to_see_help')} />
+                </a>
+                {visible ?
+                    <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} customClass="block-help" label={he.translate('pquery__help')}>
+                            <a href="https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf">
+                                https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf
+                            </a>
+                        </layoutViews.CloseableFrame>
+                    </layoutViews.ModalOverlay> :
+                    null
+                }
+            </div>
+        );
+    };
+
+    return {
+        PqueryForm: BoundWithProps<PqueryFormProps, PqueryFormModelState>(PqueryForm, model),
+        PqueryHelp: BoundWithProps<PqueryHelpProps, HtmlHelpModelState>(PqueryHelp, helpModel),
+    }
 }
