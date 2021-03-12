@@ -527,6 +527,8 @@
         "options__freq_page_size": "Srogość strōny (wielość liniji)",
         "options__coll_fieldset_heading": "Kolokacyje",
         "options__coll_page_size": "Srogość strōny (wielość liniji)",
+        "options__pquery_fieldset_heading": "Paradigmatic query UNTRANSLATED",
+        "options__pquery_page_size": "Srogość strōny (wielość liniji)",
         "options__this_applies_for_all_the_corpora": "Te sztelōnki stosujōm sie do wszyjskich korpusōw.",
         "options__submit": "Zastosuj ôpcyje widoku",
         "options__max_items_per_page_exceeded_{num}": "Maximum number of {num, plural, one{# item} other{# items}} per page exceeded",

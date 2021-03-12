@@ -559,6 +559,8 @@
         "options__freq_page_size": "Page size (number of lines) UNTRANSLATED",
         "options__coll_fieldset_heading": "Collocations UNTRANSLATED",
         "options__coll_page_size": "Page size (number of lines) UNTRANSLATED",
+        "options__pquery_fieldset_heading": "Paradigmatic query UNTRANSLATED",
+        "options__pquery_page_size": "Page size (number of lines) UNTRANSLATED",
         "options__this_applies_for_all_the_corpora": "Following settings apply for all the corpora. UNTRANSLATED",
         "options__submit": "Apply view options UNTRANSLATED",
         "options__max_items_per_page_exceeded_{num}": "Maximum number of {num, plural, one{# item} other{# items}} per page exceeded UNTRANSLATED",

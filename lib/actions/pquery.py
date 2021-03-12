@@ -38,8 +38,6 @@ import sys
 from main_menu import MainMenu, EventTriggeringItem
 
 
-PAGE_SIZE = 10
-
 """
 This module contains HTTP actions for the "Paradigmatic query" functionality
 """
@@ -53,7 +51,8 @@ def _load_conc_queries(conc_ids: List[str], corpus_id: str):
         for conc_id in conc_ids:
             data = qs.open(conc_id)
             if data is None:
-                raise UserActionException('Source concordance query does not exist: {}'.format(conc_id))
+                raise UserActionException(
+                    'Source concordance query does not exist: {}'.format(conc_id))
             fdata = data.get('lastop_form', {})
             if fdata['form_type'] != 'query':
                 raise UserActionException('Invalid source query used: {}'.format(conc_id))
@@ -109,7 +108,7 @@ class ParadigmaticQuery(Kontext):
             stored_pq = qp.open(request.args.get('query_id'))
             pquery = PqueryFormArgs()
             pquery.update_by_user_query(stored_pq)
-        pagesize = PAGE_SIZE  # TODO
+        pagesize = self.args.pqueryitemsperpage
         page = 1
         offset = (page - 1) * pagesize
         corp_info = self.get_corpus_info(self.args.corpname)
@@ -179,7 +178,7 @@ class ParadigmaticQuery(Kontext):
         page_id = int(request.args['page']) - 1
         sort = request.args['sort']
         reverse = bool(int(request.args['reverse']))
-        offset = page_id * PAGE_SIZE
+        offset = page_id * self.args.pqueryitemsperpage
 
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             stored_pq = qp.open(request.args.get('query_id'))
@@ -187,7 +186,7 @@ class ParadigmaticQuery(Kontext):
         pquery.update_by_user_query(stored_pq)
         corp_info = self.get_corpus_info(self.args.corpname)
         total_num_lines, freqs = require_existing_pquery(
-            pquery, offset, PAGE_SIZE, corp_info.collator_locale, sort, reverse)
+            pquery, offset, self.args.pqueryitemsperpage, corp_info.collator_locale, sort, reverse)
         return dict(rows=freqs)
 
     @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
@@ -257,4 +256,3 @@ class ParadigmaticQuery(Kontext):
                                  hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.PQUERY_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item(translate('Custom'))
-

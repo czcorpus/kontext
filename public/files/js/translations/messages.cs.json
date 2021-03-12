@@ -528,6 +528,8 @@
         "options__freq_page_size": "Velikost stránky (počet řádků)",
         "options__coll_fieldset_heading": "Kolokace",
         "options__coll_page_size": "Velikost stránky (počet řádků)",
+        "options__pquery_fieldset_heading": "Paradigmatický dotaz",
+        "options__pquery_page_size": "Velikost stránky (počet řádků)",
         "options__this_applies_for_all_the_corpora": "Následující nastavení platí pro všechny korpusy.",
         "options__submit": "Použít volby zobrazení",
         "options__max_items_per_page_exceeded_{num}": "Byl překročen maximální počet {num, plural, one{# položka} few{# položky} other {# položek}} na stránku",
