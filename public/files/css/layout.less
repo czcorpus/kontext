@@ -461,17 +461,17 @@ header#topbar {
         border: 1px solid transparent;
     }
 
-    li.disabled a {
+    li.disabled .menu-link {
         color: @color-light-text;
     }
 
-    li.disabled a:hover {
+    li.disabled .menu-link:hover {
         background-color: transparent;
         border: none;
         color: @color-light-text !important;
     }
 
-    > li a {
+    > li .menu-link {
         display: block;
         text-decoration: none;
         color: @color-default-text;
@@ -490,11 +490,11 @@ header#topbar {
         }
     }
 
-    > a:hover {
+    > .menu-link:hover {
         color: #FFFFFF;
     }
 
-    > li a:hover {
+    > li .menu-link:hover {
         text-decoration: none;
     }
 
@@ -523,7 +523,7 @@ header#topbar {
             padding: 0;
             margin: 0.2em 0 0.2em 0;
 
-            > a, > span {
+            > .menu-link, > span {
                 text-shadow: none;
                 display: block;
                 padding: 0.2em 1em;

@@ -316,6 +316,10 @@ export const TooltipBox = styled.section`
 
             td.msg {
                 width: 45%;
+
+                a {
+                    color: ${theme.colorLogoBlue};
+                }
             }
 
             th {
