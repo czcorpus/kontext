@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import sys
+from typing import Union
 
 
 def get_traceback():
@@ -48,8 +49,8 @@ class UserActionException(Exception):
     not have access rights etc.).
     """
 
-    def __init__(self, message, code=400, error_code=None, error_args=None, internal_message=None):
-        super().__init__(message)
+    def __init__(self, message: Union[str, Exception], code=400, error_code=None, error_args=None, internal_message=None):
+        super().__init__(message if type(message) is str else str(message))
         self.code = code
         self.error_code = error_code
         self.error_args = error_args
