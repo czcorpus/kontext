@@ -21,6 +21,7 @@
 const { merge } = require('webpack-merge');
 const common = require('./scripts/build/webpack.common');
 const path = require('path');
+const customProperties = require('./public/files/js/views/theme/default/const');
 
 module.exports = (env) => merge(common.wpConf(env), {
     mode: 'development',
@@ -30,7 +31,29 @@ module.exports = (env) => merge(common.wpConf(env), {
                 test: /\.css$/,
                 use: [
                     { loader: 'style-loader'},
-                    { loader: 'css-loader' }
+                    { loader: 'css-loader' },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            postcssOptions: {
+                                plugins: [
+                                    [
+                                        "postcss-custom-properties",
+                                        {
+                                            preserve: false,
+                                            importFrom: [
+                                                {
+                                                    customProperties: Object.fromEntries(
+                                                        Object.entries(customProperties).map(([k, v]) => [`--${k}`, v])
+                                                    )
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                ]
+                            }
+                        }
+                    }
                 ]
             },
             {

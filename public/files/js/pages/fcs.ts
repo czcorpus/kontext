@@ -20,7 +20,7 @@
 
 // declare var require:any; TODO why cannot this be active like before?!!
 // weback - ensure an individual style (even empty one) is created for the page
-require('styles/fcs.less');
+require('styles/fcs.css');
 
 /*
 There is no client-side logic for this page. It is defined just to

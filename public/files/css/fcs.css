@@ -1,9 +1,7 @@
-@import "./shared/globals.less";
-
 body {
-    font-family: @default-font-family;
-    color: @color-default-text;
-    background-image: @main-background;
+    font-family: var(--defaultFontFamily);
+    color: var(--colorDefaultText);
+    background-image: var(--mainBackground);
     font-size: 10pt;
     margin: 0;
     padding: 0;
@@ -75,7 +73,7 @@ body {
 
 #response pre {
     padding: 0.7em;
-    color: @color-default-text;
+    color: var(--colorDefaultText);
 }
 
-@import "./layoutMobile.less";
+@import "./layoutMobile.css";

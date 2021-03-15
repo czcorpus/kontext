@@ -39,7 +39,7 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../mod
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
-require('styles/layoutMobile.less');
+require('styles/layoutMobile.css');
 
 
 interface TTProps {
