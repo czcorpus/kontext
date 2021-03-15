@@ -75,7 +75,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         return (
             <li>
-                <a href={createLink()} title={props.data.hint}>
+                <a className="menu-link" href={createLink()} title={props.data.hint}>
                     {props.data.label}
                     {props.data.indirect ? '\u2026' : null}
                 </a>
@@ -107,7 +107,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         return (
             <li>
-                <a href={createLink()}
+                <a className="menu-link" href={createLink()}
                         title={props.data.hint}
                         target={props.data.openInBlank ? '_blank' : null}>
                     {props.data.label}
@@ -131,7 +131,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         return (
             <li>
-                <a onClick={clickHandler} title={props.data.hint}>
+                <a className="menu-link" onClick={clickHandler} title={props.data.hint}>
                     {props.data.label}
                     {props.data.indirect ? '\u2026' : null}
                 </a>
@@ -179,7 +179,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         return (
             <li title={props.data.hint}>
-                <a onClick={handleClick}>
+                <a className="menu-link" onClick={handleClick}>
                     {he.translate(props.data.label)}
                     {props.data.indirect ? '\u2026' : null}
                 </a>
@@ -249,7 +249,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
             <li className={htmlClasses.join(' ')}
                     onMouseOver={props.handleMouseOver}
                     onMouseLeave={props.handleMouseOut}>
-                <a className="trigger"
+                <a className="trigger menu-link"
                     title="">{props.label}</a>
                 {props.isOpened ? renderSubmenu() : null}
             </li>
