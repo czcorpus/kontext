@@ -56,6 +56,7 @@ export namespace Actions {
         created?:number;
         args?:unknown;
         error?:string;
+        url?:string;
     }> {
         name: ActionName.InboxAddAsyncTask;
     }

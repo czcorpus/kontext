@@ -86,6 +86,7 @@
         "global__task_label": "Name/ID",
         "global__task_created": "Created",
         "global__task_status": "Status",
+        "global__task_result": "Result",
         "global__remove_finished_tasks_info": "Remove finished tasks information after closing the overview",
         "global__warning": "Warning",
         "global__how_to_cite_corpus": "How to cite the corpus",

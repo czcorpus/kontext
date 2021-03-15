@@ -86,6 +86,7 @@
         "global__task_label": "Název/ID",
         "global__task_created": "Vytvořeno",
         "global__task_status": "Status",
+        "global__task_result": "Výsledek",
         "global__remove_finished_tasks_info": "Po zavření přehledu smazat informace o ukončených úlohách",
         "global__warning": "Varování",
         "global__how_to_cite_corpus": "Jak citovat korpus",

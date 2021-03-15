@@ -150,7 +150,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                             label: action.payload.label,
                             category: action.payload.category,
                             error: action.payload.error,
-                            args: action.payload.args ? action.payload.args : {}
+                            args: action.payload.args ? action.payload.args : {},
+                            url: action.payload.url ? action.payload.url : undefined
                         });
                     });
                     this.init();

@@ -290,7 +290,15 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                             <img src={he.createStaticUrl('img/error-icon.svg')} alt={item.status} />
                                             : null }
                                     </td>
-                                    <td className="msg">{item.error}</td>
+                                    <td className="msg">{
+                                        item.error ?
+                                        item.error :
+                                            item.url && item.status === 'SUCCESS' ?
+                                            <a href={he.createActionLink(item.url)}>
+                                                {he.translate('global__task_result')}
+                                            </a> :
+                                            null
+                                    }</td>
                                 </tr>
                             ))}
                         </tbody>

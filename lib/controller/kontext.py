@@ -115,7 +115,7 @@ class AsyncTaskStatus(object):
     CATEGORY_SUBCORPUS = 'subcorpus'
     CATEGORY_PQUERY = 'pquery'
 
-    def __init__(self, ident: str, label: str, status: int, category: str, args: Dict[str, Any], created: Optional[float] = None, error: Optional[str] = None) -> None:
+    def __init__(self, ident: str, label: str, status: int, category: str, args: Dict[str, Any], created: Optional[float] = None, error: Optional[str] = None, url: Optional[str] = None) -> None:
         self.ident: str = ident
         self.label: str = label
         self.status: int = status
@@ -123,6 +123,7 @@ class AsyncTaskStatus(object):
         self.created: Optional[float] = created if created else time.time()
         self.args: Dict[str, Any] = args
         self.error: Optional[str] = error
+        self.url: Optional[str] = url
 
     def is_finished(self) -> bool:
         return self.status in ('FAILURE', 'SUCCESS')
@@ -135,7 +136,7 @@ class AsyncTaskStatus(object):
         """
         return AsyncTaskStatus(status=data['status'], ident=data['ident'], label=data['label'],
                                category=data['category'], created=data.get('created'), args=data.get('args', {}),
-                               error=data.get('error'))
+                               error=data.get('error'), url=data.get('url'))
 
     def to_dict(self) -> Dict[str, Any]:
         """
