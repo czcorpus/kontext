@@ -23,7 +23,7 @@ import * as theme from '../theme/default';
 
 // ---------------- <RecentQueriesPageList /> --------------------------------------
 
-export const RecentQueriesPageList = styled.td`
+export const RecentQueriesPageList = styled.div`
     .loader {
         display: flex;
         align-items: center;
