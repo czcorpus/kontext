@@ -327,6 +327,7 @@ export namespace Kontext {
         created:number;
         error:string; // = Celery's "result" property in case status == 'FAILURE'
         args:T;
+        url:string;
     }
 
     export interface AsyncTaskOnUpdate {

@@ -169,7 +169,8 @@ class ParadigmaticQuery(Kontext):
         async_task = AsyncTaskStatus(status=res.status, ident=res.id,
                                      category=AsyncTaskStatus.CATEGORY_PQUERY,
                                      label=translate('Paradigmatic query calculation'),
-                                     args=task_args)
+                                     args=task_args,
+                                     url=f'pquery/result?corpname={self.args.corpname}&usesubcorp={self.args.usesubcorp}&query_id={query_id}')
         self._store_async_task(async_task)
         return dict(task=async_task.to_dict())
 

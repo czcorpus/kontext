@@ -453,7 +453,8 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         status: item.status,
                         created: item.created,
                         error: item.error,
-                        args: item.args
+                        args: item.args,
+                        url: undefined
                     });
                     this.changeState(state => {
                         state.unfinished.push({

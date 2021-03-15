@@ -74,6 +74,7 @@
         "global__task_label": "Ime/ID",
         "global__task_created": "Ustvarjeno",
         "global__task_status": "Status",
+        "global__task_result": "Result UNTRANSLATED",
         "global__remove_finished_tasks_info": "Po izhodu iz pregleda izbriši informacije o zaključenih opravilih.",
         "global__warning": "Opozorilo",
         "linesel__remove_selected_lines": "Odstrani izbrane vrstice",
