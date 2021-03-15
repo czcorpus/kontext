@@ -372,25 +372,30 @@ class Kontext(Controller):
             return []
         return self.cm.subcorp_names(corpname)
 
-    def get_saveable_conc_data(self) -> Dict[str, Any]:
+    def get_saveable_conc_data(self) -> Tuple[bool, Dict[str, Any]]:
         """
-        Return values to be stored as a representation
-        of user's query (here we mean all the data needed
-        to reach the current result page including data
-        needed to restore involved query forms).
+        Return a 2-tuple with the following elements
+            1) a flag specifying whether the query should be stored to user query history
+               (please note that query history != stored/persistent query; query history is just a personal
+               list of recent queries)
+            2) values to be stored as a representation of user's query (here we mean all the data needed
+               to reach the current result page including data needed to restore involved query forms).
         """
         if len(self._auto_generated_conc_ops) > 0:
             q_limit = self._auto_generated_conc_ops[0][0]
         else:
             q_limit = len(self.args.q)
-        return dict(
-            # we don't want to store all the items from self.args.q in case auto generated
-            # operations are present (we will store them individually later).
-            user_id=self.session_get('user', 'id'),
-            q=self.args.q[:q_limit],
-            corpora=self.get_current_aligned_corpora(),
-            usesubcorp=getattr(self.args, 'usesubcorp'),
-            lines_groups=self._lines_groups.serialize()
+        return (
+            False,
+            dict(
+                # we don't want to store all the items from self.args.q in case auto generated
+                # operations are present (we will store them individually later).
+                user_id=self.session_get('user', 'id'),
+                q=self.args.q[:q_limit],
+                corpora=self.get_current_aligned_corpora(),
+                usesubcorp=getattr(self.args, 'usesubcorp'),
+                lines_groups=self._lines_groups.serialize()
+            )
         )
 
     def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
@@ -422,7 +427,7 @@ class Kontext(Controller):
     def _save_query_to_history(self, query_id, conc_data):
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
-                qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='conc')
+                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='conc')
 
     def _store_conc_params(self) -> List[str]:
         """
@@ -434,10 +439,11 @@ class Kontext(Controller):
         """
         with plugins.runtime.QUERY_PERSISTENCE as cp:
             prev_data = self._prev_q_data if self._prev_q_data is not None else {}
-            curr_data = self.get_saveable_conc_data()
+            use_history, curr_data = self.get_saveable_conc_data()
             ans = [cp.store(self.session_get('user', 'id'),
                             curr_data=curr_data, prev_data=self._prev_q_data)]
-            self._save_query_to_history(ans[0], curr_data)
+            if use_history:
+                self._save_query_to_history(ans[0], curr_data)
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
                 prev = dict(id=ans[-1], lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],

@@ -26,9 +26,9 @@ import abc
 class AbstractQueryHistory(abc.ABC):
 
     @abc.abstractmethod
-    def write(self, user_id: int, query_id: str, qtype: str):
+    def store(self, user_id: int, query_id: str, qtype: str):
         """
-        Write data as a new saved query
+        Store data as a new saved query
 
         arguments:
         user_id -- a numeric ID of a user

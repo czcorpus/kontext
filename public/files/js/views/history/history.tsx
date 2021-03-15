@@ -36,7 +36,7 @@ export interface HistoryViews {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            queryHistoryModel:IModel<{}>):HistoryViews {
+            queryHistoryModel:IModel<PluginInterfaces.QueryHistory.ModelState>):HistoryViews {
 
     const layoutViews = he.getLayoutViews();
 

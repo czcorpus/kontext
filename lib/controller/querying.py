@@ -86,15 +86,17 @@ class Querying(Kontext):
         """
         self._curr_conc_form_args = item
 
-    def get_saveable_conc_data(self) -> Dict[str, Any]:
+    def get_saveable_conc_data(self):
         """
         Export data stored by conc_persistence
         """
-        ans = super().get_saveable_conc_data()
-
+        _, data = super().get_saveable_conc_data()
+        use_history = True
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
-            ans.update(lastop_form=self._curr_conc_form_args.serialize())
-        return ans
+            data.update(lastop_form=self._curr_conc_form_args.serialize())
+            if isinstance(self._curr_conc_form_args, QueryFormArgs):
+                use_history = not self._curr_conc_form_args.no_query_history
+        return use_history, data
 
     def _select_current_aligned_corpora(self, active_only: bool):
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()

@@ -510,6 +510,7 @@ export namespace Actions {
     }
 
     export interface QuerySubmit extends Action<{
+        noQueryHistory?:boolean;
     }> {
         name:ActionName.QuerySubmit;
     }

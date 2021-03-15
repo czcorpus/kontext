@@ -501,7 +501,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 concatMap(
                     () => {
                         if (opIdx < numOps - 1) {
-                            const args = this.queryModel.createSubmitArgs(queryContext, false);
+                            const args = this.queryModel.createSubmitArgs(
+                                queryContext, false, false);
                             const url = this.pageModel.createActionUrl(
                                 'query_submit',
                                 [tuple('format', 'json')]
