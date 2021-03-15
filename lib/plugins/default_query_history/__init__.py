@@ -79,7 +79,7 @@ class QueryHistory(AbstractQueryHistory):
     def _mk_tmp_key(self, user_id):
         return 'query_history:user:%d:new' % user_id
 
-    def write(self, user_id, query_id, qtype):
+    def store(self, user_id, query_id, qtype):
         """
         stores information about a query; from time
         to time also check remove too old records
@@ -194,7 +194,8 @@ class QueryHistory(AbstractQueryHistory):
                     stored = self._query_persistence.open(item['query_id'])
                     if not stored:
                         continue
-                    tmp = {}
+                    tmp = {'corpname': stored['corpora'][0], 'aligned': []}
+                    tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
                     tmp.update(item)
                     tmp.update(stored)
                     full_data.append(tmp)

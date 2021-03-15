@@ -151,7 +151,7 @@ class ParadigmaticQuery(Kontext):
         args.update_by_user_query(request.json)
         with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
             query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_qp())
-            qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
+            qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
 
         raw_queries = dict()
         with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
@@ -166,11 +166,14 @@ class ParadigmaticQuery(Kontext):
         res = app.send_task('calc_merged_freqs', args=calc_args,
                             time_limit=TASK_TIME_LIMIT)
         task_args = dict(query_id=query_id, last_update=time.time())
+        result_url = self.create_url('pquery/result',
+                                     dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
+                                          query_id=query_id))
         async_task = AsyncTaskStatus(status=res.status, ident=res.id,
                                      category=AsyncTaskStatus.CATEGORY_PQUERY,
                                      label=translate('Paradigmatic query calculation'),
                                      args=task_args,
-                                     url=f'pquery/result?corpname={self.args.corpname}&usesubcorp={self.args.usesubcorp}&query_id={query_id}')
+                                     url=result_url)
         self._store_async_task(async_task)
         return dict(task=async_task.to_dict())
 
@@ -189,15 +192,6 @@ class ParadigmaticQuery(Kontext):
         total_num_lines, freqs = require_existing_pquery(
             pquery, offset, self.args.pqueryitemsperpage, corp_info.collator_locale, sort, reverse)
         return dict(rows=freqs)
-
-    @exposed(http_method='POST', return_type='json', skip_corpus_init=True)
-    def save_query(self, request):
-        args = PqueryFormArgs()
-        args.update_by_user_query(request.json)
-        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-            query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_dict())
-            qh.write(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
-        return dict(ok=True, query_id=query_id)
 
     @exposed(access_level=1, func_arg_mapped=True, skip_corpus_init=True, return_type='plain')
     def download(self, query_id='', sort='value', reverse='0', saveformat='', from_line=1, to_line='',
