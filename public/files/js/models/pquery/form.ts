@@ -518,7 +518,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             queries: [this.exportQuery(query)],
             text_types: {} as TextTypes.ExportedSelection,
             context: {} as QueryContextArgs,
-            async
+            async,
+            no_query_history: true
         };
     }
 

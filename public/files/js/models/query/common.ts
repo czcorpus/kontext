@@ -78,6 +78,7 @@ export interface ConcQueryArgs {
     text_types:TextTypes.ExportedSelection;
     context:QueryContextArgs;
     async:boolean;
+    no_query_history?:boolean;
     type:'concQueryArgs';
 }
 

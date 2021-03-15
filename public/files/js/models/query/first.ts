@@ -869,7 +869,11 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
     }
 
-    createSubmitArgs(contextFormArgs:QueryContextArgs, async:boolean):ConcQueryArgs {
+    createSubmitArgs(
+        contextFormArgs:QueryContextArgs,
+        async:boolean,
+        noQueryHistory:boolean
+    ):ConcQueryArgs {
 
         const exportCsVal = (v:string) => typeof v === 'string' ? v.split(',') : [];
 
@@ -892,7 +896,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             queries: [],
             text_types: this.textTypesModel.UNSAFE_exportSelections(false),
             context: contextFormArgs,
-            async
+            async,
+            no_query_history: noQueryHistory
         };
 
         if (this.state.corpora.length > 1) {
@@ -926,7 +931,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     submitQuery(
         contextFormArgs:QueryContextArgs,
-        async:boolean
+        async:boolean,
+        noQueryHistory?:boolean
     ):Observable<[ConcQueryResponse|null, Array<[Kontext.UserMessageTypes, string]>]> {
 
         return this.pageModel.ajax$<ConcQueryResponse>(
@@ -935,7 +941,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 'query_submit',
                 [tuple('format', 'json')]
             ),
-            this.createSubmitArgs(contextFormArgs, async),
+            this.createSubmitArgs(contextFormArgs, async, noQueryHistory),
             {
                 contentType: 'application/json'
             }
