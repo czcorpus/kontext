@@ -229,6 +229,10 @@ class Actions(Querying):
                     'error', translate('Syntax error. Please check the query and its type.'))
             else:
                 raise ex
+        except RuntimeError as ex:
+            if 'AttrNotFound' in str(ex):
+                raise UserActionException(ex)
+            raise ex
         except UnknownConcordanceAction as ex:
             raise UserActionException(str(ex))
 
@@ -658,8 +662,9 @@ class Actions(Querying):
             ans['size'] = 0
             ans['finished'] = True
             if 'syntax error' in f'{ex}'.lower():
-                self.add_system_message(
-                    'error', translate('Syntax error. Please check the query and its type.'))
+                raise UserActionException(translate('Syntax error. Please check the query and its type.'))
+            elif 'AttrNotFound' in str(ex):
+                raise UserActionException(ex)
             else:
                 raise ex
         ans['conc_args'] = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping)).export()
