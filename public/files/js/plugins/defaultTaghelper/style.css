@@ -1,0 +1,23 @@
+.tag-builder-widget {
+    min-width: 25em;
+}
+
+.tag-builder-widget h3 {
+    display: inline-block;
+    line-height: 1.4em;
+}
+     
+.tag-builder-widget .loader {
+    display: inline-block;
+    vertical-align: middle;
+    padding-left: 1em;
+}
+
+.tag-builder-widget .buttons {
+    display: flex;
+    align-items: center;
+}
+
+.tag-builder-widget .buttons .separ {
+    flex-grow: 1;
+}

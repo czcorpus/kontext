@@ -30,7 +30,7 @@ import { init as udTagsetViewInit} from './keyval/views';
 import { TabFrameModel } from './models';
 
 declare var require:any;
-require('./style.less'); // webpack
+require('./style.css'); // webpack
 
 
 type AnyComponent = React.FC<any>|React.ComponentClass<any>;

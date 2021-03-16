@@ -26,6 +26,8 @@ import {PositionValue, PositionOptions, PosTagModelState} from './models';
 import { Kontext } from '../../../types/common';
 import { Actions, ActionName } from '../actions';
 
+import * as S from '../style';
+
 
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
 
@@ -91,25 +93,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         const renderUnfulfilledCheckbox = () => {
             return (
-                <ul className="ValueList">
+                <S.ValueList>
                     <li>
                         <label>
                             <input type="checkbox" checked={true} disabled={true} />
                             {he.translate('taghelper__unfulfilled')}
                         </label>
                     </li>
-                </ul>
+                </S.ValueList>
             );
         };
         return (
             List.filter(item => item.available, props.positionValues).length > 0 ?
             (
-                <ul className="ValueList">
+                <S.ValueList>
                 {
                     hasOnlyUnfulfilledChild() ?
                     renderUnfulfilledCheckbox() : renderChildren()
                 }
-                </ul>
+                </S.ValueList>
             )
             : null
         );
@@ -141,20 +143,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         }
 
         return (
-            <li className="defaultTaghelper_PositionLine">
+            <S.PositionLine>
                 <a className={linkClass} onClick={clickHandler}>
                     <span className="pos-num">{props.lineIdx + 1}.</span>
                     <span className="desc">{props.position['label']}</span>
                     <span className="status-text">[ {getAvailableChildren().length} ]</span>
                 </a>
-                <div className="defaultTaghelper_PositionValuesWrapper">
+                <S.PositionValuesWrapper>
                     {props.position.isActive ?
                     <ValueList positionValues={getAvailableChildren()}
                                 isLocked={props.position.isLocked}
                                 lineIdx={props.lineIdx}
                                 checkboxHandler={props.checkboxHandler} /> : null }
-                </div>
-            </li>
+                </S.PositionValuesWrapper>
+            </S.PositionLine>
         );
     };
 
@@ -179,12 +181,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         };
 
         return (
-            <ul className="defaultTaghelper_PositionList">
+            <S.PositionList>
                 {props.positions.map(
                     (item, i) => <PositionLine key={`${i}:${item.label}`} position={item}
                                                 lineIdx={i} clickHandler={lineClickHandler(i)}
                                                 checkboxHandler={props.checkboxHandler} />)}
-            </ul>
+            </S.PositionList>
         );
     }
 
@@ -207,7 +209,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         return (
             <div>
-                <input type="text" className="postag-display-box"
+                <S.PostagDisplayBox type="text"
                         value={props.data[props.sourceId].generatedQuery} readOnly />
                 <PositionList
                     positions={props.data[props.sourceId].positions}
