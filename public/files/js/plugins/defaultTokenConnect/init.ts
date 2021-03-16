@@ -28,7 +28,7 @@ import { HTTP, List, pipe } from 'cnc-tskit';
 
 
 declare var require:any;
-require('./style.less');
+require('./style.css');
 
 
 export type ServerExportedConf = {

@@ -23,11 +23,13 @@ import * as PDTVRD from './pdt-vallex';
 import * as ENGVRD from './eng-vallex';
 import { IActionDispatcher } from 'kombo';
 
+import * as S from './style';
+
 
 export interface Views {
-    VallexJsonRenderer:React.SFC<{data: VRD.VallexResponseData}>;
-    PDTVallexJsonRenderer:React.SFC<{data: PDTVRD.PDTVallexResponseData}>;
-    EngVallexJsonRenderer:React.SFC<{data: ENGVRD.EngVallexResponseData}>;
+    VallexJsonRenderer:React.FC<{data: VRD.VallexResponseData}>;
+    PDTVallexJsonRenderer:React.FC<{data: PDTVRD.PDTVallexResponseData}>;
+    EngVallexJsonRenderer:React.FC<{data: ENGVRD.EngVallexResponseData}>;
 }
 
 
@@ -39,10 +41,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     const EngVallexJsonRenderer:Views['EngVallexJsonRenderer'] = (props) => {
         if (props.data.result.length > 0) {
             return (
-                <div className="VallexJsonRenderer 1">
+                <S.VallexJsonRenderer className="1">
                     <a className="vallexSense" href={'http://lindat.mff.cuni.cz/services/PDT-Vallex/EngVallex.html?verb=' + props.data.result[1][0][0]} target="_blank">{props.data.result[1][0][0]}</a>
                     <EngVerbList info={props.data.result[1][0]} />
-                </div>
+                </S.VallexJsonRenderer>
             );
         } else {
             return (
@@ -201,9 +203,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     const PDTVallexJsonRenderer:Views['PDTVallexJsonRenderer'] = (props) => {
         if (props.data.result.length > 0) {
             return (
-                <div className="VallexJsonRenderer 2">
+                <S.VallexJsonRenderer className="2">
                     <PDTVerbList info={props.data.result[1][0]} />
-                </div>
+                </S.VallexJsonRenderer>
             );
         } else {
             return (
@@ -268,7 +270,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
 
         // ------------- <OneFrame /> -------------------------------
 
-    const OneFrame:React.SFC<{
+    const OneFrame:React.FC<{
         key:any;
         id:PDTVRD.FrameID;
         info:PDTVRD.Info;
@@ -392,9 +394,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     const VallexJsonRenderer:Views['VallexJsonRenderer'] = (props) => {
         if (props.data.result.length > 0) {
             return (
-                <div className="VallexJsonRenderer 3">
+                <S.VallexJsonRenderer className="3">
                     <VerbList list={props.data.result[1]} language={props.data.inputParameters.language} />
-                </div>
+                </S.VallexJsonRenderer>
             );
         } else {
             return (
