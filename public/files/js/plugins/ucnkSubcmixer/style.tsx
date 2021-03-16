@@ -78,3 +78,13 @@ export const SubcmixerWidget = styled.div`
         }
     }
 `;
+
+export const MixerTrigger = styled.div`
+    
+    display: inline;
+
+    a.trigger img {
+        width: 1.5em;
+        vertical-align: middle;
+    }
+`;

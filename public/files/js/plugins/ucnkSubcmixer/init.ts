@@ -23,9 +23,6 @@ import { init as viewInit } from './view';
 import { SubcMixerModel } from './model';
 import { Kontext } from '../../types/common';
 
-declare var require:any;
-require('./style.css'); // webpack
-
 
 class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
 

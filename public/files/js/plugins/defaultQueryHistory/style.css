@@ -40,10 +40,6 @@
     padding: 3px 0;
 }
     
-.history-widget .filter-current > * {
-    vertical-align: middle;
-}
-
 .history-widget .rows li .corpname {
     color: #999999;
     font-size: 80%;

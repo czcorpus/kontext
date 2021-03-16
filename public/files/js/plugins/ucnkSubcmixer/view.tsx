@@ -456,7 +456,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         };
         return (
-            <div className="mixer-trigger">
+            <S.MixerTrigger>
                 {renderButton()}
                 {props.isVisible ?
                     <SubcMixer closeClickHandler={handleCloseWidget}
@@ -471,7 +471,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             isPublic={props.subcIsPublic}
                             description={props.description} />
                     : null}
-            </div>
+            </S.MixerTrigger>
         );
     }
 
