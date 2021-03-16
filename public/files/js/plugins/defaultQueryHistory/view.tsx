@@ -28,6 +28,8 @@ import { Actions as QueryActions, ActionName as QueryActionName, QueryFormType }
 import { Actions, ActionName } from './actions';
 import { PluginInterfaces } from '../../types/plugins';
 
+import * as S from './style';
+
 
 export interface QueryHistoryProps {
     formType:QueryFormType;
@@ -170,14 +172,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         render() {
             const data = this.getFlatData();
             return (
-                <ol className="rows"
+                <S.QueryHistoryRows
                         onKeyDown={evt => this._keyPressHandler(data, evt)}
                         tabIndex={0}
                         ref={item => item ? item.focus() : null}
                         onBlur={this._handleBlurEvent}
                         onFocus={this._handleFocusEvent}>
                     {this._renderContents(data)}
-                </ol>
+                </S.QueryHistoryRows>
             );
         }
     }
