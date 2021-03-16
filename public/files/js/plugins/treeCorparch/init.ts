@@ -28,9 +28,6 @@ import { IUnregistrable } from '../../models/common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
     from '../../models/common/actions';
 
-declare var require:any;
-require('./style.less'); // webpack
-
 
 export interface Node {
     name: string;
