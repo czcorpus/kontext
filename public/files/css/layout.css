@@ -1,11 +1,7 @@
-:root {
-    --mainBackgroundLocal: '../img/groovepaper2.jpg';
-}
-
 body {
     font-family: var(--defaultFontFamily);
     color: var(--colorDefaultText);
-    background-image: var(--mainBackground, --mainBackgroundLocal);
+    background-image: var(--mainBackground);
     font-size: 10pt;
     margin: 0;
     padding: 0;

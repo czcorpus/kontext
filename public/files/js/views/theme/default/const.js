@@ -21,7 +21,8 @@
 exports.mediaPhone = '@media screen and (max-width: 479px)';
 exports.mediaTablet = '@media screen and (max-width: 1200px), screen and (orientation:portrait)';
 
-exports.mainBackground = 'url(../../img/groovepaper2.jpg)';
+// TODO originaly url(../../img/groovepaper2.jpg)
+exports.mainBackground = 'url(../img/groovepaper2.jpg)';
 
 // texts
 exports.defaultFontFamily = '"Roboto", "Segoe UI", Arial, sans-serif';
