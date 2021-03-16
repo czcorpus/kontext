@@ -1,0 +1,8 @@
+.live-attributes .mixer-trigger {
+    display: inline;
+}
+
+.live-attributes .mixer-trigger a.trigger img {
+    width: 1.5em;
+    vertical-align: middle;
+}

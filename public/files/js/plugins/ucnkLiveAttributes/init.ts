@@ -24,7 +24,6 @@ import { init as viewInit } from './view';
 import { List } from 'cnc-tskit';
 
 declare var require:any;
-require('./style.less'); // webpack
 
 
 export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {

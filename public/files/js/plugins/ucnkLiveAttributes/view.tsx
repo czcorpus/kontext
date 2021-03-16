@@ -29,6 +29,8 @@ import { PluginInterfaces } from '../../types/plugins';
 import { init as ttViewInit } from '../../views/textTypes';
 import { TextTypesModelState } from '../../models/textTypes/main';
 
+import * as S from './style';
+
 
 export interface ViewModuleArgs {
     dispatcher:IActionDispatcher;
@@ -250,7 +252,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         };
 
         return (
-            <div className="live-attributes">
+            <S.LiveAttributes className="live-attributes">
                 <ul className="controls">
                     <li>
                         <RefineButton enabled={props.controlsEnabled} clickHandler={handleRefine} />
@@ -268,7 +270,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                     : null}
                 </ul>
                 <SelectionSteps items={props.selectionSteps} isLoading={props.isBusy} />
-            </div>
+            </S.LiveAttributes>
         );
     }
 
