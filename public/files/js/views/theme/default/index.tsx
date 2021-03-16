@@ -78,6 +78,7 @@ export const ucnkTopbarLeftMargin = '30px';
 
 export const inputBorderStyle = 'solid 1px @color-light-grey';
 export const inputBorderRadius = '3px';
+export const defaultFieldsetPadding = '1.7em 1.1em';
 
 
 // sizes

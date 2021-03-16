@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { Bound, IActionDispatcher, IModel } from 'kombo';
-import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
+import { Keyboard, Dict, pipe, List, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
@@ -40,21 +40,33 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const layoutViews = he.getLayoutViews();
 
-    const queryTypes:{[k in QueryType]:string} = {
-        'simple': he.translate('query__qt_simple'),
-        'advanced': he.translate('query__qt_advanced')
+    const supertypeToHuman = (qSupertype:Kontext.QuerySupertype) => {
+        switch (qSupertype) {
+            case 'conc':
+                return he.translate('qhistory__qs_conc');
+            case 'pquery':
+                return he.translate('qhistory__qs_pquery');
+            case 'wlist':
+                return he.translate('qhistory__qs_wlist');
+        }
+    };
+
+    const typeToHuman = (qtype:QueryType) => {
+        return qtype === 'advanced' ?
+            he.translate('query__qt_advanced') :
+            he.translate('query__qt_simple');
     };
 
     // -------------------- <QueryTypeSelector /> ------------------------
 
-    const QueryTypeSelector:React.FC<{
-        value:string;
+    const SearchKindSelector:React.FC<{
+        value:Kontext.QuerySupertype;
 
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.HistorySetQueryType>({
-                name: ActionName.HistorySetQueryType,
+            dispatcher.dispatch<Actions.HistorySetQuerySupertype>({
+                name: ActionName.HistorySetQuerySupertype,
                 payload: {
                     value: evt.target.value
                 }
@@ -64,26 +76,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <select value={props.value} onChange={handleChange}>
                 <option value="">
-                    {he.translate('qhistory__sel_anytime')}
+                    {he.translate('qhistory__qs_any')}
                 </option>
-                <option value="iquery">
-                    {he.translate('query__qt_basic')}
-                </option>
-                <option value="lemma">
-                    {he.translate('query__qt_lemma')}
-                </option>
-                <option value="phrase">
-                    {he.translate('query__qt_phrase')}
-                </option>
-                <option value="word">
-                    {he.translate('query__qt_word_form')}
-                </option>
-                <option value="char">
-                    {he.translate('query__qt_word_part')}
-                </option>
-                <option value="cql">
-                    {he.translate('query__qt_cql')}
-                </option>
+                {List.map(
+                    v => <option key={v} value={v}>{supertypeToHuman(v)}</option>,
+                    ['conc', 'pquery', 'wlist'] as Array<Kontext.QuerySupertype>
+                )}
             </select>
         );
     };
@@ -131,12 +129,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const FilterForm:React.FC<{
         currentCorpusOnly:boolean;
-        queryType:string;
+        querySupertype:Kontext.QuerySupertype;
         archivedOnly:boolean;
 
     }> = (props) => {
         return (
-            <form className="query-history-filter">
+            <S.FilterForm>
                 <fieldset>
                     <legend>
                         {he.translate('qhistory__filter_legend')}
@@ -146,30 +144,31 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <CurrentCorpCheckbox value={props.currentCorpusOnly} />
                     </label>
                     <label>
-                        {he.translate('qhistory__query_type_sel')}:{'\u00a0'}
-                        <QueryTypeSelector value={props.queryType} />
+                        {he.translate('qhistory__query_supertype_sel')}:{'\u00a0'}
+                        <SearchKindSelector value={props.querySupertype} />
                     </label>
                     <label>
                         {he.translate('qhistory__checkbox_archived_only')}:{'\u00a0'}
                         <ArchivedOnlyCheckbox value={props.archivedOnly} />
                     </label>
                 </fieldset>
-            </form>
+            </S.FilterForm>
         );
     };
 
     // -------------------- <AlignedQueryInfo /> ------------------------
 
     const AlignedQueryInfo:React.FC<{
-        query_type:string;
+        query_type:QueryType;
         query:string;
 
     }> = (props) => {
         return (
-            <div className="query-line">
-                <span className="query">{props.query}</span>
-                <span className="query-type">({queryTypes[props.query_type]})</span>
-            </div>
+            <S.AlignedQueryInfoDiv>
+                <S.QueryAndTypeDiv>
+                    <span className="query" title={typeToHuman(props.query_type)}>{props.query}</span>
+                </S.QueryAndTypeDiv>
+            </S.AlignedQueryInfoDiv>
         );
     };
 
@@ -230,46 +229,51 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------- <QueryInfo /> ------------------------
 
     const QueryInfo:React.FC<{
-        query_type:string;
+        isEdited:boolean;
+        query_type:QueryType;
         query_sh:string;
         query:string;
         textTypes:Kontext.GeneralProps;
-        aligned:Kontext.QueryHistoryItem['aligned'];
+        aligned:PluginInterfaces.QueryHistory.Item['aligned'];
 
     }> = (props) => {
 
+
+
         return (
-            <div className="query-info">
-                <div className="query-line">
+            <S.QueryInfoDiv>
+                <S.QueryAndTypeDiv>
                     {
                         props.query_sh ?
                         <pre className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
                         <span className="query">{props.query}</span>
                     }
-                    <span className="query-type">({queryTypes[props.query_type]})</span>
-                </div>
-                {props.aligned.map(v => <AlignedQueryInfo key={v.corpname}
-                            query={v.query} query_type={v.query_type} />)}
+                </S.QueryAndTypeDiv>
+                {List.map(
+                    v => <AlignedQueryInfo key={v.corpname}
+                            query={v.query} query_type={v.query_type} />,
+                    props.aligned
+                )}
                 <TextTypesInfo textTypes={props.textTypes} />
-            </div>
+            </S.QueryInfoDiv>
         );
     }
 
     // -------------------- <SavedNameInfo /> ------------------------
 
     const SavedNameInfo:React.FC<{
-        queryId:string;
+        itemIdx:number;
         hasEditor:boolean;
         editingQueryName:string;
-        name:string;
+        saved:boolean;
 
     }> = (props) => {
 
         const handleEditClick = (evt) => {
-            dispatcher.dispatch<Actions.HistorySetEditingQueryId>({
-                name: ActionName.HistorySetEditingQueryId,
+            dispatcher.dispatch<Actions.HistorySetEditedItem>({
+                name: ActionName.HistorySetEditedItem,
                 payload: {
-                    value: props.queryId
+                    itemIdx: props.itemIdx
                 }
             });
         };
@@ -278,36 +282,26 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             dispatcher.dispatch<Actions.HistoryDoNotArchive>({
                 name: ActionName.HistoryDoNotArchive,
                 payload: {
-                    queryId: props.queryId
+                    itemIdx: props.itemIdx
                 }
             });
         };
 
-        if (props.hasEditor) {
-            return <SaveItemForm name={props.editingQueryName} />;
-
-        } else {
-            if (props.name) {
-                return (
-                    <div className="SavedNameInfo">
-                        {he.translate('query__save_as_saved_as')}:{'\u00a0'}
-                        <span className="saved-name">{props.name}</span>
-                        <a className="util-button" onClick={handleDoNotSaveClick}>
-                            {he.translate('query__save_as_transient')}
-                        </a>
-                    </div>
-                );
-
-            } else {
-                return (
-                    <div className="SavedNameInfo">
-                        <a className="util-button" onClick={handleEditClick}>
+        return (
+            <S.SavedNameInfoSpan>
+                {props.saved ?
+                    <button className="util-button" onClick={handleDoNotSaveClick}>
+                        {he.translate('query__save_as_transient')}
+                    </button> :
+                    props.hasEditor ?
+                        <SaveItemForm name={props.editingQueryName} /> :
+                        <button className="util-button" onClick={handleEditClick}>
                             {he.translate('query__save_button')}{'\u2026'}
-                        </a>
-                    </div>
-                );
-            }
-        }
+                        </button>
+                }
+
+            </S.SavedNameInfoSpan>
+        );
     }
 
     // -------------------- <SaveItemForm /> ------------------------
@@ -333,8 +327,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleCloseClick = () => {
-            dispatcher.dispatch<Actions.HistoryClearEditingQueryID>({
-                name: ActionName.HistoryClearEditingQueryID
+            dispatcher.dispatch<Actions.HistoryCloseEditedItem>({
+                name: ActionName.HistoryCloseEditedItem
             });
         };
 
@@ -352,7 +346,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <form onKeyDown={handleKeyDown}>
+            <S.SaveItemForm onKeyDown={handleKeyDown}>
                 <a onClick={handleCloseClick}>
                     <img src={he.createStaticUrl('img/close-icon.svg')} alt={he.translate('global__close')}
                                 style={{width: '1em', verticalAlign: 'middle'}} />
@@ -368,16 +362,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     {he.translate('global__ok')}
                 </button>
                 <br />
-            </form>
+            </S.SaveItemForm>
         );
     };
 
     // -------------------- <DataRow /> ------------------------
 
     const DataRow:React.FC<{
-        data:Kontext.QueryHistoryItem;
+        itemIdx:number;
+        isEdited:boolean;
+        data:PluginInterfaces.QueryHistory.Item;
         hasEditor:boolean;
-        editingQueryName:string;
 
     }> = (props) => {
 
@@ -391,49 +386,59 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <li>
+            <S.DataRowLi>
                 <div className="heading">
                     <strong>
                         {props.data.idx + 1}.
                     </strong>
                     {'\u00a0'}
-                    <span className="corpname">
+                    <h3>
+                        <span className="supertype">{supertypeToHuman(props.data.q_supertype)}</span>,{'\u00a0'}
                         {props.data.human_corpname}
                         {props.data.subcorpname ?
-                            <em className="subcorpname" title={he.translate('global__subcorpus')}>: {props.data.subcorpname}</em> :
+                            <span className="subcorpname" title={he.translate('global__subcorpus')}>: {props.data.subcorpname}</span> :
                             null
                         }
-                    </span>
-                    {props.data.aligned.map(v => <span key={v.corpname} className="corpname"> + {v.human_corpname}</span>)}
+                        {List.map(
+                            v => <span key={v.corpname} className="corpname"> || {v.human_corpname}</span>,
+                            props.data.aligned
+                        )}
+                    </h3>
                     <span className="date">
                         {he.formatDate(new Date(props.data.created * 1000), 1)}
                     </span>
                 </div>
-                <div className="contents">
-                    <QueryInfo
-                            query={props.data.query}
-                            query_sh={props.data.query_sh}
-                            query_type={props.data.query_type}
-                            aligned={props.data.aligned}
-                            textTypes={props.data.selected_text_types} />
-                    <div className="actions">
-                        <div>
-                            <a className="open-in-form util-button" onClick={handleFormClick}>
-                                {he.translate('qhistory__open_in_form')}
-                                {'\u2026'}
-                            </a>
-                        </div>
-                        <div>
+                <QueryInfo
+                        isEdited={props.isEdited}
+                        query={props.data.query}
+                        query_sh={props.data.query_sh}
+                        query_type={props.data.query_type}
+                        aligned={props.data.aligned}
+                        textTypes={props.data.selected_text_types} />
+                <S.ActionsDiv>
+                    {props.data.name !== null && !props.hasEditor ?
+                        <span className="saved-as">
+                            {he.translate('query__save_as_saved_as')}:{'\u00a0'}
+                            <span className="saved-name">{props.data.name}</span>
+                        </span> :
+                        null
+                    }
+                    <span>
                         {props.data.query_id ?
-                        <SavedNameInfo name={props.data.name} queryId={props.data.query_id}
+                        <SavedNameInfo saved={!!props.data.name && !props.isEdited} itemIdx={props.itemIdx}
                                 hasEditor={props.hasEditor}
-                                editingQueryName={props.editingQueryName} /> :
+                                editingQueryName={props.data.name} /> :
                                 null /* legacy query history record cannot be archived  */
                         }
-                        </div>
-                    </div>
-                </div>
-            </li>
+                    </span>
+                    <span>
+                        <button className="open-in-form util-button" onClick={handleFormClick}>
+                            {he.translate('qhistory__open_in_form')}
+                            {'\u2026'}
+                        </button>
+                    </span>
+                </S.ActionsDiv>
+            </S.DataRowLi>
         );
     };
 
@@ -496,28 +501,31 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <DataTable /> ------------------------
 
-
-
     const DataTable:React.FC<{
-        editingQueryId:string;
+        editedItem:number;
         offset:number;
-        editingQueryName:string;
         hasMoreItems:boolean;
         modelIsBusy:boolean;
-        data:Array<Kontext.QueryHistoryItem>;
+        data:Array<PluginInterfaces.QueryHistory.Item>;
 
     }> = (props) => {
+
         return (
             <div>
-                    <ul className="history-entries">
-                        {props.data.map((item, i) => {
-                            const hasEditor = item.query_id === props.editingQueryId;
-                            return <DataRow key={i + props.offset} data={item} hasEditor={hasEditor}
-                                            editingQueryName={hasEditor ? props.editingQueryName : undefined} />;
-                        })}
-                    </ul>
-                    <DataTableFooter dataLength={props.data.length} modelIsBusy={props.modelIsBusy}
-                            hasMoreItems={props.hasMoreItems} />
+                <ul className="history-entries">
+                    {pipe(
+                        props.data,
+                        List.map(
+                            (item, i) => (
+                                <DataRow key={i + props.offset} itemIdx={i} data={item}
+                                    hasEditor={i === props.editedItem}
+                                    isEdited={props.editedItem === i} />
+                            )
+                        )
+                    )}
+                </ul>
+                <DataTableFooter dataLength={props.data.length} modelIsBusy={props.modelIsBusy}
+                        hasMoreItems={props.hasMoreItems} />
             </div>
         );
     };
@@ -527,7 +535,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const RecentQueriesPageList:React.FC<PluginInterfaces.QueryHistory.ModelState> = (props) => {
         return (
             <S.RecentQueriesPageList>
-                <FilterForm queryType={props.queryType}
+                <FilterForm querySupertype={props.querySupertype}
                         currentCorpusOnly={props.currentCorpusOnly}
                         archivedOnly={props.archivedOnly} />
                 {props.data.length === 0 && props.isBusy ?
@@ -535,8 +543,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <DataTable data={props.data} offset={props.offset}
                             modelIsBusy={props.isBusy}
                             hasMoreItems={props.hasMoreItems}
-                            editingQueryId={props.editingQueryId}
-                            editingQueryName={props.editingQueryName} />
+                            editedItem={props.editedItem} />
                 }
             </S.RecentQueriesPageList>
         );

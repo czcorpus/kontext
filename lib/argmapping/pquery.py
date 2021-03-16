@@ -29,7 +29,7 @@ class PqueryFormArgs(object):
         self.conc_ids = []
 
     def update_by_user_query(self, data):
-        self.corpname = data['corpname'] if 'corpname' in data else data['corpora'][0]
+        self.corpname = data['corpname']
         self.usesubcorp = data.get('usesubcorp')
         self.min_freq = data['min_freq']
         self.pos_index = data['pos_index']
@@ -43,10 +43,7 @@ class PqueryFormArgs(object):
         return tmp
 
     def to_qp(self) -> Dict[str, Any]:
-        tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
-        tmp['corpora'] = [tmp['corpname']]
-        del tmp['corpname']
-        return tmp
+        return self.to_dict()
 
     def from_dict(self, data):
         for k, v in data.items():

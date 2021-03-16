@@ -43,6 +43,7 @@ from controller.errors import ForbiddenException, NotFoundException
 
 QUERY_KEY = 'q'
 ID_KEY = 'id'
+USER_ID_KEY = 'user_id'
 DEFAULT_TTL_DAYS = 7
 
 
@@ -135,6 +136,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
                 curr_data['prev_id'] = prev_data[ID_KEY]
             data_id = generate_idempotent_hex_id(curr_data)
             curr_data[ID_KEY] = data_id
+            curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
             self.db.set(data_key, curr_data)
             self.db.set_ttl(data_key, self.ttl)

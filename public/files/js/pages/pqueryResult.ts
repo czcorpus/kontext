@@ -29,7 +29,7 @@ import { PqueryResultModel } from '../models/pquery/result';
 import { init as resultViewInit } from '../views/pquery/result';
 import { init as queryOverviewInit } from '../views/pquery/overview';
 import { MultiDict } from '../multidict';
-import { PqueryResult, FreqIntersectionArgs, importConcQueries, StoredQueryFormArgs,
+import { PqueryResult, FreqIntersectionArgs, importConcQueries, InvolvedConcFormArgs,
     storedQueryToModel } from '../models/pquery/common';
 import { AttrHelper } from '../models/query/cqleditor/attrs';
 import { PqueryResultsSaveModel } from '../models/pquery/save';
@@ -75,11 +75,15 @@ class ParadigmaticQueryPage {
                 this.layoutModel.getConf<Array<string>>('StructList'),
                 this.layoutModel.getConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('Tagsets')
             );
+            const pqForm = this.layoutModel.getConf<FreqIntersectionArgs>('FormData');
             const formModel = new PqueryFormModel(
                 this.layoutModel.dispatcher,
                 storedQueryToModel(
-                    this.layoutModel.getConf<FreqIntersectionArgs>('FormData'),
-                    importConcQueries(this.layoutModel.getConf<Array<StoredQueryFormArgs>>('ConcQueries')),
+                    pqForm,
+                    importConcQueries(
+                        pqForm.conc_ids,
+                        this.layoutModel.getConf<InvolvedConcFormArgs>('ConcForms')
+                    ),
                     this.layoutModel.getConf('AttrList'),
                     this.layoutModel.getConf('StructAttrList'),
                     this.layoutModel.getConf<boolean>('UseRichQueryEditor')

@@ -36,7 +36,7 @@ __conf.FormData = {{ form_data|to_json }};
 __conf.AttrList = {{ AttrList|default([], true)|to_json }};
 __conf.StructAttrList = {{ StructAttrList|to_json }};
 __conf.StructList = {{ StructList|to_json }};
-__conf.ConcQueries = {{ conc_queries|to_json }};
+__conf.ConcForms = {{ conc_forms|to_json }};
 __conf.DataReady = {{ data_ready|to_json }};
 pqueryResultPage.init(__conf);
 {% endblock %}

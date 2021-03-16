@@ -46,7 +46,7 @@ TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
 def _load_conc_queries(conc_ids: List[str], corpus_id: str):
-    ans = []
+    ans = {}
     with plugins.runtime.QUERY_PERSISTENCE as qs:
         for conc_id in conc_ids:
             data = qs.open(conc_id)
@@ -58,8 +58,7 @@ def _load_conc_queries(conc_ids: List[str], corpus_id: str):
                 raise UserActionException('Invalid source query used: {}'.format(conc_id))
             args = QueryFormArgs(corpora=[corpus_id], persist=True)
             tmp = args.updated(fdata, conc_id).to_dict()
-            tmp['query_id'] = args.op_key
-            ans.append(tmp)
+            ans[args.op_key] = tmp
     return ans
 
 
@@ -85,18 +84,22 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
+        conc_forms = {}
         if 'query_id' in request.args:
             with plugins.runtime.QUERY_PERSISTENCE as qp:
                 data = qp.open(request.args['query_id'])
                 form = PqueryFormArgs()
-                form.update_by_user_query(data)
+                form.update_by_user_query(data['form'])
+                for conc_id in form.conc_ids:
+                    conc_forms[conc_id] = qp.open(conc_id)['lastop_form']
         else:
             form = None
         ans = {
             'corpname': self.args.corpname,
             'form_data': form.to_dict() if form is not None else None,
             'tagsets': self._get_tagsets(),
-            'pquery_default_attr': self._get_default_attr()
+            'pquery_default_attr': self._get_default_attr(),
+            'conc_forms': conc_forms
         }
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         self._add_save_menu()
@@ -107,12 +110,12 @@ class ParadigmaticQuery(Kontext):
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             stored_pq = qp.open(request.args.get('query_id'))
             pquery = PqueryFormArgs()
-            pquery.update_by_user_query(stored_pq)
+            pquery.update_by_user_query(stored_pq['form'])
         pagesize = self.args.pqueryitemsperpage
         page = 1
         offset = (page - 1) * pagesize
         corp_info = self.get_corpus_info(self.args.corpname)
-        conc_queries = _load_conc_queries(pquery.conc_ids, self.args.corpname)
+        conc_forms = _load_conc_queries(pquery.conc_ids, self.args.corpname)
         try:
             total_num_lines, freqs = require_existing_pquery(
                 pquery, offset, pagesize, corp_info.collator_locale, 'freq', True)
@@ -129,7 +132,7 @@ class ParadigmaticQuery(Kontext):
             'page': page,
             'pagesize': pagesize,
             'form_data': pquery.to_dict(),
-            'conc_queries': conc_queries,
+            'conc_forms': conc_forms,
             'total_num_lines': total_num_lines,
             'data_ready': data_ready
         }
@@ -150,8 +153,10 @@ class ParadigmaticQuery(Kontext):
         args = PqueryFormArgs()
         args.update_by_user_query(request.json)
         with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-            query_id = qp.store(user_id=self.session_get('user', 'id'), curr_data=args.to_qp())
-            qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='pquery')
+            query_id = qp.store(user_id=self.session_get('user', 'id'),
+                                curr_data=dict(form=args.to_qp(), corpora=[args.corpname],
+                                               usesubcorp=args.usesubcorp))
+            qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='pquery')
 
         raw_queries = dict()
         with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
@@ -187,7 +192,7 @@ class ParadigmaticQuery(Kontext):
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             stored_pq = qp.open(request.args.get('query_id'))
         pquery = PqueryFormArgs()
-        pquery.update_by_user_query(stored_pq)
+        pquery.update_by_user_query(stored_pq['form'])
         corp_info = self.get_corpus_info(self.args.corpname)
         total_num_lines, freqs = require_existing_pquery(
             pquery, offset, self.args.pqueryitemsperpage, corp_info.collator_locale, sort, reverse)
@@ -205,7 +210,7 @@ class ParadigmaticQuery(Kontext):
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             stored_pq = qp.open(query_id)
         pquery = PqueryFormArgs()
-        pquery.update_by_user_query(stored_pq)
+        pquery.update_by_user_query(stored_pq['form'])
         corp_info = self.get_corpus_info(self.args.corpname)
         _, freqs = require_existing_pquery(
             pquery, from_line, to_line - from_line, corp_info.collator_locale, sort, bool(int(reverse)))

@@ -169,14 +169,14 @@ class User(Kontext):
             auth.update_user_password(self.session_get('user', 'id'), new_passwd)
             return ans
 
-    def _load_query_history(self, offset, limit, from_date, to_date, query_type, corpname, archived_only):
+    def _load_query_history(self, offset, limit, from_date, to_date, q_supertype, corpname, archived_only):
         if plugins.runtime.QUERY_HISTORY.exists:
             with plugins.runtime.QUERY_HISTORY as qh:
                 rows = qh.get_user_queries(
                     self.session_get('user', 'id'),
                     self.cm,
                     offset=offset, limit=limit,
-                    query_type=query_type, corpname=corpname,
+                    q_supertype=q_supertype, corpname=corpname,
                     from_date=from_date, to_date=to_date,
                     archived_only=archived_only)
         else:
@@ -187,10 +187,10 @@ class User(Kontext):
     def ajax_query_history(self, request):
         offset = int(request.args.get('offset', '0'))
         limit = int(request.args.get('limit'))
-        query_type = request.args.get('query_type')
+        query_supertype = request.args.get('query_supertype')
         corpname = request.args.get('corpname', None)
         archived_only = bool(int(request.args.get('archived_only', '0')))
-        rows = self._load_query_history(query_type=query_type, corpname=corpname, from_date=None,
+        rows = self._load_query_history(q_supertype=query_supertype, corpname=corpname, from_date=None,
                                         to_date=None, archived_only=archived_only, offset=offset, limit=limit)
         return dict(
             data=rows,

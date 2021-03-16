@@ -83,12 +83,6 @@ export namespace AjaxResponse {
         arf:number;
     }
 
-    export interface QueryHistory extends Kontext.AjaxResponse {
-        data:Array<Kontext.QueryHistoryItem>;
-        limit:number;
-        offset:number;
-    }
-
     export interface WideCtx extends Kontext.AjaxResponse {
         content:Array<{class:string; str:string}>;
         expand_left_args:{

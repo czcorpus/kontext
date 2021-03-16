@@ -44,136 +44,6 @@ export const RecentQueriesPageList = styled.div`
         list-style-type: none;
         margin: 0;
         padding: 0;
-
-        > li:first-of-type {
-            border-width: 1px 0 1px 0;
-        }
-
-        > li {
-            margin: 0;
-            padding: 0;
-            border-color: ${theme.colorLightGreen};
-            border-style: solid;
-            border-width: 0 0 1px 0;
-
-            .heading {
-                font-size: 1.1em;
-                display: flex;
-                padding-top: 0.4em;
-                padding-bottom: 0.4em;
-
-                .corpname {
-                    flex-grow: 1;
-                    margin-right: 1em;
-                    color: ${theme.colorLightText};
-
-                    em.subcorpname {
-                        font-weight: bold;
-                        font-style: normal;
-                    }
-                }
-
-                .date {
-                    color: ${theme.colorLightText};
-
-                    strong {
-                        padding-left: 0.4em;
-                    }
-                }
-            }
-
-            .contents {
-
-                display: flex;
-
-                .saved-name {
-                    color: ${theme.colorLogoPink};
-                    padding-right: 0.7em;
-                }
-
-                .query-info {
-                    flex-grow: 1;
-
-                    .query-line {
-                        display: flex;
-                        flex-direction: column;
-                        max-width: 80em;
-
-                        .query {
-                            overflow: hidden;
-                            padding: 0.3em 0.7em 0 0;
-                            font-family: ${theme.monospaceFontFamily};
-                            background-color: transparent;
-                            border: none;
-                            font-size: 1.2em;
-                            color: #920040;
-                        }
-
-                        span.query {
-                            white-space: nowrap;
-                        }
-
-                        pre.query {
-                            display: inline-block;
-                            vertical-align: middle;
-                        }
-
-                        .query-type {
-                            color: ${theme.colorLightText};
-                            font-size: 80%;
-                            padding-bottom: 0.7em;
-                        }
-                    }
-
-                    .text-types-info {
-
-                        a.switch {
-                            text-decoration: none;
-                            color: ${theme.colorLogoBlue};
-                        }
-
-                        a.switch:hover {
-                            text-decoration: underline;
-                            color: ${theme.colorLogoBlueShining};
-                        }
-
-                        ul {
-                            margin: 0.4em 0 0.2em 0;
-                        }
-                    }
-                }
-
-                .actions {
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: right;
-
-                    > div {
-                        text-align: right;
-                    }
-
-                    > div:not(:last-child) {
-                        margin-bottom: 0.7em;
-                    }
-                }
-            }
-
-        }
-
-        div.footer {
-            font-size: 0.9em;
-            padding-bottom: 0.4em;
-            margin-top: 0.3em;
-
-            a.open-in-form {
-                float: right;
-                color: ${theme.colorLogoBlue};
-            }
-
-            a.open-in-form:hover {
-                color: ${theme.colorLogoBlueShining};
-            }
-        }
     }
 
     /*
@@ -215,12 +85,173 @@ export const RecentQueriesPageList = styled.div`
         padding: 1px 4px;
         white-space: nowrap;
     }
+`;
 
-    .query-history-filter {
-        margin-bottom: 2.3em;
+// ------------- <DataRowLi /> ---------------------------------
+
+export const DataRowLi = styled.li`
+
+    border-style: solid;
+    border-color: ${theme.colorLightFrame};
+    border-width: 1px 0 0 0;
+    margin: 0;
+    padding: 0.4em 0 0 0;
+
+    &:not(:first-of-type) {
+        margin-top: 1em;
+    }
+
+    .heading {
+        font-size: 1.1em;
+        display: flex;
+        padding-top: 0.4em;
+        padding-bottom: 0.4em;
+
+        h3 {
+            flex-grow: 1;
+            margin: 0 1em 0 0;
+            color: ${theme.colorLightText};
+            font-weight: normal;
+            font-size: 1em;
+
+            .subcorpname {
+                font-style: normal;
+            }
+
+            .supertype {
+                font-weight: bold;
+            }
+        }
+
+        .date {
+            color: ${theme.colorLightText};
+
+            strong {
+                padding-left: 0.4em;
+            }
+        }
+    }
+`;
+
+// ------------- <SavedNameInfoSpan /> -------------------------
+
+export const SavedNameInfoSpan = styled.span`
+
+    color: ${theme.colorLogoPink};
+    padding-right: 0.7em;
+
+`;
+
+// ------------- <QueryInfoDiv /> -------------------------
+
+export const QueryInfoDiv = styled.div`
+
+    flex-grow: 1;
+
+    .text-types-info {
+
+        a.switch {
+            text-decoration: none;
+            color: ${theme.colorLogoBlue};
+        }
+
+        a.switch:hover {
+            text-decoration: underline;
+            color: ${theme.colorLogoBlueShining};
+        }
+
+        ul {
+            margin: 0.4em 0 0.2em 0;
+        }
+    }
+`;
+
+// -------------- <QueryAndTypeDiv /> ------------------------------
+
+export const QueryAndTypeDiv = styled.div`
+
+    display: flex;
+    flex-direction: column;
+    max-width: 80em;
+    margin-top: 0.7em;
+
+
+    .query {
+        overflow: hidden;
+        padding: 0.3em 0.7em 0 0;
+        font-family: ${theme.monospaceFontFamily};
+        background-color: transparent;
+        border: none;
+        font-size: 1.2em;
+        color: #920040;
+    }
+
+    span.query {
+        white-space: nowrap;
+    }
+
+    pre.query {
+        display: inline-block;
+        vertical-align: middle;
+    }
+`;
+
+// ----------------------- <AlignedQueryInfoDiv /> ---------------------
+
+export const AlignedQueryInfoDiv = styled.div`
+
+    margin-left: 2em;
+
+`;
+
+// ----------------------- <ActionsDiv /> ------------------------------
+
+export const ActionsDiv = styled.div`
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    .saved-as {
+
+        margin-right: 1em;
+
+        .saved-name {
+            color: ${theme.colorLogoPink}
+        }
+    }
+
+`;
+
+// ---------------------- <SaveItemForm /> ------------------------------
+
+export const SaveItemForm = styled.div`
+
+    display: inline;
+    margin-left: 1em;
+`;
+
+// ---------------------- <FilterForm /> --------------------------------
+
+export const FilterForm = styled.div`
+
+    margin-bottom: 2.3em;
+
+    fieldset {
+        display: flex;
+        flex-wrap: nowrap;
+        border: 1px solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
+        padding: ${theme.defaultFieldsetPadding};
 
         label:not(first-child) {
             margin-left: 1em;
         }
+
+        label {
+            white-space: nowrap;
+        }
+
     }
+
 `;

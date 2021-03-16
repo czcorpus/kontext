@@ -26,14 +26,14 @@ import abc
 class AbstractQueryHistory(abc.ABC):
 
     @abc.abstractmethod
-    def store(self, user_id: int, query_id: str, qtype: str):
+    def store(self, user_id: int, query_id: str, q_supertype: str):
         """
         Store data as a new saved query
 
         arguments:
         user_id -- a numeric ID of a user
         query_id -- a query identifier as produced by query_history plug-in
-        qtype -- a type of the query -
+        q_supertype -- a super-type of the query (do not confuse with 'query type')
             conc - concordance (for backward compatibility reasons, None means also 'conc')
             wlist - word list
             pquery - paradigmatic query
@@ -66,7 +66,7 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, query_type=None, corpname=None,
+    def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
                          archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
@@ -76,7 +76,7 @@ class AbstractQueryHistory(abc.ABC):
         corpus_manager -- a corplib.CorpusManager instance
         from_date -- YYYY-MM-DD date string
         to_date -- YYY-MM-DD date string
-        query_type -- one of {iquery, lemma, phrase, word, char, cql}
+        q_supertype -- one of {conc, pquery, wlist}
         corpus_name -- internal corpus name (i.e. including possible path-like prefix)
         archived_only -- if True then only archived items should be displayed
         offset -- where to start the list (starts from zero)

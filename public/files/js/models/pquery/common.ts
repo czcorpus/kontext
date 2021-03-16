@@ -48,10 +48,6 @@ export interface StoredAdvancedQuery extends AdvancedQuerySubmit {
     conc_id:string;
 }
 
-export interface StoredQueryFormArgs extends AjaxResponse.QueryFormArgs {
-    conc_id:string;
-}
-
 export type ConcQueries = Array<StoredAdvancedQuery>;
 
 export interface AsyncTaskArgs {
@@ -77,6 +73,7 @@ export interface HistoryArgs {
     page:number;
 }
 
+export type InvolvedConcFormArgs = {[queryId:string]:AjaxResponse.QueryFormArgs};
 
 export interface PqueryFormModelState {
     isBusy:boolean;
@@ -242,11 +239,16 @@ export function storedQueryToModel(
     }
 }
 
-export function importConcQueries(args:Array<StoredQueryFormArgs>):Array<StoredAdvancedQuery> {
+export function importConcQueries(
+    queryIds:Array<string>,
+    args:InvolvedConcFormArgs
+
+):Array<StoredAdvancedQuery> {
     return pipe(
-        args,
+        queryIds,
+        List.map(qId => tuple(qId, args[qId])), // order is important (so no Dict.keys() here)
         List.flatMap(
-            formArgs => pipe(
+            ([conc_id, formArgs]) => pipe(
                 formArgs.curr_queries,
                 Dict.toEntries(),
                 List.map(
@@ -257,7 +259,7 @@ export function importConcQueries(args:Array<StoredQueryFormArgs>):Array<StoredA
                         pcq_pos_neg: 'pos',
                         include_empty: false,
                         default_attr:  formArgs.curr_default_attr_values[corpname],
-                        conc_id: formArgs.conc_id
+                        conc_id
                     })
                 )
             )
