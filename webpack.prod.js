@@ -24,7 +24,6 @@ const webpack = require('webpack');
 const OptimizeCss = require('optimize-css-assets-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const customProperties = require('./public/files/js/views/theme/default/const');
 
 
 module.exports = (env) => merge(common.wpConf(env), {
@@ -48,11 +47,14 @@ module.exports = (env) => merge(common.wpConf(env), {
                                         {
                                             preserve: false,
                                             importFrom: [
-                                                {
-                                                    customProperties: Object.fromEntries(
-                                                        Object.entries(customProperties).map(([k, v]) => [`--${k}`, v])
-                                                    )
-                                                }
+												() => {
+													const customProperties = require('./public/files/js/views/theme/default/const');
+													return {
+														customProperties: Object.fromEntries(
+															Object.entries(customProperties).map(([k, v]) => [`--${k}`, v])
+														)
+													}
+												}
                                             ]
                                         }
                                     ]

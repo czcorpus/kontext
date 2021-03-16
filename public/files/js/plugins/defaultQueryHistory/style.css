@@ -1,0 +1,51 @@
+.history-widget {
+    min-width: 25em;
+    max-width: 30em;
+    position: absolute;
+    border: 1px solid var(--colorLightFrame);
+    background-color: #FFFFFF;
+    box-shadow: var(--portalBoxShadow);
+    padding: 0;
+}
+
+.history-widget ol {
+    margin: 0;
+    padding: 0;
+}
+
+.history-widget li {
+    padding: 5px 8px;
+    border-radius: var(--borderRadiusDefault);
+    cursor: pointer;
+    color: #999999;
+    overflow: hidden;
+}
+
+.history-widget li .wrapper {
+    color: var(--colorDefaultText);
+}
+    
+.history-widget li em {
+    display: inline;
+    font-style: normal;
+}
+    
+.history-widget li.selected {
+    background-color: var(--colorWhitelikeBlue);
+}
+    
+.history-widget .footer {
+    background-color: var(--colorLightGreen);
+    text-align: right;
+    padding: 3px 0;
+}
+    
+.history-widget .filter-current > * {
+    vertical-align: middle;
+}
+
+.history-widget .rows li .corpname {
+    color: #999999;
+    font-size: 80%;
+    padding-left: 0.5em;
+}

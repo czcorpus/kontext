@@ -1,6 +1,27 @@
-@import "../../../css/shared/globals.less";
+/*
+ * Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * dated June, 1991.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
 
-.KwicConnectContainer {
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+import styled from 'styled-components';
+import * as theme from '../../views/theme/default';
+
+export const KwicConnectContainer = styled.div`
 
     .contents {
         max-height: 40em;
@@ -14,7 +35,7 @@
     }
 
     h3.tckc-provider {
-        color: @color-default-text;
+        color: ${theme.colorDefaultText};
         text-align: right;
         margin-top: 1em;
         margin-bottom: 0;
@@ -50,7 +71,7 @@
             font-size: 1.3em;
             font-weight: normal;
             padding-right: 0.3em;
-            color: @color-logo-pink;
+            color: ${theme.colorLogoPink};
         }
 
         .words {
@@ -63,7 +84,7 @@
 
             a.word:hover {
                 text-decoration: underline;
-                color: @color-logo-pink;
+                color: ${theme.colorLogoPink};
             }
         }
 
@@ -78,12 +99,4 @@
             }
         }
     }
-}
-
-// wiktionary stuff
-
-#conc-dashboard-mount .ConcExtendedInfo .mw-parser-output {
-    h2 {
-        background-color: transparent;
-    }
-}
+`;

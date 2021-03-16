@@ -1,0 +1,127 @@
+/*
+ * Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * dated June, 1991.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+.SuggestionsWidget {
+    min-width: 25em;
+    max-width: 30em;
+    max-height: 25em;
+    overflow: auto;
+    position: absolute;
+    border: 1px solid var(--colorLightFrame);
+    background-color: #FFFFFF;
+    box-shadow: var(--portalBoxShadow);
+    padding: 0.7em 0.3em;
+}
+
+.SuggestionsWidget h2 {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: normal;
+    color: var(--colorLogoPink);
+}
+
+.SuggestionsWidget li {
+    padding: 5px 8px;
+    border-radius: var(--borderRadiusDefault);
+    color: #999999;
+    overflow: hidden;
+}
+
+.SuggestionsWidget .ErrorRenderer img.error-icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 1.2em;
+    margin-right: 0.4em;
+}
+
+.SuggestionsWidget .ErrorRenderer p.gear {
+    text-align: center;
+}
+
+.SuggestionsWidget .BasicRenderer ul {
+    margin: 0;
+    padding: 0;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer table {
+    margin-top: 0.7em;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer table thead tr th {
+    border-width: 0 0 1px 0;
+    text-align: left;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer table td,
+.SuggestionsWidget .PosAttrPairRelRenderer table th {
+    padding: 0.2em 0.4em;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer table th {
+    border: 1px solid var(--colorLightGrey);
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer table th.attr1 {
+    font-weight: normal;
+    font-size: 120%;
+    border-width: 0 1px 0 0;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer table tr.separ td,
+.SuggestionsWidget .PosAttrPairRelRenderer table tr.separ th {
+    border-top-width: 1px;
+    border-top-color: var(--colorLightGrey);
+    border-top-style: solid;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer table tr.separ a {
+    color: var(--colorLogoBlue);
+    text-decoration: none;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer table tr.separ a:hover {
+    color: var(--colorLogoBlue);
+    text-decoration: underline;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer .note {
+    display: flex;
+    align-items: center;
+    padding: 0.3em 0.7em;
+}
+
+.SuggestionsWidget .PosAttrPairRelRenderer .note .icon-box {
+    width: 1.2em;
+    margin-right: 0.4em;
+}
+        
+.SuggestionsWidget .PosAttrPairRelRenderer .note .icon-box img {
+    width: 1.2em;
+    display: block;
+}
+
+.SuggestionsWidget .loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1em;
+}

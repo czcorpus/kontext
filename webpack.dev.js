@@ -21,7 +21,6 @@
 const { merge } = require('webpack-merge');
 const common = require('./scripts/build/webpack.common');
 const path = require('path');
-const customProperties = require('./public/files/js/views/theme/default/const');
 
 module.exports = (env) => merge(common.wpConf(env), {
     mode: 'development',
@@ -42,11 +41,14 @@ module.exports = (env) => merge(common.wpConf(env), {
                                         {
                                             preserve: false,
                                             importFrom: [
-                                                {
-                                                    customProperties: Object.fromEntries(
-                                                        Object.entries(customProperties).map(([k, v]) => [`--${k}`, v])
-                                                    )
-                                                }
+                                                () => {
+													const customProperties = require('./public/files/js/views/theme/default/const');
+													return {
+														customProperties: Object.fromEntries(
+															Object.entries(customProperties).map(([k, v]) => [`--${k}`, v])
+														)
+													}
+												}
                                             ]
                                         }
                                     ]
