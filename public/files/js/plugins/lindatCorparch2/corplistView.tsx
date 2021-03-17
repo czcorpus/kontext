@@ -26,6 +26,8 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { pipe, List } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
 
+import * as S from './style';
+
 
 export interface CorplistTableProps {
     anonymousUser:boolean;
@@ -147,26 +149,26 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const pmltq = () => {
             if (props.row.pmltq !== 'no') {
             return <a href={props.row.pmltq} title={"Inspect " + props.row.name + " in PML-TQ"}>
-                     <img src={he.createStaticUrl('img/syntax-tree-icon.svg')} className="lindat-pmltq-logo"></img></a>
+                     <S.LindatPmltqLogo src={he.createStaticUrl('img/syntax-tree-icon.svg')} /></a>
             }
         }
         const tconnect = () => {
             if (props.row.tokenConnect.length > 0) {
             return <span title="Dictionaries are avaliable for this corpus">
-                     <img src={he.createStaticUrl('img/book-solid.gif')} className="dict-logo"></img></span>
+                     <S.DictLogo src={he.createStaticUrl('img/book-solid.gif')} /></span>
             }
         }
 
         const access = () => {
             if (props.row.access.indexOf("anonymous") == -1 && !props.enableUserActions) {
-            return <span><img src={he.createStaticUrl('img/locked.svg')} className="locked-logo"></img></span>
+            return <span><S.LockedLogo src={he.createStaticUrl('img/locked.svg')} /></span>
             }
         }
 
         const download = () => {
             if (props.row.access.indexOf("anonymous") == 0 && props.row.repo !== 'no') {
             return <a href={props.row.repo} title={"Download " + props.row.name}>
-                     <img src={he.createStaticUrl('img/download-solid.gif')} className="download-logo"></img></a>
+                     <S.DownloadLogo src={he.createStaticUrl('img/download-solid.gif')} /></a>
             }
         }
 
@@ -220,11 +222,11 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             });
         };
         return (
-            <tr className="load-more">
+            <S.TrLoadMore>
                 <td colSpan={5}>
                     <a onClick={linkClickHandler}>{he.translate('global__load_more')}</a>
                 </td>
-            </tr>
+            </S.TrLoadMore>
         );
     };
 

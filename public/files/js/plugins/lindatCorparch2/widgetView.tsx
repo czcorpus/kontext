@@ -27,6 +27,8 @@ import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch';
 
+import * as S from './style';
+
 
 export interface WidgetViewModuleArgs {
     dispatcher:IActionDispatcher;
@@ -66,10 +68,10 @@ export function init({
         return (
             <a onClick={handleRemoveClick}>
                 {props.trashTTL === null ?
-                    <img className="starred" src={util.createStaticUrl('img/starred.svg')}
+                    <S.StarredImg className="starred" src={util.createStaticUrl('img/starred.svg')}
                             alt={util.translate('defaultCorparch__click_to_remove_item_from_fav')}
                             title={util.translate('defaultCorparch__click_to_remove_item_from_fav')} /> :
-                    <img className="starred" src={util.createStaticUrl('img/starred_grey.svg')}
+                    <S.StarredImg className="starred" src={util.createStaticUrl('img/starred_grey.svg')}
                             alt={util.translate('defaultCorparch__not_in_fav')}
                             title={util.translate('defaultCorparch__not_in_fav')} />
                 }
@@ -531,12 +533,12 @@ export function init({
                     <SearchInput value={props.currSearchPhrase} handleTab={props.handleTab} />
                     <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
                     {props.currSearchResult.length > 0 ?
-                        (<div className="tt-menu">
+                        (<S.TtMenu>
                             {List.map((item, i) =>
                                 <SearchResultRow key={item.id} data={item} hasFocus={i === props.focusedRowIdx} />,
                                 props.currSearchResult
                             )}
-                        </div>) : null}
+                        </S.TtMenu>) : null}
                 </div>
             </div>
         );
@@ -718,7 +720,7 @@ export function init({
 
         render() {
             return (
-                <div className="CorplistWidget">
+                <S.CorplistWidget>
                     <div>
                         <BoundCorpusButton
                             corpusIdent={this.props.corpusIdent}
@@ -739,7 +741,7 @@ export function init({
                             null
                         }
                     </div>
-                </div>
+                </S.CorplistWidget>
             );
         }
     }

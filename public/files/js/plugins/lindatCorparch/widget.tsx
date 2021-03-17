@@ -25,6 +25,8 @@ import {TreeWidgetModel, Node} from './model';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
+import * as S from './style';
+
 
 export interface Views {
     CorptreeWidget:React.ComponentClass<{}>;
@@ -195,7 +197,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div className="corp-tree-widget">
+                <S.CorpTreeWidget>
                     <button className="switch" type="button" onClick={this._buttonClickHandler}>
                         {this.state.currentCorpus.name}
                     </button>
@@ -207,7 +209,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 corplist={this.state.data.corplist} /> :
                             null
                     }
-                </div>
+                </S.CorpTreeWidget>
             );
         }
     }

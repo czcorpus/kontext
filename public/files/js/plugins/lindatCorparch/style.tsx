@@ -1,6 +1,10 @@
-@import "../../../css/shared/globals.less";
+import styled from 'styled-components';
+import * as theme from '../../views/theme/default';
 
-.tooltip-box.corp-tree-widget {
+const syntaxTreeIcon = require('../../../img/syntax-tree-icon.svg').default;
+
+
+export const CorpTreeWidget = styled.div`
     background-color: #FFFFFF;
 
     ul.corp-tree {
@@ -8,7 +12,7 @@
         padding: 1em;
         background-color: #FFFFFF;
         position: absolute;
-        box-shadow: @portal-box-shadow;
+        box-shadow: ${theme.portalBoxShadow};
         list-style-type: none;
 
         ul {
@@ -24,7 +28,7 @@
 
         li.node a {
             text-decoration: none;
-            color: @color-logo-blue;
+            color: ${theme.colorLogoBlue};
         }
 
         li.node a:hover {
@@ -32,7 +36,7 @@
         }
 
         li.leaf a {
-            color: @color-default-text;
+            color: ${theme.colorDefaultText};
             text-decoration: none;
         }
 
@@ -49,9 +53,9 @@
             width: 1em;
         }
     }
-}
+`;
 
-.corp-tree-component {
+export const CorpTreeComponent = styled.div`
   .tab-nav {
     border-bottom: solid 1px #eeeeee;
     margin-bottom: 10px;
@@ -62,7 +66,7 @@
 
   .lindat-pmltq-logo {
     /* TODO currently no defined solution for custom imgs */
-    background: url('../../../img/syntax-tree-icon.svg');
+    background: url(${syntaxTreeIcon});
     background-size: 1.7em;
     background-repeat: no-repeat;
     background-position: center;
@@ -315,8 +319,10 @@
   .search-selected {
     color: #e92381;
   }
-}
+`;
 
-.corpus-main-info h3 {
-  cursor: pointer;
-}
+export const CorpusMainInfo = styled.div`
+  h3 {
+    cursor: pointer;
+  }
+`;
