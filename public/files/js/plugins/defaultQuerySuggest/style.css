@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,20 +18,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces } from '../../types/plugins';
-
-declare var require:any;
-require('./style.css'); // webpack
-
-export class FooterPlugin {
-
-    isActive():boolean {
-        return true;
-    }
+.SuggestionsWidget {
+    min-width: 25em;
+    max-width: 30em;
+    max-height: 25em;
+    overflow: auto;
+    position: absolute;
+    border: 1px solid var(--colorLightFrame);
+    background-color: #FFFFFF;
+    box-shadow: var(--portalBoxShadow);
+    padding: 0.7em 0.3em;
 }
 
-const create:PluginInterfaces.FooterBar.Factory = (pluginApi) => {
-    return new FooterPlugin();
+.SuggestionsWidget h2 {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: normal;
+    color: var(--colorLogoPink);
 }
 
-export default create;
+.SuggestionsWidget .loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1em;
+}

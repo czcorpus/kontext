@@ -30,7 +30,32 @@ module.exports = (env) => merge(common.wpConf(env), {
                 test: /\.css$/,
                 use: [
                     { loader: 'style-loader'},
-                    { loader: 'css-loader' }
+                    { loader: 'css-loader' },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            postcssOptions: {
+                                plugins: [
+                                    [
+                                        "postcss-custom-properties",
+                                        {
+                                            preserve: false,
+                                            importFrom: [
+                                                () => {
+													const customProperties = require('./public/files/js/views/theme/default/const');
+													return {
+														customProperties: Object.fromEntries(
+															Object.entries(customProperties).map(([k, v]) => [`--${k}`, v])
+														)
+													}
+												}
+                                            ]
+                                        }
+                                    ]
+                                ]
+                            }
+                        }
+                    }
                 ]
             },
             {

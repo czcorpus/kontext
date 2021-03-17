@@ -31,7 +31,7 @@ import { AnyQuery, QuerySuggestion } from '../../models/query/query';
 
 
 declare var require:any;
-require('./style.less');
+require('./style.css');
 
 /**
  *

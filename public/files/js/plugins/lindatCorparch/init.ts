@@ -27,8 +27,6 @@ import {TreeWidgetModel} from './model';
 import {Views as CorplistViews, init as corplistViewInit} from './view';
 import {init as widgetViewInit} from './widget';
 
-declare var require:any;
-require('./style.less'); //  webpack
 
 export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {
 

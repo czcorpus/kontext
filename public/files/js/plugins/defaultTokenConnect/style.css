@@ -1,0 +1,74 @@
+/* General styling (possibly any service) ---> */
+
+.ConcordanceView .token-detail dt {
+    font-weight: bold;
+}
+
+.ConcordanceView .token-detail h2.token {
+    font-weight: bold;
+    margin-left: 0;
+    font-size: 1.8em;
+}
+
+.ConcordanceView .token-detail hr {
+    margin-top: 0;
+    margin-bottom: 0.7em;
+    background-color: var(--colorLightText);
+}
+
+/* a heading for a service output */
+.ConcordanceView .token-detail h2.tckc-provider {
+    color: var(--colorDefaultText);
+    text-align: right;
+    margin-top: 1em;
+    margin-bottom: 0;
+    padding-bottom: 0.2em;
+    font-size: 1.1em;
+}
+
+.ConcordanceView .token-detail h2.tckc-provider img {
+    width: 1.1em;
+    margin-left: 0.1em;
+    margin-right: 0.1em;
+    margin-bottom: 0.15em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.ConcordanceView .token-detail p.keywords {
+    line-height: 1.7em;
+    word-spacing: 0.4em;
+    padding: 0 1.4em;
+}
+
+.ConcordanceView .token-detail a.keyword {
+    text-decoration: none;
+    font-size: 1.3em;
+}
+
+.ConcordanceView .token-detail a.keyword:hover {
+    text-decoration: underline;
+}
+
+.ConcordanceView .token-detail .ErrorRenderer img.error-icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 1.2em;
+    margin-right: 0.4em;
+}
+
+.ConcordanceView .token-detail .ErrorRenderer p.gear {
+    text-align: center;
+}
+
+.ConcordanceView .token-detail .text {
+    border-top: 1px dotted;
+}
+
+.ConcordanceView .token-detail .document {
+    border-top: 1px solid;
+}
+
+.ConcordanceView .token-detail .formatted-text {
+    font-size: 1.2em;
+}

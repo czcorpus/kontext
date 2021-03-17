@@ -24,7 +24,7 @@ import { PublicSubcorpListModel, DataItem } from '../models/subcorp/listPublic';
 import { KontextPage } from '../app/main';
 
 declare var require:any;
-require('styles/layoutMobile.less'); // webpack
+require('styles/layoutMobile.css'); // webpack
 
 
 class PubSubcorpPage {

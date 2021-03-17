@@ -1,0 +1,9 @@
+.history-widget {
+    min-width: 25em;
+    max-width: 30em;
+    position: absolute;
+    border: 1px solid var(--colorLightFrame);
+    background-color: #FFFFFF;
+    box-shadow: var(--portalBoxShadow);
+    padding: 0;
+}

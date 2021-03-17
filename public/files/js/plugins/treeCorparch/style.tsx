@@ -1,18 +1,34 @@
-@import "../../../css/shared/globals.less";
+/*
+ * Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * dated June, 1991.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
 
-.corp-tree-wrapper {
-    display: inline-block;
-}
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 
+import styled from 'styled-components';
+import * as theme from '../../views/theme/default';
 
-.corp-tree-widget {
+export const CorpTreeWidget = styled.div`
 
     ul.corp-tree {
         margin: 0;
         padding: 1em;
         background-color: #FFFFFF;
         position: absolute;
-        box-shadow: @portal-box-shadow;
+        box-shadow: ${theme.portalBoxShadow};
         list-style-type: none;
 
         ul {
@@ -28,7 +44,7 @@
 
         li.node a {
             text-decoration: none;
-            color: @color-logo-blue;
+            color: ${theme.colorLogoBlue};
         }
 
         li.node a:hover {
@@ -36,7 +52,7 @@
         }
 
         li.leaf a {
-            color: @color-default-text;
+            color: ${theme.colorDefaultText};;
             text-decoration: none;
         }
 
@@ -48,9 +64,9 @@
             padding-right: 0.4em;
         }
     }
-}
+`;
 
-.corp-tree-component {
+export const CorpTreeComponent = styled.div`
     ul.corp-tree {
         font-size: 120%;
         margin: 0;
@@ -73,11 +89,11 @@
         li.node a {
             display: block;
             text-decoration: none;
-            color: @color-logo-blue;
+            color: ${theme.colorLogoBlue};;
         }
 
         li.node > a {
-            border: 1px solid @color-light-text;
+            border: 1px solid ${theme.colorLightText};
             padding: 0.4em 0.6em;
             margin-bottom: 0.3em;
         }
@@ -87,7 +103,7 @@
         }
 
         li.leaf > a {
-            color: @color-default-text;
+            color: ${theme.colorDefaultText};;
             text-decoration: none;
             padding: 0.4em 0.6em;
         }
@@ -100,4 +116,4 @@
             padding-right: 0.4em;
         }
     }
-}
+`;

@@ -26,23 +26,23 @@ import { ActionName as QueryActionName, Actions as QueryActions } from '../../mo
 
 
 export interface Views {
-    RawHtmlRenderer:React.SFC<{
+    RawHtmlRenderer:React.FC<{
         corpora: Array<string>;
         data: {contents: Array<[string, string]>};
     }>;
-    DataMuseSimilarWords:React.SFC<{
+    DataMuseSimilarWords:React.FC<{
         corpora: Array<string>;
         data:any;
     }>;
-    TreqRenderer:React.SFC<{
+    TreqRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
     }>;
-    UnsupportedRenderer:React.SFC<{
+    UnsupportedRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
     }>;
-    CustomMessageRenderer:React.SFC<{
+    CustomMessageRenderer:React.FC<{
         corpora: Array<string>;
         data:any;
     }>;
@@ -101,7 +101,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     // --------------------------- TREQ -------------------------------------------------------
 
-    const TreqBacklinkForm:React.SFC<{
+    const TreqBacklinkForm:React.FC<{
         action:string;
         args:Array<[string, string]>;
 

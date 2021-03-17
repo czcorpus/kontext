@@ -1,36 +1,26 @@
-@import "./shared/globals.less";
-
 @media screen and (max-width: 1200px), screen and (orientation:portrait) {
 
-    #conc-dashboard-mount {
+    #conc-dashboard-mount .ConcordanceDashboard {
+        display: grid;
+        grid-template-columns: auto;
+    }
 
-        .ConcordanceDashboard {
-            display: grid;
-            grid-template-columns: auto;
-        }
+    #conc-dashboard-mount .ConcordanceDashboard.collapsed {
+        grid-template-columns: auto;
+    }
 
-        .ConcordanceDashboard.collapsed {
-            grid-template-columns: auto;
+    #conc-dashboard-mount .ConcordanceDashboard.collapsed .ConcExtendedInfo header {
+        padding: 0.3em;
+    }
 
-            .ConcExtendedInfo {
-
-                header {
-
-                    padding: 0.3em;
-
-                    a {
-                        margin: 0 0 0 0.3em;
-                    }
-                }
-            }
-        }
+    #conc-dashboard-mount .ConcordanceDashboard.collapsed .ConcExtendedInfo headera {
+        margin: 0 0 0 0.3em;
     }
 
     .tooltip-box.refs-detail {
         bottom: 1em;
         width: 85%;
     }
-
 }
 
 @media screen and (max-width: 479px) {
@@ -67,10 +57,10 @@
     #menu-level-1 li {
         display: block;
         text-align: left;
+    }
 
-        ul.submenu {
-            width: 90%;
-        }
+    #menu-level-1 li ul.submenu {
+        width: 90%;
     }
 
     #menu-level-1 li.disabled {
@@ -107,19 +97,20 @@
     #menu-level-1 > li.active {
         border: none;
         background-color: transparent;
+    }
 
-        > a {
-            color: @color-logo-blue;
-        }
+    #menu-level-1 > li.active > a {
+        color: var(--colorLogoBlue);
     }
 
     #menu-level-1 > li.active ul.submenu {
         position: initial;
         margin-left: 1em;
         margin-top: -0.1em;
-        li {
-            padding: 0;
-        }
+    }
+
+        #menu-level-1 > li.active ul.submenu li {
+        padding: 0;
     }
 
     .ktx-pagination a > img {
@@ -142,7 +133,7 @@
         padding-top: 0.7em;
         border-width: 1px 0 0 0;
         border-style: solid;
-        border-color: @color-light-text;
+        border-color: var(--colorLightText);
     }
 
     section.closeable-frame .heading div.control img {
@@ -165,34 +156,27 @@
         min-width: initial;
     }
 
-    .StructAttrsViewOptions {
+    .StructAttrsViewOptions .StructsAndAttrsForm .struct-groups {
+        grid-template-columns: 1fr 1fr;
+    }
 
-        .StructsAndAttrsForm {
-
-
-            .struct-groups {
-
-                grid-template-columns: 1fr 1fr;
-
-                div.group:nth-child(2) {
-                    border-style: none;                }
-            }
-        }
+    .StructAttrsViewOptions .StructsAndAttrsForm .struct-groups div.group:nth-child(2) {
+        border-style: none;
     }
 
     ul.tabs {
         white-space: pre-wrap;
+    }
 
-        li {
-            display: block;
-        }
+    ul.tabs li {
+        display: block;
+    }
 
-        li:not(:first-child) {
-            margin-left: 0em;
-        }
+    ul.tabs li:not(:first-child) {
+        margin-left: 0em;
+    }
 
-        li:not(:last-child) {
-            padding-right: 0em;
-        }
+    ul.tabs li:not(:last-child) {
+        padding-right: 0em;
     }
 }
