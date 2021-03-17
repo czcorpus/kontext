@@ -22,6 +22,28 @@ import styled from 'styled-components';
 import * as theme from '../../views/theme/default';
 
 
+export const ActiveTagBuilder = styled.div`
+    h3 {
+        display: inline-block;
+        line-height: 1.4em;
+    }
+        
+    .loader {
+        display: inline-block;
+        vertical-align: middle;
+        padding-left: 1em;
+    }
+
+    .buttons {
+        display: flex;
+        align-items: center;
+    }
+
+    .buttons .separ {
+        flex-grow: 1;
+    }
+`;
+
 export const PositionList = styled.ul`
     list-style-type: none;
     margin: 0;

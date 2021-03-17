@@ -40,6 +40,13 @@ export const BasicRenderer = styled.div`
         margin: 0;
         padding: 0;
     }
+
+    li {
+        padding: 5px 8px;
+        border-radius: var(--borderRadiusDefault);
+        color: #999999;
+        overflow: hidden;
+    }
 `;
 
 export const PosAttrPairRelRenderer = styled.div`

@@ -30,6 +30,8 @@ import { TabFrameModel, TabFrameModelState } from './models';
 import { PosTagModelState, PosTagModel } from './positional/models';
 import { UDTagBuilderModelState, UDTagBuilderModel } from './keyval/models';
 
+import * as S from './style';
+
 
 export function init(
     dispatcher:IActionDispatcher,
@@ -283,7 +285,7 @@ export function init(
         );
 
         return (
-            <div>
+            <S.ActiveTagBuilder>
                 <h3>{he.translate('taghelper__create_tag_heading')}</h3>
                 <layoutViews.TabView
                         className="TagsetFormSelector"
@@ -293,7 +295,7 @@ export function init(
                         noButtonSeparator={true} >
                     {children}
                 </layoutViews.TabView>
-            </div>
+            </S.ActiveTagBuilder>
         );
     }
 
