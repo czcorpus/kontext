@@ -58,6 +58,7 @@ import queryHistoryPlugin from 'plugins/queryHistory/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
+import { GlobalStyle } from '../views/theme/default/global';
 
 
 export enum DownloadType {
@@ -627,6 +628,13 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         );
     }
 
+    private initGlobalStyles():void {
+        this.renderReactComponent(
+            GlobalStyle,
+            window.document.getElementById('global-style-mount')
+        );
+    }
+
     /**
      * @return true if the plug-in has been installed else false
      */
@@ -795,6 +803,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.globalKeyHandlers.forEach(fn => fn(evt));
             }
             this.userSettings.init();
+            this.initGlobalStyles();
             this.initMainMenu();
             this.initOverviewArea();
             this.bindLangSwitch();

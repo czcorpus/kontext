@@ -538,3 +538,47 @@ export const TRIncludeEmptySelector = styled.div`
         margin-left: 0;
     }
 `;
+
+// ----------------- <HistoryWidget /> --------------------------------
+
+export const HistoryWidget = styled.div`
+
+    min-width: 25em;
+    max-width: 30em;
+    position: absolute;
+    border: 1px solid  ${theme.colorLightFrame};
+    background-color: #FFFFFF;
+    box-shadow: ${theme.portalBoxShadow};
+    padding: 0;
+
+`;
+
+// ------------------- <SuggestionsWidget /> --------------------------
+
+export const SuggestionsWidget = styled.div`
+
+    min-width: 25em;
+    max-width: 30em;
+    max-height: 25em;
+    overflow: auto;
+    position: absolute;
+    border: 1px solid ${theme.colorLightFrame};
+    background-color: #FFFFFF;
+    box-shadow: ${theme.portalBoxShadow};
+    padding: 0.7em 0.3em;
+
+
+    h2 {
+        margin: 0;
+        font-size: 1.1em;
+        font-weight: normal;
+        color: ${theme.colorLogoPink};
+    }
+
+    .loader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1em;
+    }
+`;

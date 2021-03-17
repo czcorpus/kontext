@@ -1,6 +1,6 @@
 footer {
     margin-top: 2em;
-    color: var(--colorLightText);
+    color: #8d8c8c;
     padding: 0.5em 2em;
     line-height: 1.3em;
 }
@@ -18,7 +18,7 @@ footer .actions, footer .info {
     display: flex;
     flex-direction: row;
     justify-content: center;
-} 
+}
 
 footer .debug-warning {
     background-color: #E2007A;
@@ -29,7 +29,7 @@ footer .debug-warning {
 }
 
 footer a {
-    color: var(--colorDarkGreenText);
+    color: #4c5854;
     text-decoration: none;
 }
 
@@ -45,14 +45,14 @@ footer #language-switch-form .switch {
     border: none;
     background: transparent;
     cursor: pointer;
-    color: var(--colorDarkGreenText);
+    color: #4c5854;
     padding: 0 0 0 0.1em;
 }
 
 footer #language-switch-form .switch:hover {
     text-decoration: underline;
 }
-    
+
 footer #language-switch-form .switch:last-child {
     padding-right: 0;
 }

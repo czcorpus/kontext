@@ -30,9 +30,6 @@ import { AnyProviderInfo } from './providers';
 import { AnyQuery, QuerySuggestion } from '../../models/query/query';
 
 
-declare var require:any;
-require('./style.css');
-
 /**
  *
  */

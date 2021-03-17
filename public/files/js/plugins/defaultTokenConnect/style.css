@@ -13,12 +13,12 @@
 .ConcordanceView .token-detail hr {
     margin-top: 0;
     margin-bottom: 0.7em;
-    background-color: var(--colorLightText);
+    background-color: #8d8c8c;
 }
 
 /* a heading for a service output */
 .ConcordanceView .token-detail h2.tckc-provider {
-    color: var(--colorDefaultText);
+    color: #010101;
     text-align: right;
     margin-top: 1em;
     margin-bottom: 0;

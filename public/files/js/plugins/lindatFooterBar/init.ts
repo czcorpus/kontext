@@ -19,7 +19,7 @@
 import { PluginInterfaces } from '../../types/plugins';
 
 declare var require:any;
-require('./style.less'); // webpack
+require('./style.css'); // webpack
 
 export class FooterPlugin {
 

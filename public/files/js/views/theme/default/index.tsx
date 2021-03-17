@@ -23,7 +23,7 @@ import styled from 'styled-components';
 export const mediaPhone = '@media screen and (max-width: 479px)';
 export const mediaTablet = '@media screen and (max-width: 1200px), screen and (orientation:portrait)';
 
-export const mainBackground = 'url(../../img/groovepaper2.jpg)';
+export const mainBackground = 'url(./files/img/groovepaper2.jpg)';
 
 // texts
 export const defaultFontFamily = '"Roboto", "Segoe UI", Arial, sans-serif';

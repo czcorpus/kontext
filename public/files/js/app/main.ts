@@ -31,8 +31,6 @@ import { AppNavigation } from './navigation';
 import { ActionDispatcher } from 'kombo';
 import { Dict, List } from 'cnc-tskit';
 
-declare var require:any; // webpack's require
-require('styles/layout.css');
 
 /**
  * KontextConf handles current page configuration as

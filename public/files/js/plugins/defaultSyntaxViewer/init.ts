@@ -33,7 +33,7 @@ import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 import { HTTP } from 'cnc-tskit';
 import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
-require('./style.less'); // webpack
+require('./style.css'); // webpack
 
 
 export interface SyntaxTreeViewerState extends PluginInterfaces.SyntaxViewer.BaseState {

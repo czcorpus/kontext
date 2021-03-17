@@ -43,7 +43,7 @@ export const BasicRenderer = styled.div`
 
     li {
         padding: 5px 8px;
-        border-radius: var(--borderRadiusDefault);
+        border-radius: ${theme.borderRadiusDefault};
         color: #999999;
         overflow: hidden;
     }
