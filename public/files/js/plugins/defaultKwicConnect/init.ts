@@ -27,7 +27,7 @@ import { List } from 'cnc-tskit';
 import { IConcLinesProvider } from '../../models/concordance/common';
 
 declare var require:any;
-require('./style.less'); // webpack
+require('./style.css'); // webpack
 
 
 interface PluginData {

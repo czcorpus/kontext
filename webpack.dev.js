@@ -32,23 +32,7 @@ module.exports = (env) => merge(common.wpConf(env), {
                     { loader: 'style-loader'},
                     { loader: 'css-loader' }
                 ]
-            },
-            {
-                test: /\.less$/,
-                use: [
-                    { loader: 'style-loader'},
-                    { loader: 'css-loader' },
-                    {
-                        loader: 'less-loader',
-                        options: {
-                            lessOptions: {
-                                strictMath: true,
-                                noIeCompat: true
-                            }
-                        }
-                    }
-                ]
-            },
+            }
         ]
     },
     devServer: {

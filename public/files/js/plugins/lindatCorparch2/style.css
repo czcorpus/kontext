@@ -1,0 +1,17 @@
+section.corplist form.filter h3 {
+    display: inline-block;
+}
+
+section.corplist form.filter .ajax-loader {
+    display: inline-block;
+    margin-left: 1em;
+}
+
+section.corplist form.filter .hint {
+    font-size: 80%;
+}
+
+section.corplist form.filter div.hint {
+    margin-top: 1em;
+    padding-left: 0.5em;
+}

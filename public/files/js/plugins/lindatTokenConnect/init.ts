@@ -26,8 +26,7 @@ import { init as initLindatView, Views as LindatTokenConnectRenderers } from './
 import { KnownRenderers } from '../defaultKwicConnect/model';
 
 declare var require:any;
-require('../defaultTokenConnect/style.less');
-require('./style.less');
+require('../defaultTokenConnect/style.css');
 
 
 export type ServerExportedConf = {

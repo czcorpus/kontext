@@ -1,0 +1,99 @@
+.syntax-tree img {
+    cursor: pointer;
+}
+
+.tooltip-box.syntax-tree {
+    padding: 0;
+}
+
+.syntax-tree {
+    box-sizing: border-box;
+}
+
+.syntax-tree .token-node {
+    font-size: 8pt;
+    font-family: Verdana, sans-serif;
+    background-color: RGBA(240, 240, 240, 0.8);
+    display: inline-block;
+    padding: 0.4em 0.4em;
+    border: 1px solid #009EE0;
+    border-radius: 2px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px #A0A0A0;
+}
+
+.syntax-tree .token-node.focused {
+    background-color: #FFF;
+    box-shadow: 0 2px 4px #E2007A;
+}
+
+.syntax-tree .sentence {
+    padding: 0.6em;
+    line-height: 1.4em;
+    font-size: 1.1em;
+    display: flex;
+}
+
+.syntax-tree .sentence span {
+    padding: 0.1em 0.1em;
+}
+
+.syntax-tree .sentence span.focused {
+    background-color: RGBA(0, 158, 224, 0.4);
+}
+
+.syntax-tree .sentence span.multival-start {
+    padding-right: 0;
+}
+
+.syntax-tree .sentence span.multival-end {
+    padding-left: 0;
+}
+
+.syntax-tree .sentence span.kwic {
+    font-weight: bold;
+    color: #E2007A;
+}
+
+
+.syntax-tree table.node-detail {
+    border: 1px solid #dddddd;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px #A0A0A0;
+    background-color: RGBA(250, 250, 250, 0.94);
+    position: absolute;
+    border-spacing: 0;
+    font-size: 0.9em;
+}
+
+.syntax-tree table.node-detail th {
+    padding-right: 0.7em;
+    padding-left: 0.7em;
+    text-align: right;
+}
+
+.syntax-tree table.node-detail td {
+    padding-right: 0.4em;
+}
+
+.syntax-tree table.node-detail td.controls {
+    text-align: right;
+    padding: 0.4em;
+}
+
+.syntax-tree table.node-detail td.controls a {
+    cursor: pointer;
+}
+
+.syntax-tree table.node-detail  td.controls a img {
+    width: 1em;
+}
+
+.syntax-tree table.node-detail td a.detail-ref {
+    color: #009EE0;
+    text-decoration: none;
+}
+
+.syntax-tree table.node-detail  td a.detail-ref:hover {
+    text-decoration: underline;
+}

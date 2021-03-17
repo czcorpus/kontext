@@ -22,7 +22,7 @@ import { StatelessModel, IFullActionControl } from 'kombo';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 
 declare var require:any;
-require('./style.less'); // webpack
+require('./style.css'); // webpack
 
 
 class LindatAppBarModel extends StatelessModel<{}> {

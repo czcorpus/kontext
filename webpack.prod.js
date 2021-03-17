@@ -39,24 +39,6 @@ module.exports = (env) => merge(common.wpConf(env), {
 					{ loader: 'css-loader' }
 				]
 			},
-			{
-				test: /\.less$/,
-				use: [
-					{
-						loader: MiniCssExtractPlugin.loader
-					},
-					{ loader: 'css-loader' },
-					{
-						loader: 'less-loader',
-						options: {
-							lessOptions: {
-								strictMath: true,
-								noIeCompat: true
-							}
-						}
-					}
-				]
-			}
 		]
 	},
 	optimization: {

@@ -27,7 +27,7 @@ import { Actions as ConcActions, ActionName as ConcActionName } from '../../mode
 
 
 declare var require:any;
-require('./style.less'); // webpack
+require('./style.css'); // webpack
 
 
 interface ServerExportedData {

@@ -37,10 +37,6 @@ import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/layoutMobile.less');
-
 
 interface TTProps {
     alignedCorpora:Array<string>;

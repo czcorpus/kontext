@@ -30,7 +30,7 @@ import * as common from './common';
 import { SearchEngine } from './search';
 
 declare var require:any;
-require('./style.less'); // webpack
+require('./style.css'); // webpack
 
 
 export class Plugin implements PluginInterfaces.Corparch.IPlugin {

@@ -25,6 +25,8 @@ import {TreeWidgetModel, Node} from './model';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
+import * as S from './style';
+
 export interface Views {
     CorptreePageComponent:React.ComponentClass<{}>;
     FilterForm:React.FC<{}>;
@@ -317,7 +319,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </div>
                     </div>
                     <div className="row">
-                        <div className="corpus-main-info col-xs-12 col-md-12">
+                        <S.CorpusMainInfo className="col-xs-12 col-md-12">
                             <div className="row">
                                 <div className="col-xs-2 icons">
                                     {this._pmltq(this.props.pmltq)}
@@ -335,7 +337,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </S.CorpusMainInfo>
                     </div>
             </div>;
         }
@@ -566,7 +568,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div className="corp-tree-component">
+                <S.CorpTreeComponent>
                     <div className="row tab-nav">
                         <div className="col-xs-9">
                             <ul className="nav nav-tabs">
@@ -611,7 +613,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                   onActiveFeatDrop={this.handleActiveFeatDrop}
                                   permitted={this.state.data.permitted}/>
                     </div>
-                </div>
+                </S.CorpTreeComponent>
             );
         }
     }

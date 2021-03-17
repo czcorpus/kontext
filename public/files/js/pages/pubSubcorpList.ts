@@ -23,9 +23,6 @@ import { init as viewInit } from '../views/subcorp/listPublic';
 import { PublicSubcorpListModel, DataItem } from '../models/subcorp/listPublic';
 import { KontextPage } from '../app/main';
 
-declare var require:any;
-require('styles/layoutMobile.less'); // webpack
-
 
 class PubSubcorpPage {
 

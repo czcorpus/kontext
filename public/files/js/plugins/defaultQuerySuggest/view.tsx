@@ -25,6 +25,8 @@ import { IActionDispatcher } from 'kombo';
 import { List, pipe, Dict, tuple } from 'cnc-tskit';
 import { Model } from './model';
 
+import * as S from './style';
+
 
 
 export enum KnownRenderers {
@@ -79,7 +81,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
     // ------------- <ErrorRenderer /> -------------------------------
 
     const ErrorRenderer:React.FC<ErrorRendererProps> = (props) => {
-        return <div className="ErrorRenderer">
+        return <S.ErrorRenderer>
             <p>
                 <img className="error-icon"
                         src={he.createStaticUrl('img/error-icon.svg')}
@@ -91,13 +93,13 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                 <img src={he.createStaticUrl('img/gear.svg')} alt={he.translate('defaultTD__plug_in_error_symbol_alt')}
                         style={{width: '3em'}} title={`${props.data}`} />
             </p>
-        </div>
+        </S.ErrorRenderer>
     };
 
     // -------------- <BasicRenderer /> ------------------------------
 
     const BasicRenderer:React.FC<BasicRendererProps> = (props) => {
-        return <div className="BasicRenderer">
+        return <S.BasicRenderer>
             <ul>
                 {List.map(
                     (item, index) => <li key={index}>{
@@ -108,14 +110,14 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                     props.data
                 )}
             </ul>
-        </div>
+        </S.BasicRenderer>
     };
 
     // ------------- <PosAttrPairRelRenderer /> ----------------------
 
     const PosAttrPairRelRenderer:React.FC<PosAttrPairRelRendererProps> = (props) => {
 
-        return <div className="PosAttrPairRelRenderer">
+        return <S.PosAttrPairRelRenderer>
             <table>
                 <thead>
                     <tr>
@@ -177,7 +179,7 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                 </div> :
                 null
             }
-        </div>
+        </S.PosAttrPairRelRenderer>
     };
 
     return {

@@ -6,6 +6,8 @@ import { FilterRecord, UDTagBuilderModelState } from './models';
 import { Kontext } from '../../../types/common';
 import { Actions, ActionName } from '../actions';
 
+import * as S from '../style';
+
 
 export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):React.FC<UDTagBuilderModelState & {sourceId:string}> {
 
@@ -37,7 +39,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                 </li>
             })
         );
-        return <ul className="defaultTaghelper_PositionList">{checkboxes}</ul>;
+        return <S.PositionList>{checkboxes}</S.PositionList>;
     }
 
     // --------------------------- <CategorySelect /> ------------------------------
@@ -120,9 +122,9 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             )
         );
         return (
-            <div className="QueryExpression">
-                {selected.length > 0 ? <ul className="query-line">{selected}</ul> : null}
-            </div>
+            <S.QueryExpression>
+                {selected.length > 0 ? <S.QueryLine>{selected}</S.QueryLine> : null}
+            </S.QueryExpression>
         );
     }
 
@@ -180,7 +182,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
             delete featsWithoutPos['POS'];
 
             return (
-                <div className='FeatureSelect'>
+                <S.FeatureSelect>
                     <h4>{ut.translate('taghelper__selected_features_label')}:</h4>
                     <div className='QueryLine' style={{maxWidth: '39em', minHeight: '4em'}}>
                         <QueryExpression
@@ -188,7 +190,7 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                             handleRemoveFilter={handleRemoveFilter} />
                     </div>
                     <div style={{display: 'flex', alignItems: 'stretch'}}>
-                        <div className='CategoryDetail' style={{marginRight: '5em'}}>
+                        <S.CategoryDetail style={{marginRight: '5em'}}>
                             <h4>{ut.translate('taghelper__part_of_speech_label')}:</h4>
                             <CategoryDetail
                                 onChangeHandler={(event) => handleCheckboxChange(event)}
@@ -196,29 +198,29 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
                                 categoryName="POS"
                                 allValues={data.allFeatures['POS'] || []}
                                 availableValues={data.availableFeatures['POS'] || []} />
-                        </div>
+                        </S.CategoryDetail>
                         <div>
                             <h4>{ut.translate('taghelper__features_label')}:</h4>
                             <div style={{display: 'flex', alignItems: 'flex-start'}}>
-                                <div className='CategorySelect' style={{marginRight: '2em'}}>
+                                <S.CategorySelect className='CategorySelect' style={{marginRight: '2em'}}>
                                     <CategorySelect
                                         allFeatures={featsWithoutPos}
                                         availableFeatures={data.availableFeatures}
                                         onSelectCategoryHandler={handleCategorySelect}
                                         selectedCategory={data.showCategory} />
-                                </div>
-                                <div className='CategoryDetail'>
+                                </S.CategorySelect>
+                                <S.CategoryDetail>
                                     <CategoryDetail
                                         onChangeHandler={(event) => handleCheckboxChange(event)}
                                         filterFeatures={List.last(data.filterFeaturesHistory)}
                                         categoryName={data.showCategory}
                                         allValues={data.allFeatures[data.showCategory] || []}
                                         availableValues={data.availableFeatures[data.showCategory] || []} />
-                                </div>
+                                </S.CategoryDetail>
                             </div>
                         </div>
                     </div>
-                </div>
+                </S.FeatureSelect>
             );
         }
     };

@@ -25,11 +25,6 @@ import { SubcorpListModel, SortKey, SubcListFilter } from '../models/subcorp/lis
 import { init as listViewInit } from '../views/subcorp/list';
 import { KontextPage } from '../app/main';
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/layoutMobile.less');
-
-
 /**
  *
  */

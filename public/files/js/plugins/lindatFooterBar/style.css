@@ -6,12 +6,13 @@ footer {
     background-color: #f8f8f8;
     margin-top: 1em;
     padding: 0.4em 1em;
-    .debug-warning {
-        font-size: 8pt;
-        display: inline-block;
-        background-color: #E2007A;
-        color: #EEEEEE;
-        border-radius: 3px;
-        padding: 3px 6px;
-    }
+}
+
+footer .debug-warning {
+    font-size: 8pt;
+    display: inline-block;
+    background-color: #E2007A;
+    color: #EEEEEE;
+    border-radius: 3px;
+    padding: 3px 6px;
 }

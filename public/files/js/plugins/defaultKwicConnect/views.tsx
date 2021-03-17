@@ -24,6 +24,8 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 import { PluginInterfaces } from '../../types/plugins';
 
+import * as S from './style';
+
 export interface KwicConnectContainerProps {
 
 }
@@ -50,7 +52,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         render() {
             const outList = this.props.data.filter(output => !!output);
             return (
-                <div className="KwicConnectContainer">
+                <S.KwicConnectContainer className="KwicConnectContainer">
                     {List.map(output => (
                         <React.Fragment key={output.heading}>
                             <div className="KwicConnectWidget">
@@ -95,7 +97,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         </div> :
                         null
                     }
-                </div>
+                </S.KwicConnectContainer>
             );
         }
     }

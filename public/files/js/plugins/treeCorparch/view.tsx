@@ -23,6 +23,8 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { ActionName, Actions } from './actions';
 import { List } from 'cnc-tskit';
 
+import * as S from './style';
+
 export interface CorptreeWidgetProps {
 
 }
@@ -155,14 +157,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div className="corp-tree-widget">
+                <S.CorpTreeWidget>
                     <button className="switch util-button" type="button" onClick={this._buttonClickHandler}
                             title={this.props.corpusIdent.name}>
                         {this.props.corpusIdent.id}
                     </button>
                     {this.props.active ? <ItemList htmlClass="corp-tree"
                         corplist={this.props.data.corplist} nodeActive={this.props.nodeActive} /> : null}
-                </div>
+                </S.CorpTreeWidget>
             );
         }
     }
@@ -177,12 +179,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div className="corp-tree-component">
+                <S.CorpTreeComponent>
                     <ItemList htmlClass="corp-tree"
                             corplist={this.props.data ? this.props.data.corplist : []}
                             nodeActive={this.props.nodeActive}
                     />
-                </div>
+                </S.CorpTreeComponent>
             );
         }
     }

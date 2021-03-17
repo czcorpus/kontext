@@ -29,6 +29,8 @@ import { CalculationResults, SubcMixerExpression } from './common';
 import { Actions, ActionName } from './actions';
 import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
 
+import * as S from './style';
+
 
 export interface WidgetProps {
     isActive:boolean;
@@ -396,9 +398,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
                 <layoutViews.CloseableFrame onCloseClick={props.closeClickHandler}
-                        customClass="subcmixer-widget"
                         label={he.translate('ucnk_subcm__widget_header')}>
-                    <div>
+                    <S.SubcmixerWidget>
                         {List.empty(props.alignedCorpora) ? null : renderAlignedCorpInfo()}
                         <ValuesTable items={props.selectedValues}
                                 currentResult={props.currentResult}
@@ -413,7 +414,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 usedAttributes={props.usedAttributes}
                                 isPublic={props.isPublic}
                                 description={props.description} />
-                    </div>
+                    </S.SubcmixerWidget>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );
@@ -455,7 +456,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         };
         return (
-            <div className="mixer-trigger">
+            <S.MixerTrigger>
                 {renderButton()}
                 {props.isVisible ?
                     <SubcMixer closeClickHandler={handleCloseWidget}
@@ -470,7 +471,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             isPublic={props.subcIsPublic}
                             description={props.description} />
                     : null}
-            </div>
+            </S.MixerTrigger>
         );
     }
 

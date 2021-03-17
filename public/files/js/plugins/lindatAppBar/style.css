@@ -1,0 +1,58 @@
+#common-bar {
+    height: auto !important;
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+#common-bar a {
+    color: #000000;
+}
+
+#common-bar .user {
+    padding: 5px 10px 5px 10px;
+    margin: 5px 15px 5px 5px;
+    position: fixed;
+    right: 0px;
+    top: 0px;
+    display: block;
+    background-color: #428bca;
+    color: white;
+    font-weight: bold;
+    border-radius: .25em;
+    font-size: 16px;
+}
+
+#common-bar .user a {
+    color: white;
+    text-decoration: none;
+}
+
+#common-bar .user a:hover {
+    text-decoration: underline;
+}
+
+#common-bar .user.loggedout {
+    background-color: #d9534f;
+    z-index: 1;
+}
+
+#common-bar .lindat-auth-bar {
+    background-color: transparent;
+}
+
+#localization-bar {
+    margin-left:40px;
+}
+
+#localization-bar li {
+    list-style-type: none;
+}
+
+.selected img {
+    border: 2px solid rgb(102, 175, 233) !important;
+}
+
+footer {
+    margin-top: 0;
+    padding: 0;
+}

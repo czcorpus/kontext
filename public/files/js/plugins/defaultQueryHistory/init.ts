@@ -23,9 +23,6 @@ import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { QueryHistoryModel } from './models';
 import { init as viewsInit } from './view';
 
-declare var require:any;
-require('./style.less'); // webpack
-
 export class QueryHistoryPlugin implements PluginInterfaces.QueryHistory.IPlugin {
 
     private pluginApi:IPluginApi;

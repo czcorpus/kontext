@@ -2,6 +2,7 @@
  * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -455,12 +456,12 @@ export function init({
 
     }> = (props) => {
         return (
-            <div className="history-widget">
+            <S.HistoryWidget>
                 <props.queryHistoryView
                         sourceId={props.sourceId}
                         onCloseTrigger={props.onCloseTrigger}
                         formType={props.formType} />
-            </div>
+            </S.HistoryWidget>
         );
     };
 
@@ -511,26 +512,26 @@ export function init({
         };
 
         return (
-            <div className={`SuggestionsWidget${dynCls}`} tabIndex={0} onKeyDown={handleKey}
+            <S.SuggestionsWidget className={dynCls} tabIndex={0} onKeyDown={handleKey}
                     onBlur={handleBlur} ref={ref}>
-            {props.data ?
-                pipe(
-                    props.data.data,
-                    List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
-                    List.map(
-                        (v, i) => (
-                            <React.Fragment key={`${v.rendererId}${i}`}>
-                                <h2>{v.heading}:</h2>
-                                {props.qsuggPlugin.createElement(v, props.handleItemClick)}
-                                {props.data.isPartial ?
-                                    <layoutViews.AjaxLoaderBarImage /> : null}
-                            </React.Fragment>
-                        ),
-                    )
-                ) :
-                <div className="loader"><layoutViews.AjaxLoaderImage /></div>
-            }
-            </div>
+                {props.data ?
+                    pipe(
+                        props.data.data,
+                        List.filter(v => !props.qsuggPlugin.isEmptyResponse(v)),
+                        List.map(
+                            (v, i) => (
+                                <React.Fragment key={`${v.rendererId}${i}`}>
+                                    <h2>{v.heading}:</h2>
+                                    {props.qsuggPlugin.createElement(v, props.handleItemClick)}
+                                    {props.data.isPartial ?
+                                        <layoutViews.AjaxLoaderBarImage /> : null}
+                                </React.Fragment>
+                            ),
+                        )
+                    ) :
+                    <div className="loader"><layoutViews.AjaxLoaderImage /></div>
+                }
+            </S.SuggestionsWidget>
         );
     };
 
