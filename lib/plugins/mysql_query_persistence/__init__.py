@@ -77,6 +77,7 @@ from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime
 
 
 PERSIST_LEVEL_KEY = 'persist_level'
+USER_ID_KEY = 'user_id'
 ID_KEY = 'id'
 QUERY_KEY = 'q'
 DEFAULT_CONC_ID_LENGTH = 12
@@ -224,6 +225,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
             curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
+            curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
             self.db.set(data_key, curr_data)
             self.db.set_ttl(data_key, self._get_ttl_for(user_id))

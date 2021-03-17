@@ -64,6 +64,7 @@ KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x i
 PERSIST_LEVEL_KEY = 'persist_level'
 ID_KEY = 'id'
 QUERY_KEY = 'q'
+USER_ID_KEY = 'user_id'
 DEFAULT_CONC_ID_LENGTH = 12
 
 
@@ -229,6 +230,7 @@ class UcnkQueryPersistence2(AbstractQueryPersistence):
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
             curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
+            curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
             self.db.set(data_key, curr_data)
             self.db.set_ttl(data_key, self._get_ttl_for(user_id))

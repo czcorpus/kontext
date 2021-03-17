@@ -300,7 +300,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                     formVisible={props.paramsVisible}
                     title={he.translate('pquery__parameters_form')}
                     handleClick={handleParamsFormVisibility}
-                >   
+                >
                     <S.ParametersFieldset>
                         <S.ParameterField>
                             <label htmlFor="attr">{he.translate('pquery__attr_input')}:</label>
@@ -370,9 +370,12 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                 {visible ?
                     <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
                         <layoutViews.CloseableFrame onCloseClick={toggleHelp} customClass="block-help" label={he.translate('pquery__help')}>
-                            <a href="https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf">
-                                https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf
-                            </a>
+                            <p>TODO</p>
+                            <p>
+                                <a href="https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf" target="_blank">
+                                    see a presentation
+                                </a>
+                            </p>
                         </layoutViews.CloseableFrame>
                     </layoutViews.ModalOverlay> :
                     null

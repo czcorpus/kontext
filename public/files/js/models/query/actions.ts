@@ -114,14 +114,14 @@ export enum ActionName {
     GetConcArchivedStatusDone = 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
     MakeConcordancePermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
     MakeConcordancePermanentDone = 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
-    HistorySetQueryType = 'QUERY_HISTORY_SET_QUERY_TYPE',
+    HistorySetQuerySupertype = 'QUERY_HISTORY_SET_QUERY_SUPERTYPE',
     HistorySetCurrentCorpusOnly = 'QUERY_HISTORY_SET_CURRENT_CORPUS_ONLY',
     HistorySetArchivedOnly = 'QUERY_HISTORY_SET_ARCHIVED_ONLY',
-    HistorySetEditingQueryId = 'QUERY_HISTORY_SET_EDITING_QUERY_ID',
+    HistorySetEditedItem = 'QUERY_HISTORY_SET_EDITED_ITEM',
     HistoryDoNotArchive = 'QUERY_HISTORY_DO_NOT_ARCHIVE',
     HistoryEditorSetName = 'QUERY_HISTORY_EDITOR_SET_NAME',
     HistoryEditorClickSave = 'QUERY_HISTORY_EDITOR_CLICK_SAVE',
-    HistoryClearEditingQueryID = 'QUERY_HISTORY_CLEAR_EDITING_QUERY_ID',
+    HistoryCloseEditedItem = 'QUERY_HISTORY_CLOSE_EDITED_ITEM',
     HistoryOpenQueryForm = 'QUERY_HISTORY_OPEN_QUERY_FORM',
     HistoryLoadMore = 'QUERY_HISTORY_LOAD_MORE',
     QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN'
@@ -715,10 +715,10 @@ export namespace Actions {
         name:ActionName.MakeConcordancePermanentDone
     }
 
-    export interface HistorySetQueryType extends Action<{
-        value:string;
+    export interface HistorySetQuerySupertype extends Action<{
+        value:Kontext.QuerySupertype;
     }> {
-        name:ActionName.HistorySetQueryType;
+        name:ActionName.HistorySetQuerySupertype;
     }
 
     export interface HistorySetCurrentCorpusOnly extends Action<{
@@ -733,14 +733,14 @@ export namespace Actions {
         name:ActionName.HistorySetArchivedOnly;
     }
 
-    export interface HistorySetEditingQueryId extends Action<{
-        value:string;
+    export interface HistorySetEditedItem extends Action<{
+        itemIdx:number;
     }> {
-        name:ActionName.HistorySetEditingQueryId;
+        name:ActionName.HistorySetEditedItem;
     }
 
     export interface HistoryDoNotArchive extends Action<{
-        queryId:string;
+        itemIdx:number;
     }> {
         name:ActionName.HistoryDoNotArchive;
     }
@@ -756,9 +756,9 @@ export namespace Actions {
         name:ActionName.HistoryEditorClickSave;
     }
 
-    export interface HistoryClearEditingQueryID extends Action<{
+    export interface HistoryCloseEditedItem extends Action<{
     }> {
-        name:ActionName.HistoryClearEditingQueryID;
+        name:ActionName.HistoryCloseEditedItem;
     }
 
     export interface HistoryOpenQueryForm extends Action<{

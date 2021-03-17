@@ -79,7 +79,7 @@ class QueryHistory(AbstractQueryHistory):
     def _mk_tmp_key(self, user_id):
         return 'query_history:user:%d:new' % user_id
 
-    def store(self, user_id, query_id, qtype):
+    def store(self, user_id, query_id, q_supertype):
         """
         stores information about a query; from time
         to time also check remove too old records
@@ -87,7 +87,7 @@ class QueryHistory(AbstractQueryHistory):
         arguments:
         see the super class
         """
-        item = dict(created=self._current_timestamp(), query_id=query_id, name=None, qtype=qtype)
+        item = dict(created=self._current_timestamp(), query_id=query_id, name=None, q_supertype=q_supertype)
         self.db.list_append(self._mk_key(user_id), item)
         if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(user_id)
@@ -159,7 +159,7 @@ class QueryHistory(AbstractQueryHistory):
         else:
             return None   # persistent result not available
 
-    def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, query_type=None, corpname=None,
+    def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
                          archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
@@ -181,8 +181,9 @@ class QueryHistory(AbstractQueryHistory):
 
         for item in data:
             if 'query_id' in item:
-                qtype = item.get('qtype')
-                if qtype is None or qtype == 'conc':
+                item_qs = item.get('q_supertype', item.get('qtype'))
+                item['q_supertype'] = item_qs  # upgrade possible deprecated qtype
+                if item_qs is None or item_qs == 'conc':
                     tmp = self._merge_conc_data(item)
                     if not tmp:
                         continue
@@ -190,15 +191,23 @@ class QueryHistory(AbstractQueryHistory):
                     for ac in tmp['aligned']:
                         ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
                     full_data.append(tmp)
-                elif qtype == 'pquery':
+                elif item_qs == 'pquery':
                     stored = self._query_persistence.open(item['query_id'])
                     if not stored:
                         continue
                     tmp = {'corpname': stored['corpora'][0], 'aligned': []}
                     tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
+                    q_join = []
+                    for q in stored.get('form', {}).get('conc_ids', []):
+                        stored_q = self._query_persistence.open(q)
+                        for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
+                            q_join.append(f'{{ {qs} }}')
+                    tmp['query'] = ' && '.join(q_join)
                     tmp.update(item)
                     tmp.update(stored)
                     full_data.append(tmp)
+                elif item_qs == 'wlist':
+                    pass  # TODO
             else:
                 # deprecated type of record (this will vanish soon as there
                 # are no persistent history records based on the old format)
@@ -226,8 +235,8 @@ class QueryHistory(AbstractQueryHistory):
                 datetime(to_date[0], to_date[1], to_date[2], 23, 59, 59).timetuple())
             full_data = [x for x in full_data if x['created'] <= to_date]
 
-        if query_type:
-            full_data = [x for x in full_data if matches_corp_prop(x, 'query_type', query_type)]
+        if q_supertype:
+            full_data = [x for x in full_data if x['q_supertype'] == q_supertype]
 
         if corpname:
             full_data = [x for x in full_data if matches_corp_prop(

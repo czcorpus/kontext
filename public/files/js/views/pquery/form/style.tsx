@@ -75,9 +75,11 @@ export const QueryRowDiv = styled.div`
 // ---------------- <ParametersFieldset /> -------------
 
 export const ParametersFieldset = styled.fieldset`
+
     display: flex;
     align-items: center;
     border: none;
+    padding: ${theme.defaultFieldsetPadding};
 
     & >* {
         flex-grow: 1;

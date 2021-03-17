@@ -19,7 +19,7 @@
  */
 
 import { tap, concatMap, map } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable, of as rxOf } from 'rxjs';
 import { StatefulModel } from 'kombo';
 
 import { Kontext } from '../../types/common';
@@ -27,7 +27,7 @@ import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../../models/query/cqleditor/parser';
-import { List, HTTP } from 'cnc-tskit';
+import { List, HTTP, tuple } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
@@ -42,7 +42,7 @@ export interface InputBoxHistoryItem {
 }
 
 
-const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) => {
+const attachSh = (he:Kontext.ComponentHelpers, item:PluginInterfaces.QueryHistory.Item) => {
     if (item.query_type === 'advanced') {
         [item.query_sh,] = highlightSyntaxStatic(item.query, item.query_type, he);
     }
@@ -64,7 +64,7 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             pluginApi.dispatcher(),
             {
                 data: [],
-                queryType: '',
+                querySupertype: undefined,
                 currentCorpusOnly: true,
                 offset,
                 limit,
@@ -72,9 +72,7 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
                 isBusy: false,
                 hasMoreItems: true, // TODO this should be based on initial data (n+1 items)
                 archivedOnly: false,
-                editingQueryId: null,
-                // null is ok here, a value is attached once the editor is opened
-                editingQueryName: null,
+                editedItem: undefined,
                 currentItem: 0,
             }
         );
@@ -96,12 +94,12 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.HistorySetQueryType>(
-            QueryActionName.HistorySetQueryType,
+        this.addActionHandler<QueryActions.HistorySetQuerySupertype>(
+            QueryActionName.HistorySetQuerySupertype,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
-                    state.queryType = action.payload.value;
+                    state.querySupertype = action.payload.value || undefined;
                 });
                 this.performLoadAction();
             }
@@ -147,44 +145,54 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.HistorySetEditingQueryId>(
-            QueryActionName.HistorySetEditingQueryId,
+        this.addActionHandler<QueryActions.HistorySetEditedItem>(
+            QueryActionName.HistorySetEditedItem,
             action => {
                 this.changeState(state => {
-                    state.editingQueryId = action.payload.value;
-                    const srch = List.find(v => v.query_id === state.editingQueryId, state.data);
-                    if (srch) {
-                        state.editingQueryName = srch.name ? srch.name : '';
+                    state.editedItem = action.payload.itemIdx;
+                    if (!state.data[state.editedItem].name) {
+                        state.data[state.editedItem].name= '';
                     }
                 });
             }
         );
 
-        this.addActionHandler<QueryActions.HistoryClearEditingQueryID>(
-            QueryActionName.HistoryClearEditingQueryID,
+        this.addActionHandler<QueryActions.HistoryCloseEditedItem>(
+            QueryActionName.HistoryCloseEditedItem,
             action => {
                 this.changeState(state => {
-                    state.editingQueryId = null;
-                    state.editingQueryName = null;
+                    state.editedItem = undefined;
                 });
             }
         );
 
         this.addActionHandler<QueryActions.HistoryEditorSetName>(
             QueryActionName.HistoryEditorSetName,
-            action => {this.changeState(state => {state.editingQueryName = action.payload.value})}
+            action => {
+                this.changeState(state => {
+                    const item = state.data[state.editedItem];
+                    item.name = action.payload.value;
+                });
+            }
         );
 
         this.addActionHandler<QueryActions.HistoryDoNotArchive>(
             QueryActionName.HistoryDoNotArchive,
             action => {
-                this.saveItem(action.payload.queryId, null).subscribe(
+                this.changeState(state => {
+                    state.data[action.payload.itemIdx].name = null;
+                });
+                this.saveItem(action.payload.itemIdx).subscribe(
                     (msg) => {
-                        this.changeState(state => {state.isBusy = false});
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                         this.pluginApi.showMessage('info', msg);
                     },
                     (err) => {
-                        this.changeState(state => {state.isBusy = false});
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                         this.pluginApi.showMessage('error', err);
                     }
                 );
@@ -194,17 +202,14 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
         this.addActionHandler<QueryActions.HistoryEditorClickSave>(
             QueryActionName.HistoryEditorClickSave,
             action => {
-                if (!this.state.editingQueryName) {
+                const item = this.state.data[this.state.editedItem];
+                if (!item.name) {
                     this.pluginApi.showMessage('error',
                         this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
 
                 } else {
                     this.changeState(state => {state.isBusy = true});
-                    this.saveItem(
-                        this.state.editingQueryId,
-                        this.state.editingQueryName
-
-                    ).subscribe(
+                    this.saveItem(this.state.editedItem).subscribe(
                         (msg) => {
                             this.changeState(state => {state.isBusy = false});
                             this.pluginApi.showMessage('info', msg);
@@ -221,14 +226,31 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
 
     private openQueryForm(idx:number):void { // TODO this does not work
         const item = List.find(v => v.idx === idx, this.state.data);
-        window.location.href = this.pluginApi.createActionUrl(
-            'query',
-            [
-                ['corpname', item.corpname],
-                ['usesubcorp', item.subcorpname],
-                ['qkey', `${item.query_id}:${item.created}`]
-            ]
-        );
+        switch (item.q_supertype) {
+            case 'conc':
+                window.location.href = this.pluginApi.createActionUrl(
+                    'query',
+                    [
+                        tuple('corpname', item.corpname),
+                        tuple('usesubcorp', item.subcorpname),
+                        tuple('qkey', `${item.query_id}:${item.created}`)
+                    ]
+                );
+                break;
+            case 'pquery':
+                window.location.href = this.pluginApi.createActionUrl(
+                    'pquery/index',
+                    [
+                        tuple('corpname', item.corpname),
+                        tuple('usesubcorp', item.subcorpname),
+                        tuple('query_id', item.query_id)
+                    ]
+                );
+                break;
+            case 'wlist':
+                // TODO
+                break;
+        }
     }
 
     private performLoadAction(widgetMode:boolean=false):void {
@@ -251,20 +273,22 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
         const args = new MultiDict();
         args.set('offset', this.state.offset);
         args.set('limit', this.state.limit + 1);
-        args.set('query_type', this.state.queryType);
+        args.set('query_supertype', this.state.querySupertype);
         if (!widgetMode && this.state.currentCorpusOnly) {
             args.set('corpname', this.pluginApi.getCorpusIdent().id);
         }
         args.set('archived_only', widgetMode || !this.state.archivedOnly ? '0' : '1');
-        return this.pluginApi.ajax$<AjaxResponse.QueryHistory>(
+        return this.pluginApi.ajax$<PluginInterfaces.QueryHistory.GetHistoryResponse>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('user/ajax_query_history'),
             args
 
         ).pipe(
-            tap((data) => {this.changeState(state => {
-                state.hasMoreItems = data.data.length === state.limit + 1;
-                state.data = state.hasMoreItems ?
+            tap(data => {
+                this.changeState(state => {
+                    state.editedItem = undefined;
+                    state.hasMoreItems = data.data.length === state.limit + 1;
+                    state.data = state.hasMoreItems ?
                         List.map(
                             attachSh.bind(null, this.pluginApi.getComponentHelpers()),
                             data.data.slice(0, data.data.length - 1)
@@ -273,40 +297,53 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
                             attachSh.bind(null, this.pluginApi.getComponentHelpers()),
                             data.data
                         );
-            })})
+                })
+            })
         );
     }
 
-    private saveItem(queryId:string, name:string):Observable<string> {
+    private saveItem(itemIdx:number):Observable<string> {
         return (() => {
+            const item = this.state.data[itemIdx];
             const args = new MultiDict();
-            args.set('query_id', queryId);
-            args.set('name', name);
-            if (name) {
+            args.set('query_id', item.query_id);
+            args.set('name', item.name);
+            if (item.name) {
                 return this.pluginApi.ajax$<any>(
                     HTTP.Method.POST,
                     this.pluginApi.createActionUrl('save_query'),
                     args
 
-                );
+                ).pipe(
+                    map(resp => tuple(resp, true))
+                )
 
             } else {
                 const args = new MultiDict();
-                args.set('query_id', queryId);
+                args.set('query_id', item.query_id);
                 return this.pluginApi.ajax$<any>(
                     HTTP.Method.POST,
                     this.pluginApi.createActionUrl('delete_query'),
                     args
-                );
+
+                ).pipe(
+                    map(resp => tuple(resp, false))
+                )
             }
 
         })().pipe(
-            tap((data) => {this.changeState(state => {
-                state.editingQueryId = null;
-                state.editingQueryName = null;
-            })}),
-            concatMap((_) => this.loadData()),
-            map(() => name ?
+            tap(
+                _ => {
+                    this.changeState(state => {
+                        state.editedItem = undefined;
+                    })
+                }
+            ),
+            concatMap(
+                ([, added]) => forkJoin([this.loadData(), rxOf(added)])
+            ),
+            map(
+                ([, added]) => added ?
                     this.pluginApi.translate('query__save_as_item_saved') :
                     this.pluginApi.translate('query__save_as_item_removed')
             )

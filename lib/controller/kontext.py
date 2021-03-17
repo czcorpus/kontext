@@ -272,12 +272,12 @@ class Kontext(Controller):
         """
         if self._user_has_persistent_settings():
             with plugins.runtime.SETTINGS_STORAGE as settings_plg:
-                return settings_plg.load(self.session_get('user', 'id'), corpus_id)
+                data = settings_plg.load(self.session_get('user', 'id'), corpus_id)
         else:
             data = self.session_get('corpus_settings')
-            if not data:
-                data = {}
-            return data
+        if not data:
+            data = {}
+        return data
 
     @staticmethod
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
@@ -427,7 +427,7 @@ class Kontext(Controller):
     def _save_query_to_history(self, query_id, conc_data):
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
-                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, qtype='conc')
+                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='conc')
 
     def _store_conc_params(self) -> List[str]:
         """

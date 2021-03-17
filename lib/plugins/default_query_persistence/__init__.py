@@ -260,6 +260,7 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         if prev_data is None or records_differ(curr_data, prev_data):
             data_id = generate_uniq_id()
             curr_data['id'] = data_id
+            curr_data['user_id'] = user_id
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
             data_key = self._mk_key(data_id)

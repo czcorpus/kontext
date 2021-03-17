@@ -1,8 +1,5 @@
 from lxml import etree
 import sys
-import json
-import os
-import codecs
 
 
 def process_document(xml_doc, single_upd=None):
