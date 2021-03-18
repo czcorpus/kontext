@@ -23,6 +23,7 @@ import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { ActionName, Actions } from '../../../models/query/actions';
+import * as S from './style';
 
 
 export interface EmptyQueryOverviewBarProps {
@@ -62,7 +63,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     const EmptyQueryOverviewBar:React.FC<EmptyQueryOverviewBarProps> = (props) => (
         <div>
-            <ul id="query-overview-bar">
+            <S.QueryOverviewBarUL>
                 <layoutViews.CorpnameInfoTrigger
                         corpname={props.corpname}
                         humanCorpname={props.humanCorpname}
@@ -70,7 +71,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         origSubcorpName={props.origSubcorpName}
                         foreignSubcorp={props.foreignSubcorp} />
                 {props.children}
-            </ul>
+            </S.QueryOverviewBarUL>
         </div>
     );
 
@@ -92,8 +93,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         };
 
         return (
-            <layoutViews.PopupBox customClass="query-overview centered" onCloseClick={handleCloseClick} takeFocus={true}>
-                <div>
+            <layoutViews.PopupBox customClass="centered" onCloseClick={handleCloseClick} takeFocus={true}>
+                <S.QueryOverviewDiv>
                     <h3>{he.translate('global__query_overview')}</h3>
                     <table>
                         <tbody>
@@ -123,7 +124,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </S.QueryOverviewDiv>
             </layoutViews.PopupBox>
         );
     };

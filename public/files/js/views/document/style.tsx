@@ -38,6 +38,23 @@ export const ModalOverlay = styled.div`
     width: 100%;
     height: 100%;
     background-color: RGBA(20, 20, 20, 0.70);
+
+    .block-help {
+        color: ${theme.colorDarkGreenText};
+    }
+
+    .block-help .contents h2 {
+        margin-left: 0;
+        margin-top: 1em;
+        font-size: 1.5em;
+    }
+
+    .block-help .contents h3 {
+        margin-left: 0;
+        font-size: 1.2em;
+        color: ${theme.colorLogoPink};
+        font-weight: normal;
+    }
 `;
 
 // ---------------- <CloseableFrame /> --------------------------------------
@@ -664,5 +681,107 @@ export const Calendar = styled.div`
     .controls .curr-date {
         padding: 0.1em;
         text-align: center;
+    }
+`;
+
+// ------------------- <CorpnameInfoTriggerLI /> --------------------
+
+export const CorpnameInfoTriggerLI = styled.li`
+
+    a {
+        color: ${theme.colorLogoBlue};
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    .subcorpus {
+        color: ${theme.colorLogoBlue};
+    }
+
+    .subcorpus.foreign {
+        color: ${theme.colorLogoPink};
+    }
+`;
+
+
+// --------------- <DelItemIconA /> -----------------------
+
+export const DelItemIconA = styled.a`
+
+    display: inline-block;
+    text-decoration: none;
+    padding: 0 0.1em;
+
+    &.disabled,
+    &.disabled:hover {
+        cursor: default !important;
+        color: ${theme.colorSuperlightText} !important;
+        background-color: transparent !important;
+    }
+
+    &:hover {
+        text-decoration: none !important;
+        color: #FFFFFF !important;
+    }
+`;
+
+// ------------------ <ExpandButton /> ---------------------
+
+export const ExpandButton = styled.button`
+
+    margin: 0.2em;
+    display: inline-block;
+    background-color: ${theme.colorButtonDefault};
+    color: ${theme.colorLogoBlue};
+    border-color: ${theme.colorLogoBlue};
+    border-width: 0.1em;
+    border-style: solid;
+    border-radius: ${theme.inputBorderRadius};
+    cursor: pointer;
+
+    span {
+        font-size: 1.5em;
+        font-weight: bold;
+        display: block;
+        margin: 0 auto;
+        width: 0.7em;
+        line-height: 0.7em;
+        height: 0.8em;
+    }
+
+    &:hover {
+        background-color: ${theme.colorButtonHover};
+    }
+
+    &.readonly {
+        cursor: inherit;
+
+        border-color: ${theme.colorLightGrey};
+        color: ${theme.colorLightGrey};
+    }
+`;
+
+// ------------------- <ExpandableAreaDiv /> --------------------
+
+export const ExpandableAreaDiv = styled.div`
+
+    .controls .ExpandButton {
+        margin-right: 0.7em;
+    }
+
+    .controls > a {
+        color: ${theme.colorLogoBlue};
+        text-decoration: none;
+    }
+
+    .controls > a:hover {
+        text-decoration: underline;
+    }
+
+    &.readonly .controls span {
+        color: ${theme.colorLightText};
     }
 `;

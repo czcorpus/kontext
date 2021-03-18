@@ -128,7 +128,7 @@ export function init(
                 style['overflow'] = 'auto';
             }
             return (
-                <S.ModalOverlay id="modal-overlay" style={style}>
+                <S.ModalOverlay style={style}>
                     {this.props.children}
                 </S.ModalOverlay>
             );
@@ -588,14 +588,14 @@ export function init(
         };
 
         return (
-            <li id="active-corpus">
+            <S.CorpnameInfoTriggerLI>
                 <strong>{he.translate('global__corpus')}:{'\u00a0'}</strong>
                 <a className="corpus-desc" title="click for details"
                             onClick={handleCorpnameClick}>
                     {props.humanCorpname}
                 </a>
                 {renderSubcorp()}
-            </li>
+            </S.CorpnameInfoTriggerLI>
         );
     };
 
@@ -651,12 +651,12 @@ export function init(
     // ------------------------------------------------------------------------------------
 
     const DelItemIcon:React.FC<CoreViews.DelItemIcon.Props> = (props) => {
-        return <a className={`DelItemIcon ${props.disabled ? 'disabled' : ''} ${props.className}`}
+        return <S.DelItemIconA className={`${props.disabled ? 'disabled' : ''} ${props.className}`}
                         onClick={props.onClick && !props.disabled ? props.onClick : undefined}
                         title={props.title}>
                     <ImgWithMouseover src={he.createStaticUrl('img/garbage_can.svg')}
                             alt={props.title ? props.title : "garbage can"} />
-                </a>;
+                </S.DelItemIconA>;
     };
 
     // ------------------------------------------------------------------------------------
@@ -727,10 +727,10 @@ export function init(
 
     const ExpandButton:CoreViews.ExpandButton.Component = (props) => {
         return (
-            <button type="button" className={`ExpandButton${props.onClick ? '' : ' readonly'}`}
+            <S.ExpandButton type="button" className={`ExpandButton${props.onClick ? '' : ' readonly'}`}
                     onClick={props.onClick ? () => props.onClick(props.isExpanded) : null}>
                 {props.isExpanded ? <span>-</span> : <span>+</span>}
-            </button>
+            </S.ExpandButton>
         );
     };
 
@@ -745,7 +745,7 @@ export function init(
         };
 
         return (
-            <div className={`ExpandableArea${props.alwaysExpanded ? ' readonly' : ''}`}>
+            <S.ExpandableAreaDiv className={props.alwaysExpanded ? ' readonly' : ''}>
                 <div className="controls">
                     <ExpandButton isExpanded={isExpanded}
                         onClick={props.alwaysExpanded ? undefined : handleClick} />
@@ -756,7 +756,7 @@ export function init(
                     }
                 </div>
                 {isExpanded ? props.children : null}
-            </div>
+            </S.ExpandableAreaDiv>
         );
     }
 

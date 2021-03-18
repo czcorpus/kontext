@@ -29,6 +29,7 @@ import { Actions, ActionName } from '../../../models/wordlist/actions';
 import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
 import * as S from './style';
 import * as S2 from '../style';
+import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../../query/basicOverview/style';
 
 
 export interface WordlistFormViewArgs {
@@ -48,7 +49,7 @@ export interface CorpInfoToolbarProps {
 
 export interface WordlistFormExportViews {
     WordListForm:React.ComponentClass<{}>;
-    CorpInfoToolbar:React.SFC<CorpInfoToolbarProps>;
+    CorpInfoToolbar:React.FC<CorpInfoToolbarProps>;
 }
 
 
@@ -62,7 +63,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
      *
      * @param {*} props
      */
-    const TRCorpusField:React.SFC<{
+    const TRCorpusField:React.FC<{
         corparchWidget:PluginInterfaces.Corparch.WidgetView;
         currentSubcorp:string;
 
@@ -79,7 +80,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // ---------------- <TRAttrSelector /> -----------------------
 
-    const TRAttrSelector:React.SFC<{
+    const TRAttrSelector:React.FC<{
         wlattr:string;
         attrList:Array<Kontext.AttrItem>;
         structAttrList:Array<Kontext.AttrItem>;
@@ -117,21 +118,21 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // ------------------- <CorpInfoToolbar /> -----------------------------
 
-    const CorpInfoToolbar:React.SFC<CorpInfoToolbarProps> = (props) => {
+    const CorpInfoToolbar:React.FC<CorpInfoToolbarProps> = (props) => {
         return (
-            <ul id="query-overview-bar">
+            <Style_QueryOverviewBarUL>
                 <layoutViews.CorpnameInfoTrigger corpname={props.corpname}
                         humanCorpname={props.humanCorpname}
                         usesubcorp={props.usesubcorp}
                         origSubcorpName={props.origSubcorpName}
                         foreignSubcorp={props.foreignSubcorp} />
-            </ul>
+            </Style_QueryOverviewBarUL>
         );
     };
 
     // ---------------------- <TRWlpatternInput /> -------------------
 
-    const TRWlpatternInput:React.SFC<{
+    const TRWlpatternInput:React.FC<{
         wlpat:string;
 
     }> = (props) => {
@@ -161,7 +162,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // ------------------ <TRFrequencyFigures /> -------------------------------
 
-    const TRFrequencyFigures:React.SFC<{
+    const TRFrequencyFigures:React.FC<{
         wlnums:string;
 
     }> = (props) => {
@@ -211,7 +212,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // --------------------- <OutTypeAttrSel /> -------------------------------
 
-    const OutTypeAttrSel:React.SFC<{
+    const OutTypeAttrSel:React.FC<{
         position:number;
         attrList:Array<Kontext.AttrItem>;
         enabled:boolean;
@@ -239,7 +240,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // --------------------- <MultiLevelPosAttr /> -------------------------------
 
-    const MultiLevelPosAttr:React.SFC<{
+    const MultiLevelPosAttr:React.FC<{
         attrList:Array<Kontext.AttrItem>;
         enabled:boolean;
         numWlPosattrLevels:number;
@@ -292,7 +293,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // --------------------- <TROutputType /> -------------------------------
 
-    const TROutputType:React.SFC<{
+    const TROutputType:React.FC<{
         wltype:string;
         allowsMultilevelWltype:boolean;
         wlattr:string;
@@ -357,7 +358,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // --------------------- <FieldsetOutputOptions /> ----------------------
 
-    const FieldsetOutputOptions:React.SFC<{
+    const FieldsetOutputOptions:React.FC<{
         wlnums:string;
         attrList:Array<Kontext.AttrItem>;
         wposattrs:[string, string, string];
@@ -387,7 +388,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // --------------------- <TRWlminfreqInput /> ----------------------------------
 
-    const TRWlminfreqInput:React.SFC<{
+    const TRWlminfreqInput:React.FC<{
         wlminfreq:Kontext.FormValue<string>;
 
     }> = (props) => {
@@ -419,7 +420,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // -------------------- <TRFilterFileUploadInput /> ----------------------------------------
 
-    const TDFilterFileUploadInput:React.SFC<{
+    const TDFilterFileUploadInput:React.FC<{
         target:FileTarget;
 
     }> = (props) => {
@@ -458,7 +459,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // -------------------- <TDExistingFileOps /> ----------------------------------------
 
-    const TDExistingFileOps:React.SFC<{
+    const TDExistingFileOps:React.FC<{
         target:FileTarget;
         fileName:string;
 
@@ -499,7 +500,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // -------------------- <ListUploadInput /> ----------------------------------------
 
-    const TRFilterFile:React.SFC<{
+    const TRFilterFile:React.FC<{
         label:string;
         hasValue:boolean;
         target:FileTarget;
@@ -525,7 +526,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     /**
      *
      */
-    const FileEditor:React.SFC<{
+    const FileEditor:React.FC<{
         data:{
             fileName:string;
             data:string;
@@ -584,7 +585,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     // --------------- <TRIncludeNonWordsCheckbox /> ------------------------
 
-    const TRIncludeNonWordsCheckbox:React.SFC<{
+    const TRIncludeNonWordsCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {

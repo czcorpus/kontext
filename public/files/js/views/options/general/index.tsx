@@ -21,9 +21,9 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound, StatelessModel } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { GeneralViewOptionsModelState } from '../../models/options/general';
-import { Actions, ActionName } from '../../models/options/actions';
+import { Kontext } from '../../../types/common';
+import { GeneralViewOptionsModelState } from '../../../models/options/general';
+import { Actions, ActionName } from '../../../models/options/actions';
 
 import * as S from './style';
 
@@ -199,7 +199,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         id="use-rich-editor"
                         onChange={handleCheckbox}
                         checked={props.value}/>
-                </td>                
+                </td>
             </tr>
         );
     }
@@ -219,7 +219,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <legend>
                     {he.translate('options__concordance_fieldset_heading')}
                 </legend>
-                <table className="results-range-and-paging">
+                <S.ResultRangeAndPagingTable>
                     <tbody>
                         <TRConcPageSizeInput value={props.pageSize} />
                         <TRKwicContextSize value={props.newCtxSize} />
@@ -227,7 +227,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <TRAlwaysShuffleCheckbox value={props.shuffle} />
                         <TRUseRichQueryEditor value={props.useRichQueryEditor} />
                     </tbody>
-                </table>
+                </S.ResultRangeAndPagingTable>
             </fieldset>
         );
     };
@@ -274,11 +274,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <legend>
                     {he.translate('options__worlist_fieldset_heading')}
                 </legend>
-                <table className="results-range-and-paging">
+                <S.ResultRangeAndPagingTable>
                     <tbody>
                         <TRWordlistNumPagesInput value={props.wlPageSize} />
                     </tbody>
-                </table>
+                </S.ResultRangeAndPagingTable>
             </fieldset>
         );
     };
@@ -325,11 +325,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <legend>
                     {he.translate('options__freq_fieldset_heading')}
                 </legend>
-                <table className="results-range-and-paging">
+                <S.ResultRangeAndPagingTable>
                     <tbody>
                         <TRFmaxitemsInput value={props.fmaxItems} />
                     </tbody>
-                </table>
+                </S.ResultRangeAndPagingTable>
             </fieldset>
         );
     };
@@ -376,11 +376,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <legend>
                     {he.translate('options__coll_fieldset_heading')}
                 </legend>
-                <table className="results-range-and-paging">
+                <S.ResultRangeAndPagingTable>
                     <tbody>
                         <TRCitemsPerPageInput value={props.citemsPerPage} />
                     </tbody>
-                </table>
+                </S.ResultRangeAndPagingTable>
             </fieldset>
         );
     };
@@ -427,11 +427,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <legend>
                     {he.translate('options__pquery_fieldset_heading')}
                 </legend>
-                <table className="results-range-and-paging">
+                <S.ResultRangeAndPagingTable>
                     <tbody>
                         <TRPQueryitemsPerPageInput value={props.resultsPerPage} />
                     </tbody>
-                </table>
+                </S.ResultRangeAndPagingTable>
             </fieldset>
         );
     };

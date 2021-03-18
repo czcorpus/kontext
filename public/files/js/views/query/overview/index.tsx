@@ -38,6 +38,7 @@ import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from '../filter'
 import { SortFormProps } from '../sort';
 import { MainMenuModelState } from '../../../models/mainMenu';
 import * as S from './style';
+import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../basicOverview/style';
 
 /*
 Important note regarding variable naming conventions:
@@ -189,7 +190,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         };
 
         return (
-            <fieldset className="query-exec-opts">
+            <S.ExecutionOptionsFieldset>
                 <legend>
                     {he.translate('query__execution_opts_fieldset')}
                 </legend>
@@ -211,7 +212,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         </label>
                     </li>
                 </ul>
-            </fieldset>
+            </S.ExecutionOptionsFieldset>
         );
     };
 
@@ -517,7 +518,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         null}
                 {props.branchReplayIsRunning ? <QueryReplayView /> : null}
 
-                <ul id="query-overview-bar">
+                <Style_QueryOverviewBarUL>
                     {props.humanCorpname ?
                             <layoutViews.CorpnameInfoTrigger
                                     corpname={props.corpname}
@@ -546,7 +547,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         ),
                         props.currEncodedOperations
                     )}
-                </ul>
+                </Style_QueryOverviewBarUL>
             </div>
         );
     }
@@ -578,7 +579,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         };
 
         return (
-            <ul id="query-overview-bar">
+            <Style_QueryOverviewBarUL>
                     {props.humanCorpname ?
                             <layoutViews.CorpnameInfoTrigger
                                     corpname={props.corpname}
@@ -604,7 +605,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             shuffleMinResultWarning={null}
                             editIsLocked={true} />
                     ))}
-            </ul>
+            </Style_QueryOverviewBarUL>
         );
     }
 
