@@ -45,7 +45,7 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
     static fromDict<U>(data:{[k in keyof U]:U[keyof U]}):MultiDict<U> {
         const ans = new MultiDict<U>();
         for (let k in data) {
-            ans.set(k, data[k]);
+            ans.set(k, data[k] as U[keyof U]);
         }
         return ans;
     }
