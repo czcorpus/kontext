@@ -21,7 +21,7 @@
 const { merge } = require('webpack-merge');
 const common = require('./scripts/build/webpack.common');
 const webpack = require('webpack');
-const OptimizeCss = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
@@ -61,14 +61,7 @@ module.exports = (env) => merge(common.wpConf(env), {
 	},
 	optimization: {
         minimizer: [
-            new OptimizeCss({
-				assetNameRegExp: /\.css/,
-				cssProcessorOptions: {
-					discardComments: { removeAll: true },
-					reduceIdents: false,
-					discardUnused: false
-				}
-			}),
+            new CssMinimizerPlugin(),
             new TerserPlugin(),
         ]
 	},
