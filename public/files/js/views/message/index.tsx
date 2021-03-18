@@ -82,11 +82,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         return (
             <S.MessagePageHelp>
-                <div className="messages">
+                <S.MessagesDiv>
                     {props.messages.map(message => {
                         return <Message key={message.messageId} status={message.messageType} text={message.messageText} />;
                     })}
-                </div>
+                </S.MessagesDiv>
                 <h2>{he.translate('global__where_to_continue')}:</h2>
                 <ul className="links">
                     {props.lastUsedConc ?

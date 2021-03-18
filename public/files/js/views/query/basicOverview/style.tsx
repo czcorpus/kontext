@@ -20,3 +20,71 @@
 
 import styled from 'styled-components';
 import * as theme from '../../theme/default'
+
+// ------------------ <QueryOverviewDiv /> ----------------
+
+export const QueryOverviewDiv = styled.div`
+
+    padding: 1.5em;
+    background-color: #E9F7FC;
+    text-align: center;
+
+    h3 {
+        display: inline-block;
+        margin-top: 0;
+        margin-bottom: 0.5em;
+        border-style: solid;
+        border-color: ${theme.colorDefaultGreen};
+        border-width: 0 0 1px 0;
+    }
+
+    table {
+        border-collapse: collapse;
+        border: none;
+    }
+
+    table th,
+    table td {
+        padding: 5px 1em;
+    }
+
+    table th {
+        color: ${theme.colorLogoPink};
+        border: none;
+    }
+
+    table td {
+        text-align: left;
+        border: 1px solid ${theme.colorDefaultGreen};
+    }
+`;
+
+// --------------------- <QueryOverviewBarUL /> ----------------------
+
+export const QueryOverviewBarUL = styled.ul`
+
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    font-family: ${theme.condensedFontFamily};
+
+    > li {
+        display: inline-block;
+        margin: 0;
+    }
+
+    > li a.args {
+        text-decoration: none;
+        color: ${theme.colorLogoBlue};
+    }
+
+    > li a.args:hover {
+        text-decoration: underline;
+    }
+
+    > li .transition {
+        font-size: 120%;
+        color: ${theme.colorLightText};
+    }
+
+`;

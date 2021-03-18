@@ -19,8 +19,8 @@
  */
 
 import styled from 'styled-components';
-import * as theme from '../theme/default';
-import { CollMetricsSelection } from '../coll/style';
+import * as theme from '../../theme/default';
+import { CollMetricsSelection } from '../../coll/style';
 
 // ---------------- <StructsAndAttrsForm /> --------------------------------------
 
@@ -104,64 +104,6 @@ export const StructsAndAttrsForm = styled.form`
     }
 `;
 
-// ---------------- <GeneralOptions /> --------------------------------------
-
-export const GeneralOptions = styled.div`
-    max-width: 30em;
-    white-space: normal;
-
-    .warn {
-        white-space: normal;
-        width: 25em;
-
-        .icon {
-            display: inline-block;
-            padding-right: 0.3em;
-            vertical-align: middle;
-
-            img {
-                width: 1.2em;
-            }
-        }
-    }
-
-    .data-loader {
-        text-align: center;
-    }
-
-    fieldset {
-        padding: 10pt 10pt;
-
-        legend {
-            font-weight: bold;
-        }
-
-        legend:first-letter {
-            text-transform: capitalize;
-        }
-
-        input {
-            margin-left: 5pt;
-        }
-
-        // hide number input arrows
-        /* Chrome, Safari, Edge, Opera */
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        /* Firefox */
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
-    }
-
-    fieldset:not(:first-of-type) {
-        margin-top: 0.7em;
-    }
-`;
 
 // ---------------- <AttributesTweaks /> --------------------------------------
 
@@ -194,10 +136,11 @@ export const AttributesTweaks = styled.div`
     }
 `;
 
+
 // ---------------- <Extensions /> --------------------------------------
 
 export const Extensions = styled.div`
-    
+
     margin-left: 1.5em;
     margin-bottom: 1.2em;
 
@@ -238,6 +181,7 @@ export const Extensions = styled.div`
     }
 `;
 
+
 // ---------------- <AttrSelection /> --------------------------------------
 
 export const AttrSelection = styled(CollMetricsSelection)`
@@ -248,6 +192,24 @@ export const AttrSelection = styled(CollMetricsSelection)`
     }
 `;
 
+
 // ---------------- <AttributesCheckboxes /> --------------------------------------
 
 export const AttributesCheckboxes = styled.div``;
+
+
+// ---------------- <StructAttrsViewOptions /> ------------------------------------
+
+export const StructAttrsViewOptions = styled.div`
+
+    @media screen and (max-width: 479px) {
+
+        .struct-groups {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .struct-groups div.group:nth-child(2) {
+            border-style: none;
+        }
+    }
+`;

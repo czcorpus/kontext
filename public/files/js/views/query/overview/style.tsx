@@ -21,8 +21,49 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
+
+// -------------------------- <QueryFormOverlay /> -------------------
+
 export const QueryFormOverlay = styled.div`
 
     font-family: ${theme.defaultFontFamily};
+
+`;
+
+// -------------------------- <ExecutionOptionsFieldset /> -------------------
+
+export const ExecutionOptionsFieldset = styled.div`
+
+    margin-bottom: 0.7em;
+
+    legend {
+        margin-left: 0.7em;
+        margin-right: 0.7em;
+    }
+
+    ul {
+        list-style-type: none;
+        margin: 0;
+        }
+
+    ul li {
+        margin: 0;
+        padding: 0.2em 0;
+    }
+
+    ul li label {
+        color: ${theme.colorDefaultText};
+        white-space: nowrap;
+    }
+
+    ul li label input[type="radio"] {
+        margin: 0 0.3em 0.1em 0;
+        padding: 0;
+        vertical-align: middle;
+    }
+
+    ul li label.active {
+        color: ${theme.colorDefaultText};
+    }
 
 `;

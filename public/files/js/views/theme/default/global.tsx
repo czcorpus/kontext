@@ -19,14 +19,16 @@
  */
 
 import { createGlobalStyle } from 'styled-components';
-import * as v from './index';
+import * as theme from './index';
+
+// ----------------- <GlobalStyle /> -------------------------
 
 export const GlobalStyle = createGlobalStyle`
 
     body {
-        font-family: ${v.defaultFontFamily};
-        color: ${v.colorDefaultText};
-        background-image: ${v.mainBackground};
+        font-family: ${theme.defaultFontFamily};
+        color: ${theme.colorDefaultText};
+        background-image: ${theme.mainBackground};
         font-size: 10pt;
         margin: 0;
         padding: 0;
@@ -55,7 +57,7 @@ export const GlobalStyle = createGlobalStyle`
         align-content: center;
         margin: 0;
         padding: 0.4em 0.6em;
-        background-color: ${v.colorLightFrame};
+        background-color: ${theme.colorLightFrame};
         border-radius: 6px 6px 0 0;
     }
 
@@ -64,7 +66,7 @@ export const GlobalStyle = createGlobalStyle`
         padding: 0;
         font-size: 140%;
         font-weight: 300;
-        color: ${v.colorDarkGreenText};
+        color: ${theme.colorDarkGreenText};
         flex-grow: 1;
     }
 
@@ -105,20 +107,20 @@ export const GlobalStyle = createGlobalStyle`
 
     input[type="text"],
     input[type="password"] {
-        border: ${v.inputBorderStyle};
-        border-radius: ${v.inputBorderRadius};
+        border: ${theme.inputBorderStyle};
+        border-radius: ${theme.inputBorderRadius};
         display: inline-block;
         vertical-align: middle;
         padding-left: 0.2em;
     }
 
     input[readonly][type="text"] {
-        background-color: ${v.colorLightGreen};
+        background-color: ${theme.colorLightGreen};
     }
 
     input[type="number"] {
-        border: ${v.inputBorderStyle};
-        border-radius: ${v.inputBorderRadius};
+        border: ${theme.inputBorderStyle};
+        border-radius: ${theme.inputBorderRadius};
         width: 35px;
         padding: 3px;
     }
@@ -131,14 +133,14 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     hr {
-        color: ${v.colorFrameFieldset};
-        background-color: ${v.colorFrameFieldset};
+        color: ${theme.colorFrameFieldset};
+        background-color: ${theme.colorFrameFieldset};
         height: 1px;
         border: none;
     }
 
     a {
-        color: ${v.colorLinkDark};
+        color: ${theme.colorLinkDark};
         cursor: pointer;
         text-decoration: underline;
     }
@@ -154,17 +156,17 @@ export const GlobalStyle = createGlobalStyle`
         display: block;
         margin: 0;
         overflow: auto;
-        padding: 0 2em 2em ${v.ucnkTopbarLeftMargin};
+        padding: 0 2em 2em ${theme.ucnkTopbarLeftMargin};
         flex-grow: 2;
     }
 
     #content > section {
-        border-radius: ${v.borderRadiusDefault};
+        border-radius: ${theme.borderRadiusDefault};
         display: inline-block;
         vertical-align: top;
         margin: 1em 0 0 0;
-        background-color: ${v.colorSectionBg};
-        box-shadow: ${v.portalBoxShadow};
+        background-color: ${theme.colorSectionBg};
+        box-shadow: ${theme.portalBoxShadow};
         min-width: 70%;
     }
 
@@ -231,132 +233,6 @@ export const GlobalStyle = createGlobalStyle`
         margin: 0;
     }
 
-    section.corpus-and-query ul#query-overview-bar {
-        padding: 0;
-        margin: 0;
-        list-style-type: none;
-        font-family: ${v.condensedFontFamily};
-    }
-
-    section.corpus-and-query ul#query-overview-bar > li {
-        display: inline-block;
-        margin: 0;
-    }
-
-    section.corpus-and-query ul#query-overview-bar > li a.args {
-        text-decoration: none;
-        color: ${v.colorLogoBlue};
-    }
-
-    section.corpus-and-query ul#query-overview-bar > li a.args:hover {
-        text-decoration: underline;
-    }
-
-    section.corpus-and-query ul#query-overview-bar > li .transition {
-        font-size: 120%;
-        color: ${v.colorLightText};
-    }
-
-    fieldset.query-exec-opts {
-
-        margin-bottom: 0.7em;
-    }
-
-    fieldset.query-exec-opts legend {
-        margin-left: 0.7em;
-        margin-right: 0.7em;
-    }
-
-    fieldset.query-exec-opts ul {
-        list-style-type: none;
-        margin: 0;
-    }
-
-    fieldset.query-exec-opts ul li {
-        margin: 0;
-        padding: 0.2em 0;
-    }
-
-    fieldset.query-exec-opts ul li label {
-        color: ${v.colorDefaultText};
-        white-space: nowrap;
-    }
-
-    fieldset.query-exec-opts ul li label input[type="radio"] {
-        margin: 0 0.3em 0.1em 0;
-        padding: 0;
-        vertical-align: middle;
-    }
-
-    fieldset.query-exec-opts ul li label.active {
-        color: ${v.colorDefaultText};
-    }
-
-    /* system pop-up messages */
-
-    .messages {
-        display: block;
-        position: fixed;
-        left: 50%;
-        top: 7em;
-        z-index: 10000;
-    }
-
-    .messages .message {
-        background-color: #FEFEFE;
-        border: solid 1px #eeeeee;
-        border-radius: ${v.borderRadiusDefault};
-        box-shadow: 2px 2px 3px #aaa;
-        color: ${v.colorDefaultText};
-        font-weight: 700;
-        margin: 5pt;
-        padding: 0.4em 0.4em 0.4em 1em;
-        position: relative;
-        left: -50%;
-    }
-
-    .messages .message.info {
-        color: ${v.colorDefaultText};
-    }
-
-    .messages .icon-box {
-        position: absolute;
-        padding: 0;
-        top: 50%;
-        margin-top: -0.8em;
-    }
-
-    .messages .icon-box .icon {
-        display: block;
-        width: 1.6em;
-        height: 1.6em;
-        margin: 0;
-        padding: 0;
-    }
-
-    .messages .message-text {
-        margin-top: 1em;
-        margin-bottom: 1em;
-        margin-left: 3em;
-        margin-right: 3em;
-    }
-
-    .messages .button-box {
-        position: absolute;
-        top: 50%;
-        right: 1em;
-        margin-top: -0.5em;
-    }
-
-    .messages .button-box .close-icon {
-        display: block;
-    }
-
-    .messages .button-box .close-icon img {
-        width: ${v.closeButtonSize};
-        height: ${v.closeButtonSize};
-    }
-
     /* an optional organization toolbar (contents injected via a plug-in) */
 
     #common-bar {
@@ -368,7 +244,7 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     #common-bar .UserPane {
-        color: ${v.colorDefaultText};
+        color: ${theme.colorDefaultText};
         background-color: transparent;
     }
 
@@ -412,7 +288,7 @@ export const GlobalStyle = createGlobalStyle`
 
     header#topbar .navig-wrapper {
         display: inline-block;
-        padding: 2em 1em 0 ${v.ucnkTopbarLeftMargin};
+        padding: 2em 1em 0 ${theme.ucnkTopbarLeftMargin};
     }
 
     header#topbar a#logo-wrapper {
@@ -435,7 +311,7 @@ export const GlobalStyle = createGlobalStyle`
         vertical-align: middle;
         background-color: transparent;
         border: 2px solid transparent;
-        border-radius: ${v.borderRadiusDefault};
+        border-radius: ${theme.borderRadiusDefault};
     }
 
     #menu-bar {
@@ -460,28 +336,11 @@ export const GlobalStyle = createGlobalStyle`
         cursor: default;
     }
 
-    #active-corpus a {
-        color: ${v.colorLogoBlue};
-        text-decoration: none;
-    }
-
-    #active-corpus a:hover {
-        text-decoration: underline;
-    }
-
-    #active-corpus .subcorpus {
-        color: ${v.colorLogoBlue};
-    }
-
-    #active-corpus .subcorpus.foreign {
-        color: ${v.colorLogoPink};
-    }
-
     .ktx-pagination {
         border-style: solid;
         border-width: 0.1em;
-        border-color: ${v.colorLightFrame};
-        border-radius: ${v.inputBorderRadius};
+        border-color: ${theme.colorLightFrame};
+        border-radius: ${theme.inputBorderRadius};
     }
 
     section > .ktx-pagination,
@@ -515,8 +374,8 @@ export const GlobalStyle = createGlobalStyle`
     .ktx-pagination-core .curr-page input {
         display: block;
         width: 3em;
-        border: ${v.inputBorderStyle};
-        border-radius: ${v.inputBorderRadius};
+        border: ${theme.inputBorderStyle};
+        border-radius: ${theme.inputBorderRadius};
         box-sizing: border-box;
     }
 
@@ -543,7 +402,7 @@ export const GlobalStyle = createGlobalStyle`
 
     .ktx-pagination-left > a > img {
         display: block;
-        height: ${v.navigIconSize};
+        height: ${theme.navigIconSize};
     }
 
     .ktx-pagination-right {
@@ -559,7 +418,7 @@ export const GlobalStyle = createGlobalStyle`
 
     .ktx-pagination-right > a > img {
         display: block;
-        height: ${v.navigIconSize};
+        height: ${theme.navigIconSize};
     }
 
     .ktx-pagination a:last-of-type img {
@@ -571,12 +430,12 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     .highlighted {
-        color: ${v.colorLogoPink};
+        color: ${theme.colorLogoPink};
         font-weight: 700;
     }
 
     .note {
-        color: ${v.colorLightText};
+        color: ${theme.colorLightText};
         font-weight: normal;
     }
 
@@ -588,11 +447,11 @@ export const GlobalStyle = createGlobalStyle`
     a.disabled,
     input.disabled,
     button.disabled {
-        color: ${v.colorLightText};
+        color: ${theme.colorLightText};
     }
 
     a:hover {
-        color: ${v.colorLogoPink};
+        color: ${theme.colorLogoPink};
         text-decoration: underline;
     }
 
@@ -608,7 +467,7 @@ export const GlobalStyle = createGlobalStyle`
     form .select-all {
         display: inline-block;
         padding-top: 10px;
-        color: ${v.colorLogoBlue};
+        color: ${theme.colorLogoBlue};
     }
 
     fieldset.inactive {
@@ -621,8 +480,8 @@ export const GlobalStyle = createGlobalStyle`
         background-color: #FFFFFF;
         border-collapse: separate;
         border-spacing: 0;
-        border: 1px solid ${v.colorLightFrame};
-        border-radius: ${v.borderRadiusDefault};
+        border: 1px solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
     }
 
     table.data > tbody > tr > td,
@@ -630,7 +489,7 @@ export const GlobalStyle = createGlobalStyle`
     table.data > thead > tr > th {
         text-align: left;
         padding: 0.3em 0.7em 0.3em 0.8em;
-        border-color: ${v.colorDefaultGreen};
+        border-color: ${theme.colorDefaultGreen};
         border-width: 0 1pt 0 0;
         border-style: solid;
     }
@@ -642,8 +501,8 @@ export const GlobalStyle = createGlobalStyle`
 
     table.data > tbody > tr > th,
     table.data > thead > tr > th {
-        color: ${v.colorDefaultText};
-        background-color: ${v.colorDefaultGreen};
+        color: ${theme.colorDefaultText};
+        background-color: ${theme.colorDefaultGreen};
         font-weight: bold;
         padding-top: 1em;
         padding-bottom: 0.5em;
@@ -663,11 +522,11 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     table.data th a {
-        color: ${v.colorDefaultText};
+        color: ${theme.colorDefaultText};
     }
 
     table.data td a {
-        color: ${v.colorLinkDark};
+        color: ${theme.colorLinkDark};
         text-decoration: none;
     }
 
@@ -680,11 +539,11 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     table.data > tbody > tr:nth-child(odd) {
-        background-color: ${v.colorTableEvenBg};
+        background-color: ${theme.colorTableEvenBg};
     }
 
     table.data .deleted {
-        color: ${v.colorLogoPink};
+        color: ${theme.colorLogoPink};
     }
 
     table.data .sort-flag {
@@ -715,26 +574,13 @@ export const GlobalStyle = createGlobalStyle`
     #content form.login {
         height: auto;
         overflow: auto;
-        color: ${v.colorDefaultText};
+        color: ${theme.colorDefaultText};
     }
 
     .struct em {
         text-decoration: none;
         color: #575757;
         font-size: 130%;
-    }
-
-    table.results-range-and-paging {
-        border-collapse: collapse;
-    }
-
-    table.results-range-and-paging th {
-        font-weight: normal;
-        text-align: left;
-    }
-
-    table.results-range-and-paging td {
-        padding: 3pt 0;
     }
 
     a.context-help {
@@ -752,19 +598,19 @@ export const GlobalStyle = createGlobalStyle`
     a.util-button,
     button.util-button {
         display: inline-block;
-        border: 1px solid ${v.colorLogoBlue};
-        border-radius: ${v.inputBorderRadius};
-        background-color: ${v.colorButtonDefault};
+        border: 1px solid ${theme.colorLogoBlue};
+        border-radius: ${theme.inputBorderRadius};
+        background-color: ${theme.colorButtonDefault};
         text-decoration: none;
         padding: 3px 8px;
-        color: ${v.colorLogoBlue};
+        color: ${theme.colorLogoBlue};
         box-shadow: 0px 1px 2px rgba(150, 150, 150, 0.9), inset 0px 0px 2px rgba(215, 215, 215, 0.2);
         cursor: default;
     }
 
     a.util-button.active,
     button.util-button.active {
-        background-color: ${v.colorLightPink};
+        background-color: ${theme.colorLightPink};
         color: rgb(39, 35, 36);
     }
 
@@ -777,24 +623,24 @@ export const GlobalStyle = createGlobalStyle`
     .util-button.cancel.disabled,
     .util-button.disabled {
         display: inline-block;
-        border: 1px solid ${v.colorSuperlightText};
-        border-radius: ${v.inputBorderRadius};
+        border: 1px solid ${theme.colorSuperlightText};
+        border-radius: ${theme.inputBorderRadius};
         background-color: #ffffff;
         text-decoration: none;
         padding: 3px 8px;
-        color: ${v.colorSuperlightText};
+        color: ${theme.colorSuperlightText};
         box-shadow: 0px 1px 2px rgba(150, 150, 150, 0.9), inset 0px 0px 2px rgba(215, 215, 215, 0.2);
         cursor: default;
     }
 
     a.util-button.cancel,
     button.util-button.cancel {
-        color: ${v.colorLogoPink};
+        color: ${theme.colorLogoPink};
     }
 
     a.util-button:hover,
     button.util-button:hover {
-        background-color: ${v.colorButtonHover};
+        background-color: ${theme.colorButtonHover};
     }
 
     #error-reporting {
@@ -802,29 +648,29 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     .monospace {
-        font-family: ${v.monospaceFontFamily};
+        font-family: ${theme.monospaceFontFamily};
     }
 
     .default-button, .danger-button {
         font-size: 1em;
-        color: ${v.colorWhiteText};
+        color: ${theme.colorWhiteText};
         text-decoration: none;
         padding: 0.3em 0.7em;
-        background-color: ${v.colorLogoBlue};
+        background-color: ${theme.colorLogoBlue};
         border-radius: 0.2em;
-        border: 1px solid ${v.colorLogoBlue};
+        border: 1px solid ${theme.colorLogoBlue};
         box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
     }
 
     .danger-button {
-        background-color: ${v.colorLogoPink};
-        border: 1px solid ${v.colorLogoPink};
+        background-color: ${theme.colorLogoPink};
+        border: 1px solid ${theme.colorLogoPink};
     }
 
     .default-button:hover {
-        background-color: ${v.colorLogoBlueShining};
-        border-color: ${v.colorLogoBlueShining};
-        color: ${v.colorWhiteText};
+        background-color: ${theme.colorLogoBlueShining};
+        border-color: ${theme.colorLogoBlueShining};
+        color: ${theme.colorWhiteText};
         text-decoration: none;
     }
 
@@ -833,34 +679,16 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     .error-input {
-        border: 2px solid ${v.colorLogoPink} !important;
-        border-radius: ${v.borderRadiusDefault} !important;
+        border: 2px solid ${theme.colorLogoPink} !important;
+        border-radius: ${theme.borderRadiusDefault} !important;
     }
 
     .highlighted-label {
-        color: ${v.colorLogoPink} !important;
+        color: ${theme.colorLogoPink} !important;
     }
 
     .inline-label {
         padding-left: 0.5em;
-    }
-
-
-    #modal-overlay .block-help {
-        color: ${v.colorDarkGreenText};
-    }
-
-    #modal-overlay .block-help .contents h2 {
-        margin-left: 0;
-        margin-top: 1em;
-        font-size: 1.5em;
-    }
-
-    #modal-overlay .block-help .contents h3 {
-        margin-left: 0;
-        font-size: 1.2em;
-        color: ${v.colorLogoPink};
-        font-weight: normal;
     }
 
     p.boxed-par {
@@ -870,68 +698,6 @@ export const GlobalStyle = createGlobalStyle`
     .view-options .buttons img.ajax-loader {
         display: inline-block;
         margin: 0 2em;
-    }
-
-    .OptionsContainer.busy {
-        text-align: center;
-    }
-
-    .OptionsContainer.busy .ajax-loader {
-        display: inline-block;
-        margin-bottom: 1em;
-    }
-
-    .DelItemIcon {
-        display: inline-block;
-        text-decoration: none;
-        padding: 0 0.1em;
-    }
-
-    .DelItemIcon.disabled,
-    .DelItemIcon.disabled:hover {
-        cursor: default !important;
-        color: ${v.colorSuperlightText} !important;
-        background-color: transparent !important;
-    }
-
-    .DelItemIcon:hover {
-        text-decoration: none !important;
-        color: #FFFFFF !important;
-    }
-
-    .query-overview {
-        padding: 1.5em;
-        background-color: #E9F7FC;
-        text-align: center;
-    }
-
-    .query-overview h3 {
-        display: inline-block;
-        margin-top: 0;
-        margin-bottom: 0.5em;
-        border-style: solid;
-        border-color: ${v.colorDefaultGreen};
-        border-width: 0 0 1px 0;
-    }
-
-    .query-overview table {
-        border-collapse: collapse;
-        border: none;
-    }
-
-    .query-overview table th,
-    .query-overview table td {
-        padding: 5px 1em;
-    }
-
-    .query-overview table th {
-        color: ${v.colorLogoPink};
-        border: none;
-    }
-
-    .query-overview table td {
-        text-align: left;
-        border: 1px solid ${v.colorDefaultGreen};
     }
 
     .disabled .toggle-img a {
@@ -991,56 +757,6 @@ export const GlobalStyle = createGlobalStyle`
         padding-right: 1em;
     }
 
-    .ExpandButton {
-        margin: 0.2em;
-        display: inline-block;
-        background-color: ${v.colorButtonDefault};
-        color: ${v.colorLogoBlue};
-        border-color: ${v.colorLogoBlue};
-        border-width: 0.1em;
-        border-style: solid;
-        border-radius: ${v.inputBorderRadius};
-        cursor: pointer;
-    }
-
-    .ExpandButton span {
-        font-size: 1.5em;
-        font-weight: bold;
-        display: block;
-        margin: 0 auto;
-        width: 0.7em;
-        line-height: 0.7em;
-        height: 0.8em;
-    }
-
-    .ExpandButton:hover {
-        background-color: ${v.colorButtonHover};
-    }
-
-    .ExpandButton.readonly {
-        cursor: inherit;
-
-        border-color: ${v.colorLightGrey};
-        color: ${v.colorLightGrey};
-    }
-
-    .ExpandableArea .controls .ExpandButton {
-        margin-right: 0.7em;
-    }
-
-    .ExpandableArea .controls > a {
-        color: ${v.colorLogoBlue};
-        text-decoration: none;
-    }
-
-    .ExpandableArea .controls > a:hover {
-        text-decoration: underline;
-    }
-
-    .ExpandableArea.readonly .controls span {
-        color: ${v.colorLightText};
-    }
-
     #wordlist-result-mount {
         margin: 0;
     }
@@ -1050,7 +766,7 @@ export const GlobalStyle = createGlobalStyle`
     }
 
 
-    @media screen and (max-width: 1200px), screen and (orientation:portrait) {
+    ${theme.mediaTablet} {
 
         #conc-dashboard-mount .ConcordanceDashboard {
             display: grid;
@@ -1075,7 +791,7 @@ export const GlobalStyle = createGlobalStyle`
         }
     }
 
-    @media screen and (max-width: 479px) {
+    ${theme.mediaPhone} {
 
         #logo-wrapper {
             display: block !important;
@@ -1152,7 +868,7 @@ export const GlobalStyle = createGlobalStyle`
         }
 
         #menu-level-1 > li.active > a {
-            color: ${v.colorLogoBlue};
+            color: ${theme.colorLogoBlue};
         }
 
         #menu-level-1 > li.active ul.submenu {
@@ -1185,7 +901,7 @@ export const GlobalStyle = createGlobalStyle`
             padding-top: 0.7em;
             border-width: 1px 0 0 0;
             border-style: solid;
-            border-color: ${v.colorLightText};
+            border-color: ${theme.colorLightText};
         }
 
         section.closeable-frame .heading div.control img {
@@ -1206,14 +922,6 @@ export const GlobalStyle = createGlobalStyle`
             transform: none;
             width: calc(100% - 3.7em);
             min-width: initial;
-        }
-
-        .StructAttrsViewOptions .StructsAndAttrsForm .struct-groups {
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .StructAttrsViewOptions .StructsAndAttrsForm .struct-groups div.group:nth-child(2) {
-            border-style: none;
         }
 
         ul.tabs {

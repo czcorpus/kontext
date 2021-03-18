@@ -19,13 +19,12 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext, ViewOptions } from '../../types/common';
-import { CorpusViewOptionsModel, CorpusViewOptionsModelState } from '../../models/options/structsAttrs';
-import { MainMenuModelState } from '../../models/mainMenu';
-import { Actions, ActionName } from '../../models/options/actions';
-import { Actions as OptionsActions, ActionName as OptionsActionName } from '../../models/options/actions';
+import { Kontext, ViewOptions } from '../../../types/common';
+import { CorpusViewOptionsModel, CorpusViewOptionsModelState } from '../../../models/options/structsAttrs';
+import { Actions, ActionName } from '../../../models/options/actions';
+import { Actions as OptionsActions, ActionName as OptionsActionName } from '../../../models/options/actions';
 import { List } from 'cnc-tskit';
 
 import * as S from './style';
@@ -598,7 +597,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
     // ---------------------------- <StructAttrsViewOptions /> ----------------------
 
     const StructAttrsViewOptions:React.FC<StructAttrsViewOptionsProps & CorpusViewOptionsModelState> = (props) => (
-        <div className="StructAttrsViewOptions">
+        <S.StructAttrsViewOptions>
             <StructsAndAttrsForm
                     fixedAttr={props.fixedAttr}
                     attrList={props.attrList}
@@ -620,7 +619,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                     queryHintEnabled={props.qsEnabled}
                     queryHintAvailable={props.qsPluginAvaiable}
                     availQSProviders={props.qsProviders} />
-        </div>
+        </S.StructAttrsViewOptions>
     );
 
     return {

@@ -21,13 +21,15 @@
 import * as React from 'react';
 import { IActionDispatcher, IModel, BoundWithProps, StatelessModel } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { init as generalViewsInit } from './general';
-import { init as structsAttrsViewsInit } from './structsAttrs';
-import { CorpusViewOptionsModel } from '../../models/options/structsAttrs';
-import { MainMenuModelState } from '../../models/mainMenu';
-import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../../models/mainMenu/actions';
-import { GeneralViewOptionsModelState } from '../../models/options/general';
+import { Kontext } from '../../../types/common';
+import { init as generalViewsInit } from '../general';
+import { init as structsAttrsViewsInit } from '../structsAttrs';
+import { CorpusViewOptionsModel } from '../../../models/options/structsAttrs';
+import { MainMenuModelState } from '../../../models/mainMenu';
+import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../../../models/mainMenu/actions';
+import { GeneralViewOptionsModelState } from '../../../models/options/general';
+import * as S from './style';
+
 
 export interface MainModuleArgs {
     dispatcher:IActionDispatcher;
@@ -103,9 +105,10 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
                         <layoutViews.CloseableFrame
                                 scrollable={true}
                                 onCloseClick={this._handleCloseClick}
-                                label={this._renderTitle()}
-                                customClass="OptionsContainer">
-                            {this._renderForm()}
+                                label={this._renderTitle()}>
+                            <S.OptionsContainer>
+                                {this._renderForm()}
+                            </S.OptionsContainer>
                         </layoutViews.CloseableFrame>
                     </layoutViews.ModalOverlay>;
 
@@ -114,7 +117,9 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
                         <layoutViews.CloseableFrame label={helpers.translate('global__loading')}
                                     onCloseClick={()=>undefined}
                                     customClass="OptionsContainer busy">
-                            <layoutViews.AjaxLoaderImage htmlClass="ajax-loader" />
+                            <S.OptionsContainer>
+                                <layoutViews.AjaxLoaderImage htmlClass="ajax-loader" />
+                            </S.OptionsContainer>
                         </layoutViews.CloseableFrame>
                     </layoutViews.ModalOverlay>;
 
