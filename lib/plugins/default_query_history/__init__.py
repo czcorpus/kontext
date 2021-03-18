@@ -200,8 +200,11 @@ class QueryHistory(AbstractQueryHistory):
                     q_join = []
                     for q in stored.get('form', {}).get('conc_ids', []):
                         stored_q = self._query_persistence.open(q)
-                        for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
-                            q_join.append(f'{{ {qs} }}')
+                        if stored_q is None:
+                            logging.getLogger(__name__).warning('Missing conc for pquery: {}'.format(q))
+                        else:
+                            for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
+                                q_join.append(f'{{ {qs} }}')
                     tmp['query'] = ' && '.join(q_join)
                     tmp.update(item)
                     tmp.update(stored)

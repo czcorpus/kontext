@@ -472,7 +472,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         };
 
         return (
-            <div className="QueryHelp topbar-help-icon">
+            <S.QueryHelp className="topbar-help-icon">
                 <a className="icon" onClick={toggleHelp}>
                     <layoutViews.ImgWithMouseover
                         htmlClass="over-img"
@@ -481,7 +481,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                 </a>
                 {visible ?
                     <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
-                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} customClass="block-help" label={he.translate('query__help')}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} label={he.translate('query__help')}>
                             <div>
                                 <div dangerouslySetInnerHTML={{__html: props.rawHtml}}/>
                                 <p><a target="_blank" href={he.getHelpLink('term_cql')}>{he.getHelpLink('term_cql')}</a></p>
@@ -494,8 +494,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                         List.map(
                                             ([corpus, tagsets]) => (
                                                 <li key={`item:${corpus}`}>
-                                                    <h3>{corpus}</h3>
-                                                    <dl>{pipe(
+                                                    <h3>{corpus}:</h3>
+                                                    <ul className="tagsets">{pipe(
                                                         tagsets,
                                                         List.map(tagset => tuple(
                                                             tagset,
@@ -504,18 +504,14 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                                         List.filter(([,url]) => !!url),
                                                         List.map(
                                                             ([tagset, url]) => (
-                                                                <React.Fragment key={`item:${tagset.ident}`}>
-                                                                    <dt>
-                                                                        {he.translate('global__attribute').toLocaleLowerCase()}{'\u00a0'}
-                                                                        <span className="attr">{tagset.featAttr}</span>:
-                                                                    </dt>
-                                                                    <dd>
-                                                                        <a className="external" target="_blank" href={url}>{url}</a>
-                                                                    </dd>
-                                                                </React.Fragment>
+                                                                <li key={`item:${tagset.ident}`}>
+                                                                    {he.translate('global__attribute').toLocaleLowerCase()}{'\u00a0'}
+                                                                    <span className="attr">{tagset.featAttr}</span>{'\u00a0'}
+                                                                    - <a className="external" target="_blank" href={url}>{url}</a>
+                                                                </li>
                                                             )
                                                         )
-                                                    )}</dl>
+                                                    )}</ul>
                                                 </li>
                                             ))
                                     )}</ul>
@@ -525,7 +521,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                     </layoutViews.ModalOverlay> :
                     null
                 }
-            </div>
+            </S.QueryHelp>
         );
     };
 

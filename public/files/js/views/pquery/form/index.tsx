@@ -369,7 +369,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                 </a>
                 {visible ?
                     <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
-                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} customClass="block-help" label={he.translate('pquery__help')}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} label={he.translate('pquery__help')}>
                             <p>TODO</p>
                             <p>
                                 <a href="https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf" target="_blank">
