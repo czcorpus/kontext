@@ -25,6 +25,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 userTokenConfirmPage.init(__conf);
 {% endblock %}
 
+{% block headers %}
+<style type="text/css">
+    p.token-confirmation {
+        font-size: 1.1em;
+    }
+</style>
+{% endblock %}
+
 {% block main %}
 <section>
     <div class="bar"><h2>{{ "Verification key confirmation"|_ }}</h2></div>

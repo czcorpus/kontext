@@ -24,7 +24,7 @@ import * as React from 'react';
 import { Kontext } from '../../types/common';
 import { ImgWithMouseover } from './general';
 import { CoreViews } from '../../types/coreViews';
-
+import * as S from './style';
 
 
 export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Props> {
@@ -185,7 +185,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
         };
 
         return (
-            <div className="Calendar">
+            <S.Calendar>
                 <table>
                     <thead>
                         <tr className="controls">
@@ -216,7 +216,7 @@ export function init(he:Kontext.ComponentHelpers):React.FC<CoreViews.Calendar.Pr
                         )}
                     </tbody>
                 </table>
-            </div>
+            </S.Calendar>
         )
     };
 

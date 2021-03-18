@@ -21,8 +21,8 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { ActionName, Actions } from '../../models/query/actions';
+import { Kontext } from '../../../types/common';
+import { ActionName, Actions } from '../../../models/query/actions';
 
 
 export interface EmptyQueryOverviewBarProps {

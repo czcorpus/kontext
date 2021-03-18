@@ -20,18 +20,13 @@
 
 import * as React from 'react';
 import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../types/common';
+import {Kontext} from '../../types/common';
 import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo }
-    from '../models/common/layout';
+    from '../../models/common/layout';
 import { Subscription } from 'rxjs';
-import { Actions, ActionName } from '../models/common/actions';
-
+import { Actions, ActionName } from '../../models/common/actions';
 import * as S from './style';
-
-
-export interface OverviewAreaProps {
-
-}
+import * as S2 from '../style';
 
 
 interface OverviewAreaState {
@@ -47,7 +42,7 @@ export interface CorpusInfoBoxProps {
 
 
 export interface OverviewViews {
-    OverviewArea:React.ComponentClass<OverviewAreaProps>;
+    OverviewArea:React.ComponentClass<{}>;
     CorpusInfoBox:React.FC<CorpusInfoBoxProps>;
 }
 
@@ -160,15 +155,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         if (props.isWaiting) {
             return (
-                <div id="corpus-details-box">
+                <S.CorpusInfoBox>
                     <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
                         alt={he.translate('global__loading')} title={he.translate('global__loading')} />
-                </div>
+                </S.CorpusInfoBox>
             );
 
         } else {
             return (
-                <div id="corpus-details-box">
+                <S.CorpusInfoBox>
                     <h2 className="corpus-name">{props.data.corpname}</h2>
                     <dl>
                         <dt>{he.translate('global__description')}:</dt>
@@ -204,7 +199,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <CorpusReference data={props.data.citation_info} />
                         </dd>
                     </dl>
-                </div>
+                </S.CorpusInfoBox>
             );
         }
     };
@@ -228,7 +223,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <div className="SubcorpusInfo">
+            <S.SubcorpusInfo>
                 <h2 className="subcorpus-name">
                     {props.data.corpusName}{'\u00a0/\u00a0'}<strong>{props.data.origSubCorpusName}</strong>
                 </h2>
@@ -259,7 +254,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         null
                     }
                 </dl>
-            </div>
+            </S.SubcorpusInfo>
         );
     };
 
@@ -303,7 +298,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const KeyboardShortcuts:React.FC<{}> = (props) => {
         return (
-            <S.KeyboardShortcuts>
+            <S2.KeyboardShortcuts>
                 <h1>{he.translate('global__keyboard_shortcuts')}</h1>
                 <h2>{he.translate('global__keyboard_conc_view_section')}</h2>
                 <table>
@@ -404,13 +399,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </tr>
                     </tbody>
                 </table>
-            </S.KeyboardShortcuts>
+            </S2.KeyboardShortcuts>
         );
     };
 
     // ----------------------------- <OverviewArea /> --------------------------
 
-    class OverviewArea extends React.Component<OverviewAreaProps, OverviewAreaState> {
+    class OverviewArea extends React.Component<{}, OverviewAreaState> {
 
         private modelSubscription:Subscription;
 

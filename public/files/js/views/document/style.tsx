@@ -2,6 +2,7 @@
  * Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+ * Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -577,7 +578,7 @@ export const KwicRangeSelector = styled.div`
 // ---------------- <UnsupportedRenderer /> --------------------------------------
 
 export const UnsupportedRenderer = styled.div`
-    
+
     .note {
         text-align: center;
     }
@@ -589,5 +590,79 @@ export const UnsupportedRenderer = styled.div`
     pre {
         font-size: 0.7em;
         white-space: normal;
-    }    
+    }
+`;
+
+// ---------------------- <Calendar /> -------------------------------------------
+
+export const Calendar = styled.div`
+
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    table th,
+    table td {
+        border: 1px solid ${theme.colorLightGrey};
+        padding: 0.2em;
+    }
+
+    table th {
+        text-align: center;
+    }
+
+    table td {
+        text-align: right;
+    }
+
+    table tbody td a {
+        text-decoration: none;
+        display: block;
+    }
+
+    table tbody td a:hover {
+        text-decoration: underline;
+    }
+
+    table td.current {
+        background-color: #efefef;
+    }
+
+    table td.current a {
+        color: #222222;
+    }
+
+    table td.current.active {
+        background-color: ${theme.colorLogoPink};
+    }
+
+    table td.current.active a {
+        color: #dedede;
+    }
+
+    .controls td {
+        padding: 0;
+    }
+
+    .controls td a.prev-month-change,
+    .controls td a.next-month-change {
+        border-right-width: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+
+    .controls td a.prev-month-change img,
+    .controls td a.next-month-change img {
+        display: block;
+        width: 60%;
+        padding: 0.2em;
+    }
+
+    .controls .curr-date {
+        padding: 0.1em;
+        text-align: center;
+    }
 `;
