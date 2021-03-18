@@ -18,12 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import {KontextPage} from '../app/main';
-
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/userTokenConfirm.css');
+import { Kontext } from '../types/common';
+import { KontextPage } from '../app/main';
 
 
 export function init(conf:Kontext.Conf):void {

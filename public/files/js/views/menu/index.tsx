@@ -22,14 +22,15 @@ import * as React from 'react';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher, IModel, Bound } from 'kombo';
 
-import { Kontext } from '../types/common';
+import { Kontext } from '../../types/common';
 import { isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
-        DynamicSubmenuItem, MainMenuModelState } from '../models/mainMenu';
-import { Actions, ActionName } from '../models/mainMenu/actions';
-import { AsyncTaskCheckerState, AsyncTaskChecker } from '../models/asyncTask';
+        DynamicSubmenuItem, MainMenuModelState } from '../../models/mainMenu';
+import { Actions, ActionName } from '../../models/mainMenu/actions';
+import { AsyncTaskCheckerState, AsyncTaskChecker } from '../../models/asyncTask';
 import { Actions as ATActions, ActionName as ATActionName }
-    from '../models/asyncTask/actions';
-import { ConcServerArgs } from '../models/concordance/common';
+    from '../../models/asyncTask/actions';
+import { ConcServerArgs } from '../../models/concordance/common';
+import * as S from './style';
 
 
 export interface MenuModuleArgs {
@@ -463,7 +464,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         render() {
             return (
-                <ul id="menu-level-1">
+                <S.MainMenuUL>
                     {List.map(
                         ([itemId, item]) => {
                             const mouseOverHandler = item.disabled ?
@@ -482,7 +483,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                         this.props.data
                     )}
                     <BoundLiAsyncTaskNotificator  />
-                </ul>
+                </S.MainMenuUL>
             );
         }
     }
