@@ -93,7 +93,11 @@ class ParadigmaticQueryPage {
             );
             const helpModel = new HtmlHelpModel(
                 this.layoutModel,
-                this.layoutModel.dispatcher
+                this.layoutModel.dispatcher,
+                {
+                    isBusy: false,
+                    rawHtml: ''
+                }
             );
 
             // pquery result

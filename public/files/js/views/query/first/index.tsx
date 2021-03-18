@@ -37,9 +37,9 @@ import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../../models/query/context';
 import { ActionName, Actions } from '../../../models/query/actions';
 import { TTSelOps } from '../../../models/textTypes/selectionOps';
-import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
 import { Actions as HelpActions, ActionName as HelpActionName } from '../../../models/help/actions';
 import * as S from './style';
+import { QueryHelpModel, QueryHelpModelState } from '../../../models/help/queryHelp';
 
 
 export interface MainModuleArgs {
@@ -53,7 +53,7 @@ export interface MainModuleArgs {
     virtualKeyboardModel:VirtualKeyboardModel;
     queryContextModel:QueryContextModel;
     querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
-    queryHelpModel:HtmlHelpModel;
+    queryHelpModel:QueryHelpModel;
 }
 
 
@@ -78,7 +78,6 @@ export interface QueryFormLiteProps {
 
 export interface QueryHelpProps {
     isLocalUiLang:boolean;
-    tagsets:{[corpname:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
 }
 
 
@@ -456,7 +455,7 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
 
     // ------------------- <QueryHelp /> -----------------------------
 
-    const QueryHelp:React.FC<QueryHelpProps & HtmlHelpModelState> = (props) => {
+    const QueryHelp:React.FC<QueryHelpProps & QueryHelpModelState> = (props) => {
 
         const [visible, changeState] = React.useState(false);
 
@@ -490,8 +489,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 {Dict.empty(props.tagsets) ?
                                     null :
                                     <ul className="tagset-links">{pipe(
-                                        props.tagsets,
-                                        Dict.toEntries(),
+                                        props.activeCorpora,
+                                        List.map(corp => tuple(corp, props.tagsets[corp])),
                                         List.map(
                                             ([corpus, tagsets]) => (
                                                 <li key={`item:${corpus}`}>
@@ -533,6 +532,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
     return {
         QueryForm: BoundWithProps<QueryFormProps, FirstQueryFormModelState>(QueryForm, queryModel),
         QueryFormLite: BoundWithProps<QueryFormLiteProps, FirstQueryFormModelState>(QueryFormLite, queryModel),
-        QueryHelp: BoundWithProps<QueryHelpProps, HtmlHelpModelState>(QueryHelp, queryHelpModel)
+        QueryHelp: BoundWithProps<QueryHelpProps, QueryHelpModelState>(QueryHelp, queryHelpModel)
     };
 }
