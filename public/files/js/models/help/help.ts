@@ -31,17 +31,14 @@ export interface HtmlHelpModelState {
     rawHtml:string;
 }
 
-export class HtmlHelpModel extends StatefulModel<HtmlHelpModelState> {
+export class HtmlHelpModel<T extends HtmlHelpModelState=HtmlHelpModelState> extends StatefulModel<T> {
 
-    private readonly layoutModel:PageModel;
+    protected readonly layoutModel:PageModel;
 
-    constructor(layoutModel:PageModel, dispatcher:IFullActionControl) {
+    constructor(layoutModel:PageModel, dispatcher:IFullActionControl, initialState:T) {
         super(
             dispatcher,
-            {
-                isBusy: false,
-                rawHtml: null
-            }
+            initialState
         );
         this.layoutModel = layoutModel;
 
