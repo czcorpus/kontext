@@ -20,6 +20,7 @@
 
 import { createGlobalStyle } from 'styled-components';
 import * as theme from './index';
+import externalLinkImg from '../../../../img/external-link.png';
 
 // ----------------- <GlobalStyle /> -------------------------
 
@@ -147,7 +148,7 @@ export const GlobalStyle = createGlobalStyle`
 
     a.external {
         padding-right: 1em;
-        background-image: url(../img/external-link.png);
+        background-image: url(${externalLinkImg});
         background-repeat: no-repeat;
         background-position: 100% 0;
     }

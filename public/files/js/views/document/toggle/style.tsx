@@ -20,10 +20,10 @@
 
 import styled from 'styled-components';
 
-const toggleOnImg = require('../../../../img/toggle_on.svg').default;
-const toggleOffImg = require('../../../../img/toggle_off.svg').default;
-const toggleOff1Img = require('../../../../img/toggle_off_1.svg').default;
-const toggleOff2Img = require('../../../../img/toggle_off_2.svg').default;
+import toggleOnImg from '../../../../img/toggle_on.svg';
+import toggleOffImg from '../../../../img/toggle_off.svg';
+import toggleOff1Img from '../../../../img/toggle_off_1.svg';
+import toggleOff2Img from '../../../../img/toggle_off_2.svg';
 
 
 export const ToggleSwitch = styled.span`

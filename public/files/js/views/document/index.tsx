@@ -523,11 +523,11 @@ export function init(
 
         List.empty(props.messages) ?
             null :
-            <div className="messages">
+            <S.MessagesDiv>
                 {props.messages.map((item, i) => (
                     <Message key={`msg:${i}`} {...item} />
                 ))}
-            </div>
+            </S.MessagesDiv>
     );
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------

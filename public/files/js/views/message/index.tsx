@@ -25,6 +25,7 @@ import { MessageModel, MessageModelState } from '../../models/common/layout';
 import { ConcServerArgs } from '../../models/concordance/common';
 import { Dict } from 'cnc-tskit';
 import * as S from './style';
+import { MessagesDiv as Style_MessagesDiv } from '../document/style';
 
 
 export interface MessageViewProps {
@@ -82,11 +83,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         return (
             <S.MessagePageHelp>
-                <S.MessagesDiv>
+                <div className="messages">
                     {props.messages.map(message => {
                         return <Message key={message.messageId} status={message.messageType} text={message.messageText} />;
                     })}
-                </S.MessagesDiv>
+                </div>
                 <h2>{he.translate('global__where_to_continue')}:</h2>
                 <ul className="links">
                     {props.lastUsedConc ?

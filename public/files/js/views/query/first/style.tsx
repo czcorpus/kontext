@@ -80,48 +80,46 @@ export const QueryForm = styled.form`
 // ---------------- <QueryHelp /> --------------------------------------
 
 export const QueryHelp = styled.div`
-    #modal-overlay {
 
-        h2::first-letter {
-            text-transform: capitalize;
-        }
+    color: ${theme.colorDarkGreenText};
+    font-size: 1.1em;
+    line-height: 1.4em;
 
-        h3 {
-            color: ${theme.colorDefaultText};
-            margin: 0.5em 0 0.5em 0;
-        }
+    h2 {
+        margin-left: 0;
+        margin-top: 0.2em;
+        font-size: 1.5em;
+    }
 
-        ul.tagset-links {
-            margin: 0;
+    h2::first-letter {
+        text-transform: capitalize;
+    }
+
+    h3 {
+        margin: 0.2em 0;
+        font-size: 1.2em;
+        color: ${theme.colorLogoPink};
+        font-weight: normal;
+    }
+
+    ul.tagset-links {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+
+        li {
             padding: 0;
-            list-style-type: none;
 
-            li {
+            ul.tagsets {
                 padding: 0;
+                margin: 0.1em 0 0 2em;
 
-                dl {
-                    padding: 0;
-
-                    .attr {
-                        color: ${theme.colorDefaultText};
-                    }
-
-                    dt {
-                        padding: 0.3em;
-                        display: inline-block;
-                    }
-
-                    dd {
-                        display: inline-block;
-                        margin-inline-start: 0.1em;
-                    }
-
-                    dd::after {
-                        content: "\a";
-                        white-space: pre;
-                    }
+                .attr {
+                    color: ${theme.colorLogoPink};
+                    font-weight: bold;
                 }
             }
         }
     }
+
 `;

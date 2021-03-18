@@ -38,23 +38,6 @@ export const ModalOverlay = styled.div`
     width: 100%;
     height: 100%;
     background-color: RGBA(20, 20, 20, 0.70);
-
-    .block-help {
-        color: ${theme.colorDarkGreenText};
-    }
-
-    .block-help .contents h2 {
-        margin-left: 0;
-        margin-top: 1em;
-        font-size: 1.5em;
-    }
-
-    .block-help .contents h3 {
-        margin-left: 0;
-        font-size: 1.2em;
-        color: ${theme.colorLogoPink};
-        font-weight: normal;
-    }
 `;
 
 // ---------------- <CloseableFrame /> --------------------------------------
@@ -783,5 +766,71 @@ export const ExpandableAreaDiv = styled.div`
 
     &.readonly .controls span {
         color: ${theme.colorLightText};
+    }
+`;
+
+// ------------------ <MessagesDiv /> ----------------------------------------
+
+export const MessagesDiv = styled.div`
+
+    display: block;
+    position: fixed;
+    left: 50%;
+    top: 7em;
+    z-index: 10000;
+
+    .message {
+        background-color: #FEFEFE;
+        border: solid 1px #eeeeee;
+        border-radius: ${theme.borderRadiusDefault};
+        box-shadow: 2px 2px 3px #aaa;
+        color: ${theme.colorDefaultText};
+        font-weight: 700;
+        margin: 5pt;
+        padding: 0.4em 0.4em 0.4em 1em;
+        position: relative;
+        left: -50%;
+    }
+
+    .message.info {
+        color: ${theme.colorDefaultText};
+    }
+
+    .icon-box {
+        position: absolute;
+        padding: 0;
+        top: 50%;
+        margin-top: -0.8em;
+    }
+
+    .icon-box .icon {
+        display: block;
+        width: 1.6em;
+        height: 1.6em;
+        margin: 0;
+        padding: 0;
+    }
+
+    .message-text {
+        margin-top: 1em;
+        margin-bottom: 1em;
+        margin-left: 3em;
+        margin-right: 3em;
+    }
+
+    .button-box {
+        position: absolute;
+        top: 50%;
+        right: 1em;
+        margin-top: -0.5em;
+    }
+
+    .button-box .close-icon {
+        display: block;
+    }
+
+    .button-box .close-icon img {
+        width: ${theme.closeButtonSize};
+        height: ${theme.closeButtonSize};
     }
 `;
