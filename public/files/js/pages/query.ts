@@ -42,7 +42,7 @@ import { Actions as GlobalActions, ActionName as GlobalActionName } from '../mod
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
-import { HtmlHelpModel } from '../models/help/help';
+import { QueryHelpModel } from '../models/help/queryHelp';
 
 
 declare var require:any;
@@ -103,7 +103,7 @@ export class QueryPage {
 
     private queryHintModel:UsageTipsModel;
 
-    private queryHelpModel:HtmlHelpModel;
+    private queryHelpModel:QueryHelpModel;
 
     private withinBuilderModel:WithinBuilderModel;
 
@@ -263,7 +263,6 @@ export class QueryPage {
 
     private attachQueryForm(
         properties:QueryFormProps,
-        tagsets:{[corp:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>},
         corparchWidget:React.ComponentClass
 
     ):void {
@@ -289,7 +288,6 @@ export class QueryPage {
             queryFormComponents.QueryHelp,
             window.document.getElementById('topbar-help-mount'),
             {
-                tagsets,
                 isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang')
             }
         );
@@ -334,11 +332,6 @@ export class QueryPage {
                 this.layoutModel
             );
 
-            this.queryHelpModel = new HtmlHelpModel(
-                this.layoutModel,
-                this.layoutModel.dispatcher
-            );
-
             const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
                 'ConcFormsArgs'
             );
@@ -347,6 +340,21 @@ export class QueryPage {
                 this.layoutModel.dispatcher,
                 queryFormArgs
             );
+
+            this.queryHelpModel = new QueryHelpModel(
+                this.layoutModel,
+                this.layoutModel.dispatcher,
+                {
+                    isBusy: false,
+                    rawHtml: '',
+                    tagsets: queryFormArgs.tagsets,
+                    activeCorpora: [
+                        this.layoutModel.getCorpusIdent().id,
+                        ...this.layoutModel.getConf<Array<string>>('alignedCorpora')
+                    ]
+                }
+            );
+
             const ttAns = this.createTTViews(queryFormArgs);
 
             ttAns.queryStorageView = this.layoutModel.qstorPlugin.getWidgetView();
@@ -378,7 +386,10 @@ export class QueryPage {
 
             this.initQueryModel(queryFormArgs);
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
-            this.attachQueryForm(ttAns, queryFormArgs.tagsets, corparchWidget);
+            this.attachQueryForm(
+                ttAns,
+                corparchWidget
+            );
             this.initCorpnameLink();
             const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
             // all the models must be unregistered and components must

@@ -88,6 +88,7 @@ import { TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
 import { HtmlHelpModel } from '../models/help/help';
 import { HitReloader } from '../models/concordance/concStatus';
+import { QueryHelpModel } from '../models/help/queryHelp';
 
 
 declare var require:any;
@@ -109,7 +110,7 @@ export class QueryModels {
     switchMcModel:SwitchMainCorpModel;
     saveAsFormModel:QuerySaveAsFormModel;
     firstHitsModel:FirstHitsModel;
-    queryHelpModel:HtmlHelpModel;
+    queryHelpModel:QueryHelpModel;
 }
 
 interface RenderLinesDeps {
@@ -331,9 +332,18 @@ export class ViewPage {
             this.layoutModel.getConf<number>('concUrlTTLDays'),
             this.layoutModel.getConf<boolean>('concExplicitPersistenceUI')
         );
-        this.queryModels.queryHelpModel = new HtmlHelpModel(
+        this.queryModels.queryHelpModel = new QueryHelpModel(
             this.layoutModel,
-            this.layoutModel.dispatcher
+            this.layoutModel.dispatcher,
+            {
+                isBusy: false,
+                rawHtml: '',
+                tagsets: queryFormArgs.tagsets,
+                activeCorpora: [
+                    this.layoutModel.getCorpusIdent().id,
+                    ...this.layoutModel.getConf<Array<string>>('alignedCorpora')
+                ]
+            }
         );
 
         const queryFormProps:QueryFormProperties = {
