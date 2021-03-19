@@ -143,6 +143,12 @@ export interface CalendarDaysSelectorProps {
     firstDayOfWeek:'mo'|'su'|'sa';
 }
 
+
+function localIsoDate(d:Date):string {
+    return new Date(d.getTime() -  60000 * d.getTimezoneOffset()).toISOString().split('T')[0];
+}
+
+
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):React.FC<CalendarDaysSelectorProps> {
 
     const layoutViews = he.getLayoutViews();
@@ -172,7 +178,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         attrName: props.attrObj.name,
                         type: props.attrObj.type,
                         value: rangeToRegexp(newState.fromDate, newState.toDate),
-                        decodedValue: `${newState.fromDate.toISOString().split('T')[0]}, \u2026, ${newState.toDate.toISOString().split('T')[0]}`
+                        decodedValue: `${localIsoDate(newState.fromDate)}, \u2026, ${localIsoDate(newState.toDate)}`
                     }
                 });
 
