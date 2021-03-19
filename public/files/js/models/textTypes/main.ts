@@ -813,17 +813,17 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     private exportSelections(lockedOnesOnly:boolean):TextTypes.ExportedSelection {
         const ans = {};
         this.state.attributes.forEach((attrSel:TextTypes.AnyTTSelection) => {
+            const trueAttr = attrSel.name !== this.state.bibLabelAttr ?
+                    attrSel.name : this.state.bibIdAttr;
             if (TTSelOps.hasUserChanges(attrSel)) {
                 if (attrSel.type === 'regexp' && attrSel.widget === 'days') {
-                    ans[attrSel.name] = attrSel.textFieldValue;
+                    ans[trueAttr] = attrSel.textFieldValue;
 
                 } else if (attrSel.type === 'text') {
-                    const trueAttr = attrSel.name !== this.state.bibLabelAttr ?
-                            attrSel.name : this.state.bibIdAttr;
                     ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
 
                 } else {
-                    ans[attrSel.name] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
+                    ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
                 }
             }
         });
