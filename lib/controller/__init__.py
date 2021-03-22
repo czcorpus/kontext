@@ -628,15 +628,7 @@ class Controller(object):
             return err
         text = str(err)
         setattr(err, 'message', text)  # in case we return the original error
-        if 'syntax error' in text.lower():
-            srch = re.match(r'.+ position (\d+)', text)
-            if srch:
-                text = translate(f'Query failed: Syntax error at position {srch.groups()[0]}.')
-            else:
-                text = translate('Query failed: Syntax error.')
-            return UserActionException(
-                translate(f'{text} Please make sure the query and selected query type are correct.'))
-        elif 'AttrNotFound' in text:
+        if 'AttrNotFound' in text:
             srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
             if srch:
                 text = translate(f'Attribute "{srch.groups()[0]}" not found.')

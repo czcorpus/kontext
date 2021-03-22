@@ -142,7 +142,7 @@ class DefaultCacheMapping(AbstractConcCache):
         self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
 
     def del_full_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
-        for k, stored in list(self._db.hash_get_all(self._mk_key()).items()):
+        for k, stored in self._db.hash_get_all(self._mk_key()).items():
             if stored:
                 if type(stored) is not dict:
                     logging.getLogger(__name__).warning('Removed unsupported conc cache value: {}'.format(stored))
