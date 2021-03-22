@@ -22,6 +22,7 @@ import os
 import time
 import logging
 import sys
+import re
 
 import settings
 import plugins
@@ -31,7 +32,8 @@ from conclib.empty import InitialConc
 import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
-from conclib.errors import ConcCalculationStatusException, ConcNotFoundException, BrokenConcordanceException
+from conclib.errors import (ConcordanceException, ConcCalculationStatusException, ConcNotFoundException,
+                            BrokenConcordanceException)
 import bgcalc
 from bgcalc.errors import CalcTaskNotFoundError
 
@@ -291,11 +293,22 @@ class ConcCalculation(GeneralWorker):
             # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
             # here as this is performed by _get_cached_conc()
             # function in case it detects a problem.
+            if isinstance(e, RuntimeError) and 'unexpected character' in str(e):
+                srch = re.match(r'unexpected character(.*)at position (\d+)', str(e))
+                if srch:
+                    # TODO please note that currently due to loss of information about error type during
+                    # CalcStatus storing/restoring, the message is normalized to a more general form
+                    norm_err = ConcordanceException(
+                        'Syntax error at position {}. Please check the query and its type.'.format(srch.group(2)))
+                else:
+                    norm_err = ConcordanceException('Syntax error. Please check the query and its type')
+            else:
+                norm_err = e
             import traceback
-            logging.getLogger(__name__).error('Background calculation error: %s' % e)
+            logging.getLogger(__name__).error('Background calculation error: %s' % norm_err)
             logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
             if cache_map is not None:
-                cache_map.update_calc_status(subchash, query, finished=True, error=e)
+                cache_map.update_calc_status(subchash, query, finished=True, error=norm_err)
 
 
 class ConcSyncCalculation(GeneralWorker):
