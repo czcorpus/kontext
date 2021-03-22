@@ -717,6 +717,8 @@ class Actions(Querying):
         maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
         try:
             query = self._compile_query(data=ff_args, corpus=maincorp)
+            if query is None:
+                raise ConcError(translate('No query entered.'))
         except ConcError:
             if texttypes:
                 query = '[]'
