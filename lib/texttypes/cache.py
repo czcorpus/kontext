@@ -37,7 +37,7 @@ class TextTypesCache(object):
 
     @staticmethod
     def _mk_cache_key(corpname):
-        return 'ttcache:%s' % (corpname, )
+        return str(corpname)
 
     @staticmethod
     def _mk_attr_cache_key(corpname: str, structname: str, subcnorm: str):

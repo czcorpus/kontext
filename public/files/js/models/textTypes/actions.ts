@@ -149,6 +149,10 @@ export namespace Actions {
         name:ActionName.AttributeTextInputAutocompleteReady;
     };
 
+    export function isAttributeTextInputAutocompleteReady(action:Action<{}>):action is AttributeTextInputAutocompleteReady {
+        return action.name === ActionName.AttributeTextInputAutocompleteReady;
+    }
+
 
     export interface AttributeTextInputAutocompleteRequestDone extends Action<{
         attrName:string;

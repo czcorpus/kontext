@@ -113,7 +113,6 @@ export class SubcorpForm {
 
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
-            this.textTypesModel,
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             true, // manual aligned corp. selection mode
             {

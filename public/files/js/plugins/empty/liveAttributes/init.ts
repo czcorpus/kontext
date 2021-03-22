@@ -64,7 +64,6 @@ export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttribute
 
 const create:PluginInterfaces.LiveAttributes.Factory = (
     pluginApi,
-    textTypesModel,
     isEnabled,
     controlsAlignedCorpora,
     args

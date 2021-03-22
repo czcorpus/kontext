@@ -139,9 +139,14 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
                 }).pipe(
                     concatMap(
-                        (action:PluginInterfaces.LiveAttributes.Actions.RefineReady) =>
-                            this.loadFilteredData(state, action.payload.selections)
+                        (action) => {
+                            if (PluginInterfaces.LiveAttributes.Actions.isRefineReady(action)) {
+                                return this.loadFilteredData(state, action.payload.selections)
 
+                            } else {
+                                throw new Error('Not an instance of RefineReady');
+                            }
+                        }
                     )
                 ).subscribe(
                     ([selections, data]) => {
@@ -324,12 +329,19 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     return syncData;
                 }).pipe(
                     concatMap(
-                        (action:TTActions.AttributeTextInputAutocompleteReady) => this.loadAutocompleteHint(
-                            state,
-                            action.payload.value,
-                            action.payload.attrName,
-                            action.payload.selections
-                        )
+                        (action) => {
+                            if (TTActions.isAttributeTextInputAutocompleteReady(action)) {
+                                return this.loadAutocompleteHint(
+                                    state,
+                                    action.payload.value,
+                                    action.payload.attrName,
+                                    action.payload.selections
+                                );
+
+                            } else {
+                                throw new Error('Not an AttributeTextInputAutocompleteReady instance');
+                            }
+                        }
                     )
                 ).subscribe(
                     (resp) => {

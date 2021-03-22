@@ -34,6 +34,7 @@ import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
     from '../common/actions';
 import { Actions as ConcActions, ActionName as ConcActionName } from '../concordance/actions';
+import { PluginName } from '../../app/plugin';
 
 
 
@@ -91,6 +92,8 @@ export interface TextTypesModelState {
     metaInfoHelpVisible:boolean;
 
     firstDayOfWeek:'mo'|'su'|'sa';
+
+    isLiveAttrsActive:boolean;
 
 }
 
@@ -162,7 +165,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 ),
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),
                 metaInfoHelpVisible: false,
-                firstDayOfWeek: pluginApi.getConf<'mo'|'su'|'sa'>('firstDayOfWeek')
+                firstDayOfWeek: pluginApi.getConf<'mo'|'su'|'sa'>('firstDayOfWeek'),
+                isLiveAttrsActive: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)
             }
         );
         this.readonlyMode = readonlyMode;
@@ -671,7 +675,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     ) {
 
         const attrIdx = this.getAttributeIdx(state, attrName);
-        if (attrIdx) {
+        if (attrIdx > -1) {
             state.attributes[attrIdx] = TTSelOps.setTextFieldValue(
                 state.attributes[attrIdx], value, decodedValue);
         }
