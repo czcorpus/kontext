@@ -117,6 +117,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         hasExtendedInfo:boolean;
         textInputPlaceholder:string;
         isBusy:boolean;
+        isAutocompleteActive:boolean;
         firstDayOfWeek:'mo'|'su'|'sa';
 
     }> = (props) => {
@@ -144,7 +145,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         isLocked={props.isLocked}
                         hasExtendedInfo={props.hasExtendedInfo}
                         textInputPlaceholder={props.textInputPlaceholder}
-                        isBusy={props.isBusy} />;
+                        isBusy={props.isBusy}
+                        isAutoCompleteActive={props.isAutocompleteActive} />;
             }
         }
 
@@ -185,6 +187,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         textInputPlaceholder:string;
         isBusy:boolean;
         firstDayOfWeek:'mo'|'su'|'sa';
+        isAutocompleteActive:boolean;
 
     }> = (props) => {
 
@@ -346,7 +349,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                     hasExtendedInfo={props.hasExtendedInfo}
                                     textInputPlaceholder={props.textInputPlaceholder}
                                     isBusy={props.isBusy}
-                                    firstDayOfWeek={props.firstDayOfWeek} />
+                                    firstDayOfWeek={props.firstDayOfWeek}
+                                    isAutocompleteActive={props.isAutocompleteActive} />
                         </div>
                         <div className="metadata">
                             {renderMetaInfo()}
@@ -416,7 +420,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                         metaInfo={props.metaInfo[attrObj.name]}
                                         isBusy={props.busyAttribute === attrObj.name}
                                         textInputPlaceholder={props.textInputPlaceholder}
-                                        firstDayOfWeek={props.firstDayOfWeek} />
+                                        firstDayOfWeek={props.firstDayOfWeek}
+                                        isAutocompleteActive={props.isLiveAttrsActive} />
                             </div>
                             ),
                             props.attributes

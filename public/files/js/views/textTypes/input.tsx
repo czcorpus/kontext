@@ -33,6 +33,7 @@ export interface RawInputMultiValueContainerProps {
     isLocked:boolean;
     textInputPlaceholder:string;
     isBusy:boolean;
+    isAutoCompleteActive:boolean;
 
 }
 
@@ -133,6 +134,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         attrObj:TextTypes.TextInputAttributeSelection;
         customInputName:string;
         textInputPlaceholder:string;
+        isAutoCompleteActive:boolean;
         customAutoCompleteHintClickHandler:(item:TextTypes.AutoCompleteItem)=>void;
 
     }> {
@@ -163,15 +165,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             if (this.throttlingTimer) {
                 window.clearTimeout(this.throttlingTimer);
             }
-            this.throttlingTimer = window.setTimeout(() => {
-                dispatcher.dispatch<Actions.AttributeTextInputAutocompleteRequest>({
-                    name: ActionName.AttributeTextInputAutocompleteRequest,
-                    payload: {
-                        attrName: this.props.attrObj.name,
-                        value: v
-                    }
-                });
-            }, this._throttlingIntervalMs);
+            if (this.props.isAutoCompleteActive) {
+                this.throttlingTimer = window.setTimeout(() => {
+                    dispatcher.dispatch<Actions.AttributeTextInputAutocompleteRequest>({
+                        name: ActionName.AttributeTextInputAutocompleteRequest,
+                        payload: {
+                            attrName: this.props.attrObj.name,
+                            value: v
+                        }
+                    });
+                }, this._throttlingIntervalMs);
+            }
         }
 
         _renderAutoComplete() {
@@ -258,9 +262,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                     </tbody>
                 </table>
                 <RawInputContainer attrObj={props.attrObj}
-                                    customInputName={null}
-                                    customAutoCompleteHintClickHandler={handleAutoCompleteHintClick}
-                                    textInputPlaceholder={props.textInputPlaceholder} />
+                        customInputName={null}
+                        customAutoCompleteHintClickHandler={handleAutoCompleteHintClick}
+                        textInputPlaceholder={props.textInputPlaceholder}
+                        isAutoCompleteActive={props.isAutoCompleteActive} />
             </div>
         );
     };

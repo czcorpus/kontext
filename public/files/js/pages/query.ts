@@ -160,7 +160,6 @@ export class QueryPage {
 
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
-            this.textTypesModel,
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             false,
             {

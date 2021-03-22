@@ -82,11 +82,10 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
 
 /**
  * @param pluginApi KonText plugin-api provider
- * @param textTypesModel
  * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
  */
 const create:PluginInterfaces.LiveAttributes.Factory = (
-        pluginApi, textTypesModel, isEnabled, controlsAlignedCorpora, args) => {
+        pluginApi, isEnabled, controlsAlignedCorpora, args) => {
     const currAligned = pluginApi.getConf<Array<string>>('alignedCorpora') || [];
     const alignedCorpora = List.map(
         item => ({
