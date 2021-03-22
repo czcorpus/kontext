@@ -441,6 +441,10 @@ export namespace PluginInterfaces {
                 name:ActionName.RefineReady;
             }
 
+            export function isRefineReady(a:Action<{}>):a is RefineReady {
+                return a.name === ActionName.RefineReady;
+            }
+
             export interface ResetClicked extends Action<{
             }> {
                 name:ActionName.ResetClicked;
@@ -511,7 +515,6 @@ export namespace PluginInterfaces {
         export interface Factory {
             (
                 pluginApi:IPluginApi,
-                textTypesModel:TextTypes.ITextTypesModel<{}>,
                 isEnabled:boolean,
                 controlsAlignedCorpora:boolean,
                 args:PluginInterfaces.LiveAttributes.InitArgs
