@@ -26,7 +26,7 @@ import { Kontext } from '../types/common';
  * number.
  */
 export function validateNumber(s:string):boolean {
-    return !!/^-?([1-9]\d*|0)?$/.exec(s);
+    return !!/^-?([1-9]\d*|0)$/.exec(s);
 }
 
 /**
