@@ -357,7 +357,9 @@ class Kontext(Controller):
                 settings_storage.save(self.session_get('user', 'id'), options)
             else:
                 options = {}
-                options.update(self.session_get('settings'))
+                sess_options = self.session_get('settings')
+                if sess_options:
+                    options.update(sess_options)
                 merge_incoming_opts_to(options)
                 self._session['settings'] = options
 
