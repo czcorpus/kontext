@@ -71,7 +71,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private triggerUpdateAction:(resp:AsyncTaskResponse)=>void;
 
-    private socket:WebSocket;
+    private statusSocket:WebSocket;
 
     constructor(
         dispatcher:IFullActionControl,
@@ -97,6 +97,14 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 }
             })
         };
+
+        const wsUrl = new URL(this.pageModel.createActionUrl('ws/job_status'));
+        wsUrl.protocol = 'ws';        
+        this.statusSocket = new WebSocket(wsUrl.href);
+        this.statusSocket.onmessage = e => {console.log(e.data)};
+        this.statusSocket.onopen = e => {
+            this.statusSocket.send(JSON.stringify(List.map(item => item.ident, this.state.asyncTasks)));
+        }
 
         this.addActionHandler<Actions.InboxToggleOverviewVisibility>(
             ActionName.InboxToggleOverviewVisibility,
@@ -188,8 +196,6 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 });
             }
         );
-
-        this.socket = new WebSocket('ws://10.0.3.212/aiohttp');
     }
 
     private updateMessageList(state:AsyncTaskCheckerState, data:Array<Kontext.AsyncTaskInfo>) {
@@ -270,6 +276,10 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     }
 
     init():void {
+        if (this.statusSocket.readyState == this.statusSocket.OPEN) {
+            this.statusSocket.send(JSON.stringify(List.map(item => item.ident, this.state.asyncTasks)));
+        }
+
         if (!List.empty(this.state.asyncTasks)) {
             this.emitChange();
             if (this.timer$) {

@@ -103,7 +103,7 @@ async def status_app(redis_client: Redis=None):
             port=settings.get('calc_backend', 'rq_redis_port'),
             db=settings.get('calc_backend', 'rq_redis_db')
         )
-    app.add_routes([web.get('/tasks', functools.partial(tasks_status_ws_handler, redis_client))])
+    app.add_routes([web.get('/job_status', functools.partial(tasks_status_ws_handler, redis_client))])
     return app
 
 
