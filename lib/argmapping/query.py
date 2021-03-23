@@ -12,12 +12,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, List, Tuple, Optional, Union
 import re
 
 import plugins
 from plugins.abstract.corpora import TagsetInfo
-from .error import ArgumentMappingError
+from .error import ArgumentMappingError, ValidationError
 
 
 class ConcFormArgs(object):
@@ -87,6 +87,9 @@ class ConcFormArgs(object):
     def make_saveable(self):
         self._op_key = '__new__'
         self._persistent = True
+
+    def validate(self) -> Union[Exception, None]:
+        return None
 
 
 class LgroupOpArgs(ConcFormArgs):
@@ -274,6 +277,16 @@ class FilterFormArgs(ConcFormArgs):
             self.tagsets = [d.to_dict() for d in corp_info.tagsets]
             for tagset in self.tagsets:
                 tagset['widgetEnabled'] = th.tags_enabled_for(self.maincorp, tagset['ident'])
+
+    def validate(self):
+        try:
+            int(self.filfpos)
+        except ValueError:
+            return ValidationError('Invalid value for filfpos: {}'.format(self.filfpos))
+        try:
+            int(self.filtpos)
+        except ValueError:
+            return ValidationError('Invalid value for filtpos: {}'.format(self.filtpos))
 
 
 class SortFormArgs(ConcFormArgs):

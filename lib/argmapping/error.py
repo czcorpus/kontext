@@ -15,3 +15,7 @@
 
 class ArgumentMappingError(Exception):
     pass
+
+
+class ValidationError(ArgumentMappingError):
+    pass

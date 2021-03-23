@@ -711,6 +711,9 @@ class Actions(Querying):
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
         ff_args.update_by_user_query(request.json)
+        err = ff_args.validate()
+        if err is not None:
+            raise UserActionException(err)
         self.add_conc_form_args(ff_args)
         rank = dict(f=1, l=-1).get(ff_args.filfl, 1)
         texttypes = TextTypeCollector(self.corp, {}).get_query()

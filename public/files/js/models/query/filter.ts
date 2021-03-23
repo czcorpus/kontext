@@ -483,8 +483,11 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                         },
                         (err) => {
                             this.pageModel.showMessage('error', err);
+                            this.changeState(state => {
+                                state.isBusy = false;
+                            });
                         }
-                    )
+                    );
 
                 } else {
                     this.pageModel.showMessage('error', err);
