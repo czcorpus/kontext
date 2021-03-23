@@ -1107,9 +1107,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
-                'ajax_get_within_max_hits'
+                'get_adhoc_subcorp_size'
             ),
             {
+                corpname: this.state.baseCorpname,
+                usesubcorp: this.state.subCorpName,
                 ...this.layoutModel.getConcArgs(),
                 type:'adHocIpmArgs',
                 text_types: ttSelection

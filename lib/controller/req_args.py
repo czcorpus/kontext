@@ -153,7 +153,8 @@ class JSONRequestArgsProxy:
         elif self._json.get('type') in ('filterQueryArgs', 'sortQueryArgs', 'mlSortQueryArgs'):
             return [self.getlist('corpname')[0]] + self.getlist('align')
         else:
-            return [self._json.get('corpname')]
+            cn = self._json.get('corpname')
+            return [cn] if cn is not None else []
 
     def keys(self):
         if type(self._json) is dict:

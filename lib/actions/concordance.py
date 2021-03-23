@@ -1695,7 +1695,7 @@ class Actions(Querying):
             return ce.export_pie_chart(data=data, title=request.form.get('title', '??'), format=format)
 
     @exposed(return_type='json', http_method='POST')
-    def ajax_get_within_max_hits(self, request):
+    def get_adhoc_subcorp_size(self, request):
         if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname):
             # a faster solution based on liveattrs
             with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
