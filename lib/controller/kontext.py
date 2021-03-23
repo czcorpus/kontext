@@ -546,7 +546,8 @@ class Kontext(Controller):
         """
         with plugins.runtime.AUTH as auth:
             if not action_metadata['skip_corpus_init']:
-                corpname, redirect = self._determine_curr_corpus(form)
+                is_api = action_metadata['return_type'] == 'json' or form.getvalue('format') == 'json'
+                corpname, redirect = self._determine_curr_corpus(form, is_api)
                 has_access, variant = auth.validate_access(corpname, self.session_get('user'))
                 if has_access and redirect:
                     url_pref = self.get_mapping_url_prefix()
@@ -683,7 +684,7 @@ class Kontext(Controller):
             self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
                                                        ).add_args(('saveformat', save_format)))
 
-    def _determine_curr_corpus(self, form: RequestArgsProxy):
+    def _determine_curr_corpus(self, form: RequestArgsProxy, is_api: bool):
         """
         This method tries to determine which corpus is currently in use.
         If no answer is found or in case there is a conflict between selected
@@ -699,6 +700,8 @@ class Kontext(Controller):
         """
         cn = ''
         redirect = False
+        if is_api and len(form.corpora) == 0:
+            raise UserActionException('No corpus specified')
         if len(form.corpora) > 0:
             cn = form.corpora[0]
         elif not self.user_is_anonymous():
