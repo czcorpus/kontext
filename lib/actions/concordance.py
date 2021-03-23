@@ -188,6 +188,8 @@ class Actions(Querying):
 
         if self.args.fromp < 1:
             raise UserActionException(translate('Invalid page number'))
+        if self.args.pagesize < 1:
+            raise UserActionException('Invalid page size')
 
         self._apply_viewmode(corpus_info['sentence_struct'])
 

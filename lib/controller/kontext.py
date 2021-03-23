@@ -599,33 +599,37 @@ class Kontext(Controller):
         # only general setting can be applied now because
         # we do not know final corpus name yet
         self._init_default_settings(options)
-        options.update(self._load_general_settings())
-        self.args.map_args_to_attrs(options)
 
-        self._setup_user_paths()
-        self.cm = corplib.CorpusManager(self.subcpath)
+        try:
+            options.update(self._load_general_settings())
+            self.args.map_args_to_attrs(options)
 
-        self._restore_prev_conc_params(req_args)
-        # corpus access check and modify path in case user cannot access currently requested corp.
-        corpname, self._corpus_variant = self._check_corpus_access(
-            action_name, req_args, action_metadata)
+            self._setup_user_paths()
+            self.cm = corplib.CorpusManager(self.subcpath)
 
-        # now we can apply also corpus-dependent settings
-        # because the corpus name is already known
-        if corpname is None:
-            req_args.set_forced_arg('corpname', '')  # make sure no unwanted corpname arg is used
-        else:
-            corpus_options = {}
-            corpus_options.update(self.get_corpus_info(corpname).default_view_opts)
-            corpus_options.update(self._load_corpus_settings(corpname))
-            self.args.map_args_to_attrs(corpus_options)
-            req_args.set_forced_arg('corpname', corpname)
+            self._restore_prev_conc_params(req_args)
+            # corpus access check and modify path in case user cannot access currently requested corp.
+            corpname, self._corpus_variant = self._check_corpus_access(
+                action_name, req_args, action_metadata)
 
-        # always prefer corpname returned by _check_corpus_access()
-        # TODO we should reflect align here if corpus has changed
+            # now we can apply also corpus-dependent settings
+            # because the corpus name is already known
+            if corpname is None:
+                req_args.set_forced_arg('corpname', '')  # make sure no unwanted corpname arg is used
+            else:
+                corpus_options = {}
+                corpus_options.update(self.get_corpus_info(corpname).default_view_opts)
+                corpus_options.update(self._load_corpus_settings(corpname))
+                self.args.map_args_to_attrs(corpus_options)
+                req_args.set_forced_arg('corpname', corpname)
 
-        # now we apply args from URL (highest priority)
-        self.args.map_args_to_attrs(req_args)
+            # always prefer corpname returned by _check_corpus_access()
+            # TODO we should reflect align here if corpus has changed
+
+            # now we apply args from URL (highest priority)
+            self.args.map_args_to_attrs(req_args)
+        except ValueError as ex:
+            raise UserActionException(ex)
 
         # return url (for 3rd party pages etc.)
         args = {}
