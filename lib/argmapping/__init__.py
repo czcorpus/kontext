@@ -253,21 +253,24 @@ class Args(object):
             values = in_args.getlist(key)
             if len(values) > 0:
                 if hasattr(self, key):
-                    if isinstance(getattr(self, key), (list, tuple)):
-                        setattr(self, key, values)
-                    elif isinstance(getattr(self, key), bool):
-                        setattr(self, key, bool(int(values[-1])))
-                    elif isinstance(getattr(self, key), int):
-                        setattr(self, key, int(
-                            self._upgrade_legacy_value(key, values[-1], in_args)))
-                    else:
-                        if key in ('attrs', 'structs', 'refs'):
-                            setattr(self, key, ','.join(values))
-                        # when mapping to a scalar arg we always take the last
-                        # value item but in such case, the length of values should
-                        # be always 1
+                    try:
+                        if isinstance(getattr(self, key), (list, tuple)):
+                            setattr(self, key, values)
+                        elif isinstance(getattr(self, key), bool):
+                            setattr(self, key, bool(int(values[-1])))
+                        elif isinstance(getattr(self, key), int):
+                            setattr(self, key, int(
+                                self._upgrade_legacy_value(key, values[-1], in_args)))
                         else:
-                            setattr(self, key, self._upgrade_legacy_value(key, values[-1], in_args))
+                            if key in ('attrs', 'structs', 'refs'):
+                                setattr(self, key, ','.join(values))
+                            # when mapping to a scalar arg we always take the last
+                            # value item but in such case, the length of values should
+                            # be always 1
+                            else:
+                                setattr(self, key, self._upgrade_legacy_value(key, values[-1], in_args))
+                    except ValueError as ex:
+                        raise ValueError('Request attribute \'{}\': {}'.format(key, ex))
         if len(in_args.corpora) > 0:
             self.corpname = in_args.corpora[0]
             self.align = in_args.corpora[1:] if len(in_args.corpora) > 1 else []
