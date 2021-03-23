@@ -627,28 +627,32 @@ class Kontext(Controller):
 
         options = {}
         corp_options = {}
-        self._load_user_settings(options, corp_options)
-        self._scheduled_actions(options)
-        # only general setting can be applied now because
-        # we do not know final corpus name yet
-        self._apply_general_user_settings(options, self._init_default_settings)
+        try:
+            self._load_user_settings(options, corp_options)
+            self._scheduled_actions(options)
+            # only general setting can be applied now because
+            # we do not know final corpus name yet
 
-        self.cm = corplib.CorpusManager(self.subcpath)
+            self._apply_general_user_settings(options, self._init_default_settings)
 
-        self._restore_prev_conc_params(req_args)
-        # corpus access check and modify path in case user cannot access currently requested corp.
-        corpname, corpus_variant = self._check_corpus_access(action_name, req_args, action_metadata)
+            self.cm = corplib.CorpusManager(self.subcpath)
 
-        # now we can apply also corpus-dependent settings
-        # because the corpus name is already known
-        if len(corpname) > 0:
-            self._apply_corpus_user_settings(corp_options, corpname)
+            self._restore_prev_conc_params(req_args)
+            # corpus access check and modify path in case user cannot access currently requested corp.
+            corpname, corpus_variant = self._check_corpus_access(action_name, req_args, action_metadata)
 
-        # always prefer corpname returned by _check_corpus_access()
-        req_args.set_forced_arg('corpname', corpname)  # TODO we should reflect align here if corpus has changed
-        # now we apply args from URL (highest priority)
-        self.args.map_args_to_attrs(req_args)
-        self._corpus_variant = corpus_variant
+            # now we can apply also corpus-dependent settings
+            # because the corpus name is already known
+            if len(corpname) > 0:
+                self._apply_corpus_user_settings(corp_options, corpname)
+
+            # always prefer corpname returned by _check_corpus_access()
+            req_args.set_forced_arg('corpname', corpname)  # TODO we should reflect align here if corpus has changed
+            # now we apply args from URL (highest priority)
+            self.args.map_args_to_attrs(req_args)
+            self._corpus_variant = corpus_variant
+        except ValueError as ex:
+            raise UserActionException(ex)
 
         # return url (for 3rd party pages etc.)
         args = {}
