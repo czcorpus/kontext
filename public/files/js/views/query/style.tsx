@@ -21,6 +21,7 @@
 import styled from 'styled-components';
 import * as theme from '../theme/default';
 
+// ---------------- <ExpandableSectionLabel /> -----------------------------------
 
 export const ExpandableSectionLabel = styled.h2`
     margin: 0 0 0.4em 0;
@@ -42,4 +43,43 @@ export const ExpandableSectionLabel = styled.h2`
     a:hover {
         text-decoration: underline;
     }
+`;
+
+// ---------------- <SaveHintParagraph /> -----------------------------------
+
+export const SaveHintParagraph = styled.p`
+
+    width: 30em;
+    white-space: initial;
+    color: ${theme.colorDefaultText};
+
+    .icon {
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 0.4em;
+
+        img {
+            width: 1.2em;
+        }
+    }
+`;
+
+
+// ---------------- <PersistentConcordanceForm /> -----------------------
+
+export const PersistentConcordanceForm = styled.form`
+
+    input {
+        font-size: 1.5em;
+        width: 30em;
+        display: inline-block;
+        margin-top: 0.4em;
+        margin-bottom: 1em;
+        color: ${theme.colorSuperlightText};
+    }
+
+    input.archived {
+        color: ${theme.colorDefaultText};
+    }
+
 `;

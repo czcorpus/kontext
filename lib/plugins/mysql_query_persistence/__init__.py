@@ -276,7 +276,12 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         return ans, archived_rec
 
     def is_archived(self, conc_id):
-        return True  # we ignore archiver task delay and say "True" for all the items
+        cursor = self._archive.cursor()
+        cursor.execute(
+            'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
+            (conc_id,)
+        )
+        return cursor.fetchone() is not None
 
     def export_tasks(self):
         """

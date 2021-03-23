@@ -250,7 +250,6 @@ export namespace AjaxResponse {
         subcorpname:string;
         baseAttr:string;
         currentArgs:Array<[string, string]>;
-        compiledQuery:Array<string>;
         concPersistenceOpId:string;
         alignedCorpora:Array<string>;
         availableAlignedCorpora:Array<Kontext.AttrItem>;

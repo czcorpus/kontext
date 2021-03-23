@@ -488,7 +488,7 @@
         "concview__abs_ipm_bar_title_{abs}{ipm}": "abs. frekw: {abs}, i.p.m.: {ipm}",
         "concview__extended_info": "Rozszyrzōnŏ informacyjŏ",
         "concview__make_conc_link_permanent_hd": "Permanyntnŏ adresa URL kōnkordancyje",
-        "concview__permanent_link_hint_{ttl}": "Dōmyślnie adresy URL ôd strōn we KonTekście sōm ważne na {ttl, plural, one{# dziyń} other {# dni}}. Żeby mōc ôdnosić sie do tyj kōnkordancyje bez limitu czasu (bp. we publikowanych artykułach), użyj tyj funkcyje.",
+        "concview__permanent_link_hint_{ttl}": "By default, URLs of results in KonText are valid for {ttl, plural, one{# day} other {# days}}. To be able to refer to this concordance without a time limit (e.g. for published papers), use this function. UNTRANSLATED",
         "concview__permanent_link_is_archived": "Ta kōnkordancyjŏ mŏ permanyntny link",
         "concview__make_conc_link_permanent_done": "Link do tyj kōnkordancyje je terŏz permanyntny.",
         "concview__make_conc_link_permanent_revoked": "Permanyntny status ôd linku bōł pociepniynty",

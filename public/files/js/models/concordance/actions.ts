@@ -437,7 +437,7 @@ export namespace Actions {
 
     export interface UnlockLineSelectionDone extends Action<{
         selection:Array<LineSelValue>;
-        query:Array<string>;
+        queryId:string;
         mode:LineSelectionModes;
 
     }> {

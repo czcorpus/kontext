@@ -489,7 +489,7 @@
         "concview__abs_ipm_bar_title_{abs}{ipm}": "abs. frekv.: {abs}, i.p.m.: {ipm}",
         "concview__extended_info": "Doplňující informace",
         "concview__make_conc_link_permanent_hd": "Trvalý odkaz na konkordanci",
-        "concview__permanent_link_hint_{ttl}": "URL odkazy stránek v KonTextu jsou implicitně platné po dobu {ttl, plural, one{# dne} other {# dní}}. Chcete-li odkazovat na konkordanci bez časového omezení (např. v publikovaném článku), použijte tuto funkci.",
+        "concview__permanent_link_hint_{ttl}": "URL odkazy výsledků v KonTextu jsou implicitně platné po dobu {ttl, plural, one{# dne} other {# dní}}. Chcete-li odkazovat na konkordanci bez časového omezení (např. v publikovaném článku), použijte tuto funkci.",
         "concview__permanent_link_is_archived": "Tato konkordance má trvalý odkaz",
         "concview__make_conc_link_permanent_done": "Odkaz na konkordanci je nyní trvalý",
         "concview__make_conc_link_permanent_revoked": "The permanent status of the link has been revoked",

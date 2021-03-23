@@ -66,7 +66,7 @@ http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
 
 
 def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple = (), page_model: Optional[str] = None,
-            func_arg_mapped: bool = False, skip_corpus_init: bool = False, mutates_conc: bool = False,
+            func_arg_mapped: bool = False, skip_corpus_init: bool = False, mutates_result: bool = False,
             http_method: Union[Optional[str], Tuple[str, ...]] = 'GET', accept_kwargs: bool = None,
             apply_semi_persist_args: bool = False, return_type: str = 'template',
             action_log_mapper: Callable[[None], Any] = False) -> Callable[..., Any]:
@@ -82,7 +82,7 @@ def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple =
     page_model -- a JavaScript page module
     func_arg_mapped -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
     skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
-    mutates_conc -- store a new conc action under a new key to a conc_peristence db
+    mutates_result -- store a new set of result parameters under a new key to query_peristence db
     http_method -- required HTTP method (POST, GET, PUT,...), either a single string or a tuple of strings
     accept_kwargs -- True/False
     apply_semi_persist_args -- if True hen use session to initialize action args first
@@ -95,7 +95,7 @@ def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple =
         func.__dict__['page_model'] = page_model
         func.__dict__['func_arg_mapped'] = func_arg_mapped
         func.__dict__['skip_corpus_init'] = skip_corpus_init
-        func.__dict__['mutates_conc'] = mutates_conc
+        func.__dict__['mutates_result'] = mutates_result
         func.__dict__['http_method'] = http_method
         func.__dict__['accept_kwargs'] = accept_kwargs
         func.__dict__['apply_semi_persist_args'] = apply_semi_persist_args

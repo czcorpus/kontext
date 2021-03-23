@@ -301,29 +301,34 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         action.payload.tasks
                     );
                     if (!task) {
+                        // TODO cleanup
+                        this.changeState(state => {
+                            state.isBusy = false;
+                        });
                         layoutModel.showMessage('error', 'Paradigmatic query task not found!');
 
                     } else {
-                        this.changeState(state => {
-                            state.task = task as Kontext.AsyncTaskInfo<AsyncTaskArgs>;
-                        });
-                    }
-                    if (this.state.task.status === 'SUCCESS') {
+                        const pqTask = task as Kontext.AsyncTaskInfo<AsyncTaskArgs>; // TODO type
+                        if (pqTask.status === 'SUCCESS') {
+                            window.location.href = this.layoutModel.createActionUrl(
+                                'pquery/result',
+                                [
+                                    tuple('corpname', this.state.corpname),
+                                    tuple('usesubcorp', this.state.usesubcorp),
+                                    tuple('query_id', this.state.task.args.query_id)
+                                ]
+                            );
 
-                        window.location.href = this.layoutModel.createActionUrl(
-                            'pquery/result',
-                            [
-                                tuple('corpname', this.state.corpname),
-                                tuple('usesubcorp', this.state.usesubcorp),
-                                tuple('query_id', this.state.task.args.query_id)
-                            ]
-                        );
-
-                    } else if (this.state.task.status === 'FAILURE') {
-                        this.layoutModel.showMessage(
-                            'error',
-                            `Paradigmatic query task failed: ${this.state.task.error}`
-                        );
+                        } else if (pqTask.status === 'FAILURE') {
+                            this.changeState(state => {
+                                state.task = pqTask;
+                                state.isBusy = false;
+                            });
+                            this.layoutModel.showMessage(
+                                'error',
+                                `Paradigmatic query task failed: ${this.state.task.error}`
+                            );
+                        }
                     }
                 }
             }

@@ -38,6 +38,8 @@ import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from '../filter'
 import { SortFormProps } from '../sort';
 import { MainMenuModelState } from '../../../models/mainMenu';
 import * as S from './style';
+import { PersistentConcordanceForm as Style_PersistentConcordanceForm,
+        SaveHintParagraph as Style_SaveHintParagraph } from '../style';
 import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../basicOverview/style';
 
 /*
@@ -740,18 +742,17 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.handleCloseEvent}>
                     <layoutViews.CloseableFrame onCloseClick={this.handleCloseEvent}
-                                customClass="PersistentConcordanceForm"
                                 label={he.translate('concview__make_conc_link_permanent_hd')}>
                         {this.props.isBusy ?
                             <layoutViews.AjaxLoaderImage /> :
-                            <form>
-                                <p className="hint">
+                            <Style_PersistentConcordanceForm>
+                                <Style_SaveHintParagraph>
                                     <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
                                     {this.props.concIsArchived ?
                                         he.translate('concview__permanent_link_is_archived') + ':' :
                                         he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.props.concTTLDays})
                                     }
-                                </p>
+                                </Style_SaveHintParagraph>
                                 <div>
                                     <input type="text" readOnly={true}
                                             disabled={!this.props.concIsArchived}
@@ -772,7 +773,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                         </button>
                                     }
                                 </p>
-                            </form>
+                            </Style_PersistentConcordanceForm>
                         }
                     </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>

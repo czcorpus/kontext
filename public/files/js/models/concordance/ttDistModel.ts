@@ -210,8 +210,8 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                 this.state.lastArgs = args.head('q');
                 return this.layoutModel.ajax$<Response.Reduce>(
                     HTTP.Method.POST,
-                    this.layoutModel.createActionUrl('reduce'),
-                    args
+                    this.layoutModel.createActionUrl('reduce', args),
+                    {}
                 );
 
             } else {

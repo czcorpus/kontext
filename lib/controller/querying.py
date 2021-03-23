@@ -82,21 +82,89 @@ class Querying(Kontext):
         action. The data are used in two ways:
         1) as a source of values when respective JS models are instantiated
         2) when conc persistence automatic save procedure
-           is performed during post_dispatch() (see self.get_saveable_conc_data())
+           is performed during post_dispatch() (see self.export_query_data())
         """
         self._curr_conc_form_args = item
 
-    def get_saveable_conc_data(self):
-        """
-        Export data stored by conc_persistence
-        """
-        _, data = super().get_saveable_conc_data()
+    def export_query_data(self):
+        _, data = super().export_query_data()
         use_history = True
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
             data.update(lastop_form=self._curr_conc_form_args.serialize())
             if isinstance(self._curr_conc_form_args, QueryFormArgs):
                 use_history = not self._curr_conc_form_args.no_query_history
         return use_history, data
+
+    def _update_output_with_conc_params(self, op_id, tpl_data):
+        """
+        Updates template data dictionary tpl_data with stored operation values.
+
+        arguments:
+        op_id -- unique operation ID
+        tpl_data -- a dictionary used along with HTML template to render the output
+        """
+        if plugins.runtime.QUERY_PERSISTENCE.exists:
+            if op_id:
+                tpl_data['Q'] = [f'~{op_id}']
+                tpl_data['conc_persistence_op_id'] = op_id
+                if self._prev_q_data:  # => main query already entered; user is doing something else
+                    # => additional operation => ownership is clear
+                    if self._prev_q_data.get('id', None) != op_id:
+                        tpl_data['user_owns_conc'] = True
+                    else:  # some other action => we have to check if user is the author
+                        tpl_data['user_owns_conc'] = self._prev_q_data.get(
+                            'user_id', None) == self.session_get('user', 'id')
+                else:  # initial query => ownership is clear
+                    tpl_data['user_owns_conc'] = True
+                if '__latest__' in tpl_data.get('conc_forms_args', {}):
+                    tpl_data['conc_forms_args'][op_id] = tpl_data['conc_forms_args']['__latest__']
+                    del tpl_data['conc_forms_args']['__latest__']
+            else:
+                tpl_data['Q'] = []
+                tpl_data['conc_persistence_op_id'] = None
+        else:
+            tpl_data['Q'] = getattr(self.args, 'q')[:]
+        tpl_data['num_lines_in_groups'] = len(self._lines_groups)
+        tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
+
+    def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
+        super().post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
+        # create and store concordance query key
+        if type(result) is dict:
+            if action_metadata['mutates_result']:
+                next_query_keys = self._store_conc_params()
+            else:
+                next_query_keys = [self._prev_q_data.get('id', None)] if self._prev_q_data else []
+            self.on_conc_store(next_query_keys)
+            self._update_output_with_conc_params(
+                next_query_keys[-1] if len(next_query_keys) else None, result)
+
+    def _store_conc_params(self) -> List[str]:
+        """
+        Stores concordance operation if the query_persistence plugin is installed
+        (otherwise nothing is done).
+
+        returns:
+        string ID of the stored operation (or the current ID of nothing was stored)
+        """
+        with plugins.runtime.QUERY_PERSISTENCE as cp:
+            prev_data = self._prev_q_data if self._prev_q_data is not None else {}
+            use_history, curr_data = self.export_query_data()
+            ans = [cp.store(self.session_get('user', 'id'),
+                            curr_data=curr_data, prev_data=self._prev_q_data)]
+            if use_history:
+                self._save_query_to_history(ans[0], curr_data)
+            lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
+            for q_idx, op in self._auto_generated_conc_ops:
+                prev = dict(id=ans[-1], lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
+                            corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
+                            user_id=self.session_get('user', 'id'))
+                curr = dict(lines_groups=lines_groups,
+                            q=getattr(self.args, 'q')[:q_idx + 1],
+                            corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
+                            lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
+                ans.append(cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
+            return ans
 
     def _select_current_aligned_corpora(self, active_only: bool):
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
