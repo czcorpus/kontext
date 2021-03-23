@@ -71,6 +71,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private triggerUpdateAction:(resp:AsyncTaskResponse)=>void;
 
+    private socket:WebSocket;
+
     constructor(
         dispatcher:IFullActionControl,
         pageModel:IPluginApi,
@@ -186,6 +188,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 });
             }
         );
+
+        this.socket = new WebSocket('ws://10.0.3.212/aiohttp');
     }
 
     private updateMessageList(state:AsyncTaskCheckerState, data:Array<Kontext.AsyncTaskInfo>) {
