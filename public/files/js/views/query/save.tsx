@@ -26,6 +26,7 @@ import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/quer
 import { Actions, ActionName } from '../../models/query/actions';
 import { Actions as MainMenuActions,
     ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import * as S from './style';
 
 
 export interface QuerySaveAsFormProps {
@@ -140,13 +141,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 customClass="QuerySaveAsForm"
                                 label={he.translate('query__save_as_box_hd')}>
                         <form>
-                            <p className="hint">
+                            <S.SaveHintParagraph>
                                 <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
                                 {this.props.concExplicitPersistenceUI ?
                                     he.translate('query__save_as_box_hint_explicit') :
                                     he.translate('query__save_as_box_hint')
                                 }
-                            </p>
+                            </S.SaveHintParagraph>
                             <p>
                                 <QueryNameInput value={this.props.name} onKeyDown={this._handleKeyDown} />
                             </p>

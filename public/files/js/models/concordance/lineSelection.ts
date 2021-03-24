@@ -112,9 +112,9 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
     static registerQuery(
         state:LineSelectionModelState,
         clStorage:ConcLinesStorage<LineSelectionModelState>,
-        query:Array<string>
+        queryId:string
     ):void {
-        clStorage.init(state, query);
+        clStorage.init(state, queryId);
     }
 
     static actualSelection(state:LineSelectionModelState):ConcLineSelection {
@@ -129,7 +129,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
     }
 
     constructor({layoutModel, dispatcher, clStorage}:LineSelectionModelArgs) {
-        const query = layoutModel.getConf<Array<string>>('compiledQuery');
+        const query = layoutModel.getConf<string>('concPersistenceOpId');
         const initState:LineSelectionModelState = {
             corpusId: layoutModel.getCorpusIdent().id,
             currentGroupIds: attachColorsToIds(
@@ -307,7 +307,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                             name: ActionName.UnlockLineSelectionDone,
                             payload: {
                                 selection: data.selection,
-                                query: data.Q,
+                                queryId: data.conc_persistence_op_id,
                                 mode: 'groups'
                             }
                         });
@@ -330,7 +330,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                 this.changeState(state => {
                     state.isBusy = false;
                     state.isLocked = false;
-                    LineSelectionModel.registerQuery(state, this.clStorage, action.payload.query);
+                    LineSelectionModel.registerQuery(
+                        state, this.clStorage, action.payload.queryId);
                     this.importData(state, action.payload.selection, action.payload.mode);
                 });
             }

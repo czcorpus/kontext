@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% block title %}KonText - {{ page_title }} - ({{ "Frequency list"|_|lower }}){% endblock %}
 
 {% block bodyonload %}
+__conf.concPersistenceOpId = {{ conc_persistence_op_id|to_json }};
+__conf.ConcFormsArgs = {{ conc_forms_args|to_json }};
 __conf.AttrList = {{ AttrList|default([], true)|to_json }};
 __conf.StructAttrList = {{ StructAttrList|default([], true)|to_json }};
 __conf.FreqFormProps = {{ freq_form_args|to_json }};
@@ -39,7 +41,6 @@ __conf.Attr2 = {{ attr2|to_json }};
 {% endif %}
 __conf.FreqType = {{ freq_type|to_json }};
 __conf.textTypesData = {{ text_types_data|to_json }};
-__conf.ConcFormsArgs = {{ conc_forms_args|to_json }};
 __conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
 freqPage.init(__conf);
 {% endblock %}

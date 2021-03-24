@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% endblock %}
 
 {% block bodyonload %}
-__conf.replicableQuery = {%if replicable_query %}true{% else %}false{% endif %};
+__conf.concPersistenceOpId = {{ conc_persistence_op_id|to_json }};
 __conf.concLineMaxGroupNum = {{ conc_line_max_group_num|to_json }};
 __conf.WideCtxGlobals = {{ widectx_globals|to_json }};
 __conf.CorporaColumns = {{ CorporaColumns|to_json }};

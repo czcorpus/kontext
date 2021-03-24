@@ -68,8 +68,8 @@ export class ConcLinesStorage<T extends StorageUsingState> {
         )
     }
 
-    init(state:T, query:Array<string>):T {
-        state.queryHash = Ident.hashCode(query.join(''));
+    init(state:T, queryId:string):T {
+        state.queryHash = queryId;
         try {
             const curr = JSON.parse(window.sessionStorage.getItem(
                 ConcLinesStorage.ACC_KEY));

@@ -527,7 +527,7 @@
         "concview__abs_ipm_bar_title_{abs}{ipm}": "abs. freq: {abs}, i.p.m.: {ipm} UNTRANSLATED",
         "concview__extended_info": "Extended information UNTRANSLATED",
         "concview__make_conc_link_permanent_hd": "Permanent concordance URL UNTRANSLATED",
-        "concview__permanent_link_hint_{ttl}": "By default, URLs of pages in KonText are valid for {ttl, plural, one{# day} other {# days}}. To be able to refer to this concordance without a time limit (e.g. for published papers), use this function. UNTRANSLATED",
+        "concview__permanent_link_hint_{ttl}": "By default, URLs of results in KonText are valid for {ttl, plural, one{# day} other {# days}}. To be able to refer to this concordance without a time limit (e.g. for published papers), use this function. UNTRANSLATED",
         "concview__permanent_link_is_archived": "This concordance has a permanent link UNTRANSLATED",
         "concview__make_conc_link_permanent_done": "The link to the concordance is now permanent. UNTRANSLATED",
         "concview__make_conc_link_permanent_revoked": "The permanent status of the link has been revoked UNTRANSLATED",

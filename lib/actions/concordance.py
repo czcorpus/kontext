@@ -177,7 +177,7 @@ class Actions(Querying):
             out['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
                                                    out['query_overview'][0].get('nicearg'))
 
-    @exposed(vars=('orig_query', ), mutates_conc=False, action_log_mapper=log_mapping.view)
+    @exposed(vars=('orig_query', ), mutates_result=False, action_log_mapper=log_mapping.view)
     def view(self, request):
         """
         KWIC view
@@ -308,7 +308,7 @@ class Actions(Querying):
         self._attach_query_overview(out)
         return out
 
-    @exposed(mutates_conc=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view)
+    @exposed(mutates_result=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view)
     def create_view(self, request):
         """
         This is intended for direct conc. access via external pages (i.e. no query_submit + view and just directly
@@ -331,13 +331,20 @@ class Actions(Querying):
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def save_query(self, request):
-        with plugins.runtime.QUERY_HISTORY as qh:
-            ans = qh.make_persistent(self.session_get('user', 'id'), request.form['query_id'],
-                                     request.form['name'])
-        return dict(saved=ans)
+        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as cp:
+            hsave = qh.make_persistent(self.session_get('user', 'id'), request.form['query_id'],
+                                       request.form['name'])
+            _, data = cp.archive(self.session_get('user', 'id'), request.form['query_id'])
+            if cp.stored_query_type(data) == 'pquery':
+                for conc_id in data.get('form', {}).get('conc_ids', []):
+                    cn, _ = cp.archive(self.session_get('user', 'id'), conc_id)
+        return dict(saved=hsave)
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def delete_query(self, request):
+        # as opposed to the 'save_query' method which also performs archiving of conc params,
+        # this method keeps the conc params as they are because we assume that user just does
+        # not want to keep the query in their history
         with plugins.runtime.QUERY_HISTORY as qh:
             ans = qh.delete(self.session_get('user', 'id'), request.form['query_id'])
         return dict(deleted=ans)
@@ -446,7 +453,7 @@ class Actions(Querying):
                     relconcsize=1e6 * fullsize / self.corp.search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
-    @exposed(access_level=1, template='view.html', page_model='view', mutates_conc=True, http_method='POST')
+    @exposed(access_level=1, template='view.html', page_model='view', mutates_result=True, http_method='POST')
     def sortx(self, request):
         """
         simple sort concordance
@@ -474,7 +481,7 @@ class Actions(Querying):
         self.args.q.append(f's{qinfo.sattr}/{qinfo.sicase}{qinfo.sbward} {ctx}')
         return self.view(request)
 
-    @exposed(access_level=1, template='view.html', page_model='view', mutates_conc=True, http_method='POST')
+    @exposed(access_level=1, template='view.html', page_model='view', mutates_result=True, http_method='POST')
     def mlsortx(self, request):
         """
         multiple level sort concordance
@@ -624,7 +631,7 @@ class Actions(Querying):
         if len(corpora) > 1:
             self.args.viewmode = 'align'
 
-    @exposed(mutates_conc=True, http_method=('POST',), action_log_mapper=log_mapping.query_submit,
+    @exposed(mutates_result=True, http_method=('POST',), action_log_mapper=log_mapping.query_submit,
              return_type='json')
     def query_submit(self, request):
 
@@ -673,7 +680,7 @@ class Actions(Querying):
         self._attach_query_overview(ans)
         return ans
 
-    @exposed(template='view.html', page_model='view', mutates_conc=True, http_method='POST')
+    @exposed(template='view.html', page_model='view', mutates_result=True, http_method='POST')
     def quick_filter(self, request):
         """
         A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls pages).
@@ -694,7 +701,7 @@ class Actions(Querying):
             op_idx += 1
         return self.view(request)
 
-    @exposed(http_method='POST', template='view.html', page_model='view', mutates_conc=True)
+    @exposed(http_method='POST', template='view.html', page_model='view', mutates_result=True)
     def switch_main_corp(self, request):
         maincorp = request.args['maincorp']
         self.args.q.append('x-{0}'.format(maincorp))
@@ -702,7 +709,7 @@ class Actions(Querying):
         self.add_conc_form_args(ksargs)
         return self.view(request)
 
-    @exposed(access_level=1, mutates_conc=True, http_method='POST', return_type='json')
+    @exposed(access_level=1, mutates_result=True, http_method='POST', return_type='json')
     def filter(self, request):
         """
         Positive/Negative filter
@@ -751,7 +758,7 @@ class Actions(Querying):
                 del self.args.q[-1]
             raise
 
-    @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_conc=True, http_method='POST')
+    @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_result=True, http_method='POST')
     def reduce(self, request):
         """
         random sample
@@ -765,7 +772,7 @@ class Actions(Querying):
         self.args.q.append('r' + self.args.rlines)
         return self.view(request)
 
-    @exposed(access_level=0, template='view.html', page_model='view', mutates_conc=True)
+    @exposed(access_level=0, template='view.html', page_model='view', mutates_result=True)
     def shuffle(self, request):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
@@ -773,7 +780,7 @@ class Actions(Querying):
         self.args.q.append('f')
         return self.view(request)
 
-    @exposed(access_level=0, template='view.html', page_model='view', mutates_conc=True)
+    @exposed(access_level=0, template='view.html', page_model='view', mutates_result=True)
     def filter_subhits(self, request):
         if len(self._lines_groups) > 0:
             raise UserActionException(
@@ -783,7 +790,7 @@ class Actions(Querying):
         return self.view(request)
 
     @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=False,
-             mutates_conc=True, http_method='POST')
+             mutates_result=True, http_method='POST')
     def filter_firsthits(self, request):
         if len(self._lines_groups) > 0:
             raise UserActionException(
@@ -795,7 +802,7 @@ class Actions(Querying):
         self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
         return self.view(request)
 
-    @exposed(mutates_conc=True)
+    @exposed(mutates_result=True)
     def restore_conc(self, request):
         out = self._create_empty_conc_result_dict()
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
@@ -1591,7 +1598,7 @@ class Actions(Querying):
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
 
-    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_unset_lines_groups(self, _):
         pipeline = self.load_pipeline_ops(self._q_code)
         i = len(pipeline) - 1
@@ -1608,26 +1615,26 @@ class Actions(Querying):
         self.add_conc_form_args(pipeline[i])
         return {}
 
-    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_apply_lines_groups(self, request):
         rows = request.form.get('rows')
         self._lines_groups = LinesGroups(data=json.loads(rows))
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_remove_non_group_lines(self, _):
         self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_sort_group_lines(self, _):
         self._lines_groups.sorted = True
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_remove_selected_lines(self, request):
         pnfilter = request.args.get('pnfilter', 'p')
         rows = request.form.get('rows', '')
@@ -1661,7 +1668,7 @@ class Actions(Querying):
                 reply_to=user_email)
             return dict(ok=mailing.send_mail(smtp_server, msg, [recip_email]))
 
-    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_reedit_line_selection(self, _):
         ans = self._lines_groups.as_list()
         self._lines_groups = LinesGroups(data=[])
@@ -1675,7 +1682,7 @@ class Actions(Querying):
             ans[item[2]] += 1
         return dict(groups=ans)
 
-    @exposed(return_type='json', http_method='POST', mutates_conc=True)
+    @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_rename_line_group(self, request):
         from_num = int(request.form.get('from_num', '0'))
         to_num = int(request.form.get('to_num', '-1'))
@@ -1784,7 +1791,6 @@ class Actions(Querying):
                 foreignSubcorp=(self.corp.author_id is not None and
                                 self.session_get('user', 'id') != self.corp.author_id)),
             currentArgs=conc_args.export(),
-            compiledQuery=[],
             concPersistenceOpId=None,
             alignedCorpora=self.args.align,
             availableAlignedCorpora=avail_al_corp,

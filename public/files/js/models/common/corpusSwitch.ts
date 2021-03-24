@@ -158,7 +158,6 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
                             this.conf.setConf<string>('baseAttr', data.baseAttr);
                             this.conf.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
-                            this.conf.setConf<Array<string>>('compiledQuery', data.compiledQuery);
                             this.conf.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
                             this.conf.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
                             this.conf.setConf<Array<Kontext.AttrItem>>('availableAlignedCorpora', data.availableAlignedCorpora);

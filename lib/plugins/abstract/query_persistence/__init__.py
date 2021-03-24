@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, Optional, Tuple, Any, Union
 
 
 class AbstractQueryPersistence(abc.ABC):
@@ -113,3 +113,16 @@ class AbstractQueryPersistence(abc.ABC):
         returns:
             True if the concordance is archived else False
         """
+
+    @staticmethod
+    def stored_query_type(data: Dict[str, Any]) -> Union[None, str]:
+        """
+        Determine a form type of serialized query/filter/pquery/etc. form data
+        """
+        if data is None:
+            return None
+        if data.get('form', {}).get('form_type') == 'pquery':
+            return 'pquery'
+        elif 'lastop_form' in data:
+            return data['lastop_form'].get('form_type')
+        return None

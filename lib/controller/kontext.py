@@ -374,8 +374,10 @@ class Kontext(Controller):
             return []
         return self.cm.subcorp_names(corpname)
 
-    def get_saveable_conc_data(self) -> Tuple[bool, Dict[str, Any]]:
+    def export_query_data(self) -> Tuple[bool, Dict[str, Any]]:
         """
+        Export query data for query_persistence
+
         Return a 2-tuple with the following elements
             1) a flag specifying whether the query should be stored to user query history
                (please note that query history != stored/persistent query; query history is just a personal
@@ -431,33 +433,6 @@ class Kontext(Controller):
             with plugins.runtime.QUERY_HISTORY as qh:
                 qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='conc')
 
-    def _store_conc_params(self) -> List[str]:
-        """
-        Stores concordance operation if the query_persistence plugin is installed
-        (otherwise nothing is done).
-
-        returns:
-        string ID of the stored operation (or the current ID of nothing was stored)
-        """
-        with plugins.runtime.QUERY_PERSISTENCE as cp:
-            prev_data = self._prev_q_data if self._prev_q_data is not None else {}
-            use_history, curr_data = self.get_saveable_conc_data()
-            ans = [cp.store(self.session_get('user', 'id'),
-                            curr_data=curr_data, prev_data=self._prev_q_data)]
-            if use_history:
-                self._save_query_to_history(ans[0], curr_data)
-            lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
-            for q_idx, op in self._auto_generated_conc_ops:
-                prev = dict(id=ans[-1], lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
-                            corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
-                            user_id=self.session_get('user', 'id'))
-                curr = dict(lines_groups=lines_groups,
-                            q=getattr(self.args, 'q')[:q_idx + 1],
-                            corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
-                            lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
-                ans.append(cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
-            return ans
-
     def _clear_prev_conc_params(self):
         self._prev_q_data = None
 
@@ -476,38 +451,6 @@ class Kontext(Controller):
         args = self._get_curr_conc_args()
         href = werkzeug.urls.Href(self.get_root_url() + 'view')
         self.redirect(href(MultiDict(args)))
-
-    def _update_output_with_conc_params(self, op_id, tpl_data):
-        """
-        Updates template data dictionary tpl_data with stored operation values.
-
-        arguments:
-        op_id -- unique operation ID
-        tpl_data -- a dictionary used along with HTML template to render the output
-        """
-        if plugins.runtime.QUERY_PERSISTENCE.exists:
-            if op_id:
-                tpl_data['Q'] = [f'~{op_id}']
-                tpl_data['conc_persistence_op_id'] = op_id
-                if self._prev_q_data:  # => main query already entered; user is doing something else
-                    # => additional operation => ownership is clear
-                    if self._prev_q_data.get('id', None) != op_id:
-                        tpl_data['user_owns_conc'] = True
-                    else:  # some other action => we have to check if user is the author
-                        tpl_data['user_owns_conc'] = self._prev_q_data.get(
-                            'user_id', None) == self.session_get('user', 'id')
-                else:  # initial query => ownership is clear
-                    tpl_data['user_owns_conc'] = True
-                if '__latest__' in tpl_data.get('conc_forms_args', {}):
-                    tpl_data['conc_forms_args'][op_id] = tpl_data['conc_forms_args']['__latest__']
-                    del tpl_data['conc_forms_args']['__latest__']
-            else:
-                tpl_data['Q'] = []
-                tpl_data['conc_persistence_op_id'] = None
-        else:
-            tpl_data['Q'] = getattr(self.args, 'q')[:]
-        tpl_data['num_lines_in_groups'] = len(self._lines_groups)
-        tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
 
     def _scheduled_actions(self, user_settings):
         actions = []
@@ -576,6 +519,10 @@ class Kontext(Controller):
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
         options, validating corpus access rights, scheduled actions.
+
+        It is OK to override this method but the super().pre_dispatch()
+        should be always called before performing custom actions.
+        It is also OK to raise UserActionException types if necessary.
         """
         req_args = super().pre_dispatch(action_name, action_metadata)
 
@@ -660,16 +607,6 @@ class Kontext(Controller):
             self.disabled_menu_items = tuple(disabled_set.union(
                 set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
         super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
-
-        # create and store concordance query key
-        if type(result) is dict:
-            if action_metadata['mutates_conc']:
-                next_query_keys = self._store_conc_params()
-            else:
-                next_query_keys = [self._prev_q_data.get('id', None)] if self._prev_q_data else []
-            self.on_conc_store(next_query_keys)
-            self._update_output_with_conc_params(
-                next_query_keys[-1] if len(next_query_keys) else None, result)
 
         with plugins.runtime.ACTION_LOG as alog:
             alog.log_action(self._request, action_metadata.get('action_log_mapper'),

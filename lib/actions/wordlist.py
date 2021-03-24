@@ -226,7 +226,7 @@ class Wordlist(ConcActions):
             result['lastpage'] = None
             return result
 
-    @exposed(template='freqs.html', page_model='freq', http_method='POST', mutates_conc=True)
+    @exposed(template='freqs.html', page_model='freq', http_method='POST', mutates_result=True)
     def struct_result(self, request):
         self.args.corpname = request.form.get('corpname')
         self.args.usesubcorp = request.form.get('usesubcorp')

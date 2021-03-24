@@ -239,7 +239,7 @@ class QueryHistory(AbstractQueryHistory):
             full_data = [x for x in full_data if x['created'] <= to_date]
 
         if q_supertype:
-            full_data = [x for x in full_data if x['q_supertype'] == q_supertype]
+            full_data = [x for x in full_data if x.get('q_supertype') == q_supertype]
 
         if corpname:
             full_data = [x for x in full_data if matches_corp_prop(

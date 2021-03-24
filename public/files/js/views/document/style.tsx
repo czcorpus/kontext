@@ -106,43 +106,6 @@ export const CloseableFrame = styled.section`
     ${theme.mediaPhone} {
         max-width: 100%;
     }
-
-    .PersistentConcordanceForm {
-
-        input {
-            font-size: 1.5em;
-            width: 30em;
-            display: inline-block;
-            margin-top: 0.4em;
-            margin-bottom: 1em;
-            color: ${theme.colorSuperlightText};
-        }
-
-        input.archived {
-            color: ${theme.colorDefaultText};
-        }
-
-    }
-
-    .QuerySaveAsForm,
-    .PersistentConcordanceForm {
-
-        p.hint {
-            width: 30em;
-            white-space: initial;
-            color: ${theme.colorDefaultText};
-
-            .icon {
-                display: inline-block;
-                vertical-align: middle;
-                margin-right: 0.4em;
-
-                img {
-                    width: 1.2em;
-                }
-            }
-        }
-    }
 `;
 
 // ---------------- <TooltipBox /> --------------------------------------
