@@ -31,7 +31,7 @@ STATUS_KONTEXT_MAP = dict(
 )
 
 
-def prepare_response(jobs: Dict[str, Job]):
+def prepare_response(jobs: Dict[str, Job]) -> List[Dict[str, Any]]:
     return [
         {
             'ident': job_id,
@@ -47,14 +47,14 @@ def prepare_response(jobs: Dict[str, Job]):
     ]
 
 
-async def job_status_ws_handler(redis_client: Redis, request: web.Request):
+async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> web.WebSocketResponse:
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
     jobs = {}
     job_status = {}
 
-    async def check_status(job: Job):
+    async def check_status(job: Job) -> str:
         await asyncio.sleep(REFRESH_PERIOD)
         try:
             job.refresh()
@@ -129,7 +129,7 @@ async def job_status_ws_handler(redis_client: Redis, request: web.Request):
     return ws
 
 
-async def app_factory(redis_client: Redis=None):
+async def app_factory(redis_client: Redis=None) -> web.Application:
     app = web.Application()
     if redis_client is None:
         redis_client = Redis(
