@@ -38,6 +38,7 @@ import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTok
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
 import { Actions as QueryHintsActions, ActionName as QueryHintsActionName } from '../usageTips/actions';
+import { Actions as HistoryActions, ActionName as HistoryActionName } from '../searchHistory/actions';
 import { AjaxResponse } from '../../types/ajaxResponses';
 
 /*
@@ -357,8 +358,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<Actions.ToggleQueryHistoryWidget>(
-            ActionName.ToggleQueryHistoryWidget,
+        this.addActionSubtypeHandler<HistoryActions.ToggleQueryHistoryWidget>(
+            HistoryActionName.ToggleQueryHistoryWidget,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {

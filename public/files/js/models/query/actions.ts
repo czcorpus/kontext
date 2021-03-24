@@ -85,7 +85,6 @@ export enum ActionName {
     QuerySubmit = 'QUERY_INPUT_SUBMIT',
     ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
     FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
-    ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
     ToggleQuerySuggestionWidget = 'QUERY_INPUT_TOGGLE_QUERY_SUGGESTION_WIDGET',
     ShowQueryStructureWidget = 'QUERY_INPUT_SHOW_QUERY_STRUCTURE_WIDGET',
     HideQueryStructureWidget = 'QUERY_INPUT_HIDE_QUERY_STRUCTURE_WIDGET',
@@ -114,16 +113,6 @@ export enum ActionName {
     GetConcArchivedStatusDone = 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
     MakeConcordancePermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
     MakeConcordancePermanentDone = 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
-    HistorySetQuerySupertype = 'QUERY_HISTORY_SET_QUERY_SUPERTYPE',
-    HistorySetCurrentCorpusOnly = 'QUERY_HISTORY_SET_CURRENT_CORPUS_ONLY',
-    HistorySetArchivedOnly = 'QUERY_HISTORY_SET_ARCHIVED_ONLY',
-    HistorySetEditedItem = 'QUERY_HISTORY_SET_EDITED_ITEM',
-    HistoryDoNotArchive = 'QUERY_HISTORY_DO_NOT_ARCHIVE',
-    HistoryEditorSetName = 'QUERY_HISTORY_EDITOR_SET_NAME',
-    HistoryEditorClickSave = 'QUERY_HISTORY_EDITOR_CLICK_SAVE',
-    HistoryCloseEditedItem = 'QUERY_HISTORY_CLOSE_EDITED_ITEM',
-    HistoryOpenQueryForm = 'QUERY_HISTORY_OPEN_QUERY_FORM',
-    HistoryLoadMore = 'QUERY_HISTORY_LOAD_MORE',
     QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN'
 }
 
@@ -521,13 +510,6 @@ export namespace Actions {
         name:ActionName.FilterFirstHitsSubmit;
     }
 
-    export interface ToggleQueryHistoryWidget extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-    }> {
-        name:ActionName.ToggleQueryHistoryWidget;
-    }
-
     export interface ToggleQuerySuggestionWidget extends Action<{
         formType:QueryFormType;
         sourceId:string;
@@ -713,63 +695,6 @@ export namespace Actions {
         revoked:boolean;
     }> {
         name:ActionName.MakeConcordancePermanentDone
-    }
-
-    export interface HistorySetQuerySupertype extends Action<{
-        value:Kontext.QuerySupertype;
-    }> {
-        name:ActionName.HistorySetQuerySupertype;
-    }
-
-    export interface HistorySetCurrentCorpusOnly extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.HistorySetCurrentCorpusOnly;
-    }
-
-    export interface HistorySetArchivedOnly extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.HistorySetArchivedOnly;
-    }
-
-    export interface HistorySetEditedItem extends Action<{
-        itemIdx:number;
-    }> {
-        name:ActionName.HistorySetEditedItem;
-    }
-
-    export interface HistoryDoNotArchive extends Action<{
-        itemIdx:number;
-    }> {
-        name:ActionName.HistoryDoNotArchive;
-    }
-
-    export interface HistoryEditorSetName extends Action<{
-        value:string;
-    }> {
-        name:ActionName.HistoryEditorSetName;
-    }
-
-    export interface HistoryEditorClickSave extends Action<{
-    }> {
-        name:ActionName.HistoryEditorClickSave;
-    }
-
-    export interface HistoryCloseEditedItem extends Action<{
-    }> {
-        name:ActionName.HistoryCloseEditedItem;
-    }
-
-    export interface HistoryOpenQueryForm extends Action<{
-        idx:number;
-    }> {
-        name:ActionName.HistoryOpenQueryForm;
-    }
-
-    export interface HistoryLoadMore extends Action<{
-    }> {
-        name:ActionName.HistoryLoadMore;
     }
 
     /**

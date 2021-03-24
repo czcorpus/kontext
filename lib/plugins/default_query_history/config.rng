@@ -7,9 +7,6 @@
             <element name="module">
                 <value>default_query_history</value>
             </element>
-            <element name="js_module">
-                <value>defaultQueryHistory</value>
-            </element>
             <element name="page_num_records">
                 <data type="positiveInteger" />
             </element>

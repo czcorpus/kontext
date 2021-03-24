@@ -20,7 +20,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Dict, Keyboard, List, pipe, tuple } from 'cnc-tskit';
 
 import { init as keyboardInit } from '../virtualKeyboard';
@@ -35,10 +35,14 @@ import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
 import { Actions, ActionName, QueryFormType } from '../../../models/query/actions';
 import { Actions as HintActions,
     ActionName as HintActionName } from '../../../models/usageTips/actions';
+import { Actions as HistoryActions,
+    ActionName as HistoryActionName } from '../../../models/searchHistory/actions';
 import { QueryType, TokenSuggestions } from '../../../models/query/query';
 import { init as queryStructureInit } from '../structure';
+import { init as shViewInit } from '../../searchHistory/simple';
 import * as S from './style';
 import * as SC from '../style';
+import { SearchHistoryModel } from '../../../models/searchHistory';
 
 
 export interface InputModuleViews {
@@ -54,7 +58,6 @@ export interface TRQueryInputFieldProps {
     corpname:string;
     lposValue:string;
     wPoSList:Array<{n:string; v:string}>;
-    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
     tagHelperView:PluginInterfaces.TagHelper.View;
     widgets:Array<string>;
     inputLanguage:string;
@@ -120,11 +123,12 @@ export interface InputModuleArgs {
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
+    searchHistoryModel:SearchHistoryModel;
 }
 
 export function init({
     dispatcher, he, queryModel, queryHintModel, withinBuilderModel,
-    virtualKeyboardModel, querySuggest}:InputModuleArgs):InputModuleViews {
+    virtualKeyboardModel, querySuggest, searchHistoryModel}:InputModuleArgs):InputModuleViews {
 
     const keyboardViews = keyboardInit({
         dispatcher: dispatcher,
@@ -135,6 +139,7 @@ export function init({
     const cqlEditorViews = cqlEditoInit(dispatcher, he, queryModel);
     const richInputViews = richInputInit(dispatcher, he, queryModel);
     const QueryStructure = queryStructureInit({dispatcher, he, queryModel});
+    const SearchHistoryWidget = shViewInit(dispatcher, he, searchHistoryModel);
     const layoutViews = he.getLayoutViews();
 
 
@@ -452,12 +457,11 @@ export function init({
         sourceId:string;
         formType:QueryFormType;
         onCloseTrigger:()=>void;
-        queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
 
     }> = (props) => {
         return (
             <S.HistoryWidget>
-                <props.queryHistoryView
+                <SearchHistoryWidget
                         sourceId={props.sourceId}
                         onCloseTrigger={props.onCloseTrigger}
                         formType={props.formType} />
@@ -900,8 +904,8 @@ export function init({
         }
 
         _toggleHistoryWidget() {
-            dispatcher.dispatch<Actions.ToggleQueryHistoryWidget>({
-                name: ActionName.ToggleQueryHistoryWidget,
+            dispatcher.dispatch<HistoryActions.ToggleQueryHistoryWidget>({
+                name: HistoryActionName.ToggleQueryHistoryWidget,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId
@@ -1131,7 +1135,6 @@ export function init({
                         <div style={{position: 'relative'}}>
                             {this.props.historyVisible[this.props.sourceId] ?
                                 <HistoryWidget
-                                        queryHistoryView={this.props.queryHistoryView}
                                         sourceId={this.props.sourceId}
                                         onCloseTrigger={this._toggleHistoryWidget}
                                         formType={this.props.formType}/>

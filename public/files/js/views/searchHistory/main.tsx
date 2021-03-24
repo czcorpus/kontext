@@ -19,18 +19,18 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, IModel, BoundWithProps, StatefulModel } from 'kombo';
+import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../types/common';
-import { init as historyViewsInit } from './history';
+import { init as fullViewInit } from './full';
 import { MainMenuModelState } from '../../models/mainMenu';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../../models/mainMenu/actions';
-import { PluginInterfaces } from '../../types/plugins';
+import { SearchHistoryModel } from '../../models/searchHistory';
 
 export interface MainModuleArgs {
     dispatcher:IActionDispatcher;
     helpers:Kontext.ComponentHelpers;
-    recentQueriesModel:IModel<PluginInterfaces.QueryHistory.ModelState>;
+    searchHistoryModel:SearchHistoryModel;
     mainMenuModel:IModel<MainMenuModelState>;
 }
 
@@ -39,10 +39,10 @@ export interface MainViews {
 }
 
 
-export function init({dispatcher, helpers, recentQueriesModel, mainMenuModel}:MainModuleArgs):MainViews {
+export function init({dispatcher, helpers, searchHistoryModel, mainMenuModel}:MainModuleArgs):MainViews {
 
     const layoutViews = helpers.getLayoutViews();
-    const historyViews = historyViewsInit(dispatcher, helpers, recentQueriesModel);
+    const widgetView = fullViewInit(dispatcher, helpers, searchHistoryModel);
 
     class HistoryContainer extends React.PureComponent<MainMenuModelState> {
 
@@ -62,7 +62,7 @@ export function init({dispatcher, helpers, recentQueriesModel, mainMenuModel}:Ma
 
         _renderForm() {
             if (this._isActive()) {
-                return <historyViews.RecentQueriesPageList />;
+                return <widgetView.RecentQueriesPageList />;
 
             } else {
                 return <div></div>;
