@@ -12,6 +12,7 @@ from redis import Redis
 from rq.job import Job
 from rq.exceptions import NoSuchJobError
 import functools
+import logging
 
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, os.path.join(APP_PATH, 'lib'))  # application libraries
@@ -20,35 +21,41 @@ import settings
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 
 TASK_LIMIT = settings.get_int('calc_backend', 'task_time_limit')
-REFRESH_RATE = 1.0
+REFRESH_PERIOD = 1.0  # in seconds
+STATUS_KONTEXT_MAP = dict(
+    queued='PENDING',
+    started='STARTED',
+    deferred='deferred',  # TODO Rq specific
+    finished='SUCCESS',
+    failed='FAILURE'
+)
 
 
 def prepare_response(jobs: Dict[str, Job]):
     return [
         {
             'ident': job_id,
-            'label': None, # TODO
-            'category': None, # TODO
-            'status': job.get_status(refresh=False) if job is not None else 'failed',
+            'label': None,  # TODO
+            'category': None,  # TODO
+            'status': STATUS_KONTEXT_MAP[job.get_status(refresh=False) if job is not None else 'failed'],
             'created': job.enqueued_at.timestamp() if job is not None else None,
             'error': job.exc_info if job is not None else 'job not found',
-            'args': None, # TODO
-            'url': None, # TODO
+            'args': None,  # TODO
+            'url': None,  # TODO
         }
         for job_id, job in jobs.items()
     ]
 
 
-async def tasks_status_ws_handler(redis_client: Redis, request: web.Request):
+async def job_status_ws_handler(redis_client: Redis, request: web.Request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
-    print('Client connected')
 
     jobs = {}
     job_status = {}
 
     async def check_status(job: Job):
-        await asyncio.sleep(REFRESH_RATE)
+        await asyncio.sleep(REFRESH_PERIOD)
         try:
             job.refresh()
         except NoSuchJobError:
@@ -67,17 +74,15 @@ async def tasks_status_ws_handler(redis_client: Redis, request: web.Request):
         if recieve_msg_task in done:
             msg = recieve_msg_task.result()
             if msg.type == WSMsgType.ERROR:
-                print(f'WS connection closed with exception {ws.exception()}')
+                logging.error(f'WS connection closed with exception {ws.exception()}')
 
             elif msg.type == WSMsgType.TEXT:
                 if msg.data == 'close':
-                    print('Connection closed')
                     await ws.close()
 
                 else:
                     new_job_ids = json.loads(msg.data)
                     jobs = dict(zip(new_job_ids, Job.fetch_many(new_job_ids, redis_client)))
-                    print(f'Watching jobs {new_job_ids}')
 
                     pending = set(
                         asyncio.ensure_future(check_status(job))
@@ -90,7 +95,7 @@ async def tasks_status_ws_handler(redis_client: Redis, request: web.Request):
                     job_status = {
                         job_id: job.get_status(refresh=False)
                         if job is not None
-                        else 'not found'
+                        else None
                         for job_id, job in jobs.items()
                     }
                     await ws.send_json(prepare_response(jobs))
@@ -124,7 +129,7 @@ async def tasks_status_ws_handler(redis_client: Redis, request: web.Request):
     return ws
 
 
-async def status_app(redis_client: Redis=None):
+async def app_factory(redis_client: Redis=None):
     app = web.Application()
     if redis_client is None:
         redis_client = Redis(
@@ -132,7 +137,12 @@ async def status_app(redis_client: Redis=None):
             port=settings.get('calc_backend', 'rq_redis_port'),
             db=settings.get('calc_backend', 'rq_redis_db')
         )
-    app.add_routes([web.get('/job_status', functools.partial(tasks_status_ws_handler, redis_client))])
+
+    if settings.get('calc_backend', 'type') == 'rq':
+        app.router.add_get('/job_status', functools.partial(job_status_ws_handler, redis_client))
+    else:
+        logging.warn('WebSocket status check is supported only for Rq backend')
+
     return app
 
 
@@ -146,4 +156,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     redis_client = Redis(host=args.redis_host, port=args.redis_port, db=args.redis_db)
-    web.run_app(status_app(redis_client), path=args.host, port=args.port)
+    web.run_app(app_factory(redis_client), path=args.host, port=args.port)
