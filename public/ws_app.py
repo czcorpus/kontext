@@ -1,22 +1,42 @@
+from typing import Any, Dict
+
 import asyncio
 from aiohttp import web, WSMsgType
 
 import os
 import sys
 import json
+import time
 import argparse
 from redis import Redis
 from rq.job import Job
 from rq.exceptions import NoSuchJobError
 import functools
 
-REFRESH_RATE = 1.0
-
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, os.path.join(APP_PATH, 'lib'))  # application libraries
 
 import settings
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
+
+TASK_LIMIT = settings.get_int('calc_backend', 'task_time_limit')
+REFRESH_RATE = 1.0
+
+
+def prepare_response(jobs: Dict[str, Job]):
+    return [
+        {
+            'ident': job_id,
+            'label': None, # TODO
+            'category': None, # TODO
+            'status': job.get_status(refresh=False) if job is not None else 'failed',
+            'created': job.enqueued_at.timestamp() if job is not None else None,
+            'error': job.exc_info if job is not None else 'job not found',
+            'args': None, # TODO
+            'url': None, # TODO
+        }
+        for job_id, job in jobs.items()
+    ]
 
 
 async def tasks_status_ws_handler(redis_client: Redis, request: web.Request):
@@ -35,8 +55,8 @@ async def tasks_status_ws_handler(redis_client: Redis, request: web.Request):
             jobs[job.id] = None
         return job.id
 
-    recieve_msg = asyncio.ensure_future(ws.receive())
-    pending = set([recieve_msg])
+    recieve_msg_task = asyncio.ensure_future(ws.receive())
+    pending = set([recieve_msg_task])
     while not ws.closed:
         done, pending = await asyncio.wait(
             pending,
@@ -44,8 +64,8 @@ async def tasks_status_ws_handler(redis_client: Redis, request: web.Request):
         )
 
         # update job list when received message
-        if recieve_msg in done:
-            msg = recieve_msg.result()
+        if recieve_msg_task in done:
+            msg = recieve_msg_task.result()
             if msg.type == WSMsgType.ERROR:
                 print(f'WS connection closed with exception {ws.exception()}')
 
@@ -56,41 +76,50 @@ async def tasks_status_ws_handler(redis_client: Redis, request: web.Request):
 
                 else:
                     new_job_ids = json.loads(msg.data)
+                    jobs = dict(zip(new_job_ids, Job.fetch_many(new_job_ids, redis_client)))
                     print(f'Watching jobs {new_job_ids}')
 
-                    jobs = {}
-                    for job_id in new_job_ids:
-                        try:
-                            jobs[job_id] = Job.fetch(job_id, redis_client)
-                        except NoSuchJobError:
-                            jobs[job_id] = None
-
-                    pending = set(check_status(job) for job in jobs.values() if job is not None)
-                    recieve_msg = asyncio.ensure_future(ws.receive())
-                    pending.add(recieve_msg)
+                    pending = set(
+                        asyncio.ensure_future(check_status(job))
+                        for job in jobs.values()
+                        if job is not None
+                    )
+                    recieve_msg_task = asyncio.ensure_future(ws.receive())
+                    pending.add(recieve_msg_task)
 
                     job_status = {
-                        job_id: job.get_status()
+                        job_id: job.get_status(refresh=False)
                         if job is not None
                         else 'not found'
                         for job_id, job in jobs.items()
                     }
-                    await ws.send_json(job_status)
+                    await ws.send_json(prepare_response(jobs))
 
         # handle job status check
         else:
+            change = False
             for done_task in done:
                 job_id = done_task.result()
 
                 if jobs[job_id] is not None:
+                    job = jobs[job_id]
+                    new_status = job.get_status(refresh=False)
                     pending.add(check_status(jobs[job_id]))
-                    if job_status[job_id] != jobs[job_id].get_status():
-                        job_status[job_id] = jobs[job_id].get_status()
-                        await ws.send_json(job_status)
+                    if job_status[job_id] != new_status:
+                        job_status[job_id] = new_status
+                        change = True
+                    else:
+                        now = time.time()
+                        if (job.is_queued or job.is_started) and now - job.enqueued_at > TASK_LIMIT:
+                            jobs[job_id].exc_info = 'task time limit exceeded'
+                            change = True
 
                 else:
-                    job_status[job_id] = 'not found'
-                    await ws.send_json(job_status)
+                    job_status[job_id] = None
+                    change = True
+
+            if change:
+                await ws.send_json(prepare_response(jobs))
 
     return ws
 

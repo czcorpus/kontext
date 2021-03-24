@@ -99,7 +99,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         };
 
         const wsUrl = new URL(this.pageModel.createActionUrl('ws/job_status'));
-        wsUrl.protocol = 'ws';        
+        wsUrl.protocol = 'ws';
         this.statusSocket = new WebSocket(wsUrl.href);
         this.statusSocket.onmessage = e => {console.log(e.data)};
         this.statusSocket.onopen = e => {
