@@ -175,7 +175,7 @@ class ParadigmaticQuery(Kontext):
 
         self._curr_pquery_args = PqueryFormArgs()
         self._curr_pquery_args.update_by_user_query(request.json)
-        _, raw_queries = _load_conc_queries(request.json.get('conc_ids'), self.args.corpname)
+        conc_forms, raw_queries = _load_conc_queries(self._curr_pquery_args.conc_ids, self.args.corpname)
         calc_args = (
             self._curr_pquery_args,
             raw_queries,
@@ -185,6 +185,12 @@ class ParadigmaticQuery(Kontext):
         task_status = app.send_task('calc_merged_freqs', args=calc_args,
                                     time_limit=TASK_TIME_LIMIT)
 
+        sq_items = []
+        for conc_id in self._curr_pquery_args.conc_ids:
+            sq_items.append(conc_forms[conc_id]['curr_queries'][self.args.corpname])
+        shortened_q = ' && '.join(f'{{{q}}}' for q in sq_items)
+        shortened_q = f'{shortened_q} -> {self._curr_pquery_args.attr}'
+
         def on_conc_store(query_ids, result):
             task_args = dict(query_id=query_ids[0], last_update=time.time())
             result_url = self.create_url('pquery/result',
@@ -192,7 +198,7 @@ class ParadigmaticQuery(Kontext):
                                               query_id=query_ids[0]))
             async_task = AsyncTaskStatus(status=task_status.status, ident=task_status.id,
                                          category=AsyncTaskStatus.CATEGORY_PQUERY,
-                                         label=translate('Paradigmatic query calculation'),
+                                         label=shortened_q,
                                          args=task_args,
                                          url=result_url)
             self._store_async_task(async_task)

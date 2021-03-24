@@ -295,7 +295,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                         item.error ?
                                         item.error :
                                             item.url && item.status === 'SUCCESS' ?
-                                            <a href={he.createActionLink(item.url)}>
+                                            <a href={item.url}>
                                                 {he.translate('global__task_result')}
                                             </a> :
                                             null

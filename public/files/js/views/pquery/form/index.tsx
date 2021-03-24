@@ -372,7 +372,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                         <layoutViews.CloseableFrame onCloseClick={toggleHelp} label={he.translate('pquery__help')}>
                             <p>TODO</p>
                             <p>
-                                <a href="https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf" target="_blank">
+                                <a className="external" href="https://trost.korpus.cz/~pavelv/para_dotaz/para-dotaz-sem.pdf" target="_blank">
                                     see a presentation
                                 </a>
                             </p>

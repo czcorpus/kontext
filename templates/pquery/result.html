@@ -37,6 +37,7 @@ __conf.AttrList = {{ AttrList|default([], true)|to_json }};
 __conf.StructAttrList = {{ StructAttrList|to_json }};
 __conf.StructList = {{ StructList|to_json }};
 __conf.ConcForms = {{ conc_forms|to_json }};
+__conf.UseRichQueryEditor = {{ rich_query_editor|default(false)|to_json }};
 __conf.DataReady = {{ data_ready|to_json }};
 pqueryResultPage.init(__conf);
 {% endblock %}
