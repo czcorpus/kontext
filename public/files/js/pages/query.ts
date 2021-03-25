@@ -183,7 +183,6 @@ export class QueryPage {
             ...liveAttrsViews,
             formType: Kontext.ConcFormTypes.QUERY,
             tagHelperViews: {},
-            queryHistoryView: null,
             allowCorpusSelection: null
         };
     }
@@ -270,7 +269,8 @@ export class QueryPage {
             virtualKeyboardModel: this.virtualKeyboardModel,
             queryContextModel: this.queryContextModel,
             querySuggest: this.layoutModel.qsuggPlugin,
-            queryHelpModel: this.queryHelpModel
+            queryHelpModel: this.queryHelpModel,
+            searchHistoryModel: this.layoutModel.getModels().searchHistoryModel
         });
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
@@ -344,8 +344,6 @@ export class QueryPage {
             );
 
             const ttAns = this.createTTViews(queryFormArgs);
-
-            ttAns.queryHistoryView = this.layoutModel.qhistPlugin.getWidgetView();
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,

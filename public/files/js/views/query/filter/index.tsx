@@ -34,6 +34,7 @@ import { ActionName, Actions } from '../../../models/query/actions';
 import { Keyboard } from 'cnc-tskit';
 import * as QS from '../first/style';
 import * as S from './style';
+import { SearchHistoryModel } from '../../../models/searchHistory';
 
 
 
@@ -51,7 +52,6 @@ export interface FilterFormProps {
     corpname:string;
     operationIdx?:number;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
 }
 
 // ---------
@@ -85,6 +85,7 @@ interface ViewInitArgs {
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
     firstHitsModel:FirstHitsModel;
+    searchHistoryModel:SearchHistoryModel;
     querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
 }
 
@@ -96,7 +97,8 @@ export function init({
         withinBuilderModel,
         virtualKeyboardModel,
         firstHitsModel,
-        querySuggest
+        querySuggest,
+        searchHistoryModel
 }:ViewInitArgs):FilterFormViews {
 
     const inputViews = inputInit({
@@ -106,7 +108,8 @@ export function init({
         queryHintModel,
         withinBuilderModel,
         virtualKeyboardModel,
-        querySuggest
+        querySuggest,
+        searchHistoryModel
     });
 
     const layoutViews = he.getLayoutViews();
@@ -318,7 +321,6 @@ export function init({
                                     attrList={this.props.attrList}
                                     tagHelperView={this.props.tagHelperView}
                                     tagsets={this.props.tagsets}
-                                    queryHistoryView={this.props.queryHistoryView}
                                     inputLanguage={this.props.inputLanguage}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
                                     onEnterKey={this._handleSubmit}
@@ -376,7 +378,6 @@ export function init({
                                     attrList={this.props.attrList}
                                     tagHelperView={this.props.tagHelperView}
                                     tagsets={this.props.tagsets}
-                                    queryHistoryView={this.props.queryHistoryView}
                                     inputLanguage={this.props.inputLanguage}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
                                     onEnterKey={this._handleSubmit}

@@ -19,15 +19,16 @@
  */
 
 import * as React from 'react';
-import { Bound, IActionDispatcher, IModel } from 'kombo';
-import { Keyboard, Dict, pipe, List, tuple } from 'cnc-tskit';
+import { Bound, IActionDispatcher } from 'kombo';
+import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
-import { Actions, ActionName } from '../../models/query/actions';
-import { QueryType } from '../../models/query/query';
+import { Kontext } from '../../../types/common';
+import { Actions, ActionName } from '../../../models/searchHistory/actions';
+import { QueryType } from '../../../models/query/query';
 
 import * as S from './style';
+import { ModelState, QueryHistoryItem } from '../../../models/searchHistory/common';
+import { SearchHistoryModel } from '../../../models/searchHistory';
 
 
 export interface HistoryViews {
@@ -36,7 +37,7 @@ export interface HistoryViews {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            queryHistoryModel:IModel<PluginInterfaces.QueryHistory.ModelState>):HistoryViews {
+            queryHistoryModel:SearchHistoryModel):HistoryViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -234,7 +235,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         query_sh:string;
         query:string;
         textTypes:Kontext.GeneralProps;
-        aligned:PluginInterfaces.QueryHistory.Item['aligned'];
+        aligned:QueryHistoryItem['aligned'];
 
     }> = (props) => {
 
@@ -371,7 +372,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const DataRow:React.FC<{
         itemIdx:number;
         isEdited:boolean;
-        data:PluginInterfaces.QueryHistory.Item;
+        data:QueryHistoryItem;
         hasEditor:boolean;
 
     }> = (props) => {
@@ -506,7 +507,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         offset:number;
         hasMoreItems:boolean;
         modelIsBusy:boolean;
-        data:Array<PluginInterfaces.QueryHistory.Item>;
+        data:Array<QueryHistoryItem>;
 
     }> = (props) => {
 
@@ -532,7 +533,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <RecentQueriesPageList /> ------------------------
 
-    const RecentQueriesPageList:React.FC<PluginInterfaces.QueryHistory.ModelState> = (props) => {
+    const RecentQueriesPageList:React.FC<ModelState> = (props) => {
         return (
             <S.RecentQueriesPageList>
                 <FilterForm querySupertype={props.querySupertype}

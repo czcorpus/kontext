@@ -284,7 +284,7 @@ class QueryHistory(AbstractQueryHistory):
                     logging.getLogger(__name__).warning(
                         'Removed unpaired named query {0} of concordance {1}.'.format(item['name'],
                                                                                       item['query_id']))
-            elif int(curr_time - item['created']) / 86400 < self.ttl_days:
+            elif int(curr_time - item.get('created', 0)) / 86400 < self.ttl_days:
                 new_list.append(item)
         for item in new_list:
             self.db.list_append(tmp_key, item)

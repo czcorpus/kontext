@@ -22,13 +22,14 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard, List, pipe } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
-import { QueryHistoryModel, InputBoxHistoryItem } from './models';
-import { Actions as QueryActions, ActionName as QueryActionName, QueryFormType } from '../../models/query/actions';
-import { Actions, ActionName } from './actions';
-import { PluginInterfaces } from '../../types/plugins';
+import { Kontext } from '../../../types/common';
+import { SearchHistoryModel, InputBoxHistoryItem } from '../../../models/searchHistory';
+import { Actions, ActionName } from '../../../models/searchHistory/actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../../../models/query/actions';
 
 import * as S from './style';
+import { QueryFormType } from '../../../models/query/actions';
+import { ModelState } from '../../../models/searchHistory/common';
 
 
 export interface QueryHistoryProps {
@@ -43,11 +44,15 @@ export interface Views {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, queryHistoryModel:QueryHistoryModel) {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    queryHistoryModel:SearchHistoryModel
+):React.ComponentClass<QueryHistoryProps> {
 
     const layoutViews = he.getLayoutViews();
 
-    class QueryHistory extends React.Component<QueryHistoryProps & PluginInterfaces.QueryHistory.ModelState> {
+    class QueryHistory extends React.Component<QueryHistoryProps & ModelState> {
 
         constructor(props) {
             super(props);
@@ -184,8 +189,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
     }
 
-    return {
-        QueryHistory: BoundWithProps(QueryHistory, queryHistoryModel)
-    };
+    return BoundWithProps<QueryHistoryProps, ModelState>(QueryHistory, queryHistoryModel);
 
 }

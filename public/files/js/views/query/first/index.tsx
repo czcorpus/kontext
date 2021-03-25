@@ -40,6 +40,7 @@ import { TTSelOps } from '../../../models/textTypes/selectionOps';
 import { Actions as HelpActions, ActionName as HelpActionName } from '../../../models/help/actions';
 import * as S from './style';
 import { QueryHelpModel, QueryHelpModelState } from '../../../models/help/queryHelp';
+import { SearchHistoryModel } from '../../../models/searchHistory';
 
 
 export interface MainModuleArgs {
@@ -54,6 +55,7 @@ export interface MainModuleArgs {
     queryContextModel:QueryContextModel;
     querySuggest:PluginInterfaces.QuerySuggest.IPlugin;
     queryHelpModel:QueryHelpModel;
+    searchHistoryModel:SearchHistoryModel;
 }
 
 
@@ -61,7 +63,6 @@ export interface QueryFormProps {
     formType:Kontext.ConcFormTypes.QUERY;
     allowCorpusSelection:boolean;
     tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
-    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
     LiveAttrsView:PluginInterfaces.LiveAttributes.View;
     LiveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
 }
@@ -72,7 +73,6 @@ export interface QueryFormLiteProps {
     operationIdx?:number;
     formType:Kontext.ConcFormTypes.QUERY;
     tagHelperView:PluginInterfaces.TagHelper.View;
-    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
 }
 
 
@@ -88,9 +88,10 @@ export interface MainViews {
 }
 
 
-export function init({dispatcher, he, CorparchWidget, queryModel,
-                      textTypesModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
-                      queryContextModel, querySuggest, queryHelpModel}:MainModuleArgs):MainViews {
+export function init({
+    dispatcher, he, CorparchWidget, queryModel,
+    textTypesModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
+    queryContextModel, querySuggest, queryHelpModel, searchHistoryModel}:MainModuleArgs):MainViews {
 
     const inputViews = inputInit({
         dispatcher,
@@ -99,7 +100,8 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
         queryHintModel,
         withinBuilderModel,
         virtualKeyboardModel,
-        querySuggest
+        querySuggest,
+        searchHistoryModel
     });
     const alignedViews = alignedInit({
             dispatcher: dispatcher,
@@ -198,7 +200,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     attrList={this.props.attrList}
                                     tagHelperView={this.props.tagHelperViews[primaryCorpname]}
                                     tagsets={this.props.tagsets[primaryCorpname]}
-                                    queryHistoryView={this.props.queryHistoryView}
                                     inputLanguage={this.props.inputLanguages[primaryCorpname]}
                                     onEnterKey={this._handleSubmit}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
@@ -219,7 +220,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                     forcedAttr={this.props.forcedAttr}
                                     attrList={this.props.attrList}
                                     inputLanguages={this.props.inputLanguages}
-                                    queryHistoryView={this.props.queryHistoryView}
                                     hasLemmaAttr={this.props.hasLemma}
                                     useRichQueryEditor={this.props.useRichQueryEditor}
                                     tagHelperViews={this.props.tagHelperViews}
@@ -422,7 +422,6 @@ export function init({dispatcher, he, CorparchWidget, queryModel,
                                 forcedAttr={this.props.forcedAttr}
                                 attrList={this.props.attrList}
                                 tagHelperView={this.props.tagHelperView}
-                                queryHistoryView={this.props.queryHistoryView}
                                 inputLanguage={this.props.inputLanguages[this.props.corpname]}
                                 onEnterKey={this._handleSubmit}
                                 useRichQueryEditor={this.props.useRichQueryEditor}

@@ -86,7 +86,6 @@ import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
 import { TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
-import { HtmlHelpModel } from '../models/help/help';
 import { HitReloader } from '../models/concordance/concStatus';
 import { QueryHelpModel } from '../models/help/queryHelp';
 
@@ -112,7 +111,6 @@ export class QueryModels {
 interface RenderLinesDeps {
     ttModel:TextTypesModel;
     lvprops:ViewConfiguration;
-    qs:PluginInterfaces.QueryHistory.IPlugin;
     tagh:PluginInterfaces.TagHelper.IPlugin;
 }
 
@@ -411,7 +409,8 @@ export class ViewPage {
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             queryContextModel: this.queryModels.queryContextModel,
             querySuggest: this.layoutModel.qsuggPlugin,
-            queryHelpModel:this.queryModels.queryHelpModel
+            queryHelpModel: this.queryModels.queryHelpModel,
+            searchHistoryModel: this.layoutModel.getModels().searchHistoryModel
         });
     }
 
@@ -488,7 +487,8 @@ export class ViewPage {
             withinBuilderModel: this.queryModels.withinBuilderModel,
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,
             firstHitsModel,
-            querySuggest
+            querySuggest,
+            searchHistoryModel: this.layoutModel.getModels().searchHistoryModel
         });
     }
 
@@ -601,8 +601,7 @@ export class ViewPage {
     /**
      *
      */
-    initQueryOverviewArea(taghelperPlugin:PluginInterfaces.TagHelper.IPlugin,
-                    queryHistoryPlugin:PluginInterfaces.QueryHistory.IPlugin):void {
+    initQueryOverviewArea(taghelperPlugin:PluginInterfaces.TagHelper.IPlugin):void {
         this.queryModels.queryReplayModel = new QueryReplayModel({
             dispatcher: this.layoutModel.dispatcher,
             pageModel: this.layoutModel,
@@ -659,7 +658,6 @@ export class ViewPage {
                                         'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
-                    queryHistoryView: queryHistoryPlugin.getWidgetView(),
                     corpname: this.layoutModel.getCorpusIdent().id
                 },
                 filterFormProps: {
@@ -673,7 +671,6 @@ export class ViewPage {
                                     'pluginData', 'taghelper', 'corp_tagsets')
                             ) :
                             null,
-                    queryHistoryView: queryHistoryPlugin.getWidgetView(),
                     filterId: '__new__',
                     corpname: this.layoutModel.getCorpusIdent().id
                 },
@@ -1063,7 +1060,7 @@ export class ViewPage {
             this.initSortForm();
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);
-            this.initQueryOverviewArea(tagHelperPlg, this.layoutModel.qhistPlugin);
+            this.initQueryOverviewArea(tagHelperPlg);
             this.initAnalysisViews(ttModel);
             this.initKeyShortcuts();
             this.updateHistory();
@@ -1079,7 +1076,6 @@ export class ViewPage {
                 {
                     ttModel,
                     lvprops: lineViewProps,
-                    qs: this.layoutModel.qhistPlugin,
                     tagh: tagHelperPlg
                 },
                 this.layoutModel.pluginTypeIsActive(PluginName.KWIC_CONNECT) ?

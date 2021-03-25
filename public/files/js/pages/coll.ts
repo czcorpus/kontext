@@ -254,7 +254,6 @@ export class CollPage {
                     formType: Kontext.ConcFormTypes.QUERY,
                     allowCorpusSelection: false,
                     tagHelperViews: {},
-                    queryHistoryView: null,
                     LiveAttrsView: null,
                     LiveAttrsCustomTT: null
                 },
@@ -262,8 +261,7 @@ export class CollPage {
                     formType: Kontext.ConcFormTypes.FILTER,
                     filterId: null,
                     corpname: this.layoutModel.getCorpusIdent().id,
-                    tagHelperView: null,
-                    queryHistoryView: null
+                    tagHelperView: null
                 },
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,

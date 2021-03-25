@@ -20,18 +20,17 @@
 
 import { tap, concatMap, map } from 'rxjs/operators';
 import { forkJoin, Observable, of as rxOf } from 'rxjs';
-import { StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 
 import { Kontext } from '../../types/common';
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
-import { highlightSyntaxStatic } from '../../models/query/cqleditor/parser';
+import { highlightSyntaxStatic } from '../query/cqleditor/parser';
 import { List, HTTP, tuple } from 'cnc-tskit';
 import { Actions, ActionName } from './actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
-import { QueryType } from '../../models/query/query';
+import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { QueryType } from '../query/query';
+import { PageModel } from '../../app/page';
+import { GetHistoryResponse, QueryHistoryItem, ModelState } from './common';
 
 
 
@@ -42,7 +41,7 @@ export interface InputBoxHistoryItem {
 }
 
 
-const attachSh = (he:Kontext.ComponentHelpers, item:PluginInterfaces.QueryHistory.Item) => {
+const attachSh = (he:Kontext.ComponentHelpers, item:QueryHistoryItem) => {
     if (item.query_type === 'advanced') {
         [item.query_sh,] = highlightSyntaxStatic(item.query, item.query_type, he);
     }
@@ -50,18 +49,19 @@ const attachSh = (he:Kontext.ComponentHelpers, item:PluginInterfaces.QueryHistor
 };
 
 
-export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHistory.ModelState> {
+export class SearchHistoryModel extends StatefulModel<ModelState> {
 
-    private pluginApi:IPluginApi;
+    private readonly pageModel:PageModel;
 
     constructor(
-        pluginApi:IPluginApi,
+        dispatcher:IFullActionControl,
+        pageModel:PageModel,
         offset:number,
         limit:number,
         pageSize:number
     ) {
         super(
-            pluginApi.dispatcher(),
+            dispatcher,
             {
                 data: [],
                 querySupertype: undefined,
@@ -76,15 +76,15 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
                 currentItem: 0,
             }
         );
-        this.pluginApi = pluginApi;
+        this.pageModel = pageModel;
 
         this.addActionHandler<Actions.SelectItem>(
             ActionName.SelectItem,
             action => {this.changeState(state => {state.currentItem = action.payload.value})}
         );
 
-        this.addActionHandler<QueryActions.HistorySetCurrentCorpusOnly>(
-            QueryActionName.HistorySetCurrentCorpusOnly,
+        this.addActionHandler<Actions.HistorySetCurrentCorpusOnly>(
+            ActionName.HistorySetCurrentCorpusOnly,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -94,8 +94,8 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.HistorySetQuerySupertype>(
-            QueryActionName.HistorySetQuerySupertype,
+        this.addActionHandler<Actions.HistorySetQuerySupertype>(
+            ActionName.HistorySetQuerySupertype,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -105,8 +105,8 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.HistorySetArchivedOnly>(
-            QueryActionName.HistorySetArchivedOnly,
+        this.addActionHandler<Actions.HistorySetArchivedOnly>(
+            ActionName.HistorySetArchivedOnly,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -116,8 +116,8 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.HistoryLoadMore>(
-            QueryActionName.HistoryLoadMore,
+        this.addActionHandler<Actions.HistoryLoadMore>(
+            ActionName.HistoryLoadMore,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -127,26 +127,26 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory>(
-            [QueryActionName.ToggleQueryHistoryWidget, MainMenuActionName.ShowQueryHistory],
+        this.addActionHandler<Actions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory>(
+            [ActionName.ToggleQueryHistoryWidget, MainMenuActionName.ShowQueryHistory],
             action => {
                 this.changeState(state => {
                     state.isBusy = true
                 });
-                this.performLoadAction(action.name === QueryActionName.ToggleQueryHistoryWidget);
+                this.performLoadAction(action.name === ActionName.ToggleQueryHistoryWidget);
             }
         );
 
-        this.addActionHandler<QueryActions.HistoryOpenQueryForm>(
-            QueryActionName.HistoryOpenQueryForm,
+        this.addActionHandler<Actions.HistoryOpenQueryForm>(
+            ActionName.HistoryOpenQueryForm,
             action => {
                 this.openQueryForm(action.payload.idx);
                 // page leaves here
             }
         );
 
-        this.addActionHandler<QueryActions.HistorySetEditedItem>(
-            QueryActionName.HistorySetEditedItem,
+        this.addActionHandler<Actions.HistorySetEditedItem>(
+            ActionName.HistorySetEditedItem,
             action => {
                 this.changeState(state => {
                     state.editedItem = action.payload.itemIdx;
@@ -157,8 +157,8 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.HistoryCloseEditedItem>(
-            QueryActionName.HistoryCloseEditedItem,
+        this.addActionHandler<Actions.HistoryCloseEditedItem>(
+            ActionName.HistoryCloseEditedItem,
             action => {
                 this.changeState(state => {
                     state.editedItem = undefined;
@@ -166,8 +166,8 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.HistoryEditorSetName>(
-            QueryActionName.HistoryEditorSetName,
+        this.addActionHandler<Actions.HistoryEditorSetName>(
+            ActionName.HistoryEditorSetName,
             action => {
                 this.changeState(state => {
                     const item = state.data[state.editedItem];
@@ -176,8 +176,8 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             }
         );
 
-        this.addActionHandler<QueryActions.HistoryDoNotArchive>(
-            QueryActionName.HistoryDoNotArchive,
+        this.addActionHandler<Actions.HistoryDoNotArchive>(
+            ActionName.HistoryDoNotArchive,
             action => {
                 this.changeState(state => {
                     state.data[action.payload.itemIdx].name = null;
@@ -187,36 +187,36 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
                         this.changeState(state => {
                             state.isBusy = false;
                         });
-                        this.pluginApi.showMessage('info', msg);
+                        this.pageModel.showMessage('info', msg);
                     },
                     (err) => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
-                        this.pluginApi.showMessage('error', err);
+                        this.pageModel.showMessage('error', err);
                     }
                 );
             }
         );
 
-        this.addActionHandler<QueryActions.HistoryEditorClickSave>(
-            QueryActionName.HistoryEditorClickSave,
+        this.addActionHandler<Actions.HistoryEditorClickSave>(
+            ActionName.HistoryEditorClickSave,
             action => {
                 const item = this.state.data[this.state.editedItem];
                 if (!item.name) {
-                    this.pluginApi.showMessage('error',
-                        this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
+                    this.pageModel.showMessage('error',
+                        this.pageModel.translate('query__save_as_cannot_have_empty_name'));
 
                 } else {
                     this.changeState(state => {state.isBusy = true});
                     this.saveItem(this.state.editedItem).subscribe(
                         (msg) => {
                             this.changeState(state => {state.isBusy = false});
-                            this.pluginApi.showMessage('info', msg);
+                            this.pageModel.showMessage('info', msg);
                         },
                         (err) => {
                             this.changeState(state => {state.isBusy = false});
-                            this.pluginApi.showMessage('error', err);
+                            this.pageModel.showMessage('error', err);
                         }
                     );
                 }
@@ -228,7 +228,7 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
         const item = List.find(v => v.idx === idx, this.state.data);
         switch (item.q_supertype) {
             case 'conc':
-                window.location.href = this.pluginApi.createActionUrl(
+                window.location.href = this.pageModel.createActionUrl(
                     'query',
                     [
                         tuple('corpname', item.corpname),
@@ -238,7 +238,7 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
                 );
                 break;
             case 'pquery':
-                window.location.href = this.pluginApi.createActionUrl(
+                window.location.href = this.pageModel.createActionUrl(
                     'pquery/index',
                     [
                         tuple('corpname', item.corpname),
@@ -264,7 +264,7 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
                 this.changeState(state => {
                     state.isBusy = false
                 });
-                this.pluginApi.showMessage('error', err);
+                this.pageModel.showMessage('error', err);
             }
         );
     }
@@ -275,12 +275,12 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
         args.set('limit', this.state.limit + 1);
         args.set('query_supertype', this.state.querySupertype);
         if (!widgetMode && this.state.currentCorpusOnly) {
-            args.set('corpname', this.pluginApi.getCorpusIdent().id);
+            args.set('corpname', this.pageModel.getCorpusIdent().id);
         }
         args.set('archived_only', widgetMode || !this.state.archivedOnly ? '0' : '1');
-        return this.pluginApi.ajax$<PluginInterfaces.QueryHistory.GetHistoryResponse>(
+        return this.pageModel.ajax$<GetHistoryResponse>(
             HTTP.Method.GET,
-            this.pluginApi.createActionUrl('user/ajax_query_history'),
+            this.pageModel.createActionUrl('user/ajax_query_history'),
             args
 
         ).pipe(
@@ -290,11 +290,11 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
                     state.hasMoreItems = data.data.length === state.limit + 1;
                     state.data = state.hasMoreItems ?
                         List.map(
-                            attachSh.bind(null, this.pluginApi.getComponentHelpers()),
+                            attachSh.bind(null, this.pageModel.getComponentHelpers()),
                             data.data.slice(0, data.data.length - 1)
                         ) :
                         List.map(
-                            attachSh.bind(null, this.pluginApi.getComponentHelpers()),
+                            attachSh.bind(null, this.pageModel.getComponentHelpers()),
                             data.data
                         );
                 })
@@ -309,9 +309,9 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             args.set('query_id', item.query_id);
             args.set('name', item.name);
             if (item.name) {
-                return this.pluginApi.ajax$<any>(
+                return this.pageModel.ajax$<any>(
                     HTTP.Method.POST,
-                    this.pluginApi.createActionUrl('save_query'),
+                    this.pageModel.createActionUrl('save_query'),
                     args
 
                 ).pipe(
@@ -321,9 +321,9 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             } else {
                 const args = new MultiDict();
                 args.set('query_id', item.query_id);
-                return this.pluginApi.ajax$<any>(
+                return this.pageModel.ajax$<any>(
                     HTTP.Method.POST,
-                    this.pluginApi.createActionUrl('delete_query'),
+                    this.pageModel.createActionUrl('delete_query'),
                     args
 
                 ).pipe(
@@ -344,8 +344,8 @@ export class QueryHistoryModel extends StatefulModel<PluginInterfaces.QueryHisto
             ),
             map(
                 ([, added]) => added ?
-                    this.pluginApi.translate('query__save_as_item_saved') :
-                    this.pluginApi.translate('query__save_as_item_removed')
+                    this.pageModel.translate('query__save_as_item_saved') :
+                    this.pageModel.translate('query__save_as_item_removed')
             )
         );
     }

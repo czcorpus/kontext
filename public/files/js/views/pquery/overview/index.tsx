@@ -78,7 +78,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 pipe(
                                     props.queries,
                                     Dict.toEntries(),
-                                    List.map(([,item]) => Strings.shortenText(item.query, 10)),
+                                    List.map(([,item]) => `{ ${Strings.shortenText(item.query, 10)} }`),
                                     List.join(() => ' && ')
                                 )}</a>
                         </li> :

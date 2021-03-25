@@ -50,7 +50,6 @@ export interface AlignedCorporaProps {
     forcedAttr:string;
     attrList:Array<Kontext.AttrItem>;
     inputLanguages:{[key:string]:string};
-    queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
     hasLemmaAttr:{[key:string]:boolean};
     useRichQueryEditor:boolean;
     tagHelperViews:{[key:string]:PluginInterfaces.TagHelper.View};
@@ -89,7 +88,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         forcedAttr:string;
         attrList:Array<Kontext.AttrItem>;
         inputLanguage:string;
-        queryHistoryView:PluginInterfaces.QueryHistory.WidgetView;
         useRichQueryEditor:boolean;
         tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
         tagHelperView:PluginInterfaces.TagHelper.View;
@@ -145,7 +143,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                             forcedAttr={this.props.forcedAttr}
                             attrList={this.props.attrList}
                             inputLanguage={this.props.inputLanguage}
-                            queryHistoryView={this.props.queryHistoryView}
                             useRichQueryEditor={this.props.useRichQueryEditor}
                             onEnterKey={this.props.onEnterKey}
                             tagHelperView={this.props.tagHelperView}
@@ -237,7 +234,6 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 attrList={props.attrList}
                                 tagHelperView={props.tagHelperViews[item]}
                                 inputLanguage={props.inputLanguages[item]}
-                                queryHistoryView={props.queryHistoryView}
                                 hasLemmaAttr={props.hasLemmaAttr[item]}
                                 useRichQueryEditor={props.useRichQueryEditor}
                                 tagsets={props.tagsets[item]}

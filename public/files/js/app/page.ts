@@ -32,7 +32,7 @@ import { init as commonViewsFactory, CommonViews } from '../views/common';
 import { init as menuViewsFactory } from '../views/menu';
 import { init as overviewAreaViewsFactory } from '../views/overview';
 import { init as viewOptionsFactory } from '../views/options/main';
-import { init as initQueryHistoryViews } from '../views/history/main';
+import { init as initQueryHistoryViews } from '../views/searchHistory/main';
 import { MultiDict } from '../multidict';
 import * as docModels from '../models/common/layout';
 import { UserInfo } from '../models/user/info';
@@ -54,11 +54,11 @@ import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import querySuggestPlugin from 'plugins/querySuggest/init';
-import queryHistoryPlugin from 'plugins/queryHistory/init';
 import { IPageLeaveVoter } from '../models/common/pageLeave';
 import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
 import { GlobalStyle } from '../views/theme/default/global';
+import { SearchHistoryModel } from '../models/searchHistory';
 
 
 export enum DownloadType {
@@ -122,9 +122,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     private asyncTaskChecker:AsyncTaskChecker;
 
-    qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    private searchHistoryModel:SearchHistoryModel;
 
-    qhistPlugin:PluginInterfaces.QueryHistory.IPlugin;
+    qsuggPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 
     /**
      * This is intended for React components to make them able register key
@@ -159,7 +159,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             generalViewOptionsModel: this.generalViewOptionsModel,
             asyncTaskInfoModel: this.asyncTaskChecker,
             mainMenuModel: this.mainMenuModel,
-            corpusSwitchModel: this.appNavig.corpusSwitchModel
+            corpusSwitchModel: this.appNavig.corpusSwitchModel,
+            searchHistoryModel: this.searchHistoryModel
         };
     }
 
@@ -779,17 +780,19 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.getConf<boolean>('anonymousUser')
             );
 
-            this.qhistPlugin = queryHistoryPlugin(
-                this.pluginApi(),
+            this.searchHistoryModel = new SearchHistoryModel(
+                this.dispatcher,
+                this,
                 0,
                 this.getNestedConf<number>('pluginData', 'query_history', 'page_num_records'),
                 this.getNestedConf<number>('pluginData', 'query_history', 'page_num_records')
             );
+
             const qhViews = initQueryHistoryViews({
                 dispatcher: this.dispatcher,
                 helpers: this.getComponentHelpers(),
-                recentQueriesModel: this.qhistPlugin.getModel(),
-                mainMenuModel: this.mainMenuModel
+                mainMenuModel: this.mainMenuModel,
+                searchHistoryModel: this.searchHistoryModel
             });
 
             this.renderReactComponent(

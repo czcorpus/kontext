@@ -19,7 +19,7 @@
  */
 
 import styled from 'styled-components';
-import * as theme from '../../views/theme/default';
+import * as theme from '../../theme/default';
 
 
 export const QueryHistoryRows = styled.ol`

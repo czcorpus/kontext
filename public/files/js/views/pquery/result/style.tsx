@@ -28,6 +28,12 @@ import * as theme from '../../theme/default';
 export const PqueryResultSection = styled.section`
 
     border: 1px solid ${theme.colorBgLightBlue};
+    padding-bottom: 1em;
+    min-width: 30em;
+
+    table.data {
+        margin: 1em 2em 1em 0;
+    }
 
 `;
 
