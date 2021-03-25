@@ -89,11 +89,12 @@ export interface QueryHistoryItem {
     }>;
 }
 
-
 export interface GetHistoryResponse extends Kontext.AjaxResponse {
     data:Array<QueryHistoryItem>;
     limit:number;
     offset:number;
+    from_date:string;
+    to_date:string;
 }
 
 export interface WidgetProps {
@@ -102,8 +103,9 @@ export interface WidgetProps {
     onCloseTrigger:()=>void;
 }
 
-export interface ModelState {
+export interface SearchHistoryModelState {
     data:Array<QueryHistoryItem>;
+    itemsToolbars:Array<[boolean, boolean]>;
     offset:number;
     limit:number;
     querySupertype:Kontext.QuerySupertype;
@@ -112,7 +114,6 @@ export interface ModelState {
     pageSize:number;
     hasMoreItems:boolean;
     archivedOnly:boolean;
-    editedItem:number|undefined;
     currentItem:number;
 }
 

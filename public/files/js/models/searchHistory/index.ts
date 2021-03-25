@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { tap, concatMap, map } from 'rxjs/operators';
+import { tap, concatMap, map, timestamp } from 'rxjs/operators';
 import { forkJoin, Observable, of as rxOf } from 'rxjs';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
@@ -30,7 +30,7 @@ import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { QueryType } from '../query/query';
 import { PageModel } from '../../app/page';
-import { GetHistoryResponse, QueryHistoryItem, ModelState } from './common';
+import { GetHistoryResponse, QueryHistoryItem, SearchHistoryModelState } from './common';
 
 
 
@@ -49,7 +49,7 @@ const attachSh = (he:Kontext.ComponentHelpers, item:QueryHistoryItem) => {
 };
 
 
-export class SearchHistoryModel extends StatefulModel<ModelState> {
+export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
 
     private readonly pageModel:PageModel;
 
@@ -64,6 +64,7 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
             dispatcher,
             {
                 data: [],
+                itemsToolbars: [],
                 querySupertype: undefined,
                 currentCorpusOnly: true,
                 offset,
@@ -72,7 +73,6 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
                 isBusy: false,
                 hasMoreItems: true, // TODO this should be based on initial data (n+1 items)
                 archivedOnly: false,
-                editedItem: undefined,
                 currentItem: 0,
             }
         );
@@ -149,9 +149,9 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
             ActionName.HistorySetEditedItem,
             action => {
                 this.changeState(state => {
-                    state.editedItem = action.payload.itemIdx;
-                    if (!state.data[state.editedItem].name) {
-                        state.data[state.editedItem].name= '';
+                    state.itemsToolbars[action.payload.itemIdx] = tuple(true, true);
+                    if (!state.data[action.payload.itemIdx].name) {
+                        state.data[action.payload.itemIdx].name = '';
                     }
                 });
             }
@@ -161,7 +161,7 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
             ActionName.HistoryCloseEditedItem,
             action => {
                 this.changeState(state => {
-                    state.editedItem = undefined;
+                    state.itemsToolbars[action.payload.itemIdx] = tuple(true, false);
                 });
             }
         );
@@ -170,8 +170,7 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
             ActionName.HistoryEditorSetName,
             action => {
                 this.changeState(state => {
-                    const item = state.data[state.editedItem];
-                    item.name = action.payload.value;
+                    state.data[action.payload.itemIdx].name = action.payload.value;
                 });
             }
         );
@@ -202,14 +201,14 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
         this.addActionHandler<Actions.HistoryEditorClickSave>(
             ActionName.HistoryEditorClickSave,
             action => {
-                const item = this.state.data[this.state.editedItem];
+                const item = this.state.data[action.payload.itemIdx];
                 if (!item.name) {
                     this.pageModel.showMessage('error',
                         this.pageModel.translate('query__save_as_cannot_have_empty_name'));
 
                 } else {
                     this.changeState(state => {state.isBusy = true});
-                    this.saveItem(this.state.editedItem).subscribe(
+                    this.saveItem(action.payload.itemIdx).subscribe(
                         (msg) => {
                             this.changeState(state => {state.isBusy = false});
                             this.pageModel.showMessage('info', msg);
@@ -222,6 +221,38 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
                 }
             }
         );
+
+        this.addActionHandler<Actions.ToggleRowToolbar>(
+            ActionName.ToggleRowToolbar,
+            action => {
+                this.changeState(state => {
+                    const [status,] = state.itemsToolbars[action.payload.rowIdx];
+                    if (status) {
+                        state.itemsToolbars[action.payload.rowIdx] = tuple(false, false);
+
+                    } else {
+                        state.itemsToolbars[action.payload.rowIdx] = tuple(true, false);
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.RemoveItemFromList>(
+            ActionName.RemoveItemFromList,
+            action => {
+                this.changeState(state => {
+                    state.isBusy = true;
+                });
+
+                this.deleteItem(action.payload.itemIdx).subscribe(
+                    _ => {
+                    },
+                    error => {
+                        this.pageModel.showMessage('error', error);
+                    }
+                );
+            }
+        )
     }
 
     private openQueryForm(idx:number):void { // TODO this does not work
@@ -269,7 +300,7 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
         );
     }
 
-    private loadData(widgetMode:boolean=false):Observable<any> {
+    private loadData(widgetMode:boolean=false):Observable<GetHistoryResponse> {
         const args = new MultiDict();
         args.set('offset', this.state.offset);
         args.set('limit', this.state.limit + 1);
@@ -286,7 +317,6 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
         ).pipe(
             tap(data => {
                 this.changeState(state => {
-                    state.editedItem = undefined;
                     state.hasMoreItems = data.data.length === state.limit + 1;
                     state.data = state.hasMoreItems ?
                         List.map(
@@ -297,8 +327,35 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
                             attachSh.bind(null, this.pageModel.getComponentHelpers()),
                             data.data
                         );
+                    state.itemsToolbars = List.repeat(
+                        _ => tuple(false, false),
+                        state.data.length
+                    );
                 })
             })
+        );
+    }
+
+    private deleteItem(itemIdx:number):Observable<GetHistoryResponse> {
+        const item = this.state.data[itemIdx];
+        return this.pageModel.ajax$<any>(
+            HTTP.Method.POST,
+            this.pageModel.createActionUrl('delete_query'),
+            MultiDict.fromDict({
+                query_id: item.query_id,
+                created: item.created
+            })
+
+        ).pipe(
+            tap(
+                _ => {
+                    this.pageModel.showMessage(
+                        'info',
+                        this.pageModel.translate('qhistory__item_removed')
+                    );
+                }
+            ),
+            concatMap(_ => this.loadData())
         );
     }
 
@@ -323,7 +380,7 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
                 args.set('query_id', item.query_id);
                 return this.pageModel.ajax$<any>(
                     HTTP.Method.POST,
-                    this.pageModel.createActionUrl('delete_query'),
+                    this.pageModel.createActionUrl('unsave_query'),
                     args
 
                 ).pipe(
@@ -335,7 +392,7 @@ export class SearchHistoryModel extends StatefulModel<ModelState> {
             tap(
                 _ => {
                     this.changeState(state => {
-                        state.editedItem = undefined;
+                        state.itemsToolbars[itemIdx] = tuple(false, false);
                     })
                 }
             ),

@@ -103,7 +103,7 @@ class QueryHistory(AbstractQueryHistory):
                 return True
         return False
 
-    def delete(self, user_id, query_id):
+    def make_transient(self, user_id, query_id, name):
         k = self._mk_key(user_id)
         data = self.db.list_get(k)
         for i, item in enumerate(data):
@@ -112,6 +112,18 @@ class QueryHistory(AbstractQueryHistory):
                 self.db.list_set(k, i, item)
                 return True
         return False
+
+    def delete(self, user_id, query_id, created):
+        k = self._mk_key(user_id)
+        data = self.db.list_get(k)
+        self.db.remove(k)
+        deleted = 0
+        for item in data:
+            if item.get('query_id') != query_id or item.get('created', 0) != created:
+                self.db.list_append(k, item)
+            else:
+                deleted += 1
+        return deleted
 
     def _is_paired_with_conc(self, data):
         q_id = data['query_id']

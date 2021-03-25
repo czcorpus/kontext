@@ -147,6 +147,12 @@ export const SavedNameInfoSpan = styled.span`
 export const QueryInfoDiv = styled.div`
 
     flex-grow: 1;
+    padding: 0.3em;
+    cursor: pointer;
+
+    :hover {
+        background-color: ${theme.colorLightGreen};
+    }
 
     .text-types-info {
 
@@ -171,10 +177,14 @@ export const QueryInfoDiv = styled.div`
 export const QueryAndTypeDiv = styled.div`
 
     display: flex;
-    flex-direction: column;
+    align-items: center;
     max-width: 80em;
     margin-top: 0.7em;
 
+    .symbol {
+        font-size: 1.4em;
+        color: ${theme.colorLightText};
+    }
 
     .query {
         overflow: hidden;
@@ -201,6 +211,7 @@ export const QueryAndTypeDiv = styled.div`
 export const AlignedQueryInfoDiv = styled.div`
 
     margin-left: 2em;
+    font-size: 0.9em;
 
 `;
 
@@ -210,7 +221,16 @@ export const ActionsDiv = styled.div`
 
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
+
+    .tools {
+        flex-grow: 1;
+        text-align: right;
+
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
 
     .saved-as {
 
@@ -254,4 +274,11 @@ export const FilterForm = styled.div`
 
     }
 
+`;
+
+// ---------------------- <RemoveFromHistoryButton /> -----------------
+
+export const RemoveFromHistoryButton = styled.button`
+
+    margin-right: 1em;
 `;

@@ -29,7 +29,7 @@ import { Actions as QueryActions, ActionName as QueryActionName } from '../../..
 
 import * as S from './style';
 import { QueryFormType } from '../../../models/query/actions';
-import { ModelState } from '../../../models/searchHistory/common';
+import { SearchHistoryModelState } from '../../../models/searchHistory/common';
 
 
 export interface QueryHistoryProps {
@@ -52,7 +52,7 @@ export function init(
 
     const layoutViews = he.getLayoutViews();
 
-    class QueryHistory extends React.Component<QueryHistoryProps & ModelState> {
+    class QueryHistory extends React.Component<QueryHistoryProps & SearchHistoryModelState> {
 
         constructor(props) {
             super(props);
@@ -189,6 +189,6 @@ export function init(
         }
     }
 
-    return BoundWithProps<QueryHistoryProps, ModelState>(QueryHistory, queryHistoryModel);
+    return BoundWithProps<QueryHistoryProps, SearchHistoryModelState>(QueryHistory, queryHistoryModel);
 
 }
