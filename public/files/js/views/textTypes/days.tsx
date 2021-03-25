@@ -26,6 +26,8 @@ import { Kontext, TextTypes } from '../../types/common';
 import { Actions, ActionName } from '../../models/textTypes/actions';
 import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
 
+import * as S from './style';
+
 
 function rangeToRegexp(d1:Date, d2:Date):string {
 
@@ -193,7 +195,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         };
 
         return (
-            <div className="CalendarDaysSelector">
+            <S.CalendarDaysSelector>
                 <div className="calendars">
                     <div>
                         <h3>{he.translate('query__tt_calendar_from_date')}</h3>
@@ -209,7 +211,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         he.translate('query__tt_no_date_range_selected') :
                         '(' + he.translate('query__tt_you_can_unselect_date_range') + ')'}
                 </p>
-            </div>
+            </S.CalendarDaysSelector>
         );
     }
 

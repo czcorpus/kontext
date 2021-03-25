@@ -28,6 +28,8 @@ import { Actions, ActionName } from '../../models/textTypes/actions';
 import { WidgetView } from '../../models/textTypes/common';
 import { init as commonViewInit } from './common';
 
+import * as S from './style';
+
 export interface FullListContainerProps {
     attrObj:TextTypes.FullAttributeSelection;
     hasExtendedInfo:boolean;
@@ -193,7 +195,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
         const renderListOfCheckBoxes = () => {
             return (
-                <table className="FullListContainer">
+                <S.FullListContainer>
                     <tbody>
                     {List.map(
                         (item, i) => (
@@ -219,7 +221,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                         props.attrObj.values
                     )}
                     </tbody>
-                </table>
+                </S.FullListContainer>
             );
         };
 

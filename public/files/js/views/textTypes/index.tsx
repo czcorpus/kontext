@@ -163,7 +163,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TextTypeAttributeMinIcon:React.FC<TextTypeAttributeMinIconProps> = (props) => {
 
         return (
-            <div className="textTypes_TextTypeAttributeMinIcon">
+            <S.TextTypeAttributeMinIcon>
                 <a onClick={props.onClick}>
                     {props.isMinimized ?
                         <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/maximize-icon.svg')}
@@ -172,7 +172,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         alt="minimize" />
                     }
                 </a>
-            </div>
+            </S.TextTypeAttributeMinIcon>
         );
     }
 
@@ -318,13 +318,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
 
-        const classes = ['TableTextTypeAttribute'];
-        if (TTSelOps.isLocked(props.attrObj)) {
-            classes.push('locked');
-        }
         return (
-            <div className={classes.join(' ')}>
-                <div className="attrib-name">
+            <S.TableTextTypeAttribute className={TTSelOps.isLocked(props.attrObj) ? 'locked' : null}>
+                <S.AttribName>
                     <h3 title={props.attrObj.name !== props.attrObj.label ? props.attrObj.name : null}>
                         {props.attrObj.label}
                         {props.isMinimized && TTSelOps.hasUserChanges(props.attrObj) ?
@@ -336,7 +332,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     </h3>
                     <TextTypeAttributeMinIcon isMinimized={props.isMinimized}
                             onClick={handleMinimizeIconFn(props.attrObj.name)} />
-                </div>
+                </S.AttribName>
                 {props.isMinimized ?
                     <div></div> :
                     (<>
@@ -356,12 +352,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <div className="metadata">
                             {renderMetaInfo()}
                         </div>
-                        <div className="last-line">
+                        <S.LastLine>
                             {renderFooter()}
-                        </div>
+                        </S.LastLine>
                     </>)
                 }
-            </div>
+            </S.TableTextTypeAttribute>
         );
     }
 
