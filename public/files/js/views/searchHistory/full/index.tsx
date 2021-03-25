@@ -131,6 +131,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------- <FilterForm /> ------------------------
 
     const FilterForm:React.FC<{
+        corpname:string;
         currentCorpusOnly:boolean;
         querySupertype:Kontext.QuerySupertype;
         archivedOnly:boolean;
@@ -143,7 +144,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('qhistory__filter_legend')}
                     </legend>
                     <label>
-                        {he.translate('qhistory__curr_corp_only_label')}:{'\u00a0'}
+                        {he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:{'\u00a0'}
                         <CurrentCorpCheckbox value={props.currentCorpusOnly} />
                     </label>
                     <label>
@@ -618,7 +619,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const RecentQueriesPageList:React.FC<SearchHistoryModelState> = (props) => {
         return (
             <S.RecentQueriesPageList>
-                <FilterForm querySupertype={props.querySupertype}
+                <FilterForm
+                        corpname={props.corpname}
+                        querySupertype={props.querySupertype}
                         currentCorpusOnly={props.currentCorpusOnly}
                         archivedOnly={props.archivedOnly} />
                 {props.data.length === 0 && props.isBusy ?

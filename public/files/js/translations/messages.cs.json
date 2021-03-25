@@ -412,7 +412,7 @@
         "query__help": "Nápověda - dotazovací formulář",
         "pquery__help": "Nápověda - paradigmatický dotaz",
         "qhistory__attached_text_types": "Typy textů",
-        "qhistory__curr_corp_only_label": "obsahuje aktuálně používaný korpus",
+        "qhistory__curr_corp_only_label_{corpus}": "pouze korpus {corpus}",
         "qhistory__query_supertype_sel": "druh hledání",
         "qhistory__qs_any": "libovolný",
         "qhistory__th_query": "korpus a dotaz",

@@ -412,7 +412,7 @@
         "query__help": "Help - query form",
         "pquery__help": "Help - paradigmatic query",
         "qhistory__attached_text_types": "Text types",
-        "qhistory__curr_corp_only_label": "contains currently used corpus",
+        "qhistory__curr_corp_only_label_{corpus}": "{corpus} only",
         "qhistory__query_supertype_sel": "search kind",
         "qhistory__qs_any": "any",
         "qhistory__th_query": "corpus and query",

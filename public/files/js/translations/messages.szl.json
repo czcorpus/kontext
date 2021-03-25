@@ -411,7 +411,7 @@
         "query__help": "Help - query form UNTRANSLATED",
         "pquery__help": "Help - paradigmatic query UNTRANSLATED",
         "qhistory__attached_text_types": "Typy tekstu",
-        "qhistory__curr_corp_only_label": "zawiyrŏ prawie używany korpus",
+        "qhistory__curr_corp_only_label_{corpus}": "{corpus} only UNTRANSLATED",
         "qhistory__query_supertype_sel": "search kind UNTRANSLATED",
         "qhistory__qs_any": "any UNTRANSLATED",
         "qhistory__th_query": "korpus i zapytanie",
