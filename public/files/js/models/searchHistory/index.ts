@@ -63,6 +63,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         super(
             dispatcher,
             {
+                corpname: pageModel.getCorpusIdent().id,
                 data: [],
                 itemsToolbars: [],
                 querySupertype: undefined,

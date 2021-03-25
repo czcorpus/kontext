@@ -472,7 +472,7 @@
         "query__help": "Help - query form UNTRANSLATED",
         "pquery__help": "Help - paradigmatic query UNTRANSLATED",
         "qhistory__attached_text_types": "Text types UNTRANSLATED",
-        "qhistory__curr_corp_only_label": "contains currently used corpus UNTRANSLATED",
+        "qhistory__curr_corp_only_label_{corpus}": "{corpus} only UNTRANSLATED",
         "qhistory__query_supertype_sel": "search kind UNTRANSLATED",
         "qhistory__qs_any": "any UNTRANSLATED",
         "qhistory__th_query": "corpus and query UNTRANSLATED",
