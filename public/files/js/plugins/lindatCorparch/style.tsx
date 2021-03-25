@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import * as theme from '../../views/theme/default';
 
-const syntaxTreeIcon = require('../../../img/syntax-tree-icon.svg').default;
+import syntaxTreeIcon from '../../../img/syntax-tree-icon.svg';
 
 
 export const CorpTreeWidget = styled.div`

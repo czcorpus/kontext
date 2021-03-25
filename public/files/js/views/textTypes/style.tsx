@@ -21,7 +21,7 @@
 import styled from 'styled-components';
 import * as theme from '../theme/default';
 
-const externalLinkImg = require('../../../img/external-link.png').default;
+import externalLinkImg from '../../../img/external-link.png';
 
 // ----------- <TextTypesPanel /> ----------------------------
 

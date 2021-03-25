@@ -22,11 +22,11 @@
 import styled from 'styled-components';
 import * as theme from '../theme/default';
 
-const closeIconImg = require('../../../img/close-icon.svg').default;
-const closeIconSImg = require('../../../img/close-icon_s.svg').default;
-const movableImg = require('../../../img/movable.svg').default;
-const externalLinkImg = require('../../../img/external-link.png').default;
-const warningIconImg = require('../../../img/warning-icon.svg').default;
+import closeIconImg from '../../../img/close-icon.svg';
+import closeIconSImg from '../../../img/close-icon_s.svg';
+import movableImg from '../../../img/movable.svg';
+import externalLinkImg from '../../../img/external-link.png';
+import warningIconImg from '../../../img/warning-icon.svg';
 
 // ---------------- <ModalOverlay /> --------------------------------------
 

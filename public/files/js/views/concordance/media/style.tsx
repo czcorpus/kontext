@@ -19,7 +19,12 @@
  */
 
 import styled from 'styled-components';
-import * as theme from '../../theme/default';
+
+import mediaPlayIcon from '../../../../img/media_play.svg';
+import mediaPauseIcon from '../../../../img/media_pause.svg';
+import mediaStopIcon from '../../../../img/media_stop.svg';
+import mediaPlaySIcon from '../../../../img/media_play_s.svg';
+import mediaPauseSIcon from '../../../../img/media_pause_s.svg';
 
 
 export const AudioPlayer = styled.div`
@@ -63,45 +68,45 @@ export const AudioPlayer = styled.div`
     }
 
     a.img-button-play {
-        background-image: url('../img/media_play.svg');
+        background-image: url(${mediaPlayIcon});
     }
 
     a.img-button-pause {
-        background-image: url('../img/media_pause.svg');
+        background-image: url(${mediaPauseIcon});
     }
 
     a.img-button-stop {
-        background-image: url('../img/media_stop.svg');
+        background-image: url(${mediaStopIcon});
     }
 
 
     @keyframes playBlink {
         0% {
-            background-image: url('../img/media_play.svg');
+            background-image: url(${mediaPlayIcon});
         }
         49% {
-            background-image: url('../img/media_play.svg');
+            background-image: url(${mediaPlayIcon});
         }
         50% {
-            background-image: url('../img/media_play_s.svg');
+            background-image: url(${mediaPlaySIcon});
         }
         99% {
-            background-image: url('../img/media_play_s.svg');
+            background-image: url(${mediaPlaySIcon});
         }
     }
 
     @keyframes pauseBlink {
         0% {
-            background-image: url('../img/media_pause.svg');
+            background-image: url(${mediaPauseIcon});
         }
         49% {
-            background-image: url('../img/media_pause.svg');
+            background-image: url(${mediaPauseIcon});
         }
         50% {
-            background-image: url('../img/media_pause_s.svg');
+            background-image: url(${mediaPauseSIcon});
         }
         99% {
-            background-image: url('../img/media_pause_s.svg');
+            background-image: url(${mediaPauseSIcon});
         }
     }
 
