@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf, zip } from 'rxjs';
+import { of as rxOf, Subject, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
 import { HTTP } from 'cnc-tskit';
 import { PageModel } from "../../app/page";
@@ -59,9 +59,10 @@ export class HitReloader {
         const wsArgs = new MultiDict();
         wsArgs.set('corpusId', this.layoutModel.getCorpusIdent().id);
         wsArgs.set('cacheKey', this.layoutModel.getConf('ConcCacheKey'));
-        const ws = this.layoutModel.openWebSocket(wsArgs);
+        const [ws, input] = this.layoutModel.openWebSocket(wsArgs);
 
-        if (ws) {
+        if (ws && false) {
+            /* TODO !!!
             ws.onmessage = (evt:MessageEvent) => {
                 const dataSrc = <string>evt.data;
                 if (dataSrc) {
@@ -78,6 +79,7 @@ export class HitReloader {
                     this.layoutModel.showMessage('error', x.reason);
                 }
             };
+            */
 
         } else {
             rxOf(HitReloader.CHECK_CONC_DECAY).pipe(

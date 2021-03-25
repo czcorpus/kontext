@@ -1011,7 +1011,7 @@ class Kontext(Controller):
             'HTTP_USER_AGENT', '').lower()
         if 'popup_server_messages' not in result:
             result['popup_server_messages'] = True
-        result['websocket_url'] = settings.get('global', 'websocket_url', None)
+        result['job_status_service_url'] = settings.get('calc_backend', 'status_service_url', None)
         return result
 
     def _human_readable_corpname(self):
