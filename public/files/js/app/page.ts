@@ -21,7 +21,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
-import { Observable } from 'rxjs';
+import { combineLatest, forkJoin, Observable, Subject } from 'rxjs';
 import { List, HTTP, tuple, pipe } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../types/plugins';
@@ -59,6 +59,7 @@ import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
 import { GlobalStyle } from '../views/theme/default/global';
 import { SearchHistoryModel } from '../models/searchHistory';
+import { concatMap, map, tap } from 'rxjs/operators';
 
 
 export enum DownloadType {
@@ -224,6 +225,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Register a function interested in a task status.
      * Multiple functions can be set to listen a single
      * task.
+     *
+     * @deprecated Use actions instead
      */
     registerTask(task:Kontext.AsyncTaskInfo):void {
         this.asyncTaskChecker.registerTask(task);
@@ -683,16 +686,59 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         return ans !== undefined ? ans : dflt;
     }
 
-    openWebSocket(args:MultiDict):WebSocket|null {
-        if (window['WebSocket'] !== undefined && this.getConf('webSocketUrl')) {
-            const ans = new WebSocket(this.getConf('webSocketUrl') + '?' +
-                this.encodeURLParameters(args));
-            ans.onerror = (evt:Event) => {
-                this.showMessage('error', 'WebSocket error.');
-            };
-            return ans;
-        }
-        return null;
+    supportsWebSocket():boolean {
+        return window['WebSocket'] !== undefined && this.getConf('jobStatusServiceUrl');
+    }
+
+    openWebSocket<T, U>(args?:MultiDict):[Subject<T>, Observable<U>] {
+        const input = new Subject<T>();
+        const ans = input.pipe(
+            concatMap(
+                inputData => {
+                    const params = args ? '?' + this.encodeURLParameters(args) : '';
+                    const url = new URL(this.getConf<string>('jobStatusServiceUrl') + params);
+                    url.protocol = 'ws';
+                    const ans = new WebSocket(url.href);
+                    return new Observable<WebSocket>(observer => {
+                        ans.onerror = (evt:Event) => {
+                            observer.error(evt);
+                        };
+                        ans.onopen = (evt:Event) => {
+                            observer.next(ans);
+                        };
+                        ans.onclose = () => {
+                            observer.complete();
+                        };
+                    }).pipe(
+                        map(
+                            ws => tuple(ws, inputData)
+                        )
+                    );
+                }
+            ),
+            tap(
+                ([ws, inputData]) => {
+                    ws.send(JSON.stringify(inputData));
+                }
+            ),
+            concatMap(
+                ([ws,]) => {
+                    return new Observable<U>((observer) => {
+                        ws.onmessage = e => {
+                            const incoming = JSON.parse(e.data);
+                            observer.next(incoming);
+                        };
+                        ws.onclose = e => {
+                            observer.complete();
+                        };
+                        ws.onerror = e => {
+                            observer.error(`${e}`);
+                        }
+                    });
+                }
+            )
+        );
+        return tuple(input, ans);
     }
 
     unregisterAllModels():void {
@@ -735,7 +781,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         try {
             this.asyncTaskChecker = new AsyncTaskChecker(
                 this.dispatcher,
-                this.pluginApi(),
+                this,
                 this.getConf<any>('asyncTasks') || []
             );
             this.corpusInfoModel = new docModels.CorpusInfoModel(this.dispatcher, this.pluginApi());

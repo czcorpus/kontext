@@ -136,6 +136,8 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, str], subcp
     user_id -- user ID
     collator_locale -- a locale used for collation within the current corpus
     """
+    import time
+    time.sleep(5)
     tasks = []
     num_tasks = len(pquery.conc_ids)
     for conc_id in pquery.conc_ids:

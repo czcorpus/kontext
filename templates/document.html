@@ -113,7 +113,7 @@ __conf.helpLinks = {{ help_links|to_json }};
 __conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
 __conf.LoginUrl = {{ login_url|to_json }};
 __conf.LogoutUrl = {{ logout_url|to_json }};
-__conf.webSocketUrl =  {{ websocket_url|to_json }};
+__conf.jobStatusServiceUrl = {{ job_status_service_url|to_json }};
 __conf.TextDirectionRTL = {{ righttoleft|default(false, true)|to_json }};
 __conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
 </script>

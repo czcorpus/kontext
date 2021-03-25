@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import asyncio
 from aiohttp import web, WSMsgType
@@ -115,7 +115,7 @@ async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> we
                         change = True
                     else:
                         now = time.time()
-                        if (job.is_queued or job.is_started) and now - job.enqueued_at > TASK_LIMIT:
+                        if (job.is_queued or job.is_started) and now - job.enqueued_at.timestamp() > TASK_LIMIT:
                             jobs[job_id].exc_info = 'task time limit exceeded'
                             change = True
 
