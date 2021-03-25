@@ -126,6 +126,9 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 });
             });
         };
+        this.statusSocket.onclose = e => {
+            this.init();
+        };
 
         this.addActionHandler<Actions.InboxToggleOverviewVisibility>(
             ActionName.InboxToggleOverviewVisibility,
