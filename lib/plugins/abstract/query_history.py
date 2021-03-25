@@ -56,13 +56,27 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete(self, user_id, query_id):
+    def make_transient(self, user_id, query_id, name):
+        """
+        Remove name from the history item and let it be
+        removed once it gets too old
+        """
+
+    @abc.abstractmethod
+    def delete(self, user_id, query_id, created):
         """
         Delete a named query from history.
 
+        Note: items should be searched by both query_id
+        and created as multiple items may have the same query_id.
+        In a theoretical case in which multiple items have
+        the same query_id and creation timestamp, all of them
+        should be removed.
+
         arguments:
-        user_id -- a user ID
-        conc_id -- a concordance ID
+        user_id -- user ID
+        query_id -- query ID
+        created -- creation UNIX timestamp
         """
 
     @abc.abstractmethod

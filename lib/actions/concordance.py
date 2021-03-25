@@ -341,13 +341,20 @@ class Actions(Querying):
         return dict(saved=hsave)
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
-    def delete_query(self, request):
+    def unsave_query(self, request):
         # as opposed to the 'save_query' method which also performs archiving of conc params,
         # this method keeps the conc params as they are because we assume that user just does
         # not want to keep the query in their history
         with plugins.runtime.QUERY_HISTORY as qh:
-            ans = qh.delete(self.session_get('user', 'id'), request.form['query_id'])
+            ans = qh.make_transient(self.session_get('user', 'id'), request.form['query_id'])
         return dict(deleted=ans)
+
+    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
+    def delete_query(self, request):
+        # remove query from history (respective results are kept)
+        with plugins.runtime.QUERY_HISTORY as qh:
+            ans = qh.delete(self.session_get('user', 'id'), request.form['query_id'], int(request.form['created']))
+        return dict(num_deleted=ans)
 
     @exposed()
     def first_form(self, request):

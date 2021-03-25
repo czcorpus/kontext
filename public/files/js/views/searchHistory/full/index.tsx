@@ -27,8 +27,10 @@ import { Actions, ActionName } from '../../../models/searchHistory/actions';
 import { QueryType } from '../../../models/query/query';
 
 import * as S from './style';
-import { ModelState, QueryHistoryItem } from '../../../models/searchHistory/common';
+import { SearchHistoryModelState, QueryHistoryItem } from '../../../models/searchHistory/common';
 import { SearchHistoryModel } from '../../../models/searchHistory';
+import gearIcon from '../../../../img/config-icon.svg';
+import gearIconS from '../../../../img/config-icon_s.svg';
 
 
 export interface HistoryViews {
@@ -167,6 +169,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <S.AlignedQueryInfoDiv>
                 <S.QueryAndTypeDiv>
+                    <span className="symbol">{'\u2016\u00a0'}</span>
                     <span className="query" title={typeToHuman(props.query_type)}>{props.query}</span>
                 </S.QueryAndTypeDiv>
             </S.AlignedQueryInfoDiv>
@@ -230,6 +233,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------- <QueryInfo /> ------------------------
 
     const QueryInfo:React.FC<{
+        itemIdx:number;
         isEdited:boolean;
         query_type:QueryType;
         query_sh:string;
@@ -239,11 +243,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
 
-
+        const handleAreaClick = () => {
+            dispatcher.dispatch<Actions.HistoryOpenQueryForm>({
+                name: ActionName.HistoryOpenQueryForm,
+                payload: {
+                    idx: props.itemIdx
+                }
+            });
+        };
 
         return (
             <S.QueryInfoDiv>
-                <S.QueryAndTypeDiv>
+                <S.QueryAndTypeDiv onClick={handleAreaClick} title={he.translate('qhistory__open_in_form')}>
                     {
                         props.query_sh ?
                         <pre className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
@@ -266,7 +277,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         itemIdx:number;
         hasEditor:boolean;
         editingQueryName:string;
-        saved:boolean;
 
     }> = (props) => {
 
@@ -290,12 +300,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         return (
             <S.SavedNameInfoSpan>
-                {props.saved ?
+                {props.editingQueryName && !props.hasEditor ?
                     <button className="util-button" onClick={handleDoNotSaveClick}>
                         {he.translate('query__save_as_transient')}
                     </button> :
                     props.hasEditor ?
-                        <SaveItemForm name={props.editingQueryName} /> :
+                        <SaveItemForm name={props.editingQueryName} itemIdx={props.itemIdx} /> :
                         <button className="util-button" onClick={handleEditClick}>
                             {he.translate('query__save_button')}{'\u2026'}
                         </button>
@@ -308,6 +318,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------- <SaveItemForm /> ------------------------
 
     const SaveItemForm:React.FC<{
+        itemIdx:number;
         name:string;
 
     }> = (props) => {
@@ -316,6 +327,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             dispatcher.dispatch<Actions.HistoryEditorSetName>({
                 name: ActionName.HistoryEditorSetName,
                 payload: {
+                    itemIdx: props.itemIdx,
                     value: evt.target.value
                 }
             });
@@ -323,13 +335,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmitClick = () => {
             dispatcher.dispatch<Actions.HistoryEditorClickSave>({
-                name: ActionName.HistoryEditorClickSave
+                name: ActionName.HistoryEditorClickSave,
+                payload: {
+                    itemIdx: props.itemIdx
+                }
             });
         };
 
         const handleCloseClick = () => {
             dispatcher.dispatch<Actions.HistoryCloseEditedItem>({
-                name: ActionName.HistoryCloseEditedItem
+                name: ActionName.HistoryCloseEditedItem,
+                payload: {
+                    itemIdx: props.itemIdx
+                }
             });
         };
 
@@ -367,24 +385,104 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
-    // -------------------- <DataRow /> ------------------------
+    // ----------- <RemoveFromHistoryButton /> ------------------
 
-    const DataRow:React.FC<{
+    const RemoveFromHistoryButton:React.FC<{
         itemIdx:number;
-        isEdited:boolean;
-        data:QueryHistoryItem;
-        hasEditor:boolean;
 
     }> = (props) => {
 
-        const handleFormClick = () => {
-            dispatcher.dispatch<Actions.HistoryOpenQueryForm>({
-                name: ActionName.HistoryOpenQueryForm,
+        const handleClick = () => {
+            dispatcher.dispatch<Actions.RemoveItemFromList>({
+                name: ActionName.RemoveItemFromList,
                 payload: {
-                    idx: props.data.idx
+                    itemIdx: props.itemIdx
                 }
             });
         };
+
+        return (
+            <S.RemoveFromHistoryButton type="button" className="util-button" onClick={handleClick}>
+                {he.translate('qhistory__remove_from_list')}
+            </S.RemoveFromHistoryButton>
+        );
+    };
+
+    // ------------------ <RowToolbar /> -----------------------------------
+
+    const RowToolbar:React.FC<{
+        itemIdx:number;
+        queryId:string;
+        name:string;
+        nameEditorVisible:boolean;
+
+    }> = (props) => {
+        return <>
+            <RemoveFromHistoryButton itemIdx={props.itemIdx} />
+            <span>
+                {props.queryId ?
+                <SavedNameInfo
+                        itemIdx={props.itemIdx}
+                        hasEditor={props.nameEditorVisible}
+                        editingQueryName={props.name} /> :
+                        null /* legacy query history record cannot be archived  */
+                }
+            </span>
+        </>
+    }
+
+    // -------------------- <DataRowActions /> ------------------------
+
+    const DataRowActions:React.FC<{
+        data:QueryHistoryItem;
+        toolbarVisible:boolean;
+        nameEditorVisible:boolean;
+
+    }> = (props) => {
+
+        const handleRowToolbarClick = () => {
+            dispatcher.dispatch<Actions.ToggleRowToolbar>({
+                name: ActionName.ToggleRowToolbar,
+                payload: {
+                    rowIdx: props.data.idx
+                }
+            });
+        };
+
+        return (
+            <S.ActionsDiv>
+                {props.data.name && !props.nameEditorVisible ?
+                    <span className="saved-as">
+                        {he.translate('query__save_as_saved_as')}:{'\u00a0'}
+                        <span className="saved-name">{props.data.name}</span>
+                    </span> :
+                    null
+                }
+                <span className="tools">
+                    {props.toolbarVisible ?
+                        <RowToolbar
+                            itemIdx={props.data.idx}
+                            queryId={props.data.query_id}
+                            name={props.data.name}
+                            nameEditorVisible={props.nameEditorVisible} /> :
+                        null
+                    }
+                    <a onClick={handleRowToolbarClick}>
+                        <layoutViews.ImgWithMouseover src={gearIcon} src2={gearIconS} alt="edit" />
+                    </a>
+                </span>
+            </S.ActionsDiv>
+        )
+    }
+
+    // -------------------- <DataRow /> ------------------------
+
+    const DataRow:React.FC<{
+        toolbarVisible:boolean;
+        nameEditorVisible:boolean;
+        data:QueryHistoryItem;
+
+    }> = (props) => {
 
         return (
             <S.DataRowLi>
@@ -397,7 +495,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <span className="supertype">{supertypeToHuman(props.data.q_supertype)}</span>,{'\u00a0'}
                         {props.data.human_corpname}
                         {props.data.subcorpname ?
-                            <span className="subcorpname" title={he.translate('global__subcorpus')}>: {props.data.subcorpname}</span> :
+                            <span className="subcorpname" title={he.translate('global__subcorpus')}>:
+                                    {props.data.subcorpname}</span> :
                             null
                         }
                         {List.map(
@@ -410,35 +509,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     </span>
                 </div>
                 <QueryInfo
-                        isEdited={props.isEdited}
+                        itemIdx={props.data.idx}
+                        isEdited={props.toolbarVisible}
                         query={props.data.query}
                         query_sh={props.data.query_sh}
                         query_type={props.data.query_type}
                         aligned={props.data.aligned}
                         textTypes={props.data.selected_text_types} />
-                <S.ActionsDiv>
-                    {props.data.name !== null && !props.hasEditor ?
-                        <span className="saved-as">
-                            {he.translate('query__save_as_saved_as')}:{'\u00a0'}
-                            <span className="saved-name">{props.data.name}</span>
-                        </span> :
-                        null
-                    }
-                    <span>
-                        {props.data.query_id ?
-                        <SavedNameInfo saved={!!props.data.name && !props.isEdited} itemIdx={props.itemIdx}
-                                hasEditor={props.hasEditor}
-                                editingQueryName={props.data.name} /> :
-                                null /* legacy query history record cannot be archived  */
-                        }
-                    </span>
-                    <span>
-                        <button className="open-in-form util-button" onClick={handleFormClick}>
-                            {he.translate('qhistory__open_in_form')}
-                            {'\u2026'}
-                        </button>
-                    </span>
-                </S.ActionsDiv>
+                <DataRowActions toolbarVisible={props.toolbarVisible}
+                        nameEditorVisible={props.nameEditorVisible}
+                        data={props.data} />
             </S.DataRowLi>
         );
     };
@@ -503,25 +583,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // -------------------- <DataTable /> ------------------------
 
     const DataTable:React.FC<{
-        editedItem:number;
         offset:number;
         hasMoreItems:boolean;
         modelIsBusy:boolean;
+        itemsToolbars:Array<[boolean, boolean]>;
         data:Array<QueryHistoryItem>;
 
     }> = (props) => {
-
         return (
             <div>
                 <ul className="history-entries">
                     {pipe(
                         props.data,
                         List.map(
-                            (item, i) => (
-                                <DataRow key={i + props.offset} itemIdx={i} data={item}
-                                    hasEditor={i === props.editedItem}
-                                    isEdited={props.editedItem === i} />
-                            )
+                            item => {
+                                const [ toolbarVisible, nameEdited ] = props.itemsToolbars[item.idx];
+                                return (
+                                    <DataRow key={item.idx + props.offset} data={item}
+                                        toolbarVisible={toolbarVisible}
+                                        nameEditorVisible={nameEdited} />
+                                );
+                            }
                         )
                     )}
                 </ul>
@@ -533,7 +615,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------- <RecentQueriesPageList /> ------------------------
 
-    const RecentQueriesPageList:React.FC<ModelState> = (props) => {
+    const RecentQueriesPageList:React.FC<SearchHistoryModelState> = (props) => {
         return (
             <S.RecentQueriesPageList>
                 <FilterForm querySupertype={props.querySupertype}
@@ -544,7 +626,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <DataTable data={props.data} offset={props.offset}
                             modelIsBusy={props.isBusy}
                             hasMoreItems={props.hasMoreItems}
-                            editedItem={props.editedItem} />
+                            itemsToolbars={props.itemsToolbars} />
                 }
             </S.RecentQueriesPageList>
         );

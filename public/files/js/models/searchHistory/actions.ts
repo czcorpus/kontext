@@ -36,7 +36,10 @@ export enum ActionName {
     HistoryOpenQueryForm = 'QUERY_HISTORY_OPEN_QUERY_FORM',
     HistoryLoadMore = 'QUERY_HISTORY_LOAD_MORE',
     SelectItem = 'QUERY_HISTORY_SELECT_CURRENT_ITEM',
-    ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET'
+    ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
+    ToggleRowToolbar = 'QUERY_HISTORY_TOGGLE_ROW_TOOLBAR',
+    RemoveItemFromList = 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST',
+    RemoveItemFromListDone = 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST_DONE'
 }
 
 
@@ -73,17 +76,20 @@ export namespace Actions {
     }
 
     export interface HistoryEditorSetName extends Action<{
+        itemIdx:number;
         value:string;
     }> {
         name:ActionName.HistoryEditorSetName;
     }
 
     export interface HistoryEditorClickSave extends Action<{
+        itemIdx:number;
     }> {
         name:ActionName.HistoryEditorClickSave;
     }
 
     export interface HistoryCloseEditedItem extends Action<{
+        itemIdx:number;
     }> {
         name:ActionName.HistoryCloseEditedItem;
     }
@@ -112,4 +118,21 @@ export namespace Actions {
         name:ActionName.ToggleQueryHistoryWidget;
     }
 
+    export interface ToggleRowToolbar extends Action<{
+        rowIdx:number;
+    }> {
+        name:ActionName.ToggleRowToolbar;
+    }
+
+    export interface RemoveItemFromList extends Action<{
+        itemIdx:number;
+    }> {
+        name:ActionName.RemoveItemFromList;
+    }
+
+    export interface RemoveItemFromListDone extends Action<{
+        itemIdx:number;
+    }> {
+        name:ActionName.RemoveItemFromListDone;
+    }
 }
