@@ -325,12 +325,13 @@ class MenuGenerator(object):
 
         self.recent_queries = (
             EventTriggeringItem(MainMenu.VIEW('history'), te('Recent queries'),
-                                'MAIN_MENU_SHOW_QUERY_HISTORY')
+                                'MAIN_MENU_SHOW_QUERY_HISTORY', key_code=72, key_mod='shift')  # key = 'h'
             .mark_indirect()
         )
 
         self.pquery = (
-            MenuItemInternal(MainMenu.NEW_QUERY('paradigmatic-query'), te('Paradigmatic query'), 'pquery/index')
+            MenuItemInternal(MainMenu.NEW_QUERY('paradigmatic-query'),
+                             te('Paradigmatic query'), 'pquery/index')
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('usesubcorp', self._args['usesubcorp']))
@@ -581,7 +582,8 @@ class MenuGenerator(object):
             (MainMenu.NEW_QUERY.name, dict(
                 label=te('Query'),
                 fallback_action='query',
-                items=exp(MainMenu.NEW_QUERY, self.new_query, self.pquery, self.word_list, self.recent_queries),
+                items=exp(MainMenu.NEW_QUERY, self.new_query, self.pquery,
+                          self.word_list, self.recent_queries),
                 disabled=is_disabled(MainMenu.NEW_QUERY)
             )),
             (MainMenu.CORPORA.name, dict(

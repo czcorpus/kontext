@@ -306,6 +306,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <tr>
                             <th>
                                 <span className="key-button">{'\u21E7'}</span>
+                                <span className="key-button">h</span>
+                                -
+                            </th>
+                            <td>{he.translate('global__key_shortcut_history')}</td>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span className="key-button">{'\u21E7'}</span>
                                 <span className="key-button">k</span>
                                 -
                             </th>
