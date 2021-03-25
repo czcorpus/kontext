@@ -21,9 +21,9 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
-const warningIconImg = require('../../../../img/warning-icon.svg').default;
-const tokenHighlightImg = require('../../../../img/token_highlight.svg').default;
-const configIconPink = require('../../../../img/config-icon-pink.svg').default;
+import warningIconImg from '../../../../img/warning-icon.svg';
+import tokenHighlightImg from '../../../../img/token_highlight.svg';
+import configIconPink from '../../../../img/config-icon-pink.svg';
 
 // -------------------- <AdvancedFormFieldsetDesc /> ---------------------------
 

@@ -20,6 +20,7 @@
 
 import { createGlobalStyle } from 'styled-components';
 import * as theme from './index';
+
 import externalLinkImg from '../../../../img/external-link.png';
 
 // ----------------- <GlobalStyle /> -------------------------

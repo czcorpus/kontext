@@ -20,6 +20,8 @@
 
 import styled from 'styled-components';
 
+import warningIcon from '../../../../../img/warning-icon.svg';
+
 
 // ---------------- <CTFlatFreqResultView /> ---------------------
 
@@ -46,7 +48,7 @@ export const CTFlatFreqResultView = styled.div`
     td strong.warn {
         float: left;
         font-weight: bold;
-        background-image: url(../img/warning-icon.svg);
+        background-image: url(${warningIcon});
         background-repeat: no-repeat;
         background-size: 1.1em 1.1em;
         width: 1.1em;

@@ -21,6 +21,8 @@
 import styled from 'styled-components';
 import * as theme from '../../../theme/default';
 
+import warningIcon from '../../../../../img/warning-icon.svg';
+
 // ---------------- <IntervalGroupVisualisation /> ---------------------------------
 
 export const IntervalGroupVisualisation = styled.div`
@@ -141,7 +143,7 @@ export const CT2dFreqResultView = styled.div`
             .warn {
                 float: left;
                 font-weight: bold;
-                background-image: url(../img/warning-icon.svg);
+                background-image: url(${warningIcon});
                 background-repeat: no-repeat;
                 background-size: 1.1em 1.1em;
                 width: 1.1em;

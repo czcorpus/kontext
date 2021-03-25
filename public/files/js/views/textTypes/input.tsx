@@ -27,6 +27,8 @@ import { TTSelOps } from '../../models/textTypes/selectionOps';
 import { Actions, ActionName } from '../../models/textTypes/actions';
 import { init as commonViewInit } from './common';
 
+import * as S from './style';
+
 export interface RawInputMultiValueContainerProps {
     attrObj:TextTypes.TextInputAttributeSelection;
     hasExtendedInfo:boolean;
@@ -190,7 +192,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
         render() {
             return (
-                <table className="textTypes_RawInputContainer">
+                <S.RawInputContainer>
                     <tbody>
                         <tr>
                             <td>
@@ -205,7 +207,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                             <td></td>
                         </tr>
                     </tbody>
-                </table>
+                </S.RawInputContainer>
             );
         }
     }

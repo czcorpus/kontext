@@ -30,6 +30,7 @@ import { init as ttViewInit } from '../../views/textTypes';
 import { TextTypesModelState } from '../../models/textTypes/main';
 
 import * as S from './style';
+import * as TTS from '../../views/textTypes/style';
 
 
 export interface ViewModuleArgs {
@@ -321,17 +322,13 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         };
 
         if (!List.empty(props.alignedCorpora)) {
-            const classes = ['TableTextTypeAttribute', 'aligned'];
-            if (!List.empty(props.selectionSteps) && isAlignedSelectionStep(List.head(props.selectionSteps))) {
-                classes.push('locked');
-            }
             return (
-                <div className={classes.join(' ')}>
-                    <div className="attrib-name">
+                <TTS.TableTextTypeAttribute className={!List.empty(props.selectionSteps) && isAlignedSelectionStep(List.head(props.selectionSteps)) ? 'locked' : null}>
+                    <TTS.AttribName>
                         <h3>{he.translate('ucnkLA__aligned_corpora')}</h3>
                         <ttViews.TextTypeAttributeMinIcon isMinimized={props.isTTListMinimized}
                                 onClick={handleMinIconClick} />
-                    </div>
+                    </TTS.AttribName>
                     {props.isTTListMinimized ?
                         <div /> :
                         <>
@@ -376,12 +373,12 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                 </div>
                             </div>
                             <div className="hidden-values" />
-                            <div className="last-line">
+                            <TTS.LastLine>
                                 {'\u00a0'}
-                            </div>
+                            </TTS.LastLine>
                         </>
                     }
-                </div>
+                </TTS.TableTextTypeAttribute>
             );
 
         } else {
