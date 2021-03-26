@@ -811,28 +811,6 @@ export class ViewPage {
         );
     }
 
-    private initKeyShortcuts():void {
-        const actionMap = this.layoutModel.getModels().mainMenuModel.exportKeyShortcutActions();
-        actionMap.register(
-            69,
-            null,
-            'DASHBOARD_TOGGLE_EXTENDED_INFO',
-            {}
-        );
-        this.layoutModel.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
-            if (document.activeElement === document.body &&
-                    !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
-                const action = actionMap.get(evt.keyCode, evt.shiftKey ? 'shift' : null);
-                if (action) {
-                    this.layoutModel.dispatcher.dispatch({
-                        name: action.message,
-                        payload: action.args
-                    });
-                }
-            }
-        });
-    }
-
     private initTextTypesModel():TextTypesModel {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
             'ConcFormsArgs'
@@ -1062,7 +1040,7 @@ export class ViewPage {
             this.initSampleForm(this.queryModels.switchMcModel);
             this.initQueryOverviewArea(tagHelperPlg);
             this.initAnalysisViews(ttModel);
-            this.initKeyShortcuts();
+            this.layoutModel.initKeyShortcuts();
             this.updateHistory();
             if (this.layoutModel.getConf<boolean>('Unfinished')) {
                 this.reloadHits();

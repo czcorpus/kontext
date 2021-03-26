@@ -729,6 +729,30 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         this.appNavig.registerPageLeaveVoters(...models);
     }
 
+    // this will enable key shortcuts
+
+    initKeyShortcuts():void {
+        const actionMap = this.mainMenuModel.exportKeyShortcutActions();
+        actionMap.register(
+            69,
+            null,
+            'DASHBOARD_TOGGLE_EXTENDED_INFO',
+            {}
+        );
+        this.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
+            if (document.activeElement === document.body &&
+                    !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
+                const action = actionMap.get(evt.keyCode, evt.shiftKey ? 'shift' : null);
+                if (action) {
+                    this.dispatcher.dispatch({
+                        name: action.message,
+                        payload: action.args
+                    });
+                }
+            }
+        });
+    }
+
     /**
      * Page layout and content initialization. Any concrete page should
      * call this while passing its own initialization logic as the

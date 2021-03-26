@@ -255,6 +255,7 @@ export class WordlistPage {
             );
 
             this.initCorpInfoToolbar();
+            this.layoutModel.initKeyShortcuts();
 
             this.layoutModel.getHistory().replaceState(
                 'wordlist/result',
