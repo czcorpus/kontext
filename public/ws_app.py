@@ -141,7 +141,7 @@ async def app_factory(redis_client: Redis=None) -> web.Application:
     if settings.get('calc_backend', 'type') == 'rq':
         app.router.add_get('/job_status', functools.partial(job_status_ws_handler, redis_client))
     else:
-        logging.warn('WebSocket status check is supported only for Rq backend')
+        logging.error('WebSocket status check is supported only for Rq backend')
 
     return app
 
@@ -156,4 +156,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     redis_client = Redis(host=args.redis_host, port=args.redis_port, db=args.redis_db)
-    web.run_app(app_factory(redis_client), path=args.host, port=args.port)
+    web.run_app(app_factory(redis_client), host=args.host, port=args.port)
