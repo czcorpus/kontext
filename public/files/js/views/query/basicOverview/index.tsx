@@ -19,20 +19,12 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { ActionName, Actions } from '../../../models/query/actions';
 import * as S from './style';
-
-
-export interface EmptyQueryOverviewBarProps {
-    corpname:string;
-    humanCorpname:string;
-    usesubcorp:string;
-    origSubcorpName:string;
-    foreignSubcorp:boolean;
-}
+import { MainMenuModelState } from '../../../models/mainMenu';
 
 
 export interface QueryOverviewTableProps {
@@ -42,7 +34,7 @@ export interface QueryOverviewTableProps {
 
 
 export interface BasicOverviewViews {
-    EmptyQueryOverviewBar:React.FC<EmptyQueryOverviewBarProps>;
+    EmptyQueryOverviewBar:React.ComponentClass<{}, MainMenuModelState>;
     QueryOverviewTable:React.FC<QueryOverviewTableProps>;
 }
 
@@ -55,13 +47,13 @@ export interface BasicOverviewViews {
  * @param {*} dispatcher
  * @param {*} he
  */
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):BasicOverviewViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, mainMenuModel:IModel<MainMenuModelState>):BasicOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
     // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
 
-    const EmptyQueryOverviewBar:React.FC<EmptyQueryOverviewBarProps> = (props) => (
+    const EmptyQueryOverviewBar:React.FC<MainMenuModelState> = (props) => (
         <div>
             <S.QueryOverviewBarUL>
                 <layoutViews.CorpnameInfoTrigger
@@ -130,7 +122,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     };
 
     return {
-        EmptyQueryOverviewBar: EmptyQueryOverviewBar,
+        EmptyQueryOverviewBar: BoundWithProps<{}, MainMenuModelState>(EmptyQueryOverviewBar, mainMenuModel),
         QueryOverviewTable: QueryOverviewTable
     };
 

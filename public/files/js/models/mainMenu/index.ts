@@ -28,6 +28,7 @@ import { ActionName as ConcActionName } from '../concordance/actions';
 import { Actions as GeneralOptsActions,
     ActionName as GeneralOptsActionName } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { ConcServerArgs } from '../concordance/common';
 
 
@@ -161,6 +162,11 @@ export interface MainMenuModelState {
     data:Array<Kontext.MenuEntry>;
     isBusy:boolean;
     concArgs:ConcServerArgs;
+    corpname:string;
+    humanCorpname:string;
+    usesubcorp?:string;
+    origSubcorpName?:string;
+    foreignSubcorp?:boolean;
 }
 
 
@@ -178,7 +184,12 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 visibleSubmenu: null,
                 data: importMenuData(initialData.submenuItems),
                 isBusy: false,
-                concArgs
+                concArgs,
+                corpname: pageModel.getCorpusIdent().id,
+                humanCorpname: pageModel.getCorpusIdent().name,
+                usesubcorp: pageModel.getCorpusIdent().usesubcorp,
+                origSubcorpName: pageModel.getCorpusIdent().origSubcorpName,
+                foreignSubcorp: pageModel.getCorpusIdent().foreignSubcorp
             }
         );
         this.pageModel = pageModel;
@@ -279,6 +290,15 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             GlobalActionName.ConcArgsUpdated,
             (state, action) => {
                 state.concArgs = action.payload.args
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
+            QueryActionName.QueryInputSelectSubcorp,
+            (state, action) => {
+                state.usesubcorp = action.payload.pubName ? action.payload.pubName : action.payload.subcorp;
+                state.origSubcorpName = action.payload.pubName ? action.payload.subcorp : null;
+                state.foreignSubcorp = action.payload.foreign;
             }
         );
     }

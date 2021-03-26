@@ -54,13 +54,13 @@ class ParadigmaticQueryPage {
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             model,
-            helpModel
+            helpModel,
+            this.layoutModel.getModels().mainMenuModel
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews,
             window.document.getElementById('query-overview-mount'),
             {
-                currCorpus: this.layoutModel.getCorpusIdent(),
                 queryId: this.layoutModel.getConf<string>('QueryId')
             }
         );

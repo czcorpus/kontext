@@ -60,7 +60,6 @@ import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
 import { GlobalStyle } from '../views/theme/default/global';
 import { SearchHistoryModel } from '../models/searchHistory';
-import { concatMap, filter, map, tap } from 'rxjs/operators';
 
 
 export enum DownloadType {

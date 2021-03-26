@@ -161,18 +161,12 @@ export class SubcorpForm {
     private initCorpusInfo():void {
         const queryOverviewViews = basicOverviewViewsInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers()
+            this.layoutModel.getComponentHelpers(),
+            this.layoutModel.getModels().mainMenuModel
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.EmptyQueryOverviewBar,
             window.document.getElementById('query-overview-mount'),
-            {
-                corpname: this.layoutModel.getCorpusIdent().id,
-                humanCorpname: this.layoutModel.getCorpusIdent().name,
-                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp
-            }
         );
     }
 
