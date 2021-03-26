@@ -111,12 +111,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             );
 
         } else if (canStartPlayback()) {
-            return <a className="speech-link" onClick={handleClick}
-                        title={he.translate('concview__click_to_play_audio')}>{getChar()}</a>;
+            return <S.AudioLink onClick={handleClick} title={he.translate('concview__click_to_play_audio')}>
+                {getChar()}
+            </S.AudioLink>;
 
         } else {
-            return <span className="speech-link disabled"
-                        title={he.translate('concview__segment_has_no_playback_data')}>{getChar()}</span>;
+            return <S.AudioLinkDisabled title={he.translate('concview__segment_has_no_playback_data')}>
+                {getChar()}
+            </S.AudioLinkDisabled>;
         }
     };
 
