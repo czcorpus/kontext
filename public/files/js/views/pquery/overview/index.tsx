@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { BoundWithProps, IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
 import { PqueryFormModelState } from '../../../models/pquery/common';
 import { PqueryFormModel } from '../../../models/pquery/form';
 import { Kontext } from '../../../types/common';
@@ -30,17 +30,17 @@ import { Dict, List, pipe, Strings } from 'cnc-tskit';
 import * as S from './style';
 import { ActionName, Actions } from '../../../models/pquery/actions';
 import { HtmlHelpModel } from '../../../models/help/help';
+import { MainMenuModelState } from '../../../models/mainMenu';
 
 
 export interface OverviewProps {
-    currCorpus:Kontext.FullCorpusIdent;
     queryId:string;
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:PqueryFormModel, helpModel:HtmlHelpModel):React.ComponentClass<OverviewProps> {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, model:PqueryFormModel, helpModel:HtmlHelpModel, mainMenuModel:IModel<MainMenuModelState>):React.ComponentClass<OverviewProps> {
 
-    const basicOverview = basicOverviewViewsInit(dispatcher, he);
+    const basicOverview = basicOverviewViewsInit(dispatcher, he, mainMenuModel);
     const PqueryViews = formInit({dispatcher, he, model, helpModel});
     const layoutViews = he.getLayoutViews();
 
@@ -66,10 +66,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         return (
             <S.Overview>
-                <basicOverview.EmptyQueryOverviewBar
-                        corpname={props.currCorpus.id} foreignSubcorp={props.currCorpus.foreignSubcorp}
-                        humanCorpname={props.currCorpus.name} origSubcorpName={props.currCorpus.origSubcorpName}
-                        usesubcorp={props.currCorpus.usesubcorp}>
+                <basicOverview.EmptyQueryOverviewBar>
                     {props.queryId ?
                         <li>
                             {'\u00a0 | '}

@@ -123,7 +123,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
     const layoutViews = he.getLayoutViews();
     const saveViews = saveViewInit(dispatcher, he, querySaveAsModel);
-    const basicOverviewViews = basicOverviewInit(dispatcher, he);
+    const basicOverviewViews = basicOverviewInit(dispatcher, he, mainMenuModel);
 
 
     const formTypeToTitle = (opFormType:string, subvariant?:string) => {
