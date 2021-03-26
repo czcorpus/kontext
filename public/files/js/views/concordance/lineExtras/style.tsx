@@ -33,10 +33,6 @@ export const AudioLink = styled.a`
     text-decoration: none;
     padding: 0 0.1em 0 0.1em;
 
-    .active a.speech-link {
-        color: #E9F7FC;
-    }
-
     :hover {
         background-color: #9ce;
         color: #FFF;
