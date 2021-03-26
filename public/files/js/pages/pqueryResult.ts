@@ -169,6 +169,7 @@ class ParadigmaticQueryPage {
             // ---
 
             this.initCorpnameLink(formModel, helpModel);
+            this.layoutModel.initKeyShortcuts();
 
             // ---
             if (!this.layoutModel.getConf<boolean>('DataReady')) {

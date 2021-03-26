@@ -370,6 +370,7 @@ export class CollPage {
             this.initAnalysisViews();
             this.initQueryOpNavigation();
             this.setupBackButtonListening();
+            this.layoutModel.initKeyShortcuts();
         });
     }
 }

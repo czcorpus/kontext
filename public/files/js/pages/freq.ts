@@ -383,6 +383,28 @@ class FreqPage {
         }
     }
 
+    private initKeyShortcuts():void {
+        const actionMap = this.layoutModel.getModels().mainMenuModel.exportKeyShortcutActions();
+        actionMap.register(
+            69,
+            null,
+            'DASHBOARD_TOGGLE_EXTENDED_INFO',
+            {}
+        );
+        this.layoutModel.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
+            if (document.activeElement === document.body &&
+                    !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
+                const action = actionMap.get(evt.keyCode, evt.shiftKey ? 'shift' : null);
+                if (action) {
+                    this.layoutModel.dispatcher.dispatch({
+                        name: action.message,
+                        payload: action.args
+                    });
+                }
+            }
+        });
+    }
+
     init() {
         this.layoutModel.init(true, [], () => {
             const subcorpSel = new NonQueryCorpusSelectionModel({
@@ -438,6 +460,7 @@ class FreqPage {
             this.initQueryOpNavigation();
             this.initFreqResult();
             this.setupBackButtonListening();
+            this.initKeyShortcuts()
         });
     }
 }
