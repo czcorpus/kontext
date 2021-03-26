@@ -694,7 +694,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     openWebSocket<T, U>(args?:MultiDict):[Subject<T>, Observable<U>] {
         const params = args ? '?' + this.encodeURLParameters(args) : '';
         const url = new URL(this.getConf<string>('jobStatusServiceUrl') + params);
-        url.protocol = 'ws';
         const ws = webSocket<any>(url.href);
         const input = new Subject<T>();
         input.subscribe(ws);
