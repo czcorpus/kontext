@@ -30,8 +30,8 @@ def update_1(doc):
             srch.text = 'default_query_history'
 
         srch = qh.find('js_module')
-        if srch is not None and srch.text == 'defaultQueryStorage':
-            srch.text = 'defaultQueryHistory'
+        if srch is not None:
+            srch.getparent().remove(srch)
 
 
 def update_2(doc):

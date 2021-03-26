@@ -1,0 +1,15 @@
+[Unit]
+Description=websocket kontext server (1)
+PartOf=websocket-kontext-all@.target
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/kontext/public
+ExecStart=/usr/bin/python3 /opt/kontext/public/ws_app.py --port 8097
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+
+[Install]
+WantedBy=multi-user.target

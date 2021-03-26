@@ -696,7 +696,9 @@
                     </element>
                     <element name="query_history">
                         <a:documentation>A plug-in for storing current queries for later retrieval</a:documentation>
-                        <ref name="plugin_common" />
+                        <element name="module">
+                            <text />
+                        </element>
                         <element name="page_num_records">
                             <data type="integer" />
                         </element>
