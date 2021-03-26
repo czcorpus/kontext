@@ -59,7 +59,7 @@ export class HitReloader {
         const wsArgs = new MultiDict();
         wsArgs.set('corpusId', this.layoutModel.getCorpusIdent().id);
         wsArgs.set('cacheKey', this.layoutModel.getConf('ConcCacheKey'));
-        const [ws, input] = this.layoutModel.openWebSocket(wsArgs);
+        const ws = this.layoutModel.openWebSocket(wsArgs);
 
         if (ws && false) {
             /* TODO !!!
