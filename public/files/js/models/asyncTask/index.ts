@@ -309,6 +309,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             checkTasks$.next(List.map(item => item.ident, this.state.asyncTasks));
 
         } else { // the ajax way
+
             const timer$ = taskCheckTimer();
             timer$.pipe(
                 concatMap(
@@ -348,7 +349,10 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     init():void {
         if (!List.empty(this.state.asyncTasks)) {
+            // refresh watched tasks received by ws
             this.checkCurrentTasks();
+
+        } else {
         }
     }
 }
