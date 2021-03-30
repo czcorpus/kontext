@@ -285,7 +285,7 @@ class PyConc(manatee.Concordance):
         head = [dict(n=label(attrs[x]), s=x / 2)
                 for x in range(0, len(attrs), 2)]
         head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
-
+        has_empty_item = False
         tofbar, tonbar = calc_scale(freqs, norms)
         if tonbar and not ml:
             maxf = max(freqs)  # because of bar height
@@ -310,7 +310,6 @@ class PyConc(manatee.Concordance):
                 head.append(dict(n='Freq [%]', title='', s='rel'))
 
             lines = []
-            has_empty_item = False
             for w, f, nf in zip(words, freqs, norms):
                 rel_norm_freq = {
                     0: round(f * 1e6 / nf, 2),
