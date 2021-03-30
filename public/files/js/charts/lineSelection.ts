@@ -123,36 +123,65 @@ export class LineSelGroupsRatiosChart {
         const labelWrapper:HTMLElement = window.document.createElement('table');
         const tbody:HTMLElement = window.document.createElement('tbody');
         const total = data.reduce((prev, curr)=>(prev + curr['count']), 0);
+
         const percentage = (item) => {
-            return (item['count'] / total * 100).toFixed(1) + '%';
+            return (item / total * 100).toFixed(1) + '%';
         };
+
+        const sortedData = List.sorted(
+            (x1, x2) => x1.groupId > x2.groupId ? 1 : -1,
+            data
+        );
+
+        const dataPairs = pipe(
+            sortedData,
+            List.filter((_, i) => i < List.size(sortedData) / 2),
+            List.zipAll(List.filter((_, i) => i >= List.size(sortedData) / 2, sortedData)),
+        );
 
         const trSel = d3.select(labelWrapper)
             .attr('class', 'chart-label')
             .append(() => tbody)
             .selectAll('tr')
-            .data(data.sort((x1, x2) => x1.groupId > x2.groupId ? 1 : -1))
+            .data(dataPairs)
             .enter()
             .append('tr');
-        trSel
-            .append('td')
-                .attr('class', 'label-text color-code')
-                .append('svg')
-                .attr('width', '1.5em')
-                .attr('height', '1.5em')
-                .append('rect')
-                .attr('width', '100%')
-                .attr('height', '100%')
-                .style('fill', (d:any) => colors[d['groupId']]);
-        trSel.append('th')
-            .attr('class', 'num')
-            .text((d) => d['group']);
-        trSel.append('td')
-            .attr('class', 'num')
-            .text(d => percentage(d));
-        trSel.append('td')
-            .attr('class', 'num')
-            .text(d => '(' + d['count'] + 'x)');
+
+        const addRowData = (colNum:number, dataSel:(d:any, key:string)=>any) => {
+            trSel
+                .append('td')
+                    .attr('class', 'label-text color-code')
+                    .style('padding-left', colNum === 1 ? '1em' : '0')
+                    .append('svg')
+                    .attr('width', '1.5em')
+                    .attr('height', '1.5em')
+                    .append('rect')
+                    .attr('width', '100%')
+                    .attr('height', '100%')
+                    .style('fill', d => colors[dataSel(d, 'groupId')])
+                    .style('display', d => dataSel(d, 'groupId') ? undefined : 'none');
+            trSel.append('th')
+                .attr('class', 'num')
+                .text(d => dataSel(d, 'group'))
+                .style('display', d => dataSel(d, 'groupId') ? undefined : 'none');
+            trSel.append('td')
+                .attr('class', 'num')
+                .text(d => percentage(dataSel(d, 'count')))
+                .style('display', d => dataSel(d, 'groupId') ? undefined : 'none');
+            trSel.append('td')
+                .attr('class', 'num')
+                .text(d => '(' + dataSel(d, 'count') + 'x)')
+                .style('display', d => dataSel(d, 'groupId') ? undefined : 'none');
+        };
+
+        addRowData(0, (item, key) => {
+            const tmp = item[0];
+            return tmp ? tmp[key] : undefined;
+        });
+        addRowData(1, (item, key) => {
+            const tmp = item[1];
+            return tmp ? tmp[key] : undefined;
+        });
         rootElm.append(() => labelWrapper);
     }
 
