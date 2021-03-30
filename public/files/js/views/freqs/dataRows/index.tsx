@@ -31,6 +31,7 @@ interface DataTableProps {
     head:Array<ResultHeader>;
     rows:Array<ResultItem>;
     sortColumn:string;
+    hasSkippedEmpty:boolean;
 }
 
 
@@ -49,6 +50,8 @@ export function init(
         pfilter:string;
         nfilter:string;
     }
+
+    const layoutViews = he.getLayoutViews();
 
     const DataRowPNFilter:React.FC<DataRowPNFilterProps> = (props) => {
 
@@ -207,25 +210,39 @@ export function init(
         };
 
         return (
-            <table className="data">
-                <tbody>
-                    <tr>
-                        <th />
-                        <th>{he.translate('freq__ct_filter_th')}</th>
-                        {List.map(
-                            (item, i) => <TableColHead key={`${item.n}:${i}`} sortColumn={props.sortColumn} data={item} />,
-                            props.head
-                        )}
-                        <th title={getBarChartTitle()} />
-                    </tr>
-                    {renderRows()}
-                </tbody>
-            </table>
+            <S.DataTable>
+                <table className="data">
+                    <tbody>
+                        <tr>
+                            <th />
+                            <th>{he.translate('freq__ct_filter_th')}</th>
+                            {List.map(
+                                (item, i) => <TableColHead key={`${item.n}:${i}`} sortColumn={props.sortColumn} data={item} />,
+                                props.head
+                            )}
+                            <th title={getBarChartTitle()} />
+                        </tr>
+                        {List.empty(props.rows) ?
+                            <tr><td colSpan={3 + List.size(props.head)}>{'\u00a0'}</td></tr> :
+                            renderRows()
+                        }
+                    </tbody>
+                </table>
+                {props.hasSkippedEmpty ?
+                    <div className="skipped-info">
+                        <layoutViews.StatusIcon status="info" />
+                        <p className="note">
+                            {he.translate('freq__contains_skipped_empty_note_{attr}', {attr: props.head[0].n})}.
+                        </p>
+                    </div> :
+                    null
+                }
+            </S.DataTable>
         );
     }
 
 
     return {
-        DataTable: DataTable
+        DataTable
     };
 }

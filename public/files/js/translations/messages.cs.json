@@ -675,6 +675,7 @@
         "freq__neg_filter_disabled": "Negativní filtr zde nelze použít.",
         "freq__save_form_label": "Uložit frekvenční seznam",
         "freq__save_form_from_value_err_msg": "Hodnota nalevo musí být větší nebo rovna 1 a menší než hodnota napravo (je-li definována).",
+        "freq__contains_skipped_empty_note_{attr}": "Z výpisu je vynechána položka s prázdnou hodnotou atributu {attr}",
         "freq__ct_dim1": "řádky",
         "freq__ct_dim2": "sloupce",
         "freq__ct_transpose_table": "Řádky \u21C6 sloupce",

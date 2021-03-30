@@ -306,6 +306,7 @@ export namespace FreqResultResponse {
         Items:Array<Item>;
         Head:Array<Header>;
         Total:number;
+        SkippedEmpty:boolean;
     }
 
     export interface FreqResultResponse extends AjaxConcResponse {

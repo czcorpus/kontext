@@ -25,13 +25,11 @@ import { FreqResultsSaveModel } from './save';
 import { MultiDict } from '../../multidict';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { FreqServerArgs, HistoryState } from './common';
+import { FreqServerArgs } from './common';
 import { HTTP, List } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
-import { Action } from 'rxjs/internal/scheduler/Action';
-import { catchError } from 'rxjs/operators';
 import { ajaxErrorMapped } from '../../app/navigation';
 
 
@@ -60,6 +58,7 @@ export interface ResultBlock {
     Total:number;
     Items:Array<ResultItem>;
     Head:Array<ResultHeader>;
+    SkippedEmpty:boolean;
 }
 
 export interface FreqDataRowsModelArgs {
@@ -84,7 +83,13 @@ export interface FreqDataRowsModelState {
     saveFormActive:boolean;
 }
 
-export function importData(pageModel:PageModel, data:Array<FreqResultResponse.Block>, pageSize:number, currentPage:number):Array<ResultBlock> {
+export function importData(
+    pageModel:PageModel,
+    data:Array<FreqResultResponse.Block>,
+    pageSize:number,
+    currentPage:number
+):Array<ResultBlock> {
+
     return List.map(item => ({
         Items: List.map((item, i) => ({
             idx: i + (currentPage - 1) * pageSize,
@@ -102,7 +107,8 @@ export function importData(pageModel:PageModel, data:Array<FreqResultResponse.Bl
         }), item.Items),
         Head: item.Head,
         TotalPages: item.TotalPages,
-        Total: item.Total
+        Total: item.Total,
+        SkippedEmpty: item.SkippedEmpty
     }), data);
 }
 

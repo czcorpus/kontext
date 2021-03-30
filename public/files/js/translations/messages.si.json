@@ -681,6 +681,7 @@
         "freq__neg_filter_disabled": "Negative filter cannot be used here. UNTRANSLATED",
         "freq__save_form_label": "Save frequency list UNTRANSLATED",
         "freq__save_form_from_value_err_msg": "The left value must be greater of equal to 1 and smaller than the right value (if defined). UNTRANSLATED",
+        "freq__contains_skipped_empty_note_{attr}": "An item with an empty attribute value has been removed from the list UNTRANSLATED",
         "freq__ct_dim1": "rows UNTRANSLATED",
         "freq__ct_dim2": "columns UNTRANSLATED",
         "freq__ct_transpose_table": "Rows ⇆ columns UNTRANSLATED",

@@ -30,3 +30,22 @@ export const DataRowTR = styled.tr`
         background-color: ${theme.colorLogoBlue};
     }
 `;
+
+// -------------- <DataTableDiv /> -------------
+
+export const DataTable = styled.div`
+
+    .skipped-info {
+        display: flex;
+        align-items: center;
+        margin-top: 1em;
+
+        img {
+            width: 1.4em;
+        }
+
+        p {
+            margin-left: 0.7em;
+        }
+    }
+`;
