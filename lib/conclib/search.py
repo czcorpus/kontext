@@ -101,7 +101,8 @@ def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
         cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
         status = cache_map.add_to_map(subchash, q[:1], status)
         conc.save(status.cachefile)
-        os.chmod(status.cachefile, 0o664)
+        if os.getuid() == os.stat(status.cachefile).st_uid:
+            os.chmod(status.cachefile, 0o664)
         # update size in map file
         cache_map.update_calc_status(subchash, q[:1], concsize=conc.size(), readable=True, finished=True)
     return conc
@@ -201,7 +202,8 @@ def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc
                     calc_status.concsize = conc.size()
                     calc_status = cache_map.add_to_map(subchash, q[:act + 1], calc_status)
                     conc.save(calc_status.cachefile)
-                    os.chmod(calc_status.cachefile, 0o664)
+                    if os.getuid() == os.stat(calc_status.cachefile).st_uid:
+                        os.chmod(calc_status.cachefile, 0o664)
                     # TODO can we be sure here that conc is finished even if its not the first query op.?
                     cache_map.update_calc_status(
                         subchash, q[:act + 1], finished=True, readable=True, concsize=conc.size())
