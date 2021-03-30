@@ -234,7 +234,8 @@ export function init(
                                     <ResultSizeInfo totalPages={block.TotalPages} totalItems={block.Total} />
                                     <drViews.DataTable head={block.Head}
                                             sortColumn={this.props.sortColumn}
-                                            rows={block.Items} />
+                                            rows={block.Items}
+                                            hasSkippedEmpty={block.SkippedEmpty} />
                                 </div>
                             );
                         }, this.props.data)}

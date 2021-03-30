@@ -674,6 +674,7 @@
         "freq__neg_filter_disabled": "Niy idzie sam użyć negatywnego filtra.",
         "freq__save_form_label": "Zapisz listã frekwyncyjnõ",
         "freq__save_form_from_value_err_msg": "Lewŏ werta musi być srogszŏ abo rōwnŏ 1 i myńszŏ ôd prawyj werty (jeźli je zdefiniowanŏ).",
+        "freq__contains_skipped_empty_note_{attr}": "An item with an empty attribute value has been removed from the list UNTRANSLATED",
         "freq__ct_dim1": "linije",
         "freq__ct_dim2": "kolumny",
         "freq__ct_transpose_table": "Linije \u21C6 kolumny",

@@ -27,7 +27,7 @@ import corplib
 from conclib.calc import require_existing_conc
 import settings
 import bgcalc
-from bgcalc.errors import UnfinishedConcordanceError
+from bgcalc.errors import UnfinishedConcordanceError, CalcBackendError
 from translation import ugettext as _
 from controller.errors import UserActionException
 
@@ -264,6 +264,8 @@ def calculate_freqs(args: FreqCalsArgs):
         # worker task caches the value AFTER the result is returned (see worker.py)
         calc_result = res.get()
 
+    if calc_result is None:
+        raise CalcBackendError('Failed to get result')
     data = calc_result['freqs']
     conc_size = calc_result['conc_size']
     lastpage = None

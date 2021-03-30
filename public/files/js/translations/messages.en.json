@@ -675,6 +675,7 @@
         "freq__neg_filter_disabled": "Negative filter cannot be used here.",
         "freq__save_form_label": "Save frequency list",
         "freq__save_form_from_value_err_msg": "The left value must be greater of equal to 1 and smaller than the right value (if defined).",
+        "freq__contains_skipped_empty_note_{attr}": "An item with an empty attribute value has been removed from the list",
         "freq__ct_dim1": "rows",
         "freq__ct_dim2": "columns",
         "freq__ct_transpose_table": "Rows \u21C6 columns",
