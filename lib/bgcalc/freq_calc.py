@@ -257,6 +257,7 @@ def calculate_freqs(args: FreqCalsArgs):
     calc_result, cache_path = cache.get(fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
                                         ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
                                         collator_locale=args.collator_locale)
+
     if calc_result is None:
         args.cache_path = cache_path
         app = bgcalc.calc_backend_client(settings)
@@ -280,7 +281,8 @@ def calculate_freqs(args: FreqCalsArgs):
         ans = [dict(Total=total_length,
                     TotalPages=int(math.ceil(total_length / float(items_per_page))),
                     Items=data[0]['Items'][fstart:fmaxitems - 1] if 'Items' in data[0] else [],
-                    Head=data[0].get('Head', []))]
+                    Head=data[0].get('Head', []),
+                    SkippedEmpty=data[0].get('SkippedEmpty', False))]
     else:
         for item in data:
             if 'Items' not in item:
