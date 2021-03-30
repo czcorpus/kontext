@@ -154,7 +154,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
         return (
             <layoutViews.ModalOverlay onCloseKey={props.onCloseClick}>
-                <layoutViews.CloseableFrame onCloseClick={props.onCloseClick} label={he.translate('linesel__operations_modal_heading')}>
+                <layoutViews.CloseableFrame scrollable={true} onCloseClick={props.onCloseClick} label={he.translate('linesel__operations_modal_heading')}>
                     {renderContents()}
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
