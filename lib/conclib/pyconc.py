@@ -261,6 +261,12 @@ class PyConc(manatee.Concordance):
             lab = self.pycorp.get_conf(attr + '.LABEL')
             return lab if lab else attr
 
+        def export_word(wrd):
+            return [{'n': '  '.join(n.split('\v'))} for n in wrd.split('\t')]
+
+        def test_word_empty(wrd):
+            return len(wrd) == 1 and (wrd[0]['n'] == '' or wrd[0]['n'] == '===NONE===')
+
         words = manatee.StrVector()
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
@@ -272,6 +278,7 @@ class PyConc(manatee.Concordance):
         if rel_mode == 0:
             norms2_dict = self.get_attr_values_sizes(crit)
             norms = [norms2_dict.get(x, 0) for x in words]
+
         sumf = float(sum([x for x in freqs]))
         attrs = crit.split()
         head = [dict(n=label(attrs[x]), s=x / 2)
@@ -302,6 +309,7 @@ class PyConc(manatee.Concordance):
                 head.append(dict(n='Freq [%]', title='', s='rel'))
 
             lines = []
+            has_empty_item = False
             for w, f, nf in zip(words, freqs, norms):
                 rel_norm_freq = {
                     0: round(f * 1e6 / nf, 2),
@@ -317,8 +325,12 @@ class PyConc(manatee.Concordance):
                     0: int(normwidth_freq * float(f) / (maxf - minf + 1) + 1),
                     1: 10
                 }[rel_mode]
+                word = export_word(w)
+                if test_word_empty(word):
+                    has_empty_item = True
+                    continue
                 lines.append(dict(
-                    Word=[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
+                    Word=word,
                     freq=f,
                     fbar=int(f * tofbar) + 1,
                     norm=nf,
@@ -331,14 +343,17 @@ class PyConc(manatee.Concordance):
         else:
             lines = []
             for w, f, nf in zip(words, freqs, norms):
+                word = export_word(w)
+                if len(word) == 1 and (word[0]['n'] == '' or word[0]['n'] == '===NONE==='):
+                    has_empty_item = True
+                    continue
                 lines.append(dict(
-                    Word=[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
+                    Word=word,
                     freq=f,
                     fbar=int(f * tofbar) + 1,
                     norel=1,
                     relbar=None
                 ))
-
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]
@@ -364,7 +379,7 @@ class PyConc(manatee.Concordance):
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
             lines = sorted(lines, key=lambda v: v[sortkey], reverse=True)
-        return dict(Head=head, Items=lines)
+        return dict(Head=head, Items=lines, SkippedEmpty=has_empty_item)
 
     def xdistribution(self, xrange, yrange):
         """
