@@ -106,7 +106,7 @@ class DefaultCacheMapping(AbstractConcCache):
             os.chmod(cache_dir, 0o775)
 
     def _cache_dir_path(self) -> str:
-        return os.path.normpath('%s/%s' % (self._cache_root_dir, self._corpus.corpname))
+        return os.path.join(self._cache_root_dir, self._corpus.corpname)
 
     def _create_cache_file_path(self, subchash: Optional[str], q: Tuple[str, ...]) -> str:
         return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), _uniqname(subchash, q)))
