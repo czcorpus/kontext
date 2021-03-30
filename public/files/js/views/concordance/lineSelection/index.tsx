@@ -25,6 +25,7 @@ import { LineSelectionModel, LineSelectionModelState } from '../../../models/con
 import { ActionName, Actions } from '../../../models/concordance/actions';
 import { ActionName as UserActionName, Actions as UserActions } from '../../../models/user/actions';
 import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
+import * as S from './style';
 
 
 export interface LockedLineGroupsMenuProps {
@@ -419,7 +420,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         render() {
             return (
-                <div id="selection-actions">
+                <S.LockedLineGroupsMenu>
                     <h3>{he.translate('linesel__saved_line_groups_heading')}</h3>
 
                     {this.props.renameLabelDialogVisible ?
@@ -435,7 +436,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             handleEmailDialogButton={this._handleEmailDialogButton}
                             handleDialogShowClick={this._handleDialogShowClick}
                             emailChangeHandler={this._emailChangeHandler} />
-                </div>
+                </S.LockedLineGroupsMenu>
             )
         }
     }
