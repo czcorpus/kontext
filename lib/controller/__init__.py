@@ -294,6 +294,7 @@ class Controller(object):
         result['deployment_suff'] = '?_v={0}'.format(hashlib.md5(deployment_id.encode('utf-8')).hexdigest()[
             :6]) if deployment_id else ''
         result['current_action'] = '/'.join([x for x in self.get_current_action() if x])
+        result['user_id'] = self.session_get('user', 'id')
 
     def get_current_url(self) -> str:
         """

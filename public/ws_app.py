@@ -18,8 +18,9 @@ APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, os.path.join(APP_PATH, 'lib'))  # application libraries
 
 import settings
-import manatee
-from conclib.calc import cancel_conc_task, ConcNotFoundException
+from conclib.calc import cancel_conc_task
+from corplib.corpus import KCorpus
+from corplib import CorpusManager
 from bgcalc.errors import CalcTaskNotFoundError
 from bgcalc import calc_backend_client
 import plugins
@@ -27,7 +28,10 @@ import initializer
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 initializer.init_plugin('db')
+initializer.init_plugin('integration_db')
+initializer.init_plugin('query_persistence')
 initializer.init_plugin('conc_cache')
+initializer.init_plugin('auth')
 
 TASK_LIMIT = settings.get_int('calc_backend', 'task_time_limit')
 JOB_REFRESH_PERIOD = 1.0  # in seconds
@@ -146,16 +150,22 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
     # wait for concordance parameters
     msg = await ws.receive()
     params = json.loads(msg.data)
-    corp = load_corp(params['corp_id'], params.get('subc_path', None))
+
+    subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
+    with plugins.runtime.AUTH as auth:
+        if not auth.is_anonymous(params['user_id']):
+            subcpath.insert(0, os.path.join(settings.get('corpora', 'users_subcpath'), str(params['user_id'])))
+    cm = CorpusManager(subcpath)
+    corp = cm.get_Corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
 
     # check until finished
     while not ws.closed:
         try:
-            response = get_conc_cache_status(corp, params['q'])
+            response = get_conc_cache_status(corp, params['conc_id'])
         except Exception as e:
-            response = {'error': str(e)}
+            response = {'error': str(e), 'finished': True}
         await ws.send_json(response)
-        
+
         if response['finished']:
             await ws.close()
         else:
@@ -164,27 +174,14 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
     return ws
 
 
-def load_corp(corp_id, subc_path):
-    """
-    Instantiate a manatee.Corpus (or manatee.SubCorpus)
-    instance
-
-    arguments:
-    corp_id -- a corpus identifier
-    subc_path -- path to a subcorpus
-    """
-    corp = manatee.Corpus(corp_id)
-    if subc_path:
-        corp = manatee.SubCorpus(corp, subc_path)
-    corp.corpname = corp_id
-    return corp
-
-
-def get_conc_cache_status(corp, q):
+def get_conc_cache_status(corp: KCorpus, conc_id: str):
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    subchash = getattr(corp, 'subchash', None)
+    q = []
     try:
-        cache_status = cache_map.get_calc_status(subchash, q)
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            data = qp.open(conc_id)
+            q = data.get('q', [])
+        cache_status = cache_map.get_calc_status(corp.subchash, data.get('q', []))
         if cache_status is None:  # conc is not cached nor calculated
             return Exception('Concordance calculation is lost')
         elif not cache_status.finished and cache_status.task_id:
@@ -202,10 +199,10 @@ def get_conc_cache_status(corp, q):
             'arf': cache_status.arf
         }
     except CalcTaskNotFoundError as ex:
-        cancel_conc_task(cache_map, subchash, q)
+        cancel_conc_task(cache_map, corp.subchash, q)
         raise Exception(f'Concordance calculation is lost: {ex}')
     except Exception as ex:
-        cancel_conc_task(cache_map, subchash, q)
+        cancel_conc_task(cache_map, corp.subchash, q)
         raise ex
 
 
