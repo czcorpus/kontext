@@ -25,7 +25,6 @@ import math
 
 import manatee
 from structures import FixedDict
-from corplib import is_subcorpus
 from conclib.empty import InitialConc
 from kwiclib_common import tokens2strclass
 
@@ -279,12 +278,12 @@ class Kwic(object):
 
         out.concsize = self.conc.size()
 
-        if is_subcorpus(self.corpus):
+        if self.corpus.is_subcorpus:
             out.result_arf = ''
         else:
             out.result_arf = round(self.conc.compute_ARF(), 2)
 
-        if is_subcorpus(self.corpus):
+        if self.corpus.is_subcorpus:
             corpsize = self.corpus.search_size(
             )  # TODO this is unverified solution trying to bypass possible manatee bug
         else:

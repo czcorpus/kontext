@@ -23,21 +23,21 @@ from plugins.abstract import CorpusDependentPlugin
 class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_api, corpname):
+    def is_enabled_for(self, plugin_ctx, corpname):
         """
         Return True if live attributes are enabled for selected corpus
         else return False
         """
 
     @abc.abstractmethod
-    def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
+    def get_attr_values(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
                         limit_lists=True):
         """
         Find all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
 
         arguments:
-        plugin_api --
+        plugin_ctx --
         corpus -- manatee.corpus object
         attr_map -- a dictionary of attributes and values as selected by a user
         aligned_corpora -- a list/tuple of corpora names aligned to base one (the 'corpus' argument)
@@ -51,13 +51,13 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
     # TODO missing raise NotImplementedError ?
     @abc.abstractmethod
-    def get_subc_size(self, plugin_api, corpus, attr_map):
+    def get_subc_size(self, plugin_ctx, corpus, attr_map):
         """
         Return a size (in tokens) of a subcorpus defined by selected attributes
 
-        plugin_api --
+        plugin_ctx --
         corpus -- a manatee.Corpus instance
-        attr_map -- a dict containing selected attributes and respective values 
+        attr_map -- a dict containing selected attributes and respective values
         """
 
     @abc.abstractmethod
@@ -74,13 +74,13 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_bibliography(self, plugin_api, corpus, item_id):
+    def get_bibliography(self, plugin_ctx, corpus, item_id):
         """
         Returns a list of 2-tuples (attr_name, attr_value).
         """
 
     @abc.abstractmethod
-    def find_bib_titles(self, plugin_api, corpus_id, id_list):
+    def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
         """
         For a list of bibliography item IDs (= typically unique document IDs)
         find respective titles.

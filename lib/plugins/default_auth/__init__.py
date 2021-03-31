@@ -120,7 +120,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         self._on_register_get_corpora = on_register_get_corpora
         self._case_sensitive_corpora_names = case_sensitive_corpora_names
 
-    def validate_user(self, plugin_api, username, password):
+    def validate_user(self, plugin_ctx, username, password):
         user_data = self._find_user(username)
         valid_pwd = False
         if user_data:
@@ -193,8 +193,8 @@ class DefaultAuthHandler(AbstractInternalAuth):
     def ignores_corpora_names_case(self):
         return not self._case_sensitive_corpora_names
 
-    def get_user_info(self, plugin_api):
-        user_key = mk_user_key(plugin_api.user_id)
+    def get_user_info(self, plugin_ctx):
+        user_key = mk_user_key(plugin_ctx.user_id)
         info = self.db.get(user_key)
         info.pop('pwd_hash', None)
         info.pop('recovery_hash', None)
@@ -247,27 +247,27 @@ class DefaultAuthHandler(AbstractInternalAuth):
         user_key = self.db.hash_get(self.USER_INDEX_KEY, username)
         return None if user_key is None else self.db.get(user_key)
 
-    def get_required_username_properties(self, plugin_api):
+    def get_required_username_properties(self, plugin_ctx):
         return (_(
             'The value must be at least %s characters long and must contain only a..z, A..Z, 0..9, _, - characters')
             % self.MIN_USERNAME_LENGTH)
 
-    def validate_new_username(self, plugin_api, username):
+    def validate_new_username(self, plugin_ctx, username):
         avail = self._find_user(username) is None and 'admin' not in username
         valid = re.match(r'^[a-zA-Z0-9_-]{3,}$', username) is not None
         return avail, valid
 
-    def sign_up_user(self, plugin_api, credentials):
+    def sign_up_user(self, plugin_ctx, credentials):
         token = SignUpToken(user_data=credentials,
                             label=_('KonText sign up confirmation'),
                             ttl=self._confirmation_token_ttl)
         errors = defaultdict(lambda: [])
-        avail_un, valid_un = self.validate_new_username(plugin_api, credentials['username'])
+        avail_un, valid_un = self.validate_new_username(plugin_ctx, credentials['username'])
         if not avail_un:
             errors['username'].append(_('Username not available'))
         if not valid_un:
             errors['username'].append(_('Username not valid') + '. ' + self.get_required_username_properties(
-                plugin_api))
+                plugin_ctx))
         if credentials['password'] != credentials['password2']:
             errors['password'].append(_('New password and its confirmation do not match.'))
             errors['password2'].append('')
@@ -285,7 +285,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         del credentials['password2']
         if len(errors) == 0:
             token.save(self.db)
-            ok = self.send_confirmation_mail(plugin_api, credentials['email'], credentials['username'],
+            ok = self.send_confirmation_mail(plugin_ctx, credentials['email'], credentials['username'],
                                              credentials['firstname'], credentials['lastname'], token)
             if not ok:
                 raise Exception(
@@ -294,7 +294,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
         return dict((k, ' '.join(v)) for k, v in errors.items())
 
-    def send_confirmation_mail(self, plugin_api, user_email, username, firstname, lastname, token):
+    def send_confirmation_mail(self, plugin_ctx, user_email, username, firstname, lastname, token):
         expir_date = (
             datetime.datetime.now().astimezone() +  # system timezone-aware
             datetime.timedelta(seconds=self._confirmation_token_ttl)
@@ -302,13 +302,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
         text = ''
         text += _('Hello')
         text += ',\n\n'
-        text += _('thank you for using KonText at {url}.').format(url=plugin_api.root_url)
+        text += _('thank you for using KonText at {url}.').format(url=plugin_ctx.root_url)
         text += '\n'
         tmp = _(
             'To verify your new account {username} (full name: {firstname} {lastname}) please click the link below')
         text += tmp.format(username=username, firstname=firstname, lastname=lastname)
         text += ':\n\n'
-        text += plugin_api.create_url('user/sign_up_confirm_email', dict(key=token.value))
+        text += plugin_ctx.create_url('user/sign_up_confirm_email', dict(key=token.value))
         text += '\n\n'
         text += time.strftime(_('The confirmation link will expire on %m/%d/%Y at %H:%M'),
                               expir_date.timetuple())
@@ -333,7 +333,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
             avail = (self.db.get(mk_user_key(v)) is None)
         return v
 
-    def sign_up_confirm(self, plugin_api, key):
+    def sign_up_confirm(self, plugin_ctx, key):
         token = SignUpToken(value=key)
         token.load(self.db)
         if token.is_stored():

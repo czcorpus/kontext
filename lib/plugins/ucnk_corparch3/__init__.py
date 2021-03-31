@@ -74,18 +74,18 @@ class UcnkCorpusInfo(CorpusInfo):
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
-    return plugins.runtime.CORPARCH.instance.export_favorite(ctrl._plugin_api)
+    return plugins.runtime.CORPARCH.instance.export_favorite(ctrl._plugin_ctx)
 
 
 @exposed(access_level=1, return_type='json', skip_corpus_init=True, http_method='POST')
 def ask_corpus_access(ctrl, request):
     ans = {}
-    plugin_api = getattr(ctrl, '_plugin_api')
+    plugin_ctx = getattr(ctrl, '_plugin_ctx')
     with plugins.runtime.CORPARCH as ca:
-        if plugin_api.user_is_anonymous:
+        if plugin_ctx.user_is_anonymous:
             raise ForbiddenException('Anonymous user cannot send the request')
         status = ca.send_request_email(corpus_id=request.form['corpusId'],
-                                       plugin_api=plugin_api,
+                                       plugin_ctx=plugin_ctx,
                                        custom_message=request.form['customMessage'])
     if status is False:
         ans['error'] = _(
@@ -113,65 +113,65 @@ class UcnkCorpArch3(RDBMSCorparch):
         self.access_req_recipients = access_req_recipients
         self.default_label = default_label
 
-    def corpus_list_item_from_row(self, plugin_api, row):
-        obj = super(UcnkCorpArch3, self).corpus_list_item_from_row(plugin_api, row)
+    def corpus_list_item_from_row(self, plugin_ctx, row):
+        obj = super(UcnkCorpArch3, self).corpus_list_item_from_row(plugin_ctx, row)
         obj.requestable = row['requestable']
         return obj
 
-    def list_corpora(self, plugin_api, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+    def list_corpora(self, plugin_ctx, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
                      offset=0, limit=-1, favourites=()):
-        return super(UcnkCorpArch3, self).list_corpora(plugin_api=plugin_api, substrs=substrs, keywords=keywords,
+        return super(UcnkCorpArch3, self).list_corpora(plugin_ctx=plugin_ctx, substrs=substrs, keywords=keywords,
                                                        min_size=min_size, max_size=max_size, requestable=requestable,
                                                        offset=offset, limit=limit if limit > -1 else 1000000000,
                                                        favourites=favourites)
 
-    def export_favorite(self, plugin_api):
+    def export_favorite(self, plugin_ctx):
         ans = []
-        favitems = plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api)
+        favitems = plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_ctx)
         favitems_corpids = [x.corpora[0]['id'] for x in favitems]
         descriptions = self.backend.load_corpora_descriptions(
-            favitems_corpids, plugin_api.user_lang)
+            favitems_corpids, plugin_ctx.user_lang)
         for item in favitems:
             tmp = item.to_dict()
             tmp['description'] = descriptions.get(item.corpora[0]['id'], None)
             ans.append(tmp)
         return ans
 
-    def export(self, plugin_api):
-        ans = super(UcnkCorpArch3, self).export(plugin_api)
-        ans['initial_keywords'] = plugin_api.session.get(
+    def export(self, plugin_ctx):
+        ans = super(UcnkCorpArch3, self).export(plugin_ctx)
+        ans['initial_keywords'] = plugin_ctx.session.get(
             self.SESSION_KEYWORDS_KEY, [self.default_label])
         return ans
 
-    def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
-        if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
-            plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
+    def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
+        if self.SESSION_KEYWORDS_KEY not in plugin_ctx.session:
+            plugin_ctx.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
         initial_query = query
         if query is False:
             query = ''
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         if len(query_keywords) == 0 and initial_query is False:
-            query_keywords = plugin_api.session[self.SESSION_KEYWORDS_KEY]
+            query_keywords = plugin_ctx.session[self.SESSION_KEYWORDS_KEY]
         else:
-            plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
+            plugin_ctx.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = (' '.join(query_substrs) + ' ' + ' '.join('%s%s' %
                                                           (self._tag_prefix, s) for s in query_keywords))
-        return super(UcnkCorpArch3, self).search(plugin_api, query, offset, limit, filter_dict)
+        return super(UcnkCorpArch3, self).search(plugin_ctx, query, offset, limit, filter_dict)
 
-    def send_request_email(self, corpus_id, plugin_api, custom_message):
+    def send_request_email(self, corpus_id, plugin_ctx, custom_message):
         """
         returns:
         True if at least one recipient has been reached else False
         """
         errors = []
 
-        user_info = self._auth.get_user_info(plugin_api)
+        user_info = self._auth.get_user_info(plugin_ctx)
         user_email = user_info['email']
         username = user_info['username']
 
         text = 'Žádost o zpřístupnění korpusu zaslaná z KonTextu:\n\n'
         text += 'datum a čas žádosti: %s\n' % time.strftime('%d.%m. %Y %H:%M')
-        text += 'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, plugin_api.user_id, user_email)
+        text += 'uživatel: %s (ID = %s, e-mail: %s)\n' % (username, plugin_ctx.user_id, user_email)
         text += 'korpus ID: %s\n' % corpus_id
 
         if custom_message:

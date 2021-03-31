@@ -16,7 +16,7 @@ from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 from secure_cookie.session import Session
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from controller.plg import PluginApi
+    from controller.plg import PluginCtx
 
 import abc
 from translation import ugettext as _
@@ -115,7 +115,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         _, access, variant = self.corpus_access(user_dict, corpus_name)
         return access, variant
 
-    def on_forbidden_corpus(self, plugin_api: 'PluginApi', corpname: str, corp_variant: str):
+    def on_forbidden_corpus(self, plugin_ctx: 'PluginCtx', corpname: str, corp_variant: str):
         """
         Optional method run in case KonText finds out that user
         does not have access rights to a corpus specified by 'corpname'.
@@ -127,17 +127,17 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
             raise CorpusForbiddenException(corpname, corp_variant)
         else:
             # no default accessible corpus for the current user
-            raise ImmediateRedirectException(plugin_api.create_url('corpora/corplist', {}))
+            raise ImmediateRedirectException(plugin_ctx.create_url('corpora/corplist', {}))
 
     @abc.abstractmethod
-    def get_user_info(self, plugin_api: 'PluginApi') -> Dict[str, Any]:
+    def get_user_info(self, plugin_ctx: 'PluginCtx') -> Dict[str, Any]:
         """
         Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions
         etc. are not expected/required to be included.
         """
 
-    def logout_hook(self, plugin_api: 'PluginApi'):
+    def logout_hook(self, plugin_ctx: 'PluginCtx'):
         """
         An action performed after logout process finishes
         """
@@ -150,7 +150,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
 class AbstractSemiInternalAuth(AbstractAuth):
 
     @abc.abstractmethod
-    def validate_user(self, plugin_api: 'PluginApi', username: str, password: str) -> Dict[str, Any]:
+    def validate_user(self, plugin_ctx: 'PluginCtx', username: str, password: str) -> Dict[str, Any]:
         """
         Tries to find a user with matching 'username' and 'password'.
         If a match is found then proper credentials of the user are
@@ -158,7 +158,7 @@ class AbstractSemiInternalAuth(AbstractAuth):
         returned.
 
         arguments:
-        plugin_api -- a kontext.PluginApi instance
+        plugin_ctx -- a kontext.PluginCtx instance
         username -- login username
         password -- login password
 
@@ -218,18 +218,18 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
 
     @abc.abstractmethod
-    def get_required_username_properties(self, plugin_api: 'PluginApi') -> str:
+    def get_required_username_properties(self, plugin_ctx: 'PluginCtx') -> str:
         pass
 
     @abc.abstractmethod
-    def validate_new_username(self, plugin_api: 'PluginApi', username: str) -> Tuple[bool, bool]:
+    def validate_new_username(self, plugin_ctx: 'PluginCtx', username: str) -> Tuple[bool, bool]:
         """
         returns:
             a 2-tuple (availability, validity) (both bool)
         """
 
     @abc.abstractmethod
-    def sign_up_user(self, plugin_api: 'PluginApi', credentials: Dict[str, Any]) -> Dict[str, str]:
+    def sign_up_user(self, plugin_ctx: 'PluginCtx', credentials: Dict[str, Any]) -> Dict[str, str]:
         """
         returns:
             a dict where keys are form item identifiers where error occurred
@@ -238,7 +238,7 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         pass
 
     @abc.abstractmethod
-    def sign_up_confirm(self, plugin_api: 'PluginApi', key: str) -> bool:
+    def sign_up_confirm(self, plugin_ctx: 'PluginCtx', key: str) -> bool:
         pass
 
     @abc.abstractmethod
@@ -252,7 +252,7 @@ class AbstractRemoteAuth(AbstractAuth):
     """
 
     @abc.abstractmethod
-    def revalidate(self, plugin_api: 'PluginApi'):
+    def revalidate(self, plugin_ctx: 'PluginCtx'):
         """
         Re-validates user authentication against external database with central
         authentication ticket (stored as a cookie) and session data.
@@ -267,7 +267,7 @@ class AbstractRemoteAuth(AbstractAuth):
         the session. Please see AbstractSemiInternalAuth.validate_user for details.
 
         arguments:
-        plugin_api -- a controller.PluginApi instance
+        plugin_ctx -- a controller.PluginCtx instance
         """
 
 

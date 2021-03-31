@@ -48,7 +48,7 @@ from typing import Dict, Any, List, Tuple, Iterable, Optional, TYPE_CHECKING
 from manatee import Corpus
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from controller.plg import PluginApi
+    from controller.plg import PluginCtx
 
 import importlib
 from plugins.abstract import CorpusDependentPlugin
@@ -225,5 +225,5 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         """
         return []
 
-    def is_enabled_for(self, plugin_api: 'PluginApi', corpname: str) -> bool:
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpname: str) -> bool:
         raise NotImplementedError()

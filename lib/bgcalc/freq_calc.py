@@ -24,6 +24,7 @@ from structures import FixedDict
 
 import manatee
 import corplib
+from corplib.corpus import KCorpus
 from conclib.calc import require_existing_conc
 import settings
 import bgcalc
@@ -64,7 +65,7 @@ class FreqCalsArgs(FixedDict):
     force_cache = False
 
 
-def corp_freqs_cache_path(corp, attrname):
+def corp_freqs_cache_path(corp: KCorpus, attrname):
     """
     Generates an absolute path to an 'attribute' directory/file. The path
     consists of two parts: 1) absolute path to corpus indexed data
@@ -79,7 +80,7 @@ def corp_freqs_cache_path(corp, attrname):
     returns:
     a path encoded as an 8-bit string (i.e. unicode paths are encoded)
     """
-    if hasattr(corp, 'spath'):
+    if corp.spath:
         path_ne, _ = os.path.splitext(corp.spath)
         ans = path_ne + '.' + attrname
     else:
@@ -93,7 +94,7 @@ def corp_freqs_cache_path(corp, attrname):
     return ans
 
 
-def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
+def prepare_arf_calc_paths(corp: KCorpus, attrname, logstep=0.02):
     """
     Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
     is quite computationally demanding the function is typically called in background by KonText.
@@ -106,7 +107,7 @@ def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
     outfilename = corplib.subcorp_base_file(corp, attrname)
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return None
-    elif hasattr(corp, 'spath'):
+    elif corp.is_subcorpus:
         return corp.spath
     else:
         return None

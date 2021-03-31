@@ -35,7 +35,7 @@ from werkzeug.wrappers import Request
 import settings
 import plugins
 from translation import ugettext as _
-from controller.plg import PluginApi
+from controller.plg import PluginCtx
 from .cache import TextTypesCache
 from .norms import CachedStructNormsCalc
 
@@ -99,16 +99,16 @@ class TextTypesException(Exception):
 
 class TextTypes(object):
 
-    def __init__(self, corp: manatee.Corpus, corpname: str, tt_cache: TextTypesCache, plugin_api: PluginApi):
+    def __init__(self, corp: manatee.Corpus, corpname: str, tt_cache: TextTypesCache, plugin_ctx: PluginCtx):
         """
         arguments:
         corp -- a manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
         corpname -- a corpus ID
-        plugin_api --
+        plugin_ctx --
         """
         self._corp = corp
         self._corpname = corpname
-        self._plugin_api = plugin_api
+        self._plugin_ctx = plugin_ctx
         self._tt_cache = tt_cache
 
     def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
@@ -130,8 +130,7 @@ class TextTypes(object):
             raise TextTypesException(
                 _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
-        corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
-            self._plugin_api.user_lang, self._corpname)
+        corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, self._corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
@@ -208,8 +207,7 @@ class TextTypes(object):
         return normslist
 
     def _add_tt_custom_metadata(self, tt):
-        metadata = plugins.runtime.CORPARCH.instance.get_corpus_info(
-            self._plugin_api.user_lang, self._corpname)['metadata']
+        metadata = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, self._corpname)['metadata']
         for line in tt:
             for item in line.get('Line', ()):
                 label, widget = next((x for x in metadata.get('interval_attrs')

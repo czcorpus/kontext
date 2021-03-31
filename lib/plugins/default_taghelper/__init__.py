@@ -80,9 +80,9 @@ class Taghelper(AbstractTaghelper):
         self._loaders = {}
         self._fetchers = {}
 
-    def loader(self, corpus_name, tagset_name):
+    def loader(self, plugin_ctx, corpus_name, tagset_name):
         if (corpus_name, tagset_name) not in self._loaders:
-            for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
+            for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
                 if tagset.tagset_type == 'positional':
                     self._loaders[(corpus_name, tagset.tagset_name)] = PositionalTagVariantLoader(
                         corpus_name=corpus_name, tagset_name=tagset.tagset_name,
@@ -102,9 +102,9 @@ class Taghelper(AbstractTaghelper):
                     self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
         return self._loaders[(corpus_name, tagset_name)]
 
-    def fetcher(self, corpus_name, tagset_name):
+    def fetcher(self, plugin_ctx, corpus_name, tagset_name):
         if (corpus_name, tagset_name) not in self._fetchers:
-            for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
+            for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
                 if tagset.tagset_type == 'positional':
                     self._fetchers[(corpus_name, tagset.tagset_name)] = PositionalSelectionFetcher()
                 elif tagset.tagset_type == 'keyval':
@@ -113,21 +113,20 @@ class Taghelper(AbstractTaghelper):
                     self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
         return self._fetchers[(corpus_name, tagset_name)]
 
-    def tags_enabled_for(self, corpus_name, tagset_id):
-        for tagset in self._corparch.get_corpus_info('en_US', corpus_name).tagsets:
+    def tags_enabled_for(self, plugin_ctx, corpus_name, tagset_id):
+        for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
             if tagset.tagset_name == tagset_id:
-                loader = self.loader(corpus_name, tagset.tagset_name)
+                loader = self.loader(plugin_ctx, corpus_name, tagset.tagset_name)
                 return loader.is_enabled()
         return False
 
     def export_actions(self):
         return {corpora.Corpora: [ajax_get_tag_variants]}
 
-    def export(self, plugin_api):
+    def export(self, plugin_ctx):
         tagsets = {}
-        for corp in ([plugin_api.current_corpus.corpname] + plugin_api.available_aligned_corpora):
-            info = self._corparch.get_corpus_info(
-                plugin_api.user_lang, corp)
+        for corp in ([plugin_ctx.current_corpus.corpname] + plugin_ctx.available_aligned_corpora):
+            info = self._corparch.get_corpus_info(plugin_ctx, corp)
             for tagset in info.tagsets:
                 tagsets[tagset.tagset_name] = tagset
         return dict(corp_tagsets=[x.to_dict() for x in tagsets.values()])

@@ -292,8 +292,7 @@ class Actions(Kontext):
                             'Requested unavailable corpus [%s], defaulting to [%s]', req_corpname, corpname)
                     data['corpname'] = corpname
 
-                corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info('en_US',
-                                                                                   corpname)
+                corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, corpname)
                 data['corppid'] = corp_conf_info.get('web', '')
                 query = req.args.get('query', '')
                 corpus = self.cm.get_Corpus(corpname)

@@ -32,6 +32,7 @@ a new version of 'taghelper'.
 import abc
 from typing import TypeVar, Generic
 from werkzeug.wrappers import Request
+from controller.plg import PluginCtx
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -126,7 +127,7 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    def tags_enabled_for(self, corpus_id: str, tagset_id: str) -> bool:
+    def tags_enabled_for(self, plugin_ctx: PluginCtx, corpus_id: str, tagset_id: str) -> bool:
         """
         Test whether tag variant data exist for a specified
         corpus.
@@ -136,13 +137,13 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
         """
 
     @abc.abstractmethod
-    def loader(self, corpus_name: str, tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
+    def loader(self, plugin_ctx: PluginCtx, corpus_name: str, tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
         """
         Return a loader for the corpus_name
         """
 
     @abc.abstractmethod
-    def fetcher(self, corpus_name: str, tagset_name: str) -> AbstractValueSelectionFetcher[U]:
+    def fetcher(self, plugin_ctx: PluginCtx, corpus_name: str, tagset_name: str) -> AbstractValueSelectionFetcher[U]:
         """
         Return a fetcher for the corpus_name
         """

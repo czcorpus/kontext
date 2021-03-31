@@ -42,6 +42,7 @@ import plugins
 from plugins.abstract.live_attributes import AbstractLiveAttributes
 import strings
 from controller import exposed
+from controller.plg import PluginCtx
 from actions import concordance
 from . import query
 
@@ -65,14 +66,14 @@ def cached(f):
     time.
     """
     @wraps(f)
-    def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
+    def wrapper(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora,
                                    autocomplete_attr, limit_lists)
             ans = self.from_cache(corpus.corpname, key)
             if ans:
                 return ans
-        ans = f(self, plugin_api, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
+        ans = f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size,
                                    aligned_corpora, autocomplete_attr, limit_lists)
@@ -86,7 +87,7 @@ def filter_attributes(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
+        return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
                                      aligned_corpora=aligned)
 
 
@@ -96,7 +97,7 @@ def attr_val_autocomplete(self, request):
     attrs[request.form['patternAttr']] = '(?i).*%s.*' % request.form['pattern']
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
+        return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
                                      aligned_corpora=aligned,
                                      autocomplete_attr=request.form['patternAttr'])
 
@@ -116,7 +117,7 @@ class LiveAttributes(AbstractLiveAttributes):
     def export_actions(self):
         return {concordance.Actions: [filter_attributes, attr_val_autocomplete]}
 
-    def db(self, user_lang, corpname):
+    def db(self, plugin_ctx: PluginCtx, corpname):
         """
         Returns thread-local database connection to a sqlite3 database
 
@@ -129,7 +130,7 @@ class LiveAttributes(AbstractLiveAttributes):
 
         if corpname not in self.databases:
             db_path = self.corparch.get_corpus_info(
-                user_lang, corpname).get('metadata', {}).get('database')
+                plugin_ctx, corpname).get('metadata', {}).get('database')
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row
@@ -141,11 +142,11 @@ class LiveAttributes(AbstractLiveAttributes):
                 self.databases[corpname] = None
         return self.databases[corpname]
 
-    def is_enabled_for(self, plugin_api, corpname):
+    def is_enabled_for(self, plugin_ctx, corpname):
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
-        return self.db(plugin_api.user_lang, corpname) is not None
+        return self.db(plugin_ctx, corpname) is not None
 
     def execute_sql(self, db, sql, args=()):
         cursor = db.cursor()
@@ -242,8 +243,8 @@ class LiveAttributes(AbstractLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
-    def get_subc_size(self, plugin_api, corpus, attr_map):
-        db = self.db(plugin_api.user_lang, corpus.corpname)
+    def get_subc_size(self, plugin_ctx, corpus, attr_map):
+        db = self.db(plugin_ctx.user_lang, corpus.corpname)
         attr_where = [corpus.corpname]
         attr_where_tmpl = ['corpus_id = ?']
         for k, vlist in list(attr_map.items()):
@@ -257,7 +258,7 @@ class LiveAttributes(AbstractLiveAttributes):
         return cur.fetchone()[0]
 
     @cached
-    def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
+    def get_attr_values(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
                         limit_lists=True):
         """
         Finds all the available values of remaining attributes according to the
@@ -272,7 +273,7 @@ class LiveAttributes(AbstractLiveAttributes):
         returns:
         a dictionary containing matching attributes and values
         """
-        corpus_info = self.corparch.get_corpus_info(plugin_api.user_lang, corpus.corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_ctx.user_lang, corpus.corpname)
 
         srch_attrs = set(self._get_subcorp_attrs(corpus))
         expand_attrs = set()  # attributes we want to be full lists even if their size exceeds configured max. value
@@ -300,7 +301,7 @@ class LiveAttributes(AbstractLiveAttributes):
                                            autocomplete_attr=self.import_key(autocomplete_attr),
                                            empty_val_placeholder=self.empty_val_placeholder)
         data_iterator = query.DataIterator(
-            self.db(plugin_api.user_lang, corpus.corpname), query_builder)
+            self.db(plugin_ctx.user_lang, corpus.corpname), query_builder)
 
         # initialize result dictionary
         ans = dict((attr, set()) for attr in srch_attrs)
@@ -353,11 +354,11 @@ class LiveAttributes(AbstractLiveAttributes):
         exported['poscount'] = values['poscount']
         return exported
 
-    def get_bibliography(self, plugin_api, corpus, item_id):
-        db = self.db(plugin_api.user_lang, corpus.corpname)
+    def get_bibliography(self, plugin_ctx, corpus, item_id):
+        db = self.db(plugin_ctx.user_lang, corpus.corpname)
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
 
-        corpus_info = self.corparch.get_corpus_info(plugin_api.user_lang, corpus.corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_ctx.user_lang, corpus.corpname)
         if corpus_info.metadata.sort_attrs:
             # here we accept default collator as attr IDs are ASCII
             col_rows = sorted(col_rows, key=lambda v: v[1])
@@ -370,11 +371,11 @@ class LiveAttributes(AbstractLiveAttributes):
                 db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
         return [(k, ans[i]) for k, i in list(col_map.items()) if k != 'id']
 
-    def find_bib_titles(self, plugin_api, corpus_id, id_list):
+    def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
         with plugins.runtime.CORPARCH as ca:
-            corpus_info = ca.get_corpus_info(plugin_api.user_lang, corpus_id)
+            corpus_info = ca.get_corpus_info(plugin_ctx.user_lang, corpus_id)
         label_attr = self.import_key(corpus_info.metadata.label_attr)
-        db = self.db(plugin_api.user_lang, corpus_id)
+        db = self.db(plugin_ctx.user_lang, corpus_id)
         pch = ', '.join(['?'] * len(id_list))
         ans = self.execute_sql(
             db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)

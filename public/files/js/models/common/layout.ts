@@ -428,10 +428,10 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                     (data) => {
                         return this.pluginApi.ajax$<SubcorpusInfoResponse>(
                             HTTP.Method.GET,
-                            this.pluginApi.createActionUrl('subcorpus/ajax_subcorp_info'),
+                            this.pluginApi.createActionUrl('subcorpus/subcorpus_info'),
                             {
                                 'corpname': corpusId,
-                                'subcname': subcorpusId
+                                'usesubcorp': subcorpusId
                             }
                         ).pipe(
                             concatMap(

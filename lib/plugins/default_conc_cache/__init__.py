@@ -35,12 +35,12 @@ import os
 import hashlib
 from typing import Union, Tuple, Optional
 import logging
-import manatee
 
 import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus
 from plugins import inject
 from plugins.abstract.general_storage import KeyValueStorage
+from corplib.corpus import KCorpus
 
 CachedConcInfo = Tuple[int, CalcStatus, str]
 
@@ -72,7 +72,7 @@ class DefaultCacheMapping(AbstractConcCache):
 
     KEY_TEMPLATE = 'conc_cache:%s'
 
-    def __init__(self, cache_dir: str, corpus: manatee.Corpus, db: KeyValueStorage):
+    def __init__(self, cache_dir: str, corpus: KCorpus, db: KeyValueStorage):
         self._cache_root_dir = cache_dir
         self._corpus = corpus
         self._db = db

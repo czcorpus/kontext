@@ -32,23 +32,23 @@ class Corpora(Kontext):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         with plugins.runtime.CORPARCH as corparch_plugin:
             if isinstance(corparch_plugin, AbstractSearchableCorporaArchive):
-                params = corparch_plugin.initial_search_params(self._plugin_api, request.args.get('query'),
+                params = corparch_plugin.initial_search_params(self._plugin_ctx, request.args.get('query'),
                                                                request.args)
-                data = corparch_plugin.search(plugin_api=self._plugin_api,
+                data = corparch_plugin.search(plugin_ctx=self._plugin_ctx,
                                               query=False,
                                               offset=0,
                                               limit=request.args.get('limit', None),
                                               filter_dict=request.args)
             else:
                 params = {}
-                data = corparch_plugin.get_all(self._plugin_api)
+                data = corparch_plugin.get_all(self._plugin_ctx)
             data['search_params'] = params
             return dict(corplist_data=data)
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_list_corpora(self, request):
         with plugins.runtime.CORPARCH as cp:
-            return cp.search(plugin_api=self._plugin_api, query=request.args.get('query', None),
+            return cp.search(plugin_ctx=self._plugin_ctx, query=request.args.get('query', None),
                              offset=request.args.get('offset', None), limit=request.args.get('limit', None),
                              filter_dict=request.args)
 
@@ -109,4 +109,4 @@ class Corpora(Kontext):
     @exposed(return_type='json')
     def bibliography(self, request):
         with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
-            return dict(bib_data=liveatt.get_bibliography(self._plugin_api, self.corp, item_id=request.args.get('id')))
+            return dict(bib_data=liveatt.get_bibliography(self._plugin_ctx, self.corp, item_id=request.args.get('id')))

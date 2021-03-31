@@ -90,15 +90,15 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
         # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
-    def is_enabled_for(self, plugin_api, corpname):
+    def is_enabled_for(self, plugin_ctx, corpname):
         return corpname in self._conf
 
     def export_actions(self):
         return {concordance.Actions: [get_syntax_data]}
 
-    def export(self, plugin_api):
-        return dict(detail_attr_orders=self._backend.get_detail_attr_orders(plugin_api.current_corpus.corpname,
-                                                                            plugin_api.current_corpus))
+    def export(self, plugin_ctx):
+        return dict(detail_attr_orders=self._backend.get_detail_attr_orders(plugin_ctx.current_corpus.corpname,
+                                                                            plugin_ctx.current_corpus))
 
 
 def load_plugin_conf(conf):

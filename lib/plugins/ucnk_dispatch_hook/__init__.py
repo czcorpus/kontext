@@ -69,7 +69,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
         self._db = db
         self._queue_key = queue_key
 
-    def pre_dispatch(self, plugin_api, action_name, action_metadata, request):
+    def pre_dispatch(self, plugin_ctx, action_name, action_metadata, request):
         # Recent KonText versions avoid specifying corpus variant directly in URL but
         # we still have to handle external links
         if action_name in ('query', 'view'):
@@ -78,7 +78,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
                 logging.getLogger(__name__).warning(
                     'Handling legacy action URL for {0}'.format(action_name))
                 raise ImmediateRedirectException(
-                    plugin_api.updated_current_url(dict(corpname=corp[len('omezeni/'):])))
+                    plugin_ctx.updated_current_url(dict(corpname=corp[len('omezeni/'):])))
 
     def export_tasks(self):
         """

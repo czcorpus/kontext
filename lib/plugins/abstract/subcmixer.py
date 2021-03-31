@@ -25,10 +25,10 @@ import abc
 class AbstractSubcMixer(abc.ABC):
 
     @abc.abstractmethod
-    def process(self, plugin_api, corpus, corpname, aligned_corpora, args):
+    def process(self, plugin_ctx, corpus, corpname, aligned_corpora, args):
         """
         arguments:
-            plugin_api -- kontext.PluginApi instance
+            plugin_ctx -- kontext.PluginCtx instance
             corpus -- a manatee.Corpus instance
             corpname -- a corpus name
             aligned_corpora -- corpora we want our result to respect as aligned ones

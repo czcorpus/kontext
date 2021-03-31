@@ -34,8 +34,8 @@ msgstr ""
 
 #: lib/corplib.py:75
 #, python-format
-msgid "Subcorpus \"%s\" not found"
-msgstr "Podkorpus \"%s\" ni bil najden"
+msgid "Subcorpus \"{}\" not found"
+msgstr "Podkorpus \"{}\" ni bil najden"
 
 #: lib/actions.py:41 lib/actions.py:48
 msgid "This function is disabled."

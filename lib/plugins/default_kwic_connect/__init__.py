@@ -50,7 +50,7 @@ def handle_word_req(args):
 def fetch_external_kwic_info(self, request):
     words = request.args.getlist('w')
     with plugins.runtime.CORPARCH as ca:
-        corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
+        corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
         args = [(w, [self.corp.corpname] + self.args.align, corpus_info.kwic_connect.providers, self.ui_lang)
                 for w in words]
         results = ThreadPool(len(words)).imap_unordered(handle_word_req, args)
@@ -70,7 +70,7 @@ def fetch_external_kwic_info(self, request):
 @exposed(return_type='json')
 def get_corpus_kc_providers(self, _):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.KWIC_CONNECT as kc:
-        corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
+        corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
         mp = kc.map_providers(corpus_info.kwic_connect.providers)
         return dict(corpname=self.corp.corpname,
                     providers=[dict(id=b.provider_id, label=f.get_heading(self.ui_lang)) for b, f in mp])
@@ -98,13 +98,13 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def cache_path(self):
         return self._cache_path
 
-    def is_enabled_for(self, plugin_api, corpname):
-        corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
-        tst = [p.enabled_for_corpora([corpname] + plugin_api.aligned_corpora)
+    def is_enabled_for(self, plugin_ctx, corpname):
+        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
+        tst = [p.enabled_for_corpora([corpname] + plugin_ctx.aligned_corpora)
                for p, _ in self.map_providers(corpus_info.kwic_connect.providers)]
         return len(tst) > 0 and True in tst
 
-    def export(self, plugin_api):
+    def export(self, plugin_ctx):
         return dict(max_kwic_words=self._max_kwic_words, load_chunk_size=self._load_chunk_size)
 
     def export_actions(self):

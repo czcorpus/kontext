@@ -66,7 +66,7 @@ def fetch_token_detail(self, request):
     context = (int(request.args.get('detail_left_ctx', 40)),
                int(request.args.get('detail_right_ctx', 40)))
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
-        corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
+        corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
         token, resp_data = td.fetch_data(corpus_info.token_connect.providers, self.corp,
                                          [self.corp.corpname] +
                                          self.args.align, token_id, num_tokens, self.ui_lang,
@@ -175,13 +175,13 @@ class DefaultTokenConnect(AbstractTokenConnect):
         word = fetch_posattr(maincorp_obj, 'word', token_id, num_tokens)
         return word, ans
 
-    def is_enabled_for(self, plugin_api, corpname):
-        corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
+    def is_enabled_for(self, plugin_ctx, corpname):
+        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
         return len(corpus_info.token_connect.providers) > 0
 
-    def export(self, plugin_api):
+    def export(self, plugin_ctx):
         corpus_info = self._corparch.get_corpus_info(
-            plugin_api.user_lang, plugin_api.current_corpus.corpname)
+            plugin_ctx, plugin_ctx.current_corpus.corpname)
         return dict(providers=[dict(ident=k, is_kwic_view=bool(v)) for k, v in corpus_info.token_connect.providers])
 
     def export_actions(self):

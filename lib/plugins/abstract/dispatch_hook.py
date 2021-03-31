@@ -21,7 +21,7 @@ import abc
 
 class AbstractDispatchHook(abc.ABC):
 
-    def pre_dispatch(self, plugin_api, action_name, action_metadata, request):
+    def pre_dispatch(self, plugin_ctx, action_name, action_metadata, request):
         """
         A function run right after Controller.pre_dispatch and before
         any Kontext.pre_dispatch.
@@ -31,13 +31,13 @@ class AbstractDispatchHook(abc.ABC):
         be always the original one as the 'path' cannot be changed).
 
         Args:
-            plugin_api -- an API available to plugins (controller.plg.PluginApi)
+            plugin_ctx -- an API available to plugins (controller.plg.PluginCtx)
             action_name -- resolved action name
             action_metadata -- action metadata (added by @inject)
             request -- current request (Werkzeug Request)
         """
 
-    def post_dispatch(self, plugin_api, methodname, action_metadata):
+    def post_dispatch(self, plugin_ctx, methodname, action_metadata):
         """
         A function run right after Controller.post_dispatch and before
         Kontext.post_dispatch.
@@ -48,7 +48,7 @@ class AbstractDispatchHook(abc.ABC):
         This hook can be used e.g. for logging and reporting (see log_data arg).
 
         Args:
-            plugin_api -- an API available to plugins (controller.plg.PluginApi)
+            plugin_ctx -- an API available to plugins (controller.plg.PluginCtx)
             methodname -- processed action method
             action_metadata -- action metadata (added by @inject)
         """

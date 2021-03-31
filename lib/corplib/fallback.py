@@ -84,6 +84,9 @@ class EmptyCorpus(object):
     def size(self):
         return 0
 
+    def is_subcorpus(self):
+        return False
+
 
 class ErrorCorpus(EmptyCorpus):
     """
@@ -105,3 +108,6 @@ class ErrorCorpus(EmptyCorpus):
         returns original error
         """
         return self._error
+
+    def is_subcorpus(self):
+        return False

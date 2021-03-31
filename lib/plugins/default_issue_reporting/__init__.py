@@ -33,7 +33,7 @@ from translation import ugettext as _
 @exposed(return_type='json', http_method='POST', skip_corpus_init=True)
 def submit_issue(self, request):
     with plugins.runtime.ISSUE_REPORTING as p:
-        p.submit(self._plugin_api, request.form)
+        p.submit(self._plugin_ctx, request.form)
     return {}
 
 
@@ -45,18 +45,18 @@ class DefaultErrorReporting(AbstractIssueReporting):
         self._mail_sender = mail_sender
         self._mail_recipients = mail_recipients
 
-    def export_report_action(self, plugin_api):
+    def export_report_action(self, plugin_ctx):
         return DynamicReportingAction()
 
-    def submit(self, plugin_api, args):
-        self._send_mail(plugin_api, args['body'], json.loads(args['args']))
+    def submit(self, plugin_ctx, args):
+        self._send_mail(plugin_ctx, args['body'], json.loads(args['args']))
 
     @staticmethod
     def _dump_browser_info(info):
         return '\n'.join(('  {0}: {1}'.format(k, v)) for k, v in list(info.items()))
 
-    def _send_mail(self, plugin_api, body, browser_info):
-        user_info = self._auth.get_user_info(plugin_api)
+    def _send_mail(self, plugin_ctx, body, browser_info):
+        user_info = self._auth.get_user_info(plugin_ctx)
         user_email = user_info['email']
         username = user_info['username']
 

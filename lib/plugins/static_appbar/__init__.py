@@ -105,15 +105,15 @@ class StaticApplicationBar(AbstractApplicationBar):
                     'Possible application bar contents file {0} will be ignored'.format(fname))
         return ans
 
-    def get_styles(self, plugin_api):
+    def get_styles(self, plugin_ctx):
         return tuple(dict(url=u) for u in self._css_urls)
 
-    def get_scripts(self, plugin_api):
+    def get_scripts(self, plugin_ctx):
         return tuple(self._js_urls)
 
-    def get_contents(self, plugin_api, return_url):
-        user_info = self._auth.get_user_info(plugin_api)
-        lang = plugin_api.user_lang.split('_')[0]
+    def get_contents(self, plugin_ctx, return_url):
+        user_info = self._auth.get_user_info(plugin_ctx)
+        lang = plugin_ctx.user_lang.split('_')[0]
         html = self._html_files.get(lang)
         if not html:
             try:

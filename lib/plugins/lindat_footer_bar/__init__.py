@@ -40,8 +40,8 @@ class FootBar(AbstractFootbar):
         else:
             return self._templates['en_US']
 
-    def get_contents(self, plugin_api, return_url=None):
-        tpl_path = self.get_template(plugin_api.user_lang)
+    def get_contents(self, plugin_ctx, return_url=None):
+        tpl_path = self.get_template(plugin_ctx.user_lang)
         if not os.path.exists(tpl_path):
             return "template [%s] does not exist!" % tpl_path
         with open(tpl_path, mode='rb') as fin:

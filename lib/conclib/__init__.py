@@ -24,6 +24,7 @@ import settings
 from translation import ugettext as _
 from kwiclib_common import tokens2strclass
 import plugins
+from corplib.corpus import KCorpus
 
 
 def conc_is_sorted(q: Tuple[str, ...]) -> bool:
@@ -36,13 +37,12 @@ def conc_is_sorted(q: Tuple[str, ...]) -> bool:
     return ans
 
 
-def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=True):
+def get_conc_desc(corpus: KCorpus, q=None, translate=True, skip_internals=True):
     """
     arguments:
     corpus -- an extended version (corpname attribute must be present) of
               manatee.Corpus object as provided by corplib.CorpusManager.get_Corpus
     q -- tuple/list of query elements
-    subchash -- hashed subcorpus name as provided by corplib.CorpusManager.get_Corpus
     translate -- if True then all the messages are translated according to the current
                  thread's locale information
     """
@@ -50,7 +50,7 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
     q = tuple(q)
 
     def get_size(pos):
-        return cache_map.get_stored_size(subchash, q[:pos + 1])
+        return cache_map.get_stored_size(corpus.subchash, q[:pos + 1])
 
     def is_aligned_op(query_items, pos):
         return (query_items[pos].startswith('x-') and query_items[pos + 1] == 'p0 0 1 []' and
@@ -140,7 +140,7 @@ def get_full_ref(corp, pos):
     return data
 
 
-def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx=40,
+def get_detail_context(corp: KCorpus, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx=40,
                        attrs=None, structs='', detail_ctx_incr=60):
     data = {}
     wrapdetail = corp.get_conf('WRAPDETAIL')
@@ -167,7 +167,7 @@ def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx
     if detail_left_ctx > pos:
         detail_left_ctx = pos
     query_attrs = 'word' if attrs is None else ','.join(attrs)
-    cr = manatee.CorpRegion(corp, query_attrs, structs)
+    cr = manatee.CorpRegion(corp.unwrap(), query_attrs, structs)
     region_left = tokens2strclass(cr.region(pos - detail_left_ctx, pos))
     region_kwic = tokens2strclass(cr.region(pos, pos + hitlen))
     region_right = tokens2strclass(cr.region(pos + hitlen,

@@ -43,7 +43,7 @@ class User(Kontext):
         So for compatibility reasons, let's keep this.
         """
         with plugins.runtime.AUTH as auth:
-            self._session['user'] = auth.validate_user(self._plugin_api, None, None)
+            self._session['user'] = auth.validate_user(self._plugin_ctx, None, None)
         if request.args.get('return_url', None):
             self.redirect(request.args.get('return_url'))
         return {}
@@ -53,7 +53,7 @@ class User(Kontext):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         with plugins.runtime.AUTH as auth:
             ans = {}
-            self._session['user'] = auth.validate_user(self._plugin_api,
+            self._session['user'] = auth.validate_user(self._plugin_ctx,
                                                        request.form['username'],
                                                        request.form['password'])
             if not auth.is_anonymous(self._session['user'].get('id', None)):
@@ -73,7 +73,7 @@ class User(Kontext):
         plugins.runtime.AUTH.instance.logout(self._session)
         self.init_session()
         self.refresh_session_id()
-        plugins.runtime.AUTH.instance.logout_hook(self._plugin_api)
+        plugins.runtime.AUTH.instance.logout_hook(self._plugin_ctx)
         self.redirect(self.create_url('query', {}))
         return {}
 
@@ -100,7 +100,7 @@ class User(Kontext):
     @exposed(access_level=0, skip_corpus_init=True, return_type='json', http_method='POST')
     def sign_up(self, request):
         with plugins.runtime.AUTH as auth:
-            errors = auth.sign_up_user(self._plugin_api, dict(
+            errors = auth.sign_up_user(self._plugin_ctx, dict(
                 username=request.form['username'],
                 firstname=request.form['firstname'],
                 lastname=request.form['lastname'],
@@ -118,7 +118,7 @@ class User(Kontext):
     def test_username(self, request):
         with plugins.runtime.AUTH as auth:
             available, valid = auth.validate_new_username(
-                self._plugin_api, request.args['username'])
+                self._plugin_ctx, request.args['username'])
             return dict(available=available if available and valid else False, valid=valid)
 
     @exposed(access_level=0, skip_corpus_init=True, http_method='GET', template='user/token_confirm.html',
@@ -128,7 +128,7 @@ class User(Kontext):
             try:
                 key = request.args['key']
                 ans = dict(sign_up_url=self.create_url('user/sign_up_form', {}))
-                ans.update(auth.sign_up_confirm(self._plugin_api, key))
+                ans.update(auth.sign_up_confirm(self._plugin_ctx, key))
                 return ans
             except SignUpNeedsUpdateException as ex:
                 logging.getLogger(__name__).warning(ex)
@@ -147,7 +147,7 @@ class User(Kontext):
             if not self._uses_internal_user_pages():
                 raise UserActionException(_('This function is disabled.'))
             logged_in = auth.validate_user(
-                self._plugin_api, self.session_get('user', 'user'), curr_passwd)
+                self._plugin_ctx, self.session_get('user', 'user'), curr_passwd)
 
             if self._is_anonymous_id(logged_in['id']):
                 fields['curr_passwd'] = False
@@ -203,12 +203,12 @@ class User(Kontext):
     @exposed(return_type='template', skip_corpus_init=True)
     def ajax_get_toolbar(self, _):
         with plugins.runtime.APPLICATION_BAR as ab:
-            return ab.get_contents(plugin_api=self._plugin_api, return_url=self.return_url)
+            return ab.get_contents(plugin_ctx=self._plugin_ctx, return_url=self.return_url)
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_user_info(self, request):
         with plugins.runtime.AUTH as auth:
-            user_info = auth.get_user_info(self._plugin_api)
+            user_info = auth.get_user_info(self._plugin_ctx)
             if not self.user_is_anonymous():
                 return {'user': user_info}
             else:
@@ -220,7 +220,7 @@ class User(Kontext):
         if not self._uses_internal_user_pages():
             raise UserActionException(_('This function is disabled.'))
         with plugins.runtime.AUTH as auth:
-            user_info = auth.get_user_info(self._plugin_api)
+            user_info = auth.get_user_info(self._plugin_ctx)
             if not self.user_is_anonymous():
                 return dict(credentials_form=user_info, user_registered=True)
             else:
