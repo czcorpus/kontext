@@ -353,7 +353,8 @@ class Actions(Querying):
     def delete_query(self, request):
         # remove query from history (respective results are kept)
         with plugins.runtime.QUERY_HISTORY as qh:
-            ans = qh.delete(self.session_get('user', 'id'), request.form['query_id'], int(request.form['created']))
+            ans = qh.delete(self.session_get('user', 'id'),
+                            request.form['query_id'], int(request.form['created']))
         return dict(num_deleted=ans)
 
     @exposed()
@@ -387,7 +388,7 @@ class Actions(Querying):
                 curr_corpora = [self.args.corpname] + self.args.align
                 if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
                     raise ImmediateRedirectException(self.create_url('query',
-                        [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
+                                                                     [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
                 try:
                     qf_args.apply_last_used_opts(
                         data=qdata.get('lastop_form', {}),
@@ -395,7 +396,8 @@ class Actions(Querying):
                         curr_corpora=curr_corpora,
                         curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
                 except Exception as ex:
-                    logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
+                    logging.getLogger(__name__).warning(
+                        'Cannot restore prev. query form: {}'.format(ex))
             qdata = qh.find_by_qkey(request.args.get('qkey'))
             if qdata is not None:
                 qf_args = qf_args.updated(qdata.get('lastop_form', {}), request.args.get('qkey'))
@@ -412,6 +414,7 @@ class Actions(Querying):
         cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(self.corp)
         q = tuple(self.args.q)
         subchash = getattr(self.corp, 'subchash', None)
+
         try:
             cache_status = cache_map.get_calc_status(subchash, q)
             if cache_status is None:  # conc is not cached nor calculated
@@ -679,7 +682,8 @@ class Actions(Querying):
             ans['size'] = 0
             ans['finished'] = True
             if 'syntax error' in f'{ex}'.lower():
-                raise UserActionException(translate('Syntax error. Please check the query and its type.'))
+                raise UserActionException(
+                    translate('Syntax error. Please check the query and its type.'))
             elif 'AttrNotFound' in str(ex):
                 raise UserActionException(ex)
             else:
