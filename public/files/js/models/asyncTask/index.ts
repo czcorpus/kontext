@@ -20,11 +20,10 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, of as rxOf, Subject } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { List, HTTP, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
-import { IPluginApi } from '../../types/plugins';
 import { concatMap, map, takeWhile, tap, timestamp } from 'rxjs/operators';
 import { Actions, ActionName } from './actions';
 import { taskCheckTimer } from './common';
@@ -284,7 +283,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
 
     private checkCurrentTasks():void {
         if (this.pageModel.supportsWebSocket()) {
-            const [checkTasks$, statusSocket] = this.pageModel.openWebSocket<Array<string>, Array<Kontext.AsyncTaskInfo>>();
+            const [checkTasks$, statusSocket] = this.pageModel.openWebSocket<Array<string>, Array<Kontext.AsyncTaskInfo>>('job_status');
             statusSocket.subscribe(
                 data => {
                     this.changeState(state => {
