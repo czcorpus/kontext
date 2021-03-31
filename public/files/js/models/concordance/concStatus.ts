@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { of as rxOf, Subject, zip } from 'rxjs';
+import { of as rxOf, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List } from 'cnc-tskit';
 import { PageModel } from "../../app/page";
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { ActionName, Actions } from './actions';
-import { MultiDict } from '../../multidict';
 
 
 export class HitReloader {
@@ -41,7 +40,7 @@ export class HitReloader {
 
 
     init():void {
-    const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
+        const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
         const applyData = (data:AjaxResponse.ConcStatus) => {
             this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationUpdated>({
                 name: ActionName.AsyncCalculationUpdated,
@@ -56,30 +55,25 @@ export class HitReloader {
             });
         };
 
-        const wsArgs = new MultiDict();
-        wsArgs.set('corpusId', this.layoutModel.getCorpusIdent().id);
-        wsArgs.set('cacheKey', this.layoutModel.getConf('ConcCacheKey'));
-        const ws = this.layoutModel.openWebSocket(wsArgs);
-
-        if (ws && false) {
-            /* TODO !!!
-            ws.onmessage = (evt:MessageEvent) => {
-                const dataSrc = <string>evt.data;
-                if (dataSrc) {
-                    applyData(JSON.parse(evt.data));
-                }
-            };
-
-            ws.onclose = (x) => {
-                if (x.code > 1000) {
+        if (this.layoutModel.supportsWebSocket()) {
+            const [checkConc$, concCacheStatusSocket] = this.layoutModel.openWebSocket<{corp_id:string;subc_path:string;q:Array<string>}, AjaxResponse.ConcStatus>('conc_cache_status');
+            concCacheStatusSocket.subscribe(
+                (response) => {
+                    applyData(response);
+                },
+                (err) => {
                     this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
                         name: ActionName.AsyncCalculationFailed,
                         payload: {}
                     });
-                    this.layoutModel.showMessage('error', x.reason);
+                    this.layoutModel.showMessage('error', err);
                 }
-            };
-            */
+            );
+            checkConc$.next({
+                corp_id: this.layoutModel.getCorpusIdent().id,
+                subc_path: this.layoutModel.getCorpusIdent().usesubcorp,
+                q: List.map(item => `q${item['arg']}`, this.layoutModel.getConf('queryOverview'))
+            });
 
         } else {
             rxOf(HitReloader.CHECK_CONC_DECAY).pipe(

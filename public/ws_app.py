@@ -18,10 +18,20 @@ APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, os.path.join(APP_PATH, 'lib'))  # application libraries
 
 import settings
+import manatee
+from conclib.calc import cancel_conc_task, ConcNotFoundException
+from bgcalc.errors import CalcTaskNotFoundError
+from bgcalc import calc_backend_client
+import plugins
+import initializer
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
+os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
+initializer.init_plugin('db')
+initializer.init_plugin('conc_cache')
 
 TASK_LIMIT = settings.get_int('calc_backend', 'task_time_limit')
-REFRESH_PERIOD = 1.0  # in seconds
+JOB_REFRESH_PERIOD = 1.0  # in seconds
+CONC_CACHE_STATUS_REFRESH_PERIOD = 0.2  # in seconds
 STATUS_KONTEXT_MAP = dict(
     queued='PENDING',
     started='STARTED',
@@ -55,7 +65,7 @@ async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> we
     job_status = {}
 
     async def check_status(job: Job) -> str:
-        await asyncio.sleep(REFRESH_PERIOD)
+        await asyncio.sleep(JOB_REFRESH_PERIOD)
         try:
             job.refresh()
         except NoSuchJobError:
@@ -129,6 +139,76 @@ async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> we
     return ws
 
 
+async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketResponse:
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    # wait for concordance parameters
+    msg = await ws.receive()
+    params = json.loads(msg.data)
+    corp = load_corp(params['corp_id'], params.get('subc_path', None))
+
+    # check until finished
+    while not ws.closed:
+        try:
+            response = get_conc_cache_status(corp, params['q'])
+        except Exception as e:
+            response = {'error': str(e)}
+        await ws.send_json(response)
+        
+        if response['finished']:
+            await ws.close()
+        else:
+            await asyncio.sleep(CONC_CACHE_STATUS_REFRESH_PERIOD)
+
+    return ws
+
+
+def load_corp(corp_id, subc_path):
+    """
+    Instantiate a manatee.Corpus (or manatee.SubCorpus)
+    instance
+
+    arguments:
+    corp_id -- a corpus identifier
+    subc_path -- path to a subcorpus
+    """
+    corp = manatee.Corpus(corp_id)
+    if subc_path:
+        corp = manatee.SubCorpus(corp, subc_path)
+    corp.corpname = corp_id
+    return corp
+
+
+def get_conc_cache_status(corp, q):
+    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+    subchash = getattr(corp, 'subchash', None)
+    try:
+        cache_status = cache_map.get_calc_status(subchash, q)
+        if cache_status is None:  # conc is not cached nor calculated
+            return Exception('Concordance calculation is lost')
+        elif not cache_status.finished and cache_status.task_id:
+            # we must also test directly a respective task as might have been killed
+            # and thus failed to store info to cache metadata
+            app = calc_backend_client(settings)
+            err = app.get_task_error(cache_status.task_id)
+            if err is not None:
+                raise err
+        return {
+            'finished': cache_status.finished,
+            'concsize': cache_status.concsize,
+            'fullsize': cache_status.fullsize,
+            'relconcsize': cache_status.relconcsize,
+            'arf': cache_status.arf
+        }
+    except CalcTaskNotFoundError as ex:
+        cancel_conc_task(cache_map, subchash, q)
+        raise Exception(f'Concordance calculation is lost: {ex}')
+    except Exception as ex:
+        cancel_conc_task(cache_map, subchash, q)
+        raise ex
+
+
 async def app_factory(redis_client: Redis=None) -> web.Application:
     app = web.Application()
     if redis_client is None:
@@ -138,6 +218,7 @@ async def app_factory(redis_client: Redis=None) -> web.Application:
             db=settings.get('calc_backend', 'rq_redis_db')
         )
 
+    app.router.add_get('/conc_cache_status', conc_cache_status_ws_handler)
     if settings.get('calc_backend', 'type') == 'rq':
         app.router.add_get('/job_status', functools.partial(job_status_ws_handler, redis_client))
     else:
