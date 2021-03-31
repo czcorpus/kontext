@@ -23,26 +23,8 @@ import os
 import logging
 from collections import OrderedDict
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
-from fallback_corpus import EmptyCorpus
+from corplib.fallback import EmptyCorpus
 import manatee
-
-
-class ManateeCorpora(object):
-    """
-    A caching source of ManateeCorpusInfo instances.
-    """
-
-    def __init__(self) -> None:
-        self._cache: Dict[str, DefaultManateeCorpusInfo] = {}
-
-    def get_info(self, corpus_id: str) -> DefaultManateeCorpusInfo:
-        try:
-            if corpus_id not in self._cache:
-                self._cache[corpus_id] = DefaultManateeCorpusInfo(manatee.Corpus(corpus_id), corpus_id)
-            return self._cache[corpus_id]
-        except:
-            # probably a misconfigured/missing corpus
-            return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id), corpus_id)
 
 
 class InstallCorpusInfo(object):

@@ -36,7 +36,7 @@ from .metadata_model import MetadataModel
 def subcmixer_run_calc(ctrl, request):
     try:
         with plugins.runtime.SUBCMIXER as sm:
-            return sm.process(plugin_api=ctrl._plugin_api, corpus=ctrl.corp,
+            return sm.process(plugin_ctx=ctrl._plugin_ctx, corpus=ctrl.corp,
                               corpname=request.form['corpname'],
                               aligned_corpora=request.form.getlist('aligned_corpora'),
                               args=json.loads(request.form['expression']))
@@ -131,12 +131,12 @@ class SubcMixer(AbstractSubcMixer):
                 ret.append(subitem)
         return ret
 
-    def process(self, plugin_api, corpus, corpname, aligned_corpora, args):
+    def process(self, plugin_ctx, corpus, corpname, aligned_corpora, args):
         used_structs = set(item['attrName'].split('.')[0] for item in args)
         if len(used_structs) > 1:
             raise SubcMixerException(
                 'Subcorpora based on more than a single structure are not supported at the moment.')
-        corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
+        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
         db = Database(db_path=corpus_info.metadata.database, table_name='item', corpus_id=corpus_info.id,
                       id_attr=corpus_info.metadata.id_attr, aligned_corpora=aligned_corpora)
 

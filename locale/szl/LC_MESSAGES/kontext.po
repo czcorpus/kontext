@@ -36,7 +36,7 @@ msgstr ""
 "Niy szło przerobić twojigo żōndaniŏ. Sprōbuj zaś niyskorzij abo skōntaktuj sie ze administracyjōm."
 
 #, python-format
-msgid "Subcorpus \"%s\" not found"
+msgid "Subcorpus \"{}\" not found"
 msgstr "Niy szło znojś podkorpusu \"%s\""
 
 msgid "This function is disabled."

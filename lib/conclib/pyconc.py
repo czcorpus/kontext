@@ -30,6 +30,7 @@ from kwiclib import lngrp_sortcrit
 from translation import ugettext as translate
 from functools import reduce
 from .errors import EmptyParallelCorporaIntersection, UnknownConcordanceAction, ConcordanceException
+from corplib.corpus import KCorpus
 
 
 def get_conc_labelmap(infopath):
@@ -64,7 +65,7 @@ def lngrp_sortstr(lab, separator='.'):
 class PyConc(manatee.Concordance):
     selected_grps: List[int] = []
 
-    def __init__(self, corp, action, params, sample_size=0, full_size=-1, orig_corp=None):
+    def __init__(self, corp: KCorpus, action, params, sample_size=0, full_size=-1, orig_corp=None):
         self.pycorp = corp
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp
@@ -73,17 +74,17 @@ class PyConc(manatee.Concordance):
         try:
             if action == 'q':
                 manatee.Concordance.__init__(
-                    self, corp, params, sample_size, full_size)
+                    self, corp.unwrap(), params, sample_size, full_size)
             elif action == 'a':
                 # query with a default attribute
                 default_attr, query = params.split(',', 1)
                 corp.set_default_attr(default_attr)
                 manatee.Concordance.__init__(
-                    self, corp, query, sample_size, full_size)
+                    self, corp.unwrap(), query, sample_size, full_size)
             elif action == 'l':
                 # load from a file
                 self._conc_file = params
-                manatee.Concordance.__init__(self, corp, self._conc_file)
+                manatee.Concordance.__init__(self, corp.unwrap(), self._conc_file)
             elif action == 's':
                 # stored in _conc_dir
                 self._conc_file = os.path.join(
@@ -284,7 +285,7 @@ class PyConc(manatee.Concordance):
         head = [dict(n=label(attrs[x]), s=x / 2)
                 for x in range(0, len(attrs), 2)]
         head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
-
+        has_empty_item = False
         tofbar, tonbar = calc_scale(freqs, norms)
         if tonbar and not ml:
             maxf = max(freqs)  # because of bar height
@@ -309,7 +310,6 @@ class PyConc(manatee.Concordance):
                 head.append(dict(n='Freq [%]', title='', s='rel'))
 
             lines = []
-            has_empty_item = False
             for w, f, nf in zip(words, freqs, norms):
                 rel_norm_freq = {
                     0: round(f * 1e6 / nf, 2),

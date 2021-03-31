@@ -10,7 +10,7 @@ import abc
 from typing import TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from controller.plg import PluginApi
+    from controller.plg import PluginCtx
 
 
 class CorpusDependentPlugin(abc.ABC):
@@ -20,7 +20,7 @@ class CorpusDependentPlugin(abc.ABC):
     """
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_api: 'PluginApi', corpname: str) -> bool:
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpname: str) -> bool:
         """
         arguments:
         corpname -- a name of the corpus

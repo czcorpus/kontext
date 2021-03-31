@@ -80,14 +80,14 @@ def set_favorite_item(ctrl, request):
         size_info=l10n.simplify_num(main_size)
     ))
     with plugins.runtime.USER_ITEMS as uit:
-        uit.add_user_item(ctrl._plugin_api, item)
+        uit.add_user_item(ctrl._plugin_ctx, item)
         return item.to_dict()
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
 def unset_favorite_item(ctrl, request):
     with plugins.runtime.USER_ITEMS as uit:
-        uit.delete_user_item(ctrl._plugin_api, request.form['id'])
+        uit.delete_user_item(ctrl._plugin_ctx, request.form['id'])
         return dict(id=request.form['id'])
 
 
@@ -121,23 +121,23 @@ class UserItems(AbstractUserItems):
         """
         return json.dumps(obj.to_dict())
 
-    def get_user_items(self, plugin_api):
+    def get_user_items(self, plugin_ctx):
         ans = []
-        if self._auth.anonymous_user()['id'] != plugin_api.user_id:
-            for item_id, item in list(self._db.hash_get_all(self._mk_key(plugin_api.user_id)).items()):
+        if self._auth.anonymous_user()['id'] != plugin_ctx.user_id:
+            for item_id, item in list(self._db.hash_get_all(self._mk_key(plugin_ctx.user_id)).items()):
                 ans.append(import_record(item))
-            ans = l10n.sort(ans, plugin_api.user_lang, key=lambda itm: itm.sort_key, reverse=False)
+            ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
 
-    def add_user_item(self, plugin_api, item):
-        if len(self.get_user_items(plugin_api)) >= self.max_num_favorites:
+    def add_user_item(self, plugin_ctx, item):
+        if len(self.get_user_items(plugin_ctx)) >= self.max_num_favorites:
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
-        self._db.hash_set(self._mk_key(plugin_api.user_id), item.ident, item.to_dict())
+        self._db.hash_set(self._mk_key(plugin_ctx.user_id), item.ident, item.to_dict())
 
-    def delete_user_item(self, plugin_api, item_id):
-        self._db.hash_del(self._mk_key(plugin_api.user_id), item_id)
+    def delete_user_item(self, plugin_ctx, item_id):
+        self._db.hash_del(self._mk_key(plugin_ctx.user_id), item_id)
 
     def export_actions(self):
         return {UserController: [set_favorite_item, unset_favorite_item]}

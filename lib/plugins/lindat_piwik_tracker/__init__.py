@@ -109,29 +109,29 @@ class Tracker(AbstractDispatchHook):
         self.rest_methods = frozenset(['fcs'])
         self.auth_token = auth_token
 
-    def post_dispatch(self, plugin_api, methodname, action_metadata):
+    def post_dispatch(self, plugin_ctx, methodname, action_metadata):
         """
         Sends the tracking information to the tracking backend
         """
         if not self.is_tracking_allowed(methodname):
             return
 
-        server_names = plugin_api.get_from_environ('HTTP_X_FORWARDED_HOST', '').split(', ')
+        server_names = plugin_ctx.get_from_environ('HTTP_X_FORWARDED_HOST', '').split(', ')
         server_name = server_names[0] if server_names else ''
-        https = plugin_api.get_from_environ('HTTP_X_FORWARDED_PROTOCOL', '') == 'https'
-        remote_addrs = plugin_api.get_from_environ('HTTP_X_FORWARDED_FOR',
-                                                   plugin_api.get_from_environ('REMOTE_ADDR', '')).split(', ')
+        https = plugin_ctx.get_from_environ('HTTP_X_FORWARDED_PROTOCOL', '') == 'https'
+        remote_addrs = plugin_ctx.get_from_environ('HTTP_X_FORWARDED_FOR',
+                                                   plugin_ctx.get_from_environ('REMOTE_ADDR', '')).split(', ')
         remote_addr = remote_addrs[0] if remote_addrs else ''
-        path_info = self.context_path.rstrip('/') + plugin_api.get_from_environ('PATH_INFO', '')
+        path_info = self.context_path.rstrip('/') + plugin_ctx.get_from_environ('PATH_INFO', '')
 
         headers = {
-            'HTTP_USER_AGENT': plugin_api.get_from_environ('HTTP_USER_AGENT', ''),
+            'HTTP_USER_AGENT': plugin_ctx.get_from_environ('HTTP_USER_AGENT', ''),
             'REMOTE_ADDR': remote_addr,
-            'HTTP_REFERER': plugin_api.get_from_environ('HTTP_REFERER', ''),
-            'HTTP_ACCEPT_LANGUAGE': plugin_api.get_from_environ('HTTP_ACCEPT_LANGUAGE', ''),
+            'HTTP_REFERER': plugin_ctx.get_from_environ('HTTP_REFERER', ''),
+            'HTTP_ACCEPT_LANGUAGE': plugin_ctx.get_from_environ('HTTP_ACCEPT_LANGUAGE', ''),
             'SERVER_NAME': server_name,
             'PATH_INFO': path_info,
-            'QUERY_STRING': plugin_api.get_from_environ('QUERY_STRING', ''),
+            'QUERY_STRING': plugin_ctx.get_from_environ('QUERY_STRING', ''),
             'HTTPS': https,
         }
 

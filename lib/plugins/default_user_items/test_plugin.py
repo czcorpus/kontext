@@ -17,7 +17,7 @@ import json
 
 import plugins
 from mocks.storage import TestingKeyValueStorage
-from mocks.request import Request, Controller, PluginApi
+from mocks.request import Request, Controller, PluginCtx
 from mocks import mplugins
 from plugins.abstract.user_items import FavoriteItem
 from plugins.default_user_items import UserItems
@@ -101,7 +101,7 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(data['subcorpus_id'], 'foo')
 
     def test_get_user_items(self):
-        papi = PluginApi()
+        papi = PluginCtx()
         papi.user_id = 7
         item1 = {'size': 150426, 'name': 'susanne - the testing one', 'subcorpus_id': '',
                  'corpora': [{'name': 'A) susanne - the testing one', 'id': 'susanne'}],

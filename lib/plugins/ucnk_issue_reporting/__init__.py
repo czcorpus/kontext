@@ -27,8 +27,8 @@ from translation import ugettext as _
 
 class UcnkErrorReporting(AbstractIssueReporting):
 
-    def export_report_action(self, plugin_api):
-        args = {'issue[custom_field_values][16]': urllib.parse.quote_plus(plugin_api.current_url)}
+    def export_report_action(self, plugin_ctx):
+        args = {'issue[custom_field_values][16]': urllib.parse.quote_plus(plugin_ctx.current_url)}
         return StaticReportingAction(
             url='https://podpora.korpus.cz/projects/kontext/issues/new',
             args=args,

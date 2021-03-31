@@ -38,8 +38,8 @@ msgstr ""
 "kontaktujte technickou podporu."
 
 #, python-format
-msgid "Subcorpus \"%s\" not found"
-msgstr "Subkorpus \"%s\" nebyl nalezen"
+msgid "Subcorpus \"{}\" not found"
+msgstr "Subkorpus \"{}\" nebyl nalezen"
 
 msgid "This function is disabled."
 msgstr "Tato funkce je vypnuta."

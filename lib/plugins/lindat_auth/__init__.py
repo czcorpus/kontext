@@ -40,7 +40,7 @@ def uni(s):
 def lindat_login(self, request):
     with plugins.runtime.AUTH as auth:
         ans = {}
-        self._session['user'] = auth.validate_user(self._plugin_api,
+        self._session['user'] = auth.validate_user(self._plugin_ctx,
                                                    request.form['username'] if request.form else None,
                                                    request.form['password'] if request.form else None)
         if not auth.is_anonymous(self._session['user'].get('id', None)):
@@ -65,7 +65,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     ID_KEYS = ('HTTP_EPPN', 'HTTP_PERSISTENT_ID', 'HTTP_MAIL')
     RESERVED_USER = '__user_count'
 
-    def get_user_info(self, plugin_api):
+    def get_user_info(self, plugin_ctx):
         raise NotImplementedError()
 
     def __init__(self, corplist, db, sessions, conf, failover):
@@ -91,7 +91,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         self._entitlement2group = {entitlement: group for entitlement, group
                                    in map(_e2g_splitter, self._conf.get('lindat:entitlements_to_groups', []))}
 
-    def validate_user(self, plugin_api, username, password):
+    def validate_user(self, plugin_ctx, username, password):
         """
             Try to find the user using two methods.
         """
@@ -101,7 +101,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                 return self.anonymous_user()
             user_d = self._failover_auth.auth(self._db, username, password)
         else:
-            user_d = self._auth(plugin_api)
+            user_d = self._auth(plugin_ctx)
 
         if user_d is not None:
             user_d['id'] = int(user_d['id'])
@@ -140,39 +140,39 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         return [corpora['ident'] for corpora in self._corplist
                 if len(set(corpora['access']).intersection(set(groups))) > 0]
 
-    def on_forbidden_corpus(self, plugin_api, corpname, corp_variant):
-        if self.is_anonymous(plugin_api.user_id):
+    def on_forbidden_corpus(self, plugin_ctx, corpname, corp_variant):
+        if self.is_anonymous(plugin_ctx.user_id):
             raise ImmediateRedirectException(
-                '{0}{1}query?corpname={2}'.format(self.get_login_url(), plugin_api.root_url, corpname))
+                '{0}{1}query?corpname={2}'.format(self.get_login_url(), plugin_ctx.root_url, corpname))
         else:
             super(FederatedAuthWithFailover, self).on_forbidden_corpus(
-                plugin_api, corpname, corp_variant)
+                plugin_ctx, corpname, corp_variant)
 
     def is_administrator(self, user_id):
         # TODO(jm)
         return False
 
-    def logout_hook(self, plugin_api):
-        plugin_api.redirect('%squery' % (plugin_api.root_url,))
+    def logout_hook(self, plugin_ctx):
+        plugin_ctx.redirect('%squery' % (plugin_ctx.root_url,))
 
     def _new_user_id(self):
         return self._db.incr(FederatedAuthWithFailover.RESERVED_USER)
 
-    def _auth(self, plugin_api):
+    def _auth(self, plugin_ctx):
         """
             Inspect HTTP headers and try to find a shibboleth user.
         """
         username = _get_non_empty_header(
-            plugin_api.get_from_environ, *FederatedAuthWithFailover.ID_KEYS)
+            plugin_ctx.get_from_environ, *FederatedAuthWithFailover.ID_KEYS)
         if username is None or username == FederatedAuthWithFailover.RESERVED_USER:
             return None
 
         firstname = uni(_get_non_empty_header(
-            plugin_api.get_from_environ, 'HTTP_GIVENNAME') or "")
+            plugin_ctx.get_from_environ, 'HTTP_GIVENNAME') or "")
         surname = uni(_get_non_empty_header(
-            plugin_api.get_from_environ, 'HTTP_SN') or "")
+            plugin_ctx.get_from_environ, 'HTTP_SN') or "")
         displayname = uni(_get_non_empty_header(
-            plugin_api.get_from_environ, 'HTTP_DISPLAYNAME', 'HTTP_CN') or "")
+            plugin_ctx.get_from_environ, 'HTTP_DISPLAYNAME', 'HTTP_CN') or "")
 
         # this will work most of the times but very likely not
         # always (no unification in what IdPs are sending)
@@ -183,7 +183,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                 surname = names[-1]
 
         idp = uni(_get_non_empty_header(
-            plugin_api.get_from_environ, "HTTP_SHIB_IDENTITY_PROVIDER") or "")
+            plugin_ctx.get_from_environ, "HTTP_SHIB_IDENTITY_PROVIDER") or "")
 
         db_user_d = self._db.hash_get_all(username)
         if 0 == len(db_user_d):
@@ -206,16 +206,16 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         else:
             groups = []
         shib_groups = self._get_shibboleth_groups_from_entitlement_vals(uni(_get_non_empty_header(
-            plugin_api.get_from_environ, "HTTP_ENTITLEMENT") or ""))
+            plugin_ctx.get_from_environ, "HTTP_ENTITLEMENT") or ""))
         groups = groups + shib_groups
         user_d['groups'] = groups
 
         return user_d
 
-    def export(self, plugin_api):
+    def export(self, plugin_ctx):
         return {
             'metadataFeed': self._conf['lindat:metadataFeed'],
-            'login_url': plugin_api.root_url + self._conf['login_url'],
+            'login_url': plugin_ctx.root_url + self._conf['login_url'],
             'service_name': self._conf['lindat:service_name'],
             'response_url': self._conf['lindat:response_url']
             if self._conf['lindat:response_url'] else '',

@@ -24,7 +24,7 @@ KonText controller and related auxiliary objects
 from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING, TypeVar
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from .plg import PluginApi
+    from .plg import PluginCtx
 
 import os
 from xml.sax.saxutils import escape
@@ -191,7 +191,7 @@ class Controller(object):
         ##
         self.args: Args = Args()
         self._uses_valid_sid: bool = True
-        self._plugin_api: Optional[PluginApi] = None  # must be implemented in a descendant
+        self._plugin_ctx: Optional[PluginCtx] = None  # must be implemented in a descendant
 
     def init_session(self) -> None:
         """
@@ -209,7 +209,7 @@ class Controller(object):
 
             if hasattr(auth, 'revalidate'):
                 try:
-                    auth.revalidate(self._plugin_api)  # type: ignore
+                    auth.revalidate(self._plugin_ctx)  # type: ignore
                 except Exception as ex:
                     self._session['user'] = auth.anonymous_user()
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)

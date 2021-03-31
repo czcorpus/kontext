@@ -244,7 +244,6 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
             return (
                 <S.CorplistTable>
-                    xxx
                     {this._renderDetailBox()}
                     <table className="data corplist">
                         <tbody>

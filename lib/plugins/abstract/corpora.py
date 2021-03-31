@@ -41,7 +41,7 @@ import abc
 from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from controller.plg import PluginApi
+    from controller.plg import PluginCtx
 import json
 
 
@@ -261,7 +261,7 @@ class AbstractCorporaArchive(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_corpus_info(self, user_lang: str, corp_id: str) -> CorpusInfo:
+    def get_corpus_info(self, plugin_ctx: 'PluginCtx', corp_id: str) -> CorpusInfo:
         """
         Return a full available corpus information.
 
@@ -270,7 +270,7 @@ class AbstractCorporaArchive(abc.ABC):
         BrokenCorpusInfo from this package.
 
         arguments:
-        user_lang -- user language (e.g. en_US)
+        plugin_ctx
         corp_id -- corpus identifier
 
         returns:
@@ -279,7 +279,7 @@ class AbstractCorporaArchive(abc.ABC):
         metadata} where metadata is a dict with keys {database, label_attr, id_attr, desc, keywords}.
         """
 
-    def mod_corplist_menu(self, plugin_api, menu_item):
+    def mod_corplist_menu(self, plugin_ctx: 'PluginCtx', menu_item):
         """
         The method allows the plug-in to customize main menu link from "Corpora -> Available corpora".
         """
@@ -291,10 +291,10 @@ class SimpleCorporaArchive(AbstractCorporaArchive):
     """
 
     @abc.abstractmethod
-    def get_all(self, plugin_api: 'PluginApi'):
+    def get_all(self, plugin_ctx: 'PluginCtx'):
         """
         Return all the available corpora (user credentials can be accessed
-        via plugin_api).
+        via plugin_ctx).
         """
 
 
@@ -304,10 +304,10 @@ class CorplistProvider(abc.ABC):
     """
 
     @abc.abstractmethod
-    def search(self, plugin_api: 'PluginApi', query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None) -> Any:
+    def search(self, plugin_ctx: 'PluginCtx', query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None) -> Any:
         """
         arguments:
-        plugin_api --
+        plugin_ctx --
         query -- raw query entered by user (possibly modified by client-side code)
         offset -- zero-based offset specifying returned data
         limit -- number of items to return
@@ -320,12 +320,12 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     An extended version supporting search by user query
     """
 
-    def search(self, plugin_api: 'PluginApi', query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None):
+    def search(self, plugin_ctx: 'PluginCtx', query: str, offset: int = 0, limit: Optional[int] = None, filter_dict: Optional[Dict[str, Any]] = None):
         """
         Returns a subset of corplist matching provided query.
 
         arguments:
-        plugin_api -- a controller.PluginApi instance
+        plugin_ctx -- a controller.PluginCtx instance
         query -- any search query the concrete plug-in implementation can understand
                  (KonText itself just passes it around). If False then default parameters
                  are expected. An empty string is understood as "no query".
@@ -338,35 +338,35 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         returns:
         a JSON-serializable dictionary a concrete plug-in implementation understands
         """
-        service = self.create_corplist_provider(plugin_api)
-        return service.search(plugin_api=plugin_api, query=query, offset=offset, limit=limit,
+        service = self.create_corplist_provider(plugin_ctx)
+        return service.search(plugin_ctx=plugin_ctx, query=query, offset=offset, limit=limit,
                               filter_dict=filter_dict)
 
     @abc.abstractmethod
-    def create_corplist_provider(self, plugin_api: 'PluginApi') -> CorplistProvider:
+    def create_corplist_provider(self, plugin_ctx: 'PluginCtx') -> CorplistProvider:
         """
         A factory function for a configured search service
 
         arguments:
-        plugin_api -- a controller.PluginApi instance
+        plugin_ctx -- a controller.PluginCtx instance
 
         returns:
         A CorplistProvider instance
         """
 
     @abc.abstractmethod
-    def initial_search_params(self, plugin_api: 'PluginApi', query: str, args: Any) -> Dict[str, Any]:
+    def initial_search_params(self, plugin_ctx: 'PluginCtx', query: str, args: Any) -> Dict[str, Any]:
         """
         Return a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).
         """
 
-    def custom_filter(self, plugin_api: 'PluginApi', corpus_list_item: Any, permitted_corpora: Dict[str, str]) -> bool:
+    def custom_filter(self, plugin_ctx: 'PluginCtx', corpus_list_item: Any, permitted_corpora: Dict[str, str]) -> bool:
         """
         An optional custom filter to exclude specific items from results.
 
         arguments:
-        plugin_api -- a controller.PluginApi instance
+        plugin_ctx -- a controller.PluginCtx instance
         corpus_list_item -- a CorpusListItem object
         permitted_corpora -- a dict (corpus_id, corpus_variant) as returned
                              by auth.permitted_corpora

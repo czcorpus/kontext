@@ -34,13 +34,13 @@ class MockUserItems(AbstractUserItems):
     def serialize(self, obj):
         raise NotImplementedError()
 
-    def get_user_items(self, plugin_api):
+    def get_user_items(self, plugin_ctx):
         raise NotImplementedError()
 
-    def add_user_item(self, plugin_api, item):
+    def add_user_item(self, plugin_ctx, item):
         self._added_items.append(item)
 
-    def delete_user_item(self, plugin_api, item_id):
+    def delete_user_item(self, plugin_ctx, item_id):
         self._deleted_items.append(item_id)
 
     @property
@@ -63,5 +63,5 @@ class MockAuth(AbstractAuth):
     def permitted_corpora(self, user_dict):
         raise NotImplementedError()
 
-    def get_user_info(self, plugin_api):
+    def get_user_info(self, plugin_ctx):
         raise NotImplementedError()

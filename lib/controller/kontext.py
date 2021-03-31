@@ -16,7 +16,6 @@
 from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, Callable
 from main_menu import AbstractMenuItem
 from argmapping.query import ConcFormArgs
-from manatee import Corpus
 from werkzeug import Request
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -44,10 +43,11 @@ import l10n
 from l10n import corpus_get_conf
 from translation import ugettext as translate
 import scheduled
-import fallback_corpus
+from corplib.fallback import ErrorCorpus, EmptyCorpus
+from corplib.corpus import KCorpus
 from argmapping import ConcArgsMapping, Args
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
-from .plg import PluginApi
+from .plg import PluginCtx
 from templating import DummyGlobals
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy
 from texttypes import TextTypes, TextTypesCache
@@ -176,7 +176,7 @@ class Kontext(Controller):
     def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
         super().__init__(request=request, ui_lang=ui_lang)
         # Note: always use _corp() method to access current corpus even from inside the class
-        self._curr_corpus: Optional[Corpus] = None
+        self._curr_corpus: Optional[KCorpus] = None
         self._corpus_variant: str = ''  # a prefix for a registry file
 
         self.return_url: Optional[str] = None
@@ -199,7 +199,7 @@ class Kontext(Controller):
         # data of the current manual concordance line selection/categorization
         self._lines_groups: LinesGroups = LinesGroups(data=[])
 
-        self._plugin_api: PluginApi = PluginApi(self, self._request, self._cookies)
+        self._plugin_ctx: PluginCtx = PluginCtx(self, self._request, self._cookies)
 
         # query_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
@@ -216,7 +216,7 @@ class Kontext(Controller):
 
     def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
-            return plg.get_corpus_info(self.ui_lang, corp)
+            return plg.get_corpus_info(self._plugin_ctx, corp)
 
     def get_mapping_url_prefix(self) -> str:
         return super().get_mapping_url_prefix()
@@ -501,7 +501,7 @@ class Kontext(Controller):
                     raise ImmediateRedirectException(self.create_url(
                         url_pref + action_name, dict(corpname=corpname)))
                 elif not has_access:
-                    auth.on_forbidden_corpus(self._plugin_api, corpname, variant)
+                    auth.on_forbidden_corpus(self._plugin_ctx, corpname, variant)
                 for al_corp in form.getlist('align'):
                     al_access, al_variant = auth.validate_access(al_corp, self.session_get('user'))
                     # we cannot accept aligned corpora without access right
@@ -527,10 +527,10 @@ class Kontext(Controller):
         req_args = super().pre_dispatch(action_name, action_metadata)
 
         with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.pre_dispatch(self._plugin_api, action_name, action_metadata, self._request)
+            dhook.pre_dispatch(self._plugin_ctx, action_name, action_metadata, self._request)
 
         def validate_corpus():
-            if isinstance(self.corp, fallback_corpus.ErrorCorpus):
+            if isinstance(self.corp, ErrorCorpus):
                 return self.corp.get_error()
             info = self.get_corpus_info(getattr(self.args, 'corpname'))
             if isinstance(info, BrokenCorpusInfo):
@@ -613,7 +613,7 @@ class Kontext(Controller):
                             f'{self.get_mapping_url_prefix()[1:]}{methodname}',
                             err_desc=err_desc, proc_time=self._proc_time)
         with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.post_dispatch(self._plugin_api, methodname, action_metadata)
+            dhook.post_dispatch(self._plugin_ctx, methodname, action_metadata)
 
     def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
@@ -671,7 +671,7 @@ class Kontext(Controller):
         return enc if enc else 'iso-8859-1'
 
     def handle_dispatch_error(self, ex: Exception):
-        if isinstance(self.corp, fallback_corpus.ErrorCorpus):
+        if isinstance(self.corp, ErrorCorpus):
             self._status = 404
             self.add_system_message('error', 'Failed to open corpus {0}'.format(
                 getattr(self.args, 'corpname')))
@@ -679,7 +679,7 @@ class Kontext(Controller):
             self._status = 500
 
     @property
-    def corp(self) -> Union[Corpus, fallback_corpus.ErrorCorpus, fallback_corpus.EmptyCorpus]:
+    def corp(self) -> Union[ErrorCorpus, EmptyCorpus, KCorpus]:
         """
         Contains the current corpus. The property always contains a corpus-like object
         (even in case of an error). Possible values:
@@ -692,17 +692,17 @@ class Kontext(Controller):
         This should be always preferred over accessing _curr_corpus attribute.
 
         """
-        if getattr(self.args, 'corpname'):
+        if self.args.corpname:
             try:
-                if not self._curr_corpus or self.args.usesubcorp and not hasattr(self._curr_corpus, 'subcname'):
+                if not self._curr_corpus or self.args.usesubcorp and not self._curr_corpus.is_subcorpus:
                     self._curr_corpus = self.cm.get_Corpus(self.args.corpname, subcname=self.args.usesubcorp,
                                                            corp_variant=self._corpus_variant)
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
             except Exception as ex:
-                return fallback_corpus.ErrorCorpus(ex)
+                return ErrorCorpus(ex)
         else:
-            return fallback_corpus.EmptyCorpus()
+            return EmptyCorpus()
 
     @property
     def tt(self) -> TextTypes:
@@ -710,7 +710,7 @@ class Kontext(Controller):
         Provides access to text types of the current corpus
         """
         return self._tt if self._tt is not None else TextTypes(
-            self.corp, self.corp.corpname, self._tt_cache, self._plugin_api)
+            self.corp, self.corp.corpname, self._tt_cache, self._plugin_ctx)
 
     def _add_corpus_related_globals(self, result, maincorp):
         """
@@ -727,18 +727,17 @@ class Kontext(Controller):
         result['corp_description'] = maincorp.get_info()
         result['corp_size'] = self.corp.size()
 
-        if hasattr(self.corp, 'subcname'):
-            setattr(self.args, 'usesubcorp', self.corp.subcname)
+        if self.corp.is_subcorpus:
+            self.args.usesubcorp = self.corp.subcname
 
-        usesubcorp = getattr(self.args, 'usesubcorp') if getattr(self.args, 'usesubcorp') else None
         result['corpus_ident'] = dict(
             id=getattr(self.args, 'corpname'),
             variant=self._corpus_variant,
             name=self._human_readable_corpname(),
-            usesubcorp=usesubcorp,
-            origSubcorpName=getattr(self.corp, 'orig_subcname', usesubcorp),
+            usesubcorp=self.args.usesubcorp,
+            origSubcorpName=self.corp.orig_subcname,
             foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id)
-        if getattr(self.args, 'usesubcorp'):
+        if self.corp.is_subcorpus:
             result['subcorp_size'] = self.corp.search_size()
         else:
             result['subcorp_size'] = None
@@ -797,7 +796,7 @@ class Kontext(Controller):
                 if js_file:
                     ans[opt_plugin.name] = js_file
                     if (not (isinstance(opt_plugin.instance, plugins.abstract.CorpusDependentPlugin)) or
-                            opt_plugin.is_enabled_for(self._plugin_api, getattr(self.args, 'corpname'))):
+                            opt_plugin.is_enabled_for(self._plugin_ctx, self.args.corpname)):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
@@ -884,7 +883,7 @@ class Kontext(Controller):
         result[key] = {}
         for plg in plugins.runtime:
             if hasattr(plg.instance, 'export'):
-                result[key][plg.name] = plg.instance.export(self._plugin_api)
+                result[key][plg.name] = plg.instance.export(self._plugin_ctx)
 
     def add_globals(self, result, methodname, action_metadata):
         """
@@ -933,10 +932,10 @@ class Kontext(Controller):
 
         if plugins.runtime.APPLICATION_BAR.exists:
             application_bar = plugins.runtime.APPLICATION_BAR.instance
-            result['app_bar'] = application_bar.get_contents(plugin_api=self._plugin_api,
+            result['app_bar'] = application_bar.get_contents(plugin_ctx=self._plugin_ctx,
                                                              return_url=self.return_url)
-            result['app_bar_css'] = application_bar.get_styles(plugin_api=self._plugin_api)
-            result['app_bar_js'] = application_bar.get_scripts(plugin_api=self._plugin_api)
+            result['app_bar_css'] = application_bar.get_styles(plugin_ctx=self._plugin_ctx)
+            result['app_bar_js'] = application_bar.get_scripts(plugin_ctx=self._plugin_ctx)
         else:
             result['app_bar'] = None
             result['app_bar_css'] = []
@@ -945,7 +944,7 @@ class Kontext(Controller):
         result['footer_bar'] = None
         result['footer_bar_css'] = None
         with plugins.runtime.FOOTER_BAR as fb:
-            result['footer_bar'] = fb.get_contents(self._plugin_api, self.return_url)
+            result['footer_bar'] = fb.get_contents(self._plugin_ctx, self.return_url)
             result['footer_bar_css'] = fb.get_css_url()
 
         self._apply_theme(result)
@@ -975,7 +974,7 @@ class Kontext(Controller):
 
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(
-                self._plugin_api).to_dict() if irp else None
+                self._plugin_ctx).to_dict() if irp else None
         page_model = action_metadata['page_model'] if action_metadata['page_model'] else l10n.camelize(
             methodname)
         result['page_model'] = page_model
@@ -991,7 +990,7 @@ class Kontext(Controller):
             'global', 'explicit_conc_persistence_ui', False)
 
         # main menu
-        menu_items = MenuGenerator(result, self.args, self._plugin_api).generate(
+        menu_items = MenuGenerator(result, self.args, self._plugin_ctx).generate(
             disabled_items=self.disabled_menu_items,
             save_items=self._save_menu,
             corpus_dependent=result['uses_corp_instance'],
@@ -1047,14 +1046,13 @@ class Kontext(Controller):
 
     def _get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
-        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, getattr(self.args, 'corpname')):
-            corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
-                self.ui_lang, getattr(self.args, 'corpname'))
+        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_ctx, self.args.corpname):
+            corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, self.args.corpname)
             id_attr = corpus_info.metadata.id_attr
             if id_attr in tt_data:
                 bib_mapping = dict(
                     plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(
-                        self._plugin_api, getattr(self.args, 'corpname'), tt_data[id_attr]))
+                        self._plugin_ctx, getattr(self.args, 'corpname'), tt_data[id_attr]))
         return bib_mapping
 
     def _export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
@@ -1125,8 +1123,7 @@ class Kontext(Controller):
     @exposed(return_type='json')
     def concdesc_json(self, _: Optional[Request] = None) -> Dict[str, List[Dict[str, Any]]]:
         out_list: List[Dict[str, Any]] = []
-        conc_desc = conclib.get_conc_desc(corpus=self.corp, q=getattr(self.args, 'q'),
-                                          subchash=getattr(self.corp, 'subchash', None))
+        conc_desc = conclib.get_conc_desc(corpus=self.corp, q=getattr(self.args, 'q'))
 
         def nicearg(arg):
             args = arg.split('"')

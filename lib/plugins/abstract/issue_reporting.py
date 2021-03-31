@@ -20,7 +20,7 @@ import abc
 from typing import Dict, Any, List, Callable, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from controller.plg import PluginApi
+    from controller.plg import PluginCtx
 
 
 class IssueReportingAction(object):
@@ -47,8 +47,8 @@ class StaticReportingAction(IssueReportingAction):
 
 class AbstractIssueReporting(abc.ABC):
 
-    def export_report_action(self, plugin_api: 'PluginApi') -> Dict[Any, List[Callable[[Any], Any]]]:
+    def export_report_action(self, plugin_ctx: 'PluginCtx') -> Dict[Any, List[Callable[[Any], Any]]]:
         pass
 
-    def submit(self, plugin_api: 'PluginApi', args: Dict[str, str]):
+    def submit(self, plugin_ctx: 'PluginCtx', args: Dict[str, str]):
         pass

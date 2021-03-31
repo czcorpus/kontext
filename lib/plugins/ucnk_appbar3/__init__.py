@@ -60,16 +60,16 @@ class ApplicationBar3(AbstractApplicationBar):
         scripts.append(conf['main'])
         return scripts
 
-    def get_styles(self, plugin_api):
-        toolbar_obj = plugin_api.get_shared('toolbar')
+    def get_styles(self, plugin_ctx):
+        toolbar_obj = plugin_ctx.get_shared('toolbar')
         return self._process_styles(toolbar_obj.get('styles', {}))
 
-    def get_scripts(self, plugin_api):
-        toolbar_obj = plugin_api.get_shared('toolbar')
+    def get_scripts(self, plugin_ctx):
+        toolbar_obj = plugin_ctx.get_shared('toolbar')
         return self._process_scripts(toolbar_obj.get('scripts', {}))
 
-    def get_contents(self, plugin_api, return_url):
-        toolbar_obj = plugin_api.get_shared('toolbar')
+    def get_contents(self, plugin_ctx, return_url):
+        toolbar_obj = plugin_ctx.get_shared('toolbar')
         if toolbar_obj:
             return toolbar_obj.get('html')
         else:

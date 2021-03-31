@@ -20,6 +20,7 @@ from controller import exposed
 from controller.errors import FunctionNotSupported, UserActionException
 from controller.kontext import AsyncTaskStatus
 from controller.querying import Querying
+from corplib.corpus import list_public_subcorpora
 from main_menu import MainMenu
 from translation import ugettext as translate
 import plugins
@@ -124,12 +125,12 @@ class Subcorpus(Querying):
             data = CreateSubcorpusArgs.from_dict(request.json)
             corpus_info = self.get_corpus_info(data.corpname)
             if (plugins.runtime.LIVE_ATTRIBUTES.exists
-                    and plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(self._plugin_api, data.corpname)
+                    and plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(self._plugin_ctx, data.corpname)
                     and len(data.aligned_corpora) > 0):
                 if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
                     within_cql = None
                     sel_match = plugins.runtime.LIVE_ATTRIBUTES.instance.get_attr_values(
-                        self._plugin_api, corpus=self.corp,
+                        self._plugin_ctx, corpus=self.corp,
                         attr_map=data.text_types,
                         aligned_corpora=data.aligned_corpora,
                         limit_lists=False)
@@ -312,11 +313,11 @@ class Subcorpus(Querying):
                         'orig_subcname': sc.orig_subcname,
                         'deleted': False,
                         'description': sc.description,
-                        'published': corplib.subcorpus_is_published(sc.spath)
+                        'published': sc.is_published
                     })
                     related_corpora.add(corp)
                 except RuntimeError as e:
-                    logging.getLogger(__name__).warn(
+                    logging.getLogger(__name__).warning(
                         'Failed to fetch information about subcorpus {0}:{1}: {2}'.format(corp, item['n'], e))
 
         if filter_args['corpname']:
@@ -327,7 +328,7 @@ class Subcorpus(Querying):
 
         if plugins.runtime.SUBC_RESTORE.exists:
             try:
-                full_list = plugins.runtime.SUBC_RESTORE.instance.extend_subc_list(self._plugin_api, data,
+                full_list = plugins.runtime.SUBC_RESTORE.instance.extend_subc_list(self._plugin_ctx, data,
                                                                                    filter_args, 0)
             except Exception as e:
                 logging.getLogger(__name__).error(
@@ -357,23 +358,24 @@ class Subcorpus(Querying):
         return ans
 
     @exposed(access_level=1, return_type='json')
-    def ajax_subcorp_info(self, request):
-        subcname = request.args.get('subcname', '')
-        sc = self.cm.get_Corpus(self.args.corpname, subcname=subcname)
+    def subcorpus_info(self, request):
+        if not self.corp.is_subcorpus:
+            raise UserActionException('Not a subcorpus')
         ans = dict(
             corpusId=self.args.corpname,
             corpusName=self._human_readable_corpname(),
-            subCorpusName=subcname,
-            origSubCorpusName=sc.orig_subcname if sc.is_published else subcname,
-            corpusSize=sc.size(),
-            subCorpusSize=sc.search_size(),
-            created=time.mktime(sc.created.timetuple()),
-            description=sc.description,
+            subCorpusName=self.args.subcname,
+            origSubCorpusName=self.corp.orig_subcname,
+            corpusSize=self.corp.size(),
+            subCorpusSize=self.corp.search_size(),
+            created=time.mktime(self.corp.created.timetuple()),
+            description=self.corp.description,
             extended_info={}
         )
+
         if plugins.runtime.SUBC_RESTORE.exists:
             with plugins.runtime.SUBC_RESTORE as sr:
-                tmp = sr.get_info(self.session_get('user', 'id'), self.args.corpname, subcname)
+                tmp = sr.get_info(self.session_get('user', 'id'), self.args.corpname, self.corp.subcname)
                 if tmp:
                     ans['extended_info'].update(tmp)
         return ans
@@ -410,7 +412,7 @@ class Subcorpus(Querying):
     def update_public_desc(self, request):
         if not self.corp.is_published:
             raise UserActionException('Corpus is not published - cannot change description')
-        corplib.rewrite_subc_desc(self.corp.spath, request.form['description'])
+        self.corp.save_subc_description(request.form['description'])
         return {}
 
     @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')
@@ -423,8 +425,8 @@ class Subcorpus(Querying):
         offset = int(request.args.get('offset', '0'))
         limit = int(request.args.get('limit', '20'))
         if len(query) >= min_query_size:
-            subclist = corplib.list_public_subcorpora(self.subcpath[-1], value_prefix=query,
-                                                      offset=offset, limit=limit)
+            subclist = list_public_subcorpora(self.subcpath[-1], value_prefix=query,
+                                              offset=offset, limit=limit)
         else:
             subclist = []
         return dict(data=subclist, min_query_size=min_query_size)

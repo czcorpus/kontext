@@ -30,6 +30,7 @@ from bgcalc.pquery import require_existing_pquery
 from bgcalc.pquery.errors import PqueryResultNotFound
 import settings
 from controller.kontext import AsyncTaskStatus
+from controller.plg import PluginCtx
 import time
 from translation import ugettext as translate
 from controller.errors import UserActionException
@@ -44,7 +45,7 @@ This module contains HTTP actions for the "Paradigmatic query" functionality
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
-def _load_conc_queries(conc_ids: List[str], corpus_id: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def _load_conc_queries(plugin_ctx: PluginCtx, conc_ids: List[str], corpus_id: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Load both conc. query forms and respective raw Manatee queries
     """
@@ -58,7 +59,8 @@ def _load_conc_queries(conc_ids: List[str], corpus_id: str) -> Tuple[Dict[str, A
                     'Source concordance query does not exist: {}'.format(conc_id))
             if qs.stored_query_type(data) != 'query':
                 raise UserActionException('Invalid source query used: {}'.format(conc_id))
-            args = QueryFormArgs(corpora=[corpus_id], persist=True).updated(data['lastop_form'], conc_id)
+            args = QueryFormArgs(
+                plugin_ctx=plugin_ctx, corpora=[corpus_id], persist=True).updated(data['lastop_form'], conc_id)
             forms[args.op_key] = args.to_dict()
             raw_queries[args.op_key] = data['q']
     return forms, raw_queries
@@ -79,7 +81,8 @@ class ParadigmaticQuery(Kontext):
     def export_form_args(self, result):
         if self._curr_pquery_args:
             result['pquery_form'] = self._curr_pquery_args.to_dict()
-            result['conc_forms'], _ = _load_conc_queries(self._curr_pquery_args.conc_ids, self.args.corpname)
+            result['conc_forms'], _ = _load_conc_queries(
+                self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname)
         else:
             result['pquery_form'] = None
             result['conc_forms'] = {}
@@ -175,7 +178,8 @@ class ParadigmaticQuery(Kontext):
 
         self._curr_pquery_args = PqueryFormArgs()
         self._curr_pquery_args.update_by_user_query(request.json)
-        conc_forms, raw_queries = _load_conc_queries(self._curr_pquery_args.conc_ids, self.args.corpname)
+        conc_forms, raw_queries = _load_conc_queries(
+            self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname)
         calc_args = (
             self._curr_pquery_args,
             raw_queries,

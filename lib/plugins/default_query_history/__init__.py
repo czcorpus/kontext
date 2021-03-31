@@ -27,7 +27,7 @@ from plugins.abstract.query_history import AbstractQueryHistory
 from plugins import inject
 import plugins
 from manatee import Corpus
-from fallback_corpus import EmptyCorpus
+from corplib.fallback import EmptyCorpus
 
 
 class CorpusCache:
@@ -302,7 +302,7 @@ class QueryHistory(AbstractQueryHistory):
             self.db.list_append(tmp_key, item)
         self.db.rename(tmp_key, data_key)
 
-    def export(self, plugin_api):
+    def export(self, plugin_ctx):
         return {'page_num_records': self._page_num_records}
 
 

@@ -23,7 +23,8 @@ import time
 import os
 from typing import Tuple, Optional,  Dict, Any
 
-from corplib import is_subcorpus, CorpusManager
+from corplib import CorpusManager
+from corplib.corpus import KCorpus
 from plugins.abstract.conc_cache import CalcStatus
 import plugins
 from conclib.errors import ConcCalculationStatusException
@@ -44,10 +45,10 @@ class GeneralWorker(object):
     def create_new_calc_status(self) -> CalcStatus:
         return CalcStatus(task_id=self._task_id)
 
-    def get_cached_conc_sizes(self, corp: manatee.Corpus, q: Tuple[str, ...] = None) -> Dict[str, Any]:
+    def get_cached_conc_sizes(self, corp: KCorpus, q: Tuple[str, ...] = None) -> Dict[str, Any]:
         """
         arguments:
-        corp -- manatee.Corpus instance
+        corp --
         q -- a list containing preprocessed query
         using CACHE_ROOT_DIR and corpus name, corpus name and the query
 
@@ -65,9 +66,8 @@ class GeneralWorker(object):
         if q is None:
             q = ()
         ans = dict(finished=False, concsize=0, fullsize=0, relconcsize=0, error=None)
-        subchash = getattr(corp, 'subchash', None)
         cache_map = self._cache_factory.get_mapping(corp)
-        status = cache_map.get_calc_status(subchash, q)
+        status = cache_map.get_calc_status(corp.subchash, q)
         if not status:
             raise ConcCalculationStatusException('Concordance calculation not found', None)
         status.test_error(TASK_TIME_LIMIT)
@@ -90,8 +90,8 @@ class GeneralWorker(object):
             else:
                 relconcsize = 1000000.0 * concsize / corp.search_size()
 
-            if finished and not is_subcorpus(corp):
-                conc = manatee.Concordance(corp, status.cachefile)
+            if finished and not corp.is_subcorpus:
+                conc = manatee.Concordance(corp.unwrap(), status.cachefile)
                 result_arf = round(conc.compute_ARF(), 2)
             else:
                 result_arf = None

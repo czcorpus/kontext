@@ -104,14 +104,14 @@ class UCNKSubcRestore(AbstractSubcRestore):
         else:
             return None
 
-    def extend_subc_list(self, plugin_api, subc_list, filter_args, from_idx, to_idx=None, include_cql=False):
+    def extend_subc_list(self, plugin_ctx, subc_list, filter_args, from_idx, to_idx=None, include_cql=False):
         """
         Enriches KonText's original subcorpora list by the information about queries which
         produced these subcorpora. It it also able to insert an information about deleted
         subcorpora.
 
         Args:
-            plugin_api (kontext.PluginApi): a Plugin API instance
+            plugin_ctx (kontext.PluginCtx): a Plugin API instance
             subc_list (list of dict): an original subcorpora list as produced by KonText's respective action
                 (= list of dict(n=str, v=???, size=int, created=str, corpname=str, usesubcorp=str))
             filter_args (dict): support for 'show_deleted': 0/1 and 'corpname': str
@@ -126,7 +126,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         def get_user_subcname(rec):
             return rec.get('orig_subcname') if rec.get('orig_subcname') else rec.get('usesubcorp')
 
-        subc_queries = self.list_queries(plugin_api.user_id, from_idx, to_idx)
+        subc_queries = self.list_queries(plugin_ctx.user_id, from_idx, to_idx)
         subc_queries_map = {}
         for x in subc_queries:
             subc_queries_map[(x['corpname'], x['subcname'])] = x
@@ -149,7 +149,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
             try:
                 corpus_name = subc_queries_map[dk]['corpname']
                 if corpname_matches(corpus_name):
-                    corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpus_name)
+                    corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpus_name)
                     deleted_items.append({
                         'name': '{0} / {1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
                         'size': None,

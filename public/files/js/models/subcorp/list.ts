@@ -221,10 +221,10 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
                         this.layoutModel.ajax$<SubcorpusInfoResponse>(
                             HTTP.Method.GET,
-                            this.layoutModel.createActionUrl('subcorpus/ajax_subcorp_info'),
+                            this.layoutModel.createActionUrl('subcorpus/subcorpus_info'),
                             {
                                 'corpname': line.corpname,
-                                'subcname': line.usesubcorp
+                                'usesubcorp': line.usesubcorp
                             }
                         ).subscribe(
                             data => {

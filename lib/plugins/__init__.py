@@ -48,7 +48,7 @@ from .abstract.action_log import AbstractActionLog
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .abstract.auth import AbstractAuth
-    from controller.plg import PluginApi
+    from controller.plg import PluginCtx
 
 import logging
 
@@ -119,7 +119,7 @@ class _ID(Generic[T]):
         """
         return _plugins.get(self._ident) is not None
 
-    def is_enabled_for(self, plugin_api: 'PluginApi', corpus_id: str) -> bool:
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpus_id: str) -> bool:
         """
         Returns True if the plugin exists and is enabled for a specified
         corpus or it is corpus independent (e.g. db plugin, session,...)
@@ -128,7 +128,7 @@ class _ID(Generic[T]):
             if hasattr(self.instance, 'is_enabled_for'):
                 # ignoring type check here, error: None type has no attribute is_enabled_for
                 # but we check if it exists
-                return self.instance.is_enabled_for(plugin_api, corpus_id)  # type: ignore
+                return self.instance.is_enabled_for(plugin_ctx, corpus_id)  # type: ignore
             else:
                 return True
         else:

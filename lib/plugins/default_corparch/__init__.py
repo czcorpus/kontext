@@ -117,14 +117,14 @@ from lxml import etree
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
-from plugins.abstract.corpora import CorplistProvider, DefaultManateeCorpusInfo, DictLike, TagsetInfo
+from plugins.abstract.corpora import CorplistProvider, DictLike, TagsetInfo
 from plugins.abstract.auth import AbstractAuth
 from plugins import inject
 import l10n
-import manatee
 from controller import exposed
 import actions.user
-from fallback_corpus import EmptyCorpus
+from corplib.fallback import EmptyCorpus
+from controller.plg import PluginCtx
 from translation import ugettext as _
 from settings import import_bool
 
@@ -138,26 +138,6 @@ def translate_markup(s):
     if not s:
         return None
     return markdown(s.strip())
-
-
-class ManateeCorpora(object):
-    """
-    A caching source of ManateeCorpusInfo instances.
-    """
-
-    def __init__(self):
-        self._cache = {}
-
-    def get_info(self, corpus_id):
-        try:
-            if corpus_id not in self._cache:
-                self._cache[corpus_id] = DefaultManateeCorpusInfo(
-                    manatee.Corpus(corpus_id), corpus_id)
-            return self._cache[corpus_id]
-        except:
-            # probably a misconfigured/missing corpus
-            return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
-                                            corpus_id)
 
 
 class CorpusListItem(DictLike):
@@ -212,15 +192,15 @@ class DefaultCorplistProvider(CorplistProvider):
     Corpus listing and filtering service
     """
 
-    def __init__(self, plugin_api, auth, corparch, tag_prefix):
+    def __init__(self, plugin_ctx, auth, corparch, tag_prefix):
         """
         arguments:
-        plugin_api -- a controller.PluginApi instance
+        plugin_ctx -- a controller.PluginCtx instance
         auth -- an auth plug-in instance
         corparch -- a plugins.abstract.corpora.AbstractSearchableCorporaArchive instance
         tag_prefix -- a string determining how a tag (= keyword or label) is recognized
         """
-        self._plugin_api = plugin_api
+        self._plugin_ctx = plugin_ctx
         self._auth = auth
         self._corparch = corparch
         self._tag_prefix = tag_prefix
@@ -244,10 +224,10 @@ class DefaultCorplistProvider(CorplistProvider):
                 (not min_size or int(item_size) >= int(min_size)) and
                 (not max_size or int(item_size) <= int(max_size)))
 
-    def sort(self, plugin_api, data, *fields):
+    def sort(self, plugin_ctx, data, *fields):
         def corp_cmp_key(c):
             return c.get('name') if c.get('name') is not None else ''
-        return l10n.sort(data, loc=plugin_api.user_lang, key=corp_cmp_key)
+        return l10n.sort(data, loc=plugin_ctx.user_lang, key=corp_cmp_key)
 
     def should_fetch_next(self, ans, offset, limit):
         """
@@ -258,13 +238,13 @@ class DefaultCorplistProvider(CorplistProvider):
         """
         return True
 
-    def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
         if query is False:  # False means 'use default values'
             query = ''
         ans = {'rows': []}
-        permitted_corpora = self._auth.permitted_corpora(plugin_api.user_dict)
+        permitted_corpora = self._auth.permitted_corpora(plugin_ctx.user_dict)
         used_keywords = set()
-        all_keywords_map = dict(self._corparch.all_keywords(plugin_api.user_lang))
+        all_keywords_map = dict(self._corparch.all_keywords(plugin_ctx))
         if filter_dict.get('minSize'):
             min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
         else:
@@ -288,7 +268,7 @@ class DefaultCorplistProvider(CorplistProvider):
         else:
             limit = int(limit)
 
-        user_items = self._corparch.user_items.get_user_items(plugin_api)
+        user_items = self._corparch.user_items.get_user_items(plugin_ctx)
 
         def fav_id(corpus_id):
             for item in user_items:
@@ -299,8 +279,8 @@ class DefaultCorplistProvider(CorplistProvider):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
 
         normalized_query_substrs = [s.lower() for s in query_substrs]
-        for corp in self._corparch.get_list(plugin_api, permitted_corpora):
-            full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
+        for corp in self._corparch.get_list(plugin_ctx, permitted_corpora):
+            full_data = self._corparch.get_corpus_info(plugin_ctx, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
                 if favourite_only and fav_id(corp['id']) is None:
                     continue
@@ -322,7 +302,7 @@ class DefaultCorplistProvider(CorplistProvider):
                         tests.append(False)
                 tests.append(self.matches_size(corp, min_size, max_size))
                 tests.append(self._corparch.custom_filter(
-                    self._plugin_api, full_data, permitted_corpora))
+                    self._plugin_ctx, full_data, permitted_corpora))
 
                 if self.matches_all(tests):
                     corp['size'] = corp['size']
@@ -337,8 +317,8 @@ class DefaultCorplistProvider(CorplistProvider):
                     if not self.should_fetch_next(ans, offset, limit):
                         break
         ans['rows'], ans['nextOffset'] = self.cut_result(
-            self.sort(plugin_api, ans['rows']), offset, limit)
-        ans['keywords'] = l10n.sort(used_keywords, loc=plugin_api.user_lang)
+            self.sort(plugin_ctx, ans['rows']), offset, limit)
+        ans['keywords'] = l10n.sort(used_keywords, loc=plugin_ctx.user_lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
         ans['filters'] = dict(filter_dict)
@@ -348,7 +328,7 @@ class DefaultCorplistProvider(CorplistProvider):
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
     with plugins.runtime.CORPARCH as ca:
-        return ca.export_favorite(ctrl._plugin_api)
+        return ca.export_favorite(ctrl._plugin_ctx)
 
 
 class CorpusArchive(AbstractSearchableCorporaArchive):
@@ -380,17 +360,16 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         self._messages = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
-        self._manatee_corpora = ManateeCorpora()
 
     @property
     def max_page_size(self):
         return self._max_page_size
 
-    def all_keywords(self, lang):
+    def all_keywords(self, plugin_ctx: PluginCtx):
         ans = []
         if self._keywords is None:
-            self._load(lang)
-        lang_key = self._get_iso639lang(lang)
+            self._load(plugin_ctx)
+        lang_key = self._get_iso639lang(plugin_ctx.user_lang)
         for label_key, item in list(self._keywords.items()):
             if lang_key in item:
                 ans.append((label_key, item[lang_key]))
@@ -399,10 +378,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     @property
     def user_items(self):
         return self._user_items
-
-    @property
-    def manatee_corpora(self):
-        return self._manatee_corpora
 
     @staticmethod
     def _decode_bool(v):
@@ -419,18 +394,18 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def customize_corpus_info(self, corpus_info, node):
         pass
 
-    def get_list(self, plugin_api, user_allowed_corpora):
+    def get_list(self, plugin_ctx: PluginCtx, user_allowed_corpora):
         """
         arguments:
         user_allowed_corpora -- a dict (corpus_id, corpus_variant) containing corpora ids
                                 accessible by the current user
         """
         cl = []
-        for item in list(self._raw_list(plugin_api.user_lang).values()):
+        for item in list(self._raw_list(plugin_ctx).values()):
             corp_id, path, web = item['id'], item['path'], item['sentence_struct']
             if corp_id in user_allowed_corpora:
                 try:
-                    corp_info = self.manatee_corpora.get_info(corp_id)
+                    corp_info = plugin_ctx.corpus_manager.get_info(corp_id)
                     cl.append({'id': corp_id,
                                'name': corp_info.name,
                                'desc': corp_info.description,
@@ -439,7 +414,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                                })
                 except Exception as e:
                     import logging
-                    logging.getLogger(__name__).warn(
+                    logging.getLogger(__name__).warning(
                         'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
                                                                               type(e).__name__, e))
                     cl.append({
@@ -447,8 +422,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                         'path': path, 'desc': '', 'size': None})
         return cl
 
-    def create_corplist_provider(self, plugin_api):
-        return DefaultCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
+    def create_corplist_provider(self, plugin_ctx):
+        return DefaultCorplistProvider(plugin_ctx, self._auth, self, self._tag_prefix)
 
     def _get_corplist_title(self, elm, lang):
         """
@@ -534,14 +509,14 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
 
-    def _process_corpus_node(self, node, path, data):
+    def _process_corpus_node(self, plugin_ctx: PluginCtx, node, path, data):
         corpus_id = node.attrib['ident'].lower() if self._auth.ignores_corpora_names_case() else node.attrib['ident']
         web_url = node.attrib['web'] if 'web' in node.attrib else None
         sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
-        ans.name = self._manatee_corpora.get_info(ans.id).name
+        ans.name = plugin_ctx.corpus_manager.get_info(ans.id).name
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
@@ -618,12 +593,12 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         data.append(ans)
         return ans
 
-    def _parse_corplist_node(self, root, path, lang, data):
+    def _parse_corplist_node(self, plugin_ctx: PluginCtx, root, path, data):
         """
         """
         if not hasattr(root, 'tag') or not root.tag == 'corplist':
             return data
-        title = self._get_corplist_title(root, lang)
+        title = self._get_corplist_title(root, plugin_ctx.user_lang)
         if title:
             path = "%s%s/" % (path, title)
         for item in root:
@@ -632,18 +607,18 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             elif item.tag == 'keywords':
                 self._parse_keywords(item)
             elif item.tag == 'corplist':
-                self._parse_corplist_node(item, path, lang, data)
+                self._parse_corplist_node(plugin_ctx, item, path, data)
             elif item.tag == 'corpus':
-                self._process_corpus_node(item, path, data)
+                self._process_corpus_node(plugin_ctx, item, path, data)
 
-    def _localize_corpus_info(self, data, lang_code):
+    def _localize_corpus_info(self, plugin_ctx: PluginCtx, data):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
         given passed lang_code.
         """
         ans = copy.deepcopy(data)
-        lang_code = lang_code.split('_')[0]
+        lang_code = plugin_ctx.user_lang.split('_')[0]
         desc = ans.metadata.desc
         if lang_code in desc:
             ans.metadata.desc = desc[lang_code]
@@ -655,28 +630,28 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             translations = self._keywords.get(keyword, {})
             translated_k.append((keyword, translations.get(lang_code, keyword)))
         ans.metadata.keywords = translated_k
-        ans.description = self.manatee_corpora.get_info(ans.id).description
+        ans.description = plugin_ctx.corpus_manager.get_info(ans.id).description
         return ans
 
-    def get_corpus_info(self, user_lang, corp_name):
+    def get_corpus_info(self, plugin_ctx, corp_name):
         if corp_name:
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1]
             if self._auth.ignores_corpora_names_case():
                 corp_name = corp_name.lower()
-            if corp_name in self._raw_list(user_lang):
-                if user_lang is not None:
-                    ans = self._localize_corpus_info(self._raw_list(user_lang)[corp_name],
-                                                     lang_code=user_lang)
+            if corp_name in self._raw_list(plugin_ctx):
+                if plugin_ctx.user_lang is not None:
+                    ans = self._localize_corpus_info(plugin_ctx,
+                                                     self._raw_list(plugin_ctx)[corp_name])
                 else:
-                    ans = self._raw_list(user_lang)[corp_name]
-                ans.manatee = self.manatee_corpora.get_info(corp_name)
+                    ans = self._raw_list(plugin_ctx)[corp_name]
+                ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name)
                 return ans
             return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()
 
-    def _load(self, lang):
+    def _load(self, plugin_ctx: PluginCtx):
         """
         Loads data from a configuration file
         """
@@ -686,73 +661,73 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             xml = etree.parse(f)
             root = xml.find(self.root_xpath)
             if root is not None:
-                self._parse_corplist_node(root, '/', lang, data)
+                self._parse_corplist_node(plugin_ctx, root, '/', data)
 
         def lowercase(s): return s.lower()
         def identity(s): return s
         name_mod = lowercase if self._auth.ignores_corpora_names_case() else identity
         self._corplist = OrderedDict([(name_mod(item['id']), item) for item in data])
 
-    def _raw_list(self, lang):
+    def _raw_list(self, plugin_ctx: PluginCtx):
         """
         Returns list of all defined corpora including all lang. variants of labels etc.
         """
         if self._corplist is None:
-            self._load(lang)
+            self._load(plugin_ctx)
         return self._corplist
 
     def _get_iso639lang(self, lang):
         return lang.split('_')[0]
 
-    def _export_untranslated_label(self, plugin_api, text):
-        if self._registry_lang[:2] == plugin_api.user_lang[:2]:
+    def _export_untranslated_label(self, plugin_ctx, text):
+        if self._registry_lang[:2] == plugin_ctx.user_lang[:2]:
             return text
         else:
             return '{0} [{1}]'.format(text, _('translation not available'))
 
-    def _export_featured(self, plugin_api):
-        permitted_corpora = self._auth.permitted_corpora(plugin_api.user_dict)
+    def _export_featured(self, plugin_ctx):
+        permitted_corpora = self._auth.permitted_corpora(plugin_ctx.user_dict)
 
         def is_featured(o):
             return o['metadata'].get('featured', False)
 
         featured = []
-        for x in list(self._raw_list(plugin_api.user_lang).values()):
+        for x in list(self._raw_list(plugin_ctx.user_lang).values()):
             if x['id'] in permitted_corpora and is_featured(x):
                 featured.append({
                     # on client-side, this may contain also subc. id, aligned ids
                     'id': x['id'],
                     'corpus_id': x['id'],
-                    'name': self._manatee_corpora.get_info(x['id']).name,
-                    'size': self._manatee_corpora.get_info(x['id']).size,
-                    'size_info': l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size),
+                    'name': plugin_ctx.corpus_manager.get_info(x['id']).name,
+                    'size': plugin_ctx.corpus_manager.get_info(x['id']).size,
+                    'size_info': l10n.simplify_num(plugin_ctx.corpus_manager.get_info(x['id']).size),
                     'description': self._export_untranslated_label(
-                        plugin_api, self._manatee_corpora.get_info(x['id']).description)
+                        plugin_ctx, plugin_ctx.corpus_manager.get_info(x['id']).description)
                 })
         return featured
 
-    def export_favorite(self, plugin_api):
+    def export_favorite(self, plugin_ctx):
         ans = []
-        for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api):
+        for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_ctx):
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_api, self._manatee_corpora.get_info(item.main_corpus_id).description)
+                plugin_ctx, plugin_ctx.corpus_manager.get_info(item.main_corpus_id).description)
             ans.append(tmp)
         return ans
 
-    def export(self, plugin_api):
+    def export(self, plugin_ctx):
         return dict(
-            favorite=self.export_favorite(plugin_api),
-            featured=self._export_featured(plugin_api),
+            favorite=self.export_favorite(plugin_ctx),
+            featured=self._export_featured(plugin_ctx),
             corpora_labels=[(k, lab, self.get_label_color(k))
-                            for k, lab in self.all_keywords(plugin_api.user_lang)],
+                            for k, lab in self.all_keywords(plugin_ctx)],
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
         )
 
-    def initial_search_params(self, plugin_api, query, filter_dict=None):
+    def initial_search_params(self, plugin_ctx, query, filter_dict=None):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
-        all_keywords = self.all_keywords(plugin_api.user_lang)
+        all_keywords = self.all_keywords(plugin_ctx)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in all_keywords]
         return {

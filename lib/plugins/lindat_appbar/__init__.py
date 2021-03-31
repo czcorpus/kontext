@@ -31,22 +31,22 @@ class LindatTopBar(AbstractApplicationBar):
         else:
             return self._templates['en_US']
 
-    def get_styles(self, plugin_api):
+    def get_styles(self, plugin_ctx):
         return [{'url': x} for x in self._css_urls]
 
-    def get_scripts(self, plugin_api):
+    def get_scripts(self, plugin_ctx):
         return self._js_urls
 
-    def get_contents(self, plugin_api, return_url):
-        tpl_path = self.get_template(plugin_api.user_lang)
+    def get_contents(self, plugin_ctx, return_url):
+        tpl_path = self.get_template(plugin_ctx.user_lang)
         if not os.path.exists(tpl_path):
             return "template [%s] does not exist!" % tpl_path
         with open(tpl_path, mode='rb') as fin:
             html = fin.read().decode('utf-8')
             user_classes = "user"
 
-            if not plugin_api.user_is_anonymous:
-                user_d = plugin_api.session["user"]
+            if not plugin_ctx.user_is_anonymous:
+                user_d = plugin_ctx.session["user"]
                 msgs = dict(fullname=user_d.get("fullname", "?"),
                             logout_url=self._logout_url or "",
                             logout_msg=_('logout'))

@@ -21,7 +21,7 @@ from mocks import MultiDict
 from mocks.manatee import CorpusManager
 
 
-class PluginApi(object):
+class PluginCtx(object):
     user_id = 3
     user_lang = 'en_US'
 
@@ -30,7 +30,7 @@ class Controller(object):
 
     def __init__(self):
         self.cm = CorpusManager()
-        self._plugin_api = PluginApi()
+        self._plugin_ctx = PluginCtx()
 
 
 class Request(object):

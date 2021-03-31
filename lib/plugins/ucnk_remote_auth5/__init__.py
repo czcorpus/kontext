@@ -132,7 +132,7 @@ class CentralAuth(AbstractRemoteAuth):
         finally:
             connection.close()
 
-    def revalidate(self, plugin_api):
+    def revalidate(self, plugin_ctx):
         """
         User re-validation as required by plug-in specification. The method
         catches no exceptions which means that in case of a problem with response
@@ -141,29 +141,29 @@ class CentralAuth(AbstractRemoteAuth):
 
         Method also stores the response for CNC toolbar to prevent an extra API call.
         """
-        curr_user_id = plugin_api.session.get('user', {'id': None})['id']
-        cookie_sid = plugin_api.cookies[
-            self._conf.cookie_sid].value if self._conf.cookie_sid in plugin_api.cookies else ''
-        cookie_at = plugin_api.cookies[
-            self._conf.cookie_at].value if self._conf.cookie_at in plugin_api.cookies else ''
-        cookie_rmme = plugin_api.cookies[
-            self._conf.cookie_rmme].value if self._conf.cookie_rmme in plugin_api.cookies else '0'
-        cookie_lang = plugin_api.cookies[
-            self._conf.cookie_lang].value if self._conf.cookie_lang in plugin_api.cookies else 'en'
+        curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
+        cookie_sid = plugin_ctx.cookies[
+            self._conf.cookie_sid].value if self._conf.cookie_sid in plugin_ctx.cookies else ''
+        cookie_at = plugin_ctx.cookies[
+            self._conf.cookie_at].value if self._conf.cookie_at in plugin_ctx.cookies else ''
+        cookie_rmme = plugin_ctx.cookies[
+            self._conf.cookie_rmme].value if self._conf.cookie_rmme in plugin_ctx.cookies else '0'
+        cookie_lang = plugin_ctx.cookies[
+            self._conf.cookie_lang].value if self._conf.cookie_lang in plugin_ctx.cookies else 'en'
         api_args = [
             ('sid', cookie_sid),
             ('at', cookie_at),
             ('rmme', cookie_rmme),
             ('lang', cookie_lang),
             ('current', 'kontext'),
-            ('continue', plugin_api.current_url)
+            ('continue', plugin_ctx.current_url)
         ]
         api_response = self._fetch_toolbar_api_response(api_args)
         response_obj = json.loads(api_response)
-        plugin_api.set_shared('toolbar', response_obj)  # toolbar plug-in will access this
+        plugin_ctx.set_shared('toolbar', response_obj)  # toolbar plug-in will access this
 
         if 'redirect' in response_obj:
-            plugin_api.redirect(response_obj['redirect'])
+            plugin_ctx.redirect(response_obj['redirect'])
 
         if 'user' not in response_obj:
             response_obj['user'] = {}
@@ -174,10 +174,10 @@ class CentralAuth(AbstractRemoteAuth):
             response_obj['user']['id'] = int(response_obj['user']['id'])
 
         if curr_user_id != response_obj['user']['id']:
-            plugin_api.refresh_session_id()
+            plugin_ctx.refresh_session_id()
             if response_obj['user']['id'] != self._anonymous_id:
                 # user logged in => keep session data (except for credentials)
-                plugin_api.session['user'] = dict(
+                plugin_ctx.session['user'] = dict(
                     id=int(response_obj['user']['id']),
                     user=response_obj['user'].get('user'),
                     fullname='%s %s' % (response_obj['user'].get('firstName'),
@@ -185,8 +185,8 @@ class CentralAuth(AbstractRemoteAuth):
                     email=response_obj['user'].get('email'))
                 # reload available corpora from remote server
             else:  # logout => clear current user's session data and set new credentials
-                plugin_api.session.clear()
-                plugin_api.session['user'] = self.anonymous_user()
+                plugin_ctx.session.clear()
+                plugin_ctx.session['user'] = self.anonymous_user()
 
     def corpus_access(self, user_dict, corpus_name):
         if corpus_name == IMPLICIT_CORPUS:
@@ -206,9 +206,9 @@ class CentralAuth(AbstractRemoteAuth):
             corpora.append(IMPLICIT_CORPUS)
         return corpora
 
-    def get_user_info(self, plugin_api):
+    def get_user_info(self, plugin_ctx):
         ans = {}
-        ans.update(plugin_api.user_dict)
+        ans.update(plugin_ctx.user_dict)
         ans['username'] = ans['user']
         del (ans['user'])
         return ans

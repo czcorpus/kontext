@@ -144,7 +144,7 @@ class Actions(Querying):
         corpus_name = self.corp.get_conf('NAME')
         if contains_within:
             return translate('related to the subset defined by the selected text types')
-        elif hasattr(self.corp, 'subcname'):
+        elif self.corp.is_subcorpus:
             return (translate('related to the whole %s') % (corpus_name,)) + \
                 ':%s' % self.corp.subcname
         else:
@@ -295,7 +295,7 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
 
         out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
-            self._plugin_api, self.args.corpname)
+            self._plugin_ctx, self.args.corpname)
         out['running_calc'] = not out['finished']   # TODO running_calc is redundant
         out['chart_export_formats'] = []
         with plugins.runtime.CHART_EXPORT as ce:
@@ -377,8 +377,9 @@ class Actions(Querying):
         out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
         last_op = self.session_get('last_submitted_op')
-        qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
-            active_only=False), persist=False)
+        qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
+                                corpora=self._select_current_aligned_corpora(active_only=False),
+                                persist=False)
         with plugins.runtime.QUERY_HISTORY as qh:
             qdata = qh.find_by_qkey(last_op)
             if qdata is not None:
@@ -561,7 +562,7 @@ class Actions(Querying):
     def _set_first_query(self, corpora: List[str], data: QueryFormArgs):
 
         def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
-            filter_args = ContextFilterArgsConv(data)(corpora[0], attrname, items, ctx, fctxtype)
+            filter_args = ContextFilterArgsConv(self._plugin_ctx, data)(corpora[0], attrname, items, ctx, fctxtype)
             self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
 
         def ctx_to_str(ctx):
@@ -650,7 +651,7 @@ class Actions(Querying):
         # 1) store query forms arguments for later reuse on client-side
         corpora = self._select_current_aligned_corpora(active_only=True)
         corpus_info = self.get_corpus_info(corpora[0])
-        qinfo = QueryFormArgs(corpora=corpora, persist=True)
+        qinfo = QueryFormArgs(plugin_ctx=self._plugin_ctx, corpora=corpora, persist=True)
         qinfo.update_by_user_query(
             request.json, self._get_tt_bib_mapping(request.json['text_types']))
         self.add_conc_form_args(qinfo)
@@ -693,7 +694,7 @@ class Actions(Querying):
         A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls pages).
         """
         new_q = request.args.getlist('q2')
-        q_conv = QuickFilterArgsConv(self.args)
+        q_conv = QuickFilterArgsConv(self._plugin_ctx, self.args)
 
         op_idx = len(self.args.q)
         if len(new_q) > 0:
@@ -724,7 +725,8 @@ class Actions(Querying):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a filter once a group of lines has been saved')
 
-        ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+        ff_args = FilterFormArgs(plugin_ctx=self._plugin_ctx,
+                                 maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
         ff_args.update_by_user_query(request.json)
         err = ff_args.validate()
@@ -1653,7 +1655,7 @@ class Actions(Querying):
     @exposed(return_type='json', http_method='POST', func_arg_mapped=False)
     def ajax_send_group_selection_link_to_mail(self, request):
         with plugins.runtime.AUTH as auth:
-            user_info = auth.get_user_info(self._plugin_api)
+            user_info = auth.get_user_info(self._plugin_ctx)
             user_email = user_info['email']
             username = user_info['username']
             smtp_server = mailing.smtp_factory()
@@ -1715,11 +1717,11 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST')
     def get_adhoc_subcorp_size(self, request):
-        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname):
+        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_ctx, self.args.corpname):
             # a faster solution based on liveattrs
             with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
                 attr_map = TextTypeCollector(self.corp, request.json['text_types']).get_attrmap()
-                size = liveatt.get_subc_size(self._plugin_api, self.corp, attr_map)
+                size = liveatt.get_subc_size(self._plugin_ctx, self.corp, attr_map)
                 return dict(total=size)
         else:
             tt_query = TextTypeCollector(self.corp, request.json['text_types']).get_query()
@@ -1772,7 +1774,8 @@ class Actions(Querying):
         poslist = self.cm.corpconf_pairs(self.corp, 'WPOSLIST')
         lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
 
-        self.add_conc_form_args(QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False),
+        self.add_conc_form_args(QueryFormArgs(plugin_ctx=self._plugin_ctx,
+                                              corpora=self._select_current_aligned_corpora(active_only=False),
                                               persist=False))
         self._attach_query_params(tmp_out)
         self._attach_aligned_query_params(tmp_out)
@@ -1784,7 +1787,7 @@ class Actions(Querying):
 
         ans = dict(
             corpname=self.args.corpname,
-            subcorpname=self.corp.subcname if corplib.is_subcorpus(self.corp) else None,
+            subcorpname=self.corp.subcname if self.corp.is_subcorpus else None,
             baseAttr=Kontext.BASE_ATTR,
             tagsets=[dict(ident=tagset.tagset_name, posAttr=tagset.pos_attr, featAttr=tagset.feat_attr,
                           docUrlLocal=tagset.doc_url_local, docUrlEn=tagset.doc_url_en)
@@ -1805,7 +1808,7 @@ class Actions(Querying):
             queryOverview=[],
             numQueryOps=0,
             textTypesData=self.tt.export_with_norms(ret_nums=True),
-            menuData=MenuGenerator(tmp_out, self.args, self._plugin_api).generate(
+            menuData=MenuGenerator(tmp_out, self.args, self._plugin_ctx).generate(
                 disabled_items=self.disabled_menu_items,
                 save_items=self._save_menu,
                 corpus_dependent=tmp_out['uses_corp_instance'],

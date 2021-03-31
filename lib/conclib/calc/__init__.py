@@ -27,7 +27,7 @@ import re
 import settings
 import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, CalcStatus
-from corplib import CorpusManager, is_subcorpus, corp_mtime as corplib_corp_mtime
+from corplib import CorpusManager, corp_mtime as corplib_corp_mtime
 from conclib.empty import InitialConc
 import manatee
 from conclib.pyconc import PyConc
@@ -286,8 +286,8 @@ class ConcCalculation(GeneralWorker):
                 cache_map.update_calc_status(subchash, query, finished=sizes['finished'],
                                              concsize=conc.size(), fullsize=sizes['fullsize'],
                                              relconcsize=sizes['relconcsize'],
-                                             arf=round(conc.compute_ARF(), 2) if not is_subcorpus(
-                                                 corpus_obj) else None,
+                                             arf=round(conc.compute_ARF(), 2) if not corpus_obj.is_subcorpus
+                                             else None,
                                              task_id=self._task_id)
         except Exception as e:
             # Please note that there is no need to clean any mess (unfinished cached concordance etc.)

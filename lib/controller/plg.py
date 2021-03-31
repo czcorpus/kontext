@@ -20,14 +20,23 @@ from . import KonTextCookie
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .kontext import Kontext
-
+from corplib import CorpusManager
 import settings
 
 
 T = TypeVar('T')
 
 
-class PluginApi(object):
+class PluginCtx(object):
+
+    """
+    PluginCtx provides a runtime context for plug-ins.
+
+    Please note that it should be never an attribute of a plug-in as
+    the plug-in instance is always shared between requests. In most
+    cases KonText passes the instance to respective plug-in methods
+    called during request processing.
+    """
 
     def __init__(self, controller: 'Kontext', request: Request, cookies: KonTextCookie) -> None:
         self._controller: 'Kontext' = controller
@@ -112,6 +121,10 @@ class PluginApi(object):
 
     def add_system_message(self, msg_type, text):
         self._controller.add_system_message(msg_type, text)
+
+    @property
+    def corpus_manager(self) -> CorpusManager:
+        return self._controller.cm
 
     @property
     def text_types(self) -> Dict:

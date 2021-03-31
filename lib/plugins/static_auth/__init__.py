@@ -74,33 +74,33 @@ class StaticAuth(AbstractRemoteAuth):
         else:
             return list(self._user_corpora[user_dict['id']].keys())
 
-    def get_user_info(self, plugin_api):
-        return dict(id=plugin_api.session['user']['id'], user='apiuser', fullname='API user')
+    def get_user_info(self, plugin_ctx):
+        return dict(id=plugin_ctx.session['user']['id'], user='apiuser', fullname='API user')
 
     def _hash_key(self, k):
         return hashlib.sha256(k.encode()).hexdigest()
 
-    def _get_api_key(self, plugin_api):
+    def _get_api_key(self, plugin_ctx):
         if self._api_key_cookie_name:
-            api_key_cookie = plugin_api.cookies.get('api_key')
+            api_key_cookie = plugin_ctx.cookies.get('api_key')
             return api_key_cookie.value if api_key_cookie else None
         elif self._api_key_http_header:
             key = 'HTTP_{0}'.format(self._api_key_http_header.upper().replace('-', '_'))
-            return plugin_api.get_from_environ(key)
+            return plugin_ctx.get_from_environ(key)
 
-    def revalidate(self, plugin_api):
-        curr_user_id = plugin_api.session.get('user', {'id': None})['id']
-        api_key = self._get_api_key(plugin_api)
+    def revalidate(self, plugin_ctx):
+        curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
+        api_key = self._get_api_key(plugin_ctx)
         hash_key = self._hash_key(api_key)
         if api_key and hash_key in self._api_keys:
             if self.is_anonymous(curr_user_id):
-                plugin_api.session.clear()
-            plugin_api.session['user'] = dict(
+                plugin_ctx.session.clear()
+            plugin_ctx.session['user'] = dict(
                 id=self._api_keys[hash_key], user='api_user', fullname='API user')
         else:
             if not self.is_anonymous(curr_user_id):
-                plugin_api.session.clear()
-            plugin_api.session['user'] = self.anonymous_user()
+                plugin_ctx.session.clear()
+            plugin_ctx.session['user'] = self.anonymous_user()
 
 
 def create_instance(conf):

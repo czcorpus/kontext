@@ -107,33 +107,33 @@ class AbstractUserItems(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_user_items(self, plugin_api):
+    def get_user_items(self, plugin_ctx):
         """
         Returns a list of user items (GeneralItem implementations)
 
         arguments:
-        plugin_api --
+        plugin_ctx --
 
         return:
         a list or a compatible structure containing GeneralItem objects
         """
 
     @abc.abstractmethod
-    def add_user_item(self, plugin_api, item):
+    def add_user_item(self, plugin_ctx, item):
         """
         Adds (persistently) an item to user's list.
 
         arguments:
-        plugin_api --
+        plugin_ctx --
         item -- an instance of GeneralItem implementation
         """
 
     @abc.abstractmethod
-    def delete_user_item(self, plugin_api, item_id):
+    def delete_user_item(self, plugin_ctx, item_id):
         """
         Removes (in a persistent way) an item from user's list.
 
         arguments:
-        plugin_api --
+        plugin_ctx --
         item_id -- an ID of GeneralItem instance
         """

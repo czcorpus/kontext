@@ -56,11 +56,10 @@ from lxml import etree
 import copy
 
 import plugins
-from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo, DefaultManateeCorpusInfo
-from fallback_corpus import EmptyCorpus
+from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
 from controller import exposed
 from actions import corpora
-import manatee
+from controller.plg import PluginCtx
 
 
 class CorptreeParser(object):
@@ -119,27 +118,7 @@ def ajax_get_corptree_data(ctrl, request):
     """
     An exposed HTTP action required by client-side widget.
     """
-    return plugins.runtime.CORPARCH.instance.get_all(ctrl._plugin_api)
-
-
-class ManateeCorpora(object):
-    """
-    A caching source of ManateeCorpusInfo instances.
-    """
-
-    def __init__(self):
-        self._cache = {}
-
-    def get_info(self, corpus_id):
-        try:
-            if corpus_id not in self._cache:
-                self._cache[corpus_id] = DefaultManateeCorpusInfo(
-                    manatee.Corpus(corpus_id), corpus_id)
-            return self._cache[corpus_id]
-        except:
-            # probably a misconfigured/missing corpus
-            return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
-                                            corpus_id)
+    return plugins.runtime.CORPARCH.instance.get_all(ctrl._plugin_ctx)
 
 
 class TreeCorparch(AbstractCorporaArchive):
@@ -152,7 +131,6 @@ class TreeCorparch(AbstractCorporaArchive):
     def __init__(self, corplist_path):
         parser = CorptreeParser()
         self._data, self._metadata = parser.parse_xml_tree(corplist_path)
-        self._manatee_corpora = ManateeCorpora()
 
     def _srch_item(self, node, name):
         for item in node.get('corplist', []):
@@ -164,40 +142,40 @@ class TreeCorparch(AbstractCorporaArchive):
                 return item
         return None
 
-    def _localize_corpus_info(self, data, lang_code):
+    def _localize_corpus_info(self, plugin_ctx: PluginCtx, data):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
         given passed lang_code.
         """
         ans = copy.deepcopy(data)
-        lang_code = lang_code.split('_')[0]
+        lang_code = plugin_ctx.user_lang.split('_')[0]
         desc = ans.metadata.desc
-        ans.metadata.desc = desc[lang_code] if lang_code in desc else ''
-        ans.description = self._manatee_corpora.get_info(ans.id).description
+        ans.metadata.desc = desc[plugin_ctx.user_lang] if lang_code in desc else ''
+        ans.description = plugin_ctx.corpus_manager.get_info(ans.id).description
         return ans
 
     def setup(self, controller_obj):
         pass
 
-    def get_corpus_info(self, user_lang, corp_id):
+    def get_corpus_info(self, plugin_ctx, corp_id):
         info = self._srch_item(self._data, corp_id)
         if info:
             ans = CorpusInfo()
             ans.id = info.get('id')
             ans.name = info.get('name')
-            ans.manatee = self._manatee_corpora.get_info(corp_id)
-            return self._localize_corpus_info(ans, user_lang)
+            ans.manatee = plugin_ctx.corpus_manager.get_info(corp_id)
+            return self._localize_corpus_info(plugin_ctx, ans)
         else:
-            return self._localize_corpus_info(BrokenCorpusInfo(), user_lang)
+            return self._localize_corpus_info(plugin_ctx, BrokenCorpusInfo())
 
-    def get_all(self, plugin_api):
+    def get_all(self, plugin_ctx):
         return self._data
 
     def export_actions(self):
         return {corpora.Corpora: [ajax_get_corptree_data]}
 
-    def initial_search_params(self, plugin_api, query, filter_dict=None):
+    def initial_search_params(self, plugin_ctx, query, filter_dict=None):
         return {}
 
 

@@ -21,38 +21,20 @@
 from typing import List, Any, Optional, Tuple, Dict, Union, Set
 from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr, Structure
 from array import array
-import re
+from .corpus import KCorpus, KSubcorpus
+from .fallback import EmptyCorpus
 
 import os
 import glob
-from hashlib import md5
-from datetime import datetime
-import json
-import logging
 
-
-try:
-    from markdown import markdown
-    from markdown.extensions import Extension
-
-    class EscapeHtml(Extension):
-        def extendMarkdown(self, md, md_globals):
-            del md.preprocessors['html_block']
-            del md.inlinePatterns['html']
-
-    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
-
-except ImportError:
-    import cgi
-
-    def k_markdown(s): return cgi.escape(s)
 
 import l10n
 import manatee
-from functools import partial
 from translation import ugettext as _
 import plugins
+from plugins.abstract.corpora import DefaultManateeCorpusInfo
 from functools import cmp_to_key
+from .corpus import _PublishedSubcMetadata
 
 
 def cmp(a, b):
@@ -86,63 +68,6 @@ def corp_mtime(corpus: Corpus) -> float:
     data_dir = os.path.dirname(data_path) if data_path.endswith('/') else data_path
     data_mtime = os.path.getmtime(data_dir)
     return max(reg_mtime, data_mtime)
-
-
-class PublishedSubcMetadata(object):
-
-    def __init__(self, **kw):
-        self.author_id: Optional[int] = kw.get('author_id', None)
-        self.author_name: Optional[str] = kw.get('author_name', None)
-        self.subcpath: Optional[str] = kw.get('subcpath', None)
-
-    def to_json(self):
-        return json.dumps(self.__dict__)
-
-    @staticmethod
-    def from_json(data):
-        return PublishedSubcMetadata(**json.loads(data))
-
-
-def _list_public_corp_dir(corpname: str, path: str, value_prefix: Optional[str]) -> List[Dict[str, Any]]:
-    ans: List[Dict[str, Any]] = []
-    subc_root = os.path.dirname(os.path.dirname(path))
-    for item in glob.glob(f'{path}/*.subc'):
-        full_path = os.path.join(path, item)
-        meta, desc = get_subcorp_pub_info(full_path)
-        if meta.subcpath is None or meta.author_name is None or not desc:
-            logging.getLogger(__name__).warning(
-                f'Missing metainformation for published subcorpus {item}')
-        else:
-            try:
-                ident = os.path.splitext(os.path.basename(item))[0]
-                author_rev = ' '.join(reversed(meta.author_name.split(' '))
-                                      ).lower() if meta.author_name else ''
-                if ident.startswith(value_prefix) or author_rev.startswith(value_prefix.lower()):
-                    ans.append(dict(
-                        ident=ident,
-                        origName=os.path.splitext(os.path.basename(meta.subcpath))[0],
-                        corpname=corpname,
-                        author=meta.author_name,
-                        description=k_markdown(desc),
-                        created=int(os.path.getctime(full_path)),
-                        userId=int(meta.subcpath.lstrip(subc_root).split(os.path.sep, 1)[0])
-                    ))
-            except Exception as ex:
-                logging.getLogger(__name__).warning(f'Broken published subcorpus {full_path}: {ex}')
-    return ans
-
-
-def list_public_subcorpora(subcpath: str, value_prefix: Optional[str] = None,
-                           offset: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
-    data: List[Dict[str, Any]] = []
-    for corp in os.listdir(subcpath):
-        try:
-            data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), value_prefix)
-            if len(data) >= offset + limit:
-                break
-        except Exception as ex:
-            logging.getLogger(__name__).warning(ex)
-    return data[offset:limit]
 
 
 def open_corpus(*args: Any, **kwargs: Any) -> Corpus:
@@ -184,10 +109,6 @@ def subcorpus_from_conc(path: str, conc: Concordance, struct: Optional[str] = No
     return manatee.create_subcorpus(path, conc.RS(), struct)
 
 
-def is_subcorpus(corp_obj: Corpus) -> bool:
-    return isinstance(corp_obj, manatee.SubCorpus)
-
-
 def create_str_vector() -> StrVector:
     """
     Creates a new manatee.StrVector instance
@@ -201,38 +122,6 @@ def conf_bool(v: str) -> bool:
     represents an encoded 'true' value ('1', 't', ...)
     """
     return v in ('y', 'yes', 'true', 't', '1')
-
-
-def subcorpus_is_published(subcpath: str) -> bool:
-    stat = os.lstat(subcpath)
-    return stat.st_nlink > 1
-
-
-def get_subcorp_pub_info(spath: str) -> Tuple[PublishedSubcMetadata, Optional[str]]:
-    desc = None
-    namepath = os.path.splitext(spath)[0] + '.name'
-    metadata = PublishedSubcMetadata()
-
-    if os.path.isfile(namepath):
-        with open(namepath, 'r') as nf:
-            desc = ''
-            for i, line in enumerate(nf):
-                if i == 0:
-                    try:
-                        metadata = PublishedSubcMetadata.from_json(line)
-                    except Exception as ex:
-                        logging.getLogger(__name__).error(
-                            f'Failed to read published subcorpus data. File {namepath}, error: {ex}')
-                elif i > 1:
-                    desc += line
-    return metadata, desc
-
-
-def rewrite_subc_desc(publicpath: str, desc: str):
-    meta, _ = get_subcorp_pub_info(publicpath)
-    with open(os.path.splitext(publicpath)[0] + '.name', 'wb') as fw:
-        fw.write(meta.to_json().encode('utf-8') + '\n\n')
-        fw.write(desc.encode('utf-8'))
 
 
 def mk_publish_links(subcpath: str, publicpath: str, author: str, desc: str):
@@ -262,7 +151,7 @@ def mk_publish_links(subcpath: str, publicpath: str, author: str, desc: str):
         with open(namefile_path, 'w') as namefile:
             # TODO what if the path struct changes?
             author_id = os.path.basename(os.path.dirname(os.path.dirname(subcpath)))
-            meta = PublishedSubcMetadata(
+            meta = _PublishedSubcMetadata(
                 subcpath=subcpath, author_id=int(author_id) if author_id else None, author_name=author)
             namefile.write(meta.to_json())
             namefile.write('\n\n')
@@ -284,7 +173,7 @@ class CorpusManager(object):
             subcpath: a list of paths where user corpora are located
         """
         self.subcpath: List[str] = list(subcpath)
-        self._cache: Dict[Tuple[str, str, str, Optional[str]], str] = {}
+        self._cache: Dict[Tuple[str, str, str, Optional[str]], KCorpus] = {}
 
     def get_subc_public_name(self, corpname: str, subcname: str) -> Optional[str]:
         if len(self.subcpath) > 0:
@@ -292,35 +181,6 @@ class CorpusManager(object):
             if os.path.islink(test):
                 return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
         return None
-
-    def _open_subcorpus(self, corpname: str, subcname: str, corp: Corpus, spath: str, decode_desc: bool) -> Corpus:
-        subc = manatee.SubCorpus(corp, spath)
-        subc.corp = corp
-        subc.spath = spath
-        try:
-            open(spath[:-4] + 'used', 'w')
-        except IOError:
-            pass
-        subc.corpname = str(corpname)  # never unicode (paths)
-        subc.subcname = subcname
-        with open(spath, 'rb') as subcinfo:
-            subc.subchash = md5(subcinfo.read()).hexdigest()
-        subc.created = datetime.fromtimestamp(int(os.path.getctime(spath)))
-        subc.is_published = subcorpus_is_published(spath)
-        meta, desc = get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
-        if meta.subcpath:
-            subc.orig_spath = meta.subcpath
-            subc.orig_subcname = os.path.splitext(os.path.basename(meta.subcpath))[0]
-        else:
-            subc.orig_spath = None
-            subc.orig_subcname = None
-        subc.author = meta.author_name
-        subc.author_id = meta.author_id
-        if desc:
-            subc.description = k_markdown(desc) if decode_desc else desc
-        else:
-            subc.description = None
-        return subc
 
     def get_Corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> Corpus:
         """
@@ -337,10 +197,6 @@ class CorpusManager(object):
         registry_file = os.path.join(corp_variant, corpname) if corp_variant else corpname
         self._ensure_reg_file(registry_file, corp_variant)
         corp = manatee.Corpus(registry_file)
-        corp.corpname = str(corpname)  # never unicode (paths)
-        corp.is_published = False
-        corp.author = None
-        corp.author_id = None
 
         # NOTE: line corp.cm = self (as present in NoSke and older KonText versions) has
         # been causing file descriptor leaking for some operations (e.g. corp.get_attr).
@@ -352,13 +208,23 @@ class CorpusManager(object):
             for sp in self.subcpath:
                 spath = os.path.join(sp, corpname, subcname + '.subc')
                 if os.path.isfile(spath):
-                    subc = self._open_subcorpus(corpname, subcname, corp, spath, decode_desc)
+                    subc = KSubcorpus.load(corp, corpname, subcname, spath, decode_desc)
                     self._cache[cache_key] = subc
                     return subc
-            raise RuntimeError(_('Subcorpus "%s" not found') % subcname)
+            raise RuntimeError(_('Subcorpus "{}" not found').format(subcname))
         else:
-            self._cache[cache_key] = corp
-        return corp
+            kcorp = KCorpus(corp, corpname)
+            self._cache[cache_key] = kcorp
+        return kcorp
+
+    def get_info(self, corpus_id: str) -> DefaultManateeCorpusInfo:
+        try:
+            if corpus_id not in self._cache:
+                self._cache[corpus_id] = DefaultManateeCorpusInfo(manatee.Corpus(corpus_id), corpus_id)
+            return self._cache[corpus_id]
+        except:
+            # probably a misconfigured/missing corpus
+            return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id), corpus_id)
 
     def _ensure_reg_file(self, rel_path: str, variant: str):
         fullpath = os.path.join(os.environ['MANATEE_REGISTRY'], rel_path)
@@ -714,8 +580,8 @@ def subc_keywords(subcorp: SubCorpus, attr: PosAttr, minfreq: int = 50, maxfreq:
     return candidates
 
 
-def subcorp_base_file(corp: SubCorpus, attrname: str) -> str:
-    if hasattr(corp, 'spath'):
+def subcorp_base_file(corp: KCorpus, attrname: str) -> str:
+    if corp.spath:
         return corp.spath[:-4] + attrname
     else:
         return corp.get_conf('PATH') + attrname
@@ -738,7 +604,7 @@ class MissingSubCorpFreqFile(Exception):
         return self._corpus
 
 
-def frq_db(corp: Corpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
+def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
     import array
     filename = (subcorp_base_file(corp, attrname) + '.' + nums)
     if not id_range:
@@ -754,7 +620,7 @@ def frq_db(corp: Corpus, attrname: str, nums: str = 'frq', id_range: int = 0) ->
             raise MissingSubCorpFreqFile(corp, ex)
     else:
         try:
-            if corp.get_conf('VIRTUAL') and not hasattr(corp, 'spath') and nums == 'frq':
+            if corp.get_conf('VIRTUAL') and not corp.is_subcorpus and nums == 'frq':
                 raise IOError
             frq = array.array('i')
             frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
@@ -768,7 +634,7 @@ def frq_db(corp: Corpus, attrname: str, nums: str = 'frq', id_range: int = 0) ->
                 frq = array.array('l')
                 frq.fromfile(open(filename + '64', 'rb'), id_range)  # type: ignore
             except IOError as ex:
-                if not hasattr(corp, 'spath') and nums == 'frq':
+                if not corp.is_subcorpus and nums == 'frq':
                     a = corp.get_attr(attrname)
                     frq.fromlist([a.freq(i) for i in range(a.id_range())])
                 else:
