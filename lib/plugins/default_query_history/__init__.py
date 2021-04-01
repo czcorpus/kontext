@@ -40,7 +40,7 @@ class CorpusCache:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
-            self._corpora[cname] = self._cm.get_Corpus(cname)
+            self._corpora[cname] = self._cm.get_corpus(cname)
         return self._corpora[cname]
 
 

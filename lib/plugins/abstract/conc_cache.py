@@ -95,7 +95,7 @@ class AbstractConcCache(abc.ABC):
 
         Arguments:
         subchash -- a md5 hash generated from subcorpus identifier by
-                    CorpusManager.get_Corpus()
+                    CorpusManager.get_corpus()
         q -- a list of query elements
         """
 
@@ -152,7 +152,7 @@ class AbstractConcCache(abc.ABC):
         Remove a specific entry with concrete subchash and query.
 
         subchash -- a md5 hash generated from subcorpus identifier by
-                    CorpusManager.get_Corpus()
+                    CorpusManager.get_corpus()
         q -- a list of query elements
         """
 
@@ -163,7 +163,7 @@ class AbstractConcCache(abc.ABC):
         what other operations the query (e.g. shuffle, filter) contains.
 
         subchash -- a md5 hash generated from subcorpus identifier by
-                    CorpusManager.get_Corpus()
+                    CorpusManager.get_corpus()
         q -- a list of query elements
         """
 

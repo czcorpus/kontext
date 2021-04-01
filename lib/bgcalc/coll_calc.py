@@ -19,6 +19,7 @@ import time
 
 import corplib
 from conclib.calc import require_existing_conc
+from corplib.errors import MissingSubCorpFreqFile
 from bgcalc import freq_calc
 import settings
 from structures import FixedDict
@@ -99,7 +100,7 @@ def calculate_colls_bg(coll_args):
     from Celery or from other process (via multiprocessing).
     """
     cm = corplib.CorpusManager(subcpath=coll_args.subcpath)
-    corp = cm.get_Corpus(coll_args.corpname, subcname=coll_args.subcname)
+    corp = cm.get_corpus(coll_args.corpname, subcname=coll_args.subcname)
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         corplib.frq_db(corp, coll_args.cattr)
@@ -114,7 +115,7 @@ def calculate_colls_bg(coll_args):
             item['pfilter'] = [('q2', item['pfilter'])]
             item['nfilter'] = [('q2', item['nfilter'])]
         return dict(data=collocs, processing=0, tasks=[])
-    except corplib.MissingSubCorpFreqFile as e:
+    except MissingSubCorpFreqFile as e:
         ans = {'attrname': coll_args.cattr, 'tasks': []}
         out = freq_calc.build_arf_db(e.corpus, coll_args.cattr)
         if type(out) is list:

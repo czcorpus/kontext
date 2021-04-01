@@ -140,7 +140,6 @@ class KCorpus:
 
     _corpname: str
     _corp: Union[Corpus, SubCorpus]
-    _path: str = ''  # TODO ??
     _spath: Union[str, None] = None
     _subcname: Union[str, None] = None
     _subchash: Union[str, None] = None
@@ -275,6 +274,17 @@ class KCorpus:
             fw.write(meta.to_json().encode('utf-8') + '\n\n')
             fw.write(desc.encode('utf-8'))
 
+    def freq_precalc_file(self, attrname: str) -> str:
+        return self._corp.get_conf('PATH') + attrname
+
+    @property
+    def corp_mtime(self) -> float:
+        reg_mtime = os.path.getmtime(self._corp.get_confpath())
+        data_path = self._corp.get_conf('PATH')
+        data_dir = os.path.dirname(data_path) if data_path.endswith('/') else data_path
+        data_mtime = os.path.getmtime(data_dir)
+        return max(reg_mtime, data_mtime)
+
 
 class KSubcorpus(KCorpus):
     """
@@ -348,3 +358,6 @@ class KSubcorpus(KCorpus):
         Return a description of the source corpus this subc. is derived from
         """
         return super().description
+
+    def freq_precalc_file(self, attrname: str) -> str:
+        return self._corp.spath[:-4] + attrname

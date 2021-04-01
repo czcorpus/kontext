@@ -214,7 +214,7 @@ class Actions(Querying):
                 kwic_args = KwicPageArgs(attr.asdict(self.args), base_attr=Kontext.BASE_ATTR)
                 kwic_args.speech_attr = self._get_speech_segment()
                 kwic_args.labelmap = {}
-                kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
+                kwic_args.alignlist = [self.cm.get_corpus(c) for c in self.args.align if c]
                 kwic_args.structs = self._get_struct_opts()
 
                 kwic = Kwic(self.corp, self.args.corpname, conc)
@@ -832,7 +832,7 @@ class Actions(Querying):
                 kwic_args = KwicPageArgs(attr.asdict(self.args), base_attr=Kontext.BASE_ATTR)
                 kwic_args.speech_attr = self._get_speech_segment()
                 kwic_args.labelmap = {}
-                kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
+                kwic_args.alignlist = [self.cm.get_corpus(c) for c in self.args.align if c]
                 kwic_args.structs = self._get_struct_opts()
 
                 kwic = Kwic(self.corp, self.args.corpname, conc)
@@ -1474,7 +1474,7 @@ class Actions(Querying):
             kwic_args.line_offset = (from_line - 1)
             kwic_args.labelmap = {}
             kwic_args.align = ()
-            kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
+            kwic_args.alignlist = [self.cm.get_corpus(c) for c in self.args.align if c]
             kwic_args.leftctx = self.args.leftctx
             kwic_args.rightctx = self.args.rightctx
             kwic_args.structs = self._get_struct_opts()
@@ -1515,7 +1515,7 @@ class Actions(Querying):
                         raise ConcError(translate('Invalid data'))
 
                     aligned_corpora = [self.corp] + \
-                                      [self.cm.get_Corpus(c) for c in self.args.align if c]
+                                      [self.cm.get_corpus(c) for c in self.args.align if c]
                     writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
                                           for c in aligned_corpora])
 

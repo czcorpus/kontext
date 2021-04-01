@@ -15,7 +15,7 @@
 import hashlib
 import os.path
 from collections import defaultdict
-from bgcalc.freq_calc import FreqCalsArgs, calc_freqs_bg
+from bgcalc.freq_calc import FreqCalsArgs, calculate_freqs_bg
 import l10n
 from multiprocessing import Pool
 from functools import wraps
@@ -160,7 +160,7 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, str], subcp
         tasks.append(args)
 
     with Pool(processes=num_tasks) as pool:
-        done = pool.map(calc_freqs_bg, tasks)
+        done = pool.map(calculate_freqs_bg, tasks)
 
     merged = defaultdict(lambda: [])
     for freq_table in done:

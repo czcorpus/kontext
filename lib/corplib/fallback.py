@@ -10,8 +10,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from manatee import Corpus
 
-class EmptyCorpus(object):
+
+class EmptyCorpus:
     """
     EmptyCorpus serves as kind of a fake corpus to keep KonText operational
     in some special cases (= cases where we do not need any corpus to be
@@ -19,73 +21,109 @@ class EmptyCorpus(object):
     count with).
     """
 
-    def __init__(self, **kwargs):
-        self.cm = object()
-        self.corpname = ''
-        self.subcname = None
-        self.is_published = False
-        self.orig_subcname = None
-        self.author = None
-        self.author_id = None
-        self.orig_spath = None
-        for k, v in list(kwargs.items()):
-            if hasattr(self, k):
-                setattr(self, k, v)
+    def __init__(self, corpname: str = ''):
+        self._corpname = corpname
+        self._conf = {
+            'ENCODING': 'UTF-8',
+            'NAME': self.corpname,
+            'ATTRLIST': '',
+            'STRUCTLIST': ''
+        }
 
-    def compute_docf(self, *args, **kwargs):
+    @property
+    def corpname(self):
+        return self._corpname
+
+    @property
+    def spath(self):
+        return None
+
+    @property
+    def subcname(self):
+        return None
+
+    @property
+    def subchash(self):
+        return None
+
+    @property
+    def created(self):
+        return None
+
+    @property
+    def is_published(self):
+        return False
+
+    @property
+    def orig_spath(self):
+        return None
+
+    @property
+    def orig_subcname(self):
+        return None
+
+    @property
+    def author(self):
+        return None
+
+    @property
+    def author_id(self):
+        return -1
+
+    @property
+    def description(self):
+        return None
+
+    def get_conf(self, param):
+        return self._conf.get(param, '')
+
+    def get_confpath(self, *args, **kwargs):
+        return None
+
+    def get_conffile(self, *args, **kwargs):
+        return None
+
+    def set_default_attr(self, *args, **kwargs):
         pass
 
-    def count_ARF(self, *args, **kwargs):
-        pass
+    @property
+    def size(self):
+        return 0
 
-    def count_rest(self, *args, **kwargs):
-        pass
+    @property
+    def search_size(self):
+        return 0
 
-    def eval_query(self, *args, **kwargs):
-        pass
-
-    def filter_fstream(self, *args, **kwargs):
-        pass
-
-    def filter_query(self, *args, **kwargs):
+    def get_struct(self, *args, **kwargs):
         pass
 
     def get_attr(self, *args, **kwargs):
         pass
 
-    def get_conf(self, param):
-        return {
-            'ENCODING': 'UTF-8',
-            'NAME': self.corpname,
-            'ATTRLIST': ''
-        }.get(param, '')
-
-    def get_conffile(self, *args, **kwargs):
-        pass
-
-    def get_confpath(self, *args, **kwargs):
-        pass
-
     def get_info(self, *args, **kwargs):
         pass
 
-    def get_sizes(self, *args, **kwargs):
+    def unwrap(self) -> Corpus:
+        return None
+
+    def freq_dist(self, rs, crit, limit, words, freqs, norms):
         pass
 
-    def get_struct(self, *args, **kwargs):
+    def filter_query(self, *args, **kwargs):
         pass
-
-    def search_size(self):
-        return 0
-
-    def set_default_attr(self, *args, **kwargs):
-        pass
-
-    def size(self):
-        return 0
 
     def is_subcorpus(self):
         return False
+
+    def save_subc_description(self, desc: str):
+        pass
+
+    def freq_precalc_file(self, attrname: str):
+        return None
+
+    @property
+    def corp_mtime(self):
+        return -1
 
 
 class ErrorCorpus(EmptyCorpus):

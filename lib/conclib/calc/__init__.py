@@ -27,8 +27,9 @@ import re
 import settings
 import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, CalcStatus
-from corplib import CorpusManager, corp_mtime as corplib_corp_mtime
+from corplib import CorpusManager
 from conclib.empty import InitialConc
+from corplib.corpus import KCorpus
 import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
@@ -162,7 +163,7 @@ def require_existing_conc(corp: manatee.Corpus, q: Tuple[str, ...]) -> manatee.C
     raise BrokenConcordanceException('Concordance broken. File: {}, error: {}'.format(status.cachefile, status.error))
 
 
-def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tuple[str, ...],
+def find_cached_conc_base(corp: KCorpus, subchash: Optional[str], q: Tuple[str, ...],
                           minsize: int) -> Tuple[Optional[int], manatee.Concordance]:
     """
     Load a concordance from cache starting from a complete operation q[:],
@@ -182,8 +183,7 @@ def find_cached_conc_base(corp: manatee.Corpus, subchash: Optional[str], q: Tupl
     calc_status = cache_map.get_calc_status(subchash, q)
     if calc_status:
         if calc_status.error is None:
-            corp_mtime = corplib_corp_mtime(corp)
-            if calc_status.created - corp_mtime < 0:
+            if calc_status.created - corp.corp_mtime < 0:
                 logging.getLogger(__name__).warning(
                     'Removed outdated cache file (older than corpus indices)')
                 cache_map.del_full_entry(subchash, q)
@@ -257,7 +257,7 @@ class ConcCalculation(GeneralWorker):
         cache_map = None
         try:
             corpus_manager = CorpusManager(subcpath=subc_dirs)
-            corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
+            corpus_obj = corpus_manager.get_corpus(corpus_name, subcname=subc_name)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
             if not initial_args['already_running']:
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
@@ -324,7 +324,7 @@ class ConcSyncCalculation(GeneralWorker):
         super().__init__(task_id, cache_factory)
         self.corpus_manager = CorpusManager(subcpath=subc_dirs)
         corpus_manager = CorpusManager(subcpath=subc_dirs)
-        self.corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
+        self.corpus_obj = corpus_manager.get_corpus(corpus_name, subcname=subc_name)
         setattr(self.corpus_obj, '_conc_dir', conc_dir)
         self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
 

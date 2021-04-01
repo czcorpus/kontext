@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2003-2013  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Milos Husak, Vit Baisa
 # Copyright(c) 2014 Charles University in Prague, Faculty of Arts,
 #                   Institute of the Czech National Corpus
@@ -27,7 +26,6 @@ from .fallback import EmptyCorpus
 import os
 import glob
 
-
 import l10n
 import manatee
 from translation import ugettext as _
@@ -35,9 +33,10 @@ import plugins
 from plugins.abstract.corpora import DefaultManateeCorpusInfo
 from functools import cmp_to_key
 from .corpus import _PublishedSubcMetadata
+from .errors import MissingSubCorpFreqFile
 
 
-def cmp(a, b):
+def _cmp(a, b):
     """Python 3 workaround for in-built python 2 cmp() function"""
     return (a > b) - (a < b)
 
@@ -60,14 +59,6 @@ def manatee_min_version(ver: str) -> bool:
     ver_parsed = int(''.join('%03d' % int(x) for x in ver.split('.')))
     actual = int(''.join('%03d' % int(x) for x in manatee.version().split('-')[-1].split('.')))
     return ver_parsed <= actual
-
-
-def corp_mtime(corpus: Corpus) -> float:
-    reg_mtime = os.path.getmtime(corpus.get_confpath())
-    data_path = corpus.get_conf('PATH')
-    data_dir = os.path.dirname(data_path) if data_path.endswith('/') else data_path
-    data_mtime = os.path.getmtime(data_dir)
-    return max(reg_mtime, data_mtime)
 
 
 def open_corpus(*args: Any, **kwargs: Any) -> Corpus:
@@ -182,7 +173,7 @@ class CorpusManager(object):
                 return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
         return None
 
-    def get_Corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> Corpus:
+    def get_corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> Corpus:
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -246,7 +237,7 @@ class CorpusManager(object):
              a list of pairs
         """
         if type(corp) is str:
-            corp = self.get_Corpus(corp)
+            corp = self.get_corpus(corp)
         val = corp.get_conf(label)
         if len(val) > 2:
             val = val[1:].split(val[0])
@@ -269,13 +260,15 @@ class CorpusManager(object):
                 for s in self.subc_files(corpname)]
 
 
-def add_block_items(items: List[Dict[str, Any]], attr: str = 'class', val: str = 'even', block_size: int = 3) -> List[Dict[str, Any]]:
+def add_block_items(items: List[Dict[str, Any]], attr: str = 'class', val: str = 'even',
+                    block_size: int = 3) -> List[Dict[str, Any]]:
     for i in [i for i in range(len(items)) if (i / block_size) % 2]:
         items[i][attr] = val
     return items
 
 
-def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlminfreq: int, words: str, blacklist: str, include_nonwords: bool) -> int:
+def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlminfreq: int, words: str,
+                        blacklist: str, include_nonwords: bool) -> int:
     enc_pattern = wlpat.strip()
     attr = corp.get_attr(wlattr)
     attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
@@ -299,7 +292,8 @@ def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlmi
     return i
 
 
-def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, words, blacklist, wlnums, wlsort, wlmaxitems):
+def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, words, blacklist, wlnums, wlsort,
+                         wlmaxitems):
     try:
         gen = attr.regexp2ids(enc_pattern, 0, excl_pattern)
     except TypeError:
@@ -352,7 +346,7 @@ def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlm
     return items
 
 
-def _get_attrfreq(corp, attr, wlattr, wlnums):
+def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
     if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
         if wlnums == 'doc sizes':
@@ -367,8 +361,9 @@ def _get_attrfreq(corp, attr, wlattr, wlnums):
     return attrfreq
 
 
-def wordlist(corp: Corpus, words: Optional[Set[str]] = None, wlattr: str = '', wlpat: str = '', wlminfreq: int = 5, wlmaxitems: int = 100,
-             wlsort: str = '', blacklist: Optional[Set[str]] = None, wlnums: Optional[str] = 'frq', include_nonwords: int = 0) -> List[Dict[str, Any]]:
+def wordlist(corp: KCorpus, words: Optional[Set[str]] = None, wlattr: str = '', wlpat: str = '', wlminfreq: int = 5,
+             wlmaxitems: int = 100, wlsort: str = '', blacklist: Optional[Set[str]] = None,
+             wlnums: Optional[str] = 'frq', include_nonwords: int = 0) -> List[Dict[str, Any]]:
     """
     Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
     """
@@ -395,8 +390,7 @@ def wordlist(corp: Corpus, words: Optional[Set[str]] = None, wlattr: str = '', w
     else:
         items = sorted(items, key=lambda x: x[1])
     del items[wlmaxitems:]
-    return add_block_items([{'str': w, 'freq': f}
-                            for f, w in items])
+    return add_block_items([{'str': w, 'freq': f} for f, w in items])
 
 
 def doc_sizes(corp: Corpus, struct: Structure, attrname: str, i: int, normvals: Dict[int, int]) -> int:
@@ -408,7 +402,9 @@ def doc_sizes(corp: Corpus, struct: Structure, attrname: str, i: int, normvals: 
     return cnt
 
 
-def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int, shrink_list: Union[Tuple[str, ...], List[str]] = (), collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
+def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int,
+                    shrink_list: Union[Tuple[str, ...], List[str]] = (),
+                    collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     arguments:
     corp -- manatee.Corpus
@@ -467,12 +463,12 @@ def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int, shrink_li
                     for i in range(attr.id_range()):
                         try:
                             vals.append({'v': int(attr.id2str(i))})
-                        except:
+                        except ValueError:
                             vals.append({'v': attr.id2str(i)})
                 elif hsep:  # hierarchical
                     vals = [{'v': attr.id2str(i)}
                             for i in range(attr.id_range())
-                            if not multisep in attr.id2str(i)]
+                            if multisep not in attr.id2str(i)]
                 else:
                     if is_multival:
                         raw_vals = [attr.id2str(i).split(multisep) for i in range(attr.id_range())]
@@ -490,7 +486,7 @@ def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int, shrink_li
                 elif collator_locale:
                     attrval['Values'] = l10n.sort(vals, collator_locale, key=lambda item: item['v'])
                 else:
-                    attrval['Values'] = sorted(vals, key=cmp_to_key(lambda x1, x2: cmp(
+                    attrval['Values'] = sorted(vals, key=cmp_to_key(lambda x1, x2: _cmp(
                         x1['v'].lower(), x2['v'].lower())))
             attrvals.append(attrval)
         attrlines.append({'Line': attrvals})
@@ -544,69 +540,9 @@ def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
     return result
 
 
-def subc_freqs(subcorp: SubCorpus, attr: PosAttr, minfreq: int = 50, maxfreq: int = 10000, last_id: Optional[int] = None) -> List[Tuple[int, int]]:
-    return [(i, subcorp.count_rest(attr.id2poss(i)))
-            for i in range(last_id or attr.id_range())
-            if maxfreq > attr.freq(i) > minfreq]
-
-
-def subc_keywords1(subcorp: SubCorpus, attr: PosAttr, minfreq: int = 50, maxfreq: int = 10000):
-    p = (subcorp.size() - subcorp.search_size()) / float(subcorp.search_size())
-    freqs = [(float(f) / (attr.freq(i) - f + 1) * p, f, i)
-             for (i, f) in subc_freqs(subcorp, attr, minfreq, maxfreq,
-                                      attr.id_range() / 1000)]
-    # freqs.sort()
-    #del freqs[:-maxitems]
-    return freqs
-
-
-def subc_keywords(subcorp: SubCorpus, attr: PosAttr, minfreq: int = 50, maxfreq: int = 10000, last_id: int = 10000,
-                  maxitems: int = 100) -> List[Tuple[float, float, int, int]]:
-    p = (subcorp.size() - subcorp.search_size()) / float(subcorp.search_size())
-    candidates = []
-    for i in range(last_id or attr.id_range()):
-        if not (maxfreq > attr.freq(i) > minfreq):
-            continue
-        freq = subcorp.count_rest(attr.id2poss(i))
-        if freq < 3:
-            continue
-        arf = subcorp.count_ARF(attr.id2poss(i), freq)
-        score = arf / (attr.freq(i) - arf + 1) * p
-        # if score < 2.0:
-        #    continue
-        candidates.append((score, arf, freq, i))
-    candidates.sort()
-    del candidates[:-maxitems]
-    return candidates
-
-
-def subcorp_base_file(corp: KCorpus, attrname: str) -> str:
-    if corp.spath:
-        return corp.spath[:-4] + attrname
-    else:
-        return corp.get_conf('PATH') + attrname
-
-
-class MissingSubCorpFreqFile(Exception):
-
-    def __init__(self, corpus, orig_error):
-        self._corpus = corpus
-        self._orig_error = orig_error
-
-    def __unicode__(self):
-        return 'Missing subcorp freq file for {0} (orig error: {1})'.format(self._corpus, self._orig_error)
-
-    def __repr__(self):
-        return self.__unicode__().encode('utf-8')
-
-    @property
-    def corpus(self):
-        return self._corpus
-
-
 def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
     import array
-    filename = (subcorp_base_file(corp, attrname) + '.' + nums)
+    filename = (corp.freq_precalc_file(attrname) + '.' + nums)
     if not id_range:
         id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':
@@ -642,48 +578,8 @@ def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -
     return frq
 
 
-def subc_keywords_onstr(sc: SubCorpus, scref: SubCorpus, attrname: str = 'word', wlminfreq: int = 5, wlpat: str = '.*',
-                        wlmaxitems: int = 100, simple_n: int = 100, wlwords: Optional[List[str]] = None,
-                        blacklist: Optional[List[str]] = None, include_nonwords: int = 0, wlnums: str = 'frq') -> List[Tuple[float, float, float, int, int, int, int, str]]:
-    f = frq_db(sc, attrname, wlnums)
-    fref = frq_db(scref, attrname, wlnums)
-    size = sum(f)
-    size_ref = sum(fref)
-    p = size_ref / size
-    attr = sc.get_attr(attrname)
-    attrref = scref.get_attr(attrname)
-    if wlwords is None:
-        wlwords = []
-    if blacklist is None:
-        blacklist = []
-
-    items = []
-    if not include_nonwords:
-        nwre = sc.get_conf('NONWORDRE')
-    else:
-        nwre = ''
-    try:
-        gen = attr.regexp2ids(wlpat.strip(), 0, nwre)
-    except TypeError:
-        gen = attr.regexp2ids(wlpat.strip(), 0)
-    while not gen.end():
-        i = gen.next()
-        w = attr.id2str(i)
-        if f[i] < wlminfreq or (wlwords and w not in wlwords) \
-                or (blacklist and w in blacklist):
-            continue
-        iref = attrref.str2id(w)
-        fref_iref = (iref != -1 and fref[iref]) or 0
-        if fref_iref == 0 or p * f[i] / fref[iref] > 1.0:
-            rel = (f[i] * 1000000.0) / size
-            relref = (fref_iref * 1000000.0) / size_ref
-            score = (rel + simple_n) / (relref + simple_n)
-            items.append((score, rel, relref, i, iref, f[i], fref_iref, w))
-    items.sort(reverse=True)
-    return items[:wlmaxitems]
-
-
-def matching_structattr(corp: manatee.Corpus, struct: str, attr: str, val: str, search_attr: str) -> Tuple[List[str], int, int]:
+def matching_structattr(corp: KCorpus, struct: str, attr: str, val: str, search_attr: str
+                        ) -> Tuple[List[str], int, int]:
     """
     Return a value of search_attr matching provided structural attribute
     [struct].[attr] = [val]
@@ -692,12 +588,13 @@ def matching_structattr(corp: manatee.Corpus, struct: str, attr: str, val: str, 
         size_limit = 1000000
         ans = set()
         query = '<{struct} {attr}="{attr_val}">[]'.format(struct=struct, attr=attr, attr_val=val)
-        conc = manatee.Concordance(corp, query, 0, -1)
+        conc = manatee.Concordance(corp.unwrap(), query, 0, -1)
         conc.sync()
         size = conc.size()
 
         kw = manatee.KWICLines(
-            corp, conc.RS(True, 0, size_limit), '-1', '1', 'word', '', '', '={}.{}'.format(struct, search_attr))
+            corp.unwrap(), conc.RS(True, 0, size_limit),
+            '-1', '1', 'word', '', '', '={}.{}'.format(struct, search_attr))
         while kw.nextline():
             refs = kw.get_ref_list()
             if len(refs) > 0:

@@ -32,7 +32,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         super().__init__(ident)
         self._conf = conf
         fixed_corp = conf.get('corpus')
-        self._preset_corp = CorpusManager().get_Corpus(fixed_corp) if fixed_corp else None
+        self._preset_corp = CorpusManager().get_corpus(fixed_corp) if fixed_corp else None
 
     def _freq_dist(self, corp: manatee.Corpus, conc: manatee.Concordance, fcrit: str, user_id: int):
         args = freq_calc.FreqCalsArgs()

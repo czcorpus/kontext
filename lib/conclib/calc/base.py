@@ -123,7 +123,7 @@ class TaskRegistration(GeneralWorker):
     def __call__(self, corpus_name: str, subc_name: str, subchash: Optional[str], subcpaths: Tuple[str, ...],
                  query: Tuple[str, ...], samplesize: int) -> Dict[str, Any]:
         corpus_manager = CorpusManager(subcpath=subcpaths)
-        corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
+        corpus_obj = corpus_manager.get_corpus(corpus_name, subcname=subc_name)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         status = cache_map.get_calc_status(subchash, query)
         if status is None or status.error:

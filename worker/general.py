@@ -232,7 +232,7 @@ def clean_colls_cache():
 def calculate_freqs(args):
     args = freq_calc.FreqCalsArgs(**args)
     calculate_freqs.cache_path = args.cache_path
-    ans = freq_calc.calc_freqs_bg(args)
+    ans = freq_calc.calculate_freqs_bg(args)
     trigger_cache_limit = settings.get_int('corpora', 'freqs_cache_min_lines', 10)
     if args.force_cache or max(len(d.get('Items', ())) for d in ans['freqs']) >= trigger_cache_limit:
         calculate_freqs.cache_data = ans
