@@ -26,7 +26,7 @@ class CreateSubcorpusTask(object):
     def __init__(self, user_id, corpus_id, author, description):
         self._user_id = user_id
         self._cm = corplib.CorpusManager()
-        self._corp = self._cm.get_Corpus(corpus_id)
+        self._corp = self._cm.get_corpus(corpus_id)
         self._author = author
         self._description = description
 

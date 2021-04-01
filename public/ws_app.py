@@ -156,7 +156,7 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
         if not auth.is_anonymous(params['user_id']):
             subcpath.insert(0, os.path.join(settings.get('corpora', 'users_subcpath'), str(params['user_id'])))
     cm = CorpusManager(subcpath)
-    corp = cm.get_Corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
+    corp = cm.get_corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
 
     # check until finished
     while not ws.closed:

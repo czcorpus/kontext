@@ -302,7 +302,7 @@ class Subcorpus(Querying):
         for corp in user_corpora:
             for item in self.user_subc_names(corp):
                 try:
-                    sc = self.cm.get_Corpus(corp, subcname=item['n'], decode_desc=False)
+                    sc = self.cm.get_corpus(corp, subcname=item['n'], decode_desc=False)
                     data.append({
                         'name': '%s / %s' % (corp, item['n']),
                         'size': sc.search_size(),

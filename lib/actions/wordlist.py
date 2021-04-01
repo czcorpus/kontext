@@ -19,6 +19,7 @@ import os
 import hashlib
 
 import corplib
+from corplib.errors import MissingSubCorpFreqFile
 from actions.concordance import Actions as ConcActions
 from controller import exposed
 from controller.errors import ImmediateRedirectException
@@ -207,7 +208,7 @@ class Wordlist(ConcActions):
             self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, result)
             return result
 
-        except corplib.MissingSubCorpFreqFile as e:
+        except MissingSubCorpFreqFile as e:
             result.update({'attrname': self.args.cattr, 'tasks': []})
             out = freq_calc.build_arf_db(e.corpus, self.args.wlattr)
             if type(out) is list:

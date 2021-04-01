@@ -695,7 +695,7 @@ class Kontext(Controller):
         if self.args.corpname:
             try:
                 if not self._curr_corpus or self.args.usesubcorp and not self._curr_corpus.is_subcorpus:
-                    self._curr_corpus = self.cm.get_Corpus(self.args.corpname, subcname=self.args.usesubcorp,
+                    self._curr_corpus = self.cm.get_corpus(self.args.corpname, subcname=self.args.usesubcorp,
                                                            corp_variant=self._corpus_variant)
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus

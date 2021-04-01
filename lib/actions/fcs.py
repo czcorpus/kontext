@@ -54,7 +54,7 @@ class Actions(Kontext):
             if i >= max_items:
                 break
             resource_info = {}
-            c = self.cm.get_Corpus(corpus_id)
+            c = self.cm.get_corpus(corpus_id)
             corpus_title = c.get_conf('NAME')
             resource_info['title'] = corpus_title
             resource_info['landingPageURI'] = c.get_conf('INFOHREF')
@@ -249,7 +249,7 @@ class Actions(Kontext):
                     req, supported_args,
                     ['recordPacking', 'x-fcs-endpoint-description']
                 )
-                corpus = self.cm.get_Corpus(corpname)
+                corpus = self.cm.get_corpus(corpname)
                 data['result'] = corpus.get_conf('ATTRLIST').split(',')
                 data['numberOfRecords'] = len(data['result'])
                 data['corpus_desc'] = 'Corpus {0} ({1} tokens)'.format(
@@ -295,7 +295,7 @@ class Actions(Kontext):
                 corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, corpname)
                 data['corppid'] = corp_conf_info.get('web', '')
                 query = req.args.get('query', '')
-                corpus = self.cm.get_Corpus(corpname)
+                corpus = self.cm.get_corpus(corpname)
                 if 0 == len(query):
                     raise Exception(7, 'fcs_query', 'Mandatory parameter not supplied')
                 data['result'], data['numberOfRecords'] = self.fcs_search(

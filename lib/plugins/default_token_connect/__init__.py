@@ -34,7 +34,6 @@ Required XML configuration: please see config.rng
 
 import json
 import logging
-import os
 import manatee
 
 import plugins
@@ -42,6 +41,7 @@ from plugins.abstract.token_connect import AbstractTokenConnect, find_implementa
 from l10n import corpus_get_conf
 from actions import concordance
 from controller import exposed
+from corplib.corpus import KCorpus
 from plugins.default_token_connect.cache_man import CacheMan
 from plugins.default_token_connect.frontends import ErrorFrontend
 
@@ -82,7 +82,7 @@ def fetch_posattr(corp, attr, token_id, num_tokens):
     return ' '.join(ans)
 
 
-def add_structattr_support(corp, attrs, token_id):
+def add_structattr_support(corp: KCorpus, attrs, token_id):
     """
     A decorator function which turns 'fetch_posattr' into
     a more general function which is able to load

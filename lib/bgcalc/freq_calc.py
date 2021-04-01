@@ -74,7 +74,7 @@ def corp_freqs_cache_path(corp: KCorpus, attrname):
     or a regular corpus (files are created in the 'cache' directory).
 
     arguments:
-    corp -- manatee corpus instance
+    corp -- a corpus instance
     attrname -- name of an attribute
 
     returns:
@@ -104,7 +104,7 @@ def prepare_arf_calc_paths(corp: KCorpus, attrname, logstep=0.02):
     attrname -- name of a positional or structure's attribute
     logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
     """
-    outfilename = corplib.subcorp_base_file(corp, attrname)
+    outfilename = corp.freq_precalc_file(attrname)
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return None
     elif corp.is_subcorpus:
@@ -230,7 +230,7 @@ def calc_freqs_bg(args: FreqCalsArgs):
     a dict(freqs=..., conc_size=...)
     """
     cm = corplib.CorpusManager(subcpath=args.subcpath)
-    corp = cm.get_Corpus(args.corpname, subcname=args.subcname)
+    corp = cm.get_corpus(args.corpname, subcname=args.subcname)
     conc = require_existing_conc(corp=corp, q=args.q)
     if not conc.finished():
         raise UnfinishedConcordanceError(
@@ -402,7 +402,7 @@ class CTCalculation(object):
         note: this is called by Celery worker
         """
         cm = corplib.CorpusManager(subcpath=self._args.subcpath)
-        self._corp = cm.get_Corpus(self._args.corpname, subcname=self._args.subcname)
+        self._corp = cm.get_corpus(self._args.corpname, subcname=self._args.subcname)
         self._conc = require_existing_conc(corp=self._corp, q=self._args.q)
         result, full_size = self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
                                          limit_type=self._args.ctminfreq_type)

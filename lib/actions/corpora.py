@@ -57,7 +57,7 @@ class Corpora(Kontext):
         """
         """
         corp_conf_info = self.get_corpus_info(request.args['corpname'])
-        corpus = self.cm.get_Corpus(request.args['corpname'])
+        corpus = self.cm.get_corpus(request.args['corpname'])
         citation_info = corp_conf_info.get('citation_info', None)
         citation_info = citation_info.to_dict() if citation_info else {}
 
