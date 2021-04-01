@@ -494,13 +494,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
-                    if (action.payload.rawAnchorIdx !== undefined &&
-                            action.payload.rawFocusIdx !== undefined) {
+                    if (action.payload.rawAnchorIdx !== null &&
+                            action.payload.rawFocusIdx !== null) {
                         const queryObj = state.queries[action.payload.sourceId];
-                        queryObj.rawAnchorIdx = action.payload.rawAnchorIdx ||
-                            action.payload.query.length;
-                            queryObj.rawFocusIdx = action.payload.rawFocusIdx ||
-                            action.payload.query.length;
+                        queryObj.rawAnchorIdx = action.payload.rawAnchorIdx;
+                        queryObj.rawFocusIdx = action.payload.rawFocusIdx;
                     }
                     this.setRawQuery(
                         state,
