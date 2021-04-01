@@ -25,7 +25,7 @@ from typing import Tuple, Optional,  Dict, Any
 
 from corplib import CorpusManager
 from corplib.corpus import KCorpus
-from plugins.abstract.conc_cache import CalcStatus
+from plugins.abstract.conc_cache import ConcCacheStatus
 import plugins
 from conclib.errors import ConcCalculationStatusException
 from conclib.pyconc import PyConc
@@ -42,8 +42,8 @@ class GeneralWorker(object):
         self._cache_factory = cache_factory if cache_factory is not None else plugins.runtime.CONC_CACHE.instance
         self._task_id = task_id
 
-    def create_new_calc_status(self) -> CalcStatus:
-        return CalcStatus(task_id=self._task_id)
+    def create_new_calc_status(self) -> ConcCacheStatus:
+        return ConcCacheStatus(task_id=self._task_id)
 
     def get_cached_conc_sizes(self, corp: KCorpus, q: Tuple[str, ...] = None) -> Dict[str, Any]:
         """

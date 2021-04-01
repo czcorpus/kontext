@@ -196,7 +196,7 @@ class TextTypes(object):
         normslist = [{'n': 'freq', 'label': _('Document counts')},
                      {'n': 'tokens', 'label': _('Tokens')}]
         if normsliststr:
-            normslist += [{'n': n, 'label': self._corp.get_conf(structname + '.' + n + '.LABEL') or n}
+            normslist += [{'n': n, 'label': self._corp.get_conf(f'{structname}.{n}.LABEL') or n}
                           for n in normsliststr.split(',')]
         else:
             try:

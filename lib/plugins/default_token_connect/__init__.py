@@ -38,7 +38,6 @@ import manatee
 
 import plugins
 from plugins.abstract.token_connect import AbstractTokenConnect, find_implementation
-from l10n import corpus_get_conf
 from actions import concordance
 from controller import exposed
 from corplib.corpus import KCorpus
@@ -95,14 +94,14 @@ def add_structattr_support(corp: KCorpus, attrs, token_id):
     refs_mapping = {}
     for n in refs:
         if n:
-            lab = corpus_get_conf(corp, n + '.LABEL')
+            lab = corp.get_conf(f'{n}.LABEL')
             refs_mapping[lab if lab else n] = n
 
     if len(refs) > 0:
-        conc = manatee.Concordance(corp, '[#{}]'.format(int(token_id)), 1, -1)
+        conc = manatee.Concordance(corp.unwrap(), '[#{}]'.format(int(token_id)), 1, -1)
         conc.sync()
         rs = conc.RS(True, 0, 0)
-        kl = manatee.KWICLines(corp, rs, '-1', '1', 'word', '', '', ','.join(refs))
+        kl = manatee.KWICLines(corp.unwrap(), rs, '-1', '1', 'word', '', '', ','.join(refs))
         if kl.nextline():
             refs_str = kl.get_refs()
             for kv in refs_str.split(','):
@@ -139,7 +138,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
     def cache_path(self):
         return self._cache_path
 
-    def fetch_data(self, providers, maincorp_obj, corpora, token_id, num_tokens, lang, context=None):
+    def fetch_data(self, providers, corpus, corpora, token_id, num_tokens, lang, context=None):
         ans = []
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
@@ -147,7 +146,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
         for backend, _, _ in self.map_providers(providers):
             all_attrs.update(backend.get_required_attrs())
 
-        @add_structattr_support(maincorp_obj, all_attrs, token_id)
+        @add_structattr_support(corpus, all_attrs, token_id)
         def fetch_any_attr(corp, att, t_id, num_t):
             return fetch_posattr(corp, att, t_id, num_t)
 
@@ -155,7 +154,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
             try:
                 args = {}
                 for attr in backend.get_required_attrs():
-                    v = fetch_any_attr(maincorp_obj, attr, token_id, num_tokens)
+                    v = fetch_any_attr(corpus, attr, token_id, num_tokens)
                     if '.' in attr:
                         s, sa = attr.split('.')
                         if s not in args:
@@ -164,7 +163,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
                     else:
                         args[attr] = v
                 data, status = backend.fetch(
-                    corpora, maincorp_obj, token_id, num_tokens, args, lang, context)
+                    corpora, corpus, token_id, num_tokens, args, lang, context)
                 ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
             except TypeError as ex:
                 logging.getLogger(__name__).error('TokenConnect backend error: {0}'.format(ex))
@@ -172,7 +171,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
                 ans.append(err_frontend.export_data(
                     dict(error='{0}'.format(ex)), False, lang, is_kwic_view).to_dict())
 
-        word = fetch_posattr(maincorp_obj, 'word', token_id, num_tokens)
+        word = fetch_posattr(corpus, 'word', token_id, num_tokens)
         return word, ans
 
     def is_enabled_for(self, plugin_ctx, corpname):

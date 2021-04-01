@@ -37,12 +37,10 @@ from typing import Union, Tuple, Optional
 import logging
 
 import plugins
-from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus
+from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, ConcCacheStatus
 from plugins import inject
 from plugins.abstract.general_storage import KeyValueStorage
 from corplib.corpus import KCorpus
-
-CachedConcInfo = Tuple[int, CalcStatus, str]
 
 
 def _uniqname(subchash: Optional[str], query: Tuple[str, ...]):
@@ -77,19 +75,19 @@ class DefaultCacheMapping(AbstractConcCache):
         self._corpus = corpus
         self._db = db
 
-    def _get_entry(self, subchash, q) -> Union[CalcStatus, None]:
+    def _get_entry(self, subchash, q) -> Union[ConcCacheStatus, None]:
         val = self._db.hash_get(self._mk_key(), _uniqname(subchash, q))
         if val and type(val) is dict:
-            return CalcStatus(**val)
+            return ConcCacheStatus(**val)
         return None
 
-    def _set_entry(self, subchash, q, data: CalcStatus):
+    def _set_entry(self, subchash, q, data: ConcCacheStatus):
         self._db.hash_set(self._mk_key(), _uniqname(subchash, q), data.to_dict())
 
     def _mk_key(self) -> str:
         return DefaultCacheMapping.KEY_TEMPLATE % self._corpus.corpname
 
-    def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[CalcStatus, None]:
+    def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
         return self._get_entry(subchash, q)
 
     def get_stored_size(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[int, None]:
@@ -115,8 +113,8 @@ class DefaultCacheMapping(AbstractConcCache):
         val = self._get_entry(subchash, q)
         return val.cachefile if val and val.readable else None
 
-    def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], calc_status: CalcStatus,
-                   overwrite: bool = False) -> CalcStatus:
+    def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], calc_status: ConcCacheStatus,
+                   overwrite: bool = False) -> ConcCacheStatus:
         """
         return:
         path to a created cache file
@@ -129,7 +127,7 @@ class DefaultCacheMapping(AbstractConcCache):
         self._set_entry(subchash, query, calc_status)
         return calc_status
 
-    def get_calc_status(self, subchash: Optional[str], query: Tuple[str, ...]) -> Union[CalcStatus, None]:
+    def get_calc_status(self, subchash: Optional[str], query: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
         return self._get_entry(subchash, query)
 
     def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
@@ -148,7 +146,7 @@ class DefaultCacheMapping(AbstractConcCache):
                     logging.getLogger(__name__).warning('Removed unsupported conc cache value: {}'.format(stored))
                     self._db.hash_del(self._mk_key(), k)
                 else:
-                    status = CalcStatus(**stored)
+                    status = ConcCacheStatus(**stored)
                     if _uniqname(subchash, q[:1]) == status.q0hash:
                         # original record's key must be used (k ~ entry_key match can be partial)
                         self._db.hash_del(self._mk_key(), k)  # must use direct access here (no del_entry())

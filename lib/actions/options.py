@@ -67,9 +67,9 @@ class Options(Kontext):
         else:
             corp = self.corp
         out['AttrList'] = [{
-            'label': corp.get_conf(n + '.LABEL') or n,
+            'label': corp.get_conf(f'{n}.LABEL') or n,
             'n': n,
-            'multisep': corp.get_conf(n + '.MULTISEP')
+            'multisep': corp.get_conf(f'{n}.MULTISEP')
         } for n in corp.get_conf('ATTRLIST').split(',') if n]
         out['fixed_attr'] = 'word'
         out['attr_vmode'] = self.args.attr_vmode
@@ -78,7 +78,7 @@ class Options(Kontext):
             set([x.split('.')[0] for x in self.args.structattrs]))
         out['Availstructs'] = [{'n': n,
                                 'sel': 'selected' if n in structlist else '',
-                                'label': corp.get_conf(n + '.LABEL')}
+                                'label': corp.get_conf(f'{n}.LABEL')}
                                for n in availstruct if n and n != '#']
         out['base_viewattr'] = self.args.base_viewattr
         availref = corp.get_conf('STRUCTATTRLIST').split(',')
@@ -99,7 +99,7 @@ class Options(Kontext):
         for n in availref:
             if ref_is_allowed(n):
                 out['Availrefs'].append(dict(n='=' + n, sel='selected' if ('=' + n) in reflist else '',
-                                             label=(corp.get_conf(n + '.LABEL') or n)))
+                                             label=(corp.get_conf(f'{n}.LABEL') or n)))
 
         doc = corp.get_conf('DOCSTRUCTURE')
         if doc in availstruct:

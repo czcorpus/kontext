@@ -26,7 +26,7 @@ the instance of AbstractConcCache is request-dependent.
 
 import abc
 from typing import Dict, Any, Optional, Union, Tuple
-from manatee import Corpus
+from corplib.corpus import KCorpus
 
 import os
 import time
@@ -34,11 +34,11 @@ import time
 QueryType = Tuple[str, ...]
 
 
-class CalcStatusException(Exception):
+class ConcCacheStatusException(Exception):
     pass
 
 
-class CalcStatus(object):
+class ConcCacheStatus(object):
 
     def __init__(self, task_id: Optional[str] = None, pid: Optional[int] = None, created: Optional[int] = None,
                  last_upd: Optional[int] = None, concsize: Optional[int] = 0, fullsize: Optional[int] = 0,
@@ -53,7 +53,10 @@ class CalcStatus(object):
         self.fullsize = fullsize
         self.relconcsize = relconcsize
         self.arf = arf
-        self.error: str = str(error) if isinstance(error, BaseException) else error
+        if isinstance(error, BaseException):
+            self.error = f'{error} ({error.__class__.__name__})'
+        else:
+            self.error = error
         self.finished = finished
         self.q0hash = q0hash
         self.cachefile = cachefile
@@ -64,17 +67,17 @@ class CalcStatus(object):
 
     def test_error(self, time_limit: int) -> Optional[BaseException]:
         if self.error is not None:
-            return CalcStatusException(self.error)
+            return ConcCacheStatusException(self.error)
         t1 = time.time()
         if not self.finished and t1 - self.last_upd > time_limit:
-            return CalcStatusException(f'Wait limit for initial data exceeded (waited {t1 - self.last_upd} '
-                                       f', limit: {time_limit})')
+            return ConcCacheStatusException(f'Wait limit for initial data exceeded (waited {t1 - self.last_upd} '
+                                            f', limit: {time_limit})')
         return None
 
     def has_some_result(self, minsize: int) -> bool:
         return self.finished or (self.readable and self.concsize >= minsize)
 
-    def update(self, **kw) -> 'CalcStatus':
+    def update(self, **kw) -> 'ConcCacheStatus':
         for k, v in kw.items():
             if hasattr(self, k):
                 v_norm = str(v) if isinstance(v, BaseException) else v
@@ -100,7 +103,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_calc_status(self, subchash: str, query: QueryType) -> CalcStatus:
+    def get_calc_status(self, subchash: str, query: QueryType) -> ConcCacheStatus:
         pass
 
     @abc.abstractmethod
@@ -130,17 +133,17 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_to_map(self, subchash: Optional[str], query: QueryType, calc_status: CalcStatus, overwrite: bool = False
-                   ) -> CalcStatus:
+    def add_to_map(self, subchash: Optional[str], query: QueryType, calc_status: ConcCacheStatus,
+                   overwrite: bool = False) -> ConcCacheStatus:
         """
         Add a cache entry. If already present, the stored version is returned unless overwrite is set to True
 
         arguments:
-        subchash -- a subcorpus identifier hash (see corplib.CorpusManager.get_Corpus)
+        subchash -- a subcorpus identifier hash (see corplib.CorpusManager.get_corpus)
         query -- a list/tuple of query elements
         size -- current size of a respective concordance (the one defined by corpus, subchash
                 and query)
-        calc_status -- an instance of CalcStatus
+        calc_status -- an instance of ConcCacheStatus
         overwrite -- if true then the new calc_status value is always used
         returns:
             an updated version of the original calc_status (e.g. with cachefile set)
@@ -180,7 +183,7 @@ class AbstractCacheMappingFactory(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_mapping(self, corpus: Corpus) -> AbstractConcCache:
+    def get_mapping(self, corpus: KCorpus) -> AbstractConcCache:
         """
         returns:
         an AbstractConcCache compatible instance

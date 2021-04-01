@@ -40,7 +40,6 @@ from plugins.abstract.corpora import BrokenCorpusInfo, CorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
-from l10n import corpus_get_conf
 from translation import ugettext as translate
 import scheduled
 from corplib.fallback import ErrorCorpus, EmptyCorpus
@@ -439,7 +438,7 @@ class Kontext(Controller):
     def _get_curr_conc_args(self):
         args = self._get_mapped_attrs(ConcArgsMapping)
         if self._q_code:
-            args.append(('q', '~%s' % self._q_code))
+            args.append(('q', f'~{self._q_code}'))
         else:
             args += [('q', q) for q in getattr(self.args, 'q')]
         return args
@@ -473,10 +472,10 @@ class Kontext(Controller):
                                 self.add_system_message('message', ans['message'])
                             continue
                         except Exception as e:
-                            logging.getLogger('SCHEDULING').error('task_id: %s, error: %s(%s)' % (
+                            logging.getLogger('SCHEDULING').error('task_id: {}, error: {} ({})'.format(
                                 action.get('id', '??'), e.__class__.__name__, e))
                 # avoided by 'continue' in case everything is OK
-                logging.getLogger('SCHEDULING').error('task_id: %s, Failed to invoke scheduled action: %s' % (
+                logging.getLogger('SCHEDULING').error('task_id: {}, Failed to invoke scheduled action: {}'.format(
                     action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
 
@@ -667,7 +666,7 @@ class Kontext(Controller):
 
     @property
     def corp_encoding(self) -> str:
-        enc = corpus_get_conf(self.corp, 'ENCODING')
+        enc = self.corp.get_conf('ENCODING')
         return enc if enc else 'iso-8859-1'
 
     def handle_dispatch_error(self, ex: Exception):
@@ -741,8 +740,8 @@ class Kontext(Controller):
             result['subcorp_size'] = self.corp.search_size()
         else:
             result['subcorp_size'] = None
-        attrlist = corpus_get_conf(maincorp, 'ATTRLIST').split(',')
-        sref = corpus_get_conf(maincorp, 'SHORTREF')
+        attrlist = maincorp.get_conf('ATTRLIST').split(',')
+        sref = maincorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0'
                                              for a in sref.split(',')])
 
@@ -753,22 +752,22 @@ class Kontext(Controller):
             poslist = self.cm.corpconf_pairs(maincorp, 'WPOSLIST')
         result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
         result['lpos_dict'] = dict([(y, x) for x, y in poslist])
-        result['default_attr'] = corpus_get_conf(maincorp, 'DEFAULTATTR')
+        result['default_attr'] = maincorp.get_conf('DEFAULTATTR')
         for listname in ['AttrList', 'StructAttrList']:
             if listname in result:
                 continue
             result[listname] = [{
-                'label': corpus_get_conf(maincorp, n + '.LABEL') or n,
+                'label': maincorp.get_conf(f'{n}.LABEL') or n,
                 'n': n,
-                **({'multisep': corpus_get_conf(maincorp, n + '.MULTISEP')} if listname == 'AttrList' else {})
-            } for n in corpus_get_conf(maincorp, listname.upper()).split(',') if n]
-        result['StructList'] = corpus_get_conf(self.corp, 'STRUCTLIST').split(',')
+                **({'multisep': maincorp.get_conf(f'{n}.MULTISEP')} if listname == 'AttrList' else {})
+            } for n in maincorp.get_conf(listname.upper()).split(',') if n]
+        result['StructList'] = self.corp.get_conf('STRUCTLIST').split(',')
 
-        if corpus_get_conf(maincorp, 'FREQTTATTRS'):
-            ttcrit_attrs = corpus_get_conf(maincorp, 'FREQTTATTRS')
+        if maincorp.get_conf('FREQTTATTRS'):
+            ttcrit_attrs = maincorp.get_conf('FREQTTATTRS')
         else:
-            ttcrit_attrs = corpus_get_conf(maincorp, 'SUBCORPATTRS')
-        result['ttcrit'] = [('fcrit', '%s 0' % a)
+            ttcrit_attrs = maincorp.get_conf('SUBCORPATTRS')
+        result['ttcrit'] = [('fcrit', f'{a} 0')
                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
         result['interval_chars'] = (
             settings.get('corpora', 'left_interval_char', None),
@@ -1020,9 +1019,9 @@ class Kontext(Controller):
         somewhere on a page).
         """
         if self.corp.get_conf('NAME'):
-            return corpus_get_conf(self.corp, 'NAME')
-        elif getattr(self.args, 'corpname'):
-            return getattr(self.args, 'corpname')
+            return self.corp.get_conf('NAME')
+        elif self.args.corpname:
+            return self.args.corpname
         else:
             return ''
 
@@ -1082,7 +1081,7 @@ class Kontext(Controller):
                 subcorp_list.insert(0, dict(v=self.corp.orig_subcname, n=self.corp.orig_subcname,
                                             pub=self.corp.subcname, foreign=True))
         if len(subcorp_list) > 0:
-            subcorp_list = [{'n': '--%s--' % translate('whole corpus'), 'v': ''}] + subcorp_list
+            subcorp_list = [{'n': '--{}--'.format(translate('whole corpus')), 'v': ''}] + subcorp_list
 
         if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []
