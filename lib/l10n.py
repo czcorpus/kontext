@@ -35,7 +35,6 @@ internationalisation of KonText:
 
 from typing import Dict, Any
 
-import re
 from functools import cmp_to_key
 from threading import local
 try:
@@ -102,17 +101,6 @@ def camelize(s):
     """
     a = [x for x in s.split('_') if len(x) > 0]
     return a[0] + ''.join([x[0].upper() + x[1:] for x in a[1:]])
-
-
-def corpus_get_conf(corp, conf_key):
-    """
-    A helper function to retrieve values from corpus registry file.
-
-    arguments:
-    corp -- a manatee.corpus instance
-    conf_key -- a registry configuration value
-    """
-    return corp.get_conf(conf_key)
 
 
 def simplify_num(v):

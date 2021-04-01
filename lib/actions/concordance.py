@@ -42,7 +42,6 @@ from bgcalc import freq_calc, coll_calc, calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
 import plugins
 from kwiclib import Kwic, KwicPageArgs
-from l10n import corpus_get_conf
 from translation import ugettext as translate
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector
@@ -54,7 +53,7 @@ import mailing
 import attr
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
-import plugins.abstract.conc_cache
+from plugins.abstract.conc_cache import ConcCacheStatusException
 
 
 class ConcError(UserActionException):
@@ -225,7 +224,7 @@ class Actions(Querying):
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
-        except plugins.abstract.conc_cache.CalcStatusException as ex:
+        except ConcCacheStatusException as ex:
             if 'syntax error' in f'{ex}'.lower():
                 self.add_system_message(
                     'error', translate('Syntax error. Please check the query and its type.'))
@@ -678,7 +677,7 @@ class Actions(Querying):
             ans['size'] = 0
             ans['finished'] = True
             self.add_system_message('warning', str(e))
-        except plugins.abstract.conc_cache.CalcStatusException as ex:
+        except ConcCacheStatusException as ex:
             ans['size'] = 0
             ans['finished'] = True
             if 'syntax error' in f'{ex}'.lower():
@@ -884,7 +883,7 @@ class Actions(Querying):
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
-        except plugins.abstract.conc_cache.CalcStatusException as ex:
+        except ConcCacheStatusException as ex:
             if 'syntax error' in f'{ex}'.lower():
                 self.add_system_message(
                     'error', translate('Syntax error. Please check the query and its type.'))
@@ -1754,24 +1753,24 @@ class Actions(Querying):
             undo_q=[]
         )
 
-        attrlist = corpus_get_conf(self.corp, 'ATTRLIST').split(',')
+        attrlist = self.corp.get_conf('ATTRLIST').split(',')
         tmp_out['AttrList'] = [{
-            'label': corpus_get_conf(self.corp, n + '.LABEL') or n,
+            'label': self.corp.get_conf(f'{n}.LABEL') or n,
             'n': n,
-            'multisep': corpus_get_conf(self.corp, n + '.MULTISEP')
+            'multisep': self.corp.get_conf(f'{n}.MULTISEP')
         } for n in attrlist if n]
 
-        tmp_out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
-                                     for n in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(',')
+        tmp_out['StructAttrList'] = [{'label': self.corp.get_conf(f'{n}.LABEL') or n, 'n': n}
+                                     for n in self.corp.get_conf('STRUCTATTRLIST').split(',')
                                      if n]
-        tmp_out['StructList'] = corpus_get_conf(self.corp, 'STRUCTLIST').split(',')
-        sref = corpus_get_conf(self.corp, 'SHORTREF')
+        tmp_out['StructList'] = self.corp.get_conf('STRUCTLIST').split(',')
+        sref = self.corp.get_conf('SHORTREF')
         tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
 
-        if corpus_get_conf(self.corp, 'FREQTTATTRS'):
-            ttcrit_attrs = corpus_get_conf(self.corp, 'FREQTTATTRS')
+        if self.corp.get_conf('FREQTTATTRS'):
+            ttcrit_attrs = self.corp.get_conf('FREQTTATTRS')
         else:
-            ttcrit_attrs = corpus_get_conf(self.corp, 'SUBCORPATTRS')
+            ttcrit_attrs = self.corp.get_conf('SUBCORPATTRS')
         tmp_out['ttcrit'] = [('fcrit', '%s 0' % a)
                              for a in ttcrit_attrs.replace('|', ',').split(',') if a]
 

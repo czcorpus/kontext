@@ -45,7 +45,7 @@ add your frontend or backend (depending on what needs to be customized).
 """
 import abc
 from typing import Dict, Any, List, Tuple, Iterable, Optional, TYPE_CHECKING
-from manatee import Corpus
+from corplib.corpus import KCorpus
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginCtx
@@ -101,7 +101,7 @@ class AbstractBackend(abc.ABC):
         return self._provider_id
 
     @abc.abstractmethod
-    def fetch(self, corpora: List[str], maincorp: Corpus, token_id: int, num_tokens: int,
+    def fetch(self, corpora: List[str], maincorp: KCorpus, token_id: int, num_tokens: int,
               query_args: Dict[str, str], lang: str, context: Tuple[int, int] = None) -> Tuple[Any, bool]:
         pass
 
@@ -198,7 +198,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
     def map_providers(self, provider_ids: List[str]):
         raise NotImplementedError()
 
-    def fetch_data(self, provider_ids: List[str], maincorp_obj: Corpus, corpora: List[str], token_id: int,
+    def fetch_data(self, provider_ids: List[str], corpus: KCorpus, corpora: List[str], token_id: int,
                    num_tokens: int, lang: str, context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
@@ -206,8 +206,8 @@ class AbstractTokenConnect(CorpusDependentPlugin):
 
         arguments:
         provider_ids -- list of defined providers we want to search in
-        maincorp_obj -- corpus object used to fetch actual positional attributes used
-                        to query the providers
+        corpus -- corpus object used to fetch actual positional attributes used
+                  to query the providers
         corpora -- list of involved corpora IDs
         token_id -- internal token ID user ask information about
         num_tokens -- how many tokens from the token_id to include in query (multi-word queries); min is 1

@@ -446,19 +446,19 @@ def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int,
             attr = corp.get_attr(n)
             attrval = {
                 'name': n,
-                'label': corp.get_conf(n + '.LABEL') or n,
-                'attr_doc': corp.get_conf(n + '.ATTRDOC'),
-                'attr_doc_label': corp.get_conf(n + '.ATTRDOCLABEL'),
-                'numeric': conf_bool(corp.get_conf(n + '.NUMERIC'))
+                'label': corp.get_conf(f'{n}.LABEL') or n,
+                'attr_doc': corp.get_conf(f'{n}.ATTRDOC'),
+                'attr_doc_label': corp.get_conf(f'{n}.ATTRDOCLABEL'),
+                'numeric': conf_bool(corp.get_conf(f'{n}.NUMERIC'))
             }
-            hsep = corp.get_conf(n + '.HIERARCHICAL')
-            multisep = corp.get_conf(n + '.MULTISEP')
-            is_multival = corp.get_conf(n + '.MULTIVAL') in ('y', 'yes')
-            if (not hsep and (corp.get_conf(n + '.TEXTBOXLENGTH')
+            hsep = corp.get_conf(f'{n}.HIERARCHICAL')
+            multisep = corp.get_conf(f'{n}.MULTISEP')
+            is_multival = corp.get_conf(f'{n}.MULTIVAL') in ('y', 'yes')
+            if (not hsep and (corp.get_conf(f'{n}.TEXTBOXLENGTH')
                               or attr.id_range() > maxlistsize or n in shrink_list)):
-                attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH') or 24)
+                attrval['textboxlength'] = (corp.get_conf(f'{n}.TEXTBOXLENGTH') or 24)
             else:  # list of values
-                if conf_bool(corp.get_conf(n + '.NUMERIC')):
+                if conf_bool(corp.get_conf(f'{n}.NUMERIC')):
                     vals = []
                     for i in range(attr.id_range()):
                         try:
@@ -481,7 +481,7 @@ def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int,
                 if hsep:  # hierarchical
                     attrval['hierarchical'] = hsep
                     attrval['Values'] = _get_attr_hierarchy(vals, hsep)
-                elif conf_bool(corp.get_conf(n + '.NUMERIC')):
+                elif conf_bool(corp.get_conf(f'{n}.NUMERIC')):
                     attrval['Values'] = sorted(vals, key=lambda item: item['v'])
                 elif collator_locale:
                     attrval['Values'] = l10n.sort(vals, collator_locale, key=lambda item: item['v'])

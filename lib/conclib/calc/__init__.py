@@ -26,7 +26,7 @@ import re
 
 import settings
 import plugins
-from plugins.abstract.conc_cache import AbstractConcCache, CalcStatus
+from plugins.abstract.conc_cache import AbstractConcCache, ConcCacheStatus
 from corplib import CorpusManager
 from conclib.empty import InitialConc
 from corplib.corpus import KCorpus
@@ -297,7 +297,7 @@ class ConcCalculation(GeneralWorker):
                 srch = re.match(r'unexpected character(.*)at position (\d+)', str(e))
                 if srch:
                     # TODO please note that currently due to loss of information about error type during
-                    # CalcStatus storing/restoring, the message is normalized to a more general form
+                    # ConcCacheStatus storing/restoring, the message is normalized to a more general form
                     norm_err = ConcordanceException(
                         'Syntax error at position {}. Please check the query and its type.'.format(srch.group(2)))
                 else:
@@ -337,7 +337,7 @@ class ConcSyncCalculation(GeneralWorker):
             calc_from, conc = find_cached_conc_base(self.corpus_obj, subchash, query, minsize=0)
             if isinstance(conc, InitialConc):   # we have nothing, let's start with the 1st operation only
                 for i in range(0, len(query)):
-                    self.cache_map.add_to_map(subchash, query[:i + 1], CalcStatus(task_id=self._task_id),
+                    self.cache_map.add_to_map(subchash, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
                                               overwrite=True)
                 calc_status = self.cache_map.get_calc_status(subchash, query[:1])
                 conc = self.compute_conc(self.corpus_obj, query[:1], samplesize)
@@ -349,7 +349,7 @@ class ConcSyncCalculation(GeneralWorker):
                 calc_from = 1
             else:
                 for i in range(calc_from, len(query)):
-                    self.cache_map.add_to_map(subchash, query[:i + 1], CalcStatus(task_id=self._task_id),
+                    self.cache_map.add_to_map(subchash, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
                                               overwrite=True)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
