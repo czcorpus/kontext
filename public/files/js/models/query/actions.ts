@@ -370,8 +370,8 @@ export namespace Actions {
         sourceId:string;
         query:string;
         insertRange:[number, number]|null;
-        rawAnchorIdx:number;
-        rawFocusIdx:number;
+        rawAnchorIdx:number|null;
+        rawFocusIdx:number|null;
     }> {
         name:ActionName.QueryInputSetQuery;
     }
