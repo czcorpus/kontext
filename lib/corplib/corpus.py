@@ -237,14 +237,22 @@ class KCorpus:
 
     @property
     def size(self):
+        """
+        Return size of the whole corpus
+        (even for a subcorpus). For actual
+        search size, use search_size().
+        """
         return self._corp.size
 
     @property
     def search_size(self):
         """
-        TODO: explain the difference between this one and 'size'
+        Return actual size we search in. This applies
+        mainly for sub-corpora where it equals to
+        a respective subcorpus size while 'size' returns
+        the original corpus size.
         """
-        return self._corp.search_size
+        return self._corp.search_size()
 
     def get_struct(self, struct: str):
         return self._corp.get_struct(struct)

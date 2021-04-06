@@ -154,7 +154,7 @@ def calc_is_running(base_path, calc_type=None):
 
 def write_log_header(corp, logfile):
     with open(logfile, 'w') as f:
-        f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size()))
+        f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size))
 
 
 def build_arf_db(corp, attrname):

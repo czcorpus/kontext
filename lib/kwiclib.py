@@ -27,6 +27,7 @@ import manatee
 from structures import FixedDict
 from conclib.empty import InitialConc
 from kwiclib_common import tokens2strclass
+from corplib.corpus import KCorpus
 
 SortCritType = List[Tuple[str, Union[str, int]]]
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
@@ -216,7 +217,7 @@ class KwicPageArgs(object):
         return ans
 
 
-class Kwic(object):
+class Kwic:
     """
     KWIC related data preparation utilities
 
@@ -226,7 +227,7 @@ class Kwic(object):
     conc -- a manatee.Concordance instance
     """
 
-    def __init__(self, corpus, corpus_fullname, conc):
+    def __init__(self, corpus: KCorpus, corpus_fullname, conc):
         self.corpus = corpus
         self.corpus_fullname = corpus_fullname
         self.conc = conc
@@ -283,11 +284,7 @@ class Kwic(object):
         else:
             out.result_arf = round(self.conc.compute_ARF(), 2)
 
-        if self.corpus.is_subcorpus:
-            corpsize = self.corpus.search_size(
-            )  # TODO this is unverified solution trying to bypass possible manatee bug
-        else:
-            corpsize = self.corpus.size
+        corpsize = self.corpus.search_size
         out.result_relative_freq = round(
             self.conc.size() / (float(corpsize) / 1e6), 2)
         if args.hidenone:

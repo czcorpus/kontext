@@ -737,7 +737,7 @@ class Kontext(Controller):
             origSubcorpName=self.corp.orig_subcname,
             foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id)
         if self.corp.is_subcorpus:
-            result['subcorp_size'] = self.corp.search_size()
+            result['subcorp_size'] = self.corp.search_size
         else:
             result['subcorp_size'] = None
         attrlist = maincorp.get_conf('ATTRLIST').split(',')
