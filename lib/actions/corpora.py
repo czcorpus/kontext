@@ -75,7 +75,7 @@ class Corpora(Kontext):
         ans = {
             'corpname': corpus_name,
             'description': corp_conf_info.description,
-            'size': int(corpus.size()),
+            'size': corpus.size,
             'attrlist': [],
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
