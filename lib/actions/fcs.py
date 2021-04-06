@@ -253,7 +253,7 @@ class Actions(Kontext):
                 data['result'] = corpus.get_conf('ATTRLIST').split(',')
                 data['numberOfRecords'] = len(data['result'])
                 data['corpus_desc'] = 'Corpus {0} ({1} tokens)'.format(
-                    corpus.get_conf('NAME'), l10n.simplify_num(corpus.size()))
+                    corpus.get_conf('NAME'), l10n.simplify_num(corpus.size))
                 data['corpus_lang'] = Languages.get_iso_code(corpus.get_conf('LANGUAGE'))
                 data['show_endpoint_desc'] = (True if req.args.get('x-fcs-endpoint-description', 'false') == 'true'
                                               else False)

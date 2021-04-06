@@ -287,7 +287,7 @@ class Kwic(object):
             corpsize = self.corpus.search_size(
             )  # TODO this is unverified solution trying to bypass possible manatee bug
         else:
-            corpsize = self.corpus.size()
+            corpsize = self.corpus.size
         out.result_relative_freq = round(
             self.conc.size() / (float(corpsize) / 1e6), 2)
         if args.hidenone:
