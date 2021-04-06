@@ -305,7 +305,7 @@ class Subcorpus(Querying):
                     sc = self.cm.get_corpus(corp, subcname=item['n'], decode_desc=False)
                     data.append({
                         'name': '%s / %s' % (corp, item['n']),
-                        'size': sc.search_size(),
+                        'size': sc.search_size,
                         'created': time.mktime(sc.created.timetuple()),
                         'corpname': corp,
                         'human_corpname': sc.get_conf('NAME'),
@@ -367,7 +367,7 @@ class Subcorpus(Querying):
             subCorpusName=self.args.subcname,
             origSubCorpusName=self.corp.orig_subcname,
             corpusSize=self.corp.size(),
-            subCorpusSize=self.corp.search_size(),
+            subCorpusSize=self.corp.search_size,
             created=time.mktime(self.corp.created.timetuple()),
             description=self.corp.description,
             extended_info={}

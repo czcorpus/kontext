@@ -86,9 +86,9 @@ class GeneralWorker(object):
             (concsize,) = struct.unpack('i', cache.read(4))
 
             if fullsize > 0:
-                relconcsize = 1000000.0 * fullsize / corp.search_size()
+                relconcsize = 1000000.0 * fullsize / corp.search_size
             else:
-                relconcsize = 1000000.0 * concsize / corp.search_size()
+                relconcsize = 1000000.0 * concsize / corp.search_size
 
             if finished and not corp.is_subcorpus:
                 conc = manatee.Concordance(corp.unwrap(), status.cachefile)

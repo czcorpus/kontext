@@ -460,7 +460,7 @@ class Actions(Querying):
             fullsize = orig_conc.fullsize()
 
         return dict(sampled_size=sampled_size, concsize=concsize,
-                    relconcsize=1e6 * fullsize / self.corp.search_size(),
+                    relconcsize=1e6 * fullsize / self.corp.search_size,
                     fullsize=fullsize, finished=conc.finished())
 
     @exposed(access_level=1, template='view.html', page_model='view', mutates_result=True, http_method='POST')

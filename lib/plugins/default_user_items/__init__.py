@@ -66,7 +66,7 @@ def set_favorite_item(ctrl, request):
     for i, c_id in enumerate(request.form.getlist('corpora')):
         corp = ctrl.cm.get_corpus(c_id, subcname=request.form['subcorpus_id'] if i == 0 else None)
         if i == 0:
-            main_size = corp.search_size()
+            main_size = corp.search_size
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     subcorpus_id = request.form['subcorpus_id']
     subcorpus_orig_id = request.form['subcorpus_orig_id']
