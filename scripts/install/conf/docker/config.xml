@@ -45,6 +45,7 @@
         <rq_redis_port>6379</rq_redis_port>
         <rq_redis_db>2</rq_redis_db>
         <rq_log_path>/var/log/rq/worker.log</rq_log_path>
+        <status_service_url />
     </calc_backend>
     <job_scheduler>
         <type>rq</type>
