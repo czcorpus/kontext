@@ -4,5 +4,9 @@ docker-compose.yml
 Dockerfile
 docker-compose.dev.yml
 Dockerfile.dev
+Dockerfile.ws
+Dockerfile.rqworker
+Dockerfile.rqscheduler
 public/files/dist
 public/files/js/.compiled
+.env
