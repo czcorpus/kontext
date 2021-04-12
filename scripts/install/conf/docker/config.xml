@@ -41,7 +41,6 @@
     <calc_backend>
         <type>rq</type>
         <task_time_limit>300</task_time_limit>
-        <status_service_url>http://0.0.0.0/</status_service_url>
         <rq_redis_host>kontext_redis_1</rq_redis_host>
         <rq_redis_port>6379</rq_redis_port>
         <rq_redis_db>2</rq_redis_db>
