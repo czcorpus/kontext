@@ -3,6 +3,8 @@ services:
   kontext:
     build: .
     command: gunicorn -c ./scripts/install/conf/docker/gunicorn-conf.py public.app:application
+    environment:
+      - STATUS_SERVICE_URL=${STATUS_SERVICE_URL}
     volumes:
       - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
       - files:/opt/kontext/public/files
@@ -23,12 +25,13 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./scripts/install/conf/docker/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./scripts/install/conf/docker/${NGINX_CONF_FILE}:/etc/nginx/conf.d/default.conf
       - files:/opt/kontext/public/files
     networks:
       - kontext
     depends_on:
       - kontext
+      - ws
   rq-scheduler:
     build:
       context: .
@@ -36,8 +39,8 @@ services:
     networks:
       - redis
     depends_on: 
-      - kontext
       - redis
+      - kontext
   rq-worker:
     build:
       context: .
@@ -48,6 +51,20 @@ services:
     networks:
       - redis
     depends_on:
+      - redis
+      - kontext
+  ws:
+    build:
+      context: .
+      dockerfile: Dockerfile.ws
+    command: python3 public/ws_app.py --host 0.0.0.0
+    volumes:
+      - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
+      - corpora:/var/local/corpora
+    networks:
+      - redis
+      - kontext
+    depends_on: 
       - redis
       - kontext
 volumes:
