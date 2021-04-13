@@ -366,7 +366,7 @@ class Subcorpus(Querying):
             corpusName=self._human_readable_corpname(),
             subCorpusName=self.args.subcname,
             origSubCorpusName=self.corp.orig_subcname,
-            corpusSize=self.corp.size(),
+            corpusSize=self.corp.size,
             subCorpusSize=self.corp.search_size,
             created=time.mktime(self.corp.created.timetuple()),
             description=self.corp.description,

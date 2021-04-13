@@ -61,12 +61,13 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_supported_structures(self, corpname):
+    def get_supported_structures(self, plugin_ctx, corpname):
         """
         Return a list of structure names the plug-in
         and its data support for the 'corpname' corpus.
 
         arguments:
+        plugin_ctx --
         corpname -- a corpus identifier
 
         returns:
