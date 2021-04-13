@@ -711,33 +711,6 @@ export const GlobalStyle = createGlobalStyle`
         cursor: default;
     }
 
-    @keyframes fadein {
-
-        /* transition: opacity .3s ease-in; */
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
-    @keyframes fadeout {
-        from {
-            opacity: 1;
-        }
-
-        to {
-            opacity: 0;
-        }
-    }
-
-    @keyframes color-change {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
-    }
-
     ul.tabs {
         list-style-type: none;
         margin: 0 auto 1.1em auto;

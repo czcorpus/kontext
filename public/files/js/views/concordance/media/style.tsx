@@ -19,6 +19,7 @@
  */
 
 import styled from 'styled-components';
+import {keyframes} from 'styled-components';
 
 import mediaPlayIcon from '../../../../img/media_play.svg';
 import mediaPauseIcon from '../../../../img/media_pause.svg';
@@ -26,6 +27,36 @@ import mediaStopIcon from '../../../../img/media_stop.svg';
 import mediaPlaySIcon from '../../../../img/media_play_s.svg';
 import mediaPauseSIcon from '../../../../img/media_pause_s.svg';
 
+
+const playBlink = keyframes`
+    0% {
+        background-image: url(${mediaPlayIcon});
+    }
+    49% {
+        background-image: url(${mediaPlayIcon});
+    }
+    50% {
+        background-image: url(${mediaPlaySIcon});
+    }
+    99% {
+        background-image: url(${mediaPlaySIcon});
+    }
+`;
+
+const pauseBlink = keyframes`
+    0% {
+        background-image: url(${mediaPauseIcon});
+    }
+    49% {
+        background-image: url(${mediaPauseIcon});
+    }
+    50% {
+        background-image: url(${mediaPauseSIcon});
+    }
+    99% {
+        background-image: url(${mediaPauseSIcon});
+    }
+`;
 
 export const AudioPlayer = styled.div`
 
@@ -56,13 +87,13 @@ export const AudioPlayer = styled.div`
     }
 
     a.img-button-play-active {
-        animation-name: playBlink;
+        animation-name: ${playBlink};
         animation-duration: 1s;
         animation-iteration-count: infinite;
     }
 
     a.img-button-pause-active {
-        animation-name: pauseBlink;
+        animation-name: ${pauseBlink};
         animation-duration: 1s;
         animation-iteration-count: infinite;
     }
@@ -78,36 +109,4 @@ export const AudioPlayer = styled.div`
     a.img-button-stop {
         background-image: url(${mediaStopIcon});
     }
-
-
-    @keyframes playBlink {
-        0% {
-            background-image: url(${mediaPlayIcon});
-        }
-        49% {
-            background-image: url(${mediaPlayIcon});
-        }
-        50% {
-            background-image: url(${mediaPlaySIcon});
-        }
-        99% {
-            background-image: url(${mediaPlaySIcon});
-        }
-    }
-
-    @keyframes pauseBlink {
-        0% {
-            background-image: url(${mediaPauseIcon});
-        }
-        49% {
-            background-image: url(${mediaPauseIcon});
-        }
-        50% {
-            background-image: url(${mediaPauseSIcon});
-        }
-        99% {
-            background-image: url(${mediaPauseSIcon});
-        }
-    }
-
 `;
