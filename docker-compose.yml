@@ -2,12 +2,12 @@ version: '3.7'
 services:
   kontext:
     build: .
-    command: gunicorn -c ./scripts/install/conf/docker/gunicorn-conf.py public.app:application
+    command: bash -c "cp -r /opt/kontext/public/files/* /opt/kontext/public/share && gunicorn -c ./scripts/install/conf/docker/gunicorn-conf.py public.app:application"
     environment:
       - STATUS_SERVICE_URL=${STATUS_SERVICE_URL}
     volumes:
       - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
-      - files:/opt/kontext/public/files
+      - files:/opt/kontext/public/share
       - corpora:/var/local/corpora
     networks:
       - redis
