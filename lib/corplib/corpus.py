@@ -242,7 +242,7 @@ class KCorpus:
         (even for a subcorpus). For actual
         search size, use search_size().
         """
-        return self._corp.size
+        return self._corp.size()
 
     @property
     def search_size(self):
@@ -314,8 +314,9 @@ class KSubcorpus(KCorpus):
         """
         load is a recommended factory function to create a KSubcorpus instance.
         """
-        kcorp = KSubcorpus(SubCorpus(corp, spath), corpname=corpname)
-        kcorp._corp = corp
+        subc = SubCorpus(corp, spath)
+        kcorp = KSubcorpus(subc, corpname=corpname)
+        kcorp._corp = subc
         kcorp._spath = spath
         try:
             open(spath[:-4] + 'used', 'w')

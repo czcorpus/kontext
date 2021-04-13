@@ -724,7 +724,7 @@ class Kontext(Controller):
         result['human_corpname'] = self._human_readable_corpname()
 
         result['corp_description'] = maincorp.get_info()
-        result['corp_size'] = self.corp.size()
+        result['corp_size'] = self.corp.size
 
         if self.corp.is_subcorpus:
             self.args.usesubcorp = self.corp.subcname

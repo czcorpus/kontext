@@ -238,13 +238,13 @@ class LiveAttributes(AbstractLiveAttributes):
                 ans[label][1] = '@' + ans[label][2]
         data[bib_label] = list(ans.values())
 
-    def get_supported_structures(self, corpname):
-        corpus_info = self.corparch.get_corpus_info('en_US', corpname)
+    def get_supported_structures(self, plugin_ctx, corpname):
+        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpname)
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
     def get_subc_size(self, plugin_ctx, corpus, attr_map):
-        db = self.db(plugin_ctx.user_lang, corpus.corpname)
+        db = self.db(plugin_ctx, corpus.corpname)
         attr_where = [corpus.corpname]
         attr_where_tmpl = ['corpus_id = ?']
         for k, vlist in list(attr_map.items()):
@@ -273,7 +273,7 @@ class LiveAttributes(AbstractLiveAttributes):
         returns:
         a dictionary containing matching attributes and values
         """
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx.user_lang, corpus.corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
 
         srch_attrs = set(self._get_subcorp_attrs(corpus))
         expand_attrs = set()  # attributes we want to be full lists even if their size exceeds configured max. value
@@ -301,7 +301,7 @@ class LiveAttributes(AbstractLiveAttributes):
                                            autocomplete_attr=self.import_key(autocomplete_attr),
                                            empty_val_placeholder=self.empty_val_placeholder)
         data_iterator = query.DataIterator(
-            self.db(plugin_ctx.user_lang, corpus.corpname), query_builder)
+            self.db(plugin_ctx, corpus.corpname), query_builder)
 
         # initialize result dictionary
         ans = dict((attr, set()) for attr in srch_attrs)
@@ -355,10 +355,10 @@ class LiveAttributes(AbstractLiveAttributes):
         return exported
 
     def get_bibliography(self, plugin_ctx, corpus, item_id):
-        db = self.db(plugin_ctx.user_lang, corpus.corpname)
+        db = self.db(plugin_ctx, corpus.corpname)
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
 
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx.user_lang, corpus.corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
         if corpus_info.metadata.sort_attrs:
             # here we accept default collator as attr IDs are ASCII
             col_rows = sorted(col_rows, key=lambda v: v[1])
@@ -375,7 +375,7 @@ class LiveAttributes(AbstractLiveAttributes):
         with plugins.runtime.CORPARCH as ca:
             corpus_info = ca.get_corpus_info(plugin_ctx.user_lang, corpus_id)
         label_attr = self.import_key(corpus_info.metadata.label_attr)
-        db = self.db(plugin_ctx.user_lang, corpus_id)
+        db = self.db(plugin_ctx, corpus_id)
         pch = ', '.join(['?'] * len(id_list))
         ans = self.execute_sql(
             db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
