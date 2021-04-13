@@ -10,3 +10,4 @@ Dockerfile.rqscheduler
 public/files/dist
 public/files/js/.compiled
 .env
+.env.ws
