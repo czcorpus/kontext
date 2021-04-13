@@ -68,7 +68,7 @@ def open_corpus(*args: Any, **kwargs: Any) -> Corpus:
     return manatee.Corpus(*args, **kwargs)
 
 
-def create_subcorpus(path: str, corpus: Corpus, structname: str, subquery: str) -> SubCorpus:
+def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str) -> SubCorpus:
     """
     Creates a subcorpus
 
@@ -80,7 +80,7 @@ def create_subcorpus(path: str, corpus: Corpus, structname: str, subquery: str) 
     """
     if os.path.exists(path):
         raise RuntimeError(_('Subcorpus already exists'))
-    return manatee.create_subcorpus(path, corpus, structname, subquery)
+    return manatee.create_subcorpus(path, corpus.unwrap(), structname, subquery)
 
 
 def subcorpus_from_conc(path: str, conc: Concordance, struct: Optional[str] = None) -> SubCorpus:
