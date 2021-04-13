@@ -22,3 +22,4 @@ RUN npm start build:production
 RUN pip3 install gunicorn
 RUN mkdir /var/log/gunicorn
 RUN mkdir /var/log/gunicorn/kontext
+RUN mkdir /var/local/corpora/query_persistence
