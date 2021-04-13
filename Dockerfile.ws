@@ -11,7 +11,7 @@ COPY ./lib/plugins/default_auth ./lib/plugins/default_auth
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 RUN python3 scripts/install/steps.py SetupManatee --step_args 2.167.8 scripts/install/ucnk-manatee-2.167.8.patch 0
+RUN pip3 install aiohttp
 
 COPY . .
 RUN python3 scripts/install/steps.py SetupKontext
-RUN pip3 install aiohttp

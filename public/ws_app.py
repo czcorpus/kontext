@@ -64,6 +64,7 @@ def prepare_response(jobs: Dict[str, Job]) -> List[Dict[str, Any]]:
 async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> web.WebSocketResponse:
     ws = web.WebSocketResponse()
     await ws.prepare(request)
+    logging.debug('Client connected to job status')
 
     jobs = {}
     job_status = {}
@@ -96,6 +97,7 @@ async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> we
 
                 else:
                     new_job_ids = json.loads(msg.data)
+                    logging.debug('Watching new job ids: %s', new_job_ids)
                     jobs = dict(zip(new_job_ids, Job.fetch_many(new_job_ids, redis_client)))
 
                     pending = set(
@@ -140,21 +142,25 @@ async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> we
             if change:
                 await ws.send_json(prepare_response(jobs))
 
+    logging.debug('Client disconnected from job status')
     return ws
 
 
 async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketResponse:
     ws = web.WebSocketResponse()
     await ws.prepare(request)
+    logging.debug('Client connected to conc cache status')
 
     # wait for concordance parameters
     msg = await ws.receive()
     params = json.loads(msg.data)
+    logging.debug('Received conc parameters: %s', params)
 
     subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
     with plugins.runtime.AUTH as auth:
         if not auth.is_anonymous(params['user_id']):
-            subcpath.insert(0, os.path.join(settings.get('corpora', 'users_subcpath'), str(params['user_id'])))
+            subcpath.insert(0, os.path.join(settings.get(
+                'corpora', 'users_subcpath'), str(params['user_id'])))
     cm = CorpusManager(subcpath)
     corp = cm.get_corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
 
@@ -171,6 +177,7 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
         else:
             await asyncio.sleep(CONC_CACHE_STATUS_REFRESH_PERIOD)
 
+    logging.debug('Client disconnected from conc cache status')
     return ws
 
 
@@ -231,7 +238,25 @@ if __name__ == '__main__':
     parser.add_argument('--redis_host', default=settings.get('calc_backend', 'rq_redis_host'))
     parser.add_argument('--redis_port', default=settings.get('calc_backend', 'rq_redis_port'))
     parser.add_argument('--redis_db', default=settings.get('calc_backend', 'rq_redis_db'))
+    parser.add_argument('--log', default='warning',
+                        help="Provide logging level (debug, info, warning, ...), default: warning")
     args = parser.parse_args()
+
+    levels = {
+        'critical': logging.CRITICAL,
+        'error': logging.ERROR,
+        'warn': logging.WARNING,
+        'warning': logging.WARNING,
+        'info': logging.INFO,
+        'debug': logging.DEBUG
+    }
+
+    level = levels.get(args.log.lower())
+    if level is None:
+        raise ValueError(
+            f"log level given: {args.log} -- must be one of: {' | '.join(levels.keys())}")
+
+    logging.basicConfig(level=level)
 
     redis_client = Redis(host=args.redis_host, port=args.redis_port, db=args.redis_db)
     web.run_app(app_factory(redis_client), host=args.host, port=args.port)

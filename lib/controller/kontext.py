@@ -1010,7 +1010,6 @@ class Kontext(Controller):
         if 'popup_server_messages' not in result:
             result['popup_server_messages'] = True
         result['job_status_service_url'] = os.environ.get('STATUS_SERVICE_URL', settings.get('calc_backend', 'status_service_url', None))
-        logging.error(os.environ.get('STATUS_SERVICE_URL'))
         return result
 
     def _human_readable_corpname(self):
