@@ -241,7 +241,7 @@ class Actions(Querying):
             corplib.add_block_items(out['Lines'], block_size=1)
         if self.corp.get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
-                               'label': corplib.open_corpus(w).get_conf(
+                               'label': self.cm.get_corpus(w).get_conf(
                                    'NAME') or w}
                               for w in self.corp.get_conf('ALIGNED').split(',')]
         if self.args.align and not self.args.maincorp:
@@ -1743,7 +1743,7 @@ class Actions(Querying):
 
         avail_al_corp = []
         for al in [x for x in self.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
-            alcorp = corplib.open_corpus(al)
+            alcorp = self.cm.get_corpus(al)
             avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
 
         tmp_out = dict(

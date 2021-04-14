@@ -103,7 +103,7 @@ class GeneralWorker(object):
             ans['arf'] = result_arf
         return ans
 
-    def compute_conc(self, corp: manatee.Corpus, q: Tuple[str, ...], samplesize: int) -> PyConc:
+    def compute_conc(self, corp: KCorpus, q: Tuple[str, ...], samplesize: int) -> PyConc:
         start_time = time.time()
         q = tuple(q)
         if q[0][0] != 'R':

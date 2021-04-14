@@ -63,7 +63,7 @@ class Options(Kontext):
 
         out = {}
         if self.args.maincorp:
-            corp = corplib.manatee.Corpus(self.args.maincorp)
+            corp = self.cm.get_corpus(self.args.maincorp)
         else:
             corp = self.corp
         out['AttrList'] = [{

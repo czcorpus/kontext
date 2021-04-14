@@ -30,9 +30,8 @@ class WordSimilarityBackend(AbstractBackend):
         self._conf = conf
         self._client = HTTPClient(server=conf['server'], port=conf['port'], ssl=conf['ssl'])
 
-    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
-                        value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
-                        s_attr: str):
+    def find_suggestion(self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+                        query_type, p_attr, struct, s_attr):
         if p_attr == 'lemma':
             path = '/'.join([self._conf['path'], 'corpora', self._conf['corpus'], 'similarWords',
                              self._conf['model'], self._client.enc_val(value)])

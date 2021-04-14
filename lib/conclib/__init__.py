@@ -40,8 +40,7 @@ def conc_is_sorted(q: Tuple[str, ...]) -> bool:
 def get_conc_desc(corpus: KCorpus, q=None, translate=True, skip_internals=True):
     """
     arguments:
-    corpus -- an extended version (corpname attribute must be present) of
-              manatee.Corpus object as provided by corplib.CorpusManager.get_Corpus
+    corpus -- a KCorpus instance
     q -- tuple/list of query elements
     translate -- if True then all the messages are translated according to the current
                  thread's locale information

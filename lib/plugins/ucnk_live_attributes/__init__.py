@@ -265,7 +265,7 @@ class LiveAttributes(AbstractLiveAttributes):
         provided attr_map and aligned_corpora
 
         arguments:
-        corpus -- manatee.corpus object
+        corpus --
         attr_map -- a dictionary of attributes and values as selected by a user
         aligned_corpora -- a list/tuple of corpora names aligned to base one (the 'corpus' argument)
         autocomplete_attr -- such attribute will be also part of selection even if it is a part 'WHERE ...' condition

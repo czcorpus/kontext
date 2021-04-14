@@ -66,6 +66,8 @@ translation.activate('en_US')  # background jobs do not need localization
 
 import conclib.calc
 import conclib.calc.base
+from corplib import CorpusManager
+from corplib.corpus import KCorpus
 from bgcalc import (freq_calc, subc_calc, coll_calc, pquery)
 
 stderr_redirector = get_stderr_redirector(settings)
@@ -79,14 +81,14 @@ class WorkerTaskException(Exception):
     pass
 
 
-def is_compiled(corp, attr, method):
+def is_compiled(corp: KCorpus, attr, method):
     """
     Test whether pre-calculated data for particular
     combination corpus+attribute+method (arf, docf, frq)
     already exist.
 
     arguments:
-    corp -- a manatee.Corpus instance
+    corp --
     attr -- a name of an attribute
     method -- one of arf, docf, frq
     """
@@ -115,14 +117,11 @@ def _load_corp(corp_id, subc_path):
     corp_id -- a corpus identifier
     subc_path -- path to a subcorpus
     """
-    corp = manatee.Corpus(corp_id)
-    if subc_path:
-        corp = manatee.SubCorpus(corp, subc_path)
-    corp.corpname = corp_id
-    return corp
+    cm = CorpusManager([os.path.join(settings.get('corpora', 'users_subcpath'), 'published')])
+    return cm.get_corpus(corp_id, '', os.path.basename(subc_path))
 
 
-def _compile_frq(corp, attr, logfile):
+def _compile_frq(corp: KCorpus, attr, logfile):
     """
     Generate pre-calculated data for frequency distribution pages.
 

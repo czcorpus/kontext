@@ -20,16 +20,17 @@ plug-in which provides input arguments used by 'subcmixer'.
 """
 
 import abc
+from corplib.corpus import KCorpus
 
 
 class AbstractSubcMixer(abc.ABC):
 
     @abc.abstractmethod
-    def process(self, plugin_ctx, corpus, corpname, aligned_corpora, args):
+    def process(self, plugin_ctx, corpus: KCorpus, corpname, aligned_corpora, args):
         """
         arguments:
             plugin_ctx -- kontext.PluginCtx instance
-            corpus -- a manatee.Corpus instance
+            corpus --
             corpname -- a corpus name
             aligned_corpora -- corpora we want our result to respect as aligned ones
                             (i.e. only results witch matching items in these corpora

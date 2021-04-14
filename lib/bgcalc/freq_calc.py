@@ -21,6 +21,7 @@ import hashlib
 import logging
 import pickle
 from structures import FixedDict
+from typing import Union
 
 import manatee
 import corplib
@@ -338,7 +339,7 @@ class CTCalculation(object):
 
     def __init__(self, args):
         self._args = args
-        self._corp = None
+        self._corp: Union[KCorpus, None] = None
         self._conc = None
 
     def _get_num_structattrs(self, attrs):
@@ -377,7 +378,7 @@ class CTCalculation(object):
             sattr_idx = 0 if '.' in attrs[0] else 1
             norms = self._calc_1sattr_norms(words, sattr=attrs[sattr_idx], sattr_idx=sattr_idx)
         else:
-            norms = [self._corp.size()] * len(words)
+            norms = [self._corp.size] * len(words)
         mans = list(zip(words, freqs, norms))
         if limit_type == 'abs':
             ans = [v for v in mans if v[1] >= limit]

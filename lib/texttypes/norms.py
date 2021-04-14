@@ -20,6 +20,7 @@
 from functools import partial
 import collections
 from .cache import TextTypesCache
+from corplib.corpus import KCorpus
 
 
 class StructNormsCalc(object):
@@ -28,11 +29,10 @@ class StructNormsCalc(object):
     An instance is always bound to a concrete structure and required value type.
     """
 
-    def __init__(self, corpus, structname, subcnorm):
+    def __init__(self, corpus: KCorpus, structname, subcnorm):
         """
         arguments:
-        corpus -- manatee.Corpus instance (enriched by KonText
-                  initialization - 'corpname' attribute is required here)
+        corpus --
         structname -- a name of a corpus structure
         subcnorm -- a type of value to be collected (allowed values: freq, tokens)
         """
@@ -84,10 +84,10 @@ class CachedStructNormsCalc(StructNormsCalc):
     store values.
     """
 
-    def __init__(self, corpus, structname, subcnorm, tt_cache: TextTypesCache):
+    def __init__(self, corpus: KCorpus, structname, subcnorm, tt_cache: TextTypesCache):
         """
         arguments:
-        corpus -- manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
+        corpus --
         structname -- a name of a corpus structure
         subcnorm -- a type of value to be collected (allowed values: freq, tokens)
         db -- a 'db' plug-in instance

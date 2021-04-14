@@ -222,7 +222,7 @@ class Kwic:
     KWIC related data preparation utilities
 
     arguments:
-    corpus -- a manatee.Corpus instance
+    corpus -- 
     corpus_fullname -- full (internal) name of the corpus (e.g. with path prefix if used)
     conc -- a manatee.Concordance instance
     """

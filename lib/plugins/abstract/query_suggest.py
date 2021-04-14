@@ -21,7 +21,7 @@
 
 import abc
 from typing import List, Dict, Any, Generic, TypeVar
-import manatee
+from corplib.corpus import KCorpus
 from controller.plg import PluginCtx
 
 
@@ -54,7 +54,7 @@ class AbstractBackend(abc.ABC):
         self._ident = ident
 
     @abc.abstractmethod
-    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
+    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: KCorpus, corpora: List[str], subcorpus: str,
                         value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
                         s_attr: str):
         """
