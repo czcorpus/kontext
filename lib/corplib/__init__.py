@@ -20,6 +20,7 @@
 from typing import List, Any, Optional, Tuple, Dict, Union, Set
 from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr, Structure
 from array import array
+import logging
 from .corpus import KCorpus, KSubcorpus
 from .fallback import EmptyCorpus
 
@@ -210,12 +211,11 @@ class CorpusManager(object):
 
     def get_info(self, corpus_id: str) -> DefaultManateeCorpusInfo:
         try:
-            if corpus_id not in self._cache:
-                self._cache[corpus_id] = DefaultManateeCorpusInfo(manatee.Corpus(corpus_id), corpus_id)
-            return self._cache[corpus_id]
-        except:
-            # probably a misconfigured/missing corpus
-            return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id), corpus_id)
+            corp = self.get_corpus(corpus_id, '', '', True)
+        except manatee.CorpInfoNotFound as ex:
+            corp = EmptyCorpus(corpus_id)
+            logging.getLogger(__name__).warning(ex)
+        return DefaultManateeCorpusInfo(corp, corpus_id)
 
     def _ensure_reg_file(self, rel_path: str, variant: str):
         fullpath = os.path.join(os.environ['MANATEE_REGISTRY'], rel_path)
