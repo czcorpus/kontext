@@ -33,9 +33,11 @@ export enum ActionName {
     ChangePage = 'CONCORDANCE_CHANGE_PAGE',
     ReloadConc = 'CONCORDANCE_RELOAD_CONC',
     AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+    ConcordanceRecalculationReady = 'CONCORDANCE_RECALCULATION_READY',
     AsyncCalculationFailed = 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
     CalculateIpmForAdHocSubc = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
     CalculateIpmForAdHocSubcReady = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC_READY',
+    CalculateIpmForAdHocSubcDone = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC_DONE',
     ChangeLangVisibility = 'CONCORDANCE_CHANGE_LANG_VISIBILITY',
     SwitchKwicSentMode = 'CONCORDANCE_SWITCH_KWIC_SENT_MODE',
     DataWaitTimeInc = 'CONCORDANCE_DATA_WAIT_TIME_INC',
@@ -172,6 +174,17 @@ export namespace Actions {
         name:ActionName.AsyncCalculationUpdated;
     }
 
+    export interface ConcordanceRecalculationReady extends Action<{
+        concSize:number;
+        overviewMinFreq:number;
+    }> {
+        name:ActionName.ConcordanceRecalculationReady;
+    }
+
+    export function isConcordanceRecalculationReady(a:Action):a is Actions.ConcordanceRecalculationReady {
+        return a.name === ActionName.ConcordanceRecalculationReady;
+    }
+
     export interface AsyncCalculationFailed extends Action<{
     }> {
         name:ActionName.AsyncCalculationFailed;
@@ -186,6 +199,12 @@ export namespace Actions {
         ttSelection:TextTypes.ExportedSelection;
     }> {
         name:ActionName.CalculateIpmForAdHocSubcReady;
+    }
+
+    export interface CalculateIpmForAdHocSubcDone extends Action<{
+        ipm:number;
+    }> {
+        name:ActionName.CalculateIpmForAdHocSubcDone;
     }
 
     export interface ChangeLangVisibility extends Action<{

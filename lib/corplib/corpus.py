@@ -272,6 +272,9 @@ class KCorpus:
     def filter_query(self, attr: str):
         return self._corp.filter_query(attr)
 
+    def compile_frq(self, attr):
+        return self._corp.compile_frq(attr)
+
     @property
     def is_subcorpus(self):
         return False

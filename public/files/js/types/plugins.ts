@@ -23,7 +23,7 @@ import { ITranslator, IFullActionControl, IModel, Action } from 'kombo';
 
 import { Kontext, TextTypes } from '../types/common';
 import { CoreViews } from './coreViews';
-import { ConcServerArgs, IConcLinesProvider } from '../models/concordance/common';
+import { ConcServerArgs } from '../models/concordance/common';
 import { QueryFormType } from '../models/query/actions';
 import { IUnregistrable } from '../models/common/common';
 import { AnyQuery, QuerySuggestion, QueryType } from '../models/query/query';
@@ -435,8 +435,11 @@ export namespace PluginInterfaces {
             FetchInfo = 'KWIC_CONNECT_FETCH_INFO'
         }
 
-        export type Factory = (pluginApi:IPluginApi, concLinesProvider:IConcLinesProvider,
-                               alignedCorpora:Array<string>)=>IPlugin;
+        export type Factory = (
+            pluginApi:IPluginApi,
+            alignedCorpora:Array<string>,
+            isUnfinishedCalculation:boolean
+        )=>IPlugin;
     }
 
 

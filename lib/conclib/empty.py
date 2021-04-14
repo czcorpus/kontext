@@ -18,7 +18,7 @@
 # 02110-1301, USA.
 
 from typing import Optional
-import manatee
+from corplib.corpus import KCorpus
 
 
 class InitialConc:
@@ -31,7 +31,7 @@ class InitialConc:
     InitialConc while the backend worker calculates actual data.
     """
 
-    def __init__(self, corp: manatee.Corpus, cache_path: Optional[str] = None, finished: bool = False):
+    def __init__(self, corp: KCorpus, cache_path: Optional[str] = None, finished: bool = False):
         self._corp = corp
         self._cache_path = cache_path
         self._finished = finished

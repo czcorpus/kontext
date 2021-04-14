@@ -32,6 +32,7 @@ from functools import reduce
 import manatee
 from strings import escape_attr_val
 from werkzeug.wrappers import Request
+from corplib.corpus import KCorpus
 import settings
 import plugins
 from translation import ugettext as _
@@ -44,10 +45,10 @@ class TextTypeCollector(object):
 
     EMPTY_VAL_PLACEHOLDER = settings.get('corpora', 'empty_attr_value_placeholder', '-')
 
-    def __init__(self, corpus, src_obj):
+    def __init__(self, corpus: KCorpus, src_obj):
         """
         arguments:
-        corpus -- a manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
+        corpus --
         src_obj -- object holding argument names and values (request or controller.args)
         """
         self._corp = corpus
@@ -99,10 +100,10 @@ class TextTypesException(Exception):
 
 class TextTypes(object):
 
-    def __init__(self, corp: manatee.Corpus, corpname: str, tt_cache: TextTypesCache, plugin_ctx: PluginCtx):
+    def __init__(self, corp: KCorpus, corpname: str, tt_cache: TextTypesCache, plugin_ctx: PluginCtx):
         """
         arguments:
-        corp -- a manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
+        corp --
         corpname -- a corpus ID
         plugin_ctx --
         """

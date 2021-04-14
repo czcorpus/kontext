@@ -30,6 +30,7 @@ from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker
 from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent
 from conclib.errors import ConcCalculationStatusException
+from corplib.corpus import KCorpus
 import bgcalc
 import manatee
 
@@ -59,7 +60,7 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
-def _get_bg_conc(corp: manatee.Corpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
+def _get_bg_conc(corp: KCorpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
                  calc_from: int, minsize: int) -> Union[PyConc, InitialConc]:
     """
     arguments:
@@ -108,14 +109,14 @@ def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
     return conc
 
 
-def _should_be_bg_query(corp: manatee.Corpus, query: Tuple[str, ...], asnc: int) -> bool:
+def _should_be_bg_query(corp: KCorpus, query: Tuple[str, ...], asnc: int) -> bool:
     return (len(query) > 1 and
             asnc == 1 and
-            (query[1][0] == 'X' and corp.size() > CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD
+            (query[1][0] == 'X' and corp.size > CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD
              or corp.size() > CONC_BG_SYNC_SINGLE_CORP_THRESHOLD))
 
 
-def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0
+def get_conc(corp: KCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0
              ) -> Union[manatee.Concordance, InitialConc]:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
@@ -126,7 +127,7 @@ def get_conc(corp, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc
     asynchronous/continuous concordance fetching or b) background calculation with
     no continuous data fetching (i.e. user waits and then the whole result is avail.).
 
-    corp -- a respective manatee.Corpus object
+    corp -- a respective KCorpus
     user_id -- database user ID
     q -- a tuple/list containing an extended query representation
          (e.g. ['aword,[] within <doc id="foo" />', 'p0 ...'])

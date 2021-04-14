@@ -16,6 +16,7 @@
 from collections import defaultdict
 from typing import List, Tuple
 from corplib import CorpusManager
+from corplib.corpus import KCorpus
 from conclib.search import get_conc
 from conclib.freq import multi_level_crit
 from bgcalc import freq_calc
@@ -34,7 +35,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         fixed_corp = conf.get('corpus')
         self._preset_corp = CorpusManager().get_corpus(fixed_corp) if fixed_corp else None
 
-    def _freq_dist(self, corp: manatee.Corpus, conc: manatee.Concordance, fcrit: str, user_id: int):
+    def _freq_dist(self, corp: KCorpus, conc: manatee.Concordance, fcrit: str, user_id: int):
         args = freq_calc.FreqCalsArgs()
         args.corpname = corp.corpname
         args.subcname = getattr(corp, 'subcname', None)
@@ -59,7 +60,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
                  for cr in args.fcrit]
         return freqs[0].get('Items', [])
 
-    def _normalize_multivalues(self, corp: manatee.Corpus, srch_val: str, attr1: str, attr2: str) -> Tuple[str, str]:
+    def _normalize_multivalues(self, corp: KCorpus, srch_val: str, attr1: str, attr2: str) -> Tuple[str, str]:
         multisep1 = corp.get_conf(self._conf["attr1"] + '.MULTISEP')
         multisep2 = corp.get_conf(self._conf["attr2"] + '.MULTISEP')
         if multisep1 and multisep2:
@@ -73,9 +74,8 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
 
         return attr1, attr2
 
-    def find_suggestion(self, user_id: int, ui_lang: str, maincorp: manatee.Corpus, corpora: List[str], subcorpus: str,
-                        value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
-                        s_attr: str):
+    def find_suggestion(self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+                        query_type, p_attr, struct, s_attr):
         used_corp = self._preset_corp if self._preset_corp is not None else maincorp
         value_norm = value if value_subformat in ('regexp', 'advanced') else re_escape(value)
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''

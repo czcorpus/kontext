@@ -62,13 +62,6 @@ def manatee_min_version(ver: str) -> bool:
     return ver_parsed <= actual
 
 
-def open_corpus(*args: Any, **kwargs: Any) -> Corpus:
-    """
-    Creates a manatee.Corpus instance
-    """
-    return manatee.Corpus(*args, **kwargs)
-
-
 def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str) -> SubCorpus:
     """
     Creates a subcorpus
@@ -402,12 +395,12 @@ def doc_sizes(corp: Corpus, struct: Structure, attrname: str, i: int, normvals: 
     return cnt
 
 
-def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int,
+def texttype_values(corp: KCorpus, subcorpattrs: str, maxlistsize: int,
                     shrink_list: Union[Tuple[str, ...], List[str]] = (),
                     collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     arguments:
-    corp -- manatee.Corpus
+    corp --
     subcorpattrs -- structures and attributes to be processed (see Manatee's SUBCORPATTRS)
     maxlistsize -- in case there is more that this number of items, empty list will be returned
     shrink_list -- list/tuple of attributes we want to return empty lists for (False can be used

@@ -683,7 +683,7 @@ class Kontext(Controller):
         Contains the current corpus. The property always contains a corpus-like object
         (even in case of an error). Possible values:
 
-        1. a manatee.Corpus instance in case everything is OK (corpus is known, object is initialized
+        1. a KCorpus (or KSubcorpus) instance in case everything is OK (corpus is known, object is initialized
         without errors)
         2. an ErrorCorpus instance in case an exception occurred
         3. an Empty corpus instance in case the action does not need one (but KonText's internals do).
@@ -907,7 +907,7 @@ class Kontext(Controller):
             result['last_freq_level'] = 1
 
         if getattr(self.args, 'maincorp'):
-            thecorp = corplib.open_corpus(getattr(self.args, 'maincorp'))
+            thecorp = self.cm.get_corpus(self.args.maincorp)
         else:
             thecorp = self.corp
         if not action_metadata['skip_corpus_init']:

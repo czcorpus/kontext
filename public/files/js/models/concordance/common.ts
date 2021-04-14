@@ -88,12 +88,6 @@ export interface Line {
 }
 
 
-export interface IConcLinesProvider {
-    isUnfinishedCalculation():boolean;
-    getRecommOverviewMinFreq():number;
-}
-
-
 /**
  * RefsColumn describes a meta-data information
  * item as shown when clicking on the left

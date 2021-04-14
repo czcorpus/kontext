@@ -18,6 +18,7 @@
 
 import abc
 from plugins.abstract import CorpusDependentPlugin
+from corplib.corpus import KCorpus
 
 
 class AbstractLiveAttributes(CorpusDependentPlugin):
@@ -30,7 +31,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_attr_values(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
+    def get_attr_values(self, plugin_ctx, corpus: KCorpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
                         limit_lists=True):
         """
         Find all the available values of remaining attributes according to the
@@ -38,7 +39,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
         arguments:
         plugin_ctx --
-        corpus -- manatee.corpus object
+        corpus --
         attr_map -- a dictionary of attributes and values as selected by a user
         aligned_corpora -- a list/tuple of corpora names aligned to base one (the 'corpus' argument)
         autocomplete_attr -- such attribute will be also part of selection even if it is a part 'WHERE ...' condition
@@ -51,12 +52,12 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
     # TODO missing raise NotImplementedError ?
     @abc.abstractmethod
-    def get_subc_size(self, plugin_ctx, corpus, attr_map):
+    def get_subc_size(self, plugin_ctx, corpus: KCorpus, attr_map):
         """
         Return a size (in tokens) of a subcorpus defined by selected attributes
 
         plugin_ctx --
-        corpus -- a manatee.Corpus instance
+        corpus --
         attr_map -- a dict containing selected attributes and respective values
         """
 

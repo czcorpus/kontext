@@ -14,6 +14,7 @@
 
 import abc
 from plugins.abstract import CorpusDependentPlugin
+from corplib.corpus import KCorpus
 
 
 class AbstractSyntaxViewerPlugin(CorpusDependentPlugin):
@@ -85,16 +86,16 @@ class SearchBackend(abc.ABC):
             return []
 
     @abc.abstractmethod
-    def get_data(self, corpus, corpus_id, token_id, kwic_len):
+    def get_data(self, corpus: KCorpus, corpus_id: str, token_id: str, kwic_len: int):
         """
         Return syntax tree data for a specified token and a proper
         JSON encoder to be able to serialize the data.
 
         Args:
-            corpus (manatee.Corpus): a respective corpus instance
-            corpus_id (str): corpus identifier
-            token_id (int): token numeric ID
-            kwic_len (int): number of tokens in KWIC
+            corpus -- a respective corpus instance
+            corpus_id -- corpus identifier
+            token_id -- token numeric ID
+            kwic_len -- number of tokens in KWIC
         Returns (tuple(list_of_nodes, TreeNodeEncoder))
 
         """

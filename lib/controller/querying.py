@@ -224,7 +224,7 @@ class Querying(Kontext):
             if 'input_languages' not in tpl_out:
                 tpl_out['input_languages'] = {}
             for al in self.corp.get_conf('ALIGNED').split(','):
-                alcorp = corplib.open_corpus(al)
+                alcorp = self.cm.get_corpus(al)
                 tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
                 attrlist = alcorp.get_conf('ATTRLIST').split(',')
                 poslist = getattr(self.cm, 'corpconf_pairs')(alcorp, 'WPOSLIST')

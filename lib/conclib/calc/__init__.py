@@ -140,11 +140,12 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     return status.has_some_result(minsize=minsize), status.finished
 
 
-def require_existing_conc(corp: manatee.Corpus, q: Tuple[str, ...]) -> manatee.Concordance:
+def require_existing_conc(corp: KCorpus, q: Tuple[str, ...]) -> manatee.Concordance:
     """
     Load a cached concordance based on a provided corpus and query.
     If nothing is found, ConcNotFoundException is thrown.
     """
+    corpus_manager = CorpusManager(subcpath=[])
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     subchash = getattr(corp, 'subchash', None)
     status = cache_map.get_calc_status(subchash, q)
@@ -154,7 +155,7 @@ def require_existing_conc(corp: manatee.Corpus, q: Tuple[str, ...]) -> manatee.C
         mcorp = corp
         for qq in reversed(q):  # find the right main corp, if aligned
             if qq.startswith('x-'):
-                mcorp = manatee.Corpus(qq[2:])
+                mcorp = corpus_manager.get_corpus(qq[2:])
                 break
         try:
             return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
@@ -177,6 +178,7 @@ def find_cached_conc_base(corp: KCorpus, subchash: Optional[str], q: Tuple[str, 
     returns:
     a 2-tuple [an index within 'q' where to start with non-cached results], [a concordance instance]
     """
+    corpus_manager = CorpusManager(subcpath=[])
     start_time = time.time()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     cache_map.refresh_map()
@@ -221,7 +223,7 @@ def find_cached_conc_base(corp: KCorpus, subchash: Optional[str], q: Tuple[str, 
                     mcorp = corp
                     for qq in reversed(q[:i]):  # find the right main corp, if aligned
                         if qq.startswith('x-'):
-                            mcorp = manatee.Corpus(qq[2:])
+                            mcorp = corpus_manager.get_corpus(qq[2:])
                             break
                     conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp)
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
@@ -323,8 +325,7 @@ class ConcSyncCalculation(GeneralWorker):
     def __init__(self, task_id, cache_factory, subc_dirs, corpus_name, subc_name: str, conc_dir: str):
         super().__init__(task_id, cache_factory)
         self.corpus_manager = CorpusManager(subcpath=subc_dirs)
-        corpus_manager = CorpusManager(subcpath=subc_dirs)
-        self.corpus_obj = corpus_manager.get_corpus(corpus_name, subcname=subc_name)
+        self.corpus_obj = self.corpus_manager.get_corpus(corpus_name, subcname=subc_name)
         setattr(self.corpus_obj, '_conc_dir', conc_dir)
         self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
 
