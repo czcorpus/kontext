@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps, IModel } from 'kombo';
+import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { Subscription } from 'rxjs';
 import { tuple } from 'cnc-tskit';
 
@@ -35,6 +35,7 @@ import { LineSelectionModel, LineSelectionModelState }
     from '../../../models/concordance/lineSelection';
 import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
 import { ConcDetailModel } from '../../../models/concordance/detail';
+import { ConcSummaryModel, ConcSummaryModelState } from '../../../models/concordance/summary';
 import { RefsDetailModel } from '../../../models/concordance/refsDetail';
 import { CollFormModel } from '../../../models/coll/collForm';
 import { TextTypesDistModel } from '../../../models/concordance/ttDistModel';
@@ -51,6 +52,7 @@ import * as S from './style';
 export class ViewPageModels {
     lineSelectionModel:LineSelectionModel;
     lineViewModel:ConcordanceModel;
+    concSummaryModel:ConcSummaryModel;
     concDetailModel:ConcDetailModel;
     refsDetailModel:RefsDetailModel;
     userInfoModel:IModel<Record<string, unknown>>;
@@ -100,10 +102,11 @@ function secs2hms(v:number) {
 }
 
 
-export function init({dispatcher, he, lineSelectionModel, lineViewModel,
+export function init({
+    dispatcher, he, lineSelectionModel, lineViewModel,
     concDetailModel, refsDetailModel, usageTipsModel,
-    ttDistModel, dashboardModel, syntaxViewModel}:MainModuleArgs):MainViews
- {
+    concSummaryModel: ipmModel, ttDistModel, dashboardModel, syntaxViewModel
+}:MainModuleArgs):MainViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -273,38 +276,24 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
 
     // ------------------------- <ConcSummary /> ---------------------------
 
-    const ConcSummary:React.FC<{
-        corpname:string;
-        isUnfinishedCalculation:boolean;
-        concSize:number;
-        fullSize:number;
-        ipm:number;
-        arf:number;
-        isShuffled:boolean;
-        canCalculateAdHocIpm:boolean;
-        fastAdHocIpm:boolean;
-        adHocIpm:number;
-        subCorpName:string;
-        origSubcorpName:string;
-        isWaiting:boolean;
-    }> = (props) => {
+    const ConcSummary:React.FC<ConcSummaryModelState> = (props) => {
 
         const renderNumHits = () => {
             const ans = [];
-            if (props.isUnfinishedCalculation) {
+            if (props.isUnfinishedConc) {
                 ans.push(<span key="hits:1" className="conc-loader">
                             <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} title={he.translate('global__processing')}
                                 alt={he.translate('global__processing')} />
                         </span>);
             }
             if (props.concSize === props.fullSize || props.fullSize === -1) {
-                ans.push(<strong key="hits:2" className={`conc-size${props.isUnfinishedCalculation ? ' unfinished' : ''}`} title={String(props.concSize)}>
+                ans.push(<strong key="hits:2" className={`conc-size${props.isUnfinishedConc ? ' unfinished' : ''}`} title={String(props.concSize)}>
                         {he.formatNumber(props.concSize)}</strong>);
 
             } else {
                 ans.push(<a key="hits:1b" className="size-warning"><img src={he.createStaticUrl('img/warning-icon.svg')} /></a>);
                 ans.push(<span key="hits:2b" id="loader"></span>);
-                ans.push(<strong key="hits:3b" className={`conc-size${props.isUnfinishedCalculation ? ' unfinished' : ''}`}>{he.formatNumber(props.concSize)}</strong>);
+                ans.push(<strong key="hits:3b" className={`conc-size${props.isUnfinishedConc ? ' unfinished' : ''}`}>{he.formatNumber(props.concSize)}</strong>);
                 ans.push('\u00a0' + he.translate('concview__out_of_total') + '\u00a0');
                 ans.push(<span key="hits:4b" id="fullsize" title={String(props.fullSize)}>{he.formatNumber(props.fullSize)}</span>);
             }
@@ -312,18 +301,18 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         };
 
         const getIpm = () => {
-            if (props.isWaiting) {
+            if (props.isBusy) {
                 return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                             alt={he.translate('global__calculating')}
                             title={he.translate('global__calculating')} />;
 
-            } else if (typeof props.ipm === 'number' && !props.canCalculateAdHocIpm) {
-                return <span className={`ipm${props.isUnfinishedCalculation ? ' unfinished' : ''}`}>{he.formatNumber(props.ipm)}</span>;
+            } else if (props.ipm !== null) {
+                return <span className={`ipm${props.isUnfinishedConc ? ' unfinished' : ''}`}>{he.formatNumber(props.ipm)}</span>;
 
-            } else if (props.adHocIpm >= 0) {
-                return <span className={`ipm${props.isUnfinishedCalculation ? ' unfinished' : ''}`}>{he.formatNumber(props.adHocIpm)}</span>;
+            } else if (props.corpusIpm >= 0 && !props.providesAdHocIpm) {
+                return <span className={`ipm${props.isUnfinishedConc ? ' unfinished' : ''}`}>{he.formatNumber(props.corpusIpm)}</span>;
 
-            } else if (props.canCalculateAdHocIpm) {
+            } else if (props.providesAdHocIpm) {
                 return <a onClick={handleCalcIpmClick}>{he.translate('global__calculate')}</a>;
 
             } else {
@@ -332,8 +321,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
         };
 
         const getIpmDesc = () => {
-            if (props.canCalculateAdHocIpm) {
-                if (props.adHocIpm) {
+            if (props.providesAdHocIpm) {
+                if (props.ipm) {
                     return (
                         <span className="ipm-note">(
                         <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
@@ -410,6 +399,8 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
             </div>
         );
     }
+
+    const BoundConcSummary = Bound<ConcSummaryModelState>(ConcSummary, ipmModel)
 
     // ------------------------- <ConcOptions /> ---------------------------
 
@@ -599,15 +590,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                         : null}
                     <S.ConcTopBar>
                         <div className="info-level">
-                            <ConcSummary {...this.props.concSummary}
-                                    corpname={this.props.baseCorpname}
-                                    isUnfinishedCalculation={this.props.unfinishedCalculation}
-                                    canCalculateAdHocIpm={this.props.providesAdHocIpm}
-                                    fastAdHocIpm={this.props.fastAdHocIpm}
-                                    adHocIpm={this.props.adHocIpm}
-                                    subCorpName={this.props.subCorpName}
-                                    origSubcorpName={this.props.origSubcorpName}
-                                    isWaiting={this.props.unfinishedCalculation} />
+                            <BoundConcSummary />
                             <paginationViews.Paginator {...this.props} />
                         </div>
                         <BoundConcToolbarWrapper

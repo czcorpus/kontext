@@ -88,6 +88,7 @@ import { TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
 import { HitReloader } from '../models/concordance/concStatus';
 import { QueryHelpModel } from '../models/help/queryHelp';
+import { ConcSummaryModel } from '../models/concordance/summary';
 
 
 export class QueryModels {
@@ -924,8 +925,29 @@ export class ViewPage {
             }),
             syntaxViewer,
             lineViewProps,
-            this.layoutModel.getConf<Array<ServerLineData>>('Lines'),
-            !Dict.empty(queryFormArgs.selected_text_types)
+            this.layoutModel.getConf<Array<ServerLineData>>('Lines')
+        );
+
+        this.viewModels.concSummaryModel = new ConcSummaryModel(
+            this.layoutModel,
+            this.layoutModel.dispatcher,
+            {
+                corpname: this.layoutModel.getCorpusIdent().id,
+                concSize: lineViewProps.concSummary.concSize,
+                fullSize: lineViewProps.concSummary.fullSize,
+                isShuffled: lineViewProps.concSummary.isShuffled,
+                isUnfinishedConc: this.layoutModel.getConf<boolean>('Unfinished'),
+                ipm: null,
+                corpusIpm: lineViewProps.concSummary.ipm,
+                arf: lineViewProps.concSummary.arf,
+                baseCorpname: lineViewProps.baseCorpname,
+                fastAdHocIpm: lineViewProps.FastAdHocIpm,
+                subCorpName: lineViewProps.subCorpName,
+                origSubcorpName: lineViewProps.origSubCorpName,
+                providesAdHocIpm: !Dict.empty(queryFormArgs.selected_text_types),
+                baseCorpusSize: lineViewProps.concSummary.fullSize,
+                isBusy: false
+            }
         );
 
         this.viewModels.syntaxViewModel = syntaxViewer.getModel();
@@ -1059,8 +1081,8 @@ export class ViewPage {
                 this.layoutModel.pluginTypeIsActive(PluginName.KWIC_CONNECT) ?
                     kwicConnectInit(
                         this.layoutModel.pluginApi(),
-                        this.viewModels.lineViewModel,
-                        this.layoutModel.getConf<Array<string>>('alignedCorpora')
+                        this.layoutModel.getConf<Array<string>>('alignedCorpora'),
+                        this.layoutModel.getConf<boolean>('Unfinished')
                     ).getWidgetView() :
                     null
             );

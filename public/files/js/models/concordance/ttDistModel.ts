@@ -32,6 +32,7 @@ import {
     Actions as ConcActions } from '../../models/concordance/actions';
 import { SampleServerArgs } from '../query/common';
 import { FreqServerArgs } from '../freqs/common';
+import { Actions } from '../textTypes/actions';
 
 
 export type TTCrit = Array<[string, string]>;
@@ -146,7 +147,22 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             ConcActionName.AsyncCalculationUpdated,
             action => {
                 this.state.blockedByAsyncConc = !action.payload.finished;
-                this.performDataLoad();
+                this.suspendWithTimeout(5000, {}, (action, syncData) => {
+                    if (ConcActions.isConcordanceRecalculationReady(action)) {
+                        return null;
+                    }
+                    return syncData;
+
+                }).subscribe(
+                    action => {
+                        if (ConcActions.isConcordanceRecalculationReady(action)) {
+                            this.performDataLoad(action.payload.concSize, action.payload.overviewMinFreq);
+                        }
+                    },
+                    error => {
+                        this.layoutModel.showMessage('error', error);
+                    }
+                );
             }
         );
 
@@ -154,7 +170,22 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             ConcActionName.LoadTTDictOverview,
             action => {
                 if (this.state.blocks.length === 0) {
-                    this.performDataLoad();
+                    this.suspendWithTimeout(5000, {}, (action, syncData) => {
+                        if (ConcActions.isConcordanceRecalculationReady(action)) {
+                            return null;
+                        }
+                        return syncData;
+
+                    }).subscribe(
+                        action => {
+                            if (ConcActions.isConcordanceRecalculationReady(action)) {
+                                this.performDataLoad(action.payload.concSize, action.payload.overviewMinFreq);
+                            }
+                        },
+                        error => {
+                            this.layoutModel.showMessage('error', error);
+                        }
+                    );
                 }
             }
         );
@@ -176,13 +207,13 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         );
     }
 
-    private performDataLoad():void {
-        if (!this.state.blockedByAsyncConc && this.getConcSize() > 0) {
+    private performDataLoad(concSize:number, flimit:number):void {
+        if (!this.state.blockedByAsyncConc && concSize > 0) {
             const args = this.layoutModel.exportConcArgs();
             if (this.state.lastArgs !== args.head('q')) {
                 this.state.isBusy = true;
                 this.emitChange();
-                this.loadData(args).subscribe(
+                this.loadData(args, concSize, flimit).subscribe(
                     (ans) => {
                         this.state.isBusy = false;
                         this.emitChange();
@@ -197,14 +228,10 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         }
     }
 
-    private getConcSize():number {
-        return this.concLineModel.getConcSummary().concSize;
-    }
-
-    private loadData(args:MultiDict<SampleServerArgs>):Observable<boolean> {
+    private loadData(args:MultiDict<SampleServerArgs>, concSize:number, flimit:number):Observable<boolean> {
 
         return (() => {
-            if (this.getConcSize() > TextTypesDistModel.SAMPLE_SIZE) {
+            if (concSize > TextTypesDistModel.SAMPLE_SIZE) {
                 args.set('rlines', TextTypesDistModel.SAMPLE_SIZE);
                 args.set('format', 'json');
                 this.state.lastArgs = args.head('q');
@@ -223,7 +250,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             ),
             concatMap(([reduceAns, args]) => {  // TODO side effects here
                 this.state.ttCrit.forEach(([key, value]) => args.add(key, value));
-                this.state.flimit = this.concLineModel.getRecommOverviewMinFreq();
+                this.state.flimit = flimit;
                 args.set('ml', 0);
                 args.set('flimit', this.state.flimit);
                 args.set('force_cache', '1');

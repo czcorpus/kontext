@@ -23,8 +23,7 @@ import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple } from 'cnc-tskit';
 
-import { TextTypes, ViewOptions } from '../../types/common';
-import { AjaxResponse } from '../../types/ajaxResponses';
+import { ViewOptions } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
@@ -33,9 +32,9 @@ import { AudioPlayer, AudioPlayerStatus} from './media';
 import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
-import { CorpColumn, ConcSummary, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
+import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
-    mapIdToIdWithColors, Line, TextChunk, IConcLinesProvider, KWICSection, PaginationActions} from './common';
+    mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions} from './common';
 import { Actions, ActionName, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
@@ -150,15 +149,9 @@ export interface ConcordanceModelState {
      */
     unfinishedCalculation:boolean;
 
-    concSummary:ConcSummary;
+    concSize:number;
 
     concId:string;
-
-    adHocIpm:number;
-
-    fastAdHocIpm:boolean;
-
-    providesAdHocIpm:boolean;
 
     useSafeFont:boolean;
 
@@ -195,8 +188,7 @@ export interface ConcordanceModelState {
 /**
  *
  */
-export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
-    implements IConcLinesProvider {
+export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
     private readonly layoutModel:PageModel;
 
@@ -220,7 +212,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         syntaxViewModel:PluginInterfaces.SyntaxViewer.IPlugin,
         lineViewProps:ViewConfiguration,
         initialData:Array<ServerLineData>,
-        providesAdHocIpm:boolean
     ) {
         const viewAttrs = layoutModel.exportConcArgs().head('attrs').split(',');
         super(
@@ -236,9 +227,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 subCorpName: lineViewProps.subCorpName,
                 origSubcorpName: lineViewProps.origSubCorpName,
                 unfinishedCalculation: lineViewProps.Unfinished,
-                fastAdHocIpm: lineViewProps.FastAdHocIpm,
-                providesAdHocIpm,
-                concSummary: lineViewProps.concSummary,
+                concSize: lineViewProps.concSummary.concSize,
                 concId: layoutModel.getConf<string>('concPersistenceOpId'),
                 baseViewAttr: lineViewProps.baseViewAttr,
                 lines: importLines(initialData, viewAttrs.indexOf(lineViewProps.baseViewAttr) - 1),
@@ -249,7 +238,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 useSafeFont: lineViewProps.useSafeFont,
                 busyWaitSecs: 0,
                 supportsSyntaxView: lineViewProps.supportsSyntaxView,
-                adHocIpm: -1,
                 playerAttachedChunk: '',
                 showAnonymousUserWarn: lineViewProps.anonymousUser,
                 supportsTokenConnect: lineViewProps.supportsTokenConnect,
@@ -436,16 +424,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         this.addActionHandler<Actions.AsyncCalculationUpdated>(
             ActionName.AsyncCalculationUpdated,
             action => {
-                const prevConcSize = this.state.concSummary.concSize;
+                const prevConcSize = this.state.concSize;
                 this.changeState(state => {
                     state.unfinishedCalculation = !action.payload.finished;
-                    state.concSummary.concSize = action.payload.concsize;
-                    state.concSummary.fullSize = action.payload.fullsize;
-                    state.concSummary.ipm = action.payload.relconcsize;
-                    state.concSummary.arf = action.payload.arf;
+                    state.concSize = action.payload.concsize;
                     state.pagination.lastPage = action.payload.availPages;
                 });
-                if (this.state.concSummary.concSize > 0) {
+                if (this.state.concSize > 0) {
                     if (prevConcSize === 0) {
                         this.changePage('customPage', 1).subscribe(
                             () => {
@@ -473,46 +458,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
                 this.changeState(state => {
                     state.unfinishedCalculation = false;
-                    state.concSummary.concSize = 0;
-                    state.concSummary.fullSize = 0;
-                    state.concSummary.ipm = 0;
-                    state.concSummary.arf = 0;
                     state.pagination.lastPage = 0;
                     state.lines = [];
                 });
-            }
-        );
-
-        this.addActionHandler<Actions.CalculateIpmForAdHocSubc>(
-            ActionName.CalculateIpmForAdHocSubc,
-            action => {
-                this.busyTimer = this.runBusyTimer(this.busyTimer);
-                this.emitChange();
-                this.suspend({}, (action, syncData) => {
-                    return action.name === ActionName.CalculateIpmForAdHocSubcReady ?
-                        null : syncData;
-
-                }).pipe(
-                    concatMap(
-                        (action) => this.calculateAdHocIpm(
-                            (action as Actions.CalculateIpmForAdHocSubcReady).payload.ttSelection)
-                    )
-
-                ).subscribe(
-                    (data) => {
-                        this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                        this.emitChange();
-                    },
-                    (err) => {
-                        this.busyTimer = this.stopBusyTimer(this.busyTimer);
-                        this.emitChange();
-                        console.error(err);
-                        this.layoutModel.showMessage(
-                            'error',
-                            this.layoutModel.translate('global__failed_to_calc_ipm')
-                        );
-                    }
-                );
             }
         );
 
@@ -932,16 +880,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         state.pagination = data.pagination;
         state.unfinishedCalculation = !!data.running_calc;
         state.lineGroupIds = [];
-        state.adHocIpm = -1;
         state.concId = data.conc_persistence_op_id;
-        state.concSummary = {
-            concSize: data.concsize,
-            fullSize: data.fullsize,
-            sampledSize: data.sampled_size,
-            ipm: data.result_relative_freq,
-            arf: data.result_arf,
-            isShuffled: data.result_shuffled
-        };
     }
 
     private changeGroupNaming(state:ConcordanceModelState, data:ConcGroupChangePayload):void {
@@ -1103,32 +1042,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         }
     }
 
-    private calculateAdHocIpm(ttSelection:TextTypes.ExportedSelection):Observable<number> {
-        return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl(
-                'get_adhoc_subcorp_size'
-            ),
-            {
-                corpname: this.state.baseCorpname,
-                usesubcorp: this.state.subCorpName,
-                ...this.layoutModel.getConcArgs(),
-                type:'adHocIpmArgs',
-                text_types: ttSelection
-            },
-            {
-                contentType: 'application/json'
-            }
-
-        ).pipe(
-            tap((data) => {
-                this.changeState(state => {
-                    state.adHocIpm = this.state.concSummary.fullSize / data.total * 1e6});
-            }),
-            map(_ => this.state.adHocIpm)
-        );
-    }
-
     isUnfinishedCalculation():boolean {
         return this.state.unfinishedCalculation;
     }
@@ -1158,10 +1071,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
         state.lines[lineIdx].hasFocus = focus;
     }
 
-    getConcSummary():ConcSummary {
-        return this.state.concSummary;
-    }
-
     getAudioPlayerStatus():AudioPlayerStatus {
         return this.audioPlayer.getStatus();
     }
@@ -1172,17 +1081,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
 
     getSyntaxViewModel():PluginInterfaces.SyntaxViewer.IPlugin {
         return this.syntaxViewModel;
-    }
-
-    // TODO pick a good heuristics here
-    getRecommOverviewMinFreq():number {
-        if (this.state.concSummary.concSize > 10000) {
-            return 100;
-
-        } else if (this.state.concSummary.concSize > 1000) {
-            return 10;
-        }
-        return 1;
     }
 }
 

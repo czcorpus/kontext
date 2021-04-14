@@ -29,7 +29,6 @@ import { concatMap } from 'rxjs/operators';
 import { FreqServerArgs } from '../../models/freqs/common';
 import { HTTP, List } from 'cnc-tskit';
 import { ActionName, Actions } from './actions';
-import { IConcLinesProvider } from '../../models/concordance/common';
 
 
 export enum KnownRenderers {
@@ -104,9 +103,9 @@ export interface KwicConnectModelArgs {
     corpora:Array<string>;
     mainCorp:string;
     rendererMap:RendererMap;
-    concLinesProvider:IConcLinesProvider;
     loadChunkSize:number;
     maxKwicWords:number;
+    isUnfinishedCalculation:boolean;
 }
 
 export class KwicConnectModel extends StatefulModel<KwicConnectState> {
@@ -123,17 +122,16 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
 
     private maxKwicWords:number;
 
-    private concLinesProvider:IConcLinesProvider;
-
     constructor({
             dispatcher,
             pluginApi,
             corpora,
             mainCorp,
             rendererMap,
-            concLinesProvider,
             loadChunkSize,
-            maxKwicWords}:KwicConnectModelArgs) {
+            maxKwicWords,
+            isUnfinishedCalculation
+    }:KwicConnectModelArgs) {
         super(
             dispatcher,
             {
@@ -142,7 +140,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                 corpora,
                 mainCorp,
                 freqType: FreqDistType.LEMMA,
-                blockedByAsyncConc: concLinesProvider.isUnfinishedCalculation(),
+                blockedByAsyncConc: isUnfinishedCalculation,
                 hasOmittedItems: false
             }
         );
@@ -150,7 +148,6 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         this.rendererMap = rendererMap;
         this.loadChunkSize = loadChunkSize;
         this.maxKwicWords = maxKwicWords;
-        this.concLinesProvider = concLinesProvider;
 
         this.addActionHandler(
             PluginInterfaces.KwicConnect.Actions.FetchInfo,
@@ -161,7 +158,22 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                     });
                 }
                 if (!this.state.blockedByAsyncConc && List.empty(this.state.data)) {
-                    this.loadData();
+                    this.suspendWithTimeout(5000, {}, (action, syncData) => {
+                        if (ConcActions.isConcordanceRecalculationReady(action)) {
+                            return null;
+                        }
+                        return syncData;
+
+                    }).subscribe(
+                        action => {
+                            if (ConcActions.isConcordanceRecalculationReady(action)) {
+                                this.loadData(action.payload.overviewMinFreq);
+                            }
+                        },
+                        error => {
+                            this.pluginApi.showMessage('error', error);
+                        }
+                    );
                 }
 
             }
@@ -195,15 +207,31 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                     state.blockedByAsyncConc = !action.payload.finished;
                 });
                 if (prevBlocked && !this.state.blockedByAsyncConc) {
-                    this.loadData();
+                    this.suspendWithTimeout(5000, {}, (action, syncData) => {
+                        if (ConcActions.isConcordanceRecalculationReady(action)) {
+                            return null;
+                        }
+                        return syncData;
+
+                    }).subscribe(
+                        action => {
+                            if (ConcActions.isConcordanceRecalculationReady(action)) {
+                                this.loadData(action.payload.overviewMinFreq);
+                            }
+                        },
+                        error => {
+                            this.pluginApi.showMessage('error', error);
+                        }
+                    );
+
                 }
             }
         );
     }
 
-    private loadData():void {
+    private loadData(flimit:number):void {
         const freqType = this.selectFreqType();
-        this.fetchResponses(freqType).subscribe(
+        this.fetchResponses(freqType, flimit).subscribe(
             (data) => {
                 this.dispatchSideEffect<Actions.FetchInfoDone>({
                     name: ActionName.FetchInfoDone,
@@ -228,10 +256,11 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
     }
 
     private fetchResponses(
-        freqType:FreqDistType
+        freqType:FreqDistType,
+        flimit:number
     ):Observable<Array<ProviderWordMatch>> {
 
-        return this.fetchUniqValues(freqType).pipe(
+        return this.fetchUniqValues(freqType, flimit).pipe(
             concatMap(
                 (kwics) => {
                     const procItems = List.filter(v => v.split(' ').length <=
@@ -401,11 +430,11 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         }
     }
 
-    private fetchUniqValues(fDistType:FreqDistType):Observable<Array<string>> {
+    private fetchUniqValues(fDistType:FreqDistType, flimit:number):Observable<Array<string>> {
         const args = this.pluginApi.exportConcArgs() as MultiDict<FreqServerArgs>;
         args.set('fcrit', `${fDistType}/ie 0~0>0`);
         args.set('ml', 0);
-        args.set('flimit', this.concLinesProvider.getRecommOverviewMinFreq());
+        args.set('flimit', flimit);
         args.set('freq_sort', 'freq');
         args.set('fmaxitems', KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE);
         args.set('format', 'json');

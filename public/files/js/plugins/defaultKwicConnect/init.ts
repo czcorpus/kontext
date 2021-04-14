@@ -24,7 +24,6 @@ import { init as viewInit, View } from './views';
 import { init as renderersInit, Views as RenderersView } from './renderers';
 import { KwicConnectModel, KnownRenderers } from './model';
 import { List } from 'cnc-tskit';
-import { IConcLinesProvider } from '../../models/concordance/common';
 
 declare var require:any;
 require('./style.css'); // webpack
@@ -51,9 +50,9 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 
     constructor(
         pluginApi:IPluginApi,
-        concLinesProvider:IConcLinesProvider,
         maxKwicWords:number,
-        loadChunkSize:number
+        loadChunkSize:number,
+        isUnfinishedCalculation:boolean
     ) {
         this.pluginApi = pluginApi;
         const concArgs = this.pluginApi.exportConcArgs();
@@ -68,9 +67,9 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
                 concArgs.head('maincorp') :
                 pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
             rendererMap: this.selectRenderer.bind(this),
-            concLinesProvider,
             loadChunkSize,
-            maxKwicWords
+            maxKwicWords,
+            isUnfinishedCalculation
         });
     }
 
@@ -113,14 +112,14 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
 
 export const create:PluginInterfaces.KwicConnect.Factory = (
             pluginApi:IPluginApi,
-            concLinesProvider:IConcLinesProvider,
-            alignedCorpora:Array<string>) => {
+            alignedCorpora:Array<string>,
+            isUnfinishedCalculation:boolean) => {
     const conf = pluginApi.getConf<PluginData>('pluginData');
     const plg = new DefaultKwicConnectPlugin(
         pluginApi,
-        concLinesProvider,
         conf.kwic_connect.max_kwic_words,
-        conf.kwic_connect.load_chunk_size
+        conf.kwic_connect.load_chunk_size,
+        isUnfinishedCalculation
     );
     plg.init();
     return plg;
