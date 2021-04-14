@@ -62,7 +62,7 @@ export const MainMenuUL = styled.ul`
     }
 
     > li.notifications .hourglass {
-        animation: color-change 1s infinite;
+        animation: ${theme.ColorChange} 1s infinite;
     }
 
     > .menu-link:hover {

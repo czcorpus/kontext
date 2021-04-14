@@ -19,6 +19,7 @@
  */
 
 import styled from 'styled-components';
+import {keyframes} from 'styled-components';
 import backgroundSrc from '../../../../img/groovepaper2.jpg';
 
 export const mediaPhone = '@media screen and (max-width: 479px)';
@@ -140,4 +141,31 @@ export const DisabledButton = styled.button`
     color: ${colorSuperlightText};
     box-shadow: 0px 1px 2px rgba(150, 150, 150, 0.9), inset 0px 0px 2px rgba(215, 215, 215, 0.2);
     cursor: default;
+`;
+
+export const FadeIn = keyframes`
+
+    /* transition: opacity .3s ease-in; */
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+`;
+
+export const FadeOut = keyframes`
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+`;
+
+export const ColorChange  = keyframes`
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 `;

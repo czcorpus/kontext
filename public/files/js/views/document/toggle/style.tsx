@@ -19,12 +19,32 @@
  */
 
 import styled from 'styled-components';
+import {keyframes} from 'styled-components';
 
 import toggleOnImg from '../../../../img/toggle_on.svg';
 import toggleOffImg from '../../../../img/toggle_off.svg';
 import toggleOff1Img from '../../../../img/toggle_off_1.svg';
 import toggleOff2Img from '../../../../img/toggle_off_2.svg';
 
+const switchingOn = keyframes`
+    0%, 50% {
+        background-image: url(${toggleOff1Img});
+    }
+
+    50%, 100% {
+        background-image: url(${toggleOff2Img});
+    }
+`;
+
+const switchingOff = keyframes`
+    0%, 50% {
+        background-image: url(${toggleOff2Img});
+    }
+
+    50%, 100% {
+        background-image: url(${toggleOff1Img});
+    }
+`;
 
 export const ToggleSwitch = styled.span`
 
@@ -64,31 +84,11 @@ export const ToggleSwitch = styled.span`
         }
 
         a.switch-on {
-            animation: switchingOn 0.1s steps(2, end);
+            animation: ${switchingOn} 0.1s steps(2, end);
         }
 
         a.switch-off {
-            animation: switchingOff 0.1s steps(2, end);
-        }
-
-        @keyframes switchingOn {
-            0%, 50% {
-                background-image: url(${toggleOff1Img});
-            }
-
-            50%, 100% {
-                background-image: url(${toggleOff2Img});
-            }
-        }
-
-        @keyframes switchingOff {
-            0%, 50% {
-                background-image: url(${toggleOff2Img});
-            }
-
-            50%, 100% {
-                background-image: url(${toggleOff1Img});
-            }
+            animation: ${switchingOff} 0.1s steps(2, end);
         }
     }
 `;
