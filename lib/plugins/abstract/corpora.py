@@ -38,11 +38,13 @@ files.
 """
 
 import abc
-from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
+from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING, Union
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginCtx
 import json
+from corplib.corpus import KCorpus
+from corplib.fallback import EmptyCorpus
 
 
 class DictLike(object):
@@ -117,7 +119,7 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
     as provided by manatee.Corpus instance
     """
 
-    def __init__(self, corpus, corpus_id) -> None:
+    def __init__(self, corpus: Union[KCorpus, EmptyCorpus], corpus_id) -> None:
         super().__init__()
         self.encoding = corpus.get_conf('ENCODING')
         self.name = corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus_id
