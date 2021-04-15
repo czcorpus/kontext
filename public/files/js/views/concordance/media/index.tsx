@@ -45,16 +45,40 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const ProgressBar:React.FC<{status:PlayerStatus}> = (props) => {
 
+        const ref = React.useRef(null);
+
         const calcWidth = () => props.status.position ?
             `${Math.floor(props.status.position / props.status.duration * 100)}%` :
             '0';
 
+        const setPosition = (e) => {           
+            let totalOffset = ref.current.offsetLeft;
+            let parent = ref.current.offsetParent;
+            while (parent) {
+                totalOffset += parent.offsetLeft;
+                parent = parent.offsetParent;
+            }
+
+            let position = props.status.duration*(e.nativeEvent.clientX - totalOffset)/ref.current.offsetWidth;
+            if (position < 0) {
+                position = 0;
+            
+            } else if (position > props.status.duration) {
+                position = props.status.duration;
+            }
+            
+            dispatcher.dispatch<Actions.AudioPlayerSetPosition>({
+                name: ActionName.AudioPlayerSetPosition,
+                payload: {offset: position}
+            })
+        }
+
         return (
-            <S.ProgressBar>
+            <S.ProgressBar onClick={setPosition}>
                 <div className="curr-time">
                     {Math.round(props.status.position / 1000)}
                 </div>
-                <div className="wrapper">
+                <div className="wrapper" ref={ref}>
                     <div className="progress" style={{width: calcWidth()}}></div>
                 </div>
                 <div className="duration">
