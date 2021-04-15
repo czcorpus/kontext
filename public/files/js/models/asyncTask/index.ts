@@ -21,13 +21,13 @@
 
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { List, HTTP, pipe } from 'cnc-tskit';
+import { List, HTTP, pipe, Dict } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { concatMap, map, takeWhile, tap, timestamp } from 'rxjs/operators';
 import { Actions, ActionName } from './actions';
 import { taskCheckTimer } from './common';
-import { PageModel } from '../../app/page';
+import { DownloadType, PageModel } from '../../app/page';
 
 
 function taskIsActive(t:Kontext.AsyncTaskInfo):boolean {
@@ -305,7 +305,14 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     console.log('error: ', error);
                 }
             );
-            checkTasks$.next(List.map(item => item.ident, this.state.asyncTasks));
+            checkTasks$.next(
+                pipe(
+                    this.state.asyncTasks,
+                    // exclude download tasks
+                    List.filter(v => !Dict.hasValue(v.category, DownloadType)),
+                    List.map(item => item.ident),
+                )
+            );
 
         } else { // the ajax way
 
