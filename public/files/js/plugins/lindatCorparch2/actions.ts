@@ -110,7 +110,9 @@ export namespace Actions {
     }
 
     export interface ListStarClickedDone extends Action<{
-        message:string;
+        corpusId:string;
+        newId:string|null;
+        action:'add'|'remove';
     }> {
         name:ActionName.ListStarClickedDone;
     }

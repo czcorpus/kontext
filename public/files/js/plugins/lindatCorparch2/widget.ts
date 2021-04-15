@@ -218,6 +218,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
 
+        this.handleSearchDelay = this.handleSearchDelay.bind(this);
+
         this.addActionHandler<Actions.WidgetShow>(
             ActionName.WidgetShow,
             (state, action) => {state.isVisible = true}
