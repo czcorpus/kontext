@@ -208,7 +208,7 @@ class Kontext(Controller):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self.on_conc_store: Callable[[List[str]], None] = lambda s: None
+        self.on_conc_store: Callable[[List[str], bool, Any], None] = lambda s, uh, res: None
 
         self._tt_cache = tt_cache
         self._tt = None  # this will be instantiated lazily
@@ -1118,6 +1118,27 @@ class Kontext(Controller):
         at_list.append(async_task_status)
         self._set_async_tasks(at_list)
         return at_list
+
+    def _store_last_search(self, op_type: str, conc_id: str):
+        """
+        Store last search operation ID. This is used when
+        a new form of the same search type is opened and
+        we need some relevant defaults.
+
+        possible types: pquery, conc, wlist
+        """
+        curr = self._session.get('last_search', {})
+        curr[op_type] = conc_id
+        self._session['last_search'] = curr
+
+    def _load_last_search(self, op_type: str):
+        """
+        See _store_last_search for more info.
+
+        possible op. types: pquery, conc, wlist
+        """
+        curr = self._session.get('last_search', {})
+        return curr.get(op_type, None)
 
     @exposed(return_type='json')
     def concdesc_json(self, _: Optional[Request] = None) -> Dict[str, List[Dict[str, Any]]]:

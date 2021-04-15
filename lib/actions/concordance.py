@@ -376,7 +376,7 @@ class Actions(Querying):
         out['text_types_notes'] = corp_info.metadata.desc
         out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
-        last_op = self.session_get('last_submitted_op')
+        last_op = self._load_last_search('conc')
         qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
                                 corpora=self._select_current_aligned_corpora(active_only=False),
                                 persist=False)
@@ -646,8 +646,9 @@ class Actions(Querying):
              return_type='json')
     def query_submit(self, request):
 
-        def store_last_op(conc_ids: List[str]):
-            self._session['last_submitted_op'] = conc_ids[0]
+        def store_last_op(conc_ids: List[str], stored_history: bool, _):
+            if stored_history:
+                self._store_last_search('conc', conc_ids[0])
 
         self._clear_prev_conc_params()
         ans = {}
