@@ -489,6 +489,7 @@
         "qhistory__qs_wlist": "word list UNTRANSLATED",
         "qhistory__remove_from_list": "Remove from the list UNTRANSLATED",
         "qhistory__item_removed": "Removed from the list UNTRANSLATED",
+        "qhistory__blank_query": "blank UNTRANSLATED",
         "concview__ipm_rel_to_the_whole_corp": "related to the whole corpus UNTRANSLATED",
         "concview__click_to_play_audio": "Click to play audio UNTRANSLATED",
         "concview__detail_default_mode_menu": "Default view UNTRANSLATED",

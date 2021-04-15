@@ -156,8 +156,8 @@ export const QueryInfoDiv = styled.div`
     border-style: solid;
 
     :hover {
-        border-color: ${theme.colorLogoGreen};
-        background-color: #FEFEFE;
+        border-color: ${theme.colorLightFrame};
+        background-color: ${theme.colorBgLightBlue};
     }
 
     .text-types-info {
@@ -202,6 +202,10 @@ export const QueryAndTypeDiv = styled.div`
         border: none;
         font-size: 1.2em;
         color: #920040;
+    }
+
+    .blank {
+        font-style: italic;
     }
 
     span.query {
