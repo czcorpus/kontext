@@ -28,7 +28,7 @@ import { PluginInterfaces } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';
-import { AudioPlayer, AudioPlayerStatus} from './media';
+import { AudioPlayer, PlaybackStatus, PlayerStatus} from './media';
 import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';
@@ -273,6 +273,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 this.emitChange();
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
+            },
+            () => {
+                this.emitChange();
             }
         );
         this.runBusyTimer = (currTimer:Subscription):Subscription => {
@@ -1071,7 +1074,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         state.lines[lineIdx].hasFocus = focus;
     }
 
-    getAudioPlayerStatus():AudioPlayerStatus {
+    getAudioPlayerStatus():PlayerStatus {
         return this.audioPlayer.getStatus();
     }
 

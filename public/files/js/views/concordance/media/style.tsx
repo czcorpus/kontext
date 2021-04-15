@@ -19,7 +19,8 @@
  */
 
 import styled from 'styled-components';
-import {keyframes} from 'styled-components';
+import { keyframes } from 'styled-components';
+import * as theme from '../../theme/default';
 
 import mediaPlayIcon from '../../../../img/media_play.svg';
 import mediaPauseIcon from '../../../../img/media_pause.svg';
@@ -58,6 +59,8 @@ const pauseBlink = keyframes`
     }
 `;
 
+// --------------------- <AudioPlayer /> -------------------------
+
 export const AudioPlayer = styled.div`
 
     position: absolute;
@@ -73,40 +76,72 @@ export const AudioPlayer = styled.div`
     padding: 0.3em 0.6em;
     box-shadow: 3px 3px 4px #aaa;
 
-    > a {
-        text-decoration: none;
-        display: inline-block;
-        vertical-align: middle;
-        width: 1.6em;
-        height: 1.6em;
-        background-size: 1.2em 1.2em;
-        background-repeat: no-repeat;
-        background-position: 0 0.15em;
-        margin-left: 0.2em;
-        margin-right: 0.2em;
-    }
+    .audio-controls {
+        display: flex;
 
-    a.img-button-play-active {
-        animation-name: ${playBlink};
-        animation-duration: 1s;
-        animation-iteration-count: infinite;
-    }
+        > a {
+            text-decoration: none;
+            display: inline-block;
+            vertical-align: middle;
+            width: 1.6em;
+            height: 1.6em;
+            background-size: 1.2em 1.2em;
+            background-repeat: no-repeat;
+            background-position: 0 0.15em;
+            margin-left: 0.2em;
+            margin-right: 0.2em;
+        }
 
-    a.img-button-pause-active {
-        animation-name: ${pauseBlink};
-        animation-duration: 1s;
-        animation-iteration-count: infinite;
-    }
+        a.img-button-play-active {
+            animation-name: ${playBlink};
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+        }
 
-    a.img-button-play {
-        background-image: url(${mediaPlayIcon});
-    }
+        a.img-button-pause-active {
+            animation-name: ${pauseBlink};
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+        }
 
-    a.img-button-pause {
-        background-image: url(${mediaPauseIcon});
-    }
+        a.img-button-play {
+            background-image: url(${mediaPlayIcon});
+        }
 
-    a.img-button-stop {
-        background-image: url(${mediaStopIcon});
+        a.img-button-pause {
+            background-image: url(${mediaPauseIcon});
+        }
+
+        a.img-button-stop {
+            background-image: url(${mediaStopIcon});
+        }
+    }
+`;
+
+// ----------------- <ProgressBar /> ------------------------------
+
+export const ProgressBar = styled.div`
+    display: flex;
+    width: 100%;
+    margin-top: 0.7em;
+
+
+    .wrapper {
+        width: 80%;
+        border: 1px solid ${theme.colorLogoBlue};
+        border-radius: ${theme.inputBorderRadius};
+
+        .progress {
+            background-color: ${theme.colorLogoBlueShining};
+            height: 100%;
+        }
+
+        .curr-time {
+
+        }
+
+        .duration {
+
+        }
     }
 `;
