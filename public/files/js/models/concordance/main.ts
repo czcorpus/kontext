@@ -345,6 +345,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
+        this.addActionHandler<Actions.AudioPlayerSetPosition>(
+            ActionName.AudioPlayerSetPosition,
+            action => {
+                this.audioPlayer.setPosition(action.payload.offset);
+            }
+        );
+
         this.addActionHandler<Actions.ChangePage, Actions.ReloadConc>(
             [
                 ActionName.ChangePage,

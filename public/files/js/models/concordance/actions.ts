@@ -30,6 +30,7 @@ export enum ActionName {
     ExpandKwicDetail = 'CONCORDANCE_EXPAND_KWIC_DETAIL',
     PlayAudioSegment = 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
     AudioPlayerClickControl = 'AUDIO_PLAYER_CLICK_CONTROL',
+    AudioPlayerSetPosition = 'AUDIO_PLAYER_SET_POSITION',
     ChangePage = 'CONCORDANCE_CHANGE_PAGE',
     ReloadConc = 'CONCORDANCE_RELOAD_CONC',
     AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
@@ -138,6 +139,12 @@ export namespace Actions {
         action:AudioPlayerActions;
     }> {
         name:ActionName.AudioPlayerClickControl;
+    }
+
+    export interface AudioPlayerSetPosition extends Action<{
+        offset:number;
+    }> {
+        name:ActionName.AudioPlayerSetPosition;
     }
 
     export interface ChangePage extends Action<{

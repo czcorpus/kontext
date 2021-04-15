@@ -167,6 +167,10 @@ export class AudioPlayer {
         this.itemsToPlay = [];
     }
 
+    setPosition(offset:number):void {
+        this.soundManager.setPosition(this.playSessionId, offset);
+    }
+
     getStatus():PlayerStatus {
         return this.status;
     }

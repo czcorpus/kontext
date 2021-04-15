@@ -564,7 +564,8 @@ class Actions(Querying):
     def _set_first_query(self, corpora: List[str], data: QueryFormArgs):
 
         def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
-            filter_args = ContextFilterArgsConv(self._plugin_ctx, data)(corpora[0], attrname, items, ctx, fctxtype)
+            filter_args = ContextFilterArgsConv(self._plugin_ctx, data)(
+                corpora[0], attrname, items, ctx, fctxtype)
             self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
 
         def ctx_to_str(ctx):
@@ -1569,8 +1570,7 @@ class Actions(Querying):
         rpath = os.path.realpath(os.path.join(settings.get(
             'corpora', 'speech_files_path'), self.args.corpname, chunk))
         basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
-        rpath = '/var/local/corpora/sound/praha-bohumin.mp3'
-        if os.path.isfile(rpath) and rpath.startswith(basepath) or True:
+        if os.path.isfile(rpath) and rpath.startswith(basepath):
             with open(rpath, 'rb') as f:
                 file_size = os.path.getsize(rpath)
                 self._headers['Content-Type'] = 'audio/mpeg'
@@ -1779,7 +1779,8 @@ class Actions(Querying):
         lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
 
         self.add_conc_form_args(QueryFormArgs(plugin_ctx=self._plugin_ctx,
-                                              corpora=self._select_current_aligned_corpora(active_only=False),
+                                              corpora=self._select_current_aligned_corpora(
+                                                  active_only=False),
                                               persist=False))
         self._attach_query_params(tmp_out)
         self._attach_aligned_query_params(tmp_out)

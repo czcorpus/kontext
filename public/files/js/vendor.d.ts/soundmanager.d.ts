@@ -169,6 +169,7 @@ declare module "vendor/SoundManager" {
        play(playSessionId:string):void;
        pause(playSessionId:string):void;
        ontimeout(status:{success:boolean;error:any}):void;
+       setPosition(playSessionId:string,offset:number):Sound;
     }
 
     export interface GetInstance {
