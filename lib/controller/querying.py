@@ -21,7 +21,7 @@ This module contains a functionality related to
 extended, re-editable query processing.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from argmapping.query import ConcFormArgs
 from werkzeug import Request
 from collections import defaultdict
@@ -29,7 +29,6 @@ import logging
 
 from controller.kontext import Kontext
 from texttypes import TextTypesCache
-import corplib
 import plugins
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               FirstHitsFilterFormArgs, build_conc_form_args)
@@ -132,14 +131,15 @@ class Querying(Kontext):
         # create and store concordance query key
         if type(result) is dict:
             if action_metadata['mutates_result']:
-                next_query_keys = self._store_conc_params()
+                next_query_keys, stored_history = self._store_conc_params()
             else:
                 next_query_keys = [self._prev_q_data.get('id', None)] if self._prev_q_data else []
-            self.on_conc_store(next_query_keys)
+                stored_history = False
+            self.on_conc_store(next_query_keys, stored_history, result)
             self._update_output_with_conc_params(
                 next_query_keys[-1] if len(next_query_keys) else None, result)
 
-    def _store_conc_params(self) -> List[str]:
+    def _store_conc_params(self) -> Tuple[List[str], bool]:
         """
         Stores concordance operation if the query_persistence plugin is installed
         (otherwise nothing is done).
@@ -164,7 +164,7 @@ class Querying(Kontext):
                             corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
                             lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
                 ans.append(cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
-            return ans
+            return ans, use_history
 
     def _select_current_aligned_corpora(self, active_only: bool):
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
