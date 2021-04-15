@@ -27,6 +27,7 @@ import { ConcordanceModel } from '../../../models/concordance/main';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { Actions, ActionName } from '../../../models/concordance/actions';
 import * as S from './style';
+import { Time } from 'cnc-tskit';
 
 
 export interface AudioPlayerProps {
@@ -50,6 +51,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         const calcWidth = () => props.status.position ?
             `${Math.floor(props.status.position / props.status.duration * 100)}%` :
             '0';
+
+        const printTime = (secs:number) => {
+            const timeString = Time.secs2hms(Math.round(secs));
+            if (typeof timeString === 'string') {
+                return timeString.split(':').slice(1).join(':');
+            }
+            return '00:00'
+        }
 
         const setPosition = (e) => {           
             let totalOffset = ref.current.offsetLeft;
@@ -76,13 +85,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <S.ProgressBar onClick={setPosition}>
                 <div className="curr-time">
-                    {Math.round(props.status.position / 1000)}
+                    {printTime(props.status.position / 1000)}
                 </div>
                 <div className="wrapper" ref={ref}>
                     <div className="progress" style={{width: calcWidth()}}></div>
                 </div>
                 <div className="duration">
-                    {Math.round(props.status.duration / 1000)}
+                    {printTime(props.status.duration / 1000)}
                 </div>
             </S.ProgressBar>
         )
