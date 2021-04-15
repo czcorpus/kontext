@@ -154,6 +154,7 @@ declare module "vendor/SoundManager" {
         onload:(succ:boolean)=>void;
         onplay:()=>void;
         onfinish:()=>void;
+        whileplaying:(arg:any)=>void;
     }
 
     export interface Sound {

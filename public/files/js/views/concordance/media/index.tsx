@@ -24,7 +24,7 @@ import { Subscription } from 'rxjs';
 
 import { Kontext } from '../../../types/common';
 import { ConcordanceModel } from '../../../models/concordance/main';
-import { AudioPlayerStatus } from '../../../models/concordance/media';
+import { PlayerStatus } from '../../../models/concordance/media';
 import { Actions, ActionName } from '../../../models/concordance/actions';
 import * as S from './style';
 
@@ -41,9 +41,32 @@ export interface MediaViews {
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             lineModel:ConcordanceModel):MediaViews {
 
+    // ------------------------- <ProgressBar /> ---------------------------
+
+    const ProgressBar:React.FC<{status:PlayerStatus}> = (props) => {
+
+        const calcWidth = () => props.status.position ?
+            `${Math.floor(props.status.position / props.status.duration * 100)}%` :
+            '0';
+
+        return (
+            <S.ProgressBar>
+                <div className="curr-time">
+                    {Math.round(props.status.position / 1000)}
+                </div>
+                <div className="wrapper">
+                    <div className="progress" style={{width: calcWidth()}}></div>
+                </div>
+                <div className="duration">
+                    {Math.round(props.status.duration / 1000)}
+                </div>
+            </S.ProgressBar>
+        )
+    }
+
     // ------------------------- <AudioPlayer /> ---------------------------
 
-    class AudioPlayer extends React.Component<AudioPlayerProps, {playerStatus:AudioPlayerStatus}> {
+    class AudioPlayer extends React.Component<AudioPlayerProps, {playerStatus:PlayerStatus}> {
 
         private modelSubscription:Subscription;
 
@@ -67,12 +90,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleLineModelChange() {
-            const playerStatus = lineModel.getAudioPlayerStatus();
-            if (playerStatus !== AudioPlayerStatus.STOPPED && playerStatus !== AudioPlayerStatus.ERROR) {
-                this.setState({
-                    playerStatus: playerStatus
-                });
-            }
+            this.setState({
+                playerStatus: lineModel.getAudioPlayerStatus()
+            });
         }
 
         componentDidMount() {
@@ -88,13 +108,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             switch (buttonId) {
                 case 'play':
                     ans.push('img-button-play');
-                    if (this.state.playerStatus === 'play') {
+                    if (this.state.playerStatus.playback === 'play') {
                         ans.push('img-button-play-active');
                     }
                 break;
                 case 'pause':
                     ans.push('img-button-pause');
-                    if (this.state.playerStatus === 'pause') {
+                    if (this.state.playerStatus.playback === 'pause') {
                         ans.push('img-button-pause-active');
                     }
                 break;
@@ -116,6 +136,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <a onClick={this._handleControlClick.bind(this, 'play')} className={this._autoSetHtmlClass('play')}></a>
                         <a onClick={this._handleControlClick.bind(this, 'pause')} className={this._autoSetHtmlClass('pause')}></a>
                         <a onClick={this._handleControlClick.bind(this, 'stop')} className={this._autoSetHtmlClass('stop')}></a>
+                    </div>
+                    <div>
+                        <ProgressBar status={this.state.playerStatus} />
                     </div>
                 </S.AudioPlayer>
             );

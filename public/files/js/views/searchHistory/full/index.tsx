@@ -171,7 +171,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             <S.AlignedQueryInfoDiv>
                 <S.QueryAndTypeDiv>
                     <span className="symbol">{'\u2016\u00a0'}</span>
-                    <span className="query" title={typeToHuman(props.query_type)}>{props.query}</span>
+                    <span className="query" title={typeToHuman(props.query_type)}>
+                        {props.query ?
+                            props.query :
+                            <span className="blank">-- {he.translate('qhistory__blank_query')} --</span>
+                        }
+                    </span>
                 </S.QueryAndTypeDiv>
             </S.AlignedQueryInfoDiv>
         );

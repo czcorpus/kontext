@@ -24,11 +24,12 @@ import * as SoundManager from 'vendor/SoundManager';
 import { List } from 'cnc-tskit';
 
 
-export enum AudioPlayerStatus {
-    STOPPED = 'stop',
-    PAUSED = 'pause',
-    PLAYING = 'play',
-    ERROR = 'error'
+export type PlaybackStatus = 'stop'|'pause'|'play'|'error';
+
+export interface PlayerStatus {
+    playback:PlaybackStatus;
+    duration:number;
+    position:number;
 }
 
 /**
@@ -38,7 +39,7 @@ export class AudioPlayer {
 
     private soundManager:SoundManager.SoundManager;
 
-    private status:AudioPlayerStatus;
+    private status:PlayerStatus;
 
     private playSessionId:string = 'kontext-playback';
 
@@ -50,8 +51,20 @@ export class AudioPlayer {
 
     private onError:()=>void;
 
-    constructor(sm2FilesURL:string, onPlay:()=>void, onStop:()=>void, onError:()=>void) {
-        this.status = AudioPlayerStatus.STOPPED;
+    private whilePlaying:()=>void;
+
+    constructor(
+        sm2FilesURL:string,
+        onPlay:()=>void,
+        onStop:()=>void,
+        onError:()=>void,
+        whilePlaying:()=>void
+    ) {
+        this.status = {
+            playback: 'stop',
+            duration: 0,
+            position: 0
+        };
         this.soundManager = SoundManager.soundManager;
         this.soundManager.ontimeout = function (status) {
             console.error(status); // TODO
@@ -66,13 +79,15 @@ export class AudioPlayer {
         this.onPlay = onPlay;
         this.onStop = onStop;
         this.onError = onError;
+        this.whilePlaying = whilePlaying;
     }
 
     start(itemsToPlay?:Array<string>):void {
         if (itemsToPlay) {
             this.itemsToPlay = this.itemsToPlay.concat(itemsToPlay);
         }
-        let sound = this.soundManager.createSound({
+        const parent = this;
+        const sound = this.soundManager.createSound({
             id: this.playSessionId,
             url: List.head(this.itemsToPlay),
             autoLoad: true,
@@ -80,16 +95,28 @@ export class AudioPlayer {
             volume: 100,
             onload: (bSuccess) => {
                 if (!bSuccess) {
-                    this.status = AudioPlayerStatus.ERROR;
+                    this.status = {
+                        playback: 'error',
+                        duration: 0,
+                        position: 0
+                    };
                     this.onError();
                 }
             },
-            onplay: () => {
-                this.status = AudioPlayerStatus.PLAYING;
-                this.onPlay();
+            onplay: function () {
+                parent.status = {
+                    playback: 'play',
+                    duration: this['duration'] as number,
+                    position: this['position'] as number
+                };
+                parent.onPlay();
             },
             onfinish: () => {
-                this.status = AudioPlayerStatus.STOPPED;
+                this.status = {
+                    playback: 'stop',
+                    duration: this['duration'] as number,
+                    position: this['position'] as number
+                };
                 this.soundManager.destroySound(this.playSessionId);
                 if (!List.empty(this.itemsToPlay)) {
                     this.soundManager.destroySound(this.playSessionId); // TODO do we need this (again)?
@@ -98,6 +125,14 @@ export class AudioPlayer {
                 } else {
                     this.onStop();
                 }
+            },
+            whileplaying: function () {
+                parent.status = {
+                    playback: 'play',
+                    duration: this['duration'] as number,
+                    position: this['position'] as number
+                };
+                parent.whilePlaying();
             }
         });
         this.itemsToPlay = List.shift(this.itemsToPlay);
@@ -105,24 +140,24 @@ export class AudioPlayer {
     }
 
     play():void {
-        if (this.status === AudioPlayerStatus.STOPPED) {
+        if (this.status.playback === 'stop') {
             this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayerStatus.PLAYING;
+            this.status = {...this.status, playback: 'play'};
 
-        } else if (this.status === AudioPlayerStatus.PAUSED) {
+        } else if (this.status.playback === 'pause') {
             this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayerStatus.PLAYING;
+            this.status = {...this.status, playback: 'play'};
         }
     }
 
     pause():void {
-        if (this.status === AudioPlayerStatus.PAUSED) {
+        if (this.status.playback === 'pause') {
             this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayerStatus.PLAYING;
+            this.status = {...this.status, playback: 'play'};
 
-        } else if (this.status === AudioPlayerStatus.PLAYING) {
+        } else if (this.status.playback === 'play') {
             this.soundManager.pause(this.playSessionId);
-            this.status = AudioPlayerStatus.PAUSED;
+            this.status = {...this.status, playback: 'pause'};
         }
     }
 
@@ -132,7 +167,7 @@ export class AudioPlayer {
         this.itemsToPlay = [];
     }
 
-    getStatus():AudioPlayerStatus {
+    getStatus():PlayerStatus {
         return this.status;
     }
 }

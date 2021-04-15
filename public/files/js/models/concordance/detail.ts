@@ -216,6 +216,9 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 this.audioPlayer.stop();
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
+            },
+            () => {
+                this.emitChange();
             }
         );
 

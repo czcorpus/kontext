@@ -429,6 +429,7 @@
         "qhistory__qs_wlist": "word list",
         "qhistory__remove_from_list": "Remove from the list",
         "qhistory__item_removed": "Removed from the list",
+        "qhistory__blank_query": "blank",
         "concview__next_page_btn": "Next page",
         "concview__last_page_btn": "Last page",
         "concview__prev_page_btn": "Previous page",
