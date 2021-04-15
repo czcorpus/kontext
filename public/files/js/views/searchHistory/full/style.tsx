@@ -147,14 +147,22 @@ export const SavedNameInfoSpan = styled.span`
 export const QueryInfoDiv = styled.div`
 
     flex-grow: 1;
-    padding: 0.3em;
+    padding: 0.7em;
+    margin-bottom: 0.3em;
     cursor: pointer;
+    border-radius: ${theme.inputBorderRadius};
+    border-color: transparent;
+    border-width: 1px;
+    border-style: solid;
 
     :hover {
-        background-color: ${theme.colorLightGreen};
+        border-color: ${theme.colorLogoGreen};
+        background-color: #FEFEFE;
     }
 
     .text-types-info {
+
+        margin-top: 0.7em;
 
         a.switch {
             text-decoration: none;
