@@ -66,7 +66,7 @@ export const AudioPlayer = styled.div`
     position: absolute;
     display: inline-block;
     z-index: 10000;
-    width: 7em;
+    width: 10em;
 
     -moz-border-radius: 5px;
     border-radius: 5px;
@@ -78,6 +78,7 @@ export const AudioPlayer = styled.div`
 
     .audio-controls {
         display: flex;
+        justify-content: space-around;
 
         > a {
             text-decoration: none;
@@ -135,13 +136,13 @@ export const ProgressBar = styled.div`
             background-color: ${theme.colorLogoBlueShining};
             height: 100%;
         }
+    }
 
-        .curr-time {
+    .curr-time {
+       margin-right: 0.2em;
+    }
 
-        }
-
-        .duration {
-
-        }
+    .duration {
+        margin-left: 0.2em;
     }
 `;
