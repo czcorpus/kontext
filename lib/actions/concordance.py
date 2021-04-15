@@ -1569,8 +1569,7 @@ class Actions(Querying):
         rpath = os.path.realpath(os.path.join(settings.get(
             'corpora', 'speech_files_path'), self.args.corpname, chunk))
         basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
-        rpath = '/var/local/corpora/sound/praha-bohumin.mp3'
-        if os.path.isfile(rpath) and rpath.startswith(basepath) or True:
+        if os.path.isfile(rpath) and rpath.startswith(basepath):
             with open(rpath, 'rb') as f:
                 file_size = os.path.getsize(rpath)
                 self._headers['Content-Type'] = 'audio/mpeg'
