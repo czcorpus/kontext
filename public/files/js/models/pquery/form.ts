@@ -166,6 +166,41 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
+        this.addActionHandler<QueryActions.QueryInputSetQuery>(
+            QueryActionName.QueryInputSetQuery,
+            action => {
+                this.changeState(state => {
+                    const queryObj = state.queries[action.payload.sourceId];
+
+                    if (action.payload.rawAnchorIdx !== undefined &&
+                            action.payload.rawFocusIdx !== undefined) {
+                        queryObj.rawAnchorIdx = action.payload.rawAnchorIdx ||
+                            action.payload.query.length;
+                            queryObj.rawFocusIdx = action.payload.rawFocusIdx ||
+                            action.payload.query.length;
+                    }
+                    this.setRawQuery(
+                        state,
+                        queryObj,
+                        action.payload.sourceId,
+                        action.payload.query,
+                        action.payload.insertRange
+                    );
+                });
+            }
+        );
+
+        this.addActionHandler<QueryActions.QueryInputMoveCursor>(
+            QueryActionName.QueryInputMoveCursor,
+            action => {
+                this.changeState(state => {
+                    const queryObj = state.queries[action.payload.sourceId];
+                    queryObj.rawAnchorIdx = action.payload.rawAnchorIdx;
+                    queryObj.rawFocusIdx = action.payload.rawFocusIdx;
+                });
+            }
+        );
+
         this.addActionHandler<Actions.AddQueryItem>(
             ActionName.AddQueryItem,
             action => {
@@ -195,31 +230,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 this.changeState(state => {
                     state.queries = this.removeItem(state.queries, action.payload.sourceId);
                     state.concWait = this.removeItem(state.concWait, action.payload.sourceId);
-                });
-            }
-        );
-
-
-        this.addActionHandler<QueryActions.QueryInputSetQuery>(
-            QueryActionName.QueryInputSetQuery,
-            action => {
-                this.changeState(state => {
-                    const queryObj = state.queries[action.payload.sourceId];
-
-                    if (action.payload.rawAnchorIdx !== undefined &&
-                            action.payload.rawFocusIdx !== undefined) {
-                        queryObj.rawAnchorIdx = action.payload.rawAnchorIdx ||
-                            action.payload.query.length;
-                            queryObj.rawFocusIdx = action.payload.rawFocusIdx ||
-                            action.payload.query.length;
-                    }
-                    this.setRawQuery(
-                        state,
-                        queryObj,
-                        action.payload.sourceId,
-                        action.payload.query,
-                        action.payload.insertRange
-                    );
                 });
             }
         );
