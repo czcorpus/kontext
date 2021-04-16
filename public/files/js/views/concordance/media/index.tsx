@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
 import { Kontext } from '../../../types/common';
-import { ConcordanceModel } from '../../../models/concordance/main';
+import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { Actions, ActionName } from '../../../models/concordance/actions';
 import * as S from './style';
@@ -99,21 +99,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------- <AudioPlayer /> ---------------------------
 
-    class AudioPlayer extends React.Component<AudioPlayerProps, {playerStatus:PlayerStatus}> {
-
-        private modelSubscription:Subscription;
-
-        constructor(props) {
-            super(props);
-            // no need to bind this._handleControlClick
-            this._handleLineModelChange = this._handleLineModelChange.bind(this);
-            this.state = {
-                playerStatus: lineModel.getAudioPlayerStatus()
-            };
-        }
+    class AudioPlayer extends React.Component<AudioPlayerProps & ConcordanceModelState> {
 
         _handleControlClick(action) {
-            this.setState({playerStatus: action});
             dispatcher.dispatch<Actions.AudioPlayerClickControl>({
                 name: ActionName.AudioPlayerClickControl,
                 payload: {
@@ -122,32 +110,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
-        _handleLineModelChange() {
-            this.setState({
-                playerStatus: lineModel.getAudioPlayerStatus()
-            });
-        }
-
-        componentDidMount() {
-            this.modelSubscription = lineModel.addListener(this._handleLineModelChange);
-        }
-
-        componentWillUnmount() {
-            this.modelSubscription.unsubscribe();
-        }
-
         _autoSetHtmlClass(buttonId) {
             const ans = [];
             switch (buttonId) {
                 case 'play':
                     ans.push('img-button-play');
-                    if (this.state.playerStatus.playback === 'play') {
+                    if (this.props.audioPlayerStatus.playback === 'play') {
                         ans.push('img-button-play-active');
                     }
                 break;
                 case 'pause':
                     ans.push('img-button-pause');
-                    if (this.state.playerStatus.playback === 'pause') {
+                    if (this.props.audioPlayerStatus.playback === 'pause') {
                         ans.push('img-button-pause-active');
                     }
                 break;
@@ -171,7 +145,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <a onClick={this._handleControlClick.bind(this, 'stop')} className={this._autoSetHtmlClass('stop')}></a>
                     </div>
                     <div>
-                        <ProgressBar status={this.state.playerStatus} />
+                        <ProgressBar status={this.props.audioPlayerStatus} />
                     </div>
                 </S.AudioPlayer>
             );
@@ -179,6 +153,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        AudioPlayer
+        AudioPlayer: BoundWithProps(AudioPlayer, lineModel)
     };
 }

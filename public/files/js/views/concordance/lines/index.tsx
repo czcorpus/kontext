@@ -729,7 +729,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         render() {
             if (this.props.forceScroll) {
-                window.scrollBy(null, this.props.forceScroll);
+                window.scrollTo(null, this.props.forceScroll);
             }
             return (<>
                 {List.map(
