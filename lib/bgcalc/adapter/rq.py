@@ -108,7 +108,8 @@ class RqClient:
                     self.scheduler.cron(
                         entry['schedule'],
                         f'{self.prefix}.{entry["task"]}',
-                        kwargs=entry['kwargs'] if 'kwargs' in entry else None
+                        kwargs=entry['kwargs'] if 'kwargs' in entry else None,
+                        use_local_timezone=True,
                     )
 
     @staticmethod
