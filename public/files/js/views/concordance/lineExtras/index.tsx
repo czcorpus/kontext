@@ -83,7 +83,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             dispatcher.dispatch<Actions.PlayAudioSegment>({
                 name: ActionName.PlayAudioSegment,
                 payload: {
-                    chunksIds: props.chunks.map(v => v.id),
+                    chunksIds: props.chunks.map(v => v.id)
                 }
             });
         };

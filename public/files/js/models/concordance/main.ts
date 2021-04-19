@@ -182,6 +182,8 @@ export interface ConcordanceModelState {
     syntaxViewVisible:boolean;
 
     forceScroll:number|null;
+
+    audioPlayerStatus:PlayerStatus;
 }
 
 
@@ -252,7 +254,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 refDetailVisible: false,
                 lineSelOptionsVisible: false,
                 syntaxViewVisible: false,
-                forceScroll: null
+                forceScroll: null,
+                audioPlayerStatus: null
             }
         );
         this.layoutModel = layoutModel;
@@ -261,21 +264,33 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
-                this.emitChange();
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                });
             },
             () => {
                 this.setStopStatus();
-                this.emitChange();
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                });
             },
             () => {
+                this.changeState(state => {
+                    state.forceScroll = window.scrollY
+                });
                 this.audioPlayer.stop();
                 this.setStopStatus();
-                this.emitChange();
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                });
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             },
             () => {
-                this.emitChange();
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.getAudioPlayerStatus(),
+                    state.forceScroll = window.scrollY
+                });
             }
         );
         this.runBusyTimer = (currTimer:Subscription):Subscription => {
@@ -333,22 +348,39 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.addActionHandler<Actions.PlayAudioSegment>(
             ActionName.PlayAudioSegment,
             action => {
+                this.changeState(state => {
+                    state.forceScroll = window.scrollY;
+                });
                 this.playAudio(action.payload.chunksIds);
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                });
             }
         );
 
         this.addActionHandler<Actions.AudioPlayerClickControl>(
             ActionName.AudioPlayerClickControl,
             action => {
+                this.changeState(state => {
+                    state.forceScroll = window.scrollY
+                });
                 this.handlePlayerControls(action.payload.action);
-                this.emitChange();
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                });
             }
         );
 
         this.addActionHandler<Actions.AudioPlayerSetPosition>(
             ActionName.AudioPlayerSetPosition,
             action => {
+                this.changeState(state => {
+                    state.forceScroll = window.scrollY
+                });
                 this.audioPlayer.setPosition(action.payload.offset);
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                });
             }
         );
 
