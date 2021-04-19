@@ -91,6 +91,7 @@ export class AudioPlayer {
             id: this.playSessionId,
             url: List.head(this.itemsToPlay),
             autoLoad: true,
+            stream: true,
             autoPlay: false,
             volume: 100,
             onload: (bSuccess) => {

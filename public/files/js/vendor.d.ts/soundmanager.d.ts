@@ -150,7 +150,9 @@ declare module "vendor/SoundManager" {
         id:string;
         autoLoad:boolean;
         autoPlay:boolean;
+        stream?:boolean;
         volume:number;
+        from?:number;
         onload:(succ:boolean)=>void;
         onplay:()=>void;
         onfinish:()=>void;
