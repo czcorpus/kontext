@@ -1579,7 +1579,7 @@ class Actions(Querying):
             logging.getLogger(__name__).warning(f'Invalid value for HTTP header Range: {rng}')
         return lft, rgt
 
-    @exposed(access_level=0, skip_corpus_init=True)
+    @exposed(access_level=0)
     def audio(self, request):
         """
         Provides access to audio-files containing speech segments.
