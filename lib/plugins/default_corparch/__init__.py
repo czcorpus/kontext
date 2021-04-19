@@ -510,7 +510,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return self._colors.get(label_id, None)
 
     def _process_corpus_node(self, plugin_ctx: PluginCtx, node, path, data):
-        corpus_id = node.attrib['ident'].lower() if self._auth.ignores_corpora_names_case() else node.attrib['ident']
+        corpus_id = node.attrib['ident'].lower(
+        ) if self._auth.ignores_corpora_names_case() else node.attrib['ident']
         web_url = node.attrib['web'] if 'web' in node.attrib else None
         sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
 
@@ -575,7 +576,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         simple_query_default_attrs_elm = node.find('simple_query_default_attrs')
         if simple_query_default_attrs_elm is not None:
-            ans.simple_query_default_attrs = [p.text for p in simple_query_default_attrs_elm.findall('attribute')]
+            ans.simple_query_default_attrs = [
+                p.text for p in simple_query_default_attrs_elm.findall('attribute')]
         else:
             ans.simple_query_default_attrs = []
 
@@ -692,7 +694,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             return o['metadata'].get('featured', False)
 
         featured = []
-        for x in list(self._raw_list(plugin_ctx.user_lang).values()):
+        for x in list(self._raw_list(plugin_ctx).values()):
             if x['id'] in permitted_corpora and is_featured(x):
                 featured.append({
                     # on client-side, this may contain also subc. id, aligned ids
@@ -754,5 +756,6 @@ def create_instance(conf, auth, user_items):
                          root_xpath=conf.get('plugins', 'corparch')['default:root_elm_path'],
                          tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
                          max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
-                         max_page_size=conf.get('plugins', 'corparch').get('default:default_page_list_size', 20),
+                         max_page_size=conf.get('plugins', 'corparch').get(
+                             'default:default_page_list_size', 20),
                          registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
