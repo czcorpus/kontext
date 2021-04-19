@@ -1560,7 +1560,26 @@ class Actions(Querying):
                 del (self._headers['Content-Disposition'])
             raise e
 
-    @exposed(access_level=0)
+    @staticmethod
+    def _parse_range(request):
+        """
+        Parse HTTP Range header value for obtaining
+        partial chunk of data.
+        """
+        rng = request.headers.get('range')
+        if not rng:
+            return 0, None
+        srch = re.match(r'^[bB]ytes=(\d+)-(\d*)$', rng)
+        lft, rgt = 0, None
+        if srch:
+            lft = int(srch.group(1))
+            if srch.group(2):
+                rgt = int(srch.group(2))
+        else:
+            logging.getLogger(__name__).warning(f'Invalid value for HTTP header Range: {rng}')
+        return lft, rgt
+
+    @exposed(access_level=0, skip_corpus_init=True)
     def audio(self, request):
         """
         Provides access to audio-files containing speech segments.
@@ -1573,14 +1592,17 @@ class Actions(Querying):
         basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
         if os.path.isfile(rpath) and rpath.startswith(basepath):
             with open(rpath, 'rb') as f:
-                file_size = os.path.getsize(rpath)
+                play_from, play_to = self._parse_range(request)
+                if play_from > 0:
+                    f.seek(play_from)
                 self._headers['Content-Type'] = 'audio/mpeg'
-                self._headers['Content-Length'] = '%s' % file_size
-                self._headers['Accept-Ranges'] = 'none'
+                self._headers['Content-Length'] = str(os.path.getsize(rpath))
+                self._headers['Accept-Ranges'] = 'bytes'
+                self._status = 206
                 if self.environ.get('HTTP_RANGE', None):
                     self._headers['Content-Range'] = 'bytes 0-%s/%s' % (
                         os.path.getsize(rpath) - 1, os.path.getsize(rpath))
-                ans = f.read()
+                ans = f.read() if not play_to else f.read(play_to - play_from)
                 return lambda: ans
         else:
             self.set_not_found()
