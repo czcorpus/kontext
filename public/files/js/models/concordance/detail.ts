@@ -66,7 +66,7 @@ export interface SpeechOptions {
     speakerIdAttr:[string, string];
     speechSegment:[string, string];
     speechAttrs:Array<string>;
-    speechOverlapAttr:[string, string];
+    speechOverlapAttr:[string, string]|null;
     speechOverlapVal:string;
 }
 
@@ -577,10 +577,14 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             };
         };
 
-        const isOverlap = (s1:Speech, s2:Speech):boolean => {
+        const isFullOverlap = (s1:Speech, s2:Speech):boolean => {
             if (s1 && s2 && state.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_FULL) {
-                const flag1 = s1.metadata[state.speechOpts.speechOverlapAttr[1]];
-                const flag2 = s2.metadata[state.speechOpts.speechOverlapAttr[1]];
+                const flag1 = state.speechOpts.speechOverlapAttr ?
+                        s1.metadata[state.speechOpts.speechOverlapAttr[1]] :
+                        '';
+                const flag2 = state.speechOpts.speechOverlapAttr ?
+                        s2.metadata[state.speechOpts.speechOverlapAttr[1]] :
+                        '';
                 if (flag1 === flag2
                         && flag2 === state.speechOpts.speechOverlapVal
                         && s1.segments[0] === s2.segments[0]) {
@@ -594,7 +598,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             const ans:SpeechLines = [];
             let prevSpeech:Speech = null;
             speeches.forEach((item, i) => {
-                if (isOverlap(prevSpeech, item)) {
+                if (isFullOverlap(prevSpeech, item)) {
                     ans[ans.length - 1].push(item);
                     ans[ans.length - 1] = ans[ans.length - 1].sort((s1, s2) => {
                         if (s1.speakerId > s2.speakerId) {
@@ -645,7 +649,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     }
 
                 }
-                if (state.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE) {
+                if (state.spkOverlapMode === ConcDetailModel.SPK_OVERLAP_MODE_SIMPLE
+                            && state.speechOpts.speechOverlapAttr) {
                     const overlapSrch = new RegExp(
                         `</?(${state.speechOpts.speechOverlapAttr[0]})(>|[^>]+>)`, 'g');
                     let srch = overlapSrch.exec(item.str);
