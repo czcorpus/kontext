@@ -76,7 +76,8 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- list access key
         """
-        return json.loads(self.redis.lpop(key))
+        tmp = self.redis.lpop(key)
+        return json.loads(tmp) if tmp is not None else None
 
     def list_len(self, key):
         """
