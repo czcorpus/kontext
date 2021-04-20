@@ -216,7 +216,6 @@ class Actions(Querying):
                 kwic_args.labelmap = {}
                 kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
                 kwic_args.structs = self._get_struct_opts()
-
                 kwic = Kwic(self.corp, self.args.corpname, conc)
 
                 out['Sort_idx'] = kwic.get_sort_idx(q=self.args.q, pagesize=self.args.pagesize)
@@ -1404,13 +1403,15 @@ class Actions(Querying):
             converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
                 {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
             """
-            ans = ''
+            ans = []
             for item in items:
                 if 'class' in item and item['class'] != 'attr':
-                    ans += ' %s' % item['str'].strip()
+                    ans.append(' {}'.format(item['str'].strip()))
                 else:
-                    ans += '%s' % item['str'].strip()
-            return ans.strip()
+                    ans.append('{}'.format(item['str'].strip()))
+                for tp in item.get('tail_posattrs', []):
+                    ans.append('/{}'.format(tp))
+            return ''.join(ans).strip()
 
         def process_lang(root, left_key, kwic_key, right_key, add_linegroup):
             if type(root) is dict:
@@ -1462,11 +1463,10 @@ class Actions(Querying):
 
             data = kwic.kwicpage(kwic_args)
 
-            def mkfilename(suffix): return '%s-concordance.%s' % (self.args.corpname, suffix)
+            def mkfilename(suffix): return f'{self.args.corpname}-concordance.{suffix}'
             if saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
-                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
-                    mkfilename('txt'),)
+                self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(mkfilename('txt'))
                 output.update(data)
                 for item in data['Lines']:
                     item['ref'] = ', '.join(item['ref'])
@@ -1484,17 +1484,6 @@ class Actions(Querying):
                     mkfilename(saveformat),)
 
                 if len(data['Lines']) > 0:
-                    if 'Left' in data['Lines'][0]:
-                        left_key = 'Left'
-                        kwic_key = 'Kwic'
-                        right_key = 'Right'
-                    elif 'Sen_Left' in data['Lines'][0]:
-                        left_key = 'Sen_Left'
-                        kwic_key = 'Kwic'
-                        right_key = 'Sen_Right'
-                    else:
-                        raise ConcError(translate('Invalid data'))
-
                     aligned_corpora = [self.corp] + \
                                       [self.cm.get_Corpus(c) for c in self.args.align if c]
                     writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
@@ -1516,6 +1505,17 @@ class Actions(Querying):
                                      [(x, x) for x in self.corp.get_conf('STRUCTATTRLIST').split(',')])
                         used_refs = [x[1] for x in used_refs if x[0] in refs_args]
                         writer.write_ref_headings([''] + used_refs if numbering else used_refs)
+
+                    if 'Left' in data['Lines'][0]:
+                        left_key = 'Left'
+                        kwic_key = 'Kwic'
+                        right_key = 'Right'
+                    elif 'Sen_Left' in data['Lines'][0]:
+                        left_key = 'Sen_Left'
+                        kwic_key = 'Kwic'
+                        right_key = 'Sen_Right'
+                    else:
+                        raise ConcError(translate('Invalid data'))
 
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]
