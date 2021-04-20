@@ -27,6 +27,8 @@ import logging
 import redis
 import mysql.connector
 
+from plugins.abstract.general_storage import KeyValueStorage
+
 
 def redis_connection(host, port, db_id):
     """
@@ -115,12 +117,12 @@ class Archiver(object):
         to_db -- a SQLite3 connection
         archive_queue_key -- a Redis key used to access archive queue
         """
-        self._from_db = from_db
+        self._from_db: KeyValueStorage = from_db
         self._to_db = to_db
         self._archive_queue_key = archive_queue_key
 
     def _get_queue_size(self):
-        return self._from_db.llen(self._archive_queue_key)
+        return self._from_db.list_len(self._archive_queue_key)
 
     def run(self, num_proc, dry_run):
         """
@@ -144,12 +146,11 @@ class Archiver(object):
         i = 0
         try:
             while i < num_proc:
-                qitem = self._from_db.lpop(self._archive_queue_key)
+                qitem = self._from_db.list_pop(self._archive_queue_key)
                 if qitem is None:
                     break
-                qitem = json.loads(qitem)
                 data = self._from_db.get(qitem['key'])
-                inserts.append((qitem['key'][len(conc_prefix):], data, curr_time, 0))
+                inserts.append((qitem['key'][len(conc_prefix):], json.dumps(data), curr_time, 0))
                 i += 1
 
             if not dry_run:
@@ -161,13 +162,11 @@ class Archiver(object):
                 self._to_db.commit()
             else:
                 for ins in reversed(inserts):
-                    self._from_db.lpush(self._archive_queue_key,
-                                        json.dumps(dict(key=conc_prefix + ins[0])))
+                    self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + ins[0]))
         except Exception as ex:
             logging.getLogger(__name__).error('Failed to archive items: {}'.format(ex))
             for item in inserts:
-                self._from_db.rpush(self._archive_queue_key, json.dumps(
-                    dict(key=conc_prefix + item[0])))
+                self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + item[0]))
             return dict(
                 num_processed=i,
                 error=str(ex),
@@ -180,12 +179,6 @@ class Archiver(object):
             queue_size=self._get_queue_size())
 
 
-def run(conf, num_proc, dry_run):
-    from_db = redis_connection(conf.get('plugins', 'db')['default:host'],
-                               conf.get('plugins', 'db')['default:port'],
-                               conf.get('plugins', 'db')['default:id'])
-    to_db = MySQLOps(MySQLConf(conf))
-
-    archive_queue_key = conf.get('plugins')['conc_persistence']['archive_queue_key']
+def run(from_db, to_db, archive_queue_key: str, num_proc: int, dry_run: bool):
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=archive_queue_key)
     return archiver.run(num_proc, dry_run)
