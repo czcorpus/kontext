@@ -186,7 +186,7 @@ class MySqlConcPersistence(AbstractConcPersistence):
         if data is None:
             cursor = self._archive.cursor()
             cursor.execute(
-                'SELECT data, num_access FROM kontext_conc_persistence WHERE id = %s', (data_id,))
+                'SELECT data, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
             tmp = cursor.fetchone()
             if tmp:
                 data = json.loads(tmp['data'])
