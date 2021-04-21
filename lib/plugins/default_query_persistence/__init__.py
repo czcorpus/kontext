@@ -255,8 +255,6 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         def records_differ(r1, r2):
             return r1['q'] != r2['q'] or r1.get('lines_groups') != r2.get('lines_groups')
 
-        if len(curr_data.get('q', [])) == 0:
-            return None
         if prev_data is None or records_differ(curr_data, prev_data):
             data_id = generate_uniq_id()
             curr_data['id'] = data_id
