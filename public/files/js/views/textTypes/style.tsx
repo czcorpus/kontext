@@ -71,7 +71,7 @@ export const TextTypesPanel = styled.div`
 
 export const TableTextTypeAttribute = styled.div`
     background-color: #FFFFFF;
-    border: solid 1px ${theme.colorLightFrame};
+    border: 1px solid ${theme.colorLightFrame};
     border-radius: ${theme.borderRadiusDefault};
     margin: 0;
     padding: 0;

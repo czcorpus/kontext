@@ -44,8 +44,8 @@ export enum ActionName {
     WordlistFormSetWlminfreq = 'WORDLIST_FORM_SET_WLMINFREQ',
     WordlistFormSetIncludeNonwords = 'WORDLIST_FORM_SET_INCLUDE_NONWORDS',
     WordlistFormAddPosattrLevel = 'WORDLIST_FORM_ADD_POSATTR_LEVEL',
-    WordlistFormCreateWhitelist = 'WORDLIST_FORM_CREATE_WHITELIST',
-    WordlistFormCreateBlacklist = 'WORDLIST_FORM_CREATE_BLACKLIST',
+    WordlistFormCreatePfilter = 'WORDLIST_FORM_CREATE_PFILTER',
+    WordlistFormCreateNfilter = 'WORDLIST_FORM_CREATE_NFILTER',
     WordlistFormSetFilter = 'WORDLIST_FORM_SET_FILTER_FILE',
     WordlistFormSetFilterDone = 'WORDLIST_FORM_SET_FILTER_FILE_DONE',
     WordlistFormUpdateEditor = 'WORDLIST_FORM_UPDATE_EDITOR',
@@ -62,7 +62,9 @@ export enum ActionName {
     WordlistSaveFormSubmit = 'WORDLIST_SAVE_FORM_SUBMIT',
     WordlistSaveFormSubmitDone = 'WORDLIST_SAVE_FORM_SUBMIT_DONE',
     WordlistHistoryPopState = 'WORDLIST_HISTORY_POP_STATE',
-    WordlistIntermediateBgCalcUpdated = 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED'
+    WordlistIntermediateBgCalcUpdated = 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED',
+    ToggleOutputOptions = 'WORDLIST_TOGGLE_OUTPUT_OPTIONS',
+    ToggleFilterOptions = 'WORDLIST_TOGGLE_FILTER_OPTIONS'
 }
 
 
@@ -169,16 +171,16 @@ export namespace Actions {
         name:ActionName.WordlistFormAddPosattrLevel;
     }
 
-    export interface WordlistFormCreateWhitelist extends Action<{
+    export interface WordlistFormCreatePfilter extends Action<{
 
     }> {
-        name:ActionName.WordlistFormCreateWhitelist;
+        name:ActionName.WordlistFormCreatePfilter;
     }
 
-    export interface WordlistFormCreateBlacklist extends Action<{
+    export interface WordlistFormCreateNfilter extends Action<{
 
     }> {
-        name:ActionName.WordlistFormCreateBlacklist;
+        name:ActionName.WordlistFormCreateNfilter;
     }
 
     export interface WordlistFormSetFilter extends Action<{
@@ -282,5 +284,15 @@ export namespace Actions {
         status:number;
     }> {
         name:ActionName.WordlistIntermediateBgCalcUpdated;
+    }
+
+    export interface ToggleOutputOptions extends Action<{
+    }> {
+        name:ActionName.ToggleOutputOptions;
+    }
+
+    export interface ToggleFilterOptions extends Action<{
+    }> {
+        name:ActionName.ToggleFilterOptions;
     }
 }

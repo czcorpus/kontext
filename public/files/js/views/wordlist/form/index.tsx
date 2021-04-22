@@ -28,7 +28,7 @@ import { PluginInterfaces } from '../../../types/plugins';
 import { Actions, ActionName } from '../../../models/wordlist/actions';
 import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
 import * as S from './style';
-import * as S2 from '../style';
+import * as SC from '../../query/style';
 import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../../query/basicOverview/style';
 
 
@@ -57,30 +57,10 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     const layoutViews = he.getLayoutViews();
 
-    // ---------------- <TRCorpusField /> -----------------------
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRCorpusField:React.FC<{
-        corparchWidget:PluginInterfaces.Corparch.WidgetView;
-        currentSubcorp:string;
+    // ---------------- <AttrSelector /> -----------------------
 
-    }> = (props) => {
-        return (
-            <tr>
-                <td>
-                    <props.corparchWidget />
-                </td>
-                <td />
-            </tr>
-        );
-    };
-
-    // ---------------- <TRAttrSelector /> -----------------------
-
-    const TRAttrSelector:React.FC<{
+    const AttrSelector:React.FC<{
         wlattr:string;
         attrList:Array<Kontext.AttrItem>;
         structAttrList:Array<Kontext.AttrItem>;
@@ -97,12 +77,12 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         return (
-            <tr>
-                <td>
-                    {he.translate('wordlist__attrsel_label')}
-                </td>
-                <td>
-                    <select value={props.wlattr} onChange={handleChange}>
+            <>
+                <label htmlFor="wl-attr-selector">
+                    {he.translate('wordlist__attrsel_label')}:
+                </label>
+                <span>
+                    <select id="wl-attr-selector" value={props.wlattr} onChange={handleChange}>
                         <optgroup label={he.translate('global__attrsel_group_pos_attrs')}>
                             {props.attrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
                         </optgroup>
@@ -110,9 +90,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                             {props.structAttrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
                         </optgroup>
                     </select>
-                </td>
-                <td />
-            </tr>
+                </span>
+            </>
         );
     };
 
@@ -130,9 +109,9 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         );
     };
 
-    // ---------------------- <TRWlpatternInput /> -------------------
+    // ---------------------- <WlpatternInput /> -------------------
 
-    const TRWlpatternInput:React.FC<{
+    const WlpatternInput:React.FC<{
         wlpat:string;
 
     }> = (props) => {
@@ -147,22 +126,22 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         return (
-            <tr>
-                <td title={he.translate('wordlist__re_pattern_title')}>
+            <>
+                <label title={he.translate('wordlist__re_pattern_title')}
+                        htmlFor="wl-pattern-input">
                     {he.translate('wordlist__re_pattern_label')}:
-                </td>
-                <td>
-                    <input type="text" value={props.wlpat} onChange={handleChange}
+                </label>
+                <S.WlpatternInput>
+                    <input id="wl-pattern-input" type="text" value={props.wlpat} onChange={handleChange}
                             style={{width: '20em'}} />
-                </td>
-                <td />
-            </tr>
+                </S.WlpatternInput>
+            </>
         );
     }
 
-    // ------------------ <TRFrequencyFigures /> -------------------------------
+    // ------------------ <FrequencyFigures /> -------------------------------
 
-    const TRFrequencyFigures:React.FC<{
+    const FrequencyFigures:React.FC<{
         wlnums:string;
 
     }> = (props) => {
@@ -177,12 +156,12 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         return (
-            <tr>
-                <td>
+            <>
+                <label id="wl-freq-figures">
                     {he.translate('wordlist__freq_figures_label')}:
-                </td>
-                <td>
-                    <ul className="wl-option-list">
+                </label>
+                <div>
+                    <ul className="wl-option-list" aria-labelledby="wl-freq-figures">
                         <li>
                             <label>
                                 <input type="radio" value="frq" checked={props.wlnums === 'frq'}
@@ -205,8 +184,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                             </label>
                         </li>
                     </ul>
-                </td>
-            </tr>
+                </div>
+            </>
         );
     };
 
@@ -291,9 +270,9 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         );
     }
 
-    // --------------------- <TROutputType /> -------------------------------
+    // --------------------- <OutputType /> -------------------------------
 
-    const TROutputType:React.FC<{
+    const OutputType:React.FC<{
         wltype:string;
         allowsMultilevelWltype:boolean;
         wlattr:string;
@@ -313,11 +292,11 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         return (
-            <tr>
-                <td>
+            <>
+                <label id="wl-output-type-sel">
                     {he.translate('wordlist__output_type_title')}:
-                </td>
-                <td className="output-types">
+                </label>
+                <div className="output-types" aria-labelledby="wl-output-type-sel">
                     <ul className="wl-option-list">
                         <li>
                             <label>
@@ -351,8 +330,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                             </li>)
                         }
                     </ul>
-                </td>
-            </tr>
+                </div>
+            </>
         );
     };
 
@@ -366,29 +345,70 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         wltype:string;
         wlattr:string;
         allowsMultilevelWltype:boolean;
+        formVisible:boolean;
+        handleClick:()=>void;
 
     }> = (props) => {
+
         return (
-            <S2.FieldsetOutputOptions>
-                <legend>
-                    {he.translate('wordlist__out_opts_fieldset_legend')}
-                </legend>
-                <table>
-                    <tbody>
-                        <TRFrequencyFigures wlnums={props.wlnums} />
-                        <TROutputType attrList={props.attrList} wposattrs={props.wposattrs}
+            <S.FieldsetOutputOptions aria-labelledby="wlform-output-options">
+
+                <SC.ExpandableSectionLabel id="wlform-output-options" >
+                    <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
+                        <a onClick={props.handleClick}>
+                            {he.translate('wordlist__out_opts_fieldset_legend')}
+                        </a>
+                </SC.ExpandableSectionLabel>
+                {props.formVisible ?
+                    <div className="contents">
+                        <FrequencyFigures wlnums={props.wlnums} />
+                        <OutputType attrList={props.attrList} wposattrs={props.wposattrs}
                                     numWlPosattrLevels={props.numWlPosattrLevels}
                                     wltype={props.wltype} wlattr={props.wlattr}
                                     allowsMultilevelWltype={props.allowsMultilevelWltype} />
-                    </tbody>
-                </table>
-            </S2.FieldsetOutputOptions>
+                    </div> :
+                    null
+                }
+            </S.FieldsetOutputOptions>
         );
     };
 
-    // --------------------- <TRWlminfreqInput /> ----------------------------------
+    // --------------------- <FieldsetFilterOptions /> -----------------------------
 
-    const TRWlminfreqInput:React.FC<{
+    const FieldsetFilterOptions:React.FC<{
+        pfilterWords:string;
+        pfilterFileName:string;
+        nfilterWords:string;
+        nfilterFileName:string;
+        formVisible:boolean;
+        handleClick:()=>void;
+
+    }> = (props) => {
+        return (
+            <S.FieldsetFilterOptions>
+                <SC.ExpandableSectionLabel id="wlform-filter-options">
+                    <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
+                        <a onClick={props.handleClick}>
+                            {he.translate('wordlist__filter_opts_fieldset_legend')}
+                        </a>
+                </SC.ExpandableSectionLabel>
+                {props.formVisible ?
+                    <div className="contents">
+                        <FilterFile label={he.translate('wordlist__pfilter_label')} target={FileTarget.WHITELIST}
+                                hasValue={!!props.pfilterWords} fileName={props.pfilterFileName} />
+                        <FilterFile label={he.translate('wordlist__nfilter_label')} target={FileTarget.BLACKLIST}
+                                                    hasValue={!!props.nfilterWords} fileName={props.nfilterFileName} />
+                        <FileFormatHint />
+                    </div> :
+                    null
+                }
+            </S.FieldsetFilterOptions>
+        )
+    }
+
+    // --------------------- <WlminfreqInput /> ----------------------------------
+
+    const WlminfreqInput:React.FC<{
         wlminfreq:Kontext.FormValue<string>;
 
     }> = (props) => {
@@ -403,25 +423,26 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         return (
-            <tr>
-                <td>
+            <>
+                <label htmlFor="wl-min-freq-input">
                     {he.translate('wordlist__min_freq_label')}:
-                </td>
-                <td>
+                </label>
+                <span>
                     <layoutViews.ValidatedItem invalid={props.wlminfreq.isInvalid}>
-                        <input type="text" value={props.wlminfreq.value}
+                        <input id="wl-min-freq-input" type="text" value={props.wlminfreq.value}
                                 onChange={handleInputChange}
                                 style={{width: '3em'}} />
                     </layoutViews.ValidatedItem>
-                </td>
-            </tr>
+                </span>
+            </>
         );
     };
 
-    // -------------------- <TRFilterFileUploadInput /> ----------------------------------------
+    // -------------------- <FilterFileUploadInput /> ----------------------------------------
 
-    const TDFilterFileUploadInput:React.FC<{
+    const FilterFileUploadInput:React.FC<{
         target:FileTarget;
+        ident:string;
 
     }> = (props) => {
 
@@ -437,29 +458,29 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleNewFileClick = (evt) => {
             if (props.target === FileTarget.WHITELIST) {
-                dispatcher.dispatch<Actions.WordlistFormCreateWhitelist>({
-                    name: ActionName.WordlistFormCreateWhitelist
+                dispatcher.dispatch<Actions.WordlistFormCreatePfilter>({
+                    name: ActionName.WordlistFormCreatePfilter
                 });
 
             } else {
-                dispatcher.dispatch<Actions.WordlistFormCreateBlacklist>({
-                    name: ActionName.WordlistFormCreateBlacklist
+                dispatcher.dispatch<Actions.WordlistFormCreateNfilter>({
+                    name: ActionName.WordlistFormCreateNfilter
                 });
             }
         }
 
         return (
-            <td>
+            <span>
                 <a onClick={handleNewFileClick}>{he.translate('wordlist__create_filter_list')}</a>
-                / <input type="file" onChange={handleInputChange} />
-            </td>
+                {'\u00a0/\u00a0'}<input id={props.ident} type="file" onChange={handleInputChange} />
+            </span>
         );
 
     };
 
-    // -------------------- <TDExistingFileOps /> ----------------------------------------
+    // -------------------- <ExistingFileOps /> ----------------------------------------
 
-    const TDExistingFileOps:React.FC<{
+    const ExistingFileOps:React.FC<{
         target:FileTarget;
         fileName:string;
 
@@ -484,7 +505,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         return (
-            <S2.TDExistingFileOps>
+            <S.ExistingFileOps>
                 <span className="active-file">{props.fileName}</span>
                 {'\u00a0'}
                 <a onClick={handleEditorEnableClick}>
@@ -494,13 +515,13 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 <a onClick={handleRemoveClick}>
                     {he.translate('global__remove')}
                 </a>
-            </S2.TDExistingFileOps>
+            </S.ExistingFileOps>
         );
     };
 
     // -------------------- <ListUploadInput /> ----------------------------------------
 
-    const TRFilterFile:React.FC<{
+    const FilterFile:React.FC<{
         label:string;
         hasValue:boolean;
         target:FileTarget;
@@ -509,15 +530,15 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         return (
-            <tr>
-                <td>
+            <>
+                <label htmlFor={`filter-file-${props.label}`}>
                     {props.label}:{'\u00a0'}
-                </td>
+                </label>
                 {props.hasValue ?
-                    <TDExistingFileOps target={props.target} fileName={props.fileName} /> :
-                    <TDFilterFileUploadInput target={props.target} />
+                    <ExistingFileOps target={props.target} fileName={props.fileName} /> :
+                    <FilterFileUploadInput ident={`filter-file-${props.label}`} target={props.target} />
                 }
-            </tr>
+            </>
         );
     };
 
@@ -583,40 +604,38 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         );
     }
 
-    // --------------- <TRIncludeNonWordsCheckbox /> ------------------------
+    // --------------- <IncludeNonWordsCheckbox /> ------------------------
 
-    const TRIncludeNonWordsCheckbox:React.FC<{
+    const IncludeNonWordsCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
 
-        const handleChange = (evt:React.ChangeEvent<{}>) => {
+        const handleChange = (value:boolean) => {
             dispatcher.dispatch<Actions.WordlistFormSetIncludeNonwords>({
                 name: ActionName.WordlistFormSetIncludeNonwords,
                 payload: {
-                    value: !props.value
+                    value
                 }
             });
         };
 
         return (
-            <S2.TRIncludeNonWordsCheckbox>
-                <td>
-                    <label htmlFor="wl-include-non-words-checkbox">
-                        {he.translate('wordlist__incl_non_word_label')}:
-                    </label>
-                </td>
-                <td>
-                    <input id="wl-include-non-words-checkbox" type="checkbox" checked={props.value}
-                            onChange={handleChange} />
-                </td>
-            </S2.TRIncludeNonWordsCheckbox>
+            <>
+                <label htmlFor="wl-include-non-words-checkbox">
+                    {he.translate('wordlist__incl_non_word_label')}:
+                </label>
+                <S.IncludeNonWordsCheckboxSpan>
+                    <layoutViews.ToggleSwitch checked={props.value} onChange={handleChange}
+                        id="wl-include-non-words-checkbox"/>
+                </S.IncludeNonWordsCheckboxSpan>
+            </>
         );
     };
 
-    // --------------- <TRFileFormatHint /> ------------------------
+    // --------------- <FileFormatHint /> ------------------------
 
-    class TRFileFormatHint extends React.Component<{},
+    class FileFormatHint extends React.Component<{},
     {
         hintVisible:boolean;
     }> {
@@ -638,20 +657,20 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         render() {
             return (
-                <tr>
-                    <td>
-                    {this.state.hintVisible ?
-                        (<layoutViews.PopupBox onCloseClick={this._handleCloseClick}
-                                customStyle={{width: '20em'}}>
-                            <p>{he.translate('wordlist__wl_white_lists')}</p>
-                        </layoutViews.PopupBox>) : null}
-                    </td>
-                    <td>
+                <>
+                    <label>
+                        {this.state.hintVisible ?
+                            (<layoutViews.PopupBox onCloseClick={this._handleCloseClick}
+                                    customStyle={{width: '20em'}}>
+                                <p>{he.translate('wordlist__wl_white_lists')}</p>
+                            </layoutViews.PopupBox>) : null}
+                    </label>
+                    <span>
                         <a className="hint" onClick={this._handleClick}>
                             {he.translate('wordlist__req_file_format_link')}
                         </a>
-                    </td>
-                </tr>
+                    </span>
+                </>
             );
         }
     }
@@ -664,6 +683,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             super(props);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
             this._handleKeyPress = this._handleKeyPress.bind(this);
+            this._handleOptionsLegendClick = this._handleOptionsLegendClick.bind(this);
+            this._handleFiltersLegendClick = this._handleFiltersLegendClick.bind(this);
         }
 
         _handleSubmitClick() {
@@ -680,48 +701,46 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             }
         }
 
+        _handleOptionsLegendClick() {
+            dispatcher.dispatch<Actions.ToggleOutputOptions>({
+                name: ActionName.ToggleOutputOptions
+            });
+        }
+
+        _handleFiltersLegendClick() {
+            dispatcher.dispatch<Actions.ToggleFilterOptions>({
+                name: ActionName.ToggleFilterOptions
+            });
+        }
+
         render() {
             return (
                 <S.WordListForm onKeyDown={this._handleKeyPress}>
                     {this.props.filterEditorData.target !== FileTarget.EMPTY ? <FileEditor data={this.props.filterEditorData} /> : null}
-                    <table className="form">
-                        <tbody>
-                            <tr>
-                                <td colSpan={2}>
-                                    <table>
-                                        <tbody>
-                                            <TRCorpusField corparchWidget={CorparchWidget}
-                                                    currentSubcorp={this.props.currentSubcorpus} />
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <fieldset>
-                        <legend>
-                            {he.translate('wordlist__filter_wordlist_by_legend')}
-                        </legend>
-                        <table className="form">
-                            <tbody>
-                                <TRAttrSelector attrList={this.props.attrList}
-                                        structAttrList={this.props.structAttrList}
-                                        wlattr={this.props.wlattr} />
-                                <TRWlpatternInput wlpat={this.props.wlpat} />
-                                <TRWlminfreqInput wlminfreq={this.props.wlminfreq} />
-                                <TRFilterFile label={he.translate('wordlist__whitelist_label')} target={FileTarget.WHITELIST}
-                                            hasValue={!!this.props.wlwords} fileName={this.props.wlFileName} />
-                                <TRFilterFile label={he.translate('wordlist__blacklist_label')} target={FileTarget.BLACKLIST}
-                                            hasValue={!!this.props.blacklist} fileName={this.props.blFileName} />
-                                <TRFileFormatHint />
-                                <TRIncludeNonWordsCheckbox value={this.props.includeNonwords} />
-                            </tbody>
-                        </table>
-                    </fieldset>
+                    <div>
+                        <CorparchWidget />
+                    </div>
+                    <S.MainFieldset>
+                        <AttrSelector attrList={this.props.attrList}
+                                structAttrList={this.props.structAttrList}
+                                wlattr={this.props.wlattr} />
+                        <WlpatternInput wlpat={this.props.wlpat} />
+                        <WlminfreqInput wlminfreq={this.props.wlminfreq} />
+                        <IncludeNonWordsCheckbox value={this.props.includeNonwords} />
+                    </S.MainFieldset>
+                    <FieldsetFilterOptions
+                            pfilterWords={this.props.pfilterWords}
+                            pfilterFileName={this.props.pfilterFileName}
+                            nfilterWords={this.props.nfilterWords}
+                            nfilterFileName={this.props.nfilterFileName}
+                            formVisible={this.props.filtersVisible}
+                            handleClick={this._handleFiltersLegendClick} />
                     <FieldsetOutputOptions wlnums={this.props.wlnums} wposattrs={this.props.wlposattrs}
                             numWlPosattrLevels={this.props.numWlPosattrLevels}
                             attrList={this.props.attrList} wltype={this.props.wltype} wlattr={this.props.wlattr}
-                            allowsMultilevelWltype={this.props.wlnums === WlnumsTypes.FRQ} />
+                            allowsMultilevelWltype={this.props.wlnums === WlnumsTypes.FRQ}
+                            formVisible={this.props.outputOptionsVisible}
+                            handleClick={this._handleOptionsLegendClick} />
                     <div className="buttons">
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>

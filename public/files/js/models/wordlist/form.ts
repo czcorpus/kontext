@@ -74,15 +74,17 @@ export interface WordlistFormState {
     numWlPosattrLevels:number;
     wltype:WlTypes;
     wlminfreq:Kontext.FormValue<string>;
-    wlwords:string;
-    blacklist:string;
+    pfilterWords:string;
+    nfilterWords:string;
     filterEditorData:FilterEditorData;
-    wlFileName:string;
-    blFileName:string;
+    pfilterFileName:string;
+    nfilterFileName:string;
     includeNonwords:boolean;
     isForeignSubcorp:boolean;
     currentSubcorpus:string;
     origSubcorpName:string;
+    outputOptionsVisible:boolean;
+    filtersVisible:boolean;
 }
 
 export interface WordlistFormCorpSwitchPreserve {
@@ -94,17 +96,25 @@ export interface WordlistFormCorpSwitchPreserve {
     includeNonwords:boolean;
 }
 
-export interface WordlistModelInitialArgs {
-    includeNonwords:number; // boolean like
-    wlminfreq:number;
-    subcnorm:string;
-    wlnums:WlnumsTypes;
-    blacklist:string;
-    wlpat:string;
-    wlwords:string;
-    wlsort:string;
-    wlattr:string;
-    wltype:WlTypes;
+export interface WordlistFormModelArgs {
+    dispatcher:IActionDispatcher;
+    layoutModel:PageModel;
+    corpusIdent:Kontext.FullCorpusIdent;
+    subcorpList:Array<string>;
+    attrList:Array<Kontext.AttrItem>;
+    structAttrList:Array<Kontext.AttrItem>;
+    initialArgs:{
+        includeNonwords:number; // boolean like
+        wlminfreq:number;
+        subcnorm:string;
+        wlnums:WlnumsTypes;
+        blacklist:string;
+        wlpat:string;
+        wlwords:string;
+        wlsort:string;
+        wlattr:string;
+        wltype:WlTypes;
+    };
 }
 
 /**
@@ -114,16 +124,19 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:IActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
-            subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>,
-            initialArgs:WordlistModelInitialArgs) {
+    constructor({dispatcher, layoutModel, corpusIdent,
+                subcorpList, attrList, structAttrList,
+                initialArgs}:WordlistFormModelArgs) {
         super(
             dispatcher,
             {
                 corpusId: corpusIdent.id,
                 corpusName: corpusIdent.name,
                 corpusVariant: corpusIdent.variant,
-                subcorpList: [...List.map(v => ({v: v, n: v, pub: '', foreign: false}), subcorpList)], // TODO missing information for subc items
+                subcorpList: [...List.map(
+                    v => ({v: v, n: v, pub: '', foreign: false}),
+                    subcorpList
+                )], // TODO missing information for subc items
                 attrList: [...attrList],
                 structAttrList: [...structAttrList],
                 wlpat: initialArgs.wlpat,
@@ -135,10 +148,10 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 wlsort: initialArgs.wlsort,
                 wlposattrs: ['', '', ''],
                 numWlPosattrLevels: 1,
-                wlwords: initialArgs.wlwords,
-                blacklist: initialArgs.blacklist,
-                wlFileName: '',
-                blFileName: '',
+                pfilterWords: initialArgs.wlwords,
+                nfilterWords: initialArgs.blacklist,
+                pfilterFileName: '',
+                nfilterFileName: '',
                 subcnorm: initialArgs.subcnorm,
                 includeNonwords: !!initialArgs.includeNonwords,
                 filterEditorData: {
@@ -146,7 +159,9 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 },
                 isForeignSubcorp: corpusIdent.foreignSubcorp,
                 currentSubcorpus: corpusIdent.usesubcorp,
-                origSubcorpName: ''
+                origSubcorpName: '',
+                outputOptionsVisible: false,
+                filtersVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -242,6 +257,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ActionName.WordlistFormSetWlminfreq,
             (state, action) => {
                 state.wlminfreq.value = action.payload.value;
+                this.validateForm(state);
             }
         );
 
@@ -259,8 +275,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<Actions.WordlistFormCreateWhitelist>(
-            ActionName.WordlistFormCreateWhitelist,
+        this.addActionHandler<Actions.WordlistFormCreatePfilter>(
+            ActionName.WordlistFormCreatePfilter,
             (state, action) => {
                 state.filterEditorData = {
                     target: FileTarget.WHITELIST,
@@ -270,8 +286,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<Actions.WordlistFormCreateBlacklist>(
-            ActionName.WordlistFormCreateBlacklist,
+        this.addActionHandler<Actions.WordlistFormCreateNfilter>(
+            ActionName.WordlistFormCreateNfilter,
             (state, action) => {
                 state.filterEditorData = {
                     target: FileTarget.BLACKLIST,
@@ -353,15 +369,15 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 if (action.payload.target === FileTarget.WHITELIST) {
                     state.filterEditorData = {
                         target: FileTarget.WHITELIST,
-                        data: state.wlwords,
-                        fileName: state.wlFileName
+                        data: state.pfilterWords,
+                        fileName: state.pfilterFileName
                     };
 
                 } else if (action.payload.target === FileTarget.BLACKLIST) {
                     state.filterEditorData = {
                         target: FileTarget.BLACKLIST,
-                        data: state.blacklist,
-                        fileName: state.blFileName
+                        data: state.nfilterWords,
+                        fileName: state.nfilterFileName
                     };
                 }
             }
@@ -372,12 +388,12 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             (state, action) => {
                 if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
                     if (action.payload.target === FileTarget.WHITELIST) {
-                        state.wlwords = '';
-                        state.wlFileName = ''
+                        state.pfilterWords = '';
+                        state.pfilterFileName = ''
 
                     } else if (action.payload.target === FileTarget.BLACKLIST) {
-                        state.blacklist = '';
-                        state.blFileName = ''
+                        state.nfilterWords = '';
+                        state.nfilterFileName = ''
                     }
                 }
             }
@@ -387,13 +403,13 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ActionName.WordlistFormCloseEditor,
             (state, action) => {
                 if (state.filterEditorData.target === FileTarget.WHITELIST) {
-                    state.wlwords = state.filterEditorData.data;
-                    state.wlFileName = state.filterEditorData.fileName;
+                    state.pfilterWords = state.filterEditorData.data;
+                    state.pfilterFileName = state.filterEditorData.fileName;
                     state.filterEditorData = {target: FileTarget.EMPTY};
 
                 } else if (state.filterEditorData.target === FileTarget.BLACKLIST) {
-                    state.blacklist = state.filterEditorData.data;
-                    state.blFileName = state.filterEditorData.fileName;
+                    state.nfilterWords = state.filterEditorData.data;
+                    state.nfilterFileName = state.filterEditorData.fileName;
                     state.filterEditorData = {target: FileTarget.EMPTY};
                 }
             }
@@ -412,12 +428,29 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 this.validateForm(state);
             },
             (state, action, dispatch) => {
-                if (!state.wlminfreq.isInvalid) {
-                    this.submit(state);
+                if (state.wlminfreq.isInvalid) {
+                    this.layoutModel.showMessage('error', state.wlminfreq.errorDesc);
+
+                } else if (!state.wlpat) {
+                    this.layoutModel.showMessage('error', this.layoutModel.translate('wordlist__pattern_empty_err'));
 
                 } else {
-                    this.layoutModel.showMessage('error', state.wlminfreq.errorDesc);
+                    this.submit(state);
                 }
+            }
+        );
+
+        this.addActionHandler<Actions.ToggleOutputOptions>(
+            ActionName.ToggleOutputOptions,
+            (state, action) => {
+                state.outputOptionsVisible = !state.outputOptionsVisible;
+            }
+        );
+
+        this.addActionHandler<Actions.ToggleFilterOptions>(
+            ActionName.ToggleFilterOptions,
+            (state, action) => {
+                state.filtersVisible = !state.filtersVisible;
             }
         );
 
@@ -490,10 +523,10 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     private serialize(state:WordlistFormState):WordlistFormCorpSwitchPreserve {
         return {
             wlpat: state.wlpat,
-            blacklist: state.blacklist,
-            wlwords: state.wlwords,
-            wlFileName: state.wlFileName,
-            blFileName: state.blFileName,
+            blacklist: state.nfilterWords,
+            wlwords: state.pfilterWords,
+            wlFileName: state.pfilterFileName,
+            blFileName: state.nfilterFileName,
             includeNonwords: state.includeNonwords
         };
     }
@@ -505,10 +538,10 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     ):void {
         if (data) {
             state.wlpat = data.wlpat;
-            state.blacklist = data.blacklist,
-            state.wlwords = data.wlwords,
-            state.wlFileName = data.wlFileName,
-            state.blFileName = data.blFileName,
+            state.nfilterWords = data.blacklist,
+            state.pfilterWords = data.wlwords,
+            state.pfilterFileName = data.wlFileName,
+            state.nfilterFileName = data.blFileName,
             state.includeNonwords = data.includeNonwords
         }
     }
@@ -523,8 +556,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             wlnums: state.wlnums,
             wltype: state.wltype,
             wlsort: state.wlsort,
-            wlwords: state.wlwords.trim(),
-            blacklist: state.blacklist.trim(),
+            wlwords: state.pfilterWords.trim(),
+            blacklist: state.nfilterWords.trim(),
             include_nonwords: state.includeNonwords,
             wlposattr1: state.wlposattrs[0],
             wlposattr2: state.wlposattrs[1],

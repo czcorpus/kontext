@@ -84,14 +84,14 @@ class WordlistFormPage {
                     'SubcorpList'
                 )
             });
-            this.wordlistFormModel = new WordlistFormModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel,
-                this.corpusIdent,
-                this.layoutModel.getConf<Array<string>>('SubcorpList'),
-                this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-                {
+            this.wordlistFormModel = new WordlistFormModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                corpusIdent: this.corpusIdent,
+                subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                initialArgs: {
                     includeNonwords: 0,
                     wlminfreq: 5,
                     subcnorm: '',
@@ -103,7 +103,7 @@ class WordlistFormPage {
                     wlattr: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')[0].n,
                     wltype: WlTypes.SIMPLE
                 }
-            );
+            });
             this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
             this.views = wordlistFormInit({
                 dispatcher: this.layoutModel.dispatcher,

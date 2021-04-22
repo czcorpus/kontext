@@ -28,7 +28,7 @@ import { MultiDict } from '../multidict';
 import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
 import { init as wordlistResultViewInit } from '../views/wordlist/result';
 import { init as wordlistSaveViewInit } from '../views/wordlist/save';
-import { WordlistFormModel, WordlistModelInitialArgs } from '../models/wordlist/form';
+import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form';
 import { WordlistSaveModel } from '../models/wordlist/save';
 import { KontextPage } from '../app/main';
 import { WordlistResultModel } from '../models/wordlist/main';
@@ -193,15 +193,15 @@ export class WordlistPage {
                     }
                 )
             }
-            const formModel = new WordlistFormModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel,
-                this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
-                this.layoutModel.getConf<Array<string>>('SubcorpList'),
-                this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-                this.layoutModel.getConf<WordlistModelInitialArgs>('FormArgs')
-            );
+            const formModel = new WordlistFormModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                corpusIdent: this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+                subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                initialArgs: this.layoutModel.getConf<WordlistFormModelArgs['initialArgs']>('FormArgs')
+            });
 
             this.saveModel = new WordlistSaveModel({
                 dispatcher: this.layoutModel.dispatcher,
