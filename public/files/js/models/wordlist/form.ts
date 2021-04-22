@@ -20,8 +20,8 @@
 
 import { Observable, Observer, of as rxOf } from 'rxjs';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { concatMap } from 'rxjs/operators';
-import { Dict, List, Ident, pipe, tuple } from 'cnc-tskit';
+import { concatMap, map } from 'rxjs/operators';
+import { Dict, List, Ident, pipe, tuple, HTTP } from 'cnc-tskit';
 
 
 import { Kontext } from '../../types/common';
@@ -31,8 +31,9 @@ import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
-import { FileTarget, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
+import { FileTarget, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
 import { IUnregistrable } from '../common/common';
+import { MultiDict } from '../../multidict';
 
 
 /**
@@ -67,7 +68,6 @@ export interface WordlistFormState {
     wlattr:string;
     usesStructAttr:boolean;
     wlpat:string;
-    wlsort:string;
     subcnorm:string;
     wlnums:WlnumsTypes;
     wlposattrs:[string, string, string];
@@ -89,10 +89,10 @@ export interface WordlistFormState {
 
 export interface WordlistFormCorpSwitchPreserve {
     wlpat:string;
-    blacklist:string;
-    wlwords:string;
-    wlFileName:string;
-    blFileName:string;
+    nfilterWords:string;
+    pfilterWords:string;
+    pfilterFileName:string;
+    nfilterFileName:string;
     includeNonwords:boolean;
 }
 
@@ -104,13 +104,13 @@ export interface WordlistFormModelArgs {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
     initialArgs:{
-        includeNonwords:number; // boolean like
+        include_nonwords:number; // boolean like
         wlminfreq:number;
         subcnorm:string;
         wlnums:WlnumsTypes;
-        blacklist:string;
         wlpat:string;
-        wlwords:string;
+        pfilter_words:Array<string>;
+        nfilter_words:Array<string>;
         wlsort:string;
         wlattr:string;
         wltype:WlTypes;
@@ -145,15 +145,14 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 wlnums: initialArgs.wlnums,
                 wltype: initialArgs.wltype,
                 wlminfreq: {value: initialArgs.wlminfreq.toFixed(), isInvalid: false, isRequired: true},
-                wlsort: initialArgs.wlsort,
                 wlposattrs: ['', '', ''],
                 numWlPosattrLevels: 1,
-                pfilterWords: initialArgs.wlwords,
-                nfilterWords: initialArgs.blacklist,
+                pfilterWords: initialArgs.pfilter_words.join('\n'),
+                nfilterWords: initialArgs.nfilter_words.join('\n'),
                 pfilterFileName: '',
                 nfilterFileName: '',
                 subcnorm: initialArgs.subcnorm,
-                includeNonwords: !!initialArgs.includeNonwords,
+                includeNonwords: !!initialArgs.include_nonwords,
                 filterEditorData: {
                     target: 'empty'
                 },
@@ -209,12 +208,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         ).sideEffectAlsoOn(
             ActionName.WordlistSaveFormSubmit,
-            MainMenuActionName.DirectSave,
-            ActionName.WordlistResultNextPage,
-            ActionName.WordlistResultPrevPage,
-            ActionName.WordlistGoToLastPage,
-            ActionName.WordlistResultConfirmPage,
-            ActionName.WordlistResultViewConc
+            MainMenuActionName.DirectSave
         );
 
         this.addActionHandler<Actions.WordlistFormSelectAttr>(
@@ -415,13 +409,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<Actions.WordlistResultSetSortColumn>(
-            ActionName.WordlistResultSetSortColumn,
-            (state, action) => {
-                state.wlsort = action.payload.sortKey;
-            }
-        );
-
         this.addActionHandler<Actions.WordlistFormSubmit>(
             ActionName.WordlistFormSubmit,
             (state, action) => {
@@ -435,7 +422,19 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                     this.layoutModel.showMessage('error', this.layoutModel.translate('wordlist__pattern_empty_err'));
 
                 } else {
-                    this.submit(state);
+                    this.submit(state).subscribe(
+                        resp => {
+                            window.location.href = this.layoutModel.createActionUrl(
+                                'wordlist/result',
+                                MultiDict.fromDict({
+                                    q: `~${resp.wl_query_id}`
+                                })
+                            );
+                        },
+                        (err) => {
+                            console.log('err: ', err);
+                        }
+                    )
                 }
             }
         );
@@ -523,10 +522,10 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     private serialize(state:WordlistFormState):WordlistFormCorpSwitchPreserve {
         return {
             wlpat: state.wlpat,
-            blacklist: state.nfilterWords,
-            wlwords: state.pfilterWords,
-            wlFileName: state.pfilterFileName,
-            blFileName: state.nfilterFileName,
+            nfilterWords: state.nfilterWords,
+            pfilterWords: state.pfilterWords,
+            pfilterFileName: state.pfilterFileName,
+            nfilterFileName: state.nfilterFileName,
             includeNonwords: state.includeNonwords
         };
     }
@@ -538,12 +537,19 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     ):void {
         if (data) {
             state.wlpat = data.wlpat;
-            state.nfilterWords = data.blacklist,
-            state.pfilterWords = data.wlwords,
-            state.pfilterFileName = data.wlFileName,
-            state.nfilterFileName = data.blFileName,
+            state.nfilterWords = data.nfilterWords,
+            state.pfilterWords = data.pfilterWords,
+            state.pfilterFileName = data.pfilterFileName,
+            state.nfilterFileName = data.nfilterFileName,
             state.includeNonwords = data.includeNonwords
         }
+    }
+
+    private splitWords(s:string):Array<string> {
+        return pipe(
+            s.split(/\s+/),
+            List.filter(v => v !== '')
+        );
     }
 
     createSubmitArgs(state:WordlistFormState):WordlistSubmitArgs {
@@ -555,9 +561,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             wlminfreq: parseInt(state.wlminfreq.value),
             wlnums: state.wlnums,
             wltype: state.wltype,
-            wlsort: state.wlsort,
-            pfilter_words: state.pfilterWords.trim(),
-            nfilter_words: state.nfilterWords.trim(),
+            pfilter_words: this.splitWords(state.pfilterWords),
+            nfilter_words: this.splitWords(state.nfilterWords),
             include_nonwords: state.includeNonwords,
             wlposattr1: state.wlposattrs[0],
             wlposattr2: state.wlposattrs[1],
@@ -566,26 +571,16 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         };
     }
 
-    static encodeSubmitArgs(args:WordlistSubmitArgs):Array<[string, string]> {
-        return pipe(
-            args,
-            Dict.toEntries(),
-            List.filter(([,v]) => v !== undefined && v !== null),
-            List.map(([k, v]) => {
-                if (typeof v === 'boolean') {
-                    return tuple(k, v ? '1' : '0')
-                }
-                return tuple(k, v + '')
-            })
-        )
-    }
-
-    private submit(state:WordlistFormState):void {
+    private submit(state:WordlistFormState):Observable<SubmitResponse> {
         const args = this.createSubmitArgs(state);
-        const action = state.wltype === 'multilevel' ? 'wordlist/struct_result' : 'wordlist/result';
-        this.layoutModel.setLocationPost(
+        const action = state.wltype === 'multilevel' ? 'wordlist/struct_result' : 'wordlist/submit';
+        return this.layoutModel.ajax$<SubmitResponse>(
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(action),
-            WordlistFormModel.encodeSubmitArgs(args)
+            args,
+            {
+                contentType: 'application/json'
+            }
         );
     }
 

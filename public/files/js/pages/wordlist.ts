@@ -200,7 +200,7 @@ export class WordlistPage {
                 subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                 structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-                initialArgs: this.layoutModel.getConf<WordlistFormModelArgs['initialArgs']>('FormArgs')
+                initialArgs: this.layoutModel.getConf<WordlistFormModelArgs['initialArgs']>('Form')
             });
 
             this.saveModel = new WordlistSaveModel({
@@ -215,6 +215,12 @@ export class WordlistPage {
                 this.layoutModel,
                 {
                     data: this.layoutModel.getConf<Array<ResultItem>>('Data'),
+                    total: this.layoutModel.getConf<number>('Total'),
+                    corpname: this.layoutModel.getCorpusIdent().id,
+                    usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+                    queryId: this.layoutModel.getConf<string>('QueryId'),
+                    reversed: this.layoutModel.getConf<boolean>('Reversed'),
+                    wlsort: this.layoutModel.getConf<string>('Wlsort'),
                     page: this.layoutModel.getConf<number>('PageNum'),
                     pageSize: this.layoutModel.getConf<number>('PageSize'),
                     isLastPage: !!this.layoutModel.getConf<boolean>('IsLastPage')
@@ -229,7 +235,6 @@ export class WordlistPage {
                         sortKey: 'f'
                     }
                 ],
-                this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'),
                 this.layoutModel.getConf<boolean>('IsUnfinished')
             );
 
@@ -256,16 +261,6 @@ export class WordlistPage {
 
             this.initCorpInfoToolbar();
             this.layoutModel.initKeyShortcuts();
-
-            this.layoutModel.getHistory().replaceState(
-                'wordlist/result',
-                new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs')),
-                {
-                    pagination: true,
-                    page: 1
-                },
-                ''
-            );
 
             this.layoutModel.getHistory().setOnPopState((evt:PopStateEvent) => {
                 if (evt.state['pagination']) {

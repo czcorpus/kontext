@@ -93,17 +93,21 @@ def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_loc
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-def compile_frq(corp_id, subcorp_path, attr, logfile):
-    return general.compile_frq(corp_id, subcorp_path, attr, logfile)
+def compile_frq(corp_id, subcorp: str, user_id, attr, logfile):
+    return general.compile_frq(corp_id, subcorp, user_id, attr, logfile)
 
 
-def compile_arf(corp_id, subcorp_path, attr, logfile):
-    return general.compile_arf(corp_id, subcorp_path, attr, logfile)
+def compile_arf(corp_id, subcorp: str, user_id, attr, logfile):
+    return general.compile_arf(corp_id, subcorp, user_id, attr, logfile)
 
 
-def compile_docf(corp_id, subcorp_path, attr, logfile):
-    return general.compile_docf(corp_id, subcorp_path, attr, logfile)
+def compile_docf(corp_id, subcorp: str, user_id, attr, logfile):
+    return general.compile_docf(corp_id, subcorp, user_id, attr, logfile)
 
+# ----------------------------- WORD LIST -------------------------------------
+
+def get_wordlist(args, max_items, user_id):
+    return general.get_wordlist(args, max_items, user_id)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 

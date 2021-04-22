@@ -785,7 +785,7 @@
         "wordlist__nfilter_label": "Negative filter words",
         "wordlist__incl_non_word_label": "Include non-words",
         "wordlist__req_file_format_link": "required file format",
-        "wordlist__wl_white_lists": "Wordlist whitelists and blacklists must be plain text (.txt), encoded in UTF-8, with one item per line.  The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.",
+        "wordlist__pn_filter_lists": "Wordlist positive and and negative filter words must be UTF-8 plain text, one item per line. The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.",
         "wordlist__confirm_file_remove": "Are you sure you want to remove the filter list?",
         "wordlist__filter_th": "Filter",
         "wordlist__page_not_found_err": "Page not found",

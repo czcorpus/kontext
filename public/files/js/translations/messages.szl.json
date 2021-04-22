@@ -784,7 +784,7 @@
         "wordlist__nfilter_label": "Czŏrnŏ lista",
         "wordlist__incl_non_word_label": "Ze liczbami i interpunkcyjōm",
         "wordlist__req_file_format_link": "wymŏgany format zbioru",
-        "wordlist__wl_white_lists": "Biŏłe i czŏrne listy muszōm być we formacie prostego tekstu (.txt), kodowane we UTF-8, ze jednym elymyntym na linijõ. Elymynta muszōm korespōndować ze ôbranym atrybutym, tōż bp. jak 'lemma' je ôbranŏ ze myni atrybutōw, to lista musi być wykŏzym lymmōw. We zbiorze wchodu używōmy akuratnych trefiyń, a niy regularnych wyrażyń.",
+        "wordlist__pn_filter_lists": "Wordlist positive and and negative filter words must be UTF-8 plain text, one item per line. The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input. UNTRANSLATED",
         "wordlist__confirm_file_remove": "Na isto chcesz skasować wykŏz filtrōw?",
         "wordlist__filter_th": "Filter",
         "wordlist__page_not_found_err": "Strōna niy znaleziōnŏ",

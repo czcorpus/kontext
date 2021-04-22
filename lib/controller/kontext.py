@@ -324,9 +324,9 @@ class Kontext(Controller):
                 merge_incoming_opts_to(options)
                 self._session['settings'] = options
 
-    def _restore_prev_conc_params(self, form):
+    def _restore_prev_query_params(self, form):
         """
-        Restores previously stored concordance query data using an ID found in request arg 'q'.
+        Restores previously stored concordance/pquery/wordlist query data using an ID found in request arg 'q'.
         To even begin the search, two conditions must be met:
         1. query_persistence plugin is installed
         2. request arg 'q' contains a string recognized as a valid ID of a stored concordance query
@@ -350,7 +350,7 @@ class Kontext(Controller):
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._prev_q_data is not None:
-                    form.add_forced_arg('q', *(self._prev_q_data['q'][:] + url_q[1:]))
+                    form.add_forced_arg('q', *(self._prev_q_data.get('q', [])[:] + url_q[1:]))
                     corpora = self._prev_q_data.get('corpora', [])
                     if len(corpora) > 0:
                         orig_corpora = form.add_forced_arg('corpname', corpora[0])
@@ -553,7 +553,7 @@ class Kontext(Controller):
             self._setup_user_paths()
             self.cm = corplib.CorpusManager(self.subcpath)
 
-            self._restore_prev_conc_params(req_args)
+            self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
             corpname, self._corpus_variant = self._check_corpus_access(
                 action_name, req_args, action_metadata)

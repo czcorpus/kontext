@@ -107,11 +107,6 @@ class Args(object):
     freq_sort: str = def_attr('')
     heading: int = def_attr(0)
     saveformat: str = def_attr('text')
-    wlattr: str = def_attr('')
-    wlpat: str = def_attr('')
-    wlpage: int = def_attr(1)
-    wlcache: str = def_attr('')
-    blcache: str = def_attr('')
     simple_n: int = def_attr(1)
     usearf: int = def_attr(0)
     collpage: int = def_attr(1)
@@ -198,15 +193,6 @@ class Args(object):
     ctfcrit2: str = def_attr('0<0')
 
     # word list
-
-    wlminfreq: int = def_attr(5)
-    wlicase: int = def_attr(0)
-    pfilter_words: str = def_attr('')
-    nfilter_words: str = def_attr('')
-
-    include_nonwords: int = def_attr(0)
-    wltype: str = def_attr('simple')
-    wlnums: str = def_attr('frq')
 
     wlposattr1: str = def_attr('')
     wlposattr2: str = def_attr('')

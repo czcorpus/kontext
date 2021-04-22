@@ -32,9 +32,8 @@ export interface WordlistSubmitArgs {
     wlminfreq:number;
     wlnums:WlnumsTypes;
     wltype:string;
-    wlsort:string;
-    pfilter_words:string;
-    nfilter_words:string;
+    pfilter_words:Array<string>;
+    nfilter_words:Array<string>;
     include_nonwords:boolean;
     wlposattr1:string;
     wlposattr2:string;
@@ -43,19 +42,25 @@ export interface WordlistSubmitArgs {
 }
 
 export type ResultData = {
-    data:Array<ResultItem>,
+    queryId:string;
+    corpname:string;
+    usesubcorp:string;
+    data:Array<ResultItem>;
+    total:number;
+    wlsort:string;
+    reversed:boolean;
     page:number;
     pageSize:number;
     isLastPage:boolean;
 }
 
 
-export interface ResultItem {
-    freq:number;
-    str:string;
-}
+export type ResultItem = [string, number];
 
-export interface IndexedResultItem extends ResultItem {
+
+export interface IndexedResultItem {
+    str:string;
+    freq:number;
     idx:number;
 }
 
@@ -67,3 +72,10 @@ export interface HeadingItem {
 export type WlTypes = 'simple'|'multilevel';
 
 export type FileTarget = 'pfilter'|'nfilter'|'empty';
+
+
+export interface SubmitResponse {
+    corpname:string;
+    usesubcorp:string;
+    wl_query_id:string;
+}
