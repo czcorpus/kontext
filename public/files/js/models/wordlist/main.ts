@@ -330,7 +330,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 return this.layoutModel.ajax$<WlSizeAjaxResponse>(
                     HTTP.Method.GET,
                     this.layoutModel.createActionUrl('wordlist/ajax_get_wordlist_size'),
-                    new MultiDict(WordlistFormModel.encodeSubmitArgs(formSubmitArgs))
+                    {} // TODO new MultiDict(WordlistFormModel.encodeSubmitArgs(formSubmitArgs))
                 );
 
             } else {
@@ -451,7 +451,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         return this.layoutModel.ajax$<DataAjaxResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('wordlist/result', [['format', 'json']]),
-            new MultiDict(WordlistFormModel.encodeSubmitArgs(formModelSubmitArgs))
+            {} // TODO new MultiDict(WordlistFormModel.encodeSubmitArgs(formModelSubmitArgs))
 
         ).pipe(
             concatMap(

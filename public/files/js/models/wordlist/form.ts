@@ -20,8 +20,8 @@
 
 import { Observable, Observer, of as rxOf } from 'rxjs';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { concatMap } from 'rxjs/operators';
-import { Dict, List, Ident, pipe, tuple } from 'cnc-tskit';
+import { concatMap, map } from 'rxjs/operators';
+import { Dict, List, Ident, pipe, tuple, HTTP } from 'cnc-tskit';
 
 
 import { Kontext } from '../../types/common';
@@ -31,8 +31,9 @@ import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
-import { FileTarget, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
+import { FileTarget, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
 import { IUnregistrable } from '../common/common';
+import { MultiDict } from '../../multidict';
 
 
 /**
@@ -435,7 +436,21 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                     this.layoutModel.showMessage('error', this.layoutModel.translate('wordlist__pattern_empty_err'));
 
                 } else {
-                    this.submit(state);
+                    this.submit(state).subscribe(
+                        resp => {
+                            window.location.href = this.layoutModel.createActionUrl(
+                                'wordlist/result',
+                                MultiDict.fromDict({
+                                    corpname: resp.corpname,
+                                    usesubcorp: resp.usesubcorp,
+                                    query_id: resp.wl_query_id
+                                })
+                            );
+                        },
+                        (err) => {
+                            console.log('err: ', err);
+                        }
+                    )
                 }
             }
         );
@@ -566,26 +581,16 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         };
     }
 
-    static encodeSubmitArgs(args:WordlistSubmitArgs):Array<[string, string]> {
-        return pipe(
-            args,
-            Dict.toEntries(),
-            List.filter(([,v]) => v !== undefined && v !== null),
-            List.map(([k, v]) => {
-                if (typeof v === 'boolean') {
-                    return tuple(k, v ? '1' : '0')
-                }
-                return tuple(k, v + '')
-            })
-        )
-    }
-
-    private submit(state:WordlistFormState):void {
+    private submit(state:WordlistFormState):Observable<SubmitResponse> {
         const args = this.createSubmitArgs(state);
-        const action = state.wltype === 'multilevel' ? 'wordlist/struct_result' : 'wordlist/result';
-        this.layoutModel.setLocationPost(
+        const action = state.wltype === 'multilevel' ? 'wordlist/struct_result' : 'wordlist/submit';
+        return this.layoutModel.ajax$<SubmitResponse>(
+            HTTP.Method.POST,
             this.layoutModel.createActionUrl(action),
-            WordlistFormModel.encodeSubmitArgs(args)
+            args,
+            {
+                contentType: 'application/json'
+            }
         );
     }
 

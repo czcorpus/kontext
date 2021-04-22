@@ -67,3 +67,10 @@ export interface HeadingItem {
 export type WlTypes = 'simple'|'multilevel';
 
 export type FileTarget = 'pfilter'|'nfilter'|'empty';
+
+
+export interface SubmitResponse {
+    corpname:string;
+    usesubcorp:string;
+    wl_query_id:string;
+}

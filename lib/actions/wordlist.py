@@ -13,15 +13,13 @@
 # GNU General Public License for more details.
 
 import sys
-import re
 import logging
 import os
-import hashlib
 
 import corplib
 from corplib.errors import MissingSubCorpFreqFile
-from actions.concordance import Actions as ConcActions
 from controller import exposed
+from controller.kontext import Kontext
 from controller.errors import ImmediateRedirectException
 from main_menu import MainMenu
 from translation import ugettext as translate
@@ -31,20 +29,41 @@ from bgcalc.errors import CalcBackendError
 import plugins
 import settings
 from argmapping import log_mapping
+from argmapping.wordlist import WordlistFormArgs
+from werkzeug import Request
+from texttypes import TextTypesCache
+from typing import Optional, Callable, List, Dict, Any
+from conclib.wordlist import make_wl_query
 
 
 class WordlistError(UserActionException):
     pass
 
 
-class Wordlist(ConcActions):
+class Wordlist(Kontext):
 
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
 
     WORDLIST_QUICK_SAVE_MAX_LINES = 10000
 
+    def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
+        super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
+        self._curr_wlform_args: Optional[WordlistFormArgs] = None
+        self.on_conc_store: Callable[[List[str], bool, Dict[str, Any]], None] = lambda s, uh, res: None
+
     def get_mapping_url_prefix(self):
         return '/wordlist/'
+
+    def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
+        super().post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
+        if action_metadata['mutates_result']:
+            with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
+                query_id = qp.store(user_id=self.session_get('user', 'id'),
+                                    curr_data=dict(form=self._curr_wlform_args.to_qp(),
+                                                   corpora=[self._curr_wlform_args.corpname],
+                                                   usesubcorp=self._curr_wlform_args.usesubcorp))
+                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='pquery')
+                self.on_conc_store([query_id], True, result)
 
     @exposed(access_level=1, return_type='json')
     def ajax_get_wordlist_size(self, request):
@@ -79,16 +98,6 @@ class Wordlist(ConcActions):
             f.close()
         return res
 
-    @staticmethod
-    def save_bw_file(bwlist):
-        hash = hashlib.md5(bwlist.encode('utf-8')).hexdigest()
-        fname = hash + '.txt'
-        path = os.path.join(settings.get('global', 'user_filter_files_dir'), fname)
-        rpath = os.path.realpath(path)
-        with open(rpath, 'w') as fw:
-            fw.write(bwlist)
-        return hash
-
     @exposed(access_level=1, vars=('LastSubcorp',), page_model='wordlistForm')
     def form(self, request):
         """
@@ -100,14 +109,43 @@ class Wordlist(ConcActions):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         return out
 
-    @exposed(access_level=1, func_arg_mapped=True, http_method=('POST', 'GET'), page_model='wordlist',
+    def _search(self, form: WordlistFormArgs):
+        return corplib.wordlist(corp=self.corp, pfilter_words=form.pfilter_words, wlattr=form.wlattr,
+                                wlpat=form.wlpat, wlminfreq=form.wlminfreq,
+                                wlmaxitems=sys.maxsize, wlsort=form.wlsort, # TODO wlmaxitems
+                                nfilter_words=form.nfilter_words,
+                                wlnums=form.wlnums,
+                                include_nonwords=form.include_nonwords)
+
+    @exposed(access_level=1, http_method='POST', page_model='wordlist',
+             return_type='json', mutates_result=True, action_log_mapper=log_mapping.wordlist)
+    def submit(self, request):
+        form_args = WordlistFormArgs()
+        form_args.update_by_user_query(request.json)
+        self._search(form_args)
+        self._curr_wlform_args = form_args
+
+        def on_conc_store(query_ids, stored_history, result):
+            result['wl_query_id'] = query_ids[0]
+
+        self.on_conc_store = on_conc_store
+        return dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp)
+
+    @exposed(access_level=1, http_method=('POST', 'GET'), page_model='wordlist',
              action_log_mapper=log_mapping.wordlist)
-    def result(self, wlpat='', paginate=True, wlhash='', blhash=''):
+    def result(self, request): # TODO wlpat='', paginate=True, wlhash='', blhash=''):
         """
         """
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
                                     MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
+
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            stored_form = qp.open(request.args.get('query_id'))
+            self._curr_wlform_args = WordlistFormArgs()
+            self._curr_wlform_args.update_by_user_query(stored_form['form'])
+
+        
         if not wlpat:
             self.args.wlpat = '.*'
         if '.' in self.args.wlattr:
@@ -135,22 +173,7 @@ class Wordlist(ConcActions):
             if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
                 self.args.wlsort = ''
 
-            pfilter_words = self.args.pfilter_words
-            nfilter_words = self.args.nfilter_words
 
-            if wlhash != '':
-                pfilter_words = self.load_bw_file(wlhash)
-
-            if blhash != '':
-                nfilter_words = self.load_bw_file(blhash)
-
-            pfilter_words = [w for w in re.split(r'\s+', pfilter_words.strip()) if w]
-            nfilter_words = [w for w in re.split(r'\s+', nfilter_words.strip()) if w]
-
-            if wlhash == '' and len(self.args.pfilter_words) > 0:
-                wlhash = self.save_bw_file(self.args.pfilter_words)
-            if blhash == '' and len(self.args.nfilter_words) > 0:
-                blhash = self.save_bw_file(self.args.nfilter_words)
 
             result['reload_args'] = list(dict(
                 corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
@@ -231,7 +254,11 @@ class Wordlist(ConcActions):
         self.args.usesubcorp = request.form.get('usesubcorp')
 
         if self.args.fcrit:
-            self._make_wl_query()
+            self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
+                                        include_nonwords=request.form['include_nonwords'],
+                                        pfilter_words=request.form['pfilter_words'],
+                                        nfilter_words=request.form['nfilter_words'],
+                                        non_word_re=self.corp.get_conf('NONWORDRE'))
             args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
                     ('fcrit', self.args.fcrit), ('flimit', self.args.flimit),
                     ('freq_sort', self.args.freq_sort), ('next', 'freqs')] + [('q', q) for q in self.args.q]
@@ -251,7 +278,11 @@ class Wordlist(ConcActions):
         if not self.args.wlpat and not self.args.pfilter_words:
             raise WordlistError(
                 translate('You must specify either a pattern or a file to get the multilevel wordlist'))
-        self._make_wl_query()
+        self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
+                                    include_nonwords=request.form['include_nonwords'],
+                                    pfilter_words=request.form['pfilter_words'],
+                                    nfilter_words=request.form['nfilter_words'],
+                                    non_word_re=self.corp.get_conf('NONWORDRE'))
         self.args.flimit = self.args.wlminfreq
         args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
                 ('flimit', self.args.wlminfreq), ('freqlevel', level), ('ml1attr', self.args.wlposattr1),

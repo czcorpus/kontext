@@ -1081,23 +1081,6 @@ class Actions(Querying):
         self._attach_query_overview(result)
         return result
 
-    def _make_wl_query(self):
-        qparts = []
-        if self.args.wlpat:
-            qparts.append('%s="%s"' % (self.args.wlattr, self.args.wlpat))
-        if not self.args.include_nonwords:
-            qparts.append('%s!="%s"' % (self.args.wlattr,
-                                        self.corp.get_conf('NONWORDRE')))
-
-        pfilter_words = [w for w in re.split('\s+', self.args.pfilter_words.strip()) if w]
-        nfilter_words = [w for w in re.split('\s+', self.args.nfilter_words.strip()) if w]
-        if len(pfilter_words) > 0:
-            qq = ['%s=="%s"' % (self.args.wlattr, w.strip()) for w in pfilter_words]
-            qparts.append('(' + '|'.join(qq) + ')')
-        for w in nfilter_words:
-            qparts.append('%s!=="%s"' % (self.args.wlattr, w.strip()))
-        self.args.q = ['q[' + '&'.join(qparts) + ']']
-
     @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.html', return_type='plain')
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
@@ -1110,7 +1093,14 @@ class Actions(Querying):
         self.args.fpage = 1
         self.args.fmaxitems = to_line - from_line + 1
         if self.args.wlattr:
-            self._make_wl_query()  # multilevel wordlist
+            pass
+            # TODO !!!!!!!!!!!!!
+            #self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
+            #                            include_nonwords=request.form['include_nonwords'],
+            #                            pfilter_words=request.form['pfilter_words'],
+            #                            nfilter_words=request.form['nfilter_words'],
+            #                            non_word_re=self.corp.get_conf('NONWORDRE'))
+            #self._make_wl_query()  # multilevel wordlist
 
         # following piece of sh.t has hidden parameter dependencies
         result = self.freqs(fcrit, flimit, freq_sort, ml)
