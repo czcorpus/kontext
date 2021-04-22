@@ -54,7 +54,7 @@ class Wordlist(ConcActions):
             wlnums = self.args.wlnums
         return dict(size=corplib.get_wordlist_length(corp=self.corp, wlattr=self.args.wlattr, wlpat=self.args.wlpat,
                                                      wlnums=wlnums, wlminfreq=self.args.wlminfreq,
-                                                     words=self.args.wlwords, blacklist=self.args.blacklist,
+                                                     pfilter_words=self.args.pfilter_words, nfilter_words=self.args.nfilter_words,
                                                      include_nonwords=self.args.include_nonwords))
 
     def _wlnums2structattr(self, wlnums):
@@ -119,51 +119,49 @@ class Wordlist(ConcActions):
         else:
             wlmaxitems = sys.maxsize
         wlstart = (self.args.wlpage - 1) * self.args.wlpagesize
-        result = {
-            'reload_args': list({
-                'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
-                'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
-                'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
-                'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums}.items()),
-            'form_args': dict(
+        result = dict(
+            reload_args=list(dict(
+                corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
+                wlattr=self.args.wlattr, wlpat=self.args.wlpat,
+                wlminfreq=self.args.wlminfreq, include_nonwords=self.args.include_nonwords,
+                wlsort=self.args.wlsort, wlnums=self.args.wlnums).items()),
+            form_args=dict(
                 wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
                 subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
-                wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
-                wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
-        }
+                wlminfreq=self.args.wlminfreq, pfilter_words=self.args.pfilter_words,
+                nfilter_words=self.args.nfilter_words, wlFileName='', blFileName='',
+                includeNonwords=self.args.include_nonwords))
         try:
             if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
                 self.args.wlsort = ''
 
-            white_words = self.args.wlwords
-            black_words = self.args.blacklist
+            pfilter_words = self.args.pfilter_words
+            nfilter_words = self.args.nfilter_words
 
             if wlhash != '':
-                white_words = self.load_bw_file(wlhash)
+                pfilter_words = self.load_bw_file(wlhash)
 
             if blhash != '':
-                black_words = self.load_bw_file(blhash)
+                nfilter_words = self.load_bw_file(blhash)
 
-            whitelist = [w for w in re.split(r'\s+', white_words.strip()) if w]
-            blacklist = [w for w in re.split(r'\s+', black_words.strip()) if w]
+            pfilter_words = [w for w in re.split(r'\s+', pfilter_words.strip()) if w]
+            nfilter_words = [w for w in re.split(r'\s+', nfilter_words.strip()) if w]
 
-            if wlhash == '' and len(self.args.wlwords) > 0:
-                wlhash = self.save_bw_file(self.args.wlwords)
+            if wlhash == '' and len(self.args.pfilter_words) > 0:
+                wlhash = self.save_bw_file(self.args.pfilter_words)
+            if blhash == '' and len(self.args.nfilter_words) > 0:
+                blhash = self.save_bw_file(self.args.nfilter_words)
 
-            if blhash == '' and len(self.args.blacklist) > 0:
-                blhash = self.save_bw_file(self.args.blacklist)
+            result['reload_args'] = list(dict(
+                corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
+                wlattr=self.args.wlattr, wlpat=self.args.wlpat,
+                wlminfreq=self.args.wlminfreq, include_nonwords=self.args.include_nonwords,
+                wlsort=self.args.wlsort, wlnums=self.args.wlnums,
+                wlhash=wlhash, blhash=blhash).items())
 
-            result['reload_args'] = list({
-                'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
-                'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
-                'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
-                'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums,
-                'wlhash': wlhash, 'blhash': blhash
-            }.items())
-
-            result_list = corplib.wordlist(corp=self.corp, words=whitelist, wlattr=self.args.wlattr,
+            result_list = corplib.wordlist(corp=self.corp, pfilter_words=pfilter_words, wlattr=self.args.wlattr,
                                            wlpat=self.args.wlpat, wlminfreq=self.args.wlminfreq,
-                                           wlmaxitems=wlmaxitems, wlsort=self.args.wlsort, blacklist=blacklist,
+                                           wlmaxitems=wlmaxitems, wlsort=self.args.wlsort, nfilter_words=nfilter_words,
                                            wlnums=self.args.wlnums,
                                            include_nonwords=self.args.include_nonwords)[wlstart:]
             result['Items'] = result_list
@@ -250,7 +248,7 @@ class Wordlist(ConcActions):
             level = 2
         if not self.args.wlposattr2:
             level = 1
-        if not self.args.wlpat and not self.args.wlwords:
+        if not self.args.wlpat and not self.args.pfilter_words:
             raise WordlistError(
                 translate('You must specify either a pattern or a file to get the multilevel wordlist'))
         self._make_wl_query()

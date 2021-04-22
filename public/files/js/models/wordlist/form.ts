@@ -39,19 +39,19 @@ import { IUnregistrable } from '../common/common';
  *
  */
 export interface WLFilterEditorData {
-    target: FileTarget.WHITELIST;
+    target: 'pfilter';
     fileName:string;
     data:string;
 }
 
 export interface BLFilterEditorData {
-    target: FileTarget.BLACKLIST;
+    target: 'nfilter';
     fileName:string;
     data:string;
 }
 
 export interface EmptyFilterEditorData {
-    target: FileTarget.EMPTY;
+    target: 'empty';
 }
 
 export type FilterEditorData = WLFilterEditorData|BLFilterEditorData|EmptyFilterEditorData;
@@ -155,7 +155,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 subcnorm: initialArgs.subcnorm,
                 includeNonwords: !!initialArgs.includeNonwords,
                 filterEditorData: {
-                    target: FileTarget.EMPTY
+                    target: 'empty'
                 },
                 isForeignSubcorp: corpusIdent.foreignSubcorp,
                 currentSubcorpus: corpusIdent.usesubcorp,
@@ -279,7 +279,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ActionName.WordlistFormCreatePfilter,
             (state, action) => {
                 state.filterEditorData = {
-                    target: FileTarget.WHITELIST,
+                    target: 'pfilter',
                     fileName: `unsaved-file-${Ident.puid().substr(0, 5)}`,
                     data: ''
                 };
@@ -290,7 +290,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ActionName.WordlistFormCreateNfilter,
             (state, action) => {
                 state.filterEditorData = {
-                    target: FileTarget.BLACKLIST,
+                    target: 'nfilter',
                     fileName: `unsaved-file-${Ident.puid().substr(0, 5)}`,
                     data: ''
                 };
@@ -324,16 +324,16 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ActionName.WordlistFormSetFilterDone,
             (state, action) => {
                 const props = action.payload.data;
-                if (props.target === FileTarget.BLACKLIST) {
+                if (props.target === 'nfilter') {
                     state.filterEditorData = {
-                        target: FileTarget.BLACKLIST,
+                        target: 'nfilter',
                         fileName: props.fileName,
                         data: props.data
                     };
 
-                } else if (props.target === FileTarget.WHITELIST) {
+                } else if (props.target === 'pfilter') {
                     state.filterEditorData = {
-                        target: FileTarget.WHITELIST,
+                        target: 'pfilter',
                         fileName: props.fileName,
                         data: props.data
                     };
@@ -344,17 +344,17 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         this.addActionHandler<Actions.WordlistFormUpdateEditor>(
             ActionName.WordlistFormUpdateEditor,
             (state, action) => {
-                if (state.filterEditorData.target !== FileTarget.EMPTY) {
-                    if (state.filterEditorData.target === FileTarget.BLACKLIST) {
+                if (state.filterEditorData.target !== 'empty') {
+                    if (state.filterEditorData.target === 'nfilter') {
                         state.filterEditorData = {
-                            target: FileTarget.BLACKLIST,
+                            target: 'nfilter',
                             data: action.payload.value,
                             fileName: state.filterEditorData.fileName
                         };
 
                     } else {
                         state.filterEditorData = {
-                            target: FileTarget.WHITELIST,
+                            target: 'pfilter',
                             data: action.payload.value,
                             fileName: state.filterEditorData.fileName
                         };
@@ -366,16 +366,16 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         this.addActionHandler<Actions.WordlistFormReopenEditor>(
             ActionName.WordlistFormReopenEditor,
             (state, action) => {
-                if (action.payload.target === FileTarget.WHITELIST) {
+                if (action.payload.target === 'pfilter') {
                     state.filterEditorData = {
-                        target: FileTarget.WHITELIST,
+                        target: 'pfilter',
                         data: state.pfilterWords,
                         fileName: state.pfilterFileName
                     };
 
-                } else if (action.payload.target === FileTarget.BLACKLIST) {
+                } else if (action.payload.target === 'nfilter') {
                     state.filterEditorData = {
-                        target: FileTarget.BLACKLIST,
+                        target: 'nfilter',
                         data: state.nfilterWords,
                         fileName: state.nfilterFileName
                     };
@@ -387,11 +387,11 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ActionName.WordlistFormClearFilterFile,
             (state, action) => {
                 if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
-                    if (action.payload.target === FileTarget.WHITELIST) {
+                    if (action.payload.target === 'pfilter') {
                         state.pfilterWords = '';
                         state.pfilterFileName = ''
 
-                    } else if (action.payload.target === FileTarget.BLACKLIST) {
+                    } else if (action.payload.target === 'nfilter') {
                         state.nfilterWords = '';
                         state.nfilterFileName = ''
                     }
@@ -402,15 +402,15 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         this.addActionHandler<Actions.WordlistFormCloseEditor>(
             ActionName.WordlistFormCloseEditor,
             (state, action) => {
-                if (state.filterEditorData.target === FileTarget.WHITELIST) {
+                if (state.filterEditorData.target === 'pfilter') {
                     state.pfilterWords = state.filterEditorData.data;
                     state.pfilterFileName = state.filterEditorData.fileName;
-                    state.filterEditorData = {target: FileTarget.EMPTY};
+                    state.filterEditorData = {target: 'empty'};
 
-                } else if (state.filterEditorData.target === FileTarget.BLACKLIST) {
+                } else if (state.filterEditorData.target === 'nfilter') {
                     state.nfilterWords = state.filterEditorData.data;
                     state.nfilterFileName = state.filterEditorData.fileName;
-                    state.filterEditorData = {target: FileTarget.EMPTY};
+                    state.filterEditorData = {target: 'empty'};
                 }
             }
         );
@@ -431,7 +431,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 if (state.wlminfreq.isInvalid) {
                     this.layoutModel.showMessage('error', state.wlminfreq.errorDesc);
 
-                } else if (!state.wlpat) {
+                } else if (!state.wlpat && !state.pfilterWords && !state.nfilterWords) {
                     this.layoutModel.showMessage('error', this.layoutModel.translate('wordlist__pattern_empty_err'));
 
                 } else {
@@ -556,8 +556,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             wlnums: state.wlnums,
             wltype: state.wltype,
             wlsort: state.wlsort,
-            wlwords: state.pfilterWords.trim(),
-            blacklist: state.nfilterWords.trim(),
+            pfilter_words: state.pfilterWords.trim(),
+            nfilter_words: state.nfilterWords.trim(),
             include_nonwords: state.includeNonwords,
             wlposattr1: state.wlposattrs[0],
             wlposattr2: state.wlposattrs[1],
@@ -582,7 +582,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
 
     private submit(state:WordlistFormState):void {
         const args = this.createSubmitArgs(state);
-        const action = state.wltype === WlTypes.MULTILEVEL ? 'wordlist/struct_result' : 'wordlist/result';
+        const action = state.wltype === 'multilevel' ? 'wordlist/struct_result' : 'wordlist/result';
         this.layoutModel.setLocationPost(
             this.layoutModel.createActionUrl(action),
             WordlistFormModel.encodeSubmitArgs(args)

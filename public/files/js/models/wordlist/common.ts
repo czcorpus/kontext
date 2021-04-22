@@ -33,8 +33,8 @@ export interface WordlistSubmitArgs {
     wlnums:WlnumsTypes;
     wltype:string;
     wlsort:string;
-    wlwords:string;
-    blacklist:string;
+    pfilter_words:string;
+    nfilter_words:string;
     include_nonwords:boolean;
     wlposattr1:string;
     wlposattr2:string;
@@ -64,13 +64,6 @@ export interface HeadingItem {
     sortKey:string;
 }
 
-export enum WlTypes {
-    SIMPLE = 'simple',
-    MULTILEVEL = 'multilevel'
-}
+export type WlTypes = 'simple'|'multilevel';
 
-export enum FileTarget {
-    WHITELIST = 'wlwords',
-    BLACKLIST = 'blacklist',
-    EMPTY = 'empty'
-}
+export type FileTarget = 'pfilter'|'nfilter'|'empty';

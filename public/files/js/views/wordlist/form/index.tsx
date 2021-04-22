@@ -394,9 +394,9 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 </SC.ExpandableSectionLabel>
                 {props.formVisible ?
                     <div className="contents">
-                        <FilterFile label={he.translate('wordlist__pfilter_label')} target={FileTarget.WHITELIST}
+                        <FilterFile label={he.translate('wordlist__pfilter_label')} target="pfilter"
                                 hasValue={!!props.pfilterWords} fileName={props.pfilterFileName} />
-                        <FilterFile label={he.translate('wordlist__nfilter_label')} target={FileTarget.BLACKLIST}
+                        <FilterFile label={he.translate('wordlist__nfilter_label')} target="nfilter"
                                                     hasValue={!!props.nfilterWords} fileName={props.nfilterFileName} />
                         <FileFormatHint />
                     </div> :
@@ -457,7 +457,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         const handleNewFileClick = (evt) => {
-            if (props.target === FileTarget.WHITELIST) {
+            if (props.target === 'pfilter') {
                 dispatcher.dispatch<Actions.WordlistFormCreatePfilter>({
                     name: ActionName.WordlistFormCreatePfilter
                 });
@@ -716,7 +716,10 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         render() {
             return (
                 <S.WordListForm onKeyDown={this._handleKeyPress}>
-                    {this.props.filterEditorData.target !== FileTarget.EMPTY ? <FileEditor data={this.props.filterEditorData} /> : null}
+                    {this.props.filterEditorData.target !== 'empty' ?
+                        <FileEditor data={this.props.filterEditorData} /> :
+                        null
+                    }
                     <div>
                         <CorparchWidget />
                     </div>

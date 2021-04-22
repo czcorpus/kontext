@@ -260,8 +260,8 @@ def add_block_items(items: List[Dict[str, Any]], attr: str = 'class', val: str =
     return items
 
 
-def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlminfreq: int, words: str,
-                        blacklist: str, include_nonwords: bool) -> int:
+def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlminfreq: int, pfilter_words: str,
+                        nfilter_words: str, include_nonwords: bool) -> int:
     enc_pattern = wlpat.strip()
     attr = corp.get_attr(wlattr)
     attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
@@ -280,13 +280,13 @@ def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlmi
         if not frq:
             continue
         id_value = attr.id2str(wid)
-        if frq >= wlminfreq and (not words or id_value in words) and (not blacklist or id_value not in blacklist):
+        if frq >= wlminfreq and (not pfilter_words or id_value in pfilter_words) and (not nfilter_words or id_value not in nfilter_words):
             i += 1
     return i
 
 
-def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, words, blacklist, wlnums, wlsort,
-                         wlmaxitems):
+def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, pfilter_words, nfilter_words,
+                         wlnums, wlsort, wlmaxitems):
     try:
         gen = attr.regexp2ids(enc_pattern, 0, excl_pattern)
     except TypeError:
@@ -307,7 +307,7 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, w
             continue
 
         id_value = attr.id2str(wid)
-        if frq >= wlminfreq and (not words or id_value in words) and (not blacklist or id_value not in blacklist):
+        if frq >= wlminfreq and (not pfilter_words or id_value in pfilter_words) and (not nfilter_words or id_value not in nfilter_words):
             if wlnums == 'arf':
                 items.append((round(frq, 1), wid))
             else:
@@ -315,9 +315,9 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, w
     return items
 
 
-def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlmaxitems, wlnums):
+def _wordlist_from_list(attr, attrfreq, pfilter_words, nfilter_words, wlsort, wlminfreq, wlmaxitems, wlnums):
     items = []
-    for word in words:
+    for word in pfilter_words:
         if len(items) > 5 * wlmaxitems:
             if wlsort == 'f':
                 items.sort(key=lambda x: x[0])
@@ -331,7 +331,7 @@ def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlm
             frq = 0
         else:
             frq = attrfreq[id]
-        if word and frq >= wlminfreq and (not blacklist or word not in blacklist):
+        if word and frq >= wlminfreq and (not nfilter_words or word not in nfilter_words):
             if wlnums == 'arf':
                 items.append((round(frq, 1), word))
             else:
@@ -354,29 +354,30 @@ def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
     return attrfreq
 
 
-def wordlist(corp: KCorpus, words: Optional[Set[str]] = None, wlattr: str = '', wlpat: str = '', wlminfreq: int = 5,
-             wlmaxitems: int = 100, wlsort: str = '', blacklist: Optional[Set[str]] = None,
+def wordlist(corp: KCorpus, pfilter_words: Optional[Set[str]] = None, wlattr: str = '', wlpat: str = '',
+             wlminfreq: int = 5, wlmaxitems: int = 100, wlsort: str = '', nfilter_words: Optional[Set[str]] = None,
              wlnums: Optional[str] = 'frq', include_nonwords: int = 0) -> List[Dict[str, Any]]:
     """
-    Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
+    Note: 'pfilter_words' and 'nfilter_words' are expected to contain utf-8-encoded strings.
     """
-    blacklist = set(w for w in blacklist) if blacklist else set()
-    words = set(w for w in words) if words else set()
+    nfilter_words = set(w for w in nfilter_words) if nfilter_words else set()
+    pfilter_words = set(w for w in pfilter_words) if pfilter_words else set()
     attr = corp.get_attr(wlattr)
     attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
-    if words and wlpat == '.*':  # word list just for given words
-        items = _wordlist_from_list(attr=attr, attrfreq=attrfreq, words=words, blacklist=blacklist, wlsort=wlsort,
-                                    wlminfreq=wlminfreq, wlmaxitems=wlmaxitems, wlnums=wlnums)
+    if pfilter_words and wlpat == '.*':  # word list just for given words
+        items = _wordlist_from_list(attr=attr, attrfreq=attrfreq, pfilter_words=pfilter_words,
+                                    nfilter_words=nfilter_words, wlsort=wlsort, wlminfreq=wlminfreq,
+                                    wlmaxitems=wlmaxitems, wlnums=wlnums)
     else:  # word list according to pattern
         if not include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
             nwre = ''
         items = _wordlist_by_pattern(attr=attr, enc_pattern=wlpat.strip(), excl_pattern=nwre,
-                                     wlminfreq=wlminfreq, words=words, blacklist=blacklist, wlnums=wlnums,
-                                     wlsort=wlsort, wlmaxitems=wlmaxitems, attrfreq=attrfreq)
+                                     wlminfreq=wlminfreq, pfilter_words=pfilter_words, nfilter_words=nfilter_words,
+                                     wlnums=wlnums, wlsort=wlsort, wlmaxitems=wlmaxitems, attrfreq=attrfreq)
 
-    if not words or wlpat != '.*':
+    if not pfilter_words or wlpat != '.*':
         items = [(f, attr.id2str(i)) for (f, i) in items]
     if wlsort == 'f':
         items = sorted(items, key=lambda x: x[0], reverse=True)

@@ -201,8 +201,8 @@ class Args(object):
 
     wlminfreq: int = def_attr(5)
     wlicase: int = def_attr(0)
-    wlwords: str = def_attr('')
-    blacklist: str = def_attr('')
+    pfilter_words: str = def_attr('')
+    nfilter_words: str = def_attr('')
 
     include_nonwords: int = def_attr(0)
     wltype: str = def_attr('simple')

@@ -26,7 +26,7 @@ import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
 import { WordlistFormModel } from '../models/wordlist/form';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
-import { WlnumsTypes, WlTypes } from '../models/wordlist/common';
+import { WlnumsTypes } from '../models/wordlist/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 import createCorparch from 'plugins/corparch/init';
 
@@ -101,7 +101,7 @@ class WordlistFormPage {
                     wlpat: '',
                     wlsort: 'f',
                     wlattr: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')[0].n,
-                    wltype: WlTypes.SIMPLE
+                    wltype: 'simple'
                 }
             });
             this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());

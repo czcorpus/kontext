@@ -1089,12 +1089,12 @@ class Actions(Querying):
             qparts.append('%s!="%s"' % (self.args.wlattr,
                                         self.corp.get_conf('NONWORDRE')))
 
-        whitelist = [w for w in re.split('\s+', self.args.wlwords.strip()) if w]
-        blacklist = [w for w in re.split('\s+', self.args.blacklist.strip()) if w]
-        if len(whitelist) > 0:
-            qq = ['%s=="%s"' % (self.args.wlattr, w.strip()) for w in whitelist]
+        pfilter_words = [w for w in re.split('\s+', self.args.pfilter_words.strip()) if w]
+        nfilter_words = [w for w in re.split('\s+', self.args.nfilter_words.strip()) if w]
+        if len(pfilter_words) > 0:
+            qq = ['%s=="%s"' % (self.args.wlattr, w.strip()) for w in pfilter_words]
             qparts.append('(' + '|'.join(qq) + ')')
-        for w in blacklist:
+        for w in nfilter_words:
             qparts.append('%s!=="%s"' % (self.args.wlattr, w.strip()))
         self.args.q = ['q[' + '&'.join(qparts) + ']']
 

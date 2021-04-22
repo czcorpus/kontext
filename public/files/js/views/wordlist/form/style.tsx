@@ -47,7 +47,7 @@ export const WordListForm = styled.form`
 
 // ---------------- <ExistingFileOps /> --------------------------------------
 
-export const ExistingFileOps = styled.td`
+export const ExistingFileOps = styled.div`
 
     .active-file {
         color: ${theme.colorLogoPink};
