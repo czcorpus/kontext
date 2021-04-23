@@ -60,14 +60,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         const setPosition = (e) => {           
-            let totalOffset = ref.current.offsetLeft;
-            let parent = ref.current.offsetParent;
-            while (parent) {
-                totalOffset += parent.offsetLeft;
-                parent = parent.offsetParent;
-            }
-
-            let position = props.status.duration*(e.nativeEvent.clientX - totalOffset)/ref.current.offsetWidth;
+            let position = props.status.duration*(e.nativeEvent.layerX - ref.current.offsetLeft - ref.current.clientLeft)/ref.current.offsetWidth;
             if (position < 0) {
                 position = 0;
             

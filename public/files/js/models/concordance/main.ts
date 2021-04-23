@@ -264,7 +264,6 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.saveModel = saveModel;
         this.syntaxViewModel = syntaxViewModel;
         this.audioPlayer = new AudioPlayer(
-            ConcordanceModel.AUDIO_PLAYER_ID,
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
                 this.changeState(state => {

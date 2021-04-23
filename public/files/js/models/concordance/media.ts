@@ -56,15 +56,12 @@ export class AudioPlayer {
     private whilePlaying:()=>void;
 
     constructor(
-        playerId:string,
         sm2FilesURL:string,
         onPlay:()=>void,
         onStop:()=>void,
         onError:()=>void,
         whilePlaying:()=>void
     ) {
-        this.playerId = playerId;
-        
         this.status = {
             playback: 'stop',
             duration: 0,
