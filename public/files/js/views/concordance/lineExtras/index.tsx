@@ -28,6 +28,7 @@ import { init as initMediaViews } from '../media';
 import { Actions, ActionName } from '../../../models/concordance/actions'
 import { LineSelectionModes, TextChunk } from '../../../models/concordance/common';
 import * as S from './style';
+import { PlayerStatus } from '../../../models/concordance/media';
 
 
 export interface LineExtrasViews {
@@ -36,6 +37,7 @@ export interface LineExtrasViews {
         lineIdx:number;
         chunks:Array<TextChunk>;
         t:string; // TODO enum
+        audioPlayerStatus:PlayerStatus;
     }>;
 
     TdLineSelection:React.FC<{
@@ -106,7 +108,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             return (
                 <span>
                     <S.AudioLink onClick={handleClick}>{getChar()}</S.AudioLink>
-                    <mediaViews.AudioPlayer />
+                    <mediaViews.AudioPlayer status={props.audioPlayerStatus} />
                 </span>
             );
 

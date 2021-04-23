@@ -28,7 +28,7 @@ import { PluginInterfaces } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';
-import { AudioPlayer, PlaybackStatus, PlayerStatus} from './media';
+import { AudioPlayer, PlayerStatus} from './media';
 import { ConcSaveModel } from './save';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
     from '../options/actions';

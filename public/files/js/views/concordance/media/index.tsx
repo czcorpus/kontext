@@ -31,6 +31,7 @@ import { Time } from 'cnc-tskit';
 
 
 export interface AudioPlayerProps {
+    status: PlayerStatus;
 }
 
 
@@ -99,7 +100,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------- <AudioPlayer /> ---------------------------
 
-    class AudioPlayer extends React.Component<AudioPlayerProps & ConcordanceModelState> {
+    class AudioPlayer extends React.Component<AudioPlayerProps> {
 
         _handleControlClick(action) {
             dispatcher.dispatch<Actions.AudioPlayerClickControl>({
@@ -115,13 +116,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             switch (buttonId) {
                 case 'play':
                     ans.push('img-button-play');
-                    if (this.props.audioPlayerStatus.playback === 'play') {
+                    if (this.props.status.playback === 'play') {
                         ans.push('img-button-play-active');
                     }
                 break;
                 case 'pause':
                     ans.push('img-button-pause');
-                    if (this.props.audioPlayerStatus.playback === 'pause') {
+                    if (this.props.status.playback === 'pause') {
                         ans.push('img-button-pause-active');
                     }
                 break;
@@ -145,7 +146,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <a onClick={this._handleControlClick.bind(this, 'stop')} className={this._autoSetHtmlClass('stop')}></a>
                     </div>
                     <div>
-                        <ProgressBar status={this.props.audioPlayerStatus} />
+                        <ProgressBar status={this.props.status} />
                     </div>
                 </S.AudioPlayer>
             );
@@ -153,6 +154,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        AudioPlayer: BoundWithProps(AudioPlayer, lineModel)
+        AudioPlayer: AudioPlayer
     };
 }
