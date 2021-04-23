@@ -465,7 +465,6 @@
         "concview__click_to_expand_up": "Click to expand up",
         "concview__click_to_expand_down": "Click to expand down",
         "concview__no_speech_metadata_available": "Metadata not available due to partially displayed speech. Try to expand the context.",
-        "concview__playing": "Playing. Click to stop.",
         "concview__nothing_to_play": "No playback data found.",
         "concview__segment_has_no_playback_data": "This segment does not contain audio playback data.",
         "concview__save_conc_head": "Save concordance",

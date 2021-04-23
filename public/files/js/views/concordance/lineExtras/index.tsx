@@ -69,7 +69,7 @@ export interface LineExtrasViews {
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcordanceModel) {
 
-    const mediaViews = initMediaViews(dispatcher, he, lineModel);
+    const mediaViews = initMediaViews(dispatcher, he);
     const layoutViews = he.getLayoutViews();
 
     // ------------------------- <AudioLink /> ---------------------------

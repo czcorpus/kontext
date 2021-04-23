@@ -465,7 +465,6 @@
         "concview__click_to_expand_up": "Klikněte pro rozšíření nahoru",
         "concview__click_to_expand_down": "Klikněte pro rozšíření dolů",
         "concview__no_speech_metadata_available": "Metadata nejsou k dispozici kvůli částečně zobrazené promluvě. Zkuste rozšířit kontext.",
-        "concview__playing": "Přehrávám. Klikněte pro zastavení.",
         "concview__nothing_to_play": "Nebyla nalezena data pro přehrání.",
         "concview__segment_has_no_playback_data": "Tento segment neobsahuje data pro přehrání audia.",
         "concview__save_conc_head": "Uložit konkordanci",

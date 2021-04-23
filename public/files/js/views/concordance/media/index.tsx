@@ -40,8 +40,7 @@ export interface MediaViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            lineModel:ConcordanceModel):MediaViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):MediaViews {
 
     // ------------------------- <ProgressBar /> ---------------------------
 
