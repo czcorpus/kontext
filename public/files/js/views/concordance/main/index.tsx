@@ -550,8 +550,12 @@ export function init({
         }
 
         _handleDetailCloseClick() {
-            dispatcher.dispatch<Actions.StopSpeech>({
-                name: ActionName.StopSpeech
+            dispatcher.dispatch<Actions.AudioPlayerClickControl>({
+                name: ActionName.AudioPlayerClickControl,
+                payload: {
+                    action: 'stop',
+                    playerId: ConcDetailModel.AUDIO_PLAYER_ID
+                }
             });
             dispatcher.dispatch<Actions.ResetDetail>({
                 name: ActionName.ResetDetail

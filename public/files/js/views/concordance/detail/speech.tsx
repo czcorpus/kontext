@@ -119,7 +119,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         isPlaying:boolean;
         audioPlayerStatus:PlayerStatus;
         setFocusFn:(v:boolean)=>void;
-        handleStopClick:()=>void;
         handleClick:()=>void;
     }> {
 
@@ -137,24 +136,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             this.props.setFocusFn(false);
         }
 
-        _getClickHandler() {
-            if (this.props.isPlaying) {
-                return this.props.handleStopClick;
-
-            } else {
-                return this.props.handleClick;
-            }
-        }
-
         render() {
-            return (
-                <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
-                    {this.props.audioPlayerStatus ? 
-                        <mediaViews.AudioPlayer status={this.props.audioPlayerStatus} /> :
+            return (                
+                this.props.isPlaying && this.props.audioPlayerStatus ?
+                    <div>
+                        <mediaViews.AudioPlayer playerId={ConcDetailModel.AUDIO_PLAYER_ID} status={this.props.audioPlayerStatus} />
+                    </div> :
+                    <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
                         <img src={he.createStaticUrl(`img/audio-3w.svg`)} title={he.translate('concview__click_to_play_audio')}
-                            onClick={this._getClickHandler()} />
-                    }
-                </span>
+                            onClick={this.props.handleClick} />
+                    </span>
             );
         }
     }
@@ -169,7 +160,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         data:Array<{class:string; str:string}>;
         audioPlayerStatus:PlayerStatus;
         handleClick:()=>void;
-        handleStopClick:()=>void;
     },
     {
         hasFocus:boolean;
@@ -194,7 +184,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     })}
                     {this.props.canStartPlayback ?
                     <PlaybackIcon handleClick={this.props.handleClick}
-                                handleStopClick={this.props.handleStopClick}
                                 isPlaying={this.props.isPlaying}
                                 setFocusFn={this._setFocus}
                                 audioPlayerStatus={this.props.audioPlayerStatus} />
@@ -213,7 +202,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         canStartPlayback:boolean;
         audioPlayerStatus:PlayerStatus;
         handlePlayClick:()=>void;
-        handleStopClick:()=>void;
 
     }> = (props) => {
 
@@ -233,7 +221,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <SpeechText data={props.speech.text} key={props.idx}
                             bulletColor={Color.color2str(props.speech.colorCode)}
                             handleClick={props.handlePlayClick}
-                            handleStopClick={props.handleStopClick}
                             isPlaying={props.isPlaying}
                             canStartPlayback={props.canStartPlayback}
                             audioPlayerStatus={props.audioPlayerStatus} />
@@ -251,7 +238,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         canStartPlayback:boolean;
         audioPlayerStatus:PlayerStatus;
         handlePlayClick:()=>void;
-        handleStopClick:()=>void;
 
     }> = (props) => {
 
@@ -282,7 +268,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 key={`${props.idx}:${i}`}
                                 bulletColor={Color.color2str(speech.colorCode)}
                                 handleClick={props.handlePlayClick}
-                                handleStopClick={props.handleStopClick}
                                 isPlaying={props.isPlaying}
                                 canStartPlayback={props.canStartPlayback}
                                 audioPlayerStatus={props.audioPlayerStatus} />)}
@@ -298,23 +283,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         constructor(props) {
             super(props);
             this._handlePlayClick = this._handlePlayClick.bind(this);
-            this._handleStopClick = this._handleStopClick.bind(this);
 
         }
 
         _handlePlayClick(segments, rowIdx) {
+            dispatcher.dispatch<Actions.AudioPlayersStop>({
+                name: ActionName.AudioPlayersStop
+            });
             dispatcher.dispatch<Actions.PlaySpeech>({
                 name: ActionName.PlaySpeech,
                 payload: {
                     segments: segments,
                     rowIdx: rowIdx
                 }
-            });
-        }
-
-        _handleStopClick() {
-            dispatcher.dispatch<Actions.StopSpeech>({
-                name: ActionName.StopSpeech
             });
         }
 
@@ -335,7 +316,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     speech={List.head(item)}
                                     idx={i}
                                     handlePlayClick={this._handlePlayClick.bind(this, List.head(item).segments, i)}
-                                    handleStopClick={this._handleStopClick}
                                     isPlaying={this.props.playingRowIdx === i}
                                     canStartPlayback={this._canStartPlayback(List.head(item))}
                                     audioPlayerStatus={this.props.audioPlayerStatus} />;
@@ -346,7 +326,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     speeches={item}
                                     idx={i}
                                     handlePlayClick={this._handlePlayClick.bind(this, List.head(item).segments, i)}
-                                    handleStopClick={this._handleStopClick}
                                     isPlaying={this.props.playingRowIdx === i}
                                     canStartPlayback={this._canStartPlayback(List.head(item))}
                                     audioPlayerStatus={this.props.audioPlayerStatus} />;

@@ -82,6 +82,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleClick = () => {
+            dispatcher.dispatch<Actions.AudioPlayersStop>({
+                name: ActionName.AudioPlayersStop
+            });
             dispatcher.dispatch<Actions.PlayAudioSegment>({
                 name: ActionName.PlayAudioSegment,
                 payload: {
@@ -108,7 +111,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             return (
                 <span>
                     <S.AudioLink onClick={handleClick}>{getChar()}</S.AudioLink>
-                    <mediaViews.AudioPlayer status={props.audioPlayerStatus} />
+                    <mediaViews.AudioPlayer playerId={ConcordanceModel.AUDIO_PLAYER_ID} status={props.audioPlayerStatus} />
                 </span>
             );
 

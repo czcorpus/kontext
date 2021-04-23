@@ -41,6 +41,8 @@ export class AudioPlayer {
 
     private status:PlayerStatus;
 
+    private playerId:string;
+
     private playSessionId:string = 'kontext-playback';
 
     private itemsToPlay:Array<string>;
@@ -54,12 +56,15 @@ export class AudioPlayer {
     private whilePlaying:()=>void;
 
     constructor(
+        playerId:string,
         sm2FilesURL:string,
         onPlay:()=>void,
         onStop:()=>void,
         onError:()=>void,
         whilePlaying:()=>void
     ) {
+        this.playerId = playerId;
+        
         this.status = {
             playback: 'stop',
             duration: 0,

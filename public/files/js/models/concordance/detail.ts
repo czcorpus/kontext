@@ -30,7 +30,7 @@ import { PageModel } from '../../app/page';
 import { AudioPlayer, PlayerStatus } from './media';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
 import { Actions, ActionName } from './actions';
-import { DetailExpandPositions } from './common';
+import { AudioPlayerActions, DetailExpandPositions } from './common';
 
 /**
  *
@@ -148,6 +148,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
 
     private static SPK_OVERLAP_MODE_SIMPLE:string = 'simple';
 
+    static AUDIO_PLAYER_ID:string = 'detailPlayer';
+
     private readonly layoutModel:PageModel;
 
     private readonly audioPlayer:AudioPlayer;
@@ -203,6 +205,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         this.layoutModel = layoutModel;
         this.tokenConnectPlg = tokenConnectPlg;
         this.audioPlayer = new AudioPlayer(
+            ConcDetailModel.AUDIO_PLAYER_ID,
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
                 this.changeState(state => {
@@ -512,15 +515,29 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.StopSpeech>(
-            ActionName.StopSpeech,
+        this.addActionSubtypeHandler<Actions.AudioPlayerClickControl>(
+            ActionName.AudioPlayerClickControl,
+            action => action.payload.playerId === ConcDetailModel.AUDIO_PLAYER_ID,
             action => {
-                if (this.state.playingRowIdx > -1) {
-                    this.changeState(state => {
-                        state.playingRowIdx = null;
-                    });
-                    this.audioPlayer.stop();
-                }
+                this.handlePlayerControls(action.payload.action);
+            }
+        );
+
+        this.addActionSubtypeHandler<Actions.AudioPlayerSetPosition>(
+            ActionName.AudioPlayerSetPosition,
+            action => action.payload.playerId === ConcDetailModel.AUDIO_PLAYER_ID,
+            action => {
+                this.audioPlayer.setPosition(action.payload.offset);
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.audioPlayer.getStatus()
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.AudioPlayersStop>(
+            ActionName.AudioPlayersStop,
+            action => {
+                this.handlePlayerControls('stop');
             }
         );
 
@@ -878,8 +895,28 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         return !!state.speechOpts.speakerIdAttr;
     }
 
-    getAudioPlayerStatus():PlayerStatus {
-        return this.audioPlayer.getStatus();
+    private handlePlayerControls(action:AudioPlayerActions) {
+        switch (action) {
+            case 'play':
+                this.audioPlayer.play();
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.audioPlayer.getStatus();
+                });
+            break;
+            case 'pause':
+                this.audioPlayer.pause();
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.audioPlayer.getStatus();
+                });
+            break;
+            case 'stop':
+                this.changeState(state => {
+                    state.playingRowIdx = null;
+                    state.audioPlayerStatus = null;
+                });
+                this.audioPlayer.stop();
+            break;
+        }
     }
 }
 

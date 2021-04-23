@@ -31,6 +31,7 @@ export enum ActionName {
     PlayAudioSegment = 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
     AudioPlayerClickControl = 'AUDIO_PLAYER_CLICK_CONTROL',
     AudioPlayerSetPosition = 'AUDIO_PLAYER_SET_POSITION',
+    AudioPlayersStop = 'AUDIO_PLAYERS_STOP',
     ChangePage = 'CONCORDANCE_CHANGE_PAGE',
     ReloadConc = 'CONCORDANCE_RELOAD_CONC',
     AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
@@ -55,7 +56,6 @@ export enum ActionName {
     ShowRefDetail = 'CONCORDANCE_SHOW_REF_DETAIL',
     ShowRefDetailDone = 'CONCORDANCE_SHOW_REF_DETAIL_DONE',
     PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
-    StopSpeech = 'CONCORDANCE_STOP_SPEECH',
     RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL',
     SaveFormSubmit = 'CONCORDANCE_SAVE_FORM_SUBMIT',
     SaveFormSetHeading = 'CONCORDANCE_SAVE_FORM_SET_HEADING',
@@ -136,15 +136,22 @@ export namespace Actions {
     }
 
     export interface AudioPlayerClickControl extends Action<{
+        playerId:string;
         action:AudioPlayerActions;
     }> {
         name:ActionName.AudioPlayerClickControl;
     }
 
     export interface AudioPlayerSetPosition extends Action<{
+        playerId:string;
         offset:number;
     }> {
         name:ActionName.AudioPlayerSetPosition;
+    }
+
+    export interface AudioPlayersStop extends Action<{
+    }> {
+        name:ActionName.AudioPlayersStop;
     }
 
     export interface ChangePage extends Action<{
@@ -321,11 +328,6 @@ export namespace Actions {
         segments:Array<string>;
     }> {
         name:ActionName.PlaySpeech;
-    }
-
-    export interface StopSpeech extends Action<{
-    }> {
-        name:ActionName.StopSpeech;
     }
 
     export interface RefResetDetail extends Action<{

@@ -192,6 +192,8 @@ export interface ConcordanceModelState {
  */
 export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
 
+    static AUDIO_PLAYER_ID:string = 'concPlayer';
+
     private readonly layoutModel:PageModel;
 
     private readonly saveModel:ConcSaveModel;
@@ -262,6 +264,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         this.saveModel = saveModel;
         this.syntaxViewModel = syntaxViewModel;
         this.audioPlayer = new AudioPlayer(
+            ConcordanceModel.AUDIO_PLAYER_ID,
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
                 this.changeState(state => {
@@ -358,8 +361,9 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.AudioPlayerClickControl>(
+        this.addActionSubtypeHandler<Actions.AudioPlayerClickControl>(
             ActionName.AudioPlayerClickControl,
+            action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.scrollY
@@ -371,13 +375,24 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.AudioPlayerSetPosition>(
+        this.addActionSubtypeHandler<Actions.AudioPlayerSetPosition>(
             ActionName.AudioPlayerSetPosition,
+            action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.scrollY
                 });
                 this.audioPlayer.setPosition(action.payload.offset);
+                this.changeState(state => {
+                    state.audioPlayerStatus = this.getAudioPlayerStatus()
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.AudioPlayersStop>(
+            ActionName.AudioPlayersStop,
+            action => {
+                this.handlePlayerControls('stop');
                 this.changeState(state => {
                     state.audioPlayerStatus = this.getAudioPlayerStatus()
                 });
