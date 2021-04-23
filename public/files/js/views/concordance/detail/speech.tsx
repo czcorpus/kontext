@@ -25,10 +25,14 @@ import { Speech, ConcDetailModel, ConcDetailModelState } from '../../../models/c
 import { Kontext } from '../../../types/common';
 import { Actions, ActionName } from '../../../models/concordance/actions';
 import { Color, pipe, List, Dict } from 'cnc-tskit';
+import { init as initMediaViews } from '../media';
+import { PlayerStatus } from '../../../models/concordance/media';
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             concDetailModel:ConcDetailModel):React.ComponentClass<{}> {
+
+    const mediaViews = initMediaViews(dispatcher, he);
 
     function exportMetadata(data:{[k:string]:unknown}) {
         if (!Dict.empty(data)) {
@@ -113,45 +117,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     class PlaybackIcon extends React.Component<{
         isPlaying:boolean;
+        audioPlayerStatus:PlayerStatus;
         setFocusFn:(v:boolean)=>void;
-        handleStopClick:()=>void;
         handleClick:()=>void;
-    },
-    {
-        img:number;
     }> {
-
-        private _interval:number;
 
         constructor(props) {
             super(props);
-            this._interval = null;
-            this.state = {img: 3};
             this._handleMouseOver = this._handleMouseOver.bind(this);
             this._handleMouseOut = this._handleMouseOut.bind(this);
-        }
-
-        componentDidUpdate() {
-            if (this.props.isPlaying && this._interval === null) {
-                this._interval = window.setInterval(() => {
-                    this.setState({
-                        img: (this.state.img + 1) % 4
-                    });
-                }, 250);
-
-            } else if (!this.props.isPlaying && this._interval !== null) {
-                window.clearInterval(this._interval);
-                this._interval = null;
-                this.setState({
-                    img: 3
-                });
-            }
-        }
-
-        componentWillUnmount() {
-            if (this._interval !== null) {
-                window.clearInterval(this._interval);
-            }
         }
 
         _handleMouseOver() {
@@ -162,30 +136,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             this.props.setFocusFn(false);
         }
 
-        _getTitle() {
-            if (this.props.isPlaying) {
-                return he.translate('concview__playing');
-
-            } else {
-                return he.translate('concview__click_to_play_audio');
-            }
-        }
-
-        _getClickHandler() {
-            if (this.props.isPlaying) {
-                return this.props.handleStopClick;
-
-            } else {
-                return this.props.handleClick;
-            }
-        }
-
         render() {
-            return (
-                <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
-                    <img src={he.createStaticUrl(`img/audio-${this.state.img}w.svg`)} title={this._getTitle()}
-                            onClick={this._getClickHandler()} />
-                </span>
+            return (                
+                this.props.isPlaying && this.props.audioPlayerStatus ?
+                    <div>
+                        <mediaViews.AudioPlayer playerId={ConcDetailModel.AUDIO_PLAYER_ID} status={this.props.audioPlayerStatus} />
+                    </div> :
+                    <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
+                        <img src={he.createStaticUrl(`img/audio-3w.svg`)} title={he.translate('concview__click_to_play_audio')}
+                            onClick={this.props.handleClick} />
+                    </span>
             );
         }
     }
@@ -198,8 +158,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         canStartPlayback:boolean;
         isPlaying:boolean;
         data:Array<{class:string; str:string}>;
+        audioPlayerStatus:PlayerStatus;
         handleClick:()=>void;
-        handleStopClick:()=>void;
     },
     {
         hasFocus:boolean;
@@ -224,9 +184,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     })}
                     {this.props.canStartPlayback ?
                     <PlaybackIcon handleClick={this.props.handleClick}
-                                handleStopClick={this.props.handleStopClick}
                                 isPlaying={this.props.isPlaying}
-                                setFocusFn={this._setFocus} />
+                                setFocusFn={this._setFocus}
+                                audioPlayerStatus={this.props.audioPlayerStatus} />
                     : null}
                 </div>
             );
@@ -240,8 +200,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         speech:Speech;
         isPlaying:boolean;
         canStartPlayback:boolean;
+        audioPlayerStatus:PlayerStatus;
         handlePlayClick:()=>void;
-        handleStopClick:()=>void;
 
     }> = (props) => {
 
@@ -261,9 +221,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <SpeechText data={props.speech.text} key={props.idx}
                             bulletColor={Color.color2str(props.speech.colorCode)}
                             handleClick={props.handlePlayClick}
-                            handleStopClick={props.handleStopClick}
                             isPlaying={props.isPlaying}
-                            canStartPlayback={props.canStartPlayback} />
+                            canStartPlayback={props.canStartPlayback}
+                            audioPlayerStatus={props.audioPlayerStatus} />
                 </td>
             </tr>
         );
@@ -276,8 +236,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         speeches:Array<Speech>;
         isPlaying:boolean;
         canStartPlayback:boolean;
+        audioPlayerStatus:PlayerStatus;
         handlePlayClick:()=>void;
-        handleStopClick:()=>void;
 
     }> = (props) => {
 
@@ -308,9 +268,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 key={`${props.idx}:${i}`}
                                 bulletColor={Color.color2str(speech.colorCode)}
                                 handleClick={props.handlePlayClick}
-                                handleStopClick={props.handleStopClick}
                                 isPlaying={props.isPlaying}
-                                canStartPlayback={props.canStartPlayback} />)}
+                                canStartPlayback={props.canStartPlayback}
+                                audioPlayerStatus={props.audioPlayerStatus} />)}
                 </td>
             </tr>
         );
@@ -323,23 +283,19 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         constructor(props) {
             super(props);
             this._handlePlayClick = this._handlePlayClick.bind(this);
-            this._handleStopClick = this._handleStopClick.bind(this);
 
         }
 
         _handlePlayClick(segments, rowIdx) {
+            dispatcher.dispatch<Actions.AudioPlayersStop>({
+                name: ActionName.AudioPlayersStop
+            });
             dispatcher.dispatch<Actions.PlaySpeech>({
                 name: ActionName.PlaySpeech,
                 payload: {
                     segments: segments,
                     rowIdx: rowIdx
                 }
-            });
-        }
-
-        _handleStopClick() {
-            dispatcher.dispatch<Actions.StopSpeech>({
-                name: ActionName.StopSpeech
             });
         }
 
@@ -360,9 +316,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     speech={List.head(item)}
                                     idx={i}
                                     handlePlayClick={this._handlePlayClick.bind(this, List.head(item).segments, i)}
-                                    handleStopClick={this._handleStopClick}
                                     isPlaying={this.props.playingRowIdx === i}
-                                    canStartPlayback={this._canStartPlayback(List.head(item))} />;
+                                    canStartPlayback={this._canStartPlayback(List.head(item))}
+                                    audioPlayerStatus={this.props.audioPlayerStatus} />;
 
                     } else if (item.length > 1) {
                         return <TROverlappingSpeeches
@@ -370,9 +326,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     speeches={item}
                                     idx={i}
                                     handlePlayClick={this._handlePlayClick.bind(this, List.head(item).segments, i)}
-                                    handleStopClick={this._handleStopClick}
                                     isPlaying={this.props.playingRowIdx === i}
-                                    canStartPlayback={this._canStartPlayback(List.head(item))} />;
+                                    canStartPlayback={this._canStartPlayback(List.head(item))}
+                                    audioPlayerStatus={this.props.audioPlayerStatus} />;
 
                     } else {
                         return null;

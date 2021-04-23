@@ -41,6 +41,8 @@ export class AudioPlayer {
 
     private status:PlayerStatus;
 
+    private playerId:string;
+
     private playSessionId:string = 'kontext-playback';
 
     private itemsToPlay:Array<string>;

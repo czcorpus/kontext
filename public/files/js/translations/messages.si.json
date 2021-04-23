@@ -503,7 +503,6 @@
         "concview__click_to_expand_up": "Click to expand up UNTRANSLATED",
         "concview__click_to_expand_down": "Click to expand down UNTRANSLATED",
         "concview__no_speech_metadata_available": "Metadata not available due to partially displayed speech. Try to expand the context. UNTRANSLATED",
-        "concview__playing": "Playing. Click to stop. UNTRANSLATED",
         "concview__nothing_to_play": "No playback data found. UNTRANSLATED",
         "concview__segment_has_no_playback_data": "This segment does not contain audio playback data. UNTRANSLATED",
         "concview__save_conc_head": "Save concordance UNTRANSLATED",

@@ -19,11 +19,9 @@
  */
 
 import * as React from 'react';
-import { BoundWithProps, IActionDispatcher } from 'kombo';
-import { Subscription } from 'rxjs';
+import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
-import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { Actions, ActionName } from '../../../models/concordance/actions';
 import * as S from './style';
@@ -31,6 +29,8 @@ import { Time } from 'cnc-tskit';
 
 
 export interface AudioPlayerProps {
+    playerId: string;
+    status: PlayerStatus;
 }
 
 
@@ -39,12 +39,11 @@ export interface MediaViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            lineModel:ConcordanceModel):MediaViews {
+export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):MediaViews {
 
     // ------------------------- <ProgressBar /> ---------------------------
 
-    const ProgressBar:React.FC<{status:PlayerStatus}> = (props) => {
+    const ProgressBar:React.FC<{playerId:string; status:PlayerStatus}> = (props) => {
 
         const ref = React.useRef(null);
 
@@ -61,14 +60,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         const setPosition = (e) => {           
-            let totalOffset = ref.current.offsetLeft;
-            let parent = ref.current.offsetParent;
-            while (parent) {
-                totalOffset += parent.offsetLeft;
-                parent = parent.offsetParent;
-            }
-
-            let position = props.status.duration*(e.nativeEvent.clientX - totalOffset)/ref.current.offsetWidth;
+            let position = props.status.duration*(e.nativeEvent.layerX - ref.current.offsetLeft - ref.current.clientLeft)/ref.current.offsetWidth;
             if (position < 0) {
                 position = 0;
             
@@ -78,7 +70,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             
             dispatcher.dispatch<Actions.AudioPlayerSetPosition>({
                 name: ActionName.AudioPlayerSetPosition,
-                payload: {offset: position}
+                payload: {
+                    playerId: props.playerId,
+                    offset: position
+                }
             })
         }
 
@@ -99,12 +94,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------- <AudioPlayer /> ---------------------------
 
-    class AudioPlayer extends React.Component<AudioPlayerProps & ConcordanceModelState> {
+    class AudioPlayer extends React.Component<AudioPlayerProps> {
 
         _handleControlClick(action) {
             dispatcher.dispatch<Actions.AudioPlayerClickControl>({
                 name: ActionName.AudioPlayerClickControl,
                 payload: {
+                    playerId: this.props.playerId,
                     action: action
                 }
             });
@@ -115,13 +111,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             switch (buttonId) {
                 case 'play':
                     ans.push('img-button-play');
-                    if (this.props.audioPlayerStatus.playback === 'play') {
+                    if (this.props.status.playback === 'play') {
                         ans.push('img-button-play-active');
                     }
                 break;
                 case 'pause':
                     ans.push('img-button-pause');
-                    if (this.props.audioPlayerStatus.playback === 'pause') {
+                    if (this.props.status.playback === 'pause') {
                         ans.push('img-button-pause-active');
                     }
                 break;
@@ -145,7 +141,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <a onClick={this._handleControlClick.bind(this, 'stop')} className={this._autoSetHtmlClass('stop')}></a>
                     </div>
                     <div>
-                        <ProgressBar status={this.props.audioPlayerStatus} />
+                        <ProgressBar playerId={this.props.playerId} status={this.props.status} />
                     </div>
                 </S.AudioPlayer>
             );
@@ -153,6 +149,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }
 
     return {
-        AudioPlayer: BoundWithProps(AudioPlayer, lineModel)
+        AudioPlayer: AudioPlayer
     };
 }

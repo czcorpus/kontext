@@ -28,6 +28,7 @@ import { init as initMediaViews } from '../media';
 import { Actions, ActionName } from '../../../models/concordance/actions'
 import { LineSelectionModes, TextChunk } from '../../../models/concordance/common';
 import * as S from './style';
+import { PlayerStatus } from '../../../models/concordance/media';
 
 
 export interface LineExtrasViews {
@@ -36,6 +37,7 @@ export interface LineExtrasViews {
         lineIdx:number;
         chunks:Array<TextChunk>;
         t:string; // TODO enum
+        audioPlayerStatus:PlayerStatus;
     }>;
 
     TdLineSelection:React.FC<{
@@ -67,7 +69,7 @@ export interface LineExtrasViews {
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, lineModel:ConcordanceModel) {
 
-    const mediaViews = initMediaViews(dispatcher, he, lineModel);
+    const mediaViews = initMediaViews(dispatcher, he);
     const layoutViews = he.getLayoutViews();
 
     // ------------------------- <AudioLink /> ---------------------------
@@ -80,6 +82,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleClick = () => {
+            dispatcher.dispatch<Actions.AudioPlayersStop>({
+                name: ActionName.AudioPlayersStop
+            });
             dispatcher.dispatch<Actions.PlayAudioSegment>({
                 name: ActionName.PlayAudioSegment,
                 payload: {
@@ -106,7 +111,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             return (
                 <span>
                     <S.AudioLink onClick={handleClick}>{getChar()}</S.AudioLink>
-                    <mediaViews.AudioPlayer />
+                    <mediaViews.AudioPlayer playerId={ConcordanceModel.AUDIO_PLAYER_ID} status={props.audioPlayerStatus} />
                 </span>
             );
 
