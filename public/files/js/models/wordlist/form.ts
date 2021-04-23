@@ -90,10 +90,10 @@ export interface WordlistFormState {
 
 export interface WordlistFormCorpSwitchPreserve {
     wlpat:string;
-    blacklist:string;
-    wlwords:string;
-    wlFileName:string;
-    blFileName:string;
+    nfilterWords:string;
+    pfilterWords:string;
+    pfilterFileName:string;
+    nfilterFileName:string;
     includeNonwords:boolean;
 }
 
@@ -105,7 +105,7 @@ export interface WordlistFormModelArgs {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
     initialArgs:{
-        includeNonwords:number; // boolean like
+        include_nonwords:number; // boolean like
         wlminfreq:number;
         subcnorm:string;
         wlnums:WlnumsTypes;
@@ -154,7 +154,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 pfilterFileName: '',
                 nfilterFileName: '',
                 subcnorm: initialArgs.subcnorm,
-                includeNonwords: !!initialArgs.includeNonwords,
+                includeNonwords: !!initialArgs.include_nonwords,
                 filterEditorData: {
                     target: 'empty'
                 },
@@ -538,10 +538,10 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     private serialize(state:WordlistFormState):WordlistFormCorpSwitchPreserve {
         return {
             wlpat: state.wlpat,
-            blacklist: state.nfilterWords,
-            wlwords: state.pfilterWords,
-            wlFileName: state.pfilterFileName,
-            blFileName: state.nfilterFileName,
+            nfilterWords: state.nfilterWords,
+            pfilterWords: state.pfilterWords,
+            pfilterFileName: state.pfilterFileName,
+            nfilterFileName: state.nfilterFileName,
             includeNonwords: state.includeNonwords
         };
     }
@@ -553,12 +553,19 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     ):void {
         if (data) {
             state.wlpat = data.wlpat;
-            state.nfilterWords = data.blacklist,
-            state.pfilterWords = data.wlwords,
-            state.pfilterFileName = data.wlFileName,
-            state.nfilterFileName = data.blFileName,
+            state.nfilterWords = data.nfilterWords,
+            state.pfilterWords = data.pfilterWords,
+            state.pfilterFileName = data.pfilterFileName,
+            state.nfilterFileName = data.nfilterFileName,
             state.includeNonwords = data.includeNonwords
         }
+    }
+
+    private splitWords(s:string):Array<string> {
+        return pipe(
+            s.split(/\s+/),
+            List.filter(v => v !== '')
+        );
     }
 
     createSubmitArgs(state:WordlistFormState):WordlistSubmitArgs {
@@ -570,9 +577,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             wlminfreq: parseInt(state.wlminfreq.value),
             wlnums: state.wlnums,
             wltype: state.wltype,
-            wlsort: state.wlsort,
-            pfilter_words: state.pfilterWords.trim(),
-            nfilter_words: state.nfilterWords.trim(),
+            pfilter_words: this.splitWords(state.pfilterWords),
+            nfilter_words: this.splitWords(state.nfilterWords),
             include_nonwords: state.includeNonwords,
             wlposattr1: state.wlposattrs[0],
             wlposattr2: state.wlposattrs[1],

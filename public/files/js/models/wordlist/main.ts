@@ -48,7 +48,19 @@ export interface WlSizeAjaxResponse extends Kontext.AjaxResponse {
 
 export interface WordlistResultModelState {
 
+    queryId:string;
+
+    corpname:string;
+
+    usesubcorp:string;
+
+    wlsort:string;
+
+    reversed:boolean;
+
     data:Array<IndexedResultItem>;
+
+    total:number;
 
     headings:Array<HeadingItem>;
 
@@ -75,8 +87,6 @@ export interface WordlistResultModelState {
     bgCalcStatus:number; // per-cent value
 
     isError:boolean;
-
-    reloadArgs:Kontext.ListOfPairs;
 }
 
 
@@ -86,9 +96,9 @@ function importData(
     pageSize:number
 ):Array<IndexedResultItem> {
     return List.map(
-        (item, i) => ({
-            freq: item.freq,
-            str: item.str,
+        ([str, freq], i) => ({
+            freq,
+            str,
             idx: (currPage - 1) * pageSize + i
         }),
         data
@@ -108,24 +118,28 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         layoutModel:PageModel,
         data:ResultData,
         headings:Array<HeadingItem>,
-        reloadArgs:Kontext.ListOfPairs,
         isUnfinished:boolean
     ) {
         super(
             dispatcher,
             {
+                queryId: data.queryId,
+                corpname: data.corpname,
+                usesubcorp: data.usesubcorp,
+                wlsort: data.wlsort,
+                reversed: data.reversed,
                 currPage: data.page,
                 currPageInput: data.page + '',
                 pageSize: data.pageSize,
                 isLastPage: data.isLastPage,
                 data: importData(data.data, data.page, data.pageSize),
+                total: data.total,
                 headings: [...headings],
                 isBusy: false,
                 numItems: null,
                 isUnfinished,
                 bgCalcStatus: 0,
-                isError: false,
-                reloadArgs
+                isError: false
             }
         );
         this.layoutModel = layoutModel;
@@ -362,6 +376,16 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         return `[${wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
     }
 
+    private exportReloadArgs(state:WordlistResultModelState):Array<[string, string|number]> {
+        return [
+            tuple('query_id', state.queryId),
+            tuple('corpname', state.corpname),
+            tuple('usesubcorp', state.usesubcorp),
+            tuple('wlpage', state.currPage.toString()),
+            tuple('wlsort', state.wlsort)
+        ];
+    }
+
     private pageLoadUsingFormArgs(
         state:WordlistResultModelState,
         newPage:number,
@@ -374,12 +398,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     if (!skipHistory) {
                         this.layoutModel.getHistory().pushState(
                             'wordlist/result',
-                            new MultiDict(
-                                state.reloadArgs.concat([['wlpage', state.currPage.toString()]])),
-                            {
-                                pagination: true,
-                                page: pageNum
-                            }
+                            new MultiDict(this.exportReloadArgs(state))
                         );
                     }
                 }

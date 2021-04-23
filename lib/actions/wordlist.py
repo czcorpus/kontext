@@ -24,8 +24,9 @@ from controller.errors import ImmediateRedirectException
 from main_menu import MainMenu
 from translation import ugettext as translate
 from controller.errors import UserActionException
-from bgcalc import freq_calc
+from bgcalc import freq_calc, calc_backend_client
 from bgcalc.errors import CalcBackendError
+from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 import plugins
 import settings
 from argmapping import log_mapping
@@ -33,7 +34,6 @@ from argmapping.wordlist import WordlistFormArgs
 from werkzeug import Request
 from texttypes import TextTypesCache
 from typing import Optional, Callable, List, Dict, Any
-from conclib.wordlist import make_wl_query
 
 
 class WordlistError(UserActionException):
@@ -109,20 +109,15 @@ class Wordlist(Kontext):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         return out
 
-    def _search(self, form: WordlistFormArgs):
-        return corplib.wordlist(corp=self.corp, pfilter_words=form.pfilter_words, wlattr=form.wlattr,
-                                wlpat=form.wlpat, wlminfreq=form.wlminfreq,
-                                wlmaxitems=sys.maxsize, wlsort=form.wlsort, # TODO wlmaxitems
-                                nfilter_words=form.nfilter_words,
-                                wlnums=form.wlnums,
-                                include_nonwords=form.include_nonwords)
 
     @exposed(access_level=1, http_method='POST', page_model='wordlist',
              return_type='json', mutates_result=True, action_log_mapper=log_mapping.wordlist)
     def submit(self, request):
         form_args = WordlistFormArgs()
         form_args.update_by_user_query(request.json)
-        self._search(form_args)
+        app = calc_backend_client(settings)
+        res = app.send_task('get_wordlist', args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
+        logging.getLogger(__name__).debug('TASK ANS: {}'.format(res))
         self._curr_wlform_args = form_args
 
         def on_conc_store(query_ids, stored_history, result):
@@ -133,7 +128,7 @@ class Wordlist(Kontext):
 
     @exposed(access_level=1, http_method=('POST', 'GET'), page_model='wordlist',
              action_log_mapper=log_mapping.wordlist)
-    def result(self, request): # TODO wlpat='', paginate=True, wlhash='', blhash=''):
+    def result(self, request):
         """
         """
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
@@ -142,71 +137,30 @@ class Wordlist(Kontext):
 
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             stored_form = qp.open(request.args.get('query_id'))
-            self._curr_wlform_args = WordlistFormArgs()
-            self._curr_wlform_args.update_by_user_query(stored_form['form'])
+            self._curr_wlform_args = WordlistFormArgs.from_dict(stored_form['form'])
 
-        
-        if not wlpat:
-            self.args.wlpat = '.*'
-        if '.' in self.args.wlattr:
-            orig_wlnums = self.args.wlnums
-            self.args.wlnums = self._wlnums2structattr(self.args.wlnums)
+        rev = bool(int(request.args.get('reversed', '0')))
+        page = int(request.args.get('wlpage', '1'))
+        offset = (page - 1) * self.args.wlpagesize
+        total, data = require_existing_wordlist(
+            form=self._curr_wlform_args, reverse=rev, offset=offset,
+            limit=self.args.wlpagesize, wlsort=request.args.get('wlsort'),
+            collator_locale=self.get_corpus_info(self.corp.corpname).collator_locale)
 
-        if paginate:
-            wlmaxitems = self.args.wlpagesize * self.args.wlpage + 1
-        else:
-            wlmaxitems = sys.maxsize
-        wlstart = (self.args.wlpage - 1) * self.args.wlpagesize
-        result = dict(
-            reload_args=list(dict(
-                corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
-                wlattr=self.args.wlattr, wlpat=self.args.wlpat,
-                wlminfreq=self.args.wlminfreq, include_nonwords=self.args.include_nonwords,
-                wlsort=self.args.wlsort, wlnums=self.args.wlnums).items()),
-            form_args=dict(
-                wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
-                subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
-                wlminfreq=self.args.wlminfreq, pfilter_words=self.args.pfilter_words,
-                nfilter_words=self.args.nfilter_words, wlFileName='', blFileName='',
-                includeNonwords=self.args.include_nonwords))
+        result=dict(data=data, total=total, form=self._curr_wlform_args.to_dict(),
+                    query_id=request.args.get('query_id'), reversed=rev, wlsort=self.args.wlsort, wlpage=page,
+                    wlpagesize=self.args.wlpagesize)
         try:
-            if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
+            if hasattr(self, 'wlfile') and self._curr_wlform_args.wlpat == '.*':
                 self.args.wlsort = ''
-
-
-
-            result['reload_args'] = list(dict(
-                corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
-                wlattr=self.args.wlattr, wlpat=self.args.wlpat,
-                wlminfreq=self.args.wlminfreq, include_nonwords=self.args.include_nonwords,
-                wlsort=self.args.wlsort, wlnums=self.args.wlnums,
-                wlhash=wlhash, blhash=blhash).items())
-
-            result_list = corplib.wordlist(corp=self.corp, pfilter_words=pfilter_words, wlattr=self.args.wlattr,
-                                           wlpat=self.args.wlpat, wlminfreq=self.args.wlminfreq,
-                                           wlmaxitems=wlmaxitems, wlsort=self.args.wlsort, nfilter_words=nfilter_words,
-                                           wlnums=self.args.wlnums,
-                                           include_nonwords=self.args.include_nonwords)[wlstart:]
-            result['Items'] = result_list
-            if len(result_list) < self.args.wlpagesize + 1:
-                result['lastpage'] = 1
-            else:
-                result['lastpage'] = 0
-                if paginate:
-                    result_list = result_list[:-1]
-            result['Items'] = result_list
-
-            if '.' in self.args.wlattr:
-                self.args.wlnums = orig_wlnums
-
             try:
-                result['wlattr_label'] = (self.corp.get_conf(self.args.wlattr + '.LABEL') or
-                                          self.args.wlattr)
+                result['wlattr_label'] = (self.corp.get_conf(self._curr_wlform_args.wlattr + '.LABEL') or
+                                          self._curr_wlform_args.wlattr)
             except Exception as e:
-                result['wlattr_label'] = self.args.wlattr
+                result['wlattr_label'] = self._curr_wlform_args.wlattr
                 logging.getLogger(__name__).warning('wlattr_label set failed: %s' % e)
 
-            result['freq_figure'] = translate(self.FREQ_FIGURES.get(self.args.wlnums, '?'))
+            result['freq_figure'] = translate(self.FREQ_FIGURES.get('frq', '?'))
             result['processing'] = None
 
             self._add_save_menu_item('CSV', save_format='csv',

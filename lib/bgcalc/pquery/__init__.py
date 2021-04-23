@@ -25,6 +25,7 @@ import csv
 from .errors import PqueryResultNotFound, PqueryArgumentError
 from typing import Tuple
 from argmapping.pquery import PqueryFormArgs
+from bgcalc.csv_cache import load_cached_partial, load_cached_full
 
 """
 This module contains function for calculating Paradigmatic queries
@@ -78,32 +79,6 @@ def _extract_freqs(freqs):
     return ans
 
 
-def _load_cached_partial(path, offset, limit):
-    with open(path, 'r') as fr:
-        csv_reader = csv.reader(fr)
-        _, total_str = next(csv_reader)
-        for i in range(0, offset):
-            next(csv_reader)
-        ans = []
-        i = offset
-        for row in csv_reader:
-            if i == offset + limit:
-                break
-            ans.append((row[0], int(row[1])))
-            i += 1
-    return int(total_str), ans
-
-
-def _load_cached_full(path):
-    ans = []
-    with open(path, 'r') as fr:
-        csv_reader = csv.reader(fr)
-        _, total_str = next(csv_reader)
-        for row in csv_reader:
-            ans.append((row[0], int(row[1])))
-    return int(total_str), ans
-
-
 def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: int,
                             collator_locale: str, sort: str, reverse: bool) -> Tuple[int, List[Tuple[str, int]]]:
     path = _create_cache_path(pquery)
@@ -112,12 +87,12 @@ def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: int,
     else:
         if sort == 'freq':
             if reverse is True:
-                return _load_cached_partial(path, offset, limit)
+                return load_cached_partial(path, offset, limit)
             else:
-                total, rows = _load_cached_full(path)
+                total, rows = load_cached_full(path)
                 return total, list(reversed(rows))[offset:offset+limit]
         elif sort == 'value':
-            total, rows = _load_cached_full(path)
+            total, rows = load_cached_full(path)
             return (total,
                     l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)[offset:offset+limit])
         else:
@@ -136,8 +111,6 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, str], subcp
     user_id -- user ID
     collator_locale -- a locale used for collation within the current corpus
     """
-    import time
-    time.sleep(5)
     tasks = []
     num_tasks = len(pquery.conc_ids)
     for conc_id in pquery.conc_ids:

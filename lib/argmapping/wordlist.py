@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 
 from typing import Dict, Any
-import re
 
 
 class WordlistFormArgs(object):
@@ -27,10 +26,12 @@ class WordlistFormArgs(object):
         self.wlminfreq = 1
         self.wlnums = 'frq'
         self.wltype = 'simple'
-        self.wlsort = 'f'
         self.pfilter_words = []
         self.nfilter_words = []
         self.include_nonwords = '0'
+
+    def __str__(self):
+        return f'WordlistFormArgs({self.__dict__})'
 
     def update_by_user_query(self, data):
         self.corpname = data['corpname']
@@ -40,9 +41,8 @@ class WordlistFormArgs(object):
         self.wlminfreq = data['wlminfreq']
         self.wlnums = data['wlnums']
         self.wltype = data['wltype']
-        self.wlsort = data['wlsort']
-        self.pfilter_words = [w for w in re.split(r'\s+', data['pfilter_words'].strip()) if w]
-        self.nfilter_words = [w for w in re.split(r'\s+', data['nfilter_words'].strip()) if w]
+        self.pfilter_words = data['pfilter_words']
+        self.nfilter_words = data['nfilter_words']
         self.include_nonwords = data['include_nonwords']
 
     def to_dict(self) -> Dict[str, Any]:
@@ -52,6 +52,9 @@ class WordlistFormArgs(object):
     def to_qp(self) -> Dict[str, Any]:
         return self.to_dict()
 
-    def from_dict(self, data):
+    @staticmethod
+    def from_dict(data):
+        ans = WordlistFormArgs()
         for k, v in data.items():
-            setattr(self, k, v)
+            setattr(ans, k, v)
+        return ans

@@ -92,7 +92,7 @@ class WordlistFormPage {
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                 structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
                 initialArgs: {
-                    includeNonwords: 0,
+                    include_nonwords: 0,
                     wlminfreq: 5,
                     subcnorm: '',
                     wlnums: WlnumsTypes.FRQ,
