@@ -662,7 +662,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                         {this.state.hintVisible ?
                             (<layoutViews.PopupBox onCloseClick={this._handleCloseClick}
                                     customStyle={{width: '20em'}}>
-                                <p>{he.translate('wordlist__wl_white_lists')}</p>
+                                <p>{he.translate('wordlist__pn_filter_lists')}</p>
                             </layoutViews.PopupBox>) : null}
                     </label>
                     <span>

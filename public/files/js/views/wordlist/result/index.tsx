@@ -67,9 +67,6 @@ export function init({dispatcher, utils, wordlistSaveViews,
                     sortKey: props.sortKey
                 }
             });
-            dispatcher.dispatch<Actions.WordlistResultReload>({
-                name: ActionName.WordlistResultReload
-            });
         };
 
         const renderSortingIcon = () => {
@@ -244,8 +241,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
     const Paginator:React.FC<{
         currPage:number;
         currPageInput:string;
+        maxPage:number;
         modelIsBusy:boolean;
-        isLastPage:boolean;
 
      }> = (props) => {
 
@@ -270,7 +267,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
                         <PaginatorTextInput value={props.currPageInput} modelIsBusy={props.modelIsBusy}
                                 hint={props.currPage !== parseInt(props.currPageInput) ? utils.translate('global__hit_enter_to_confirm') : null} />
                     </div>
-                    {!props.isLastPage ? <PaginatorRightArrows /> : null}
+                    {props.currPage < props.maxPage ? <PaginatorRightArrows /> : null}
+                    <span>{props.maxPage}</span>
                 </form>
             </div>
         );
@@ -316,7 +314,6 @@ export function init({dispatcher, utils, wordlistSaveViews,
     // -------------------------- <DataTable /> -------------------------------------
 
     interface DataTableProps {
-        wlsort:string;
         usesStructAttr:boolean;
         wlpat:string;
     }
@@ -340,7 +337,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         } else {
             return <>
                 <Paginator currPageInput={props.currPageInput} modelIsBusy={props.isBusy}
-                                currPage={props.currPage} isLastPage={props.isLastPage} />
+                                currPage={props.currPage} maxPage={props.numPages} />
                 <table className="data">
                     <thead>
                         <tr>
@@ -373,7 +370,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     const WordlistResult:React.FC<WordlistFormState> = (props) => (
         <S.WordlistResult>
-            <BoundDataTable wlpat={props.wlpat} wlsort={props.wlsort} usesStructAttr={props.usesStructAttr} />
+            <BoundDataTable wlpat={props.wlpat} usesStructAttr={props.usesStructAttr} />
             <wordlistSaveViews.WordlistSaveForm />
         </S.WordlistResult>
     );

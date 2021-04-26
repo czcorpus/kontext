@@ -218,7 +218,7 @@ export class WordlistPage {
                     total: this.layoutModel.getConf<number>('Total'),
                     corpname: this.layoutModel.getCorpusIdent().id,
                     usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                    queryId: this.layoutModel.getConf<string>('queryId'),
+                    queryId: this.layoutModel.getConf<string>('QueryId'),
                     reversed: this.layoutModel.getConf<boolean>('Reversed'),
                     wlsort: this.layoutModel.getConf<string>('Wlsort'),
                     page: this.layoutModel.getConf<number>('PageNum'),

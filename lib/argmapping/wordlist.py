@@ -18,6 +18,7 @@ from typing import Dict, Any
 class WordlistFormArgs(object):
 
     def __init__(self):
+        self._id = None
         self.form_type = 'wlist'
         self.corpname = None
         self.usesubcorp = None
@@ -52,9 +53,15 @@ class WordlistFormArgs(object):
     def to_qp(self) -> Dict[str, Any]:
         return self.to_dict()
 
+    @property
+    def id(self):
+        return self._id
+
     @staticmethod
-    def from_dict(data):
+    def from_dict(data, id=None):
         ans = WordlistFormArgs()
+        ans._id = id
         for k, v in data.items():
-            setattr(ans, k, v)
+            if not k.startswith('_'):
+                setattr(ans, k, v)
         return ans

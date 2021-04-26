@@ -785,7 +785,7 @@
         "wordlist__nfilter_label": "výrazy pro negativní filtr",
         "wordlist__incl_non_word_label": "včetně číslic a interpunkce",
         "wordlist__req_file_format_link": "požadovaný formát souboru",
-        "wordlist__wl_white_lists": "Soubory obsahující seznamy slov, pro něž jsou požadovány frekvence, musí být prosté textové soubory (.txt) v kódování UTF-8 s jednou položkou na každém řádku. Položky musí odpovídat vybranému atributu. Pokud je tedy např. v menu atributu vybráno 'lemma', musí být soubor seznamem lemmat. Pro vstupní soubor se používá přesné porovnávání, nikoliv porovnávání pomocí regulárních výrazů.",
+        "wordlist__pn_filter_lists": "Soubory obsahující seznamy slov, pro něž jsou požadovány frekvence, musí být prosté textové soubory (.txt) v kódování UTF-8 s jednou položkou na každém řádku. Položky musí odpovídat vybranému atributu. Pokud je tedy např. v menu atributu vybráno 'lemma', musí být soubor seznamem lemmat. Pro vstupní soubor se používá přesné porovnávání, nikoliv porovnávání pomocí regulárních výrazů.",
         "wordlist__confirm_file_remove": "Jste si jisti, že chcete odstranit seznam slov pro filtr?",
         "wordlist__filter_th": "Filtr",
         "wordlist__page_not_found_err": "Stránka nebyla nalezena",

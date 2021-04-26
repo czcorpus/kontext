@@ -15,8 +15,8 @@
 import sys
 import logging
 import os
+from typing import Optional, Callable, List, Dict, Any, Union
 
-import corplib
 from corplib.errors import MissingSubCorpFreqFile
 from controller import exposed
 from controller.kontext import Kontext
@@ -33,7 +33,7 @@ from argmapping import log_mapping
 from argmapping.wordlist import WordlistFormArgs
 from werkzeug import Request
 from texttypes import TextTypesCache
-from typing import Optional, Callable, List, Dict, Any
+from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy
 
 
 class WordlistError(UserActionException):
@@ -54,6 +54,19 @@ class Wordlist(Kontext):
     def get_mapping_url_prefix(self):
         return '/wordlist/'
 
+    def pre_dispatch(self, action_name, action_metadata=None) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
+        """
+                with plugins.runtime.QUERY_PERSISTENCE as qp:
+            stored_form = qp.open(request.args.get('query_id'))
+            self._curr_wlform_args = WordlistFormArgs.from_dict(stored_form['form'])
+        """
+        ans = super().pre_dispatch(action_name, action_metadata)
+        if self._prev_q_data is not None:
+            if self._prev_q_data.get('form', {}).get('form_type') != 'wlist':
+                raise UserActionException('Invalid operation session for word-list')
+            self._curr_wlform_args = WordlistFormArgs.from_dict(self._prev_q_data['form'], id=self._prev_q_data['id'])
+        return ans
+
     def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
         super().post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
         if action_metadata['mutates_result']:
@@ -64,17 +77,6 @@ class Wordlist(Kontext):
                                                    usesubcorp=self._curr_wlform_args.usesubcorp))
                 qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='pquery')
                 self.on_conc_store([query_id], True, result)
-
-    @exposed(access_level=1, return_type='json')
-    def ajax_get_wordlist_size(self, request):
-        if '.' in self.args.wlattr:
-            wlnums = self._wlnums2structattr(self.args.wlnums)
-        else:
-            wlnums = self.args.wlnums
-        return dict(size=corplib.get_wordlist_length(corp=self.corp, wlattr=self.args.wlattr, wlpat=self.args.wlpat,
-                                                     wlnums=wlnums, wlminfreq=self.args.wlminfreq,
-                                                     pfilter_words=self.args.pfilter_words, nfilter_words=self.args.nfilter_words,
-                                                     include_nonwords=self.args.include_nonwords))
 
     def _wlnums2structattr(self, wlnums):
         if wlnums == 'arf':
@@ -109,7 +111,6 @@ class Wordlist(Kontext):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
         return out
 
-
     @exposed(access_level=1, http_method='POST', page_model='wordlist',
              return_type='json', mutates_result=True, action_log_mapper=log_mapping.wordlist)
     def submit(self, request):
@@ -117,7 +118,6 @@ class Wordlist(Kontext):
         form_args.update_by_user_query(request.json)
         app = calc_backend_client(settings)
         res = app.send_task('get_wordlist', args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
-        logging.getLogger(__name__).debug('TASK ANS: {}'.format(res))
         self._curr_wlform_args = form_args
 
         def on_conc_store(query_ids, stored_history, result):
@@ -126,7 +126,7 @@ class Wordlist(Kontext):
         self.on_conc_store = on_conc_store
         return dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp)
 
-    @exposed(access_level=1, http_method=('POST', 'GET'), page_model='wordlist',
+    @exposed(access_level=1, http_method='GET', page_model='wordlist',
              action_log_mapper=log_mapping.wordlist)
     def result(self, request):
         """
@@ -134,10 +134,6 @@ class Wordlist(Kontext):
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
                                     MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
-
-        with plugins.runtime.QUERY_PERSISTENCE as qp:
-            stored_form = qp.open(request.args.get('query_id'))
-            self._curr_wlform_args = WordlistFormArgs.from_dict(stored_form['form'])
 
         rev = bool(int(request.args.get('reversed', '0')))
         page = int(request.args.get('wlpage', '1'))
@@ -147,9 +143,9 @@ class Wordlist(Kontext):
             limit=self.args.wlpagesize, wlsort=request.args.get('wlsort'),
             collator_locale=self.get_corpus_info(self.corp.corpname).collator_locale)
 
-        result=dict(data=data, total=total, form=self._curr_wlform_args.to_dict(),
-                    query_id=request.args.get('query_id'), reversed=rev, wlsort=self.args.wlsort, wlpage=page,
-                    wlpagesize=self.args.wlpagesize)
+        result = dict(data=data, total=total, form=self._curr_wlform_args.to_dict(),
+                      query_id=self._curr_wlform_args.id, reversed=rev, wlsort=self.args.wlsort, wlpage=page,
+                      wlpagesize=self.args.wlpagesize)
         try:
             if hasattr(self, 'wlfile') and self._curr_wlform_args.wlpat == '.*':
                 self.args.wlsort = ''

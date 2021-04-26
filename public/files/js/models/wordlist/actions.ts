@@ -116,8 +116,6 @@ export namespace Actions {
 
     export interface WordlistPageLoadDone extends Action<{
         page:number;
-        isLast:boolean;
-        newNumOfItems?:number;
         data:Array<IndexedResultItem>;
     }>{
         name:ActionName.WordlistPageLoadDone;

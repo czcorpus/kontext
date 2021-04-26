@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable, of as rxOf } from 'rxjs';
+import { Observable, of as rxOf, throwError } from 'rxjs';
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
 import { List, HTTP, tuple, pipe, Dict } from 'cnc-tskit';
@@ -26,7 +26,6 @@ import { List, HTTP, tuple, pipe, Dict } from 'cnc-tskit';
 import { Kontext, ViewOptions } from '../../types/common';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
-import { WordlistFormModel } from './form';
 import { MultiDict } from '../../multidict';
 import { ActionName, Actions } from './actions';
 import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common';
@@ -36,8 +35,16 @@ import { ConcQueryResponse } from '../concordance/common';
 
 
 export interface DataAjaxResponse extends Kontext.AjaxResponse {
-    Items:Array<ResultItem>;
-    lastpage:number; // 0 = no, 1 = yes
+    data:Array<ResultItem>;
+    total:number;
+    query_id:string;
+    wlattr_label:string;
+    wlsort:string;
+    reversed:boolean;
+    wlpagesize:number;
+    wlpage:number;
+    quick_save_row_limit:number;
+    freq_figure:string;
 }
 
 
@@ -70,15 +77,7 @@ export interface WordlistResultModelState {
 
     pageSize:number;
 
-    isLastPage:boolean;
-
-     /*
-      * this is not obtained automatically as a
-      * respective Manatee result object does not
-      * provide this. We fetch this by user's
-      * explicit request (when going to the last page)
-      */
-    numItems:number;
+    numPages:number;
 
     isBusy:boolean;
 
@@ -131,12 +130,11 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 currPage: data.page,
                 currPageInput: data.page + '',
                 pageSize: data.pageSize,
-                isLastPage: data.isLastPage,
                 data: importData(data.data, data.page, data.pageSize),
                 total: data.total,
                 headings: [...headings],
                 isBusy: false,
-                numItems: null,
+                numPages: Math.ceil(data.total / data.pageSize),
                 isUnfinished,
                 bgCalcStatus: 0,
                 isError: false
@@ -198,7 +196,6 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     state.currPage = action.payload.page;
                     state.currPageInput = action.payload.page + '';
                     state.data = action.payload.data;
-                    state.isLastPage = action.payload.isLast;
                 }
                 state.isBusy = false;
             }
@@ -215,9 +212,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         this.addActionHandler<Actions.WordlistResultNextPage>(
             ActionName.WordlistResultNextPage,
             (state, action) => {
-                if (!state.isLastPage) {
-                    state.isBusy = true;
-                }
+                state.isBusy = true;
             },
             (state, action, dispatch) => {
                 this.processPageLoad(state, state.currPage + 1, dispatch);
@@ -264,42 +259,15 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             ActionName.WordlistGoToLastPage,
             (state, action) => {
                 state.isBusy = true;
+                state.currPage = state.numPages;
+                state.currPageInput = `${state.numPages}`;
             },
             (state, action, dispatch) => {
-                this.suspend({}, (action, syncData) => {
-                    if (action.name === ActionName.WordlistFormSubmitReady) {
-                        return null;
-                    }
-                    return {};
-
-                }).pipe(
-                    concatMap(
-                        action => {
-                            const formArgs = (action as Actions.WordlistFormSubmitReady
-                                ).payload.args;
-                            return this.fetchLastPage(state, formArgs);
-                        }
-                    )
-                ).subscribe(
-                    ([data, pageNum, isLastPage, size]) => {
-                        dispatch<Actions.WordlistPageLoadDone>({
-                            name: ActionName.WordlistPageLoadDone,
-                            payload: {
-                                page: pageNum,
-                                isLast: isLastPage,
-                                newNumOfItems: size,
-                                data
-                            }
-                        });
-                    },
-                    (err) => {
-                        this.layoutModel.showMessage('error', err);
-                        dispatch<Actions.WordlistPageLoadDone>({
-                            name: ActionName.WordlistPageLoadDone,
-                            error: err
-                        });
-                    }
-                );
+                this.processPageLoad(
+                    state,
+                    state.currPage,
+                    dispatch
+                )
             }
         );
 
@@ -332,41 +300,26 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             (state, action, dispatch) => {
                 this.processPageLoad(state, state.currPage, dispatch);
             }
-        )
+        );
+
+        this.addActionHandler<Actions.WordlistResultSetSortColumn>(
+            ActionName.WordlistResultSetSortColumn,
+            (state, action) => {
+                state.wlsort = action.payload.sortKey;
+            },
+            (state, action, dispatch) => {
+                this.processPageLoad(state, state.currPage, dispatch);
+            }
+        );
     }
 
     private fetchLastPage(
-        state:WordlistResultModelState,
-        formSubmitArgs:WordlistSubmitArgs
-    ):Observable<[Array<IndexedResultItem>, number, boolean, number]> {
-        return (() => {
-            if (state.numItems === null) {
-                return this.layoutModel.ajax$<WlSizeAjaxResponse>(
-                    HTTP.Method.GET,
-                    this.layoutModel.createActionUrl('wordlist/ajax_get_wordlist_size'),
-                    {} // TODO new MultiDict(WordlistFormModel.encodeSubmitArgs(formSubmitArgs))
-                );
-
-            } else {
-                return rxOf({
-                        messages: [],
-                        size: state.numItems
-                });
-            }
-        })().pipe(
+        state:WordlistResultModelState
+    ):Observable<[Array<IndexedResultItem>, number]> {
+        return this.pageLoad(state, state.numPages).pipe(
             map(
-                data => tuple(
-                    data.size,
-                    Math.ceil(data.size / state.pageSize)
-                )
-            ),
-            concatMap(
-                ([size, numPages]) => this.pageLoadUsingFormArgs(state, numPages, formSubmitArgs).pipe(
-                    map(
-                        ([data, pageNum, isLast]) => tuple(
-                            data, pageNum, isLast, size
-                        )
-                    )
+                ([data, pageNum]) => tuple(
+                    data, pageNum
                 )
             )
         );
@@ -378,60 +331,10 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
 
     private exportReloadArgs(state:WordlistResultModelState):Array<[string, string|number]> {
         return [
-            tuple('query_id', state.queryId),
-            tuple('corpname', state.corpname),
-            tuple('usesubcorp', state.usesubcorp),
+            tuple('q', `~${state.queryId}`),
             tuple('wlpage', state.currPage.toString()),
             tuple('wlsort', state.wlsort)
         ];
-    }
-
-    private pageLoadUsingFormArgs(
-        state:WordlistResultModelState,
-        newPage:number,
-        formARgs:WordlistSubmitArgs,
-        skipHistory=false
-    ):Observable<[Array<IndexedResultItem>, number, boolean]> {
-        return this.loadData(state, newPage, formARgs).pipe(
-            tap(
-                ([pageNum,]) => {
-                    if (!skipHistory) {
-                        this.layoutModel.getHistory().pushState(
-                            'wordlist/result',
-                            new MultiDict(this.exportReloadArgs(state))
-                        );
-                    }
-                }
-            )
-        );
-    }
-
-    private pageLoad(
-        state:WordlistResultModelState,
-        newPage:number,
-        skipHistory=false
-    ):Observable<[Array<IndexedResultItem>, number, boolean]> {
-        return this.suspend({}, (action, syncData) => {
-            if (action.name === ActionName.WordlistFormSubmitReady) {
-                return null;
-            }
-            return {};
-        }).pipe(
-            concatMap(
-                action => {
-                    if (newPage < 1) {
-                        throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
-                    }
-                    const args = (action as Actions.WordlistFormSubmitReady).payload.args;
-                    return this.pageLoadUsingFormArgs(
-                        state,
-                        newPage,
-                        args,
-                        skipHistory
-                    );
-                }
-            )
-        );
     }
 
     private processPageLoad(
@@ -441,12 +344,11 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         skipHistory=false
     ):void {
         this.pageLoad(state, newPage, skipHistory).subscribe(
-            ([data, pageNum, isLastPage]) => {
+            ([data, total]) => {
                 dispatch<Actions.WordlistPageLoadDone>({
                     name: ActionName.WordlistPageLoadDone,
                     payload: {
-                        page: pageNum,
-                        isLast: isLastPage,
+                        page: newPage,
                         data
                     }
                 });
@@ -461,29 +363,55 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         );
     }
 
-    private loadData(
+    private pageLoad(
         state:WordlistResultModelState,
         newPage:number,
-        formModelSubmitArgs:WordlistSubmitArgs
-    ):Observable<[Array<IndexedResultItem>, number, boolean]> {
-        formModelSubmitArgs.wlpage = newPage;
+        skipHistory=false
+    ):Observable<[Array<IndexedResultItem>, number]> {
+        return newPage < 1 || newPage > state.numPages ?
+            throwError(new Error(this.layoutModel.translate('wordlist__page_not_found_err'))) :
+            this.loadData(state, newPage).pipe(
+                tap(
+                    () => {
+                        if (!skipHistory) {
+                            this.layoutModel.getHistory().pushState(
+                                'wordlist/result',
+                                new MultiDict(this.exportReloadArgs(state))
+                            );
+                        }
+                    }
+                )
+            );
+    }
+
+
+    /**
+     *
+     * @return Observable of tuple (data, total num of items)
+     */
+    private loadData(
+        state:WordlistResultModelState,
+        newPage:number
+    ):Observable<[Array<IndexedResultItem>, number]> {
         return this.layoutModel.ajax$<DataAjaxResponse>(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('wordlist/result', [['format', 'json']]),
-            {} // TODO new MultiDict(WordlistFormModel.encodeSubmitArgs(formModelSubmitArgs))
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl(
+                'wordlist/result',
+                MultiDict.fromDict({
+                    q: `~${state.queryId}`,
+                    wlpage: newPage,
+                    wlsort: state.wlsort || undefined,
+                    format: 'json'
+                })
+            ),
+            {}
 
         ).pipe(
-            concatMap(
-                (data) => {
-                    if (data.lastpage && data.Items.length === 0) {
-                        throw new Error(this.layoutModel.translate('wordlist__page_not_found_err'));
-                    }
-                    return rxOf(tuple(
-                        importData(data.Items, newPage, state.pageSize),
-                        newPage,
-                        !!data.lastpage
-                    ));
-                }
+            map(
+                data => tuple(
+                    importData(data.data, newPage, state.pageSize),
+                    data.total,
+                )
             )
         );
     }

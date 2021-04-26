@@ -189,6 +189,9 @@ class QueryHistory(AbstractQueryHistory):
 
         corpora = CorpusCache(corpus_manager)
         data = self.db.list_get(self._mk_key(user_id))
+        if limit is None:
+            limit = len(data)
+        data = [v for v in reversed(data)][offset:(offset + limit)]
         full_data = []
 
         for item in data:
@@ -260,14 +263,10 @@ class QueryHistory(AbstractQueryHistory):
         if archived_only:
             full_data = [x for x in full_data if x.get('name', None) is not None]
 
-        if limit is None:
-            limit = len(full_data)
-
-        tmp = [v for v in reversed(full_data)][offset:(offset + limit)]
-        for i, item in enumerate(tmp):
+        for i, item in enumerate(full_data):
             item['idx'] = offset + i
 
-        return tmp
+        return full_data
 
     def find_by_qkey(self, query_key):
         if query_key:

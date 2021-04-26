@@ -39,21 +39,19 @@ def _create_cache_path(form: WordlistFormArgs) -> str:
 def require_existing_wordlist(form: WordlistFormArgs, wlsort: str, reverse: bool, offset: int, limit: int,
                               collator_locale: str) -> Tuple[int, List[Tuple[str, int]]]:
     path = _create_cache_path(form)
-    import logging
-    logging.getLogger(__name__).debug('path: {}, offset: {}, limit: {}'.format(path, offset, limit))
     if not os.path.exists(path):
         raise WordlistResultNotFound('The result does not exist')
     else:
         if wlsort == 'f':
+            total, rows = load_cached_full(path)
+            return (total,
+                    sorted(rows, key=lambda x: x[1], reverse=reverse)[offset:offset + limit])
+        else:
             if reverse is True:
                 return load_cached_partial(path, offset, limit)
             else:
                 total, rows = load_cached_full(path)
                 return total, list(reversed(rows))[offset:offset+limit]
-        else:
-            total, rows = load_cached_full(path)
-            return (total,
-                    l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)[offset:offset+limit])
 
 
 def cached(f):
@@ -95,6 +93,7 @@ def _wordlist_from_list(attr, attrfreq, pfilter_words, nfilter_words, wlminfreq,
                 items.append((word, frq))
     return items
 
+
 def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, pfilter_words, nfilter_words,
                          wlnums):
     try:
@@ -114,31 +113,6 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, p
             else:
                 items.append((id_value, frq))
     return items
-
-
-def get_wordlist_length(corp: KCorpus, wlattr: str, wlpat: str, wlnums: str, wlminfreq: int, pfilter_words: str,
-                        nfilter_words: str, include_nonwords: bool) -> int:
-    enc_pattern = wlpat.strip()
-    attr = corp.get_attr(wlattr)
-    attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
-    if not include_nonwords:
-        nwre = corp.get_conf('NONWORDRE')
-    else:
-        nwre = ''
-    try:
-        gen = attr.regexp2ids(enc_pattern, 0, nwre)
-    except TypeError:
-        gen = attr.regexp2ids(enc_pattern, 0)
-    i = 0
-    while not gen.end():
-        wid = gen.next()
-        frq = attrfreq[wid]
-        if not frq:
-            continue
-        id_value = attr.id2str(wid)
-        if frq >= wlminfreq and (not pfilter_words or id_value in pfilter_words) and (not nfilter_words or id_value not in nfilter_words):
-            i += 1
-    return i
 
 
 def doc_sizes(corp: KCorpus, struct: Structure, attrname: str, i: int, normvals: Dict[int, int]) -> int:
