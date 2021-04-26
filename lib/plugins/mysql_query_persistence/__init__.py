@@ -187,7 +187,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         if data is None:
             cursor = self._archive.cursor()
             cursor.execute(
-                'SELECT data, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
+                'SELECT data, created, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
             tmp = cursor.fetchone()
             if tmp:
                 data = json.loads(tmp['data'])
@@ -195,8 +195,8 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                     cursor.execute(
                         'UPDATE kontext_conc_persistence '
                         'SET last_access = %s, num_access = num_access + 1 '
-                        'WHERE id = %s',
-                        (get_iso_datetime(), data_id)
+                        'WHERE id = %s AND created = %s',
+                        (get_iso_datetime(), data_id, tmp['created'].isoformat())
                     )
                     self._archive.commit()
         return data
@@ -218,7 +218,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         def records_differ(r1, r2):
             return (r1[QUERY_KEY] != r2[QUERY_KEY] or
                     r1.get('lines_groups') != r2.get('lines_groups'))
-        logging.getLogger(__name__).debug('curr_data: {}'.format(curr_data))
+
         if prev_data is None or records_differ(curr_data, prev_data):
             data_id = generate_idempotent_id(curr_data)
             curr_data[ID_KEY] = data_id
