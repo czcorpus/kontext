@@ -131,10 +131,20 @@ export const ProgressBar = styled.div`
         width: 80%;
         border: 1px solid ${theme.colorLogoBlue};
         border-radius: ${theme.inputBorderRadius};
+        position: relative;
 
         .progress {
+            position: absolute;
             background-color: ${theme.colorLogoBlueShining};
             height: 100%;
+        }
+
+        .waveform {
+            position: absolute;
+            left: 0em;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
         }
     }
 

@@ -54,6 +54,7 @@ import attr
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
 from plugins.abstract.conc_cache import ConcCacheStatusException
+import pydub
 
 
 class ConcError(UserActionException):
@@ -1486,7 +1487,8 @@ class Actions(Querying):
             def mkfilename(suffix): return f'{self.args.corpname}-concordance.{suffix}'
             if saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
-                self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(mkfilename('txt'))
+                self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(
+                    mkfilename('txt'))
                 output.update(data)
                 for item in data['Lines']:
                     item['ref'] = ', '.join(item['ref'])
@@ -1607,6 +1609,40 @@ class Actions(Querying):
         else:
             self.set_not_found()
             return lambda: None
+
+    @exposed(return_type='json', access_level=0)
+    def audio_waveform(self, request):
+        chunk = request.args.get('chunk', '')
+        rpath = os.path.realpath(os.path.join(settings.get(
+            'corpora', 'speech_files_path'), self.args.corpname, chunk))
+        basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
+        if os.path.isfile(rpath) and rpath.startswith(basepath):
+            play_from, play_to = self._parse_range(request)
+
+            if not play_to:
+                # TODO requires ffmpeg
+                sound = pydub.AudioSegment.from_file(rpath)
+
+            else:
+                with open(rpath, 'rb') as f:
+                    if play_from > 0:
+                        f.seek(play_from)
+
+                    # TODO reads only wav
+                    sound = pydub.AudioSegment(
+                        data=f.read() if not play_to else f.read(play_to - play_from))
+
+            def audio_slices(snd, N):
+                slice = int(len(snd) / N)
+                for i in range(0, (N - 2) * slice, slice):
+                    yield snd[i:i + slice]
+                yield snd[(N - 2) * slice:]
+
+            loudness = [snd.max / sound.max for snd in audio_slices(sound, 100)]
+            return loudness
+        else:
+            self.set_not_found()
+            return []
 
     def _collect_conc_next_url_params(self, query_id):
         params = {

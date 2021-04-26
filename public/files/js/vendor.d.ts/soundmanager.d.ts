@@ -161,6 +161,7 @@ declare module "vendor/SoundManager" {
 
     export interface Sound {
         play():void;
+        url:string;
     }
 
     export interface SoundManager {

@@ -499,8 +499,13 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                             `audio?corpname=${this.state.corpusId}&chunk=${item}`),
                         action.payload.segments
                 );
+                const waveformSources = List.map(
+                    item => this.layoutModel.createActionUrl(
+                        `audio_waveform?corpname=${this.state.corpusId}&chunk=${item}`),
+                    action.payload.segments
+                );
                 if (itemsToPlay.length > 0) {
-                    this.audioPlayer.start(itemsToPlay);
+                    this.audioPlayer.start(itemsToPlay, waveformSources);
 
                 } else {
                     this.changeState(state => {
