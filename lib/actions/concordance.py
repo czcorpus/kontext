@@ -1644,7 +1644,7 @@ class Actions(Querying):
                 yield snd[i:i + slice]
             yield snd[(N - 2) * slice:]
 
-        loudness = [snd.max / sound.max for snd in audio_slices(sound, 100)]
+        loudness = [snd.max / sound.max for snd in audio_slices(sound, 200)]
         return loudness
 
     def _collect_conc_next_url_params(self, query_id):

@@ -66,19 +66,19 @@ export const AudioPlayer = styled.div`
     position: absolute;
     display: inline-block;
     z-index: 10000;
-    width: 10em;
+    width: 18em;
 
     -moz-border-radius: 5px;
     border-radius: 5px;
     border: 1px solid #767284;
     background-color: #e9f7fc;
     overflow: hidden;
-    padding: 0.3em 0.6em;
+    padding: 0.6em 0.6em;
     box-shadow: 3px 3px 4px #aaa;
 
     .audio-controls {
         display: flex;
-        justify-content: space-around;
+        justify-content: center;
 
         > a {
             text-decoration: none;
@@ -89,8 +89,8 @@ export const AudioPlayer = styled.div`
             background-size: 1.2em 1.2em;
             background-repeat: no-repeat;
             background-position: 0 0.15em;
-            margin-left: 0.2em;
-            margin-right: 0.2em;
+            margin-left: 0.5em;
+            margin-right: 0.5em;
         }
 
         a.img-button-play-active {
@@ -125,10 +125,13 @@ export const ProgressBar = styled.div`
     display: flex;
     width: 100%;
     margin-top: 0.7em;
+    height: 3em;
+    align-items: center;
 
 
     .wrapper {
         width: 80%;
+        height: 100%;
         border: 1px solid ${theme.colorLogoBlue};
         border-radius: ${theme.inputBorderRadius};
         position: relative;
