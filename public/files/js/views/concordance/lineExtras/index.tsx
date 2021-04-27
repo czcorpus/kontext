@@ -163,10 +163,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const textChangeHandler = (event) => {
+            const parsedValue = parseInt(event.currentTarget.value)
             dispatcher.dispatch<Actions.SelectLines>({
                 name: ActionName.SelectLine,
                 payload: {
-                    value: event.currentTarget.value ? parseInt(event.currentTarget.value) : undefined,
+                    value: event.currentTarget.value && !isNaN(parsedValue) ? parsedValue : undefined,
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength
                 }
