@@ -25,6 +25,7 @@ import l10n
 from argmapping.wordlist import WordlistFormArgs
 from manatee import Structure   # TODO wrap this out
 from bgcalc.wordlist.errors import WordlistResultNotFound
+from corplib.errors import MissingSubCorpFreqFile
 from bgcalc.csv_cache import load_cached_partial, load_cached_full
 import settings
 

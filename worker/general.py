@@ -260,7 +260,7 @@ def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_loc
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-def compile_frq(corp_id, subcorp, user_id, attr, logfile):
+def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
     (see freq_calc.build_arf_db)worker.py
@@ -269,7 +269,7 @@ def compile_frq(corp_id, subcorp, user_id, attr, logfile):
     return _compile_frq(corp, attr, logfile)
 
 
-def compile_arf(corp_id, subcorp, user_id, attr, logfile):
+def compile_arf(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
     (see freq_calc.build_arf_db)
@@ -299,12 +299,12 @@ def compile_arf(corp_id, subcorp, user_id, attr, logfile):
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
-def compile_docf(corp_id, subcorp_path, user_id, attr, logfile):
+def compile_docf(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
     (see freq_calc.build_arf_db)
     """
-    corp = _load_corp(corp_id, subcorp_path, user_id)
+    corp = _load_corp(corp_id, subcorp, user_id)
     if is_compiled(corp, attr, 'docf'):
         with open(logfile, 'a') as f:
             f.write('\n100 %\n')  # to get proper calculation of total progress

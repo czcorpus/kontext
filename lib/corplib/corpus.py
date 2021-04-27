@@ -275,6 +275,12 @@ class KCorpus:
     def compile_frq(self, attr):
         return self._corp.compile_frq(attr)
 
+    def compile_arf(self, attr):
+        return self._corp.compile_arf(attr)
+
+    def compile_docf(self, attr, doc_attr):
+        return self._corp.compile_docf(attr, doc_attr)
+
     @property
     def is_subcorpus(self):
         return False
@@ -372,4 +378,4 @@ class KSubcorpus(KCorpus):
         return super().description
 
     def freq_precalc_file(self, attrname: str) -> str:
-        return self._corp.spath[:-4] + attrname
+        return self.spath[:-4] + attrname

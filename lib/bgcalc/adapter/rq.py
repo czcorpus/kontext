@@ -22,6 +22,9 @@ from rq_scheduler import Scheduler
 from bgcalc.errors import CalcTaskNotFoundError, CalcBackendError
 from controller.errors import UserActionException
 import json
+import re
+import importlib
+import sys
 
 
 class ResultWrapper:
@@ -35,35 +38,56 @@ class ResultWrapper:
     )
 
     def __init__(self, job):
-        self.job = job
+        self._job = job
         self.result = None
+
+    def infer_error(self, exc_info, job_id):
+        last = [x for x in re.split(r'\n', exc_info) if x.strip() != ''][-1]
+        srch = re.match(r'^([\w_\.]+):\s+(.+)$', last)
+        if srch is not None:
+            path = srch.group(1)
+            if '.' in path:
+                module, cls_name = srch.group(1).rsplit('.', 1)
+                try:
+                    m = importlib.import_module(module)
+                    cls = getattr(m, cls_name, None)
+                    err = cls(srch.group(2)) if cls else Exception(srch.group(2))
+                except ModuleNotFoundError:
+                    logging.getLogger(__name__).warning('Failed to infer calc backend job error {}'.format(path))
+                    err = Exception(f'Task failed: {job_id}')
+            else:
+                cls = getattr(sys.modules['builtins'], path, None)
+                err = cls(srch.group(2)) if cls else Exception(srch.group(2))
+            return err
+        return Exception(f'Task failed: {job_id}')
 
     def get(self, timeout=None):
         try:
             total_time = 0
             while True:
                 time.sleep(0.5)
-                if self.job.is_finished:
-                    self.result = self.job.result
-                    return self.job.result
-                elif self.job.is_failed:
-                    self.result = Exception(f'Task failed: {self.job}')
-                    raise self.result
+                if self._job.is_finished:
+                    self.result = self._job.result
+                    break
+                elif self._job.is_failed:
+                    self._job.refresh()
+                    self.result = self.infer_error(self._job.exc_info, self._job.id)
+                    break
                 elif timeout and total_time > timeout:
-                    self.result = Exception(f'Task result timeout: {self.job}')
-                    raise self.result
+                    self.result = Exception(f'Task result timeout: {self._job}')
+                    break
                 total_time += 0.5
         except Exception as e:
             self.result = e
-            logging.getLogger(__name__).error(e)
+        return self.result
 
     @property
     def status(self):
-        return ResultWrapper.status_map[self.job.get_status()] if self.job else 'FAILURE'
+        return ResultWrapper.status_map[self._job.get_status()] if self._job else 'FAILURE'
 
     @property
     def id(self):
-        return self.job.id
+        return self._job.id
 
 
 class RqConfig(object):

@@ -149,19 +149,18 @@ def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_loc
 
 
 @app.task(name='compile_frq')
-def compile_frq(corp_id, subcorp, user_id, attr, logfile):
-    return general.compile_frq(corp_id, subcorp, user_id, attr, logfile)
+def compile_frq(user_id, corp_id, subcorp, attr, logfile):
+    return general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
 
 
 @app.task(name='compile_arf')
-def compile_arf(corp_id, subcorp: str, user_id, attr, logfile):
-    return general.compile_arf(corp_id, subcorp, user_id, attr, logfile)
+def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
+    return general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
 
 
 @app.task(name='compile_docf')
-def compile_docf(corp_id, subcorp: str, user_id, attr, logfile):
-    return general.compile_docf(corp_id, subcorp, user_id, attr, logfile)
-
+def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
+    return general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 

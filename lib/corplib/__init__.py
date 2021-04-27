@@ -167,7 +167,7 @@ class CorpusManager(object):
                 return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
         return None
 
-    def get_corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> Corpus:
+    def get_corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> KCorpus:
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -401,10 +401,10 @@ def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -
         try:
             frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
         except IOError as ex:
-            raise MissingSubCorpFreqFile(corp, ex)
+            raise MissingSubCorpFreqFile(ex)
         except EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
-            raise MissingSubCorpFreqFile(corp, ex)
+            raise MissingSubCorpFreqFile(ex)
     else:
         try:
             if corp.get_conf('VIRTUAL') and not corp.is_subcorpus and nums == 'frq':
@@ -415,7 +415,7 @@ def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             os.remove(filename.rsplit('.', 1)[0] + '.arf')
             os.remove(filename.rsplit('.', 1)[0] + '.frq')
-            raise MissingSubCorpFreqFile(corp, ex)
+            raise MissingSubCorpFreqFile(ex)
         except IOError:
             try:
                 frq = array.array('l')
@@ -425,7 +425,7 @@ def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -
                     a = corp.get_attr(attrname)
                     frq.fromlist([a.freq(i) for i in range(a.id_range())])
                 else:
-                    raise MissingSubCorpFreqFile(corp, ex)
+                    raise MissingSubCorpFreqFile(ex)
     return frq
 
 

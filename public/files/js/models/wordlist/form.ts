@@ -424,6 +424,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 } else {
                     this.submit(state).subscribe(
                         resp => {
+                            console.log('resp: ', resp)
                             window.location.href = this.layoutModel.createActionUrl(
                                 'wordlist/result',
                                 MultiDict.fromDict({

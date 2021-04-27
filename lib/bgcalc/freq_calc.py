@@ -126,6 +126,13 @@ def get_log_last_line(path):
         return None
 
 
+def _clear_old_calc_status(base_path):
+    for m in ('frq', 'arf', 'docf'):
+        log_file = create_log_path(base_path, m)
+        if os.path.isfile(log_file) and os.path.getmtime(log_file) > 3600:
+            os.unlink(log_file)
+
+
 def _get_total_calc_status(base_path):
     items = []
     for m in ('frq', 'arf', 'docf'):
@@ -158,26 +165,27 @@ def write_log_header(corp, logfile):
         f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size))
 
 
-def build_arf_db(corp, attrname):
+def build_arf_db(user_id: int, corp: KCorpus, attrname: str):
     """
     Provides a higher level wrapper to create_arf_db(). Function creates
     a background process where create_arf_db() is run.
     """
     base_path = corp_freqs_cache_path(corp, attrname)
+    _clear_old_calc_status(base_path)
     if calc_is_running(base_path):
         curr_status = _get_total_calc_status(base_path)
         if curr_status < 100:
             return curr_status
 
-    subc_path = prepare_arf_calc_paths(corp, attrname)
     app = bgcalc.calc_backend_client(settings)
     task_ids = []
     for m in ('frq', 'arf', 'docf'):
         logfilename_m = create_log_path(base_path, m)
         write_log_header(corp, logfilename_m)
-        res = app.send_task('compile_{0}'.format(m),
-                            (corp.corpname, subc_path, attrname, logfilename_m),
+        res = app.send_task(f'compile_{m}',
+                            (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
                             time_limit=TASK_TIME_LIMIT)
+        logging.getLogger(__name__).warning('sending {}, res_id: {}'.format(m, res.id))
         task_ids.append(res.id)
     return task_ids
 
