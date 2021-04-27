@@ -19,7 +19,7 @@
  */
 
 import { Observable, Observer, of as rxOf } from 'rxjs';
-import { StatelessModel, IActionDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { concatMap, map } from 'rxjs/operators';
 import { Dict, List, Ident, pipe, tuple, HTTP } from 'cnc-tskit';
 
@@ -31,6 +31,7 @@ import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as ACActions, ActionName as ACActionName } from '../../models/asyncTask/actions';
 import { FileTarget, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
 import { IUnregistrable } from '../common/common';
 import { MultiDict } from '../../multidict';
@@ -85,6 +86,8 @@ export interface WordlistFormState {
     origSubcorpName:string;
     outputOptionsVisible:boolean;
     filtersVisible:boolean;
+    precalcTasks:Array<Kontext.AsyncTaskInfo<{}>>;
+    isBusy:boolean;
 }
 
 export interface WordlistFormCorpSwitchPreserve {
@@ -160,7 +163,9 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 currentSubcorpus: corpusIdent.usesubcorp,
                 origSubcorpName: '',
                 outputOptionsVisible: false,
-                filtersVisible: false
+                filtersVisible: false,
+                precalcTasks: [],
+                isBusy: false
             }
         );
         this.layoutModel = layoutModel;
@@ -413,6 +418,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             ActionName.WordlistFormSubmit,
             (state, action) => {
                 this.validateForm(state);
+                state.isBusy = true; // TODO in side-effect, dispatch some new action setting busy to false
             },
             (state, action, dispatch) => {
                 if (state.wlminfreq.isInvalid) {
@@ -422,20 +428,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                     this.layoutModel.showMessage('error', this.layoutModel.translate('wordlist__pattern_empty_err'));
 
                 } else {
-                    this.submit(state).subscribe(
-                        resp => {
-                            console.log('resp: ', resp)
-                            window.location.href = this.layoutModel.createActionUrl(
-                                'wordlist/result',
-                                MultiDict.fromDict({
-                                    q: `~${resp.wl_query_id}`
-                                })
-                            );
-                        },
-                        (err) => {
-                            console.log('err: ', err);
-                        }
-                    )
+                    this.submitAction(state, dispatch);
                 }
             }
         );
@@ -479,6 +472,84 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                         data: this.serialize(state)
                     }
                 });
+            }
+        );
+
+        this.addActionHandler<Actions.RegisterPrecalcTasks>(
+            ActionName.RegisterPrecalcTasks,
+            (state, action) => {
+                state.precalcTasks = action.payload.tasks;
+            }
+        );
+
+        this.addActionHandler<ACActions.AsyncTasksChecked>(
+            ACActionName.AsyncTasksChecked,
+            (state, action) => {
+                if (!List.empty(state.precalcTasks)) {
+                    const updated:Array<Kontext.AsyncTaskInfo<{}>> = [];
+                    List.forEach(
+                        (ourTask, i) => {
+                            const srch = List.find(t => t.ident === ourTask.ident, action.payload.tasks);
+                            updated.push(srch ? srch : ourTask);
+                        },
+                        state.precalcTasks
+                    );
+                    state.precalcTasks = updated;
+                    if (!List.some(t => t.status === 'PENDING' || t.status === 'STARTED', state.precalcTasks)) {
+                        state.isBusy = false;
+                    }
+                }
+            },
+            (state, action, dispatch) => {
+                if (List.empty(state.precalcTasks)) {
+                    return;
+
+                } else if (List.every(t => t.status === 'SUCCESS', state.precalcTasks)) {
+                    this.submitAction(state, dispatch);
+
+                } else if (List.every(t => t.status === 'FAILURE', state.precalcTasks)) {
+                    this.layoutModel.showMessage(
+                        'error', this.layoutModel.translate('wordlist__failed_to_precalculate')
+                    );
+                }
+            }
+        );
+    }
+
+    private submitAction(state:WordlistFormState, dispatch:SEDispatcher):void {
+        this.submit(state).subscribe(
+            resp => {
+                if (resp.freq_files_avail) {
+                    window.location.href = this.layoutModel.createActionUrl(
+                        'wordlist/result',
+                        MultiDict.fromDict({
+                            q: `~${resp.wl_query_id}`
+                        })
+                    );
+
+                } else {
+                    this.layoutModel.showMessage(
+                        'info',
+                        this.layoutModel.translate('wordlist__aux_data_must_be_precalculated')
+                    );
+                    if (!List.empty(resp.subtasks)) {
+                        List.forEach(
+                            payload => {
+                                dispatch<ACActions.InboxAddAsyncTask>({
+                                    name: ACActionName.InboxAddAsyncTask,
+                                    payload
+                                })
+                            },
+                            resp.subtasks
+                        );
+                        dispatch<Actions.RegisterPrecalcTasks>({
+                            name: ActionName.RegisterPrecalcTasks,
+                            payload: {
+                                tasks: resp.subtasks
+                            }
+                        });
+                    }
+                }
             }
         );
     }

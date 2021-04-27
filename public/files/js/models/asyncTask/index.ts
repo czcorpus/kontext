@@ -85,13 +85,42 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         this.pageModel = pageModel;
         this.onUpdate = [];
         this.triggerUpdateAction = (resp:AsyncTaskResponse) => {
-            dispatcher.dispatch<Actions.AsyncTasksChecked>({
-                name: ActionName.AsyncTasksChecked,
-                payload: {
-                    tasks: resp.data
-                }
-            })
+            // we don't want to notify about finished tasks multiple times so the
+            // receivers do not have to handle it by themselves
+            const tasks = pipe(
+                resp.data,
+                List.filter(v => {
+                    const srch = List.find(c => c.ident === v.ident, this.state.asyncTasks);
+                    return !(srch && (srch.status === 'FAILURE' || srch.status === 'SUCCESS')
+                            && v.status === srch.status);
+                })
+            );
+            if (!List.empty(tasks)) {
+                dispatcher.dispatch<Actions.AsyncTasksChecked>({
+                    name: ActionName.AsyncTasksChecked,
+                    payload: {
+                        tasks
+                    }
+                });
+            }
         };
+
+        this.addActionHandler<Actions.AsyncTasksChecked>(
+            ActionName.AsyncTasksChecked,
+            action => {
+                const updatedList:Array<Kontext.AsyncTaskInfo> = [];
+                List.forEach(
+                    newTask => {
+                        const updated = List.find(t => t.ident === newTask.ident, this.state.asyncTasks);
+                        updatedList.push(updated ? updated : newTask);
+                    },
+                    action.payload.tasks
+                );
+                this.changeState(state => {
+                    state.asyncTasks = updatedList;
+                });
+            }
+        );
 
         this.addActionHandler<Actions.InboxToggleOverviewVisibility>(
             ActionName.InboxToggleOverviewVisibility,

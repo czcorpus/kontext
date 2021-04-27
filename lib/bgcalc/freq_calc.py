@@ -21,7 +21,7 @@ import hashlib
 import logging
 import pickle
 from structures import FixedDict
-from typing import Union
+from typing import Union, List
 
 import manatee
 import corplib
@@ -30,6 +30,7 @@ from conclib.calc import require_existing_conc
 import settings
 import bgcalc
 from bgcalc.errors import UnfinishedConcordanceError, CalcBackendError
+from bgcalc import AsyncTaskStatus
 from translation import ugettext as _
 from controller.errors import UserActionException
 
@@ -165,7 +166,7 @@ def write_log_header(corp, logfile):
         f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size))
 
 
-def build_arf_db(user_id: int, corp: KCorpus, attrname: str):
+def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> List[AsyncTaskStatus]:
     """
     Provides a higher level wrapper to create_arf_db(). Function creates
     a background process where create_arf_db() is run.
@@ -178,7 +179,7 @@ def build_arf_db(user_id: int, corp: KCorpus, attrname: str):
             return curr_status
 
     app = bgcalc.calc_backend_client(settings)
-    task_ids = []
+    tasks = []
     for m in ('frq', 'arf', 'docf'):
         logfilename_m = create_log_path(base_path, m)
         write_log_header(corp, logfilename_m)
@@ -186,8 +187,13 @@ def build_arf_db(user_id: int, corp: KCorpus, attrname: str):
                             (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
                             time_limit=TASK_TIME_LIMIT)
         logging.getLogger(__name__).warning('sending {}, res_id: {}'.format(m, res.id))
-        task_ids.append(res.id)
-    return task_ids
+        async_task = AsyncTaskStatus(status=res.status, ident=res.id,
+                                     category=AsyncTaskStatus.CATEGORY_FREQ_PRECALC,
+                                     label='Subc. related data precalculation',  # TODO !!
+                                     args={},
+                                     url=None)
+        tasks.append(async_task)
+    return tasks
 
 
 def build_arf_db_status(corp, attrname):

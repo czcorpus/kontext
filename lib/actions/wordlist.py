@@ -89,18 +89,18 @@ class Wordlist(Kontext):
         form_args = WordlistFormArgs()
         form_args.update_by_user_query(request.json)
         app = calc_backend_client(settings)
-        ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp, freq_files_avail=True)
+        ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp, freq_files_avail=True, subtasks=[])
         async_res = app.send_task(
             'get_wordlist',
             args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
-        result = async_res.get()
-        if isinstance(result, MissingSubCorpFreqFile):
-            subtasks = freq_calc.build_arf_db(self.session_get('user', 'id'), self.corp, form_args.wlattr)
+        bg_result = async_res.get()
+        if isinstance(bg_result, MissingSubCorpFreqFile):
+            for subtask in freq_calc.build_arf_db(self.session_get('user', 'id'), self.corp, form_args.wlattr):
+                self._store_async_task(subtask)
+                ans['subtasks'].append(subtask.to_dict())
             ans['freq_files_avail'] = False
-            ans['subtasks'] = []
-            logging.getLogger(__name__).warning('>>> SUBTASKSxxx: {}'.format(subtasks))
-        elif isinstance(result, Exception):
-            raise result
+        elif isinstance(bg_result, Exception):
+            raise bg_result
         self._curr_wlform_args = form_args
 
         def on_conc_store(query_ids, stored_history, result):

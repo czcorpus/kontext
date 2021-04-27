@@ -18,7 +18,7 @@ from typing import List, Dict, Union
 
 from controller import exposed
 from controller.errors import FunctionNotSupported, UserActionException
-from controller.kontext import AsyncTaskStatus
+from bgcalc import AsyncTaskStatus
 from controller.querying import Querying
 from corplib.corpus import list_public_subcorpora
 from main_menu import MainMenu

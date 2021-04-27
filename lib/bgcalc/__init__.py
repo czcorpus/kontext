@@ -15,6 +15,8 @@
 
 from importlib.machinery import SourceFileLoader
 from .errors import CalcBackendInitError
+from typing import Dict, Any, Optional
+import time
 
 
 _backend_app = None
@@ -66,3 +68,58 @@ def calc_backend_client(conf):
 
 def calc_backend_server(conf, fn_prefix):
     return _calc_backend_app(conf, fn_prefix)
+
+
+class AsyncTaskStatus(object):
+    """
+    Keeps information about background tasks which are visible to a user
+    (i.e. user is informed that some calculation/task takes a long time
+    and that it is going to run in background and that the user will
+    be notified once it is done).
+
+    Please note that concordance calculation uses a different mechanism
+    as it requires continuous update of its status.
+
+    Status string is taken from Celery and should always equal
+    one of the following: PENDING, STARTED, RETRY, FAILURE, SUCCESS
+
+    Attributes:
+        ident (str): task identifier (unique per specific task instance)
+        label (str): user-readable task label
+        status (str): one of
+    """
+    CATEGORY_SUBCORPUS = 'subcorpus'
+    CATEGORY_PQUERY = 'pquery'
+    CATEGORY_FREQ_PRECALC = 'freqPrecalc'
+
+    def __init__(self, ident: str, label: str, status: int, category: str, args: Dict[str, Any],
+                 created: Optional[float] = None, error: Optional[str] = None, url: Optional[str] = None) -> None:
+        self.ident: str = ident
+        self.label: str = label
+        self.status: int = status
+        self.category: str = category
+        self.created: Optional[float] = created if created else time.time()
+        self.args: Dict[str, Any] = args
+        self.error: Optional[str] = error
+        self.url: Optional[str] = url
+
+    def is_finished(self) -> bool:
+        return self.status in ('FAILURE', 'SUCCESS')
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> 'AsyncTaskStatus':
+        """
+        Creates an instance from the 'dict' type. This is used
+        to unserialize instances from session.
+        """
+        return AsyncTaskStatus(status=data['status'], ident=data['ident'], label=data['label'],
+                               category=data['category'], created=data.get('created'), args=data.get('args', {}),
+                               error=data.get('error'), url=data.get('url'))
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Transforms an instance to the 'dict' type. This is used
+        to serialize instances to session.
+        """
+        return self.__dict__
+
