@@ -29,7 +29,7 @@ import bgcalc
 from bgcalc.pquery import require_existing_pquery
 from bgcalc.pquery.errors import PqueryResultNotFound
 import settings
-from controller.kontext import AsyncTaskStatus
+from bgcalc import AsyncTaskStatus
 from controller.plg import PluginCtx
 import time
 from translation import ugettext as translate

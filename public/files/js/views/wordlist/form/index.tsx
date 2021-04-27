@@ -745,10 +745,13 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                             formVisible={this.props.outputOptionsVisible}
                             handleClick={this._handleOptionsLegendClick} />
                     <div className="buttons">
-                        <button className="default-button" type="button"
-                                onClick={this._handleSubmitClick}>
-                            {he.translate('wordlist__make_wl_btn')}
-                        </button>
+                        {this.props.isBusy ?
+                            <layoutViews.AjaxLoaderBarImage /> :
+                            <button className="default-button" type="button"
+                                    onClick={this._handleSubmitClick}>
+                                {he.translate('wordlist__make_wl_btn')}
+                            </button>
+                        }
                     </div>
                 </S.WordListForm>
             );

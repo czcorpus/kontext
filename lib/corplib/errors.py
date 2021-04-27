@@ -18,17 +18,4 @@
 
 
 class MissingSubCorpFreqFile(Exception):
-
-    def __init__(self, corpus, orig_error):
-        self._corpus = corpus
-        self._orig_error = orig_error
-
-    def __unicode__(self):
-        return 'Missing subcorp freq file for {0} (orig error: {1})'.format(self._corpus, self._orig_error)
-
-    def __repr__(self):
-        return self.__unicode__().encode('utf-8')
-
-    @property
-    def corpus(self):
-        return self._corpus
+    pass

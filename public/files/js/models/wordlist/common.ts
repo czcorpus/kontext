@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Kontext } from "../../types/common";
+
 export enum WlnumsTypes {
     FRQ = 'frq',
     DOCF = 'docf',
@@ -78,4 +80,6 @@ export interface SubmitResponse {
     corpname:string;
     usesubcorp:string;
     wl_query_id:string;
+    freq_files_avail:string;
+    subtasks:Array<Kontext.AsyncTaskInfo<{}>>;
 }

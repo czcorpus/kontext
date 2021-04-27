@@ -93,7 +93,7 @@ class CollCalcCache(object):
         return collocs, cache_path
 
 
-def calculate_colls_bg(coll_args):
+def calculate_colls_bg(coll_args):  # TODO !!!! FIX (missing user-id, deprecated handling of MissingSubCorpFreqFile
     """
     Background collocations calculation.
     This function is expected to be run either

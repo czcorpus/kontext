@@ -14,7 +14,6 @@
 
 import sys
 import logging
-import os
 from typing import Optional, Callable, List, Dict, Any, Union
 
 from corplib.errors import MissingSubCorpFreqFile
@@ -55,15 +54,10 @@ class Wordlist(Kontext):
         return '/wordlist/'
 
     def pre_dispatch(self, action_name, action_metadata=None) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
-        """
-                with plugins.runtime.QUERY_PERSISTENCE as qp:
-            stored_form = qp.open(request.args.get('query_id'))
-            self._curr_wlform_args = WordlistFormArgs.from_dict(stored_form['form'])
-        """
         ans = super().pre_dispatch(action_name, action_metadata)
         if self._prev_q_data is not None:
             if self._prev_q_data.get('form', {}).get('form_type') != 'wlist':
-                raise UserActionException('Invalid operation session for word-list')
+                raise UserActionException('Invalid search session for word-list')
             self._curr_wlform_args = WordlistFormArgs.from_dict(self._prev_q_data['form'], id=self._prev_q_data['id'])
         return ans
 
@@ -78,29 +72,7 @@ class Wordlist(Kontext):
                 qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='pquery')
                 self.on_conc_store([query_id], True, result)
 
-    def _wlnums2structattr(self, wlnums):
-        if wlnums == 'arf':
-            raise WordlistError(translate('ARF cannot be used with text types'))
-        elif wlnums == 'frq':
-            return 'doc sizes'
-        elif wlnums == 'docf':
-            return 'docf'
-        else:
-            return wlnums
-
-    @staticmethod
-    def load_bw_file(hash):
-        res = ''
-        fname = hash + '.txt'
-        path = os.path.join(settings.get('global', 'user_filter_files_dir'), fname)
-        rpath = os.path.realpath(path)
-        if os.path.exists(rpath):
-            f = open(rpath, 'r')
-            res = f.read()
-            f.close()
-        return res
-
-    @exposed(access_level=1, vars=('LastSubcorp',), page_model='wordlistForm')
+    @exposed(access_level=1, page_model='wordlistForm')
     def form(self, request):
         """
         Word List Form
@@ -117,14 +89,25 @@ class Wordlist(Kontext):
         form_args = WordlistFormArgs()
         form_args.update_by_user_query(request.json)
         app = calc_backend_client(settings)
-        res = app.send_task('get_wordlist', args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
+        ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp, freq_files_avail=True, subtasks=[])
+        async_res = app.send_task(
+            'get_wordlist',
+            args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
+        bg_result = async_res.get()
+        if isinstance(bg_result, MissingSubCorpFreqFile):
+            for subtask in freq_calc.build_arf_db(self.session_get('user', 'id'), self.corp, form_args.wlattr):
+                self._store_async_task(subtask)
+                ans['subtasks'].append(subtask.to_dict())
+            ans['freq_files_avail'] = False
+        elif isinstance(bg_result, Exception):
+            raise bg_result
         self._curr_wlform_args = form_args
 
         def on_conc_store(query_ids, stored_history, result):
             result['wl_query_id'] = query_ids[0]
 
         self.on_conc_store = on_conc_store
-        return dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp)
+        return ans
 
     @exposed(access_level=1, http_method='GET', page_model='wordlist',
              action_log_mapper=log_mapping.wordlist)
@@ -146,57 +129,38 @@ class Wordlist(Kontext):
         result = dict(data=data, total=total, form=self._curr_wlform_args.to_dict(),
                       query_id=self._curr_wlform_args.id, reversed=rev, wlsort=self.args.wlsort, wlpage=page,
                       wlpagesize=self.args.wlpagesize)
+
+        if hasattr(self, 'wlfile') and self._curr_wlform_args.wlpat == '.*':
+            self.args.wlsort = ''
         try:
-            if hasattr(self, 'wlfile') and self._curr_wlform_args.wlpat == '.*':
-                self.args.wlsort = ''
-            try:
-                result['wlattr_label'] = (self.corp.get_conf(self._curr_wlform_args.wlattr + '.LABEL') or
-                                          self._curr_wlform_args.wlattr)
-            except Exception as e:
-                result['wlattr_label'] = self._curr_wlform_args.wlattr
-                logging.getLogger(__name__).warning('wlattr_label set failed: %s' % e)
+            result['wlattr_label'] = (self.corp.get_conf(self._curr_wlform_args.wlattr + '.LABEL') or
+                                      self._curr_wlform_args.wlattr)
+        except Exception as e:
+            result['wlattr_label'] = self._curr_wlform_args.wlattr
+            logging.getLogger(__name__).warning('wlattr_label set failed: %s' % e)
 
-            result['freq_figure'] = translate(self.FREQ_FIGURES.get('frq', '?'))
-            result['processing'] = None
+        result['freq_figure'] = translate(self.FREQ_FIGURES.get('frq', '?'))
+        result['processing'] = None
 
-            self._add_save_menu_item('CSV', save_format='csv',
-                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
-            self._add_save_menu_item('XLSX', save_format='xlsx',
-                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
-            self._add_save_menu_item('XML', save_format='xml',
-                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
-            self._add_save_menu_item('TXT', save_format='text',
-                                     hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                         self.WORDLIST_QUICK_SAVE_MAX_LINES)))
-            self._add_save_menu_item(translate('Custom'))
-            # custom save is solved in templates because of compatibility issues
-            result['tasks'] = []
-            result['SubcorpList'] = []
-            result['quick_save_row_limit'] = self.WORDLIST_QUICK_SAVE_MAX_LINES
-            self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, result)
-            return result
-
-        except MissingSubCorpFreqFile as e:
-            result.update({'attrname': self.args.cattr, 'tasks': []})
-            out = freq_calc.build_arf_db(e.corpus, self.args.wlattr)
-            if type(out) is list:
-                processing = 0
-                result['tasks'].extend(out)
-            elif out:
-                processing = out
-            else:
-                processing = 0
-            result['quick_save_row_limit'] = self.WORDLIST_QUICK_SAVE_MAX_LINES
-            result['wlattr'] = self.args.wlattr
-            result['wlattr_label'] = ''
-            result['processing'] = processing
-            result['SubcorpList'] = []
-            result['freq_figure'] = ''
-            result['lastpage'] = None
-            return result
+        self._add_save_menu_item('CSV', save_format='csv',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XLSX', save_format='xlsx',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('XML', save_format='xml',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item('TXT', save_format='text',
+                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                     self.WORDLIST_QUICK_SAVE_MAX_LINES)))
+        self._add_save_menu_item(translate('Custom'))
+        # custom save is solved in templates because of compatibility issues
+        result['tasks'] = []
+        result['SubcorpList'] = []
+        result['quick_save_row_limit'] = self.WORDLIST_QUICK_SAVE_MAX_LINES
+        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, result)
+        return result
 
     @exposed(template='freqs.html', page_model='freq', http_method='POST', mutates_result=True)
     def struct_result(self, request):

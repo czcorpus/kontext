@@ -19,10 +19,10 @@
  */
 
 import { Action } from 'kombo';
-import { MultiDict } from '../../multidict';
 import { IndexedResultItem, WlTypes, FileTarget, WordlistSubmitArgs } from './common';
 import { SaveData } from '../../app/navigation';
 import { FilterEditorData } from './form';
+import { Kontext } from '../../types/common';
 
 
 export enum ActionName {
@@ -64,7 +64,8 @@ export enum ActionName {
     WordlistHistoryPopState = 'WORDLIST_HISTORY_POP_STATE',
     WordlistIntermediateBgCalcUpdated = 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED',
     ToggleOutputOptions = 'WORDLIST_TOGGLE_OUTPUT_OPTIONS',
-    ToggleFilterOptions = 'WORDLIST_TOGGLE_FILTER_OPTIONS'
+    ToggleFilterOptions = 'WORDLIST_TOGGLE_FILTER_OPTIONS',
+    RegisterPrecalcTasks = 'WORDLIST_REGISTER_PRECALC_TASKS'
 }
 
 
@@ -292,5 +293,11 @@ export namespace Actions {
     export interface ToggleFilterOptions extends Action<{
     }> {
         name:ActionName.ToggleFilterOptions;
+    }
+
+    export interface RegisterPrecalcTasks extends Action<{
+        tasks:Array<Kontext.AsyncTaskInfo<{}>>;
+    }> {
+        name:ActionName.RegisterPrecalcTasks;
     }
 }
