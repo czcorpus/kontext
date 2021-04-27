@@ -981,11 +981,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
     }
 
-    private createAudioLink(textChunk:TextChunk):string {
+    private createAudioLink(endpoint:'audio'|'audio_waveform', textChunk:TextChunk):string {
         const tmp = textChunk.openLink || textChunk.closeLink;
         if (tmp) {
             return this.layoutModel.createActionUrl(
-                'audio',
+                endpoint,
                 [['corpname', this.state.baseCorpname], ['chunk', tmp.speechPath]]
             );
 
@@ -1054,11 +1054,18 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         });
         const playChunks = this.findChunks(this.state, ...chunksIds);
         if (!List.empty(playChunks)) {
-            this.audioPlayer.start(pipe(
-                playChunks,
-                List.map(item => this.createAudioLink(item)),
-                List.filter(item => !!item)
-            ));
+            this.audioPlayer.start(
+                pipe(
+                    playChunks,
+                    List.map(item => this.createAudioLink('audio', item)),
+                    List.filter(item => !!item)
+                ),
+                pipe(
+                    playChunks,
+                    List.map(item => this.createAudioLink('audio_waveform', item)),
+                    List.filter(item => !!item)
+                )
+            );
         }
     }
 

@@ -17,3 +17,5 @@ babel >= 2.8.0
 
 rq-scheduler >= 0.10.0
 rq >= 1.5.1
+
+pydub>=0.25.1

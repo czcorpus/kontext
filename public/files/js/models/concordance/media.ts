@@ -22,6 +22,7 @@
 
 import * as SoundManager from 'vendor/SoundManager';
 import { List } from 'cnc-tskit';
+import { ajax } from 'rxjs/ajax';
 
 
 export type PlaybackStatus = 'stop'|'pause'|'play'|'error';
@@ -30,6 +31,7 @@ export interface PlayerStatus {
     playback:PlaybackStatus;
     duration:number;
     position:number;
+    waveform:Array<number>;
 }
 
 /**
@@ -41,11 +43,13 @@ export class AudioPlayer {
 
     private status:PlayerStatus;
 
-    private playerId:string;
-
     private playSessionId:string = 'kontext-playback';
 
     private itemsToPlay:Array<string>;
+
+    private waveformSources:Array<string>;
+
+    private currentWaveformSource:string;
 
     private onStop:()=>void;
 
@@ -60,12 +64,13 @@ export class AudioPlayer {
         onPlay:()=>void,
         onStop:()=>void,
         onError:()=>void,
-        whilePlaying:()=>void
+        whilePlaying:()=>void,
     ) {
         this.status = {
             playback: 'stop',
             duration: 0,
-            position: 0
+            position: 0,
+            waveform: []
         };
         this.soundManager = SoundManager.soundManager;
         this.soundManager.ontimeout = function (status) {
@@ -78,16 +83,23 @@ export class AudioPlayer {
             preferFlash : false
         });
         this.itemsToPlay = [];
+        this.waveformSources = [];
         this.onPlay = onPlay;
         this.onStop = onStop;
         this.onError = onError;
         this.whilePlaying = whilePlaying;
     }
 
-    start(itemsToPlay?:Array<string>):void {
+    start(itemsToPlay?:Array<string>, waveformSources?:Array<string>):void {
         if (itemsToPlay) {
             this.itemsToPlay = this.itemsToPlay.concat(itemsToPlay);
+            if (waveformSources) {
+                this.waveformSources = this.waveformSources.concat(waveformSources);
+            } else {
+                this.waveformSources = this.waveformSources.concat(List.map(v => null, this.itemsToPlay));
+            }
         }
+
         const parent = this;
         const sound = this.soundManager.createSound({
             id: this.playSessionId,
@@ -101,7 +113,8 @@ export class AudioPlayer {
                     this.status = {
                         playback: 'error',
                         duration: 0,
-                        position: 0
+                        position: 0,
+                        waveform: []
                     };
                     this.onError();
                 }
@@ -110,7 +123,8 @@ export class AudioPlayer {
                 parent.status = {
                     playback: 'play',
                     duration: this['duration'] as number,
-                    position: this['position'] as number
+                    position: this['position'] as number,
+                    waveform: parent.status.waveform
                 };
                 parent.onPlay();
             },
@@ -118,7 +132,8 @@ export class AudioPlayer {
                 this.status = {
                     playback: 'stop',
                     duration: this['duration'] as number,
-                    position: this['position'] as number
+                    position: this['position'] as number,
+                    waveform: this.status.waveform
                 };
                 this.soundManager.destroySound(this.playSessionId);
                 if (!List.empty(this.itemsToPlay)) {
@@ -133,11 +148,23 @@ export class AudioPlayer {
                 parent.status = {
                     playback: 'play',
                     duration: this['duration'] as number,
-                    position: this['position'] as number
+                    position: this['position'] as number,
+                    waveform: parent.status.waveform
                 };
                 parent.whilePlaying();
             }
         });
+
+        this.currentWaveformSource = List.head(this.waveformSources);
+        if (this.currentWaveformSource) {
+            ajax(this.currentWaveformSource).subscribe(
+                next => {
+                    this.status = {...this.status, waveform: next.response};
+                }
+            );
+        }
+        
+        this.waveformSources = List.shift(this.waveformSources);
         this.itemsToPlay = List.shift(this.itemsToPlay);
         sound.play();
     }

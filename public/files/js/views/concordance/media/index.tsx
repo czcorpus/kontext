@@ -25,7 +25,7 @@ import { Kontext } from '../../../types/common';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { Actions, ActionName } from '../../../models/concordance/actions';
 import * as S from './style';
-import { Time } from 'cnc-tskit';
+import { List, Time } from 'cnc-tskit';
 
 
 export interface AudioPlayerProps {
@@ -43,6 +43,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     // ------------------------- <ProgressBar /> ---------------------------
 
+    const Waveform:React.FC<{data:Array<number>;}> = (props) => {
+        const canvasRef = React.useRef(null);    
+        React.useEffect(() => {
+            const context = canvasRef.current.getContext("2d");
+            const slice = canvasRef.current.width/List.size(props.data);
+            const height = canvasRef.current.height / 2;
+            props.data.forEach((value, index) => {
+                const x = index * slice;
+                const y = value * height;
+
+                context.moveTo(x, height - y);
+                context.lineTo(x, height + y);
+            });
+            context.strokeStyle = "black";
+            context.lineWidth = 5;
+            context.stroke();
+        }, [canvasRef, props.data]);
+      
+        return <canvas className="waveform" ref={canvasRef} />;
+    };
+
     const ProgressBar:React.FC<{playerId:string; status:PlayerStatus}> = (props) => {
 
         const ref = React.useRef(null);
@@ -59,8 +80,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             return '00:00'
         }
 
-        const setPosition = (e) => {           
-            let position = props.status.duration*(e.nativeEvent.layerX - ref.current.offsetLeft - ref.current.clientLeft)/ref.current.offsetWidth;
+        const setPosition = (e) => {
+            let position = props.status.duration*(e.nativeEvent.layerX - ref.current.clientLeft)/ref.current.offsetWidth;
             if (position < 0) {
                 position = 0;
             
@@ -74,16 +95,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                     playerId: props.playerId,
                     offset: position
                 }
-            })
+            });
         }
 
         return (
-            <S.ProgressBar onClick={setPosition}>
+            <S.ProgressBar>
                 <div className="curr-time">
                     {printTime(props.status.position / 1000)}
                 </div>
-                <div className="wrapper" ref={ref}>
-                    <div className="progress" style={{width: calcWidth()}}></div>
+                <div className="wrapper" onClick={setPosition} ref={ref}>
+                    <div className="progress" style={{width: calcWidth()}}/>
+                    <Waveform data={props.status.waveform}/>
                 </div>
                 <div className="duration">
                     {printTime(props.status.duration / 1000)}

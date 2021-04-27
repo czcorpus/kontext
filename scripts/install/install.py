@@ -30,7 +30,9 @@ REQUIREMENTS = [
     # required by manatee packages
     'm4',
     'parallel',
-    'locales-all'
+    'locales-all',
+    # for audio processing
+    'ffmpeg'
 ]
 
 
