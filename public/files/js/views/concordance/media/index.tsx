@@ -57,7 +57,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 context.lineTo(x, height + y);
             });
             context.strokeStyle = "black";
-            context.lineWidth = 5;
+            context.lineWidth = 2;
             context.stroke();
         }, [canvasRef, props.data]);
       
