@@ -283,7 +283,8 @@ class Controller(object):
     def corp_encoding(self) -> str:
         return 'iso-8859-1'
 
-    def add_globals(self, result: Dict[str, Any], methodname: str, action_metadata: Dict[str, Any]) -> None:
+    def add_globals(self, request: werkzeug.Request, result: Dict[str, Any], methodname: str,
+                    action_metadata: Dict[str, Any]) -> None:
         """
         This method is expected to fill-in global values needed by output template
         (e.g. each page contains user name or current corpus).
@@ -850,7 +851,7 @@ class Controller(object):
         elif return_type == 'plain' and not isinstance(result, dict):
             return result
         elif isinstance(result, dict):
-            self.add_globals(result, methodname, action_metadata)
+            self.add_globals(self._request, result, methodname, action_metadata)
             template_object = self._template_env.get_template(template)
             for k in attr.asdict(self.args):
                 if k not in result:

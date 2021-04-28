@@ -278,12 +278,12 @@ class Querying(Kontext):
             structs_and_attrs[s].append(a)
         return dict(structs_and_attrs)
 
-    def add_globals(self, result: Dict[str, Any], methodname: str, action_metadata: Dict[str, Any]):
+    def add_globals(self, request, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        super().add_globals(result, methodname, action_metadata)
+        super().add_globals(request, result, methodname, action_metadata)
 
         result['structs_and_attrs'] = self._get_structs_and_attrs()

@@ -833,7 +833,7 @@ class Kontext(Controller):
             if hasattr(plg.instance, 'export'):
                 result[key][plg.name] = plg.instance.export(self._plugin_ctx)
 
-    def add_globals(self, result, methodname, action_metadata):
+    def add_globals(self, request, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
@@ -841,7 +841,7 @@ class Kontext(Controller):
         Please note that self.args mapping is not exported here even though some of the values
         from self.args are used here in specific ways.
         """
-        super(Kontext, self).add_globals(result, methodname, action_metadata)
+        super().add_globals(request, result, methodname, action_metadata)
         result['corpus_ident'] = {}
         result['Globals'] = DummyGlobals()
         result['base_attr'] = Kontext.BASE_ATTR

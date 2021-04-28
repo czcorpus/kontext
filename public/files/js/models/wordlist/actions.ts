@@ -46,6 +46,7 @@ export enum ActionName {
     WordlistFormSetWlminfreq = 'WORDLIST_FORM_SET_WLMINFREQ',
     WordlistFormSetIncludeNonwords = 'WORDLIST_FORM_SET_INCLUDE_NONWORDS',
     WordlistFormAddPosattrLevel = 'WORDLIST_FORM_ADD_POSATTR_LEVEL',
+    WordlistFormRemovePosattrLevel = 'WORDLIST_FORM_REMOVE_POSATTR_LEVEL',
     WordlistFormCreatePfilter = 'WORDLIST_FORM_CREATE_PFILTER',
     WordlistFormCreateNfilter = 'WORDLIST_FORM_CREATE_NFILTER',
     WordlistFormSetFilter = 'WORDLIST_FORM_SET_FILTER_FILE',
@@ -152,7 +153,7 @@ export namespace Actions {
     }
 
     export interface WordlistFormSelectWlposattr extends Action<{
-        position:number;
+        ident:string;
         value:string;
     }> {
         name:ActionName.WordlistFormSelectWlposattr;
@@ -179,6 +180,12 @@ export namespace Actions {
     export interface WordlistFormAddPosattrLevel extends Action<{
     }> {
         name:ActionName.WordlistFormAddPosattrLevel;
+    }
+
+    export interface WordlistFormRemovePosattrLevel extends Action<{
+        ident:string;
+    }> {
+        name:ActionName.WordlistFormRemovePosattrLevel;
     }
 
     export interface WordlistFormCreatePfilter extends Action<{

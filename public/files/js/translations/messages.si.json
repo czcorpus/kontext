@@ -802,6 +802,7 @@
         "wordlist__pattern_empty_err": "The search pattern cannot be empty UNTRANSLATED",
         "wordlist__failed_to_precalculate": "Failed to create auxiliary data required for the frequency distribution calculation. Please try again later or contact system administrator. UNTRANSLATED",
         "wordlist__aux_data_must_be_precalculated": "KonText must prepare auxiliary data for the frequency distribution calculation. The calculation should take at most a few minutes to complete. UNTRANSLATED",
+        "wordlist__remove_attribute": "Remove attribute UNTRANSLATED",
         "pquery__no_form_data_to_restore": "No result - the URL address refers to invalid input data. UNTRANSLATED",
         "pquery__add_btn": "Add query UNTRANSLATED",
         "pquery__remove_btn": "Remove query UNTRANSLATED",

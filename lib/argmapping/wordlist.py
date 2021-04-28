@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 
 class WordlistFormArgs(object):
@@ -30,6 +30,7 @@ class WordlistFormArgs(object):
         self.pfilter_words = []
         self.nfilter_words = []
         self.include_nonwords = '0'
+        self.wlposattrs: List[str] = []
 
     def __str__(self):
         return f'WordlistFormArgs({self.__dict__})'
@@ -45,6 +46,7 @@ class WordlistFormArgs(object):
         self.pfilter_words = data['pfilter_words']
         self.nfilter_words = data['nfilter_words']
         self.include_nonwords = data['include_nonwords']
+        self.wlposattrs = data.get('wlposattrs', [])
 
     def to_dict(self) -> Dict[str, Any]:
         tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
@@ -65,3 +67,6 @@ class WordlistFormArgs(object):
             if not k.startswith('_'):
                 setattr(ans, k, v)
         return ans
+
+    def get_wlposattr(self, level: int):
+        return self.wlposattrs[level] if level < len(self.wlposattrs) else None

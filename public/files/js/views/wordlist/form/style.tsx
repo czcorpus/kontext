@@ -127,10 +127,9 @@ export const WlpatternInput = styled.span`
 `;
 
 
-// ---------------- <MultiLevelPosAttr /> --------------------------------------
+// ---------------- <MultiLevelPosAttrUL /> --------------------------------------
 
-
-export const MultiLevelPosAttr = styled.ul`
+export const MultiLevelPosAttrUL = styled.ul`
 
     list-style-type: none;
     margin: 0.7em 0 0 1.5em;
@@ -139,9 +138,41 @@ export const MultiLevelPosAttr = styled.ul`
     li {
         margin: 0;
         padding: 0;
+
+        display: flex;
+        align-items: center;
+
+        a {
+            display: block;
+            margin-left: 0.3em;
+
+            img {
+                display: block;
+                width: 1em;
+            }
+        }
     }
 
-    li:not(:first-child) {
+    li.add-btn {
+        padding-top: 0.7em;
+    }
+
+    li:not(:first-child):not(.add-btn) {
         padding-top: 0.3em;
     }
+`;
+
+
+// ---------------------- <FileFormatHint /> -----------------------------
+
+export const FileFormatHint = styled.div`
+
+    display: flex;
+    align-items: center;
+
+    img.info-icon {
+        width: 1.3em;
+        margin-right: 0.3em;
+    }
+
 `;

@@ -266,9 +266,9 @@ export function init({dispatcher, utils, wordlistSaveViews,
                     <div className="ktx-pagination-core">
                         <PaginatorTextInput value={props.currPageInput} modelIsBusy={props.modelIsBusy}
                                 hint={props.currPage !== parseInt(props.currPageInput) ? utils.translate('global__hit_enter_to_confirm') : null} />
+                        {'\u00a0'}/{'\u00a0'}<span>{props.maxPage}</span>
                     </div>
                     {props.currPage < props.maxPage ? <PaginatorRightArrows /> : null}
-                    <span>{props.maxPage}</span>
                 </form>
             </div>
         );

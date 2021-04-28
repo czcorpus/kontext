@@ -114,8 +114,8 @@ class Actions(Querying):
             return tuple(segment_str.split('.'))
         return None
 
-    def add_globals(self, result, methodname, action_metadata):
-        super().add_globals(result, methodname, action_metadata)
+    def add_globals(self, request, result, methodname, action_metadata):
+        super().add_globals(request, result, methodname, action_metadata)
         conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
         conc_args.set('q', [q for q in result.get('Q')])
         args = {}

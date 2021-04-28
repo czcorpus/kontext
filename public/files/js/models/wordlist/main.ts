@@ -416,8 +416,11 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         );
     }
 
-    private createConcSubmitArgs(state:WordlistResultModelState, formSubmitArgs:WordlistSubmitArgs, word:string):ConcQueryArgs {
-
+    private createConcSubmitArgs(
+        state:WordlistResultModelState,
+        formSubmitArgs:WordlistSubmitArgs,
+        word:string
+    ):ConcQueryArgs {
         const primaryCorpus = formSubmitArgs.corpname;
         const currArgs = this.layoutModel.exportConcArgs();
         const args:ConcQueryArgs = {
@@ -448,7 +451,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             text_types: {},
             context: {
                 fc_lemword_wsize: [0, 0],
-                fc_lemword: null,
+                fc_lemword: ''  ,
                 fc_lemword_type: 'none',
                 fc_pos_wsize: [0, 0],
                 fc_pos: [],

@@ -31,7 +31,7 @@ import settings
 
 
 def _create_cache_path(form: WordlistFormArgs) -> str:
-    key = (f'{form.corpname}:{form.usesubcorp}:{form.wlattr}:{form.pfilter_words}:{form.nfilter_words}:'
+    key = (f'{form.corpname}:{form.usesubcorp}:{form.wlattr}:{form.wlpat}:{form.pfilter_words}:{form.nfilter_words}:'
            f'{form.include_nonwords}:{form.wltype}:{form.wlnums}')
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'wlist_{result_id}.csv')

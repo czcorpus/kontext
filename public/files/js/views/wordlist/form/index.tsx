@@ -20,10 +20,10 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Keyboard } from 'cnc-tskit';
+import { Keyboard, List } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
-import { WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
+import { MultiposAttr, WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
 import { PluginInterfaces } from '../../../types/plugins';
 import { Actions, ActionName } from '../../../models/wordlist/actions';
 import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
@@ -192,10 +192,9 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     // --------------------- <OutTypeAttrSel /> -------------------------------
 
     const OutTypeAttrSel:React.FC<{
-        position:number;
         attrList:Array<Kontext.AttrItem>;
         enabled:boolean;
-        value:string;
+        value:MultiposAttr;
 
     }> = (props) => {
 
@@ -203,7 +202,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             dispatcher.dispatch<Actions.WordlistFormSelectWlposattr>({
                 name: ActionName.WordlistFormSelectWlposattr,
                 payload: {
-                    position: props.position,
+                    ident: props.value.inputId,
                     value: evt.target.value
                 }
             });
@@ -211,8 +210,11 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         return (
             <select onChange={handleChange} disabled={!props.enabled}>
-                <option value={props.value}>---</option>
-                {props.attrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
+                <option value={props.value.value}>---</option>
+                {List.map(
+                    x => <option key={x.n} value={x.n}>{x.label}</option>,
+                    props.attrList
+                )}
             </select>
         );
     }
@@ -222,8 +224,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     const MultiLevelPosAttr:React.FC<{
         attrList:Array<Kontext.AttrItem>;
         enabled:boolean;
-        numWlPosattrLevels:number;
-        wposattrs:[string, string, string];
+        maxNumLevels:number;
+        wposattrs:Array<MultiposAttr>;
 
     }> = (props) => {
 
@@ -233,30 +235,37 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             });
         };
 
+        const handleRemovePosAttrBtn = (ident:string) => () => {
+            dispatcher.dispatch<Actions.WordlistFormRemovePosattrLevel>({
+                name: ActionName.WordlistFormRemovePosattrLevel,
+                payload: {
+                    ident
+                }
+            });
+        };
+
         return (
-            <S.MultiLevelPosAttr>
-                <li>
-                    <OutTypeAttrSel attrList={props.attrList} position={1}
-                            enabled={props.enabled} value={props.wposattrs[0]} />
-                </li>
-                {props.numWlPosattrLevels >= 2 ?
-                    <li>
-                        <OutTypeAttrSel attrList={props.attrList} position={2}
-                            enabled={props.enabled} value={props.wposattrs[1]} />
-                    </li> :
-                    null
-                }
-                {props.numWlPosattrLevels >= 3 ?
-                    <li>
-                        <OutTypeAttrSel attrList={props.attrList} position={3}
-                            enabled={props.enabled} value={props.wposattrs[2]} />
-                    </li> :
-                    null
-                }
-                {props.numWlPosattrLevels < 3 && props.enabled ?
-                    <li>
+            <S.MultiLevelPosAttrUL>
+                {List.map(
+                    attr => (
+                        <li key={attr.inputId}>
+                            <OutTypeAttrSel attrList={props.attrList} value={attr}
+                                    enabled={props.enabled} />
+                            {List.size(props.wposattrs) > 1 ?
+                                <a onClick={handleRemovePosAttrBtn(attr.inputId)}>
+                                    <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/close-icon.svg')}
+                                            alt={he.translate('wordlist__remove_attribute')} />
+                                </a> :
+                                null
+                            }
+                        </li>
+                    ),
+                    props.wposattrs
+                )}
+                {List.size(props.wposattrs) < 3 && props.enabled ?
+                    <li className="add-btn">
                         <layoutViews.PlusButton onClick={handleAddPosAttrLevelBtn}
-                            mouseOverHint={he.translate('wordlist__add_attr')} />
+                                mouseOverHint={he.translate('wordlist__add_attr')} />
                     </li> :
                     null
                 }
@@ -266,7 +275,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                 alt={he.translate('global__info_icon')}
                                 style={{width: '1em', verticalAlign: 'middle', paddingRight: '0.4em'}} />
                         {he.translate('wordlist__multiattr_warning')}</p>) : null}
-            </S.MultiLevelPosAttr>
+            </S.MultiLevelPosAttrUL>
         );
     }
 
@@ -277,8 +286,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         allowsMultilevelWltype:boolean;
         wlattr:string;
         attrList:Array<Kontext.AttrItem>;
-        wposattrs:[string, string, string];
-        numWlPosattrLevels:number;
+        wposattrs:Array<MultiposAttr>;
+        maxNumWlPosattrLevels:number;
 
     }> = (props) => {
 
@@ -318,7 +327,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                 <MultiLevelPosAttr enabled={props.wltype === 'multilevel'}
                                         attrList={props.attrList}
                                         wposattrs={props.wposattrs}
-                                        numWlPosattrLevels={props.numWlPosattrLevels} />
+                                        maxNumLevels={props.maxNumWlPosattrLevels} />
                             </li>) :
                             (<li>
                                 <label>
@@ -340,8 +349,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     const FieldsetOutputOptions:React.FC<{
         wlnums:string;
         attrList:Array<Kontext.AttrItem>;
-        wposattrs:[string, string, string];
-        numWlPosattrLevels:number;
+        wposattrs:Array<MultiposAttr>;
+        maxNumWlPosattrLevels:number;
         wltype:string;
         wlattr:string;
         allowsMultilevelWltype:boolean;
@@ -363,7 +372,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                     <div className="contents">
                         <FrequencyFigures wlnums={props.wlnums} />
                         <OutputType attrList={props.attrList} wposattrs={props.wposattrs}
-                                    numWlPosattrLevels={props.numWlPosattrLevels}
+                                    maxNumWlPosattrLevels={props.maxNumWlPosattrLevels}
                                     wltype={props.wltype} wlattr={props.wlattr}
                                     allowsMultilevelWltype={props.allowsMultilevelWltype} />
                     </div> :
@@ -398,6 +407,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                 hasValue={!!props.pfilterWords} fileName={props.pfilterFileName} />
                         <FilterFile label={he.translate('wordlist__nfilter_label')} target="nfilter"
                                                     hasValue={!!props.nfilterWords} fileName={props.nfilterFileName} />
+                        <div />
                         <FileFormatHint />
                     </div> :
                     null
@@ -657,7 +667,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         render() {
             return (
-                <>
+                <S.FileFormatHint>
                     <label>
                         {this.state.hintVisible ?
                             (<layoutViews.PopupBox onCloseClick={this._handleCloseClick}
@@ -665,12 +675,13 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                                 <p>{he.translate('wordlist__pn_filter_lists')}</p>
                             </layoutViews.PopupBox>) : null}
                     </label>
-                    <span>
+                    <layoutViews.StatusIcon status="info" inline={true} htmlClass="info" />
+                    <span className="help">
                         <a className="hint" onClick={this._handleClick}>
                             {he.translate('wordlist__req_file_format_link')}
                         </a>
                     </span>
-                </>
+                </S.FileFormatHint>
             );
         }
     }
@@ -739,7 +750,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                             formVisible={this.props.filtersVisible}
                             handleClick={this._handleFiltersLegendClick} />
                     <FieldsetOutputOptions wlnums={this.props.wlnums} wposattrs={this.props.wlposattrs}
-                            numWlPosattrLevels={this.props.numWlPosattrLevels}
+                            maxNumWlPosattrLevels={this.props.maxNumWlPosattrLevels}
                             attrList={this.props.attrList} wltype={this.props.wltype} wlattr={this.props.wlattr}
                             allowsMultilevelWltype={this.props.wlnums === WlnumsTypes.FRQ}
                             formVisible={this.props.outputOptionsVisible}

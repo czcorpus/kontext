@@ -58,6 +58,10 @@ export interface EmptyFilterEditorData {
 
 export type FilterEditorData = WLFilterEditorData|BLFilterEditorData|EmptyFilterEditorData;
 
+export interface MultiposAttr {
+    inputId:string;
+    value:string;
+}
 
 export interface WordlistFormState {
     corpusId:string;
@@ -71,8 +75,8 @@ export interface WordlistFormState {
     wlpat:string;
     subcnorm:string;
     wlnums:WlnumsTypes;
-    wlposattrs:[string, string, string];
-    numWlPosattrLevels:number;
+    wlposattrs:Array<MultiposAttr>;
+    maxNumWlPosattrLevels:number;
     wltype:WlTypes;
     wlminfreq:Kontext.FormValue<string>;
     pfilterWords:string;
@@ -127,9 +131,15 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
 
     private layoutModel:PageModel;
 
-    constructor({dispatcher, layoutModel, corpusIdent,
-                subcorpList, attrList, structAttrList,
-                initialArgs}:WordlistFormModelArgs) {
+    constructor({
+        dispatcher,
+        layoutModel,
+        corpusIdent,
+        subcorpList,
+        attrList,
+        structAttrList,
+        initialArgs
+    }:WordlistFormModelArgs) {
         super(
             dispatcher,
             {
@@ -148,8 +158,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 wlnums: initialArgs.wlnums,
                 wltype: initialArgs.wltype,
                 wlminfreq: {value: initialArgs.wlminfreq.toFixed(), isInvalid: false, isRequired: true},
-                wlposattrs: ['', '', ''],
-                numWlPosattrLevels: 1,
+                wlposattrs: [{inputId: Ident.puid(), value: ''}],
+                maxNumWlPosattrLevels: 3,
                 pfilterWords: initialArgs.pfilter_words.join('\n'),
                 nfilterWords: initialArgs.nfilter_words.join('\n'),
                 pfilterFileName: '',
@@ -213,6 +223,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         ).sideEffectAlsoOn(
             ActionName.WordlistSaveFormSubmit,
+            ActionName.WordlistResultViewConc,
             MainMenuActionName.DirectSave
         );
 
@@ -241,7 +252,11 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         this.addActionHandler<Actions.WordlistFormSelectWlposattr>(
             ActionName.WordlistFormSelectWlposattr,
             (state, action) => {
-                state.wlposattrs[action.payload.position - 1] = action.payload.value;
+                const srchIdx = List.findIndex(v => v.inputId === action.payload.ident, state.wlposattrs);
+                if (srchIdx > -1) {
+                    const oldItem = state.wlposattrs[srchIdx];
+                    state.wlposattrs[srchIdx] = {...oldItem, value: action.payload.value};
+                }
             }
         );
 
@@ -270,9 +285,19 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         this.addActionHandler<Actions.WordlistFormAddPosattrLevel>(
             ActionName.WordlistFormAddPosattrLevel,
             (state, action) => {
-                state.numWlPosattrLevels += 1;
+                state.wlposattrs.push({inputId: Ident.puid(), value: ''});
             }
         );
+
+        this.addActionHandler<Actions.WordlistFormRemovePosattrLevel>(
+            ActionName.WordlistFormRemovePosattrLevel,
+            (state, action) => {
+                const srchIdx = List.findIndex(v => v.inputId === action.payload.ident, state.wlposattrs);
+                if (srchIdx > -1) {
+                    List.removeAt(srchIdx, state.wlposattrs);
+                }
+            }
+        )
 
         this.addActionHandler<Actions.WordlistFormCreatePfilter>(
             ActionName.WordlistFormCreatePfilter,
@@ -660,10 +685,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             pfilter_words: this.splitWords(state.pfilterWords),
             nfilter_words: this.splitWords(state.nfilterWords),
             include_nonwords: state.includeNonwords,
-            wlposattr1: state.wlposattrs[0],
-            wlposattr2: state.wlposattrs[1],
-            wlposattr3: state.wlposattrs[2],
-            wlpage: 1
+            wlposattrs: List.map(v => v.value, state.wlposattrs)
         };
     }
 

@@ -802,6 +802,7 @@
         "wordlist__pattern_empty_err": "Vyhledávaný výraz nesmí být prázdný",
         "wordlist__failed_to_precalculate": "Selhala příprava pomocných dat pro výpočet frekvence. Zkuste prosím akci opakovat později, případně kontaktujte administrátora.",
         "wordlist__aux_data_must_be_precalculated": "KonText musí připravit pomocná data pro výpočet frekvence. Mějte prosím chvíli strpení, výpočet by měl trvat max. několik minut.",
+        "wordlist__remove_attribute": "Odstranit atribut",
         "pquery__no_form_data_to_restore": "Žádný výsledek - URL adresa odkazuje na neplatná vstupní data.",
         "pquery__add_btn": "Přidat dotaz",
         "pquery__remove_btn": "Odstranit dotaz",

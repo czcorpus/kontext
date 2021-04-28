@@ -37,10 +37,7 @@ export interface WordlistSubmitArgs {
     pfilter_words:Array<string>;
     nfilter_words:Array<string>;
     include_nonwords:boolean;
-    wlposattr1:string;
-    wlposattr2:string;
-    wlposattr3:string;
-    wlpage:number;
+    wlposattrs:Array<string>;
 }
 
 export type ResultData = {

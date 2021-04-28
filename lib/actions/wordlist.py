@@ -32,6 +32,8 @@ from argmapping import log_mapping
 from argmapping.wordlist import WordlistFormArgs
 from werkzeug import Request
 from texttypes import TextTypesCache
+import templating
+from argmapping import WordlistArgsMapping, ConcArgsMapping
 from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy
 
 
@@ -71,6 +73,16 @@ class Wordlist(Kontext):
                                                    usesubcorp=self._curr_wlform_args.usesubcorp))
                 qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='pquery')
                 self.on_conc_store([query_id], True, result)
+
+    def add_globals(self, request, result, methodname, action_metadata):
+        super().add_globals(request, result, methodname, action_metadata)
+        conc_args = templating.StateGlobals(self._get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping))
+        q = request.args.get('q')
+        if q:
+            conc_args.set('q', [q])
+        args = {}
+        result['Globals'] = conc_args.update(args)
+        result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
 
     @exposed(access_level=1, page_model='wordlistForm')
     def form(self, request):
@@ -164,8 +176,8 @@ class Wordlist(Kontext):
 
     @exposed(template='freqs.html', page_model='freq', http_method='POST', mutates_result=True)
     def struct_result(self, request):
-        self.args.corpname = request.form.get('corpname')
-        self.args.usesubcorp = request.form.get('usesubcorp')
+        form_args = WordlistFormArgs()
+        form_args.update_by_user_query(request.json)
 
         if self.args.fcrit:
             self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
@@ -178,18 +190,13 @@ class Wordlist(Kontext):
                     ('freq_sort', self.args.freq_sort), ('next', 'freqs')] + [('q', q) for q in self.args.q]
             raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
-        if '.' in self.args.wlattr:
+        if '.' in form_args.wlattr:
             raise WordlistError('Text types are limited to Simple output')
-        if self.args.wlnums != 'frq':
+        if form_args.wlnums != 'frq':
             raise WordlistError('Multilevel lists are limited to Word counts frequencies')
-        level = 3
-        if not self.args.wlposattr1:
+        if len(form_args.wlposattrs):
             raise WordlistError(translate('No output attribute specified'))
-        if not self.args.wlposattr3:
-            level = 2
-        if not self.args.wlposattr2:
-            level = 1
-        if not self.args.wlpat and not self.args.pfilter_words:
+        if not form_args.wlpat and len(form_args.pfilter_words) == 0:
             raise WordlistError(
                 translate('You must specify either a pattern or a file to get the multilevel wordlist'))
         self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
@@ -197,10 +204,12 @@ class Wordlist(Kontext):
                                     pfilter_words=request.form['pfilter_words'],
                                     nfilter_words=request.form['nfilter_words'],
                                     non_word_re=self.corp.get_conf('NONWORDRE'))
-        self.args.flimit = self.args.wlminfreq
+        self.args.flimit = form_args.wlminfreq
         args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
-                ('flimit', self.args.wlminfreq), ('freqlevel', level), ('ml1attr', self.args.wlposattr1),
-                ('ml2attr', self.args.wlposattr2), ('ml3attr', self.args.wlposattr3),
+                ('flimit', self.args.flimit), ('freqlevel', len(form_args.wlattr)),
+                ('ml1attr', form_args.get_wlposattr(0)),
+                ('ml2attr', form_args.get_wlposattr(1)),
+                ('ml3attr', form_args.get_wlposattr(2)),
                 ('next', 'freqml')] + [('q', q) for q in self.args.q]
         raise ImmediateRedirectException(self.create_url('restore_conc', args))
 

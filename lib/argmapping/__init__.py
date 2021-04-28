@@ -40,7 +40,7 @@ ConcArgsMapping = (
     'attr_vmode',
     'base_viewattr',  # attribute used in a text flow
     'structs',
-    'refs'
+    'refs',
 )
 
 
@@ -49,7 +49,13 @@ WidectxArgsMapping = (
     'attrs',
     'structs',
     'refs',
-    'hitlen'
+    'hitlen',
+)
+
+
+WordlistArgsMapping = (
+    'wlpagesize',
+    'wlsort',
 )
 
 
@@ -191,12 +197,6 @@ class Args(object):
     ctattr2: str = def_attr('word')
     ctfcrit1: str = def_attr('0<0')
     ctfcrit2: str = def_attr('0<0')
-
-    # word list
-
-    wlposattr1: str = def_attr('')
-    wlposattr2: str = def_attr('')
-    wlposattr3: str = def_attr('')
 
     maxsavelines: int = def_attr(1000)
     fcrit: List[str] = def_attr(attr.Factory(list))
