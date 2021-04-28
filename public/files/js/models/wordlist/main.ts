@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable, of as rxOf, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
 import { List, HTTP, tuple, pipe, Dict } from 'cnc-tskit';
@@ -306,6 +306,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             ActionName.WordlistResultSetSortColumn,
             (state, action) => {
                 state.wlsort = action.payload.sortKey;
+                state.reversed = action.payload.reverse;
             },
             (state, action, dispatch) => {
                 this.processPageLoad(state, state.currPage, dispatch);
@@ -401,6 +402,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                     q: `~${state.queryId}`,
                     wlpage: newPage,
                     wlsort: state.wlsort || undefined,
+                    reversed: state.reversed,
                     format: 'json'
                 })
             ),

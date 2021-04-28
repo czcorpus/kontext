@@ -238,6 +238,7 @@ export namespace Actions {
 
     export interface WordlistResultSetSortColumn extends Action<{
         sortKey:string;
+        reverse:boolean;
     }> {
         name:ActionName.WordlistResultSetSortColumn;
     }

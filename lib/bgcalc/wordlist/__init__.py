@@ -45,14 +45,14 @@ def require_existing_wordlist(form: WordlistFormArgs, wlsort: str, reverse: bool
     else:
         if wlsort == 'f':
             total, rows = load_cached_full(path)
-            return (total,
-                    sorted(rows, key=lambda x: x[1], reverse=reverse)[offset:offset + limit])
+            return (
+                total,
+                sorted(rows, key=lambda x: x[1], reverse=reverse)[offset:offset + limit]
+            )
         else:
-            if reverse is True:
-                return load_cached_partial(path, offset, limit)
-            else:
-                total, rows = load_cached_full(path)
-                return total, list(reversed(rows))[offset:offset + limit]
+            total, rows = load_cached_full(path)
+            rows = l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)
+            return total, rows[offset:offset + limit]
 
 
 def cached(f):
