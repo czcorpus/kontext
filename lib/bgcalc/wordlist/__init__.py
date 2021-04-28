@@ -52,7 +52,7 @@ def require_existing_wordlist(form: WordlistFormArgs, wlsort: str, reverse: bool
                 return load_cached_partial(path, offset, limit)
             else:
                 total, rows = load_cached_full(path)
-                return total, list(reversed(rows))[offset:offset+limit]
+                return total, list(reversed(rows))[offset:offset + limit]
 
 
 def cached(f):
@@ -139,6 +139,7 @@ def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
         attrfreq = frq_db(corp, wlattr, wlnums)
     return attrfreq
 
+
 @cached
 def wordlist(corp: KCorpus, args: WordlistFormArgs, max_items: int) -> List[Tuple[str, int]]:
     """
@@ -164,7 +165,7 @@ def wordlist(corp: KCorpus, args: WordlistFormArgs, max_items: int) -> List[Tupl
 
 
 def make_wl_query(self, wlattr: str, wlpat: str, include_nonwords, pfilter_words, nfilter_words,
-                   non_word_re: str = ''):
+                  non_word_re: str = ''):
     qparts = []
     if self.args.wlpat:
         qparts.append(f'{wlattr}="{wlpat}"')
