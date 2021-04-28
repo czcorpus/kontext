@@ -421,15 +421,28 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 state.isBusy = true; // TODO in side-effect, dispatch some new action setting busy to false
             },
             (state, action, dispatch) => {
-                if (state.wlminfreq.isInvalid) {
-                    this.layoutModel.showMessage('error', state.wlminfreq.errorDesc);
-
-                } else if (!state.wlpat && !state.pfilterWords && !state.nfilterWords) {
-                    this.layoutModel.showMessage('error', this.layoutModel.translate('wordlist__pattern_empty_err'));
+                const errs = this.getFormsErrors(state);
+                List.forEach(
+                    err => {
+                        this.layoutModel.showMessage('error', err);
+                    },
+                    errs
+                );
+                if (List.empty(errs)) {
+                    this.submitAction(state, dispatch);
 
                 } else {
-                    this.submitAction(state, dispatch);
+                    dispatch<Actions.WordlistFormSubmitCancelled>({
+                        name: ActionName.WordlistFormSubmitCancelled
+                    });
                 }
+            }
+        );
+
+        this.addActionHandler<Actions.WordlistFormSubmitCancelled>(
+            ActionName.WordlistFormSubmitCancelled,
+            (state, action) => {
+                state.isBusy = false;
             }
         );
 
@@ -563,6 +576,17 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             state.wlminfreq.isInvalid = true;
             state.wlminfreq.errorDesc = this.layoutModel.translate('wordlist__minfreq_err');
         }
+    }
+
+    private getFormsErrors(state:WordlistFormState):Array<string> {
+        const ans:Array<string> = [];
+        if (state.wlminfreq.isInvalid) {
+            ans.push(state.wlminfreq.errorDesc);
+        }
+        if (!state.wlpat && !state.pfilterWords && !state.nfilterWords) {
+            ans.push(this.layoutModel.translate('wordlist__pattern_empty_err'));
+        }
+        return ans;
     }
 
     private handleFilterFileSelection(state:WordlistFormState, file:File, target:FileTarget):Observable<FilterEditorData> {

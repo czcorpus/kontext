@@ -29,6 +29,8 @@ export enum ActionName {
     WordlistResultViewConc = 'WORDLIST_RESULT_VIEW_CONC',
     WordlistResultReload = 'WORDLIST_RESULT_RELOAD',
     WordlistFormSubmitReady = 'WORDLIST_FORM_SUBMIT_READY',
+    WordlistFormSubmit = 'WORDLIST_FORM_SUBMIT',
+    WordlistFormSubmitCancelled = 'WORDLIST_FORM_SUBMIT_CANCELLED',
     WordlistResultNextPage = 'WORDLIST_RESULT_NEXT_PAGE',
     WordlistResultPrevPage = 'WORDLIST_RESULT_PREV_PAGE',
     WordlistResultSetPage = 'WORDLIST_RESULT_SET_PAGE',
@@ -53,7 +55,6 @@ export enum ActionName {
     WordlistFormClearFilterFile = 'WORDLIST_FORM_CLEAR_FILTER_FILE',
     WordlistFormCloseEditor = 'WORDLIST_FORM_CLOSE_EDITOR',
     WordlistResultSetSortColumn = 'WORDLIST_RESULT_SET_SORT_COLUMN',
-    WordlistFormSubmit = 'WORDLIST_FORM_SUBMIT',
     WordlistSaveFormHide = 'WORDLIST_SAVE_FORM_HIDE',
     WordlistSaveFormSetMaxLine = 'WORDLIST_SAVE_FORM_SET_MAX_LINE',
     WordlistSaveFormSetFormat = 'WORDLIST_SAVE_FORM_SET_FORMAT',
@@ -86,6 +87,16 @@ export namespace Actions {
         args:WordlistSubmitArgs;
     }> {
         name:ActionName.WordlistFormSubmitReady;
+    }
+
+    export interface WordlistFormSubmit extends Action<{
+    }> {
+        name:ActionName.WordlistFormSubmit;
+    }
+
+    export interface WordlistFormSubmitCancelled extends Action<{
+    }> {
+        name:ActionName.WordlistFormSubmitCancelled;
     }
 
     export interface WordlistResultNextPage extends Action<{
@@ -222,11 +233,6 @@ export namespace Actions {
         sortKey:string;
     }> {
         name:ActionName.WordlistResultSetSortColumn;
-    }
-
-    export interface WordlistFormSubmit extends Action<{
-    }> {
-        name:ActionName.WordlistFormSubmit;
     }
 
     export interface WordlistGoToLastPage extends Action<{
