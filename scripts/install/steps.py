@@ -123,7 +123,8 @@ class SetupBgCalc(InstallationStep):
 
     def run(self, celery_worker):
         try:
-            subprocess.check_call(['useradd', '-r', '-s', '/bin/false', 'celery'], stdout=self.stdout)
+            subprocess.check_call(['useradd', '-r', '-s', '/bin/false',
+                                   'celery'], stdout=self.stdout)
         except:
             pass
 
@@ -135,7 +136,8 @@ class SetupBgCalc(InstallationStep):
                 self.kontext_path, 'scripts/install/conf/celery-conf.d'), '/etc/conf.d/celery'], stdout=self.stdout)
             subprocess.check_call(['cp', os.path.join(
                 self.kontext_path, 'scripts/install/conf/celery.service'), '/etc/systemd/system'], stdout=self.stdout)
-            replace_string_in_file('/etc/systemd/system/celery.service', '/opt/kontext', self.kontext_path)
+            replace_string_in_file('/etc/systemd/system/celery.service',
+                                   '/opt/kontext', self.kontext_path)
             subprocess.check_call(['cp', os.path.join(
                 self.kontext_path, 'scripts/install/conf/celery.tmpfiles'), '/usr/lib/tmpfiles.d/celery.conf'], stdout=self.stdout)
             create_directory('/var/log/celery', 'celery', 'root')
@@ -147,13 +149,14 @@ class SetupBgCalc(InstallationStep):
                 self.kontext_path, 'scripts/install/conf/rq-all.target'), '/etc/systemd/system'], stdout=self.stdout)
             subprocess.check_call(['cp', os.path.join(
                 self.kontext_path, 'scripts/install/conf/rq@.service'), '/etc/systemd/system'], stdout=self.stdout)
-            replace_string_in_file('/etc/systemd/system/rq@.service', '/opt/kontext', self.kontext_path)
+            replace_string_in_file('/etc/systemd/system/rq@.service',
+                                   '/opt/kontext', self.kontext_path)
             subprocess.check_call(['cp', os.path.join(
                 self.kontext_path, 'scripts/install/conf/rqscheduler.service'), '/etc/systemd/system'], stdout=self.stdout)
             create_directory('/var/log/rq', 'celery', 'root')
             subprocess.check_call(['systemctl', 'enable', 'rq-all.target'], stdout=self.stdout)
             subprocess.check_call(['systemctl', 'enable', 'rqscheduler'], stdout=self.stdout)
-        
+
         subprocess.check_call(['systemctl', 'daemon-reload'], stdout=self.stdout)
 
 
@@ -221,13 +224,13 @@ class SetupManatee(InstallationStep):
             lib_path = [path for path in sys.path if path.startswith(
                 '/usr/local/lib/python3') and path.endswith('dist-packages')][0]
             make_simlink(os.path.join(lib_path, '../site-packages/manatee.py'),
-                        os.path.join(lib_path, 'manatee.py'))
+                         os.path.join(lib_path, 'manatee.py'))
             make_simlink(os.path.join(lib_path, '../site-packages/_manatee.a'),
-                        os.path.join(lib_path, '_manatee.a'))
+                         os.path.join(lib_path, '_manatee.a'))
             make_simlink(os.path.join(lib_path, '../site-packages/_manatee.la'),
-                        os.path.join(lib_path, '_manatee.la'))
+                         os.path.join(lib_path, '_manatee.la'))
             make_simlink(os.path.join(lib_path, '../site-packages/_manatee.so'),
-                        os.path.join(lib_path, '_manatee.so'))
+                         os.path.join(lib_path, '_manatee.so'))
 
         # install susanne corpus
         subprocess.check_call(wget_cmd('https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2', self._ncc),
@@ -268,15 +271,15 @@ class SetupKontext(InstallationStep):
         # celery config if required
         if use_celery:
             subprocess.check_call(['cp', 'beatconfig.sample.py', 'beatconfig.py'],
-                              cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
+                                  cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
             replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
                                    r'<calc_backend>[\s\S]*<\/calc_backend>', CELERY_CONFIG)
             replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
                                    r'<job_scheduler>[\s\S]*<\/job_scheduler>', CELERY_SCHEDULER_CONFIG)
         else:
             subprocess.check_call(['cp', 'rq-schedule-conf.sample.json', 'rq-schedule-conf.json'],
-                              cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
-        
+                                  cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
+
         # update config.xml with current install path
         replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
                                '/opt/kontext', self.kontext_path)
@@ -319,8 +322,21 @@ class SetupGunicorn(InstallationStep):
         subprocess.check_call(['systemctl', 'enable', 'gunicorn'], stdout=self.stdout)
 
 
+class SetupFFMpeg(InstallationStep):
+    def is_done(self):
+        pass
+
+    def abort(self):
+        pass
+
+    def run(self):
+        print('Installing ffmpeg...')
+        subprocess.check_call(['sh', os.path.join(
+            self.kontext_path, 'scripts/install/install-min-ffmpeg.sh')], stdout=self.stdout)
+
+
 class SetupDefaultUsers(InstallationStep):
-    def __init__(self, kontext_path: str, stdout: str, stderr: str, redis_host: str = 'localhost', redis_port = 6379):
+    def __init__(self, kontext_path: str, stdout: str, stderr: str, redis_host: str = 'localhost', redis_port=6379):
         super().__init__(kontext_path, stdout, stderr)
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=1)
 
@@ -354,15 +370,18 @@ class SetupDefaultUsers(InstallationStep):
             {bcolors.ENDC}{bcolors.ENDC}
         ''')
 
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser('Run step')
     parser.add_argument('step_name', metavar='NAME', type=str, help='Step name')
-    parser.add_argument('--step_args', metavar='ARGS', type=str, nargs='+', help='Step arguments', default=[])
+    parser.add_argument('--step_args', metavar='ARGS', type=str,
+                        nargs='+', help='Step arguments', default=[])
     args = parser.parse_args()
 
-    kontext_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+    kontext_path = os.path.abspath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), '../..'))
     init_step_args = (kontext_path, None, None)
 
     if args.step_name == 'SetupKontext':
@@ -374,8 +393,11 @@ if __name__ == "__main__":
     elif args.step_name == 'SetupManatee':
         obj = SetupManatee(*init_step_args, True)
         obj.run(args.step_args[0], args.step_args[1], bool(int(args.step_args[2])))
+    elif args.step_name == 'SetupFFMpeg':
+        obj = SetupFFMpeg(*init_step_args)
+        obj.run()
     else:
         raise Exception(f'Unknown action: {args.step_name}')
-    
+
     for msg in obj.final_messages:
         print(msg)
