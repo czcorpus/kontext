@@ -220,6 +220,7 @@ export class LineSelGroupsRatiosChart {
                         'line-selection-overview.xlsx',
                         DownloadType.LINE_SELECTION,
                         this.layoutModel.createActionUrl('export_line_groups_chart', args),
+                        'multipart/form-data',
                         postArgs
                     );
                 });

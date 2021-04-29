@@ -18,13 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from "../../types/common";
+import { SaveData } from '../../app/navigation';
+import { Kontext } from '../../types/common';
+
 
 export enum WlnumsTypes {
     FRQ = 'frq',
     DOCF = 'docf',
     ARF = 'arf'
 }
+
 
 export interface WordlistSubmitArgs {
     corpname:string;
@@ -38,6 +41,17 @@ export interface WordlistSubmitArgs {
     nfilter_words:Array<string>;
     include_nonwords:boolean;
     wlposattrs:Array<string>;
+}
+
+export interface WordlistSaveArgs {
+    q:string;
+    corpname:string;
+    usesubcorp:string;
+    from_line:number;
+    to_line:number;
+    saveformat:SaveData.Format;
+    colheaders:boolean;
+    heading:boolean;
 }
 
 export type ResultData = {

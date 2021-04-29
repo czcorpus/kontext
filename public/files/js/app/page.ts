@@ -258,10 +258,18 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * @param url
      * @param args
      */
-    bgDownload(filename:string, type:DownloadType, url:string, args?:Kontext.AjaxArgs):void {
+    bgDownload<T=Kontext.AjaxArgs>(
+        filename:string,
+        type:DownloadType,
+        url:string,
+        contentType:string,
+        args?:T
+    ):void {
+
         const taskId = `${new Date().getTime()}:${url}`;
         const method = () => {
-            if (type === DownloadType.FREQ2D || type === DownloadType.LINE_SELECTION) {
+            if (type === DownloadType.FREQ2D || type === DownloadType.LINE_SELECTION ||
+                        type === DownloadType.WORDLIST) {
                 return HTTP.Method.POST;
             }
             return HTTP.Method.GET;
@@ -275,7 +283,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 category: type
             }
         });
-        this.appNavig.bgDownload(filename, url, method(), args).subscribe(
+        this.appNavig.bgDownload<T>(
+            filename, url, method(), contentType, args
+        ).subscribe(
             () => {
                 this.dispatcher.dispatch<ATActions.InboxUpdateAsyncTask>({
                     name: ATActionName.InboxUpdateAsyncTask,
@@ -285,13 +295,14 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     }
                 });
             },
-            (err) => {
+            error => {
                 this.dispatcher.dispatch<ATActions.InboxUpdateAsyncTask>({
                     name: ATActionName.InboxUpdateAsyncTask,
                     payload: {
                         ident: taskId,
                         status: 'FAILURE'
-                    }
+                    },
+                    error
                 });
             }
         );

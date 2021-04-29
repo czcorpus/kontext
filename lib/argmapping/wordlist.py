@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 
 class WordlistFormArgs(object):
@@ -70,3 +70,28 @@ class WordlistFormArgs(object):
 
     def get_wlposattr(self, level: int):
         return self.wlposattrs[level] if level < len(self.wlposattrs) else None
+
+
+class WordlistSaveFormArgs:
+
+    def __init__(self):
+        self.corpname = ''
+        self.usesubcorp = ''
+        self.from_line = 1
+        self.to_line: Optional[int] = None
+        self.saveformat = 'text'
+        self.colheaders = False
+        self.heading = False
+
+    def update_by_user_query(self, data):
+        self.corpname = data['corpname']
+        self.usesubcorp = data['usesubcorp']
+        self.from_line = data['from_line']
+        self.to_line = data['to_line']
+        self.saveformat = data['saveformat']
+        self.colheaders = data['colheaders']
+        self.heading = data['heading']
+
+    def to_dict(self) -> Dict[str, Any]:
+        tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
+        return tmp

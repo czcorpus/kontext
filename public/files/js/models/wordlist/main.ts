@@ -314,18 +314,6 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         );
     }
 
-    private fetchLastPage(
-        state:WordlistResultModelState
-    ):Observable<[Array<IndexedResultItem>, number]> {
-        return this.pageLoad(state, state.numPages).pipe(
-            map(
-                ([data, pageNum]) => tuple(
-                    data, pageNum
-                )
-            )
-        );
-    }
-
     private createPQuery(s:string, wlattr:string):string {
         return `[${wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
     }

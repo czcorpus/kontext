@@ -280,28 +280,31 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                 <th>{he.translate('global__task_status')}</th>
                                 <th></th>
                             </tr>
-                            {props.items.map(item => (
-                                <tr key={item.ident}>
-                                    <td className="task-type">{he.translate(`task__type_${item.category}`)}</td>
-                                    <td className="label">{item.label}</td>
-                                    <td className="datetime">{he.formatDate(new Date(item.created * 1000), 2)}</td>
-                                    <td className="status">
-                                        {he.translate(`task__status_${item.status}`)}
-                                        {item.status === 'FAILURE' ?
-                                            <img src={he.createStaticUrl('img/error-icon.svg')} alt={item.status} />
-                                            : null }
-                                    </td>
-                                    <td className="msg">{
-                                        item.error ?
-                                        item.error :
-                                            item.url && item.status === 'SUCCESS' ?
-                                            <a href={item.url}>
-                                                {he.translate('global__task_result')}
-                                            </a> :
-                                            null
-                                    }</td>
-                                </tr>
-                            ))}
+                            {List.map(
+                                item => (
+                                    <tr key={item.ident}>
+                                        <td className="task-type">{he.translate(`task__type_${item.category}`)}</td>
+                                        <td className="label">{item.label}</td>
+                                        <td className="datetime">{he.formatDate(new Date(item.created * 1000), 2)}</td>
+                                        <td className="status">
+                                            {he.translate(`task__status_${item.status}`)}
+                                            {item.status === 'FAILURE' ?
+                                                <img src={he.createStaticUrl('img/error-icon.svg')} alt={item.status} />
+                                                : null }
+                                        </td>
+                                        <td className="msg">{
+                                            item.error ?
+                                            item.error :
+                                                item.url && item.status === 'SUCCESS' ?
+                                                <a href={item.url}>
+                                                    {he.translate('global__task_result')}
+                                                </a> :
+                                                null
+                                        }</td>
+                                    </tr>
+                                ),
+                                props.items
+                            )}
                         </tbody>
                     </table>
                     <div>
@@ -403,6 +406,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         render() {
             const numRunning = AsyncTaskChecker.numRunning(this.props);
             const numFinished = AsyncTaskChecker.numFinished(this.props);
+            console.log('this.props.data: ', this.props.asyncTasks)
             if (numFinished > 0 || numRunning > 0) {
                 return (
                     <li className="notifications">

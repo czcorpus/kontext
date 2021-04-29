@@ -416,6 +416,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             `2d-frequency.${format}`,
             DownloadType.FREQ2D,
             this.pageModel.createActionUrl('export_freqct', args),
+            'multipart/form-data',
             {data: JSON.stringify(this.exportData())}
         );
     }

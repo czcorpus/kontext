@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% block title %}{{ "Word list"|_ }}{% endblock %}
 
 {% block bodyonload %}
-__conf.IsUnfinished = {% if processing is not none %}true{% else %}false{% endif %};
 __conf.WorkerTasks = {{ tasks|to_json }};
 __conf.SubcorpList = {{ SubcorpList|to_json }};
 __conf.AttrList = {{ AttrList|to_json }};

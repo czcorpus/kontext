@@ -12,7 +12,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import sys
 import logging
 from typing import Optional, Callable, List, Dict, Any, Union
 
@@ -29,7 +28,7 @@ from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 import plugins
 import settings
 from argmapping import log_mapping
-from argmapping.wordlist import WordlistFormArgs
+from argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
 from werkzeug import Request
 from texttypes import TextTypesCache
 import templating
@@ -149,10 +148,9 @@ class Wordlist(Kontext):
                                       self._curr_wlform_args.wlattr)
         except Exception as e:
             result['wlattr_label'] = self._curr_wlform_args.wlattr
-            logging.getLogger(__name__).warning('wlattr_label set failed: %s' % e)
+            logging.getLogger(__name__).warning(f'wlattr_label set failed: {e}')
 
         result['freq_figure'] = translate(self.FREQ_FIGURES.get('frq', '?'))
-        result['processing'] = None
 
         self._add_save_menu_item('CSV', save_format='csv',
                                  hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
@@ -171,6 +169,7 @@ class Wordlist(Kontext):
         result['tasks'] = []
         result['SubcorpList'] = []
         result['quick_save_row_limit'] = self.WORDLIST_QUICK_SAVE_MAX_LINES
+        result['query_id'] = self._q_code
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, result)
         return result
 
@@ -213,54 +212,54 @@ class Wordlist(Kontext):
                 ('next', 'freqml')] + [('q', q) for q in self.args.q]
         raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
-    @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savewl.html', return_type='plain')
-    def savewl(self, from_line=1, to_line='', usesubcorp='', saveformat='text', colheaders=0, heading=0):
+    @exposed(access_level=1, template='txtexport/savewl.html', http_method='POST', return_type='plain')
+    def savewl(self, request):
         """
         save word list
         """
-        from_line = int(from_line)
-        to_line = int(to_line) if to_line else sys.maxsize
-        self.args.wlpage = 1
-        ans = self.result(wlpat=self.args.wlpat, paginate=False)
-        ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
-        saved_filename = self.args.corpname
-
-        if saveformat == 'text':
+        form_args = WordlistSaveFormArgs()
+        form_args.update_by_user_query(request.json)
+        if form_args.to_line is None:
+            form_args.to_line = self.corp.size
+        num_lines = form_args.to_line - form_args.from_line + 1
+        total, data = require_existing_wordlist(
+            form=self._curr_wlform_args, reverse=False, offset=form_args.from_line, limit=num_lines,
+            wlsort='', collator_locale=self.get_corpus_info(self.corp.corpname).collator_locale)
+        saved_filename = form_args.corpname
+        if form_args.saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % (
-                saved_filename,)
-            out_data = ans
-            out_data['pattern'] = self.args.wlpat
-            out_data['from_line'] = from_line
-            out_data['to_line'] = to_line
-            out_data['usesubcorp'] = usesubcorp
-            out_data['saveformat'] = saveformat
-            out_data['colheaders'] = colheaders
-            out_data['heading'] = heading
-        elif saveformat in ('csv', 'xml', 'xlsx'):
-            def mkfilename(suffix): return '%s-word-list.%s' % (self.args.corpname, suffix)
-            writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='wordlist')
+            self._headers['Content-Disposition'] = 'attachment; filename="{}-word-list.txt"'.format(saved_filename)
+            return dict(Items=data,
+                        pattern=self._curr_wlform_args.wlpat,
+                        from_line=form_args.from_line,
+                        to_line=form_args.to_line,
+                        usesubcorp=form_args.usesubcorp,
+                        saveformat=form_args.saveformat,
+                        colheaders=form_args.colheaders,
+                        heading=form_args.heading)
+        elif form_args.saveformat in ('csv', 'xml', 'xlsx'):
+            def mkfilename(suffix): return f'{self.args.corpname}-word-list.{suffix}'
+            writer = plugins.runtime.EXPORT.instance.load_plugin(form_args.saveformat, subtype='wordlist')
             writer.set_col_types(int, str, float)
 
             self._headers['Content-Type'] = writer.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
-                mkfilename(saveformat),)
+            self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(mkfilename(form_args.saveformat))
             # write the header first, if required
-            if colheaders:
-                writer.writeheading(('', self.args.wlattr, 'freq'))
-            elif heading:
+            if form_args.colheaders:
+                writer.writeheading(('', self._curr_wlform_args.wlattr, 'freq'))
+            elif form_args.heading:
                 writer.writeheading({
                     'corpus': self._human_readable_corpname(),
                     'subcorpus': self.args.usesubcorp,
-                    'pattern': self.args.wlpat
+                    'pattern': self._curr_wlform_args.wlpat
                 })
 
             i = 1
-            for item in ans['Items']:
-                writer.writerow(i, (item['str'], str(item['freq'])))
+            for item in data:
+                writer.writerow(i, (item[0], str(item[1])))
                 i += 1
-            out_data = writer.raw_content()
-        return out_data
+            return writer.raw_content()
+        return None
 
     @exposed(func_arg_mapped=True, return_type='json')
     def process(self, attrname='', worker_tasks=None):
@@ -271,5 +270,5 @@ class Wordlist(Kontext):
             for t in worker_tasks:
                 tr = app.AsyncResult(t)
                 if tr.status == 'FAILURE':
-                    raise CalcBackendError('Task %s failed' % (t,))
+                    raise CalcBackendError(f'Task {t} failed')
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}

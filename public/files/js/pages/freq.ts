@@ -267,7 +267,8 @@ class FreqPage {
     }
 
     setDownloadLink(filename:string, url:string) {
-        this.layoutModel.bgDownload(filename, DownloadType.FREQ, url);
+        this.layoutModel.bgDownload(
+            filename, DownloadType.FREQ, 'multipart/form-data', url);
     }
 
     private initFreqResult():void {

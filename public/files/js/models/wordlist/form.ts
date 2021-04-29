@@ -542,13 +542,16 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 if (List.empty(state.precalcTasks)) {
                     return;
 
-                } else if (List.every(t => t.status === 'SUCCESS', state.precalcTasks)) {
-                    this.submitAction(state, dispatch);
+                } else if (List.every(t => t.status === 'SUCCESS' || t.status === 'FAILURE', state.precalcTasks)) {
 
-                } else if (List.every(t => t.status === 'FAILURE', state.precalcTasks)) {
-                    this.layoutModel.showMessage(
-                        'error', this.layoutModel.translate('wordlist__failed_to_precalculate')
-                    );
+                    if (List.every(t => t.status === 'SUCCESS', state.precalcTasks)) {
+                        this.submitAction(state, dispatch);
+
+                    } else {
+                        this.layoutModel.showMessage(
+                            'error', this.layoutModel.translate('wordlist__failed_to_precalculate')
+                        );
+                    }
                 }
             }
         );
