@@ -406,7 +406,6 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         render() {
             const numRunning = AsyncTaskChecker.numRunning(this.props);
             const numFinished = AsyncTaskChecker.numFinished(this.props);
-            console.log('this.props.data: ', this.props.asyncTasks)
             if (numFinished > 0 || numRunning > 0) {
                 return (
                     <li className="notifications">
