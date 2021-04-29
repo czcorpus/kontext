@@ -945,7 +945,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         queryObj:SimpleQuery,
         focusTokenIdx?:number
     ):SimpleQuery {
+
         const richText = [];
+        const escape = (s:string) => (s + '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
         runSimpleQueryParser(
             queryObj.query,
             (token, tokenIdx, charIdx) => {
@@ -955,14 +959,14 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                 }
                 if (queryObj.queryParsed[tokenIdx].isExtended) {
                     richText.push(
-                        `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</a>`);
+                        `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__token_is_expanded')}">${escape(token.value)}</a>`);
 
                 } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
                     richText.push(
-                        `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
+                        `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${escape(token.value)}</a>`);
 
                 } else {
-                    richText.push('<span>' + token.value + '</span>');
+                    richText.push(`<span>${escape(token.value)}</span>`);
                 }
             },
             () => {
