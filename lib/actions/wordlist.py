@@ -70,7 +70,7 @@ class Wordlist(Kontext):
                                     curr_data=dict(form=self._curr_wlform_args.to_qp(),
                                                    corpora=[self._curr_wlform_args.corpname],
                                                    usesubcorp=self._curr_wlform_args.usesubcorp))
-                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='pquery')
+                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='wlist')
                 self.on_conc_store([query_id], True, result)
 
     def add_globals(self, request, result, methodname, action_metadata):
@@ -116,6 +116,8 @@ class Wordlist(Kontext):
 
         def on_conc_store(query_ids, stored_history, result):
             result['wl_query_id'] = query_ids[0]
+            if stored_history:
+                self._store_last_search('wlist', query_ids[0])
 
         self.on_conc_store = on_conc_store
         return ans
