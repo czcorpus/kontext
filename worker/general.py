@@ -68,7 +68,8 @@ import conclib.calc
 import conclib.calc.base
 from corplib import CorpusManager
 from corplib.corpus import KCorpus
-from bgcalc import (freq_calc, subc_calc, coll_calc, pquery)
+from bgcalc import (freq_calc, subc_calc, coll_calc, pquery, wordlist)
+from argmapping.wordlist import WordlistFormArgs
 
 stderr_redirector = get_stderr_redirector(settings)
 
@@ -108,17 +109,21 @@ def is_compiled(corp: KCorpus, attr, method):
     return False
 
 
-def _load_corp(corp_id, subc_path):
+def _load_corp(corp_id, subc: str, user_id):
     """
     Instantiate a manatee.Corpus (or manatee.SubCorpus)
     instance
 
     arguments:
     corp_id -- a corpus identifier
-    subc_path -- path to a subcorpus
+    subc -- a subcorpus identifier (None if not defined)
+    user_id --
     """
-    cm = CorpusManager([os.path.join(settings.get('corpora', 'users_subcpath'), 'published')])
-    return cm.get_corpus(corp_id, '', os.path.basename(subc_path))
+    subc_paths = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
+    if user_id is not None:
+        subc_paths.insert(0, os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id)))
+    cm = CorpusManager(subc_paths)
+    return cm.get_corpus(corp_id, '', subc)
 
 
 def _compile_frq(corp: KCorpus, attr, logfile):
@@ -255,21 +260,21 @@ def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_loc
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-def compile_frq(corp_id, subcorp_path, attr, logfile):
+def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
     (see freq_calc.build_arf_db)worker.py
     """
-    corp = _load_corp(corp_id, subcorp_path)
+    corp = _load_corp(corp_id, subcorp, user_id)
     return _compile_frq(corp, attr, logfile)
 
 
-def compile_arf(corp_id, subcorp_path, attr, logfile):
+def compile_arf(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
     (see freq_calc.build_arf_db)
     """
-    corp = _load_corp(corp_id, subcorp_path)
+    corp = _load_corp(corp_id, subcorp, user_id)
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
         base_path = freq_calc.corp_freqs_cache_path(corp, attr)
@@ -281,7 +286,7 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
             num_wait -= 1
         if not os.path.isfile(frq_data_file):
             _compile_frq(corp, attr, logfile)
-        corp = _load_corp(corp_id, subcorp_path)  # must reopen freq files
+        corp = _load_corp(corp_id, subcorp, user_id)  # must reopen freq files
     if is_compiled(corp, attr, 'arf'):
         with open(logfile, 'a') as f:
             f.write('\n100 %\n')  # to get proper calculation of total progress
@@ -294,12 +299,12 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
-def compile_docf(corp_id, subcorp_path, attr, logfile):
+def compile_docf(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
     (see freq_calc.build_arf_db)
     """
-    corp = _load_corp(corp_id, subcorp_path)
+    corp = _load_corp(corp_id, subcorp, user_id)
     if is_compiled(corp, attr, 'docf'):
         with open(logfile, 'a') as f:
             f.write('\n100 %\n')  # to get proper calculation of total progress
@@ -330,6 +335,14 @@ def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author
         if not msg:
             msg = 'Caused by: {0}'.format(ex.__class__.__name__)
         raise WorkerTaskException(msg)
+
+
+# ----------------------------- WORD LIST -------------------------------------
+
+def get_wordlist(args, max_items, user_id):
+    form = WordlistFormArgs.from_dict(args)
+    corp = _load_corp(form.corpname, form.usesubcorp, user_id)
+    wordlist.wordlist(corp, form, max_items)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

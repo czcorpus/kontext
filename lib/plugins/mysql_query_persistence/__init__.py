@@ -187,7 +187,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         if data is None:
             cursor = self._archive.cursor()
             cursor.execute(
-                'SELECT data, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
+                'SELECT data, created, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
             tmp = cursor.fetchone()
             if tmp:
                 data = json.loads(tmp['data'])
@@ -195,8 +195,8 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                     cursor.execute(
                         'UPDATE kontext_conc_persistence '
                         'SET last_access = %s, num_access = num_access + 1 '
-                        'WHERE id = %s',
-                        (get_iso_datetime(), data_id)
+                        'WHERE id = %s AND created = %s',
+                        (get_iso_datetime(), data_id, tmp['created'].isoformat())
                     )
                     self._archive.commit()
         return data

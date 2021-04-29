@@ -25,20 +25,21 @@ import { SaveData } from '../../app/navigation';
 import { PageModel } from '../../app/page';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions, ActionName } from '../wordlist/actions';
-import { MultiDict } from '../../multidict';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
-import { WordlistSubmitArgs } from './common';
-import { Dict, List } from 'cnc-tskit';
+import { WordlistSaveArgs, WordlistSubmitArgs } from './common';
+import { tuple } from 'cnc-tskit';
 
 
 export interface WordlistSaveModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
+    queryId:string;
     saveLinkFn:(file:string, url:string)=>void;
 }
 
 export interface WordlistSaveModelState {
+    queryId:string;
     formIsActive:boolean;
     toLine:Kontext.FormValue<string>;
     saveFormat:SaveData.Format;
@@ -52,13 +53,14 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly saveLinkFn:(file:string, url:string)=>void;
+    private readonly saveLinkFn:(file:string, url:string, args:WordlistSaveArgs)=>void;
 
 
-    constructor({dispatcher, layoutModel, quickSaveRowLimit, saveLinkFn}:WordlistSaveModelArgs) {
+    constructor({dispatcher, layoutModel, quickSaveRowLimit, queryId, saveLinkFn}:WordlistSaveModelArgs) {
         super(
             dispatcher,
             {
+                queryId,
                 toLine: {value: '', isInvalid: false, isRequired: true},
                 saveFormat: SaveData.Format.CSV,
                 includeHeading: false,
@@ -130,7 +132,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                     concatMap(
                         action => {
                             const payload = (action as Actions.WordlistFormSubmitReady).payload;
-                            return this.submit(state, payload.args);
+                            return this.submit(state, payload.args, state.queryId);
                         }
                     )
                 ).subscribe(
@@ -177,7 +179,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
                             if (window.confirm(this.layoutModel.translate(
                                     'global__quicksave_limit_warning_{format}{lines}',
                                     {format: action.payload.saveformat, lines: state.quickSaveRowLimit}))) {
-                                return this.submit(state, payload.args);
+                                return this.submit(state, payload.args, state.queryId);
 
                             } else {
                                 return rxOf({});
@@ -206,31 +208,29 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
         }
     }
 
-    private submit(state:WordlistSaveModelState, wlArgs:WordlistSubmitArgs):Observable<{}> {
-        const submitArgs = new MultiDict<
-            WordlistSubmitArgs & {
-                format:string;
-                saveformat:string;
-                from_line:string;
-                to_line:string;
-                colheaders:string;
-                heading:string;
-        }>(Dict.toEntries(wlArgs));
-        submitArgs.remove('format');
-        submitArgs.set('saveformat', state.saveFormat);
-        submitArgs.set('from_line', '1');
-        submitArgs.set('to_line', state.toLine.value);
+    private submit(state:WordlistSaveModelState, args:WordlistSubmitArgs, queryId:string):Observable<{}> {
+        const submitArgs:WordlistSaveArgs = {
+            q: `~${state.queryId}`,
+            corpname: args.corpname,
+            usesubcorp: args.usesubcorp,
+            from_line: 1,
+            to_line: state.toLine ? parseInt(state.toLine.value) : null,
+            saveformat: state.saveFormat,
+            colheaders: state.includeColHeaders,
+            heading: state.includeColHeaders
+        };
         if (state.saveFormat === SaveData.Format.CSV || state.saveFormat === SaveData.Format.XLSX) {
-            submitArgs.set('colheaders', state.includeColHeaders ? '1' : '0');
-            submitArgs.remove('heading');
+            submitArgs.colheaders = state.includeColHeaders;
+            submitArgs.heading = false;
 
         } else {
-            submitArgs.set('heading', state.includeHeading ? '1' : '0');
-            submitArgs.remove('colheaders');
+            submitArgs.heading = state.includeHeading;
+            submitArgs.colheaders = true;
         }
         this.saveLinkFn(
             `word-list.${SaveData.formatToExt(state.saveFormat)}`,
-            this.layoutModel.createActionUrl('wordlist/savewl', submitArgs.items())
+            this.layoutModel.createActionUrl('wordlist/savewl'),
+            submitArgs
         );
         // TODO
         return rxOf({});

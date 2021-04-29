@@ -22,21 +22,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% block title %}{{ "Word list"|_ }}{% endblock %}
 
 {% block bodyonload %}
-__conf.attrname = {{ wlattr|default(none, true)|to_json }};
-__conf.reloadArgs = {{ reload_args|to_json }};
-__conf.IsUnfinished = {% if processing is not none %}true{% else %}false{% endif %};
 __conf.WorkerTasks = {{ tasks|to_json }};
 __conf.SubcorpList = {{ SubcorpList|to_json }};
 __conf.AttrList = {{ AttrList|to_json }};
 __conf.StructAttrList = {{ StructAttrList|to_json }};
-__conf.Data = {{ Items|to_json }};
+__conf.QueryId = {{ query_id|to_json }};
+__conf.Form = {{ form|to_json }};
+__conf.Data = {{ data|to_json }};
+__conf.Total = {{ total|to_json }};
 __conf.wlattrLabel = {{ wlattr_label|to_json }};
 __conf.freqFigure = {{ freq_figure|to_json }};
 __conf.PageNum = {{ wlpage|default(1, true)|to_json }};
 __conf.PageSize = {{ wlpagesize|default(none, true)|to_json }};
-__conf.IsLastPage = {{ lastpage|to_json }};
-__conf.FormArgs = {{ form_args|to_json }};
+__conf.Reversed = {{ reversed|to_json }};
+__conf.Wlsort = {{ wlsort|to_json }};
 __conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
+
 wordlistPage.init(__conf);
 {% endblock %}
 

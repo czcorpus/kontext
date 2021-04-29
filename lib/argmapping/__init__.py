@@ -40,7 +40,7 @@ ConcArgsMapping = (
     'attr_vmode',
     'base_viewattr',  # attribute used in a text flow
     'structs',
-    'refs'
+    'refs',
 )
 
 
@@ -49,7 +49,13 @@ WidectxArgsMapping = (
     'attrs',
     'structs',
     'refs',
-    'hitlen'
+    'hitlen',
+)
+
+
+WordlistArgsMapping = (
+    'wlpagesize',
+    'wlsort',
 )
 
 
@@ -107,11 +113,6 @@ class Args(object):
     freq_sort: str = def_attr('')
     heading: int = def_attr(0)
     saveformat: str = def_attr('text')
-    wlattr: str = def_attr('')
-    wlpat: str = def_attr('')
-    wlpage: int = def_attr(1)
-    wlcache: str = def_attr('')
-    blcache: str = def_attr('')
     simple_n: int = def_attr(1)
     usearf: int = def_attr(0)
     collpage: int = def_attr(1)
@@ -196,21 +197,6 @@ class Args(object):
     ctattr2: str = def_attr('word')
     ctfcrit1: str = def_attr('0<0')
     ctfcrit2: str = def_attr('0<0')
-
-    # word list
-
-    wlminfreq: int = def_attr(5)
-    wlicase: int = def_attr(0)
-    wlwords: str = def_attr('')
-    blacklist: str = def_attr('')
-
-    include_nonwords: int = def_attr(0)
-    wltype: str = def_attr('simple')
-    wlnums: str = def_attr('frq')
-
-    wlposattr1: str = def_attr('')
-    wlposattr2: str = def_attr('')
-    wlposattr3: str = def_attr('')
 
     maxsavelines: int = def_attr(1000)
     fcrit: List[str] = def_attr(attr.Factory(list))

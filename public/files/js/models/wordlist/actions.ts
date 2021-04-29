@@ -19,16 +19,18 @@
  */
 
 import { Action } from 'kombo';
-import { MultiDict } from '../../multidict';
 import { IndexedResultItem, WlTypes, FileTarget, WordlistSubmitArgs } from './common';
 import { SaveData } from '../../app/navigation';
 import { FilterEditorData } from './form';
+import { Kontext } from '../../types/common';
 
 
 export enum ActionName {
     WordlistResultViewConc = 'WORDLIST_RESULT_VIEW_CONC',
     WordlistResultReload = 'WORDLIST_RESULT_RELOAD',
     WordlistFormSubmitReady = 'WORDLIST_FORM_SUBMIT_READY',
+    WordlistFormSubmit = 'WORDLIST_FORM_SUBMIT',
+    WordlistFormSubmitCancelled = 'WORDLIST_FORM_SUBMIT_CANCELLED',
     WordlistResultNextPage = 'WORDLIST_RESULT_NEXT_PAGE',
     WordlistResultPrevPage = 'WORDLIST_RESULT_PREV_PAGE',
     WordlistResultSetPage = 'WORDLIST_RESULT_SET_PAGE',
@@ -44,8 +46,9 @@ export enum ActionName {
     WordlistFormSetWlminfreq = 'WORDLIST_FORM_SET_WLMINFREQ',
     WordlistFormSetIncludeNonwords = 'WORDLIST_FORM_SET_INCLUDE_NONWORDS',
     WordlistFormAddPosattrLevel = 'WORDLIST_FORM_ADD_POSATTR_LEVEL',
-    WordlistFormCreateWhitelist = 'WORDLIST_FORM_CREATE_WHITELIST',
-    WordlistFormCreateBlacklist = 'WORDLIST_FORM_CREATE_BLACKLIST',
+    WordlistFormRemovePosattrLevel = 'WORDLIST_FORM_REMOVE_POSATTR_LEVEL',
+    WordlistFormCreatePfilter = 'WORDLIST_FORM_CREATE_PFILTER',
+    WordlistFormCreateNfilter = 'WORDLIST_FORM_CREATE_NFILTER',
     WordlistFormSetFilter = 'WORDLIST_FORM_SET_FILTER_FILE',
     WordlistFormSetFilterDone = 'WORDLIST_FORM_SET_FILTER_FILE_DONE',
     WordlistFormUpdateEditor = 'WORDLIST_FORM_UPDATE_EDITOR',
@@ -53,7 +56,6 @@ export enum ActionName {
     WordlistFormClearFilterFile = 'WORDLIST_FORM_CLEAR_FILTER_FILE',
     WordlistFormCloseEditor = 'WORDLIST_FORM_CLOSE_EDITOR',
     WordlistResultSetSortColumn = 'WORDLIST_RESULT_SET_SORT_COLUMN',
-    WordlistFormSubmit = 'WORDLIST_FORM_SUBMIT',
     WordlistSaveFormHide = 'WORDLIST_SAVE_FORM_HIDE',
     WordlistSaveFormSetMaxLine = 'WORDLIST_SAVE_FORM_SET_MAX_LINE',
     WordlistSaveFormSetFormat = 'WORDLIST_SAVE_FORM_SET_FORMAT',
@@ -62,7 +64,10 @@ export enum ActionName {
     WordlistSaveFormSubmit = 'WORDLIST_SAVE_FORM_SUBMIT',
     WordlistSaveFormSubmitDone = 'WORDLIST_SAVE_FORM_SUBMIT_DONE',
     WordlistHistoryPopState = 'WORDLIST_HISTORY_POP_STATE',
-    WordlistIntermediateBgCalcUpdated = 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED'
+    WordlistIntermediateBgCalcUpdated = 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED',
+    ToggleOutputOptions = 'WORDLIST_TOGGLE_OUTPUT_OPTIONS',
+    ToggleFilterOptions = 'WORDLIST_TOGGLE_FILTER_OPTIONS',
+    RegisterPrecalcTasks = 'WORDLIST_REGISTER_PRECALC_TASKS'
 }
 
 
@@ -83,6 +88,16 @@ export namespace Actions {
         args:WordlistSubmitArgs;
     }> {
         name:ActionName.WordlistFormSubmitReady;
+    }
+
+    export interface WordlistFormSubmit extends Action<{
+    }> {
+        name:ActionName.WordlistFormSubmit;
+    }
+
+    export interface WordlistFormSubmitCancelled extends Action<{
+    }> {
+        name:ActionName.WordlistFormSubmitCancelled;
     }
 
     export interface WordlistResultNextPage extends Action<{
@@ -114,8 +129,6 @@ export namespace Actions {
 
     export interface WordlistPageLoadDone extends Action<{
         page:number;
-        isLast:boolean;
-        newNumOfItems?:number;
         data:Array<IndexedResultItem>;
     }>{
         name:ActionName.WordlistPageLoadDone;
@@ -140,7 +153,7 @@ export namespace Actions {
     }
 
     export interface WordlistFormSelectWlposattr extends Action<{
-        position:number;
+        ident:string;
         value:string;
     }> {
         name:ActionName.WordlistFormSelectWlposattr;
@@ -169,16 +182,22 @@ export namespace Actions {
         name:ActionName.WordlistFormAddPosattrLevel;
     }
 
-    export interface WordlistFormCreateWhitelist extends Action<{
-
+    export interface WordlistFormRemovePosattrLevel extends Action<{
+        ident:string;
     }> {
-        name:ActionName.WordlistFormCreateWhitelist;
+        name:ActionName.WordlistFormRemovePosattrLevel;
     }
 
-    export interface WordlistFormCreateBlacklist extends Action<{
+    export interface WordlistFormCreatePfilter extends Action<{
 
     }> {
-        name:ActionName.WordlistFormCreateBlacklist;
+        name:ActionName.WordlistFormCreatePfilter;
+    }
+
+    export interface WordlistFormCreateNfilter extends Action<{
+
+    }> {
+        name:ActionName.WordlistFormCreateNfilter;
     }
 
     export interface WordlistFormSetFilter extends Action<{
@@ -219,13 +238,9 @@ export namespace Actions {
 
     export interface WordlistResultSetSortColumn extends Action<{
         sortKey:string;
+        reverse:boolean;
     }> {
         name:ActionName.WordlistResultSetSortColumn;
-    }
-
-    export interface WordlistFormSubmit extends Action<{
-    }> {
-        name:ActionName.WordlistFormSubmit;
     }
 
     export interface WordlistGoToLastPage extends Action<{
@@ -282,5 +297,21 @@ export namespace Actions {
         status:number;
     }> {
         name:ActionName.WordlistIntermediateBgCalcUpdated;
+    }
+
+    export interface ToggleOutputOptions extends Action<{
+    }> {
+        name:ActionName.ToggleOutputOptions;
+    }
+
+    export interface ToggleFilterOptions extends Action<{
+    }> {
+        name:ActionName.ToggleFilterOptions;
+    }
+
+    export interface RegisterPrecalcTasks extends Action<{
+        tasks:Array<Kontext.AsyncTaskInfo<{}>>;
+    }> {
+        name:ActionName.RegisterPrecalcTasks;
     }
 }

@@ -38,7 +38,10 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
                 if (this.data[k] === undefined) {
                     this.data[k] = [];
                 }
-                this.data[k].push(this.importValue(v));
+                const tmp = this.importValue(v);
+                if (tmp !== undefined) {
+                    this.data[k].push(tmp);
+                }
             }
         }
     }
@@ -86,7 +89,8 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
      * first.
      */
     set<K extends keyof T>(key:K, value:T[K]):Kontext.IMultiDict<T> {
-        this.data[key] = [this.importValue(value)];
+        const tmp = this.importValue(value);
+        this.data[key] = tmp !== undefined ? [tmp] : [];
         return this;
     }
 
@@ -97,7 +101,7 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
      */
     replace<K extends keyof T>(key:K, values:Array<T[K]>):Kontext.IMultiDict<T> {
         if (values.length > 0) {
-            this.data[key] = values.map(this.importValue);
+            this.data[key] = values.map(this.importValue).filter(v => v !== undefined);
 
         } else {
             this.remove(key);
@@ -120,7 +124,10 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
         if (this.data[key] === undefined) {
             this.data[key] = [];
         }
-        this.data[key].push(this.importValue(value));
+        const tmp = this.importValue(value);
+        if (tmp !== undefined) {
+            this.data[key].push(tmp);
+        }
         return this;
     }
 

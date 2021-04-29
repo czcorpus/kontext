@@ -114,8 +114,8 @@ class Actions(Querying):
             return tuple(segment_str.split('.'))
         return None
 
-    def add_globals(self, result, methodname, action_metadata):
-        super().add_globals(result, methodname, action_metadata)
+    def add_globals(self, request, result, methodname, action_metadata):
+        super().add_globals(request, result, methodname, action_metadata)
         conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
         conc_args.set('q', [q for q in result.get('Q')])
         args = {}
@@ -1081,23 +1081,6 @@ class Actions(Querying):
         self._attach_query_overview(result)
         return result
 
-    def _make_wl_query(self):
-        qparts = []
-        if self.args.wlpat:
-            qparts.append('%s="%s"' % (self.args.wlattr, self.args.wlpat))
-        if not self.args.include_nonwords:
-            qparts.append('%s!="%s"' % (self.args.wlattr,
-                                        self.corp.get_conf('NONWORDRE')))
-
-        whitelist = [w for w in re.split('\s+', self.args.wlwords.strip()) if w]
-        blacklist = [w for w in re.split('\s+', self.args.blacklist.strip()) if w]
-        if len(whitelist) > 0:
-            qq = ['%s=="%s"' % (self.args.wlattr, w.strip()) for w in whitelist]
-            qparts.append('(' + '|'.join(qq) + ')')
-        for w in blacklist:
-            qparts.append('%s!=="%s"' % (self.args.wlattr, w.strip()))
-        self.args.q = ['q[' + '&'.join(qparts) + ']']
-
     @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.html', return_type='plain')
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
@@ -1110,7 +1093,14 @@ class Actions(Querying):
         self.args.fpage = 1
         self.args.fmaxitems = to_line - from_line + 1
         if self.args.wlattr:
-            self._make_wl_query()  # multilevel wordlist
+            pass
+            # TODO !!!!!!!!!!!!!
+            #self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
+            #                            include_nonwords=request.form['include_nonwords'],
+            #                            pfilter_words=request.form['pfilter_words'],
+            #                            nfilter_words=request.form['nfilter_words'],
+            #                            non_word_re=self.corp.get_conf('NONWORDRE'))
+            #self._make_wl_query()  # multilevel wordlist
 
         # following piece of sh.t has hidden parameter dependencies
         result = self.freqs(fcrit, flimit, freq_sort, ml)

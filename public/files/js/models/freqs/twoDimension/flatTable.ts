@@ -310,6 +310,7 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             `2d-frequency.${format}`,
             DownloadType.FREQ2D,
             this.pageModel.createActionUrl('export_freqct', args),
+            'multipart/form-data',
             {data: JSON.stringify(this.exportData())}
         );
     }

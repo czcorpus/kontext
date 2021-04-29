@@ -18,11 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { SaveData } from '../../app/navigation';
+import { Kontext } from '../../types/common';
+
+
 export enum WlnumsTypes {
     FRQ = 'frq',
     DOCF = 'docf',
     ARF = 'arf'
 }
+
 
 export interface WordlistSubmitArgs {
     corpname:string;
@@ -32,30 +37,43 @@ export interface WordlistSubmitArgs {
     wlminfreq:number;
     wlnums:WlnumsTypes;
     wltype:string;
-    wlsort:string;
-    wlwords:string;
-    blacklist:string;
+    pfilter_words:Array<string>;
+    nfilter_words:Array<string>;
     include_nonwords:boolean;
-    wlposattr1:string;
-    wlposattr2:string;
-    wlposattr3:string;
-    wlpage:number;
+    wlposattrs:Array<string>;
+}
+
+export interface WordlistSaveArgs {
+    q:string;
+    corpname:string;
+    usesubcorp:string;
+    from_line:number;
+    to_line:number;
+    saveformat:SaveData.Format;
+    colheaders:boolean;
+    heading:boolean;
 }
 
 export type ResultData = {
-    data:Array<ResultItem>,
+    queryId:string;
+    corpname:string;
+    usesubcorp:string;
+    data:Array<ResultItem>;
+    total:number;
+    wlsort:string;
+    reversed:boolean;
     page:number;
     pageSize:number;
     isLastPage:boolean;
 }
 
 
-export interface ResultItem {
-    freq:number;
-    str:string;
-}
+export type ResultItem = [string, number];
 
-export interface IndexedResultItem extends ResultItem {
+
+export interface IndexedResultItem {
+    str:string;
+    freq:number;
     idx:number;
 }
 
@@ -64,13 +82,15 @@ export interface HeadingItem {
     sortKey:string;
 }
 
-export enum WlTypes {
-    SIMPLE = 'simple',
-    MULTILEVEL = 'multilevel'
-}
+export type WlTypes = 'simple'|'multilevel';
 
-export enum FileTarget {
-    WHITELIST = 'wlwords',
-    BLACKLIST = 'blacklist',
-    EMPTY = 'empty'
+export type FileTarget = 'pfilter'|'nfilter'|'empty';
+
+
+export interface SubmitResponse {
+    corpname:string;
+    usesubcorp:string;
+    wl_query_id:string;
+    freq_files_avail:string;
+    subtasks:Array<Kontext.AsyncTaskInfo<{}>>;
 }

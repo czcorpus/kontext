@@ -251,7 +251,7 @@
                         </oneOrMore>
                     </element>
                     <element name="upload_cache_dir">
-                        <a:documentation>A path where uploaded file (e.g. whitelists/blacklists)
+                        <a:documentation>A path where uploaded file (e.g. pos./neg. filter words)
                         are temporarily stored before being processed</a:documentation>
                         <text />
                     </element>

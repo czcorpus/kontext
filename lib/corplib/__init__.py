@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import List, Any, Optional, Tuple, Dict, Union, Set
-from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr, Structure
+from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr
 from array import array
 import logging
 from .corpus import KCorpus, KSubcorpus
@@ -167,7 +167,7 @@ class CorpusManager(object):
                 return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
         return None
 
-    def get_corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> Corpus:
+    def get_corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> KCorpus:
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -251,148 +251,6 @@ class CorpusManager(object):
                      v=os.path.splitext(os.path.basename(s))[0],
                      pub=self.get_subc_public_name(corpname, os.path.splitext(os.path.basename(s))[0]))
                 for s in self.subc_files(corpname)]
-
-
-def add_block_items(items: List[Dict[str, Any]], attr: str = 'class', val: str = 'even',
-                    block_size: int = 3) -> List[Dict[str, Any]]:
-    for i in [i for i in range(len(items)) if (i / block_size) % 2]:
-        items[i][attr] = val
-    return items
-
-
-def get_wordlist_length(corp: Corpus, wlattr: str, wlpat: str, wlnums: str, wlminfreq: int, words: str,
-                        blacklist: str, include_nonwords: bool) -> int:
-    enc_pattern = wlpat.strip()
-    attr = corp.get_attr(wlattr)
-    attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
-    if not include_nonwords:
-        nwre = corp.get_conf('NONWORDRE')
-    else:
-        nwre = ''
-    try:
-        gen = attr.regexp2ids(enc_pattern, 0, nwre)
-    except TypeError:
-        gen = attr.regexp2ids(enc_pattern, 0)
-    i = 0
-    while not gen.end():
-        wid = gen.next()
-        frq = attrfreq[wid]
-        if not frq:
-            continue
-        id_value = attr.id2str(wid)
-        if frq >= wlminfreq and (not words or id_value in words) and (not blacklist or id_value not in blacklist):
-            i += 1
-    return i
-
-
-def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, words, blacklist, wlnums, wlsort,
-                         wlmaxitems):
-    try:
-        gen = attr.regexp2ids(enc_pattern, 0, excl_pattern)
-    except TypeError:
-        gen = attr.regexp2ids(enc_pattern, 0)
-    items = []
-    while not gen.end():
-        if len(items) > 5 * wlmaxitems:
-            if wlsort == 'f':
-                items.sort(key=lambda x: x[0])
-                del items[:-wlmaxitems]
-            else:
-                items.sort(key=lambda x: x[1])
-                del items[wlmaxitems:]
-
-        wid = gen.next()
-        frq = attrfreq[wid]
-        if not frq:
-            continue
-
-        id_value = attr.id2str(wid)
-        if frq >= wlminfreq and (not words or id_value in words) and (not blacklist or id_value not in blacklist):
-            if wlnums == 'arf':
-                items.append((round(frq, 1), wid))
-            else:
-                items.append((frq, wid))
-    return items
-
-
-def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlmaxitems, wlnums):
-    items = []
-    for word in words:
-        if len(items) > 5 * wlmaxitems:
-            if wlsort == 'f':
-                items.sort(key=lambda x: x[0])
-                del items[:-wlmaxitems]
-            else:
-                items.sort(key=lambda x: x[1])
-                del items[wlmaxitems:]
-
-        id = attr.str2id(word)
-        if id == -1:
-            frq = 0
-        else:
-            frq = attrfreq[id]
-        if word and frq >= wlminfreq and (not blacklist or word not in blacklist):
-            if wlnums == 'arf':
-                items.append((round(frq, 1), word))
-            else:
-                items.append((frq, word))
-    return items
-
-
-def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
-    if '.' in wlattr:  # attribute of a structure
-        struct = corp.get_struct(wlattr.split('.')[0])
-        if wlnums == 'doc sizes':
-            normvals = dict([(struct.beg(i), struct.end(i) - struct.beg(i))
-                             for i in range(struct.size())])
-        else:
-            normvals = dict([(struct.beg(i), 1) for i in range(struct.size())])
-        attrfreq = dict([(i, doc_sizes(corp, struct, wlattr, i, normvals))
-                         for i in range(attr.id_range())])
-    else:  # positional attribute
-        attrfreq = frq_db(corp, wlattr, wlnums)
-    return attrfreq
-
-
-def wordlist(corp: KCorpus, words: Optional[Set[str]] = None, wlattr: str = '', wlpat: str = '', wlminfreq: int = 5,
-             wlmaxitems: int = 100, wlsort: str = '', blacklist: Optional[Set[str]] = None,
-             wlnums: Optional[str] = 'frq', include_nonwords: int = 0) -> List[Dict[str, Any]]:
-    """
-    Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
-    """
-    blacklist = set(w for w in blacklist) if blacklist else set()
-    words = set(w for w in words) if words else set()
-    attr = corp.get_attr(wlattr)
-    attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
-    if words and wlpat == '.*':  # word list just for given words
-        items = _wordlist_from_list(attr=attr, attrfreq=attrfreq, words=words, blacklist=blacklist, wlsort=wlsort,
-                                    wlminfreq=wlminfreq, wlmaxitems=wlmaxitems, wlnums=wlnums)
-    else:  # word list according to pattern
-        if not include_nonwords:
-            nwre = corp.get_conf('NONWORDRE')
-        else:
-            nwre = ''
-        items = _wordlist_by_pattern(attr=attr, enc_pattern=wlpat.strip(), excl_pattern=nwre,
-                                     wlminfreq=wlminfreq, words=words, blacklist=blacklist, wlnums=wlnums,
-                                     wlsort=wlsort, wlmaxitems=wlmaxitems, attrfreq=attrfreq)
-
-    if not words or wlpat != '.*':
-        items = [(f, attr.id2str(i)) for (f, i) in items]
-    if wlsort == 'f':
-        items = sorted(items, key=lambda x: x[0], reverse=True)
-    else:
-        items = sorted(items, key=lambda x: x[1])
-    del items[wlmaxitems:]
-    return add_block_items([{'str': w, 'freq': f} for f, w in items])
-
-
-def doc_sizes(corp: Corpus, struct: Structure, attrname: str, i: int, normvals: Dict[int, int]) -> int:
-    r = corp.filter_query(struct.attr_val(attrname.split('.')[1], i))
-    cnt = 0
-    while not r.end():
-        cnt += normvals[r.peek_beg()]
-        r.next()
-    return cnt
 
 
 def texttype_values(corp: KCorpus, subcorpattrs: str, maxlistsize: int,
@@ -543,10 +401,10 @@ def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -
         try:
             frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
         except IOError as ex:
-            raise MissingSubCorpFreqFile(corp, ex)
+            raise MissingSubCorpFreqFile(ex)
         except EOFError as ex:
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
-            raise MissingSubCorpFreqFile(corp, ex)
+            raise MissingSubCorpFreqFile(ex)
     else:
         try:
             if corp.get_conf('VIRTUAL') and not corp.is_subcorpus and nums == 'frq':
@@ -557,7 +415,7 @@ def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -
             os.remove(filename.rsplit('.', 1)[0] + '.docf')
             os.remove(filename.rsplit('.', 1)[0] + '.arf')
             os.remove(filename.rsplit('.', 1)[0] + '.frq')
-            raise MissingSubCorpFreqFile(corp, ex)
+            raise MissingSubCorpFreqFile(ex)
         except IOError:
             try:
                 frq = array.array('l')
@@ -567,7 +425,7 @@ def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -
                     a = corp.get_attr(attrname)
                     frq.fromlist([a.freq(i) for i in range(a.id_range())])
                 else:
-                    raise MissingSubCorpFreqFile(corp, ex)
+                    raise MissingSubCorpFreqFile(ex)
     return frq
 
 

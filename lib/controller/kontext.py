@@ -51,6 +51,7 @@ from templating import DummyGlobals
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy
 from texttypes import TextTypes, TextTypesCache
 import bgcalc
+from bgcalc import AsyncTaskStatus
 
 
 JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
@@ -91,58 +92,6 @@ class LinesGroups(object):
         ans = LinesGroups(data_dict.get('data', []))
         ans.sorted = data_dict.get('sorted', False)
         return ans
-
-
-class AsyncTaskStatus(object):
-    """
-    Keeps information about background tasks which are visible to a user
-    (i.e. user is informed that some calculation/task takes a long time
-    and that it is going to run in background and that the user will
-    be notified once it is done).
-
-    Please note that concordance calculation uses a different mechanism
-    as it requires continuous update of its status.
-
-    Status string is taken from Celery and should always equal
-    one of the following: PENDING, STARTED, RETRY, FAILURE, SUCCESS
-
-    Attributes:
-        ident (str): task identifier (unique per specific task instance)
-        label (str): user-readable task label
-        status (str): one of
-    """
-    CATEGORY_SUBCORPUS = 'subcorpus'
-    CATEGORY_PQUERY = 'pquery'
-
-    def __init__(self, ident: str, label: str, status: int, category: str, args: Dict[str, Any], created: Optional[float] = None, error: Optional[str] = None, url: Optional[str] = None) -> None:
-        self.ident: str = ident
-        self.label: str = label
-        self.status: int = status
-        self.category: str = category
-        self.created: Optional[float] = created if created else time.time()
-        self.args: Dict[str, Any] = args
-        self.error: Optional[str] = error
-        self.url: Optional[str] = url
-
-    def is_finished(self) -> bool:
-        return self.status in ('FAILURE', 'SUCCESS')
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'AsyncTaskStatus':
-        """
-        Creates an instance from the 'dict' type. This is used
-        to unserialize instances from session.
-        """
-        return AsyncTaskStatus(status=data['status'], ident=data['ident'], label=data['label'],
-                               category=data['category'], created=data.get('created'), args=data.get('args', {}),
-                               error=data.get('error'), url=data.get('url'))
-
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Transforms an instance to the 'dict' type. This is used
-        to serialize instances to session.
-        """
-        return self.__dict__
 
 
 class Kontext(Controller):
@@ -324,9 +273,9 @@ class Kontext(Controller):
                 merge_incoming_opts_to(options)
                 self._session['settings'] = options
 
-    def _restore_prev_conc_params(self, form):
+    def _restore_prev_query_params(self, form):
         """
-        Restores previously stored concordance query data using an ID found in request arg 'q'.
+        Restores previously stored concordance/pquery/wordlist query data using an ID found in request arg 'q'.
         To even begin the search, two conditions must be met:
         1. query_persistence plugin is installed
         2. request arg 'q' contains a string recognized as a valid ID of a stored concordance query
@@ -350,7 +299,7 @@ class Kontext(Controller):
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._prev_q_data is not None:
-                    form.add_forced_arg('q', *(self._prev_q_data['q'][:] + url_q[1:]))
+                    form.add_forced_arg('q', *(self._prev_q_data.get('q', [])[:] + url_q[1:]))
                     corpora = self._prev_q_data.get('corpora', [])
                     if len(corpora) > 0:
                         orig_corpora = form.add_forced_arg('corpname', corpora[0])
@@ -553,7 +502,7 @@ class Kontext(Controller):
             self._setup_user_paths()
             self.cm = corplib.CorpusManager(self.subcpath)
 
-            self._restore_prev_conc_params(req_args)
+            self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
             corpname, self._corpus_variant = self._check_corpus_access(
                 action_name, req_args, action_metadata)
@@ -884,7 +833,7 @@ class Kontext(Controller):
             if hasattr(plg.instance, 'export'):
                 result[key][plg.name] = plg.instance.export(self._plugin_ctx)
 
-    def add_globals(self, result, methodname, action_metadata):
+    def add_globals(self, request, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
@@ -892,7 +841,7 @@ class Kontext(Controller):
         Please note that self.args mapping is not exported here even though some of the values
         from self.args are used here in specific ways.
         """
-        super(Kontext, self).add_globals(result, methodname, action_metadata)
+        super().add_globals(request, result, methodname, action_metadata)
         result['corpus_ident'] = {}
         result['Globals'] = DummyGlobals()
         result['base_attr'] = Kontext.BASE_ATTR

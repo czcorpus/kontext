@@ -57,6 +57,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         sortKey:string;
         isActive:boolean;
         str:string;
+        reversed:boolean;
 
     }> = (props) => {
 
@@ -64,31 +65,28 @@ export function init({dispatcher, utils, wordlistSaveViews,
             dispatcher.dispatch<Actions.WordlistResultSetSortColumn>({
                 name: ActionName.WordlistResultSetSortColumn,
                 payload: {
-                    sortKey: props.sortKey
+                    sortKey: props.sortKey,
+                    reverse: props.isActive ? !props.reversed : false
                 }
-            });
-            dispatcher.dispatch<Actions.WordlistResultReload>({
-                name: ActionName.WordlistResultReload
             });
         };
 
         const renderSortingIcon = () => {
-            if (props.isActive) {
-                return (
-                    <span title={utils.translate('global__sorted')}>
-                         {props.str}
-                        <img className="sort-flag" src={utils.createStaticUrl('img/sort_desc.svg')} />
-                    </span>
-                );
-
-            } else {
-                return (
-                    <a onClick={handleClick} title={utils.translate('global__click_to_sort')}>
-                         {props.str}
+            return (
+                <span title={utils.translate('global__sorted')}>
+                    <a onClick={handleClick} title={props.isActive ?
+                        utils.translate('global__sorted_click_change') :
+                        utils.translate('global__click_to_sort')}>
+                            {props.str}
                     </a>
-                );
-            }
-        };
+                    {props.isActive ? (props.reversed ?
+                        <img className="sort-flag" src={utils.createStaticUrl('img/sort_desc.svg')} /> :
+                        <img className="sort-flag" src={utils.createStaticUrl('img/sort_asc.svg')} /> ) :
+                        null
+                    }
+                </span>
+            );
+        }
 
         return <th>{renderSortingIcon()}</th>;
     };
@@ -244,8 +242,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
     const Paginator:React.FC<{
         currPage:number;
         currPageInput:string;
+        maxPage:number;
         modelIsBusy:boolean;
-        isLastPage:boolean;
 
      }> = (props) => {
 
@@ -269,8 +267,9 @@ export function init({dispatcher, utils, wordlistSaveViews,
                     <div className="ktx-pagination-core">
                         <PaginatorTextInput value={props.currPageInput} modelIsBusy={props.modelIsBusy}
                                 hint={props.currPage !== parseInt(props.currPageInput) ? utils.translate('global__hit_enter_to_confirm') : null} />
+                        {'\u00a0'}/{'\u00a0'}<span>{props.maxPage}</span>
                     </div>
-                    {!props.isLastPage ? <PaginatorRightArrows /> : null}
+                    {props.currPage < props.maxPage ? <PaginatorRightArrows /> : null}
                 </form>
             </div>
         );
@@ -316,7 +315,6 @@ export function init({dispatcher, utils, wordlistSaveViews,
     // -------------------------- <DataTable /> -------------------------------------
 
     interface DataTableProps {
-        wlsort:string;
         usesStructAttr:boolean;
         wlpat:string;
     }
@@ -340,7 +338,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         } else {
             return <>
                 <Paginator currPageInput={props.currPageInput} modelIsBusy={props.isBusy}
-                                currPage={props.currPage} isLastPage={props.isLastPage} />
+                                currPage={props.currPage} maxPage={props.numPages} />
                 <table className="data">
                     <thead>
                         <tr>
@@ -350,7 +348,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
                             </th>
                             {List.map(
                                 item => <THSortableColumn key={item.sortKey} str={item.str} sortKey={item.sortKey}
-                                    isActive={props.wlsort === item.sortKey} />,
+                                    isActive={props.wlsort === item.sortKey} reversed={props.reversed} />,
                                 props.headings
                             )}
                         </tr>
@@ -373,7 +371,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
 
     const WordlistResult:React.FC<WordlistFormState> = (props) => (
         <S.WordlistResult>
-            <BoundDataTable wlpat={props.wlpat} wlsort={props.wlsort} usesStructAttr={props.usesStructAttr} />
+            <BoundDataTable wlpat={props.wlpat} usesStructAttr={props.usesStructAttr} />
             <wordlistSaveViews.WordlistSaveForm />
         </S.WordlistResult>
     );

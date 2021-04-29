@@ -26,6 +26,9 @@ import * as theme from '../../theme/default';
 // ---------------- <PqueryFormSection /> -------------
 
 export const PqueryFormSection = styled.section`
+
+    margin: ${theme.pageFormMargin};
+
     form >* {
         margin-top: 1em;
     }

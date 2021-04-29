@@ -25,7 +25,7 @@ import * as theme from '../../theme/default';
 
 export const QueryForm = styled.form`
 
-    margin: 1.5em;
+    margin: ${theme.pageFormMargin};
     display: flex;
     flex-direction: column;
 

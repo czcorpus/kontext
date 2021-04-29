@@ -1002,7 +1002,8 @@ export class ViewPage {
     }
 
     setDownloadLink(filename:string, url:string) {
-        this.layoutModel.bgDownload(filename, DownloadType.CONCORDANCE, url);
+        this.layoutModel.bgDownload(
+            filename, DownloadType.CONCORDANCE, 'multipart/form-data', url);
     }
 
     init():void {

@@ -189,6 +189,9 @@ class QueryHistory(AbstractQueryHistory):
 
         corpora = CorpusCache(corpus_manager)
         data = self.db.list_get(self._mk_key(user_id))
+        if limit is None:
+            limit = len(data)
+        data = [v for v in reversed(data)][offset:(offset + limit)]
         full_data = []
 
         for item in data:
@@ -222,7 +225,17 @@ class QueryHistory(AbstractQueryHistory):
                     tmp.update(stored)
                     full_data.append(tmp)
                 elif item_qs == 'wlist':
-                    pass  # TODO
+                    stored = self._query_persistence.open(item['query_id'])
+                    if not stored:
+                        continue
+                    tmp = dict(corpname=stored['corpora'][0],
+                               aligned=[],
+                               human_corpname=corpora.corpus(tmp['corpname']).get_conf('NAME'),
+                               query=stored.get('form', {}).get('wlpat'))
+                    tmp.update(item)
+                    tmp.update(stored)
+                    full_data.append(tmp)
+
             else:
                 # deprecated type of record (this will vanish soon as there
                 # are no persistent history records based on the old format)
@@ -260,14 +273,10 @@ class QueryHistory(AbstractQueryHistory):
         if archived_only:
             full_data = [x for x in full_data if x.get('name', None) is not None]
 
-        if limit is None:
-            limit = len(full_data)
-
-        tmp = [v for v in reversed(full_data)][offset:(offset + limit)]
-        for i, item in enumerate(tmp):
+        for i, item in enumerate(full_data):
             item['idx'] = offset + i
 
-        return tmp
+        return full_data
 
     def find_by_qkey(self, query_key):
         if query_key:

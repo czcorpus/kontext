@@ -24,7 +24,7 @@ import { Observable, of as rxOf } from 'rxjs';
 import { List, HTTP, pipe, Dict } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
-import { concatMap, map, takeWhile, tap, timestamp } from 'rxjs/operators';
+import { concatMap, filter, map, takeWhile, tap } from 'rxjs/operators';
 import { Actions, ActionName } from './actions';
 import { taskCheckTimer } from './common';
 import { DownloadType, PageModel } from '../../app/page';
@@ -85,13 +85,42 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         this.pageModel = pageModel;
         this.onUpdate = [];
         this.triggerUpdateAction = (resp:AsyncTaskResponse) => {
-            dispatcher.dispatch<Actions.AsyncTasksChecked>({
-                name: ActionName.AsyncTasksChecked,
-                payload: {
-                    tasks: resp.data
-                }
-            })
+            // we don't want to notify about finished tasks multiple times so the
+            // receivers do not have to handle it by themselves
+            const tasks = pipe(
+                resp.data,
+                List.filter(v => {
+                    const srch = List.find(c => c.ident === v.ident, this.state.asyncTasks);
+                    return !(srch && (srch.status === 'FAILURE' || srch.status === 'SUCCESS')
+                            && v.status === srch.status);
+                })
+            );
+            if (!List.empty(tasks)) {
+                dispatcher.dispatch<Actions.AsyncTasksChecked>({
+                    name: ActionName.AsyncTasksChecked,
+                    payload: {
+                        tasks
+                    }
+                });
+            }
         };
+
+        this.addActionHandler<Actions.AsyncTasksChecked>(
+            ActionName.AsyncTasksChecked,
+            action => {
+                const updatedList:Array<Kontext.AsyncTaskInfo> = [];
+                List.forEach(
+                    newTask => {
+                        const updated = List.find(t => t.ident === newTask.ident, this.state.asyncTasks);
+                        updatedList.push(updated ? updated : newTask);
+                    },
+                    action.payload.tasks
+                );
+                this.changeState(state => {
+                    state.asyncTasks = updatedList;
+                });
+            }
+        );
 
         this.addActionHandler<Actions.InboxToggleOverviewVisibility>(
             ActionName.InboxToggleOverviewVisibility,
@@ -225,7 +254,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         ).pipe(map(resp => resp.data));
     }
 
-    private updateTasksStatus(
+    private updateTasksStatusAjax(
         state:AsyncTaskCheckerState,
         incoming:Array<Kontext.AsyncTaskInfo>
     ):Array<Kontext.AsyncTaskInfo> {
@@ -235,7 +264,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 curr => {
                     const ans = {...curr};
                     const idx = List.findIndex(incom => incom.ident === curr.ident, incoming);
-                    if (idx === -1) {
+                    if (idx === -1 && !Dict.hasValue(ans.category, DownloadType)) {
                         ans.status = "FAILURE";
                     }
                     return ans;
@@ -260,7 +289,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 curr => {
                     const ans = {...curr};
                     const item = List.find(incom => incom.ident === curr.ident, incoming);
-                    if (item === undefined) {
+                    if (item === undefined && !Dict.hasValue(ans.category, DownloadType)) {
                         ans.status = "FAILURE";
                     } else {
                         ans.status = item.status;
@@ -337,7 +366,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             ).subscribe(
                 (data) => {
                     this.changeState(state => {
-                        const finished = this.updateTasksStatus(state, data.data);
+                        const finished = this.updateTasksStatusAjax(state, data.data);
                         if (!List.empty(finished)) {
                             this.onUpdate.forEach(item => {
                                 item(finished);

@@ -26,6 +26,8 @@ import * as theme from '../../theme/default';
 
 export const WordListForm = styled.form`
 
+    margin: ${theme.pageFormMargin};
+
     .wordlist_form .current-wlattr {
         font-weight: bold;
         color: ${theme.colorLogoPink};
@@ -43,11 +45,91 @@ export const WordListForm = styled.form`
 
 `;
 
+// ---------------- <ExistingFileOps /> --------------------------------------
 
-// ---------------- <MultiLevelPosAttr /> --------------------------------------
+export const ExistingFileOps = styled.div`
+
+    .active-file {
+        color: ${theme.colorLogoPink};
+    }
+`;
+
+// ---------------- <IncludeNonWordsCheckboxSpan /> --------------------------------------
+
+export const IncludeNonWordsCheckboxSpan = styled.span`
+    input[type='checkbox'] {
+        margin: 0;
+    }
+`;
+
+// ---------------- <FieldsetFilterOptions /> ---------------------------------------------
+
+export const FieldsetFilterOptions = styled.section`
+    margin-top: 0.7em;
+
+    .contents {
+        padding: 1.1em 1.5em;
+        border: 0.1em solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
+
+        display: grid;
+        grid-template-columns: 10em 1fr;
+        grid-gap: 0.7em;
+        align-items: center;
+    }
+`;
+
+// ---------------- <FieldsetOutputOptions /> --------------------------------------
+
+export const FieldsetOutputOptions = styled.section`
+    margin-top: 0.7em;
+
+    .contents {
+        padding: 1.1em 1.5em;
+        border: 0.1em solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
+
+        display: grid;
+        grid-template-columns: 10em 1fr;
+        grid-gap: 0.7em;
+        align-items: center;
+    }
+`;
+
+// ---------------- <MainFieldset /> --------------------------------------------
+
+export const MainFieldset = styled.div`
+
+    display: grid;
+    grid-template-columns: 10em 1fr;
+    grid-gap: 0.7em;
+    align-items: center;
+    margin-top: 3.4em;
+    margin-bottom: 1.6em;
+
+    label {
+
+    }
+
+`;
+
+// --------------- <WlpatternInput /> -------------------------------------------
+
+export const WlpatternInput = styled.span`
+
+    input {
+        border: 1px solid ${theme.colorLightFrame};
+        border-radius: ${theme.borderRadiusDefault};
+        font-size: 1.4em;
+        padding: 0.2em 0.3em;
+        width: 8em;
+    }
+`;
 
 
-export const MultiLevelPosAttr = styled.ul`
+// ---------------- <MultiLevelPosAttrUL /> --------------------------------------
+
+export const MultiLevelPosAttrUL = styled.ul`
 
     list-style-type: none;
     margin: 0.7em 0 0 1.5em;
@@ -56,9 +138,41 @@ export const MultiLevelPosAttr = styled.ul`
     li {
         margin: 0;
         padding: 0;
+
+        display: flex;
+        align-items: center;
+
+        a {
+            display: block;
+            margin-left: 0.3em;
+
+            img {
+                display: block;
+                width: 1em;
+            }
+        }
     }
 
-    li:not(:first-child) {
+    li.add-btn {
+        padding-top: 0.7em;
+    }
+
+    li:not(:first-child):not(.add-btn) {
         padding-top: 0.3em;
     }
+`;
+
+
+// ---------------------- <FileFormatHint /> -----------------------------
+
+export const FileFormatHint = styled.div`
+
+    display: flex;
+    align-items: center;
+
+    img.info-icon {
+        width: 1.3em;
+        margin-right: 0.3em;
+    }
+
 `;

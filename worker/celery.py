@@ -149,19 +149,18 @@ def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_loc
 
 
 @app.task(name='compile_frq')
-def compile_frq(corp_id, subcorp_path, attr, logfile):
-    return general.compile_frq(corp_id, subcorp_path, attr, logfile)
+def compile_frq(user_id, corp_id, subcorp, attr, logfile):
+    return general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
 
 
 @app.task(name='compile_arf')
-def compile_arf(corp_id, subcorp_path, attr, logfile):
-    return general.compile_arf(corp_id, subcorp_path, attr, logfile)
+def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
+    return general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
 
 
 @app.task(name='compile_docf')
-def compile_docf(corp_id, subcorp_path, attr, logfile):
-    return general.compile_docf(corp_id, subcorp_path, attr, logfile)
-
+def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
+    return general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 
@@ -169,6 +168,13 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
 @app.task(name='create_subcorpus')
 def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
     return general.create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description)
+
+
+# ----------------------------- WORD LIST -------------------------------------
+
+@app.task(name='get_wordlist')
+def get_wordlist(args, max_items, user_id):
+    return general.get_wordlist(args, max_items, user_id)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

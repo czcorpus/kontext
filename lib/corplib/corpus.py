@@ -155,6 +155,9 @@ class KCorpus:
         self._corp = corp
         self._corpname = corpname
 
+    def __str__(self):
+        return f'KCorpus(ident={self.corpname})'
+
     @property
     def corp(self):
         return self._corp
@@ -275,6 +278,12 @@ class KCorpus:
     def compile_frq(self, attr):
         return self._corp.compile_frq(attr)
 
+    def compile_arf(self, attr):
+        return self._corp.compile_arf(attr)
+
+    def compile_docf(self, attr, doc_attr):
+        return self._corp.compile_docf(attr, doc_attr)
+
     @property
     def is_subcorpus(self):
         return False
@@ -311,6 +320,9 @@ class KSubcorpus(KCorpus):
     def __init__(self, corp: SubCorpus, corpname: str):
         super().__init__(corp, corpname)
         self._corpname = corpname
+
+    def __str__(self):
+        return f'KSubcorpus(ident={self.corpname}, subcname={self.subcname})'
 
     @staticmethod
     def load(corp: Corpus, corpname: str, subcname: str, spath: str, decode_desc: bool) -> 'KCorpus':
@@ -372,4 +384,4 @@ class KSubcorpus(KCorpus):
         return super().description
 
     def freq_precalc_file(self, attrname: str) -> str:
-        return self._corp.spath[:-4] + attrname
+        return self.spath[:-4] + attrname

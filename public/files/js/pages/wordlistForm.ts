@@ -26,7 +26,7 @@ import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
 import { WordlistFormModel } from '../models/wordlist/form';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
-import { WlnumsTypes, WlTypes } from '../models/wordlist/common';
+import { WlnumsTypes } from '../models/wordlist/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 import createCorparch from 'plugins/corparch/init';
 
@@ -84,26 +84,26 @@ class WordlistFormPage {
                     'SubcorpList'
                 )
             });
-            this.wordlistFormModel = new WordlistFormModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel,
-                this.corpusIdent,
-                this.layoutModel.getConf<Array<string>>('SubcorpList'),
-                this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-                {
-                    includeNonwords: 0,
+            this.wordlistFormModel = new WordlistFormModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                corpusIdent: this.corpusIdent,
+                subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                initialArgs: {
+                    include_nonwords: 0,
                     wlminfreq: 5,
                     subcnorm: '',
                     wlnums: WlnumsTypes.FRQ,
-                    blacklist: '',
-                    wlwords: '',
+                    nfilter_words: [],
+                    pfilter_words: [],
                     wlpat: '',
                     wlsort: 'f',
                     wlattr: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')[0].n,
-                    wltype: WlTypes.SIMPLE
+                    wltype: 'simple'
                 }
-            );
+            });
             this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
             this.views = wordlistFormInit({
                 dispatcher: this.layoutModel.dispatcher,

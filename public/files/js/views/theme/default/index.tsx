@@ -78,7 +78,7 @@ export const ucnkTopbarLeftMargin = '30px';
 
 // forms
 
-export const inputBorderStyle = 'solid 1px @color-light-grey';
+export const inputBorderStyle = `1px solid ${colorLightGrey}`;
 export const inputBorderRadius = '3px';
 export const defaultFieldsetPadding = '1.7em 1.1em';
 
@@ -87,6 +87,7 @@ export const defaultFieldsetPadding = '1.7em 1.1em';
 
 export const closeButtonSize = '1.1em';
 export const navigIconSize = '1em';
+export const pageFormMargin = '1.5em';
 
 
 export const GeneralLabel = styled.label`
