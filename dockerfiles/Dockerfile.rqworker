@@ -1,0 +1,8 @@
+FROM czcorpus/kontext-manatee
+
+RUN mkdir /var/log/rq
+WORKDIR /opt/kontext
+COPY . .
+RUN python3 scripts/install/steps.py SetupKontext
+
+CMD [ "python3",  "worker/rqworker.py" ]

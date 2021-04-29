@@ -1,13 +1,9 @@
-node_modules
 .dockerignore
-docker-compose.yml
-Dockerfile
-docker-compose.dev.yml
-Dockerfile.dev
-Dockerfile.ws
-Dockerfile.rqworker
-Dockerfile.rqscheduler
+node_modules
+dockerfiles
 public/files/dist
 public/files/js/.compiled
+docker-compose.yml
+docker-compose.dev.yml
 .env
 .env.ws
