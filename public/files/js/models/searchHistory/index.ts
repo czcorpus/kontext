@@ -258,30 +258,15 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
 
     private openQueryForm(idx:number):void {
         const item = List.find(v => v.idx === idx, this.state.data);
-        switch (item.q_supertype) {
-            case 'conc':
-                window.location.href = this.pageModel.createActionUrl(
-                    'query',
-                    [
-                        tuple('corpname', item.corpname),
-                        tuple('usesubcorp', item.subcorpname),
-                        tuple('qkey', `${item.query_id}:${item.created}`)
-                    ]
-                );
-                break;
-            case 'pquery':
-                window.location.href = this.pageModel.createActionUrl(
-                    'pquery/index',
-                    [tuple('q', `~${item.query_id}`)]
-                );
-                break;
-            case 'wlist':
-                window.location.href = this.pageModel.createActionUrl(
-                    'wordlist/form',
-                    [tuple('q', `~${item.query_id}`)]
-                );
-                break;
-        }
+        const actions:{[k in Kontext.QuerySupertype]:string} = {
+            conc: 'query',
+            pquery: 'pquery/index',
+            wlist: 'wordlist/form'
+        };
+        window.location.href = this.pageModel.createActionUrl(
+            actions[item.q_supertype],
+            [tuple('q', `~${item.query_id}`)]
+        );
     }
 
     private performLoadAction(widgetMode:boolean=false):void {

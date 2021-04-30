@@ -28,7 +28,6 @@ import { AsyncTaskChecker } from '../models/asyncTask';
 import { GeneralViewOptionsModelState } from '../models/options/general';
 import { CorpusSwitchModel } from '../models/common/corpusSwitch';
 import { WidgetView } from '../models/textTypes/common'; // TODO this breaks meaning of the 'common' module
-import { QueryType } from '../models/query/query'; // dtto
 import { SearchHistoryModel } from '../models/searchHistory';
 
 /**

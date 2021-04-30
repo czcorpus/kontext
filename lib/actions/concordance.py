@@ -362,12 +362,11 @@ class Actions(Querying):
         return {}
 
     @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
-    def query(self, request):
+    def query(self, _):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.VIEW('kwic-sentence'))
-        out = {}
-        out['aligned_corpora'] = self.args.align
+        out = {'aligned_corpora': self.args.align}
         tt_data = self.tt.export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = tt_data
@@ -376,31 +375,31 @@ class Actions(Querying):
         out['text_types_notes'] = corp_info.metadata.desc
         out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
-        last_op = self._load_last_search('conc')
-        qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
-                                corpora=self._select_current_aligned_corpora(active_only=False),
-                                persist=False)
-        with plugins.runtime.QUERY_HISTORY as qh:
-            qdata = qh.find_by_qkey(last_op)
-            if qdata is not None:
-                prev_corpora = qdata.get('corpora', [])
-                curr_corpora = [self.args.corpname] + self.args.align
-                if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
-                    raise ImmediateRedirectException(self.create_url('query',
-                                                                     [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
-                try:
-                    qf_args.apply_last_used_opts(
-                        data=qdata.get('lastop_form', {}),
-                        prev_corpora=prev_corpora,
-                        curr_corpora=curr_corpora,
-                        curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
-                except Exception as ex:
-                    logging.getLogger(__name__).warning(
-                        'Cannot restore prev. query form: {}'.format(ex))
-            qdata = qh.find_by_qkey(request.args.get('qkey'))
-            if qdata is not None:
-                qf_args = qf_args.updated(qdata.get('lastop_form', {}), request.args.get('qkey'))
-        # TODO xx reuse selections from last submit
+        if self._prev_q_data is None:
+            qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
+                                    corpora=self._select_current_aligned_corpora(active_only=False),
+                                    persist=False)
+            last_op = self._load_last_search('conc')
+            if last_op:
+                with plugins.runtime.QUERY_PERSISTENCE as qp:
+                    last_op_form = qp.open(last_op)
+                    prev_corpora = last_op_form.get('corpora', [])
+                    curr_corpora = [self.args.corpname] + self.args.align
+                    if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
+                        raise ImmediateRedirectException(self.create_url(
+                            'query', [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
+                    if last_op_form:
+                        qf_args.apply_last_used_opts(
+                            data=last_op_form.get('lastop_form', {}),
+                            prev_corpora=prev_corpora,
+                            curr_corpora=[self.args.corpname] + self.args.align,
+                            curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
+        else:
+            qf_args = QueryFormArgs(
+                plugin_ctx=self._plugin_ctx,
+                corpora=self._prev_q_data.get('corpora', []),
+                persist=False).updated(
+                    self._prev_q_data.get('lastop_form', {}), '__new__')
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)

@@ -98,17 +98,6 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def find_by_qkey(self, query_key):
-        """
-        Searches for a record based on its 'query key' which is basically
-        a concatenation of query persistence ID and a timestamp:
-        [query persist ID]:[query timestamp].
-
-        The method should be able to accept None as query_key and return
-        None in such case.
-        """
-
-    @abc.abstractmethod
     def delete_old_records(self, user_id):
         """
         Remove old records to keep the query history
