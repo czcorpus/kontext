@@ -50,6 +50,8 @@ if __name__ == "__main__":
                            default=False, help='Do not verify HTTPS certificates when downloading packages')
     argparser.add_argument('-v', dest='verbose', action='store_true',
                            default=False, help='Verbose mode')
+    argparser.add_argument('--ffmpeg', dest='install_ffmpeg', action='store_true',
+                           default=False, help='Build and install ffmpeg mp3 support')
     args = argparser.parse_args()
 
     stdout = None if args.verbose else open(os.devnull, 'wb')
@@ -87,6 +89,8 @@ if __name__ == "__main__":
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
     if args.install_gunicorn:
         steps.SetupGunicorn(KONTEXT_PATH, stdout, stderr).run()
+    if args.install_ffmpeg:
+        steps.SetupFFMpeg(KONTEXT_PATH, stdout, stderr).run()
 
     # finalize instalation
     if args.install_celery:

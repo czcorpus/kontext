@@ -19,4 +19,7 @@ COPY ./conf ./conf
 RUN python3 scripts/install/steps.py SetupKontext
 RUN mkdir /var/log/rq
 
+RUN apt-get install libmp3lame0 libmp3lame-dev
+RUN python3 scripts/install/steps.py SetupFFMpeg
+
 COPY . .
