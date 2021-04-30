@@ -282,9 +282,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             case 'wlist':
                 window.location.href = this.pageModel.createActionUrl(
                     'wordlist/form',
-                    [
-                        tuple('q', `~${item.query_id}`)
-                    ]
+                    [tuple('q', `~${item.query_id}`)]
                 );
                 break;
         }
