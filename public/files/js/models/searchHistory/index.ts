@@ -256,7 +256,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         )
     }
 
-    private openQueryForm(idx:number):void { // TODO this does not work
+    private openQueryForm(idx:number):void {
         const item = List.find(v => v.idx === idx, this.state.data);
         switch (item.q_supertype) {
             case 'conc':
@@ -283,9 +283,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 window.location.href = this.pageModel.createActionUrl(
                     'wordlist/form',
                     [
-                        tuple('corpname', item.corpname),
-                        tuple('usesubcorp', item.subcorpname),
-                        tuple('query_id', item.query_id)
+                        tuple('q', `~${item.query_id}`)
                     ]
                 );
                 break;
