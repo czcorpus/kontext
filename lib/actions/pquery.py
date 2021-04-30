@@ -73,7 +73,8 @@ class ParadigmaticQuery(Kontext):
     def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
         super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
         self._curr_pquery_args: Optional[PqueryFormArgs] = None
-        self.on_conc_store: Callable[[List[str], bool, Dict[str, Any]], None] = lambda s, uh, res: None
+        self.on_conc_store: Callable[[List[str], bool,
+                                      Dict[str, Any]], None] = lambda s, uh, res: None
 
     def get_mapping_url_prefix(self):
         return '/pquery/'
@@ -99,12 +100,12 @@ class ParadigmaticQuery(Kontext):
 
     def pre_dispatch(self, action_name, action_metadata=None):
         ans = super().pre_dispatch(action_name, action_metadata)
-        if ans.getvalue('query_id'):
-            with plugins.runtime.QUERY_PERSISTENCE as qp:
-                data = qp.open(ans.getvalue('query_id'))
-                if data:
-                    self._curr_pquery_args = PqueryFormArgs()
-                    self._curr_pquery_args.update_by_user_query(data['form'])
+        if self._prev_q_data is not None:
+            if self._prev_q_data.get('form', {}).get('form_type') != 'pquery':
+                raise UserActionException('Invalid search session for word-list')
+            self._curr_pquery_args = PqueryFormArgs()
+            self._curr_pquery_args.from_dict(self._prev_q_data['form'])
+
         return ans
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
@@ -116,7 +117,8 @@ class ParadigmaticQuery(Kontext):
                                     curr_data=dict(form=self._curr_pquery_args.to_qp(),
                                                    corpora=[self._curr_pquery_args.corpname],
                                                    usesubcorp=self._curr_pquery_args.usesubcorp))
-                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='pquery')
+                qh.store(user_id=self.session_get('user', 'id'),
+                         query_id=query_id, q_supertype='pquery')
                 self.on_conc_store([query_id], True, result)
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')

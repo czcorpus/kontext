@@ -272,11 +272,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             case 'pquery':
                 window.location.href = this.pageModel.createActionUrl(
                     'pquery/index',
-                    [
-                        tuple('corpname', item.corpname),
-                        tuple('usesubcorp', item.subcorpname),
-                        tuple('query_id', item.query_id)
-                    ]
+                    [tuple('q', `~${item.query_id}`)]
                 );
                 break;
             case 'wlist':
