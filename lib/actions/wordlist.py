@@ -49,7 +49,8 @@ class Wordlist(Kontext):
     def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
         super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
         self._curr_wlform_args: Optional[WordlistFormArgs] = None
-        self.on_conc_store: Callable[[List[str], bool, Dict[str, Any]], None] = lambda s, uh, res: None
+        self.on_conc_store: Callable[[List[str], bool,
+                                      Dict[str, Any]], None] = lambda s, uh, res: None
 
     def get_mapping_url_prefix(self):
         return '/wordlist/'
@@ -59,7 +60,16 @@ class Wordlist(Kontext):
         if self._prev_q_data is not None:
             if self._prev_q_data.get('form', {}).get('form_type') != 'wlist':
                 raise UserActionException('Invalid search session for word-list')
-            self._curr_wlform_args = WordlistFormArgs.from_dict(self._prev_q_data['form'], id=self._prev_q_data['id'])
+            self._curr_wlform_args = WordlistFormArgs.from_dict(
+                self._prev_q_data['form'], id=self._prev_q_data['id'])
+
+        elif ans.getvalue('query_id'):
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                data = qp.open(ans.getvalue('query_id'))
+                if data:
+                    self._curr_wlform_args = WordlistFormArgs()
+                    self._curr_wlform_args.update_by_user_query(data['form'])
+
         return ans
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
@@ -70,12 +80,20 @@ class Wordlist(Kontext):
                                     curr_data=dict(form=self._curr_wlform_args.to_qp(),
                                                    corpora=[self._curr_wlform_args.corpname],
                                                    usesubcorp=self._curr_wlform_args.usesubcorp))
-                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='wlist')
+                qh.store(user_id=self.session_get('user', 'id'),
+                         query_id=query_id, q_supertype='wlist')
                 self.on_conc_store([query_id], True, result)
+
+    def export_form_args(self, result):
+        if self._curr_wlform_args:
+            result['wordlist_form'] = self._curr_wlform_args.to_dict()
+        else:
+            result['wordlist_form'] = None
 
     def add_globals(self, request, result, methodname, action_metadata):
         super().add_globals(request, result, methodname, action_metadata)
-        conc_args = templating.StateGlobals(self._get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping))
+        conc_args = templating.StateGlobals(
+            self._get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping))
         q = request.args.get('q')
         if q:
             conc_args.set('q', [q])
@@ -92,6 +110,7 @@ class Wordlist(Kontext):
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = dict(freq_figures=self.FREQ_FIGURES)
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
+        self.export_form_args(out)
         return out
 
     @exposed(access_level=1, http_method='POST', page_model='wordlist',
@@ -100,7 +119,8 @@ class Wordlist(Kontext):
         form_args = WordlistFormArgs()
         form_args.update_by_user_query(request.json)
         app = calc_backend_client(settings)
-        ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp, freq_files_avail=True, subtasks=[])
+        ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
+                   freq_files_avail=True, subtasks=[])
         async_res = app.send_task(
             'get_wordlist',
             args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
@@ -230,7 +250,8 @@ class Wordlist(Kontext):
         saved_filename = form_args.corpname
         if form_args.saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="{}-word-list.txt"'.format(saved_filename)
+            self._headers['Content-Disposition'] = 'attachment; filename="{}-word-list.txt"'.format(
+                saved_filename)
             return dict(Items=data,
                         pattern=self._curr_wlform_args.wlpat,
                         from_line=form_args.from_line,
@@ -241,11 +262,13 @@ class Wordlist(Kontext):
                         heading=form_args.heading)
         elif form_args.saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return f'{self.args.corpname}-word-list.{suffix}'
-            writer = plugins.runtime.EXPORT.instance.load_plugin(form_args.saveformat, subtype='wordlist')
+            writer = plugins.runtime.EXPORT.instance.load_plugin(
+                form_args.saveformat, subtype='wordlist')
             writer.set_col_types(int, str, float)
 
             self._headers['Content-Type'] = writer.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(mkfilename(form_args.saveformat))
+            self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(
+                mkfilename(form_args.saveformat))
             # write the header first, if required
             if form_args.colheaders:
                 writer.writeheading(('', self._curr_wlform_args.wlattr, 'freq'))

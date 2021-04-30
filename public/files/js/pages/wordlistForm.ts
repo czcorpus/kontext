@@ -23,7 +23,7 @@ import { PageModel } from '../app/page';
 import { PluginInterfaces } from '../types/plugins';
 import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import { WordlistFormModel } from '../models/wordlist/form';
+import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { WlnumsTypes } from '../models/wordlist/common';
@@ -70,6 +70,33 @@ class WordlistFormPage {
         );
     }
 
+    private getInitialArgs(formData: WordlistFormModelArgs["initialArgs"]):WordlistFormModelArgs["initialArgs"] {
+        return formData ?
+            {
+                include_nonwords: formData.include_nonwords,
+                wlminfreq: formData.wlminfreq,
+                subcnorm: formData.subcnorm,
+                wlnums: formData.wlnums,
+                nfilter_words: formData.nfilter_words,
+                pfilter_words: formData.pfilter_words,
+                wlpat: formData.wlpat,
+                wlsort: formData.wlsort,
+                wlattr: formData.wlattr,
+                wltype: formData.wltype
+            } : {
+                include_nonwords: 0,
+                wlminfreq: 5,
+                subcnorm: '',
+                wlnums: WlnumsTypes.FRQ,
+                nfilter_words: [],
+                pfilter_words: [],
+                wlpat: '',
+                wlsort: 'f',
+                wlattr: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')[0].n,
+                wltype: 'simple'
+            }
+    }
+
     init():void {
         this.layoutModel.init(true, [], () => {
             this.corpusIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
@@ -84,6 +111,7 @@ class WordlistFormPage {
                     'SubcorpList'
                 )
             });
+            const wlForm = this.layoutModel.getConf<WordlistFormModelArgs["initialArgs"]>('FormData');            
             this.wordlistFormModel = new WordlistFormModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
@@ -91,18 +119,7 @@ class WordlistFormPage {
                 subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                 structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-                initialArgs: {
-                    include_nonwords: 0,
-                    wlminfreq: 5,
-                    subcnorm: '',
-                    wlnums: WlnumsTypes.FRQ,
-                    nfilter_words: [],
-                    pfilter_words: [],
-                    wlpat: '',
-                    wlsort: 'f',
-                    wlattr: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')[0].n,
-                    wltype: 'simple'
-                }
+                initialArgs: this.getInitialArgs(wlForm)
             });
             this.corparchPlugin = createCorparch(this.layoutModel.pluginApi());
             this.views = wordlistFormInit({
