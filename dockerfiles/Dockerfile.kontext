@@ -1,0 +1,21 @@
+FROM czcorpus/kontext-manatee
+
+SHELL ["/bin/bash", "--login", "-c"]
+RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
+RUN nvm install node
+
+WORKDIR /opt/kontext
+COPY ./pack*.json ./
+RUN npm install
+
+COPY . .
+RUN python3 scripts/install/steps.py SetupKontext
+RUN npm start build:production
+
+RUN pip3 install gunicorn
+RUN mkdir /var/log/gunicorn && mkdir /var/log/gunicorn/kontext && mkdir /var/local/corpora/query_persistence
+
+RUN apt-get install libmp3lame0 libmp3lame-dev
+RUN python3 scripts/install/steps.py SetupFFMpeg
+
+CMD [ "gunicorn", "-c", "./scripts/install/conf/docker/gunicorn-conf.py", "public.app:application" ]

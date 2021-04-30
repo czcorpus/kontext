@@ -3,7 +3,7 @@ services:
   kontext-dev:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: dockerfiles/Dockerfile.kontext-dev
     environment:
       - DEV_SERVER_HOST=0.0.0.0
     command: bash -c "./scripts/install/conf/docker/run.dev.sh"
@@ -46,7 +46,7 @@ services:
   rq-scheduler:
     build:
       context: .
-      dockerfile: Dockerfile.rqscheduler
+      dockerfile: dockerfiles/Dockerfile.rqscheduler
     networks:
       - redis
     depends_on: 

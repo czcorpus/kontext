@@ -1,7 +1,9 @@
 version: '3.7'
 services:
   kontext:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.kontext
     command: bash -c "cp -r /opt/kontext/public/files/* /opt/kontext/public/share && gunicorn -c ./scripts/install/conf/docker/gunicorn-conf.py public.app:application"
     environment:
       - STATUS_SERVICE_URL=${STATUS_SERVICE_URL}
@@ -35,7 +37,7 @@ services:
   rq-scheduler:
     build:
       context: .
-      dockerfile: Dockerfile.rqscheduler
+      dockerfile: dockerfiles/Dockerfile.rqscheduler
     networks:
       - redis
     depends_on: 
@@ -44,7 +46,7 @@ services:
   rq-worker:
     build:
       context: .
-      dockerfile: Dockerfile.rqworker
+      dockerfile: dockerfiles/Dockerfile.rqworker
     volumes:
       - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
       - corpora:/var/local/corpora
@@ -56,8 +58,7 @@ services:
   ws:
     build:
       context: .
-      dockerfile: Dockerfile.ws
-    command: python3 public/ws_app.py --host 0.0.0.0
+      dockerfile: dockerfiles/Dockerfile.ws
     volumes:
       - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
       - corpora:/var/local/corpora
