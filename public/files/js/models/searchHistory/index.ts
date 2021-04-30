@@ -280,7 +280,14 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 );
                 break;
             case 'wlist':
-                // TODO
+                window.location.href = this.pageModel.createActionUrl(
+                    'wordlist/form',
+                    [
+                        tuple('corpname', item.corpname),
+                        tuple('usesubcorp', item.subcorpname),
+                        tuple('query_id', item.query_id)
+                    ]
+                );
                 break;
         }
     }
