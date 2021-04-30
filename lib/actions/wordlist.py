@@ -62,14 +62,6 @@ class Wordlist(Kontext):
                 raise UserActionException('Invalid search session for word-list')
             self._curr_wlform_args = WordlistFormArgs.from_dict(
                 self._prev_q_data['form'], id=self._prev_q_data['id'])
-
-        elif ans.getvalue('query_id'):
-            with plugins.runtime.QUERY_PERSISTENCE as qp:
-                data = qp.open(ans.getvalue('query_id'))
-                if data:
-                    self._curr_wlform_args = WordlistFormArgs()
-                    self._curr_wlform_args.update_by_user_query(data['form'])
-
         return ans
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
