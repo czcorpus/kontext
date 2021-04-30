@@ -135,10 +135,6 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(template='pquery/result.html', http_method='GET', page_model='pqueryResult')
     def result(self, request):
-        with plugins.runtime.QUERY_PERSISTENCE as qp:
-            stored_pq = qp.open(request.args.get('query_id'))
-            self._curr_pquery_args = PqueryFormArgs()
-            self._curr_pquery_args.update_by_user_query(stored_pq['form'])
         pagesize = self.args.pqueryitemsperpage
         page = 1
         offset = (page - 1) * pagesize
@@ -154,7 +150,7 @@ class ParadigmaticQuery(Kontext):
         ans = {
             'corpname': self.args.corpname,
             'usesubcorp': self.args.usesubcorp,
-            'query_id': request.args.get('query_id'),
+            'query_id': self._q_code,
             'freqs': freqs,
             'page': page,
             'pagesize': pagesize,

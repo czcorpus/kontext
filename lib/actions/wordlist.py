@@ -62,10 +62,6 @@ class Wordlist(Kontext):
                 raise UserActionException('Invalid search session for word-list')
             self._curr_wlform_args = WordlistFormArgs.from_dict(
                 self._prev_q_data['form'], id=self._prev_q_data['id'])
-<<<<<<< HEAD
-=======
-
->>>>>>> d98475d60... wordlist uses q parameter
         return ans
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
