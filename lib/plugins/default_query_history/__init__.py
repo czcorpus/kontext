@@ -87,7 +87,8 @@ class QueryHistory(AbstractQueryHistory):
         arguments:
         see the super class
         """
-        item = dict(created=self._current_timestamp(), query_id=query_id, name=None, q_supertype=q_supertype)
+        item = dict(created=self._current_timestamp(), query_id=query_id,
+                    name=None, q_supertype=q_supertype)
         self.db.list_append(self._mk_key(user_id), item)
         if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(user_id)
@@ -156,10 +157,12 @@ class QueryHistory(AbstractQueryHistory):
                     ans['aligned'].append(dict(corpname=aitem,
                                                query=form_data['curr_queries'].get(aitem),
                                                query_type=form_data['curr_query_types'].get(aitem),
-                                               default_attr=form_data['curr_default_attr_values'].get(aitem),
+                                               default_attr=form_data['curr_default_attr_values'].get(
+                                                   aitem),
                                                lpos=form_data['curr_lpos_values'].get(aitem),
                                                qmcase=form_data['curr_qmcase_values'].get(aitem),
-                                               pcq_pos_neg=form_data['curr_pcq_pos_neg_values'].get(aitem),
+                                               pcq_pos_neg=form_data['curr_pcq_pos_neg_values'].get(
+                                                   aitem),
                                                include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
             elif form_data['form_type'] == 'filter':
                 ans.update(form_data)
@@ -216,7 +219,8 @@ class QueryHistory(AbstractQueryHistory):
                     for q in stored.get('form', {}).get('conc_ids', []):
                         stored_q = self._query_persistence.open(q)
                         if stored_q is None:
-                            logging.getLogger(__name__).warning('Missing conc for pquery: {}'.format(q))
+                            logging.getLogger(__name__).warning(
+                                'Missing conc for pquery: {}'.format(q))
                         else:
                             for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
                                 q_join.append(f'{{ {qs} }}')
@@ -230,7 +234,7 @@ class QueryHistory(AbstractQueryHistory):
                         continue
                     tmp = dict(corpname=stored['corpora'][0],
                                aligned=[],
-                               human_corpname=corpora.corpus(tmp['corpname']).get_conf('NAME'),
+                               human_corpname=corpora.corpus(stored['corpora'][0]).get_conf('NAME'),
                                query=stored.get('form', {}).get('wlpat'))
                     tmp.update(item)
                     tmp.update(stored)
