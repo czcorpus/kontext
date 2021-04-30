@@ -147,9 +147,7 @@ class ParadigmaticQueryPage {
                 (action, dispatch) => {
                     const args = new MultiDict();
                     if (Actions.isSubmitQueryDone(action)) {
-                        args.set('corpname', action.payload.corpname);
-                        args.set('usesubcorp', action.payload.usesubcorp);
-                        args.set('query_id', this.layoutModel.getConf<string>('QueryId'));
+                        args.set('q', `~${this.layoutModel.getConf<string>('QueryId')}`);
                         this.layoutModel.getHistory().replaceState(
                             'pquery/result',
                             args,

@@ -322,11 +322,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         if (pqTask.status === 'SUCCESS') {
                             window.location.href = this.layoutModel.createActionUrl(
                                 'pquery/result',
-                                [
-                                    tuple('corpname', this.state.corpname),
-                                    tuple('usesubcorp', this.state.usesubcorp),
-                                    tuple('query_id', this.state.task.args.query_id)
-                                ]
+                                [tuple('q', `~${this.state.task.args.query_id}`)]
                             );
 
                         } else if (pqTask.status === 'FAILURE') {
@@ -639,9 +635,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
     private pushStateToHistory(state:PqueryFormModelState, queryId:string):void {
         const args = new MultiDict();
-        args.set('corpname', state.corpname);
-        args.set('usesubcorp', state.usesubcorp);
-        args.set('query_id', queryId);
+        args.set('q', `~${queryId}`);
         this.layoutModel.getHistory().pushState<{}, HistoryState>(
             'pquery/result',
             args,
