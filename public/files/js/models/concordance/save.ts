@@ -26,6 +26,7 @@ import { validateNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as ConcActions, ActionName as ConcActionName } from '../concordance/actions';
 import { MultiDict } from '../../multidict';
 import { ConcSaveServerArgs } from './common';
 
@@ -164,6 +165,15 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
                     this.submit();
                 }
                 this.emitChange();
+            }
+        );
+
+        this.addActionHandler<Actions.AsyncCalculationUpdated>(
+            ConcActionName.AsyncCalculationUpdated,
+            action => {
+                this.changeState(state => {
+                    state.toLine.value = `${action.payload.concsize}`;
+                });
             }
         );
     }
