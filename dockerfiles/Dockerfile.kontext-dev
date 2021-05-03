@@ -4,6 +4,7 @@ SHELL ["/bin/bash", "--login", "-c"]
 RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
 RUN nvm install node
 
+WORKDIR /opt/kontext
 COPY ./pack*.json ./
 RUN npm install
 
@@ -13,6 +14,7 @@ COPY ./conf ./conf
 RUN python3 scripts/install/steps.py SetupKontext
 RUN mkdir /var/log/rq
 
+COPY ./scripts/install/install-min-ffmpeg.sh ./scripts/install/install-min-ffmpeg.sh
 RUN apt-get install libmp3lame0 libmp3lame-dev
 RUN python3 scripts/install/steps.py SetupFFMpeg
 
