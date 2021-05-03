@@ -93,7 +93,7 @@ def filter_attributes(self, request):
 @exposed(return_type='json', http_method='POST')
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
-    attrs[request.form['patternAttr']] = '(?i).*%s.*' % request.form['pattern']
+    attrs[request.form['patternAttr']] = '%{}%'.format(request.form['pattern'])
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return lattr.get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
@@ -121,11 +121,9 @@ class LiveAttributes(AbstractLiveAttributes):
         Returns thread-local database connection to a sqlite3 database
 
         arguments:
-        user_lang -- user language (e.g. en_US)
+        plugin_ctx -- plugin context instance
         corpname -- corpus id
         """
-        def regexp(y, x, search=re.search):
-            return 1 if search(y, x) else 0
 
         if corpname not in self.databases:
             db_path = self.corparch.get_corpus_info(
@@ -135,8 +133,6 @@ class LiveAttributes(AbstractLiveAttributes):
                 self.databases[corpname].row_factory = sqlite3.Row
                 self.databases[corpname].create_function(
                     'ktx_lower', 1, lambda x: unidecode(x.lower()))
-                self.databases[corpname].create_function(
-                    'regexp', 2, regexp)
             else:
                 self.databases[corpname] = None
         return self.databases[corpname]
