@@ -73,7 +73,7 @@ from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 import logging
 
-from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime
+from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime, is_archived
 
 
 PERSIST_LEVEL_KEY = 'persist_level'
@@ -276,12 +276,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         return ans, archived_rec
 
     def is_archived(self, conc_id):
-        cursor = self._archive.cursor()
-        cursor.execute(
-            'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
-            (conc_id,)
-        )
-        return cursor.fetchone() is not None
+        return is_archived(self._archive.cursor(), conc_id)
 
     def export_tasks(self):
         """
