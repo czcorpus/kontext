@@ -12,3 +12,4 @@ COPY ./scripts/install/steps.py ./scripts/install/
 COPY ./scripts/install/*.patch ./scripts/install/
 COPY ./lib/plugins/default_auth ./lib/plugins/default_auth
 RUN python3 scripts/install/steps.py SetupManatee --step_args 2.167.8 scripts/install/ucnk-manatee-2.167.8.patch 0
+RUN rm -r /usr/local/src/susanne-example-source /usr/local/src/manatee-open-2.167.8

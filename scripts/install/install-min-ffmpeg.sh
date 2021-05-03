@@ -1,6 +1,6 @@
 sudo apt-get install libmp3lame0 libmp3lame-dev
 
-cd /opt
+cd /usr/local/src
 wget -O ffmpeg-snapshot.tar.bz2 https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2
 tar xjvf ffmpeg-snapshot.tar.bz2
 
