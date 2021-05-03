@@ -73,7 +73,7 @@ from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 import logging
 
-from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime
+from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime, is_archived
 
 
 PERSIST_LEVEL_KEY = 'persist_level'
@@ -274,7 +274,7 @@ class MySqlConcPersistence(AbstractConcPersistence):
         return ans, archived_rec
 
     def is_archived(self, conc_id):
-        return True  # we ignore archiver task delay and say "True" for all the items
+        return is_archived(self._archive.cursor(), conc_id)
 
     def export_tasks(self):
         """
