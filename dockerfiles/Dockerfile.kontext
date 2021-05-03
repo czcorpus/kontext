@@ -9,6 +9,7 @@ COPY ./pack*.json ./
 RUN npm install
 
 COPY . .
+RUN pip3 install -r requirements.txt
 RUN python3 scripts/install/steps.py SetupKontext
 RUN npm start build:production
 
@@ -17,5 +18,6 @@ RUN mkdir /var/log/gunicorn && mkdir /var/log/gunicorn/kontext && mkdir /var/loc
 
 RUN apt-get install libmp3lame0 libmp3lame-dev
 RUN python3 scripts/install/steps.py SetupFFMpeg
+RUN rm -r /usr/local/src/ffmpeg
 
 CMD [ "gunicorn", "-c", "./scripts/install/conf/docker/gunicorn-conf.py", "public.app:application" ]
