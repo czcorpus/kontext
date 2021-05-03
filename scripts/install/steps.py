@@ -8,12 +8,9 @@ import pathlib
 import shutil
 import json
 
-import redis
 import random
 import string
 import re
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib/plugins/default_auth'))
-from tools import mk_pwd_hash_default
 
 WEBSERVER_USER = "www-data"
 
@@ -56,6 +53,9 @@ def replace_string_in_file(path: str, old: str, new: str):
 
 
 def generate_random_password() -> Tuple[str, str]:
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib/plugins/default_auth'))
+    from tools import mk_pwd_hash_default
+
     password = ''.join(random.choice(string.ascii_letters + string.digits) for n in range(8))
     return password, mk_pwd_hash_default(password)
 
@@ -338,6 +338,8 @@ class SetupFFMpeg(InstallationStep):
 class SetupDefaultUsers(InstallationStep):
     def __init__(self, kontext_path: str, stdout: str, stderr: str, redis_host: str = 'localhost', redis_port=6379):
         super().__init__(kontext_path, stdout, stderr)
+
+        import redis
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=1)
 
     def is_done(self):

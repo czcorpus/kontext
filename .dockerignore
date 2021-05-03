@@ -1,8 +1,8 @@
 .dockerignore
-node_modules
-dockerfiles
-public/files/dist
-public/files/js/.compiled
+node_modules/
+dockerfiles/
+public/files/dist/
+public/files/js/.compiled/
 docker-compose.yml
 docker-compose.dev.yml
 .env

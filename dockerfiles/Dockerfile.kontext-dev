@@ -7,6 +7,8 @@ RUN nvm install node
 COPY ./pack*.json ./
 RUN npm install
 
+COPY requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
 COPY ./conf ./conf
 RUN python3 scripts/install/steps.py SetupKontext
 RUN mkdir /var/log/rq
