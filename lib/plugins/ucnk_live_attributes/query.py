@@ -73,39 +73,42 @@ class AttrArgs(object):
             if type(values) in (list, tuple):
                 for value in values:
                     if len(value) == 0 or value[0] != '@':
-                        cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(value)))
+                        cnf_item.append(f'{item_prefix}.{key} {cmp_operator(value)} ?')
                         sql_values.append(self.import_value(value))
                     else:
-                        cnf_item.append('%s.%s %s ?' %
-                                        (item_prefix, self._bib_label, cmp_operator(value[1:])))
+                        cnf_item.append(f'{item_prefix}.{self._bib_label} {cmp_operator(value[1:])} ?')
                         sql_values.append(self.import_value(value[1:]))
 
             elif is_range_argument(values):
                 pass  # a range query  TODO
 
             elif type(values) is str:
-                cnf_item.append(f'{item_prefix}.{key} REGEXP ?')
+                cnf_item.append(f'{item_prefix}.{key} LIKE ?')
                 sql_values.append(self.import_value(values))
 
             else:
-                cnf_item.append('ktx_lower(%s.%s) %s ktx_lower(?)' %
-                                (item_prefix, key, cmp_operator(values)))
+                cnf_item.append(f'ktx_lower({item_prefix}.{key}) {cmp_operator(values)} ktx_lower(?)')
                 sql_values.append(self.import_value(values))
 
             if len(cnf_item) > 0:
-                where.append('(%s)' % ' OR '.join(cnf_item))
+                where.append('({})'.format(' OR '.join(cnf_item)))
 
-        where.append('%s.corpus_id = ?' % item_prefix)
+        where.append(f'{item_prefix}.corpus_id = ?')
         sql_values.append(corpus_id)
         return ' AND '.join(where), sql_values
 
 
 class QueryComponents(object):
+
     def __init__(self, sql_template, selected_attrs, hidden_attrs, where_values):
         self.sql_template = sql_template
         self.selected_attrs = selected_attrs
         self.hidden_attrs = hidden_attrs
         self.where_values = where_values
+
+    def __str__(self):
+        return (f'QueryComponents(sql_template={self.sql_template}, '
+                f'selected_attrs: {self.selected_attrs}, where: {self.where_values}')
 
 
 class QueryBuilder(object):
@@ -120,7 +123,7 @@ class QueryBuilder(object):
 
     @staticmethod
     def apply_prefix(values, prefix):
-        return ['%s.%s' % (prefix, v) for v in values]
+        return [f'{prefix}.{v}' for v in values]
 
     # TODO redundant
     @staticmethod
@@ -139,8 +142,8 @@ class QueryBuilder(object):
         join_sql = []
         i = 2
         for item in self._aligned_corpora:
-            join_sql.append('JOIN item AS t%d ON t1.item_id = t%d.item_id' % (i, i))
-            where_sql += ' AND t%d.corpus_id = ?' % i
+            join_sql.append(f'JOIN item AS t{i} ON t1.item_id = t{i}.item_id')
+            where_sql += f' AND t{i}.corpus_id = ?'
             where_values.append(item)
             i += 1
 
@@ -152,12 +155,13 @@ class QueryBuilder(object):
         selected_attrs = tuple(self._srch_attrs.union(hidden_attrs))
 
         if len(where_sql) > 0:
-            sql_template = "SELECT DISTINCT %s FROM item AS t1 %s WHERE %s" \
-                           % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql), where_sql)
+            sql_template = "SELECT DISTINCT {} FROM item AS t1 {} WHERE {}".format(
+                            ', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql), where_sql)
         else:
-            sql_template = "SELECT DISTINCT %s FROM item AS t1 %s " \
-                           % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
-        return QueryComponents(sql_template, selected_attrs, hidden_attrs, where_values)
+            sql_template = "SELECT DISTINCT {} FROM item AS t1 {} ".format(
+                            ', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
+        tmp = QueryComponents(sql_template, selected_attrs, hidden_attrs, where_values)
+        return tmp
 
 
 class DataIterator(object):
