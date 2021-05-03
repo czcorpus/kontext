@@ -41,6 +41,14 @@ def get_iso_datetime():
     return datetime.datetime.now().isoformat()
 
 
+def is_archived(cursor: mysql.connector.Cursor, conc_id):
+    cursor.execute(
+        'SELECT id FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
+        (conc_id,)
+    )
+    return cursor.fetchone() is not None
+
+
 class MySQLConf(object):
 
     def __init__(self, conf):
@@ -110,7 +118,7 @@ class Archiver(object):
     from fast database (Redis) to a slow one (SQLite3)
     """
 
-    def __init__(self, from_db, to_db, archive_queue_key):
+    def __init__(self, from_db: KeyValueStorage, to_db: MySQLOps, archive_queue_key: str):
         """
         arguments:
         from_db -- a Redis connection
@@ -118,7 +126,7 @@ class Archiver(object):
         archive_queue_key -- a Redis key used to access archive queue
         """
         self._from_db: KeyValueStorage = from_db
-        self._to_db = to_db
+        self._to_db: MySQLOps = to_db
         self._archive_queue_key = archive_queue_key
 
     def _get_queue_size(self):
@@ -145,14 +153,16 @@ class Archiver(object):
         inserts = []
         i = 0
         try:
+            cursor = self._to_db.cursor()
             while i < num_proc:
                 qitem = self._from_db.list_pop(self._archive_queue_key)
                 if qitem is None:
                     break
                 data = self._from_db.get(qitem['key'])
-                inserts.append((qitem['key'][len(conc_prefix):], json.dumps(data), curr_time, 0))
-                i += 1
-
+                if not is_archived(cursor, qitem['key']):
+                    inserts.append((qitem['key'][len(conc_prefix):], json.dumps(data), curr_time, 0))
+                    i += 1
+            cursor.close()
             if not dry_run:
                 self._to_db.executemany(
                     'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
