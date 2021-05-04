@@ -23,7 +23,6 @@ services:
       - redis
   redis:
     image: redis:latest
-    command: rqscheduler --host kontext_redis_1 --db 2 -i 10
     networks:
       - redis
     ports:
@@ -48,6 +47,7 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.rqscheduler
+    command: rqscheduler --host kontext_redis_1 --db 2 -i 10
     networks:
       - redis
     depends_on: 
