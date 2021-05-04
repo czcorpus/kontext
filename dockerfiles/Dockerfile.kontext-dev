@@ -18,4 +18,4 @@ COPY ./scripts/install/install-min-ffmpeg.sh ./scripts/install/install-min-ffmpe
 RUN apt-get install libmp3lame0 libmp3lame-dev
 RUN python3 scripts/install/steps.py SetupFFMpeg
 
-COPY . .
+COPY launcher-config.json launcher-menu.json tsconfig.json webpack.dev.js ./

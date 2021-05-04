@@ -9,7 +9,14 @@ services:
     command: bash -c "./scripts/install/conf/docker/run.dev.sh"
     volumes:
       - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
+      - ./lib:/opt/kontext/lib
+      - ./locale:/opt/kontext/locale
+      - ./scripts:/opt/kontext/scripts
+      - ./templates:/opt/kontext/templates
+      - ./worker:/opt/kontext/worker
       - dist:/opt/kontext/public/files/dist
+      - ./public/app.py:/opt/kontext/public/app.py
+      - ./public/ws_app.py:/opt/kontext/public/ws_app.py
       - ./public/files/css:/opt/kontext/public/files/css
       - ./public/files/html:/opt/kontext/public/files/html
       - ./public/files/img:/opt/kontext/public/files/img
