@@ -9,14 +9,16 @@ services:
     environment:
       - STATUS_SERVICE_URL=${STATUS_SERVICE_URL}
     volumes:
-      - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
+      - ./scripts/install/conf/docker/config.mariadb.xml:/opt/kontext/conf/config.xml
       - files:/opt/kontext/public/share
       - corpora:/var/local/corpora
     networks:
       - redis
+      - mariadb
       - kontext
     depends_on: 
       - redis
+      - mariadb
 
   rq-scheduler:
     build:
@@ -75,6 +77,16 @@ services:
     depends_on:
       - kontext
       - ws
+  
+  mariadb:
+    image: mariadb:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=kontext
+      - MYSQL_USER=kontext
+      - MYSQL_PASSWORD=password
+    networks:
+      - mariadb
 
 volumes:
   files:
@@ -82,4 +94,5 @@ volumes:
 
 networks:
   redis: {}
+  mariadb: {}
   kontext: {}

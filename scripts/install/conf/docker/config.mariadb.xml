@@ -1,0 +1,186 @@
+<kontext>
+    <theme>
+        <name>default</name>
+        <css/>
+        <logo>kontext-logo.svg</logo>
+        <logo_mouseover>kontext-logo_s.svg</logo_mouseover>
+        <logo_href>http://localhost:5000</logo_href> <!-- change this according to your settings -->
+        <logo_inline_css>width: 200px</logo_inline_css>
+        <fonts/>
+        <favicon>favicon.ico</favicon>
+    </theme>
+    <global>
+        <deployment_id>20151031_v4
+        </deployment_id> <!-- can flush browser's cache when updating app even if HTTP caching headers are not ok -->
+        <manatee_path />
+        <umask>002</umask>
+        <debug>false</debug>
+        <maintenance>false</maintenance>
+        <profile_log_path/> <!-- leave this empty unless you want to do a low-level debugging -->
+        <max_attr_list_size>30</max_attr_list_size>
+        <translations>
+            <!--
+            please note that you need to rebuild the project
+            whenever you change supported UI languages here
+            -->
+            <language label="česky">cs-CZ</language>
+            <language label="English">en-US</language>
+            <language label="ślōnskŏ mŏwa">szl</language>
+        </translations>
+        <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
+        <user_filter_files_dir>/var/local/corpora/user_filter_files</user_filter_files_dir>
+        <conc_line_max_group_num>99</conc_line_max_group_num>
+        <action_path_prefix/>
+        <static_files_prefix>/files</static_files_prefix>
+        <use_conc_toolbar>0</use_conc_toolbar>
+        <anonymous_user_conc_login_prompt>0</anonymous_user_conc_login_prompt>
+        <conc_dashboard_modules>
+            <item>freqs</item>
+        </conc_dashboard_modules>
+    </global>
+    <calc_backend>
+        <type>rq</type>
+        <task_time_limit>300</task_time_limit>
+        <rq_redis_host>kontext_redis_1</rq_redis_host>
+        <rq_redis_port>6379</rq_redis_port>
+        <rq_redis_db>2</rq_redis_db>
+        <rq_log_path>/var/log/rq/worker.log</rq_log_path>
+        <status_service_url />
+    </calc_backend>
+    <job_scheduler>
+        <type>rq</type>
+        <conf>/opt/kontext/conf/rq-schedule-conf.json</conf>
+    </job_scheduler>
+    <mailing/>
+    <logging>
+        <path>/var/log/kontext/application.log</path>
+        <file_size>5000000</file_size>
+        <num_files>10</num_files>
+    </logging>
+    <corpora>
+        <manatee_registry>/var/lib/manatee/registry</manatee_registry>
+        <manatee_registry_locale>cs_CZ</manatee_registry_locale>
+        <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <freqs_precalc_dir>/var/local/corpora/freqs-precalc</freqs_precalc_dir> <!-- this is optional -->
+        <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
+        <freqs_cache_ttl>3600</freqs_cache_ttl>
+        <freqs_cache_min_lines>100</freqs_cache_min_lines>
+        <colls_cache_dir>/var/local/corpora/colls-cache</colls_cache_dir>
+        <colls_cache_ttl>3600</colls_cache_ttl>
+        <colls_cache_min_lines>50</colls_cache_min_lines>
+        <conc_dir>/var/local/corpora/conc</conc_dir>
+        <default_corpora>
+            <item>susanne</item>
+            <!-- item>insert_your_default_corpus_here</item -->
+        </default_corpora>
+        <speech_files_path/>
+        <empty_attr_value_placeholder>--</empty_attr_value_placeholder>
+        <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
+        <right_interval_char>+</right_interval_char>
+        <left_interval_char/>
+        <interval_char>±</interval_char>
+    </corpora>
+    <fcs />
+    <plugins>
+        <application_bar/>
+        <auth>
+            <module>default_auth</module>
+            <js_module>defaultAuth</js_module>
+            <anonymous_user_id>0</anonymous_user_id>
+            <auth_cookie_name>kontext_session</auth_cookie_name>
+            <login_url>/user/login?continue=%s</login_url>
+            <logout_url>/user/logout?continue=%s</logout_url>
+            <confirmation_token_ttl>3600</confirmation_token_ttl>
+        </auth>
+        <action_log>
+            <module>default_action_log</module>
+        </action_log>
+        <conc_cache>
+            <module>default_conc_cache</module>
+            <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
+        </conc_cache>
+        <query_persistence>
+            <module>default_query_persistence</module>
+            <ttl_days extension-by="default">100</ttl_days>
+            <archive_dir extension-by="default">/var/local/corpora/query_persistence</archive_dir>
+        </query_persistence>
+        <corparch>
+            <module>default_corparch</module>
+            <js_module>defaultCorparch</js_module>
+            <file extension-by="default">/opt/kontext/conf/corplist.xml</file>
+            <root_elm_path extension-by="default">/corplist</root_elm_path>
+            <tag_prefix extension-by="default">+</tag_prefix>
+            <max_num_hints extension-by="default">10</max_num_hints>
+            <default_page_list_size extension-by="default">30</default_page_list_size>
+        </corparch>
+        <db>
+            <module>redis_db</module>
+            <host extension-by="default">kontext_redis_1</host>
+            <port extension-by="default">6379</port>
+            <id extension-by="default">1</id>
+        </db>
+        <integration_db>
+            <module>mysql_integration_db</module>
+            <host>kontext_maridb_1</host>
+            <db>kontext</db>
+            <user>kontext</user>
+            <passwd>password</passwd>
+            <pool_size>3</pool_size>
+            <retry_delay>2</retry_delay>
+            <retry_attempts>5</retry_attempts>
+        </integration_db>
+        <export>
+            <csv>default_csv</csv>
+            <xlsx>default_xlsx</xlsx>
+        </export>
+        <export_freq2d>
+            <xlsx>default_xlsx</xlsx>
+        </export_freq2d>
+        <footer_bar>
+            <module>default_footer_bar</module>
+            <js_module>defaultFooterBar</js_module>
+        </footer_bar>
+        <getlang>
+            <module>default_getlang</module>
+            <cookie extension-by="default">kontext_toolbar_lang</cookie>
+            <fallback_lang extension-by="default">en-US</fallback_lang>
+        </getlang>
+        <live_attributes/>
+        <menu_items>
+            <module>default_menu_items</module>
+            <data_path extension-by="default">/opt/kontext/conf/main-menu.sample.json</data_path>
+        </menu_items>
+        <query_history>
+            <module>default_query_history</module>
+            <page_num_records>10</page_num_records>
+            <ttl_days extension-by="default">10</ttl_days>
+        </query_history>
+        <query_suggest />
+        <settings_storage>
+            <module>default_settings_storage</module>
+            <excluded_users extension-by="default">
+                <item>1</item>
+                <item>3</item>
+            </excluded_users>
+        </settings_storage>
+        <sessions>
+            <module>default_sessions</module>
+            <ttl>14400</ttl>
+        </sessions>
+        <subcmixer/>
+        <subc_restore/>
+        <syntax_viewer/>
+        <taghelper/>
+        <user_items>
+            <module>default_user_items</module>
+            <max_num_favorites extension-by="default">15</max_num_favorites>
+        </user_items>
+        <chart_export>
+            <module>default_chart_export</module>
+        </chart_export>
+        <issue_reporting/>
+        <token_connect />
+        <kwic_connect />
+        <dispatch_hook />
+    </plugins>
+</kontext>

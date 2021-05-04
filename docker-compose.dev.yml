@@ -1,4 +1,5 @@
 version: '3.7'
+
 services:
   kontext-dev:
     build:
@@ -32,6 +33,17 @@ services:
       - kontext
     depends_on: 
       - redis
+  
+  rq-scheduler:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.rqscheduler
+    command: rqscheduler --host kontext_redis_1 --db 2 -i 10
+    networks:
+      - redis
+    depends_on: 
+      - redis
+
   redis:
     image: redis:latest
     environment:
@@ -40,6 +52,7 @@ services:
       - redis
     ports:
       - "16379:6379"
+
   nginx:
     image: nginx:latest
     environment:
@@ -58,19 +71,10 @@ services:
       - kontext
     depends_on:
       - kontext-dev
-  rq-scheduler:
-    build:
-      context: .
-      dockerfile: dockerfiles/Dockerfile.rqscheduler
-    command: rqscheduler --host kontext_redis_1 --db 2 -i 10
-    environment:
-      - TZ=Europe/Prague
-    networks:
-      - redis
-    depends_on: 
-      - redis
+
 volumes:
   dist:
+
 networks:
   redis: {}
   kontext: {}
