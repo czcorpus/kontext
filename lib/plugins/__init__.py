@@ -29,7 +29,7 @@ from .export_freq2d import Loader as LoaderFreq2d
 from .abstract.user_items import AbstractUserItems
 from .abstract.menu_items import AbstractMenuItems
 from .abstract.getlang import AbstractGetLang
-from .abstract.corpora import AbstractCorporaArchive
+from .abstract.corparch import AbstractCorporaArchive
 from .abstract.query_history import AbstractQueryHistory
 from .abstract.appbar import AbstractApplicationBar
 from .abstract.footer_bar import AbstractFootbar

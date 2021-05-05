@@ -17,12 +17,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import List, Dict, Any, IO, Optional, Tuple, Mapping
-
+import manatee
 import json
 import re
 
 
-class InstallJsonMetadata(object):
+class _InstallJsonMetadata(object):
 
     def __init__(self) -> None:
         self.database: Optional[str] = None
@@ -41,7 +41,7 @@ class InstallJsonMetadata(object):
                 setattr(self, attr, data.get(attr, None))
 
 
-class InstallJsonReference(object):
+class _InstallJsonReference(object):
 
     def __init__(self) -> None:
         self.default: Optional[str] = None
@@ -74,8 +74,8 @@ class InstallJson(object):
         self.speech_overlap_attr: Optional[str] = None
         self.speech_overlap_val: Optional[str] = None
         self.use_safe_font: bool = False
-        self.metadata: InstallJsonMetadata = InstallJsonMetadata()
-        self.reference: InstallJsonReference = InstallJsonReference()
+        self.metadata: _InstallJsonMetadata = _InstallJsonMetadata()
+        self.reference: _InstallJsonReference = _InstallJsonReference()
         self.token_connect: List[str] = []
         self.kwic_connect: List[str] = []
 
@@ -137,3 +137,47 @@ class InstallJson(object):
 
     def write(self, fw: IO):
         return json.dump(self.to_dict(), fw, indent=4)
+
+
+class InstallCorpusInfo(object):
+    """
+    Provides specific information required
+    when installing a new corpus to a corparch
+    database.
+    """
+
+    def __init__(self, reg_path: str) -> None:
+        self._reg_path: str = reg_path
+
+    def get_corpus_size(self, corp_id: str) -> int:
+        c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+        return c.size()
+
+    def get_corpus_name(self, corp_id: str) -> Optional[str]:
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('NAME').decode(self.get_corpus_encoding(corp_id))
+        except:
+            return None
+
+    def get_corpus_description(self, corp_id: str) -> Optional[str]:
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('INFO').decode(self.get_corpus_encoding(corp_id))
+        except:
+            return None
+
+    def get_corpus_encoding(self, corp_id: str) -> Optional[str]:
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('ENCODING')
+        except:
+            return None
+
+    def get_data_path(self, corp_id: str) -> Optional[str]:
+        try:
+            c = manatee.Corpus(os.path.join(self._reg_path, corp_id))
+            return c.get_conf('PATH').rstrip('/')
+        except Exception as ex:
+            logging.getLogger(__name__).warning(ex)
+            return None

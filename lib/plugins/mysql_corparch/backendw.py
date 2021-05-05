@@ -21,7 +21,7 @@ import datetime
 import pytz
 import logging
 import mysql.connector
-from plugins.ucnk_remote_auth5.backend.mysql import Backend
+from plugins.mysql_corparch.backend import Backend
 
 
 class WritableBackend(Backend):

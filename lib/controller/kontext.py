@@ -36,7 +36,7 @@ from .errors import (UserActionException, ForbiddenException,
                      AlignedCorpusForbiddenException, NotFoundException,
                      ImmediateRedirectException, FunctionNotSupported)
 import plugins
-from plugins.abstract.corpora import BrokenCorpusInfo, CorpusInfo
+from plugins.abstract.corparch import BrokenCorpusInfo, CorpusInfo
 from plugins.abstract.auth import AbstractInternalAuth
 import settings
 import l10n
