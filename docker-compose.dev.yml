@@ -13,12 +13,16 @@ services:
       - "5678:5678"
       - "5679:5679"
     volumes:
-      - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
+      - ./scripts/install/conf/docker/config.default.xml:/opt/kontext/conf/config.xml
+      # we have to bind folders separatelly
+      # if we bind whole root, container can't access its node_modules
       - ./lib:/opt/kontext/lib
       - ./locale:/opt/kontext/locale
       - ./scripts:/opt/kontext/scripts
       - ./templates:/opt/kontext/templates
       - ./worker:/opt/kontext/worker
+      # similar reason for binding folders
+      # we need to share dist files with nginx
       - dist:/opt/kontext/public/files/dist
       - ./public/app.py:/opt/kontext/public/app.py
       - ./public/ws_app.py:/opt/kontext/public/ws_app.py
@@ -31,16 +35,6 @@ services:
     networks:
       - redis
       - kontext
-    depends_on: 
-      - redis
-  
-  rq-scheduler:
-    build:
-      context: .
-      dockerfile: dockerfiles/Dockerfile.rqscheduler
-    command: rqscheduler --host kontext_redis_1 --db 2 -i 10
-    networks:
-      - redis
     depends_on: 
       - redis
 
