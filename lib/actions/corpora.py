@@ -17,7 +17,7 @@ from collections import defaultdict
 from controller import exposed
 from controller.kontext import Kontext
 import plugins
-from plugins.abstract.corpora import AbstractSearchableCorporaArchive
+from plugins.abstract.corparch import AbstractSearchableCorporaArchive
 import l10n
 from translation import ugettext as translate
 

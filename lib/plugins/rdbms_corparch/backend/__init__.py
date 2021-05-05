@@ -22,7 +22,7 @@ from .input import InstallJson
 import os
 import logging
 from collections import OrderedDict
-from plugins.abstract.corpora import DefaultManateeCorpusInfo
+from plugins.abstract.corparch import DefaultManateeCorpusInfo
 from corplib.fallback import EmptyCorpus
 import manatee
 

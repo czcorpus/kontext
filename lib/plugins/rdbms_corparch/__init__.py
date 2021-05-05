@@ -27,7 +27,7 @@ import json
 from controller import exposed
 import actions.user
 import plugins
-from plugins.abstract.corpora import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
+from plugins.abstract.corparch import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
                                       TokenConnect, KwicConnect, QuerySuggest, DictLike, TagsetInfo, CorpusInfo)
 import l10n
 from .backend.sqlite import Backend
@@ -95,7 +95,7 @@ class DefaultCorplistProvider(CorplistProvider):
         """
         arguments:
         plugin_ctx -- a controller.PluginCtx instance
-        corparch -- a plugins.abstract.corpora.AbstractSearchableCorporaArchive instance
+        corparch -- a plugins.abstract.corparch.AbstractSearchableCorporaArchive instance
         tag_prefix -- a string determining how a tag (= keyword or label) is recognized
         """
         self._plugin_ctx = plugin_ctx

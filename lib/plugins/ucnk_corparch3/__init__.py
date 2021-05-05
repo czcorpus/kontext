@@ -42,7 +42,7 @@ import os
 import plugins
 from plugins import inject
 from plugins.rdbms_corparch import RDBMSCorparch, CorpusListItem, parse_query
-from plugins.abstract.corpora import CorpusInfo
+from plugins.abstract.corparch import CorpusInfo
 from plugins.ucnk_remote_auth5.backend.mysql import Backend
 from controller import exposed
 from controller.errors import ForbiddenException

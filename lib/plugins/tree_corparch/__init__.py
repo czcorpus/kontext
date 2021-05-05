@@ -56,7 +56,7 @@ from lxml import etree
 import copy
 
 import plugins
-from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
+from plugins.abstract.corparch import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
 from controller import exposed
 from actions import corpora
 from controller.plg import PluginCtx

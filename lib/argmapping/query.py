@@ -16,7 +16,7 @@ from typing import Dict, Any, List, Tuple, Optional, Union
 import re
 
 import plugins
-from plugins.abstract.corpora import TagsetInfo
+from plugins.abstract.corparch import TagsetInfo
 from controller.plg import PluginCtx
 from .error import ArgumentMappingError, ValidationError
 
