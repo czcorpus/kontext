@@ -84,13 +84,21 @@
     <plugins>
         <application_bar/>
         <auth>
-            <module>default_auth</module>
+            <module>ucnk_remote_auth5</module>
             <js_module>defaultAuth</js_module>
             <anonymous_user_id>0</anonymous_user_id>
-            <auth_cookie_name>kontext_session</auth_cookie_name>
-            <login_url>/user/login?continue=%s</login_url>
-            <logout_url>/user/logout?continue=%s</logout_url>
-            <confirmation_token_ttl>3600</confirmation_token_ttl>
+            <auth_cookie_name>kontextsid</auth_cookie_name>
+            <login_url>https://trost.korpus.cz/toolbar/login.php?continue=%s</login_url>
+            <logout_url>https://trost.korpus.cz/toolbar/logout.php?continue=%s</logout_url>
+            <cookie_sid extension-by="ucnk">cnc_toolbar_sid_test</cookie_sid>
+            <cookie_at extension-by="ucnk">cnc_toolbar_at_test</cookie_at>
+            <cookie_rmme extension-by="ucnk">cnc_toolbar_rmme</cookie_rmme>
+            <cookie_lang extension-by="ucnk">cnc_toolbar_lang</cookie_lang>
+            <toolbar_server extension-by="ucnk">trost.korpus.cz</toolbar_server>
+            <toolbar_port extension-by="ucnk">443</toolbar_port>
+            <toolbar_path extension-by="ucnk">/toolbar/toolbar</toolbar_path>
+            <toolbar_server_timeout extension-by="ucnk">20</toolbar_server_timeout>
+            <toolbar_unverified_ssl_cert extension-by="ucnk">1</toolbar_unverified_ssl_cert>
         </auth>
         <action_log>
             <module>default_action_log</module>
@@ -100,18 +108,22 @@
             <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
         </conc_cache>
         <query_persistence>
-            <module>default_query_persistence</module>
+            <module>mysql_query_persistence</module>
             <ttl_days extension-by="default">100</ttl_days>
-            <archive_dir extension-by="default">/var/local/corpora/query_persistence</archive_dir>
+            <archive_dir extension-by="default">/var/local/corpora/conc_persistence</archive_dir>
+            <archive_db_path extension-by="ucnk">/opt/kontext/conc_archive.db</archive_db_path>
+            <archive_queue_key>arch</archive_queue_key>
         </query_persistence>
         <corparch>
-            <module>default_corparch</module>
-            <js_module>defaultCorparch</js_module>
-            <file extension-by="default">/opt/kontext/conf/corplist.xml</file>
-            <root_elm_path extension-by="default">/corplist</root_elm_path>
-            <tag_prefix extension-by="default">+</tag_prefix>
-            <max_num_hints extension-by="default">10</max_num_hints>
-            <default_page_list_size extension-by="default">30</default_page_list_size>
+            <module>ucnk_corparch3</module>
+            <js_module>ucnkCorparch</js_module>
+            <tag_prefix extension-by="ucnk"></tag_prefix>
+            <max_num_hints extension-by="ucnk">10</max_num_hints>
+            <default_label extension-by="ucnk">test</default_label>
+            <default_page_list_size extension-by="ucnk">30</default_page_list_size>
+            <access_req_smtp_server extension-by="ucnk">a@b.c</access_req_smtp_server>
+            <access_req_sender extension-by="ucnk">a@b.c</access_req_sender>
+            <access_req_recipients extension-by="ucnk">a@b.c</access_req_recipients>
         </corparch>
         <db>
             <module>redis_db</module>
@@ -121,7 +133,7 @@
         </db>
         <integration_db>
             <module>mysql_integration_db</module>
-            <host>kontext_maridb_1</host>
+            <host>kontext_mariadb_1</host>
             <db>kontext</db>
             <user>kontext</user>
             <passwd>password</passwd>
