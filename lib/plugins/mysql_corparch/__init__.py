@@ -27,148 +27,18 @@ import json
 from controller import exposed
 import actions.user
 import plugins
-from plugins.abstract.corparch import (AbstractSearchableCorporaArchive, BrokenCorpusInfo, CorplistProvider,
-                                      TokenConnect, KwicConnect, QuerySuggest, DictLike, TagsetInfo, CorpusInfo)
-import l10n
-from .backend.sqlite import Backend
-from .registry import RegModelSerializer, RegistryConf
+from plugins import inject
+from plugins.abstract.corparch import (
+    AbstractSearchableCorporaArchive, BrokenCorpusInfo,
+    TokenConnect, KwicConnect, QuerySuggest, TagsetInfo, CorpusInfo, CorpusListItem)
+from plugins.abstract.corparch.registry import RegModelSerializer, RegistryConf
+from plugins.mysql_corparch.backend import Backend
+from plugins.mysql_corparch.corplist import DefaultCorplistProvider, parse_query
 
 try:
     from markdown import markdown
 except ImportError:
     def markdown(s): return s
-
-
-def parse_query(tag_prefix, query):
-    """
-    Parses a search query:
-
-    <query> ::= <label> | <desc_part>
-    <label> ::= <tag_prefix> <desc_part>
-
-    returns:
-    2-tuple (list of description substrings, list of labels/keywords)
-    """
-    if query is not None:
-        tokens = re.split(r'\s+', query.strip())
-    else:
-        tokens = []
-    query_keywords = []
-    substrs = []
-    for t in tokens:
-        if len(t) > 0:
-            if t[0] == tag_prefix:
-                query_keywords.append(t[1:])
-            else:
-                substrs.append(t)
-    return substrs, query_keywords
-
-
-class CorpusListItem(DictLike):
-
-    def __init__(self, id=None, corpus_id=None, name=None, description=None, size=0, path=None,
-                 featured=False, keywords=None):
-        self.id = id
-        self.corpus_id = corpus_id
-        self.name = name
-        self.description = description
-        self.size = size
-        self.size_info = l10n.simplify_num(size)
-        self.path = path
-        self.featured = featured
-        self.found_in = []
-        self.keywords = [] if keywords is None else keywords
-
-    def __unicode__(self):
-        return 'CorpusListItem({0})'.format(self.__dict__)
-
-    def __repr__(self):
-        return self.__unicode__()
-
-
-class DefaultCorplistProvider(CorplistProvider):
-    """
-    Corpus listing and filtering service
-    """
-
-    def __init__(self, plugin_ctx, corparch, tag_prefix):
-        """
-        arguments:
-        plugin_ctx -- a controller.PluginCtx instance
-        corparch -- a plugins.abstract.corparch.AbstractSearchableCorporaArchive instance
-        tag_prefix -- a string determining how a tag (= keyword or label) is recognized
-        """
-        self._plugin_ctx = plugin_ctx
-        self._corparch = corparch
-        self._tag_prefix = tag_prefix
-
-    def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
-        if query is False:  # False means 'use default values'
-            query = ''
-        if filter_dict.get('minSize'):
-            min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
-        else:
-            min_size = 0
-        if filter_dict.get('maxSize'):
-            max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
-        else:
-            max_size = None
-        if filter_dict.get('requestable'):
-            requestable = bool(int(filter_dict.get('requestable')))
-        else:
-            requestable = False
-        if filter_dict.get('favOnly'):
-            favourites_only = bool(int(filter_dict.get('favOnly')))
-        else:
-            favourites_only = False
-
-        if offset is None:
-            offset = 0
-        else:
-            offset = int(offset)
-
-        if limit is None:
-            limit = int(self._corparch.max_page_size)
-        else:
-            limit = int(limit)
-
-        user_items = self._corparch.user_items.get_user_items(plugin_ctx)
-        favourite_corpora = {
-            item.main_corpus_id: item.ident for item in user_items if item.is_single_corpus}
-
-        def get_found_in(corp, phrases):
-            ans = []
-            for phrase in phrases:
-                phrase = phrase.lower()
-                name = corp.name.lower() if corp.name is not None else ''
-                desc = corp.description.lower() if corp.description is not None else ''
-                if phrase not in name and phrase in desc:
-                    ans.append('defaultCorparch__found_in_desc')
-                    break
-            return ans
-
-        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
-        normalized_query_substrs = [s.lower() for s in query_substrs]
-        used_keywords = set()
-        rows = list(self._corparch.list_corpora(plugin_ctx, substrs=normalized_query_substrs,
-                                                min_size=min_size, max_size=max_size, requestable=requestable,
-                                                offset=offset, limit=limit + 1, keywords=query_keywords,
-                                                favourites=tuple(favourite_corpora.keys()) if favourites_only else ()).values())
-        ans = []
-        for i, corp in enumerate(rows):
-            used_keywords.update(corp.keywords)
-            corp.keywords = self._corparch.get_l10n_keywords(corp.keywords, plugin_ctx.user_lang)
-            corp.fav_id = favourite_corpora.get(corp.id, None)
-            corp.found_in = get_found_in(corp, normalized_query_substrs)
-            ans.append(corp.to_dict())
-            if i == limit - 1:
-                break
-        return dict(rows=ans,
-                    nextOffset=offset + limit if len(rows) > limit else None,
-                    keywords=l10n.sort(used_keywords, loc=plugin_ctx.user_lang),
-                    query=query,
-                    current_keywords=query_keywords,
-                    filters=dict(filter_dict))
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
@@ -177,7 +47,7 @@ def get_favorite_corpora(ctrl, request):
         return ca.export_favorite(ctrl._plugin_ctx)
 
 
-class RDBMSCorparch(AbstractSearchableCorporaArchive):
+class MySQLCorparch(AbstractSearchableCorporaArchive):
     """
     A corparch plug-in implementation based on a relational
     database (sqlite/mysql - depends on backend).
@@ -483,12 +353,14 @@ class RDBMSCorparch(AbstractSearchableCorporaArchive):
         )
 
 
-@plugins.inject(plugins.runtime.USER_ITEMS)
-def create_instance(conf, user_items):
-    return RDBMSCorparch(backend=Backend(db_path=conf.get('plugins', 'corparch')['default:file']),
-                         user_items=user_items,
-                         tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
-                         max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
-                         max_page_size=conf.get('plugins', 'corparch').get('default:default_page_list_size',
-                                                                           None),
-                         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
+@inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
+def create_instance(conf, user_items, integ_db):
+    backend = Backend(integ_db)
+    logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
+    return MySQLCorparch(
+        backend=backend,
+        user_items=user_items,
+        tag_prefix=conf.get('plugins', 'corparch')['tag_prefix'],
+        max_num_hints=conf.get('plugins', 'corparch')['max_num_hints'],
+        max_page_size=conf.get('plugins', 'corparch').get('default_page_list_size', None),
+        registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))

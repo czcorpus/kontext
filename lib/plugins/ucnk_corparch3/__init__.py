@@ -41,9 +41,11 @@ import os
 
 import plugins
 from plugins import inject
-from plugins.rdbms_corparch import RDBMSCorparch, CorpusListItem, parse_query
+from plugins.abstract.corparch import CorpusListItem
 from plugins.abstract.corparch import CorpusInfo
-from plugins.ucnk_remote_auth5.backend.mysql import Backend
+from plugins.mysql_corparch import MySQLCorparch
+from plugins.mysql_corparch.corplist import parse_query
+from plugins.mysql_corparch.backend import Backend
 from controller import exposed
 from controller.errors import ForbiddenException
 import actions.user
@@ -93,7 +95,7 @@ def ask_corpus_access(ctrl, request):
     return ans
 
 
-class UcnkCorpArch3(RDBMSCorparch):
+class UcnkCorpArch3(MySQLCorparch):
     """
     Loads and provides access to a hierarchical list of corpora
     defined in XML format

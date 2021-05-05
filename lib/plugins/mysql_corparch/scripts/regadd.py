@@ -23,8 +23,8 @@ import logging
 from collections import defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
-from plugins.rdbms_corparch.backend.sqlite_w import WritableBackend
+from plugins.abstract.corparch.registry.parser import Tokenizer, Parser, infer_encoding
+from plugins.mysql_corparch.backendw import WritableBackend
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.INFO)

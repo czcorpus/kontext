@@ -22,8 +22,8 @@ import sys
 import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.rdbms_corparch.registry import RegModelSerializer, RegistryConf
-from plugins.rdbms_corparch.backend.sqlite import Backend
+from plugins.abstract.corparch.registry import RegModelSerializer, RegistryConf
+from plugins.mysql_corparch.backend import Backend
 
 
 def load_registry(corpus_id, variant, backend):

@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-This script provides a functionality to add/replace corpus within rdbms_corparch
+This script provides a functionality to add/replace corpus within mysql_corparch
 plug-in.
 
 To create a new database, use scripts/install.py. This script is also able to parse
@@ -89,9 +89,9 @@ import manatee
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import settings
-from plugins.rdbms_corparch.backend.sqlite_w import WritableBackend
-from plugins.rdbms_corparch.backend.input import InstallJson
-from plugins.rdbms_corparch.registry.parser import Tokenizer, Parser, infer_encoding
+from plugins.mysql_corparch.backendw import WritableBackend
+from plugins.mysql_corparch.install import InstallJson
+from plugins.abstract.corparch.registry.parser import Tokenizer, Parser, infer_encoding
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',

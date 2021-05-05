@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import List, Any, Tuple, Dict, Optional
-from .input import InstallJson
+from plugins.mysql_corparch.install import InstallJson
 import abc
 from collections import OrderedDict
 

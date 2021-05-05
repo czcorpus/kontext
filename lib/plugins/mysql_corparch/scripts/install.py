@@ -25,8 +25,7 @@ import sqlite3
 import argparse
 from hashlib import md5
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.rdbms_corparch.backend import InstallCorpusInfo
-from plugins.rdbms_corparch.backend.input import InstallJson
+from plugins.mysql_corparch.install import InstallJson, InstallCorpusInfo
 
 
 class Shared(InstallCorpusInfo):
@@ -67,32 +66,6 @@ class Shared(InstallCorpusInfo):
         if variant:
             return os.path.exists(os.path.join(self._reg_path, variant, corpus_id))
         return os.path.exists(os.path.join(self._reg_path, corpus_id))
-
-
-class InstallJsonDir(object):
-
-    def __init__(self, dir_path):
-        self._dir_path = dir_path
-        self._data = {}
-        self._current = None
-
-    def switch_to(self, corpus_id):
-        if corpus_id not in self._data:
-            self._data[corpus_id] = InstallJson()
-        self._current = self._data[corpus_id]
-
-    @property
-    def current(self):
-        return self._current
-
-    def write(self):
-        if args.json_out:
-            if not os.path.exists(args.json_out):
-                os.makedirs(args.json_out)
-            for ident, conf in list(self._data.items()):
-                fpath = os.path.join(self._dir_path, ident + '.json')
-                with open(fpath, 'wb') as fw:
-                    conf.write(fw)
 
 
 def decode_bool(v):

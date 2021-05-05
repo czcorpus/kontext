@@ -17,9 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A corparch-plugin database backend for MySQL with some minor UCNK-specific stuff added (requestable corpus).
-It can be used along with rdbms_corparch as an alternative backend to the sqlite3 one - in such case
-you have to copy the whole 'mysql' directory/package to rdbms_corparch/backend directory.
+A corparch database backend for MySQL/MariaDB.
 
 --------
 """
@@ -31,11 +29,6 @@ class MySQLConfException(Exception):
 
 
 class Backend(DatabaseBackend):
-    """
-    UCNK's custom MySQL backend. With some minor modifications it should be
-    also usable with general rdbms_corparch but it is not tested in such
-    a configuration.
-    """
 
     def __init__(self, db):
         self._db = db

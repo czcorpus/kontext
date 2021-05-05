@@ -38,8 +38,7 @@ import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
 from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins import inject
-
-from .backend.mysql import Backend
+from plugins.mysql_corparch.backend import Backend
 
 
 IMPLICIT_CORPUS = 'susanne'
