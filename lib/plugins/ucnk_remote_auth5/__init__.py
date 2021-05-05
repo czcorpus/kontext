@@ -36,7 +36,7 @@ import logging
 
 import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
-from plugins.rdbms_corparch.backend import DatabaseBackend
+from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins import inject
 
 from .backend.mysql import Backend

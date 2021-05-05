@@ -18,7 +18,7 @@
 
 import sqlite3
 
-from . import DatabaseBackend
+from plugins.abstract.corparch.backend import DatabaseBackend
 
 
 class Backend(DatabaseBackend):

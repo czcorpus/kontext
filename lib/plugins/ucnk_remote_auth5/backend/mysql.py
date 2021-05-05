@@ -23,7 +23,7 @@ you have to copy the whole 'mysql' directory/package to rdbms_corparch/backend d
 
 --------
 """
-from plugins.rdbms_corparch.backend import DatabaseBackend
+from plugins.abstract.corparch.backend import DatabaseBackend
 
 
 class MySQLConfException(Exception):
