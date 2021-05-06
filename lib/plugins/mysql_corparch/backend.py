@@ -28,14 +28,23 @@ class MySQLConfException(Exception):
     pass
 
 
+DFLT_CORP_TABLE = 'kontext_corpus'
+DFLT_GROUP_ACC_TABLE = 'kontext_group_access'
+DFLT_USER_ACC_TABLE = 'kontext_user_access'
+
+
 class Backend(DatabaseBackend):
 
-    def __init__(self, db):
+    def __init__(self, db, corp_table: str = DFLT_CORP_TABLE, group_acc_table: str = DFLT_GROUP_ACC_TABLE,
+                 user_acc_table: str = DFLT_USER_ACC_TABLE):
         self._db = db
+        self._corp_table = corp_table
+        self._group_acc_table = group_acc_table
+        self._user_acc_table = user_acc_table
 
     def contains_corpus(self, corpus_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT name FROM kontext_corpus WHERE name = %s', (corpus_id,))
+        cursor.execute(f'SELECT name FROM {self._corp_table} WHERE name = %s', (corpus_id,))
         return cursor.fetchone() is not None
 
     def load_corpus_articles(self, corpus_id):
@@ -63,9 +72,9 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         placeholders = ', '.join(['%s'] * len(corp_ids))
         col = 'description_{0}'.format(user_lang[:2])
-        cursor.execute('SELECT name AS corpname, {0} AS contents '
-                       'FROM corpora '
-                       'WHERE name IN ({1})'.format(col, placeholders), corp_ids)
+        cursor.execute(f'SELECT name AS corpname, {col} AS contents '
+                       f'FROM {self._corp_table} '
+                       f'WHERE name IN ({placeholders})', corp_ids)
         return dict((r['corpname'], r['contents']) for r in cursor.fetchall())
 
     def load_corpus(self, corp_id):
@@ -90,7 +99,7 @@ class Backend(DatabaseBackend):
             'c.size, rc.name, rc.rencoding AS encoding, rc.language, '
             'c.default_virt_keyboard as default_virt_keyboard, '
             'c.default_view_opts '
-            'FROM corpora AS c '
+            f'FROM {self._corp_table} AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
             'LEFT JOIN corpus_structure AS cs ON cs.corpus_name = kc.corpus_name '
@@ -166,7 +175,7 @@ class Backend(DatabaseBackend):
                 'c.group_name AS g_name, c.version AS version, '
                 '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
                 'WHERE kcx.corpus_name = c.name) AS keywords '
-                'FROM corpora AS c '
+                f'FROM {self._corp_table} AS c '
                 'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
                 'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
                 'WHERE {where1} '
@@ -186,25 +195,25 @@ class Backend(DatabaseBackend):
             '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
             'WHERE kcx.corpus_name = c.name) AS keywords '
             'FROM '
-            'corpora AS c '
+            f'{self._corp_table} AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
             'JOIN ('
-            '  SELECT user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited '
-            '  FROM user_corpus_relation WHERE (user_corpus_relation.user_id = %s) '
+            f'  SELECT {self._user_acc_table}.corpus_id AS corpus_id, {self._user_acc_table}.limited AS limited '
+            f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
             '  UNION '
-            '  SELECT relation.corpora AS corpus_id, relation.limited AS limited '
-            '  FROM relation '
-            '  WHERE (relation.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+            f'  SELECT {self._group_acc_table}.corpora AS corpus_id, {self._group_acc_table}.limited AS limited '
+            f'  FROM {self._group_acc_table} '
+            f'  WHERE ({self._group_acc_table}.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
             ') AS kcu ON c.id = kcu.corpus_id '
-            'WHERE {where2} '
+            f'WHERE {" AND ".join("(" + wc + ")" for wc in where_cond2)} '
             'GROUP BY c.name '
             'HAVING num_match_keys >= %s ) '
             ') AS ans '
             'GROUP BY id '
             'ORDER BY g_name, version DESC, id '
             'LIMIT %s '
-            'OFFSET %s').format(where2=' AND '.join('(' + wc + ')' for wc in where_cond2))
+            'OFFSET %s')
         c.execute(sql, where + [limit, offset])
         return c.fetchall()
 
@@ -212,10 +221,10 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         desc_col = 'c.description_{0}'.format(user_lang[:2])
         cursor.execute('SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
-                       '{0} AS description, c.size '
-                       'FROM corpora AS c '
+                       f'{desc_col} AS description, c.size '
+                       f'FROM {self._corp_table} AS c '
                        'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-                       'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name'.format(desc_col))
+                       'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name')
         return cursor.fetchall()
 
     def load_registry_table(self, corpus_id, variant):
@@ -303,14 +312,18 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                        'FROM ( '
-                       '  SELECT user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited '
-                       '  FROM user_corpus_relation WHERE (user_corpus_relation.user_id = %s) '
+                       f'  SELECT {self._user_acc_table}.corpus_id AS corpus_id, '
+                       f'    {self._user_acc_table}.limited AS limited '
+                       f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
                        '  UNION '
-                       '  SELECT relation.corpora AS corpus_id, relation.limited AS limited '
-                       '  FROM relation '
-                       '  WHERE (relation.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+                       f'  SELECT {self._group_acc_table}.corpora AS corpus_id, '
+                       f'    {self._group_acc_table}.limited AS limited '
+                       f'  FROM {self._group_acc_table} '
+                       f'  WHERE ({self._group_acc_table}.corplist = '
+                       '      (SELECT user.corplist FROM user WHERE (user.id = %s))) '
                        ') as ucp '
-                       'JOIN corpora AS c ON ucp.corpus_id = c.id AND c.name = %s ORDER BY ucp.limited LIMIT 1',
+                       f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
+                       'ORDER BY ucp.limited LIMIT 1',
                        (user_id, user_id, user_id, corpus_id))
         row = cursor.fetchone()
         if not row:
@@ -321,14 +334,17 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                        'FROM ( '
-                       '  SELECT user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited '
-                       '  FROM user_corpus_relation WHERE (user_corpus_relation.user_id = %s) '
+                       f'  SELECT {self._user_acc_table}.corpus_id AS corpus_id, '
+                       f'    {self._user_acc_table}.limited AS limited '
+                       f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
                        '  UNION '
-                       '  SELECT relation.corpora AS corpus_id, relation.limited AS limited '
-                       '  FROM relation '
-                       '  WHERE (relation.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+                       f'  SELECT {self._group_acc_table}.corpora AS corpus_id, '
+                       f'     {self._group_acc_table}.limited AS limited '
+                       f'  FROM {self._group_acc_table} '
+                       f'  WHERE ({self._group_acc_table}.corplist = '
+                       '      (SELECT user.corplist FROM user WHERE (user.id = %s))) '
                        ') as ucp '
-                       'JOIN corpora AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
+                       f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
         return [r['corpus_id'] for r in cursor.fetchall()]
 
     def load_corpus_tagsets(self, corpus_id):

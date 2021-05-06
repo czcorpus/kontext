@@ -21,7 +21,7 @@ import datetime
 import pytz
 import logging
 import mysql.connector
-from plugins.mysql_corparch.backend import Backend
+from plugins.mysql_corparch.backend import Backend, DFLT_CORP_TABLE, DFLT_GROUP_ACC_TABLE, DFLT_USER_ACC_TABLE
 
 
 class WritableBackend(Backend):
@@ -30,8 +30,9 @@ class WritableBackend(Backend):
     to import existing corpora.xml/registry files etc.
     """
 
-    def __init__(self, conf=None):
-        super(WritableBackend, self).__init__(conf)
+    def __init__(self, db, corp_table: str = DFLT_CORP_TABLE, group_acc_table: str = DFLT_GROUP_ACC_TABLE,
+                 user_acc_table: str = DFLT_USER_ACC_TABLE):
+        super().__init__(db, corp_table, group_acc_table, user_acc_table)
         self.autocommit = False
 
     def commit(self):
@@ -67,12 +68,12 @@ class WritableBackend(Backend):
         cursor.execute('DELETE FROM corpus_structure WHERE corpus_name = %s', (corpus_id,))
         cursor.execute('DELETE FROM kontext_corpus_user WHERE corpus_name = %s', (corpus_id,))
         cursor.execute('DELETE FROM registry_conf WHERE corpus_name = %s', (corpus_id,))
-        cursor.execute('DELETE FROM corpora WHERE id = %s', (corpus_id,))
+        cursor.execute(f'DELETE FROM {self._corp_table} WHERE id = %s', (corpus_id,))
 
         # text types description
         cursor.execute('SELECT t.id '
                        'FROM kontext_ttdesc AS t '
-                       'LEFT JOIN corpora AS kc ON kc.ttdesc_id = t.id '
+                       f'LEFT JOIN {self._corp_table} AS kc ON kc.ttdesc_id = t.id '
                        'WHERE kc.ttdesc_id IS NULL')
         for row4 in cursor.fetchall():
             cursor.execute('DELETE FROM kontext_ttdesc WHERE id = %s', (row4['id'],))
@@ -214,7 +215,7 @@ class WritableBackend(Backend):
             install_json.ident, install_json.metadata.label_attr)
         bli_struct, bli_attr = self._create_structattr_if_none(
             install_json.ident, install_json.metadata.id_attr)
-        cursor.execute('UPDATE corpora SET sentence_struct = %s, '
+        cursor.execute(f'UPDATE {self._corp_table} SET sentence_struct = %s, '
                        'speech_segment_struct = %s, speech_segment_attr = %s, '
                        'speaker_id_struct = %s, speaker_id_attr = %s, '
                        'speech_overlap_struct = %s, speech_overlap_attr = %s, '
