@@ -1,0 +1,21 @@
+[
+  {
+    "id": 0,
+    "username": "anonymous",
+    "pwd": null,
+    "firstname": "Anonymous",
+    "lastname": null,
+    "email": null,
+    "permitted_corpora": ["susanne"]
+  },
+  {
+    "id": 1,
+    "username": "your_user",
+    "pwd": "yourpwd",
+    "firstname": "Your",
+    "lastname": "Name",
+    "email": "your.email@your.domain",
+    "affiliation": "Some organization",
+    "permitted_corpora": ["susanne", "your_corpus", "your_other_corpus"]
+  }
+]

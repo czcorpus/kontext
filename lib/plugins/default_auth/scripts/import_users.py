@@ -17,7 +17,7 @@ import argparse
 import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.default_auth.tools import mk_pwd_hash_default
+from plugins.abstract.auth.hash import mk_pwd_hash_default
 
 
 def import_user_redis(data):
@@ -79,5 +79,7 @@ if __name__ == '__main__':
             elif db_conf['module'] == 'sqlite3_db':
                 import_user_sqlite3(user)
             else:
-                print('Sorry, the script currently supports only Redis db backend')
+                print(
+                    'Sorry, the script currently supports only Redis or Sqlite3 db backends. '
+                    'To import users into a MySQL/Mariadb instance, please refer to the mysql_auth plugin scripts')
                 sys.exit(1)

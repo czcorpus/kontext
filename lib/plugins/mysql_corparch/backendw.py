@@ -21,7 +21,9 @@ import datetime
 import pytz
 import logging
 import mysql.connector
-from plugins.mysql_corparch.backend import Backend, DFLT_CORP_TABLE, DFLT_GROUP_ACC_TABLE, DFLT_USER_ACC_TABLE
+from plugins.mysql_corparch.backend import (
+    Backend, DFLT_CORP_TABLE, DFLT_GROUP_ACC_TABLE, DFLT_USER_ACC_TABLE, DFLT_USER_ACC_CORP_ATTR,
+    DFLT_GROUP_ACC_CORP_ATTR, DFLT_GROUP_ACC_GROUP_ATTR)
 
 
 class WritableBackend(Backend):
@@ -31,8 +33,11 @@ class WritableBackend(Backend):
     """
 
     def __init__(self, db, corp_table: str = DFLT_CORP_TABLE, group_acc_table: str = DFLT_GROUP_ACC_TABLE,
-                 user_acc_table: str = DFLT_USER_ACC_TABLE):
-        super().__init__(db, corp_table, group_acc_table, user_acc_table)
+                 user_acc_table: str = DFLT_USER_ACC_TABLE, user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
+                 group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
+                 group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):
+        super().__init__(db, corp_table, group_acc_table, user_acc_table, user_acc_corp_attr, group_acc_corp_attr,
+                         group_acc_group_attr)
         self.autocommit = False
 
     def commit(self):

@@ -30,17 +30,25 @@ class MySQLConfException(Exception):
 
 DFLT_CORP_TABLE = 'kontext_corpus'
 DFLT_GROUP_ACC_TABLE = 'kontext_group_access'
+DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
+DFLT_GROUP_ACC_GROUP_ATTR = 'group_access'
 DFLT_USER_ACC_TABLE = 'kontext_user_access'
+DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
 
 
 class Backend(DatabaseBackend):
 
     def __init__(self, db, corp_table: str = DFLT_CORP_TABLE, group_acc_table: str = DFLT_GROUP_ACC_TABLE,
-                 user_acc_table: str = DFLT_USER_ACC_TABLE):
+                 user_acc_table: str = DFLT_USER_ACC_TABLE, user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
+                 group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
+                 group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):
         self._db = db
         self._corp_table = corp_table
         self._group_acc_table = group_acc_table
         self._user_acc_table = user_acc_table
+        self._user_acc_corp_attr = user_acc_corp_attr
+        self._group_acc_corp_attr = group_acc_corp_attr
+        self._group_acc_group_attr = group_acc_group_attr
 
     def contains_corpus(self, corpus_id):
         cursor = self._db.cursor()
@@ -199,12 +207,15 @@ class Backend(DatabaseBackend):
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
             'JOIN ('
-            f'  SELECT {self._user_acc_table}.corpus_id AS corpus_id, {self._user_acc_table}.limited AS limited '
+            f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
+            f'    {self._user_acc_table}.limited AS limited '
             f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
             '  UNION '
-            f'  SELECT {self._group_acc_table}.corpora AS corpus_id, {self._group_acc_table}.limited AS limited '
+            f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
+            f'    {self._group_acc_table}.limited AS limited '
             f'  FROM {self._group_acc_table} '
-            f'  WHERE ({self._group_acc_table}.corplist = (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+            f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
+            f'     (SELECT user.{self._group_acc_group_attr} FROM user WHERE (user.id = %s))) '
             ') AS kcu ON c.id = kcu.corpus_id '
             f'WHERE {" AND ".join("(" + wc + ")" for wc in where_cond2)} '
             'GROUP BY c.name '
@@ -312,15 +323,15 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                        'FROM ( '
-                       f'  SELECT {self._user_acc_table}.corpus_id AS corpus_id, '
+                       f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
                        f'    {self._user_acc_table}.limited AS limited '
                        f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
                        '  UNION '
-                       f'  SELECT {self._group_acc_table}.corpora AS corpus_id, '
+                       f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
                        f'    {self._group_acc_table}.limited AS limited '
                        f'  FROM {self._group_acc_table} '
-                       f'  WHERE ({self._group_acc_table}.corplist = '
-                       '      (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+                       f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
+                       f'      (SELECT user.{self._group_acc_group_attr} FROM user WHERE (user.id = %s))) '
                        ') as ucp '
                        f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
                        'ORDER BY ucp.limited LIMIT 1',
@@ -334,15 +345,15 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                        'FROM ( '
-                       f'  SELECT {self._user_acc_table}.corpus_id AS corpus_id, '
+                       f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
                        f'    {self._user_acc_table}.limited AS limited '
                        f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
                        '  UNION '
-                       f'  SELECT {self._group_acc_table}.corpora AS corpus_id, '
+                       f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
                        f'     {self._group_acc_table}.limited AS limited '
                        f'  FROM {self._group_acc_table} '
-                       f'  WHERE ({self._group_acc_table}.corplist = '
-                       '      (SELECT user.corplist FROM user WHERE (user.id = %s))) '
+                       f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
+                       f'      (SELECT user.{self._group_acc_group_attr} FROM user WHERE (user.id = %s))) '
                        ') as ucp '
                        f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
         return [r['corpus_id'] for r in cursor.fetchall()]

@@ -25,9 +25,8 @@ import logging
 
 import json
 import redis
-import mysql.connector
 from mysql.connector.cursor import MySQLCursor
-
+from plugins.common.mysql import MySQLOps
 from plugins.abstract.general_storage import KeyValueStorage
 
 
@@ -48,69 +47,6 @@ def is_archived(cursor: MySQLCursor, conc_id):
         (conc_id,)
     )
     return cursor.fetchone() is not None
-
-
-class MySQLConf(object):
-
-    def __init__(self, conf):
-        self.pool_name = 'kontext_mysql_pool'
-        self.autocommit = True
-        self.host = conf.get('plugins', 'query_persistence')['mysql_host']
-        self.database = conf.get('plugins', 'query_persistence')['mysql_db']
-        self.user = conf.get('plugins', 'query_persistence')['mysql_user']
-        self.password = conf.get('plugins', 'query_persistence')['mysql_passwd']
-        self.pool_size = int(conf.get('plugins', 'query_persistence')['mysql_pool_size'])
-        self.conn_retry_delay = int(conf.get('plugins', 'query_persistence')['mysql_retry_delay'])
-        self.conn_retry_attempts = int(conf.get('plugins', 'query_persistence')['mysql_retry_attempts'])
-
-    @property
-    def conn_dict(self):
-        return dict(host=self.host, database=self.database, user=self.user,
-                    password=self.password, pool_size=self.pool_size, pool_name=self.pool_name,
-                    autocommit=self.autocommit)
-
-
-class MySQLOps(object):
-    """
-    A simple wrapper for mysql.connector with ability
-    to reconnect.
-    """
-
-    def __init__(self, mysql_conf):
-        self._conn = mysql.connector.connect(**mysql_conf.conn_dict)
-        self._conn_retry_delay = mysql_conf.conn_retry_delay
-        self._conn_retry_attempts = mysql_conf.conn_retry_attempts
-
-    def cursor(self, dictionary=True, buffered=False):
-        try:
-            return self._conn.cursor(dictionary=dictionary, buffered=buffered)
-        except mysql.connector.errors.OperationalError as ex:
-            if 'MySQL Connection not available' in ex.msg:
-                logging.getLogger(__name__).warning(
-                    'Lost connection to MySQL server - reconnecting')
-                self._conn.reconnect(delay=self._conn_retry_delay,
-                                     attempts=self._conn_retry_attempts)
-                return self._conn.cursor(dictionary=dictionary, buffered=buffered)
-
-    @property
-    def connection(self):
-        return self._conn
-
-    def execute(self, sql, args):
-        cursor = self.cursor()
-        cursor.execute(sql, args)
-        return cursor
-
-    def executemany(self, sql, args_rows):
-        cursor = self.cursor()
-        cursor.executemany(sql, args_rows)
-        return cursor
-
-    def commit(self):
-        self._conn.commit()
-
-    def rollback(self):
-        self._conn.rollback()
 
 
 class Archiver(object):

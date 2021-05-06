@@ -222,7 +222,8 @@ class UcnkCorpArch3(MySQLCorparch):
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, user_items, auth, cnc_db):
-    backend = Backend(cnc_db, corp_table='corpora', group_acc_table='relation', user_acc_table='user_corpus_relation')
+    backend = Backend(cnc_db, corp_table='corpora', group_acc_table='relation', user_acc_table='user_corpus_relation',
+                      user_acc_corp_attr='corpus_id', group_acc_corp_attr='corpora', group_acc_group_attr='corplist')
     logging.getLogger(__name__).info(f'ucnk_corparch3 uses integration_db[{cnc_db.info}]')
     return UcnkCorpArch3(backend=backend,
                          auth=auth,
