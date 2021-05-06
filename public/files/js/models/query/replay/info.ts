@@ -104,7 +104,7 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
         ).pipe(
             map(
                 data => List.map(
-                    v => ({...v, arg: ''}),
+                    v => ({arg: '', ...v}),
                     data.Desc
                 )
             )
