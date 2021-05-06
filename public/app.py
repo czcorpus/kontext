@@ -295,7 +295,8 @@ if os.path.isfile(robots_path):
         '/robots.txt': robots_path
     })
 
-if settings.is_debug_mode():
+
+def set_debug_mode():
     from werkzeug.debug import DebuggedApplication
     application = DebuggedApplication(application)
     # profiling
@@ -305,6 +306,10 @@ if settings.is_debug_mode():
         profile_log_path = settings.get('global', 'profile_log_path')
         if profile_log_path:
             application = ProfilerMiddleware(application, open(profile_log_path), 'w')
+
+
+if settings.is_debug_mode():
+    set_debug_mode()
 
 
 if __name__ == '__main__':
@@ -324,6 +329,8 @@ if __name__ == '__main__':
                         help='Set embedded web server to watch for source code changes and reload itself if needed')
     parser.add_argument('--debugpy', action='store_true', default=False,
                         help='Use debugpy for debugging')
+    parser.add_argument('--debugmode', action='store_true', default=False,
+                        help='Force debug mode')
     args = parser.parse_args()
 
     if args.debugpy:
@@ -331,6 +338,9 @@ if __name__ == '__main__':
             import debugpy
             debugpy.listen(('0.0.0.0', 5678))
             os.environ['_DEBUGPY_RUNNING'] = '1'
+
+    if args.debuglevel and not settings.is_debug_mode():
+        set_debug_mode()
 
     application = SharedDataMiddleware(application, {
         '/files':  os.path.join(os.path.dirname(__file__), 'files')
