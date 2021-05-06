@@ -35,7 +35,8 @@ from werkzeug.wrappers.json import JSONMixin
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
-CONF_PATH = os.getenv('KONTEXT_CONF', os.path.realpath('%s/../conf/config.xml' % os.path.dirname(__file__)))
+CONF_PATH = os.getenv('KONTEXT_CONF', os.path.realpath(
+    '%s/../conf/config.xml' % os.path.dirname(__file__)))
 
 import plugins
 import plugins.export
@@ -321,7 +322,16 @@ if __name__ == '__main__':
                         help='an address the server listens on (default is %s)' % DEFAULT_ADDR)
     parser.add_argument('--use-reloader', action='store_true', default=False,
                         help='Set embedded web server to watch for source code changes and reload itself if needed')
+    parser.add_argument('--debugpy', action='store_true', default=False,
+                        help='Use debugpy for debugging')
     args = parser.parse_args()
+
+    if args.debugpy:
+        if '_DEBUGPY_RUNNING' not in os.environ:
+            import debugpy
+            debugpy.listen(('0.0.0.0', 5678))
+            os.environ['_DEBUGPY_RUNNING'] = '1'
+
     application = SharedDataMiddleware(application, {
         '/files':  os.path.join(os.path.dirname(__file__), 'files')
     })
