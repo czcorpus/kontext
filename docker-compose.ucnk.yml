@@ -87,6 +87,8 @@ services:
   
   mariadb:
     image: mariadb:latest
+    volumes:
+      - ./scripts/install/conf/docker/kontext.sql:/docker-entrypoint-initdb.d/kontext.sql
     ports:
       - "3306:3306"
     environment:
