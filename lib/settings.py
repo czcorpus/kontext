@@ -311,6 +311,10 @@ def debug_level():
     return {'false': DEBUG_OFF, '0': DEBUG_OFF, 'true': DEBUG_ON, '1': DEBUG_ON, '2': DEBUG_AND_PROFILE}.get(value, DEBUG_OFF)
 
 
+def activate_debug():
+    set('global', 'debug', 'true')
+
+
 def is_debug_mode():
     """
     Returns True if the application is in 'debugging mode'

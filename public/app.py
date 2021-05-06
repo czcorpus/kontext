@@ -296,20 +296,21 @@ if os.path.isfile(robots_path):
     })
 
 
-def set_debug_mode():
+def set_debug_mode(app):
     from werkzeug.debug import DebuggedApplication
-    application = DebuggedApplication(application)
+    app = DebuggedApplication(app)
     # profiling
     if settings.debug_level() == settings.DEBUG_AND_PROFILE:
         from werkzeug.middleware.profiler import ProfilerMiddleware
-        application = ProfilerMiddleware(application, sys.stdout)
+        app = ProfilerMiddleware(application, sys.stdout)
         profile_log_path = settings.get('global', 'profile_log_path')
         if profile_log_path:
-            application = ProfilerMiddleware(application, open(profile_log_path), 'w')
+            app = ProfilerMiddleware(app, open(profile_log_path), 'w')
+    return app
 
 
 if settings.is_debug_mode():
-    set_debug_mode()
+    application = set_debug_mode(application)
 
 
 if __name__ == '__main__':
@@ -339,8 +340,9 @@ if __name__ == '__main__':
             debugpy.listen(('0.0.0.0', 5678))
             os.environ['_DEBUGPY_RUNNING'] = '1'
 
-    if args.debuglevel and not settings.is_debug_mode():
-        set_debug_mode()
+    if args.debugmode and not settings.is_debug_mode():
+        application = set_debug_mode(application)
+        settings.activate_debug()
 
     application = SharedDataMiddleware(application, {
         '/files':  os.path.join(os.path.dirname(__file__), 'files')
