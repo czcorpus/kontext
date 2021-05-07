@@ -274,6 +274,7 @@ class Args(object):
         if len(in_args.corpora) > 0:
             self.corpname = in_args.corpora[0]
             self.align = in_args.corpora[1:] if len(in_args.corpora) > 1 else []
+            self.usesubcorp = in_args.getvalue('usesubcorp')
 
 
 def update_attr(obj: Args, k: str, v: Union[str, int, float]) -> None:
