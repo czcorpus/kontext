@@ -113,7 +113,7 @@ def _should_be_bg_query(corp: KCorpus, query: Tuple[str, ...], asnc: int) -> boo
     return (len(query) > 1 and
             asnc == 1 and
             (query[1][0] == 'X' and corp.size > CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD
-             or corp.size() > CONC_BG_SYNC_SINGLE_CORP_THRESHOLD))
+             or corp.size > CONC_BG_SYNC_SINGLE_CORP_THRESHOLD))
 
 
 def get_conc(corp: KCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0
