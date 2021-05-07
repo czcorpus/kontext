@@ -3,8 +3,7 @@
         "task": "query_persistence__archive_concordance",
         "schedule": "0 */1 * * *",
         "kwargs": {
-            "cron_interval": 20,
-            "key_prefix": null,
+            "num_proc": 1,
             "dry_run": false
         }
     },
