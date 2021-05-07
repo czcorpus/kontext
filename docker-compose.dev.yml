@@ -9,6 +9,7 @@ services:
     command: bash -c "./scripts/install/conf/docker/run.dev.sh"
     ports:
       - "5678:5678"
+      - "5679:5679"
     volumes:
       - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
       - ./lib:/opt/kontext/lib
