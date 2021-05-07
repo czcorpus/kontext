@@ -72,8 +72,8 @@ from plugins.abstract.query_persistence.common import generate_idempotent_id
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 import logging
-
-from .archive import Archiver, MySQLOps, MySQLConf, get_iso_datetime, is_archived
+from plugins.common.mysql import MySQLOps, MySQLConf
+from .archive import Archiver, get_iso_datetime, is_archived
 
 
 PERSIST_LEVEL_KEY = 'persist_level'
@@ -118,7 +118,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             self._archive = integration_db
             logging.getLogger(__name__).info(f'mysql_query_persistence uses integration_db[{integration_db.info}]')
         else:
-            self._archive = MySQLOps(MySQLConf(settings))
+            self._archive = MySQLOps(MySQLConf(plugin_conf))
         self._settings = settings
 
     def _get_ttl_for(self, user_id):

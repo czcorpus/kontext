@@ -18,6 +18,7 @@
 
 from plugins.abstract.corparch import CorplistProvider
 import l10n
+import re
 
 
 def parse_query(tag_prefix, query):

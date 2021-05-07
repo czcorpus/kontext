@@ -75,6 +75,8 @@ class WsgiApp(object):
         maximum file size (optional, default is 8MB): /kontext/global/log_file_size
         number of backed-up files (optional, default is 10): /kontext/global/log_num_files
         """
+        #handler = logging.StreamHandler(sys.stderr)
+
         try:
             from concurrent_log_handler import ConcurrentRotatingFileHandler as HandlerClass
         except ImportError:
@@ -83,6 +85,7 @@ class WsgiApp(object):
                                maxBytes=conf.get_int(
                                    'logging', 'file_size', 8000000),
                                backupCount=conf.get_int('logging', 'num_files', 10))
+
         handler.setFormatter(logging.Formatter(
             fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
         logger.addHandler(handler)

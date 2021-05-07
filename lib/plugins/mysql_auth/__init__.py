@@ -14,9 +14,11 @@
 # GNU General Public License for more details.
 
 """
-A simple authentication module to start with.
-It relies on default_db module which requires no database backend.
+A production-ready authentication module based on MySQL/MariaDB.
+The database can be configured either manually or automatically
+(in case integration_db is enabled)
 """
+
 import hashlib
 import urllib.request
 import urllib.parse
@@ -25,6 +27,7 @@ import re
 import time
 import datetime
 import mailing
+import logging
 from collections import defaultdict
 from plugins.abstract.auth import AbstractInternalAuth, AuthException, SignUpNeedsUpdateException
 from plugins.abstract.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
@@ -32,24 +35,13 @@ from .sign_up import SignUpToken
 from translation import ugettext as _
 import plugins
 from plugins import inject
+from plugins.common.mysql import MySQLOps, MySQLConf
+from mysql.connector import MySQLConnection
+
+IMPLICIT_CORPUS = 'susanne'
 
 
-IMPLICIT_CORPUS = 'ud_fused_test_a'
-
-
-def mk_list_key(user_id):
-    return 'corplist:user:%s' % user_id
-
-
-def mk_user_key(user_id):
-    return 'user:%d' % user_id
-
-
-def get_user_id_from_key(user_key):
-    return int(user_key.split(':')[1])
-
-
-class DefaultAuthHandler(AbstractInternalAuth):
+class MysqlAuthHandler(AbstractInternalAuth):
     """
     Sample authentication handler
     """
@@ -60,17 +52,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     DEFAULT_CONFIRM_TOKEN_TTL = 3600  # 1 hour
 
-    LAST_USER_ID_KEY = 'last_user_id'
-
-    USER_INDEX_KEY = 'user_index'
-
-    def __init__(self, db, sessions, anonymous_user_id, case_sensitive_corpora_names: bool,
+    def __init__(self, db: MySQLConnection, sessions, anonymous_user_id, case_sensitive_corpora_names: bool,
                  login_url, logout_url, smtp_server, mail_sender,
                  confirmation_token_ttl, on_register_get_corpora):
         """
         """
         super().__init__(anonymous_user_id)
-        self.db = db
+        self.db: MySQLConnection = db
         self.sessions = sessions
         self._login_url = login_url
         self._logout_url = logout_url
@@ -120,15 +108,19 @@ class DefaultAuthHandler(AbstractInternalAuth):
         Updates user's password.
         There is no need to hash/encrypt the password - function does it automatically.
 
+        Security note: the calling function must make sure user_id matches the actual user logged in
+
         arguments:
         user_id -- a database ID of a user
         password -- new password
         """
-        user_key = mk_user_key(user_id)
-        user_data = self.db.get(user_key)
-        if user_data:
-            user_data['pwd_hash'] = mk_pwd_hash_default(password)
-            self.db.set(user_key, user_data)
+        cursor = self.db.cursor()
+        cursor.execute('SELECT username FROM kontext_user WHERE id = %s', (user_id,))
+        row = cursor.fetchone()
+        if row is not None:
+            cursor.execute('UPDATE kontext_user SET pwd_hash = %s WHERE id = %s',
+                           (mk_pwd_hash_default(password), user_id))
+            self.db.commit()
         else:
             raise AuthException(_('User %s not found.') % user_id)
 
@@ -139,13 +131,45 @@ class DefaultAuthHandler(AbstractInternalAuth):
     def corpus_access(self, user_dict, corpus_name):
         if corpus_name == IMPLICIT_CORPUS:
             return False, True, ''
-        corpora = self.db.get(mk_list_key(user_dict['id']), [])
-        if corpus_name in corpora:
+        cursor = self.db.cursor()
+        cursor.execute(
+            'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
+            'FROM ' 
+            '  (SELECT c.name, gr.limited '
+            '   FROM kontext_corpus AS c '
+            '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
+            '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
+            '   WHERE ku.id = %s AND c.name = %s '
+            '   UNION ' 
+            '   SELECT c.name, ucr.limited '
+            '   FROM kontext_corpus AS c '
+            '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
+            '   WHERE ucr.user_id = %s AND c.name = %s) AS guaccess '
+            'GROUP BY guaccess.name',
+            (user_dict['id'], corpus_name, user_dict['id'], corpus_name))
+        row = cursor.fetchone()
+        if row is not None:
             return False, True, self._variant_prefix(corpus_name)
         return False, False, ''
 
     def permitted_corpora(self, user_dict):
-        corpora = self.db.get(mk_list_key(user_dict['id']), [])
+        cursor = self.db.cursor()
+        cursor.execute(
+            'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
+            'FROM '
+            '  (SELECT c.name, gr.limited '
+            '   FROM kontext_corpus AS c '
+            '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
+            '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
+            '   WHERE ku.id = %s '
+            '   UNION '
+            '   SELECT c.name, ucr.limited '
+            '   FROM kontext_corpus AS c '
+            '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
+            '   WHERE ucr.user_id = %s) AS guaccess '
+            'GROUP BY guaccess.name',
+            (user_dict['id'], user_dict['id']))
+        corpora = [row['name'] for row in cursor.fetchall()]
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return corpora
@@ -154,11 +178,12 @@ class DefaultAuthHandler(AbstractInternalAuth):
         return not self._case_sensitive_corpora_names
 
     def get_user_info(self, plugin_ctx):
-        user_key = mk_user_key(plugin_ctx.user_id)
-        info = self.db.get(user_key)
-        info.pop('pwd_hash', None)
-        info.pop('recovery_hash', None)
-        return info
+        cursor = self.db.cursor()
+        cursor.execute(
+            'SELECT id, username, firstname, lastname, email ' 
+            'FROM kontext_user '
+            'WHERE id = %s', (plugin_ctx.user_id, ))
+        return cursor.fetchone()
 
     def is_administrator(self, user_id):
         """
@@ -204,8 +229,12 @@ class DefaultAuthHandler(AbstractInternalAuth):
         returns:
         a dictionary containing user data or None if nothing is found
         """
-        user_key = self.db.hash_get(self.USER_INDEX_KEY, username)
-        return None if user_key is None else self.db.get(user_key)
+        cursor = self.db.cursor()
+        cursor.execute(
+            'SELECT id, username, firstname, lastname, email, pwd_hash, affiliation '
+            'FROM kontext_user '
+            'WHERE username = %s', (username,))
+        return cursor.fetchone()
 
     def get_required_username_properties(self, plugin_ctx):
         return (_(
@@ -241,7 +270,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         if re.match(r'^[^@]+@[^@]+\.[^@]+$', credentials['email']) is None:  # just a basic e-mail syntax validation
             errors['email'].append(_('E-mail not valid'))
 
-        credentials['password'] = mk_pwd_hash_default(credentials['password'])
+        token.pwd_hash = mk_pwd_hash_default(credentials['password'])
         del credentials['password2']
         if len(errors) == 0:
             token.save(self.db)
@@ -283,38 +312,36 @@ class DefaultAuthHandler(AbstractInternalAuth):
             text=text, reply_to=None)
         return mailing.send_mail(server, msg, [user_email])
 
-    def find_free_user_id(self):
-        v = self.db.get(self.LAST_USER_ID_KEY)
-        if v is None:
-            v = 0
-        avail = False
-        while not avail:
-            v += 1
-            avail = (self.db.get(mk_user_key(v)) is None)
-        return v
-
     def sign_up_confirm(self, plugin_ctx, key):
-        token = SignUpToken(value=key)
-        token.load(self.db)
-        if token.is_stored():
-            user_test = self.db.hash_get(self.USER_INDEX_KEY, token.user['username'])
-            if user_test:
-                raise SignUpNeedsUpdateException()
-            new_id = self.find_free_user_id()
-            self.db.set(mk_user_key(new_id),
-                        dict(id=new_id, username=token.user['username'],
-                             firstname=token.user['firstname'],
-                             lastname=token.user['lastname'],
-                             affiliation=token.user['affiliation'],
-                             email=token.user['email'],
-                             pwd_hash=token.user['password']))
-            self.db.hash_set(self.USER_INDEX_KEY, token.user['username'], mk_user_key(new_id))
-            self.db.set(self.LAST_USER_ID_KEY, new_id)
-            self.db.set(mk_list_key(new_id), self._on_register_get_corpora)
-            token.delete(self.db)
-            return dict(ok=True, label=token.label)
-        else:
-            return dict(ok=False)
+        self.db.start_transaction()
+        try:
+            token = SignUpToken(value=key)
+            token.load(self.db)
+            if token.is_stored():
+                curr = self._find_user(token.username)
+                if curr:
+                    raise SignUpNeedsUpdateException()
+
+                cursor = self.db.cursor()
+                cursor.execute(
+                    'INSERT INTO kontext_user (username, firstname, lastname, pwd_hash, email, affiliation) '
+                    'VALUES (%s, %s, %s, %s, %s, %s)',
+                    (token.username, token.firstname, token.lastname,
+                     token.pwd_hash, token.email, token.affiliation))
+                for corp in self._on_register_get_corpora:
+                    cursor.execute(
+                        'INSERT INTO kontext_user_access (user_id, corpus_name, limited) ' 
+                        'VALUES (%s, %s, 0) ', (cursor.lastrowid, corp))
+                token.delete(self.db)
+                self.db.commit()
+                return dict(ok=True, label=token.label)
+            else:
+                self.db.rollback()
+                return dict(ok=False)
+        except Exception as ex:
+            self.db.rollback()
+            logging.getLogger(__name__).error(f'Failed to apply sign_up token {key}: {ex}')
+            raise ex
 
     def get_form_props_from_token(self, key):
         token = SignUpToken(value=key)
@@ -324,22 +351,22 @@ class DefaultAuthHandler(AbstractInternalAuth):
         return None
 
 
-@inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
+@inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.SESSIONS)
 def create_instance(conf, db, sessions):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
     """
     plugin_conf = conf.get('plugins', 'auth')
-    return DefaultAuthHandler(db=db,
-                              sessions=sessions,
-                              anonymous_user_id=int(plugin_conf['anonymous_user_id']),
-                              case_sensitive_corpora_names=plugin_conf.get(
-                                  'default:case_sensitive_corpora_names', False),
-                              login_url=plugin_conf.get('login_url', '/user/login'),
-                              logout_url=plugin_conf.get('logout_url', '/user/logoutx'),
-                              smtp_server=conf.get('mailing', 'smtp_server'),
-                              mail_sender=conf.get('mailing', 'sender'),
-                              confirmation_token_ttl=int(plugin_conf.get('confirmation_token_ttl',
-                                                                         DefaultAuthHandler.DEFAULT_CONFIRM_TOKEN_TTL)),
-                              on_register_get_corpora=plugin_conf.get('on_register_get_corpora', ('susanne',)))
+    return MysqlAuthHandler(
+        db=db if db and db.is_active else MySQLOps(MySQLConf(plugin_conf)),
+        sessions=sessions,
+        anonymous_user_id=int(plugin_conf['anonymous_user_id']),
+        case_sensitive_corpora_names=plugin_conf.get('default:case_sensitive_corpora_names', False),
+        login_url=plugin_conf.get('login_url', '/user/login'),
+        logout_url=plugin_conf.get('logout_url', '/user/logoutx'),
+        smtp_server=conf.get('mailing', 'smtp_server'),
+        mail_sender=conf.get('mailing', 'sender'),
+        confirmation_token_ttl=int(
+            plugin_conf.get('confirmation_token_ttl', MysqlAuthHandler.DEFAULT_CONFIRM_TOKEN_TTL)),
+        on_register_get_corpora=plugin_conf.get('on_register_get_corpora', ('susanne',)))
