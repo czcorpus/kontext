@@ -12,7 +12,7 @@ services:
     environment:
       - STATUS_SERVICE_URL=${STATUS_SERVICE_URL}
     volumes:
-      - ./scripts/install/conf/docker/config.ucnk.xml:/opt/kontext/conf/config.xml
+      - ./scripts/install/conf/docker/config.mysql.xml:/opt/kontext/conf/config.xml
       - files:/opt/kontext/public/share
       - corpora:/var/local/corpora
     networks:
@@ -39,7 +39,7 @@ services:
       context: .
       dockerfile: dockerfiles/Dockerfile.rqworker
     volumes:
-      - ./scripts/install/conf/docker/config.ucnk.xml:/opt/kontext/conf/config.xml
+      - ./scripts/install/conf/docker/config.mysql.xml:/opt/kontext/conf/config.xml
       - corpora:/var/local/corpora
     networks:
       - redis
@@ -54,7 +54,7 @@ services:
       context: .
       dockerfile: dockerfiles/Dockerfile.ws
     volumes:
-      - ./scripts/install/conf/docker/config.ucnk.xml:/opt/kontext/conf/config.xml
+      - ./scripts/install/conf/docker/config.mysql.xml:/opt/kontext/conf/config.xml
       - corpora:/var/local/corpora
     networks:
       - redis
@@ -88,7 +88,9 @@ services:
   mariadb:
     image: mariadb:latest
     volumes:
-      - ./scripts/install/conf/docker/kontext.sql:/docker-entrypoint-initdb.d/kontext.sql
+      - ./lib/plugins/mysql_corparch/scripts/tables.sql:/docker-entrypoint-initdb.d/1_corparch_tables.sql
+      - ./lib/plugins/mysql_query_persistence/scripts/schema.sql:/docker-entrypoint-initdb.d/2_query_persistence_tables.sql
+      - ./lib/plugins/mysql_auth/scripts/schema.sql:/docker-entrypoint-initdb.d/3_auth_tables.sql
     ports:
       - "3306:3306"
     environment:

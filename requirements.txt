@@ -20,5 +20,3 @@ rq-scheduler >= 0.10.0
 rq >= 1.5.1
 
 pydub>=0.25.1
-# necessary when using mysql plugins
-mysql-connector >= 2.2.9
