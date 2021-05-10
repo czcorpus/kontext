@@ -25,7 +25,7 @@ import sqlite3
 import argparse
 from hashlib import md5
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.mysql_corparch.install import InstallJson, InstallCorpusInfo
+from plugins.abstract.corparch.install import InstallJson, InstallCorpusInfo
 
 
 class Shared(InstallCorpusInfo):
