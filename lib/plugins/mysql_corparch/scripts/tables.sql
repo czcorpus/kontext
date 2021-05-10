@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS kontext_conc_persistence;
 
 CREATE TABLE kontext_corpus (
   id int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  name varchar(50),
+  name varchar(63),
   size bigint(20) NOT NULL DEFAULT '0',
   group_name varchar(255) NOT NULL,
   version int(11) NOT NULL DEFAULT '1',
@@ -233,6 +233,37 @@ CREATE TABLE kontext_conc_persistence (
   num_access int(11) NOT NULL DEFAULT '0',
   last_access timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (id,created)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ---------------------- registry file model ------------------------
+
+CREATE TABLE registry_conf (
+  corpus_name varchar(63) NOT NULL,
+  name varchar(255),
+  created varchar(25),
+  updated varchar(25),
+  path varchar(255) NOT NULL,
+  vertical varchar(255),
+  language varchar(255),
+  locale varchar(255),
+  rencoding varchar(255) NOT NULL,
+  info text,
+  shortref varchar(255),
+  freqttattrs text,
+  tagsetdoc varchar(255),
+  wposlist text,
+  docstructure varchar(63),
+  wsdef text,
+  wsattr varchar(63),
+  wsbase text,
+  wsthes text,
+  alignstruct text,
+  aligndef text,
+  PRIMARY KEY (corpus_name),
+  KEY registry_conf_info_idx (info(255)),
+  CONSTRAINT registry_conf_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora (name),
+  CONSTRAINT registry_conf_docstructure_fkey FOREIGN KEY (corpus_name, docstructure) REFERENCES corpus_structure (corpus_name, name),
+  CONSTRAINT registry_conf_wsattr_id_fkey FOREIGN KEY (corpus_name, wsattr) REFERENCES corpus_posattr (corpus_name, name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- -------------------- susanne corpus

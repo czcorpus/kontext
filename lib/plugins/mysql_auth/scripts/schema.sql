@@ -14,7 +14,8 @@ CREATE TABLE kontext_user_access (
   corpus_name varchar(63) NOT NULL,
   limited tinyint(1) NOT NULL,
   PRIMARY KEY (user_id, corpus_name),
-  CONSTRAINT kontext_user_access_user_id_fk FOREIGN KEY (user_id) REFERENCES kontext_user(id)
+  CONSTRAINT kontext_user_access_user_id_fk FOREIGN KEY (user_id) REFERENCES kontext_user(id),
+  CONSTRAINT kontext_user_access_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE kontext_group_access (
@@ -41,3 +42,4 @@ CREATE TABLE kontext_sign_up_token (
 
 INSERT INTO kontext_user (id, username, firstname, lastname, email, pwd_hash)
 VALUES (1, 'anonymous', 'anonymous', 'user', 'anonymous@localhost', '---');
+INSERT INTO kontext_user_access (user_id, corpus_name, limited) VALUES (1, 'susanne', 0);
