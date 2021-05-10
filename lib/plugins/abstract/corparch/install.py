@@ -20,6 +20,7 @@ from typing import List, Dict, Any, IO, Optional, Tuple, Mapping
 import manatee
 import json
 import re
+import os
 
 
 class _InstallJsonMetadata(object):

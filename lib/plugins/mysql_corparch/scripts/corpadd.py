@@ -90,7 +90,7 @@ import manatee
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import settings
 from plugins.mysql_corparch.backendw import WritableBackend
-from plugins.mysql_corparch.install import InstallJson
+from plugins.abstract.corparch.install import InstallJson
 from plugins.abstract.corparch.registry.parser import Tokenizer, Parser, infer_encoding
 
 
