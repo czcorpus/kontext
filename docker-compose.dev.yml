@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: dockerfiles/Dockerfile.kontext-dev
     environment:
+      - TZ=Europe/Prague
       - DEV_SERVER_HOST=0.0.0.0
     command: bash -c "./scripts/install/conf/docker/run.dev.sh"
     ports:
@@ -33,12 +34,16 @@ services:
       - redis
   redis:
     image: redis:latest
+    environment:
+      - TZ=Europe/Prague
     networks:
       - redis
     ports:
       - "16379:6379"
   nginx:
     image: nginx:latest
+    environment:
+      - TZ=Europe/Prague
     ports:
       - "8080:80"
     volumes:
@@ -58,6 +63,8 @@ services:
       context: .
       dockerfile: dockerfiles/Dockerfile.rqscheduler
     command: rqscheduler --host kontext_redis_1 --db 2 -i 10
+    environment:
+      - TZ=Europe/Prague
     networks:
       - redis
     depends_on: 
