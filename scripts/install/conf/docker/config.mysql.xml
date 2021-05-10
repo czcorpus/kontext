@@ -87,7 +87,7 @@
             <module>mysql_auth</module>
             <js_module>defaultAuth</js_module>
             <auth_cookie_name>kontext_session</auth_cookie_name>
-            <anonymous_user_id>32</anonymous_user_id>
+            <anonymous_user_id>1</anonymous_user_id>
             <login_url>/user/login</login_url>
             <logout_url>/user/logoutx</logout_url>
         </auth>
@@ -111,7 +111,7 @@
             <tag_prefix>+</tag_prefix>
             <max_num_hints>10</max_num_hints>
             <max_num_favorites>5</max_num_favorites>
-            <default_page_list_size>3</default_page_list_size>
+            <default_page_list_size>30</default_page_list_size>
             <default_label>czech</default_label>
         </corparch>
         <db>

@@ -6,5 +6,5 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && dpkg
 WORKDIR /opt/kontext
 
 COPY ./scripts/install/steps.py ./scripts/install/*.patch ./scripts/install/
-RUN python3 scripts/install/steps.py SetupManatee --step_args 2.167.8 scripts/install/ucnk-manatee-2.167.8.patch 0
+RUN python3 scripts/install/steps.py SetupManatee --step-args 2.167.8 scripts/install/ucnk-manatee-2.167.8.patch 0
 RUN rm -r /usr/local/src/manatee-open-2.167.8
