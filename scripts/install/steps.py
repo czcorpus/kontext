@@ -378,7 +378,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser('Run step')
     parser.add_argument('step_name', metavar='NAME', type=str, help='Step name')
-    parser.add_argument('--step_args', metavar='ARGS', type=str,
+    parser.add_argument('--step-args', metavar='ARGS', type=str,
                         nargs='+', help='Step arguments', default=[])
     args = parser.parse_args()
 
