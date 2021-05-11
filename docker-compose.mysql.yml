@@ -71,6 +71,8 @@ services:
       - redis
     ports:
       - "16379:6379"
+    volumes:
+      - redisdata:/data
 
   nginx:
     image: nginx:latest
@@ -91,6 +93,7 @@ services:
       - ./lib/plugins/mysql_corparch/scripts/tables.sql:/docker-entrypoint-initdb.d/1_corparch_tables.sql
       - ./lib/plugins/mysql_query_persistence/scripts/schema.sql:/docker-entrypoint-initdb.d/2_query_persistence_tables.sql
       - ./lib/plugins/mysql_auth/scripts/schema.sql:/docker-entrypoint-initdb.d/3_auth_tables.sql
+      - mdbdata:/var/lib/mysql
     ports:
       - "3306:3306"
     environment:
@@ -102,8 +105,10 @@ services:
       - mariadb
 
 volumes:
-  files:
-  corpora:
+  files: {}
+  corpora: {}
+  mdbdata: {}
+  redisdata: {}
 
 networks:
   redis: {}
