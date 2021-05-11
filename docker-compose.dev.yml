@@ -46,6 +46,8 @@ services:
       - redis
     ports:
       - "16379:6379"
+    volumes:
+      - redisdata:/data
 
   nginx:
     image: nginx:latest
@@ -67,7 +69,9 @@ services:
       - kontext-dev
 
 volumes:
-  dist:
+  dist: {}
+  redisdata: {}
+
 
 networks:
   redis: {}
