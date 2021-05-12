@@ -53,7 +53,15 @@ def init_plugin(name, module=None, optional=False):
                 plugin_module = plugins.load_plugin_module(settings.get('plugins', name)['module'])
             else:
                 plugin_module = module
-            plugins.install_plugin(name, plugin_module, settings)
+            plg = plugins.install_plugin(name, plugin_module, settings)
+            if hasattr(plg, 'wait_for_environment') and callable(plg.wait_for_environment):
+                logging.getLogger(__name__).info(f'Plug-in {plg.__class__.__name__} is waiting for environment')
+                err = plg.wait_for_environment(timeout_ms=20000)
+                if err:
+                    logging.getLogger(__name__).error(f'{plg.__class__.__name__}: {err}')
+                else:
+                    logging.getLogger(__name__).info(f'Plug-in {plg.__class__.__name__} environment OK')
+
         except ImportError as e:
             logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
                                              % (name, e))

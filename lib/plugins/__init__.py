@@ -178,11 +178,16 @@ class _Names(object):
 runtime: _Names = _Names()
 
 
-def install_plugin(name: str, module, config) -> None:
+def install_plugin(name: str, module, config) -> Any:
+    """
+    returns:
+        an initialized plug-in instance
+    """
     if isinstance(module.create_instance, _PluginFactory):
         _plugins[name] = module.create_instance(*(config,))
     else:  # modules without @inject will get just the configuration
         _plugins[name] = module.create_instance(*(config,))
+    return _plugins[name]
 
 
 def inject_plugin(ident: _ID, obj: object) -> None:

@@ -11,6 +11,7 @@ tmp/
 *.db
 lib/plugins/devel_*
 node_modules/
+docker.local/
 
 # default app installation
 venv/
