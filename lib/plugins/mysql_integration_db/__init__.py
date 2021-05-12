@@ -22,6 +22,8 @@ from mysql.connector.cursor import MySQLCursor
 from mysql.connector.errors import OperationalError
 from mysql.connector import connect
 import logging
+import time
+from typing import Dict, Optional
 
 
 class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
@@ -32,32 +34,37 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
     require access to them, it is recommended to configure this plug-in.
     """
 
-    _conn: MySQLConnection
+    _conn: Optional[MySQLConnection]
+
+    _conn_args: Dict[str, str]
 
     _retry_delay: int
 
     _retry_attempts: int
 
     def __init__(self, host, database, user, password, pool_size, pool_name, autocommit, retry_delay, retry_attempts):
-        self._conn = connect(host=host, database=database, user=user, password=password, pool_size=pool_size,
-                             pool_name=pool_name, autocommit=autocommit)
+        self._conn_args = dict(
+            host=host, database=database, user=user, password=password, pool_size=pool_size,
+            pool_name=pool_name, autocommit=autocommit)
         self._retry_delay = retry_delay
         self._retry_attempts = retry_attempts
+        self._conn = None
 
     @property
     def connection(self):
+        if self._conn is None:
+            self._conn = connect(**self._conn_args)
         return self._conn
 
     def cursor(self, dictionary=True, buffered=False):
         try:
-            return self._conn.cursor(dictionary=dictionary, buffered=buffered)
+            return self.connection.cursor(dictionary=dictionary, buffered=buffered)
         except OperationalError as ex:
             if 'MySQL Connection not available' in ex.msg:
                 logging.getLogger(__name__).warning(
                     'Lost connection to MySQL server - reconnecting')
-                self._conn.reconnect(delay=self._retry_delay,
-                                     attempts=self._retry_attempts)
-                return self._conn.cursor(dictionary=dictionary, buffered=buffered)
+                self.connection.reconnect(delay=self._retry_delay, attempts=self._retry_attempts)
+                return self.connection.cursor(dictionary=dictionary, buffered=buffered)
 
     @property
     def is_active(self):
@@ -65,7 +72,21 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
 
     @property
     def info(self):
-        return f'{self._conn.server_host}/{self._conn.database}'
+        return f'{self.connection.server_host}/{self.connection.database}'
+
+    def wait_for_environment(self, timeout_ms):
+        t = time.time()
+        while (time.time() - t) * 1000 < timeout_ms:
+            try:
+                cursor = self.connection.cursor(dictionary=False, buffered=False)
+                cursor.execute('SELECT COUNT(*) FROM kontext_integration_env LIMIT 1')
+                row = cursor.fetchone()
+                if row and row[0] == 1:
+                    return None
+            except Exception:
+                pass
+            time.sleep(0.5)
+        return Exception('No confirmed environment installation. Please check table kontext_integration_env')
 
     def execute(self, sql, args):
         cursor = self.cursor()
@@ -78,13 +99,13 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
         return cursor
 
     def start_transaction(self, isolation_level=None):
-        return self._conn.start_transaction()
+        return self.connection.start_transaction()
 
     def commit(self):
-        self._conn.commit()
+        self.connection.commit()
 
     def rollback(self):
-        self._conn.rollback()
+        self.connection.rollback()
 
 
 def create_instance(conf):

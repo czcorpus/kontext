@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Optional
 
 N = TypeVar('N')
 R = TypeVar('R')
@@ -57,6 +57,24 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         """
         Provide a brief info about the database. This is mainly for administrators
         as it is typically written to the application log during KonText start.
+        """
+        pass
+
+    @abc.abstractmethod
+    def wait_for_environment(self, timeout_ms: int) -> Optional[Exception]:
+        """
+        This function is called each time KonText service is started
+        and it should block the execution until either timeout_ms has elapsed
+        or some external condition allowing plug-in initialization has been
+        fulfilled.
+
+        This can be e.g. used when KonText run within a Docker container and
+        it has to wait for a database container to initialize. In such case
+        it should e.g. try to select from a table to make sure there is a
+        working connection along with database, tables and data.
+
+        returns:
+        if None then the environment is ready else provide an error for further processing
         """
         pass
 

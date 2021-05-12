@@ -59,6 +59,9 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
     def info(self):
         return 'Empty integration DB.'
 
+    def wait_for_environment(self, timeout_ms):
+        return None
+
     def execute(self, sql, args):
         raise PluginCompatibilityException(self._err_msg())
 
