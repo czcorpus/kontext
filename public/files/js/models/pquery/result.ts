@@ -107,7 +107,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
     reloadData():void {
         const args = {
-            query_id: this.state.queryId,
+            q: `~${this.state.queryId}`,
             page: this.state.page,
             sort: this.state.sortKey.column,
             reverse: this.state.sortKey.reverse ? 1 : 0
