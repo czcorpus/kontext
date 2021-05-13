@@ -3,7 +3,7 @@
 #
 # for more convenient logging, install concurrent_log_handler
 jinja2 >= 2.10
-Werkzeug >= 1.0.1
+Werkzeug >= 1.0.1, < 2.0.0
 secure-cookie >= 0.1.0
 # please note that lxml package requires the following system packages:
 # libxml2-dev, libxslt-dev, python-dev

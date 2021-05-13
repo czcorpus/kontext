@@ -1,7 +1,7 @@
 FROM mariadb:latest
 
 ENV MYSQL_ROOT_PASSWORD="root-secret"
-ENV MYSQL_DATABASES="kontext"
+ENV MYSQL_DATABASE="kontext"
 ENV MYSQL_USER="kontext"
 ENV MYSQL_PASSWORD="kontext-secret"
 
