@@ -13,7 +13,7 @@ services:
       - "5678:5678"
       - "5679:5679"
     volumes:
-      - ./scripts/install/conf/docker/config.default.xml:/opt/kontext/conf/config.xml
+      - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       # we have to bind folders separatelly
       # if we bind whole root, container can't access its node_modules
       - ./lib:/opt/kontext/lib

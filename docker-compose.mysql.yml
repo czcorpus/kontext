@@ -2,90 +2,16 @@ version: '3.7'
 
 services:
   kontext:
-    build:
-      context: .
-      dockerfile: dockerfiles/Dockerfile.kontext
-    # since we are using shared volume with nginx
-    # in case different version of kontext is used
-    # we need to copy files into the shared volume first
-    command: bash -c "cp -r /opt/kontext/public/files/* /opt/kontext/public/share && gunicorn -c ./scripts/install/conf/docker/gunicorn-conf.py public.app:application"
-    environment:
-      - STATUS_SERVICE_URL=${STATUS_SERVICE_URL}
-    volumes:
-      - ./scripts/install/conf/docker/config.mysql.xml:/opt/kontext/conf/config.xml
-      - files:/opt/kontext/public/share
-      - corpora:/var/local/corpora
     networks:
-      - redis
       - mariadb
-      - kontext
     depends_on:
-      - redis
       - mariadb
-
-  rq-scheduler:
-    build:
-      context: .
-      dockerfile: dockerfiles/Dockerfile.rqscheduler
-    command: rqscheduler --host kontext_redis_1 --db 2 -i 10
-    networks:
-      - redis
-    depends_on:
-      - redis
-      - kontext
 
   rq-worker:
-    build:
-      context: .
-      dockerfile: dockerfiles/Dockerfile.rqworker
-    volumes:
-      - ./scripts/install/conf/docker/config.mysql.xml:/opt/kontext/conf/config.xml
-      - corpora:/var/local/corpora
     networks:
-      - redis
       - mariadb
     depends_on:
-      - redis
       - mariadb
-      - kontext
-
-  ws:
-    build:
-      context: .
-      dockerfile: dockerfiles/Dockerfile.ws
-    volumes:
-      - ./scripts/install/conf/docker/config.mysql.xml:/opt/kontext/conf/config.xml
-      - corpora:/var/local/corpora
-    networks:
-      - redis
-      - mariadb
-      - kontext
-    depends_on:
-      - redis
-      - mariadb
-      - kontext
-
-  redis:
-    image: redis:latest
-    networks:
-      - redis
-    ports:
-      - "16379:6379"
-    volumes:
-      - redisdata:/data
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "8080:80"
-    volumes:
-      - ./scripts/install/conf/docker/${NGINX_CONF_FILE}:/etc/nginx/conf.d/default.conf
-      - files:/opt/kontext/public/files
-    networks:
-      - kontext
-    depends_on:
-      - kontext
-      - ws
 
   mariadb:
     build:
@@ -99,12 +25,7 @@ services:
       - mariadb
 
 volumes:
-  files: {}
-  corpora: {}
   mdbdata: {}
-  redisdata: {}
 
 networks:
-  redis: {}
   mariadb: {}
-  kontext: {}
