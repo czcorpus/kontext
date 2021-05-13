@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="corparch">
+            <element name="module">
+                <value>mysql_corparch</value>
+            </element>
+            <element name="js_module">
+                <value>ucnkCorparch</value>
+            </element>
+            <element name="default_page_list_size">
+                <data type="positiveInteger" />
+            </element>
+            <element name="tag_prefix">
+                <text />
+            </element>
+            <element name="max_num_hints">
+                <data type="positiveInteger" />
+            </element>
+            <element name="max_num_favorites">
+                <data type="positiveInteger" />
+            </element>
+            <optional>
+                <element name="mysql_host">
+                    <text />
+                </element>
+                <element name="mysql_db">
+                    <text />
+                </element>
+                <element name="mysql_user">
+                    <text />
+                </element>
+                <element name="mysql_passwd">
+                    <text />
+                </element>
+                <element name="mysql_pool_size">
+                    <data type="positiveInteger" />
+                </element>
+                <element name="mysql_retry_delay">
+                    <data type="positiveInteger" />
+                </element>
+                <element name="mysql_retry_attempts">
+                    <data type="positiveInteger" />
+                </element>
+            </optional>
+        </element>
+    </start>
+</grammar>

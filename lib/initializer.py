@@ -56,7 +56,7 @@ def init_plugin(name, module=None, optional=False):
             plg = plugins.install_plugin(name, plugin_module, settings)
             if hasattr(plg, 'wait_for_environment') and callable(plg.wait_for_environment):
                 logging.getLogger(__name__).info(f'Plug-in {plg.__class__.__name__} is waiting for environment')
-                err = plg.wait_for_environment(timeout_ms=20000)
+                err = plg.wait_for_environment()
                 if err:
                     logging.getLogger(__name__).error(f'{plg.__class__.__name__}: {err}')
                 else:

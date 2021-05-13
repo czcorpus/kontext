@@ -29,9 +29,15 @@ from typing import Dict, Optional
 class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
     """
     MySqlIntegrationDb is a variant of integration_db plug-in providing access
-    to MySQL and MariaDB instances. In case you have an existing information system
-    based on one of those databases and multiple KonText plug-ins you use
-    require access to them, it is recommended to configure this plug-in.
+    to MySQL/MariaDB instances. It is recommended for:
+     1) integration with existing MySQL/MariaDB information systems,
+     2) self-contained production installations with many registered users and
+        thousands or more search requests per day where most of the search
+        requests are archived
+
+    Please make sure scripts/schema.sql is applied to your database. Otherwise
+    the plug-in fails to start. In case of a Dockerized installation, this
+    is done automatically.
     """
 
     _conn: Optional[MySQLConnection]
@@ -42,12 +48,14 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
 
     _retry_attempts: int
 
-    def __init__(self, host, database, user, password, pool_size, pool_name, autocommit, retry_delay, retry_attempts):
+    def __init__(self, host, database, user, password, pool_size, pool_name, autocommit, retry_delay, retry_attempts,
+                 environment_wait_sec: int):
         self._conn_args = dict(
             host=host, database=database, user=user, password=password, pool_size=pool_size,
             pool_name=pool_name, autocommit=autocommit)
         self._retry_delay = retry_delay
         self._retry_attempts = retry_attempts
+        self._environment_wait_sec = environment_wait_sec
         self._conn = None
 
     @property
@@ -74,9 +82,9 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
     def info(self):
         return f'{self.connection.server_host}/{self.connection.database}'
 
-    def wait_for_environment(self, timeout_ms):
+    def wait_for_environment(self):
         t = time.time()
-        while (time.time() - t) * 1000 < timeout_ms:
+        while (time.time() - t) * 1000 < self._environment_wait_sec:
             try:
                 cursor = self.connection.cursor(dictionary=False, buffered=False)
                 cursor.execute('SELECT COUNT(*) FROM kontext_integration_env LIMIT 1')
@@ -110,8 +118,8 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
 
 def create_instance(conf):
     pconf = conf.get('plugins', 'integration_db')
-    return MySqlIntegrationDb(host=pconf['host'], database=pconf['db'], user=pconf['user'],
-                              password=pconf['passwd'], pool_size=int(pconf['pool_size']),
-                              pool_name='kontext_pool', autocommit=True,
-                              retry_delay=int(pconf['retry_delay']),
-                              retry_attempts=int(pconf['retry_attempts']))
+    return MySqlIntegrationDb(
+        host=pconf['host'], database=pconf['db'], user=pconf['user'], password=pconf['passwd'],
+        pool_size=int(pconf['pool_size']), pool_name='kontext_pool', autocommit=True,
+        retry_delay=int(pconf['retry_delay']), retry_attempts=int(pconf['retry_attempts']),
+        environment_wait_sec=int(pconf['environment_wait_sec']))

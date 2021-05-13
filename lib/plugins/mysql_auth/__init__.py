@@ -53,8 +53,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
     DEFAULT_CONFIRM_TOKEN_TTL = 3600  # 1 hour
 
     def __init__(self, db: MySQLConnection, sessions, anonymous_user_id, case_sensitive_corpora_names: bool,
-                 login_url, logout_url, smtp_server, mail_sender,
-                 confirmation_token_ttl, on_register_get_corpora):
+                 login_url, logout_url, smtp_server, mail_sender, confirmation_token_ttl, on_register_get_corpora):
         """
         """
         super().__init__(anonymous_user_id)
@@ -362,7 +361,7 @@ def create_instance(conf, db, sessions):
         db=db if db and db.is_active else MySQLOps(MySQLConf(plugin_conf)),
         sessions=sessions,
         anonymous_user_id=int(plugin_conf['anonymous_user_id']),
-        case_sensitive_corpora_names=plugin_conf.get('default:case_sensitive_corpora_names', False),
+        case_sensitive_corpora_names=plugin_conf.get('case_sensitive_corpora_names', False),
         login_url=plugin_conf.get('login_url', '/user/login'),
         logout_url=plugin_conf.get('logout_url', '/user/logoutx'),
         smtp_server=conf.get('mailing', 'smtp_server'),

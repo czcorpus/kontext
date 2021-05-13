@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+    <start>
+        <element name="integration_db">
+            <element name="module">
+                <value>mysql_integration_db</value>
+            </element>
+            <element name="host">
+                <text />
+            </element>
+            <element name="db">
+                <text />
+            </element>
+            <element name="user">
+                <text />
+            </element>
+            <element name="passwd">
+                <text />
+            </element>
+            <element name="pool_size">
+                <data type="integer" />
+            </element>
+            <element name="retry_delay">
+                <data type="integer" />
+            </element>
+            <element name="retry_attempts">
+                <data type="integer" />
+            </element>
+            <element name="environment_wait_sec">
+                <a:documentation>
+                    How many seconds should the plug-in wait to
+                    its environment to be ready. The predicate specifying
+                    the "readiness" is based on existence of table
+                    'kontext_integration_env' containing a timestamp.
+                    This is mostly used when running within a Docker container.
+                </a:documentation>
+                <data type="integer" />
+            </element>
+        </element>
+    </start>
+</grammar>

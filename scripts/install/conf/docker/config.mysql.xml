@@ -8,6 +8,7 @@
         <logo_inline_css>width: 200px</logo_inline_css>
         <fonts/>
         <favicon>favicon.ico</favicon>
+        <favicon_type>image/x-icon</favicon_type>
     </theme>
     <global>
         <deployment_id>20151031_v4
@@ -51,7 +52,6 @@
         <type>rq</type>
         <conf>/opt/kontext/conf/rq-schedule-conf.json</conf>
     </job_scheduler>
-    <mailing/>
     <logging>
         <path>/var/log/kontext/application.log</path>
         <file_size>5000000</file_size>
@@ -86,10 +86,11 @@
         <auth>
             <module>mysql_auth</module>
             <js_module>defaultAuth</js_module>
-            <auth_cookie_name>kontext_session</auth_cookie_name>
             <anonymous_user_id>1</anonymous_user_id>
+            <auth_cookie_name>kontext_session</auth_cookie_name>
             <login_url>/user/login</login_url>
             <logout_url>/user/logoutx</logout_url>
+            <case_sensitive_corpora_names>0</case_sensitive_corpora_names>
         </auth>
         <action_log>
             <module>default_action_log</module>
@@ -100,19 +101,17 @@
         </conc_cache>
         <query_persistence>
             <module>mysql_query_persistence</module>
-            <ttl_days extension-by="default">100</ttl_days>
-            <archive_dir extension-by="default">/var/local/corpora/conc_persistence</archive_dir>
-            <archive_db_path extension-by="ucnk">/opt/kontext/conc_archive.db</archive_db_path>
+            <ttl_days>100</ttl_days>
+            <anonymous_user_ttl_days>7</anonymous_user_ttl_days>
             <archive_queue_key>arch</archive_queue_key>
         </query_persistence>
         <corparch>
             <module>mysql_corparch</module>
             <js_module>ucnkCorparch</js_module>
+            <default_page_list_size>30</default_page_list_size>
             <tag_prefix>+</tag_prefix>
             <max_num_hints>10</max_num_hints>
             <max_num_favorites>5</max_num_favorites>
-            <default_page_list_size>30</default_page_list_size>
-            <default_label>czech</default_label>
         </corparch>
         <db>
             <module>redis_db</module>
@@ -129,6 +128,7 @@
             <pool_size>3</pool_size>
             <retry_delay>2</retry_delay>
             <retry_attempts>5</retry_attempts>
+            <environment_wait_sec>10</environment_wait_sec>
         </integration_db>
         <export>
             <csv>default_csv</csv>
