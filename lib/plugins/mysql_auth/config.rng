@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+    <start>
+        <element name="auth">
+            <element name="module">
+                <value>mysql_auth</value>
+            </element>
+            <element name="js_module">
+                <value>defaultAuth</value>
+            </element>
+            <element name="anonymous_user_id">
+                <data type="nonNegativeInteger" />
+            </element>
+            <element name="auth_cookie_name">
+                <text />
+            </element>
+            <element name="login_url">
+                <text />
+            </element>
+            <element name="logout_url">
+                <text />
+            </element>
+            <optional>
+                <element name="confirmation_token_ttl">
+                    <a:documentation>
+                        Number of seconds a confirmation token (typically for sign up process)
+                        is valid.
+                    </a:documentation>
+                    <text />
+                </element>
+            </optional>
+            <optional>
+                <element name="on_register_get_corpora">
+                    <a:documentation>
+                        A list of corpora a registered user will get access to
+                    </a:documentation>
+                    <oneOrMore>
+                        <element name="item">
+                            <text />
+                        </element>
+                    </oneOrMore>
+                </element>
+            </optional>
+            <element name="case_sensitive_corpora_names">
+                <a:documentation>By default, KonText converts all the corpora names to lowercase.
+                    Setting this to true (or 1) disables the conversion and allows having corpora.
+                    like 'Foo', 'FOO', 'foo' side by side.
+                </a:documentation>
+                <data type="boolean" />
+            </element>
+        </element>
+    </start>
+</grammar>

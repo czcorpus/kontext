@@ -28,6 +28,7 @@ class MySQLConfException(Exception):
     pass
 
 
+DFLT_USER_TABLE = 'kontext_user'
 DFLT_CORP_TABLE = 'kontext_corpus'
 DFLT_GROUP_ACC_TABLE = 'kontext_group_access'
 DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
@@ -38,11 +39,12 @@ DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
 
 class Backend(DatabaseBackend):
 
-    def __init__(self, db, corp_table: str = DFLT_CORP_TABLE, group_acc_table: str = DFLT_GROUP_ACC_TABLE,
-                 user_acc_table: str = DFLT_USER_ACC_TABLE, user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
-                 group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
+    def __init__(self, db, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
+                 group_acc_table: str = DFLT_GROUP_ACC_TABLE, user_acc_table: str = DFLT_USER_ACC_TABLE,
+                 user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR, group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
                  group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):
         self._db = db
+        self._user_table = user_table
         self._corp_table = corp_table
         self._group_acc_table = group_acc_table
         self._user_acc_table = user_acc_table
@@ -215,7 +217,8 @@ class Backend(DatabaseBackend):
             f'    {self._group_acc_table}.limited AS limited '
             f'  FROM {self._group_acc_table} '
             f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
-            f'     (SELECT user.{self._group_acc_group_attr} FROM user WHERE (user.id = %s))) '
+            f'     (SELECT {self._user_table}.{self._group_acc_group_attr} '
+            f'          FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
             ') AS kcu ON c.id = kcu.corpus_id '
             f'WHERE {" AND ".join("(" + wc + ")" for wc in where_cond2)} '
             'GROUP BY c.name '
@@ -331,7 +334,8 @@ class Backend(DatabaseBackend):
                        f'    {self._group_acc_table}.limited AS limited '
                        f'  FROM {self._group_acc_table} '
                        f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
-                       f'      (SELECT user.{self._group_acc_group_attr} FROM user WHERE (user.id = %s))) '
+                       f'      (SELECT {self._user_table}.{self._group_acc_group_attr} '
+                       f'           FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
                        ') as ucp '
                        f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
                        'ORDER BY ucp.limited LIMIT 1',
@@ -353,7 +357,8 @@ class Backend(DatabaseBackend):
                        f'     {self._group_acc_table}.limited AS limited '
                        f'  FROM {self._group_acc_table} '
                        f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
-                       f'      (SELECT user.{self._group_acc_group_attr} FROM user WHERE (user.id = %s))) '
+                       f'      (SELECT {self._user_table}.{self._group_acc_group_attr} '
+                       f'           FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
                        ') as ucp '
                        f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
         return [r['corpus_id'] for r in cursor.fetchall()]

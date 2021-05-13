@@ -59,7 +59,7 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
     def info(self):
         return 'Empty integration DB.'
 
-    def wait_for_environment(self, timeout_ms):
+    def wait_for_environment(self):
         return None
 
     def execute(self, sql, args):

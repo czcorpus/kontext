@@ -355,12 +355,18 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, user_items, integ_db):
-    backend = Backend(integ_db)
-    logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
+    plugin_conf = conf.get('plugins', 'corparch')
+    if integ_db.is_active:
+        logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
+        backend = Backend(integ_db)
+    else:
+        from plugins.common.mysql import MySQLOps, MySQLConf
+        backend = MySQLOps(MySQLConf(plugin_conf))
+
     return MySQLCorparch(
         backend=backend,
         user_items=user_items,
-        tag_prefix=conf.get('plugins', 'corparch')['tag_prefix'],
-        max_num_hints=conf.get('plugins', 'corparch')['max_num_hints'],
-        max_page_size=conf.get('plugins', 'corparch').get('default_page_list_size', None),
+        tag_prefix=plugin_conf['tag_prefix'],
+        max_num_hints=plugin_conf['max_num_hints'],
+        max_page_size=plugin_conf.get('default_page_list_size', None),
         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))

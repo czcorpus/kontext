@@ -61,12 +61,12 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         pass
 
     @abc.abstractmethod
-    def wait_for_environment(self, timeout_ms: int) -> Optional[Exception]:
+    def wait_for_environment(self) -> Optional[Exception]:
         """
         This function is called each time KonText service is started
-        and it should block the execution until either timeout_ms has elapsed
-        or some external condition allowing plug-in initialization has been
-        fulfilled.
+        and it should block the execution until either an internally
+        defined/configured timeout has elapsed or some external condition
+        allowing plug-in initialization has been fulfilled.
 
         This can be e.g. used when KonText run within a Docker container and
         it has to wait for a database container to initialize. In such case
