@@ -69,25 +69,23 @@ class WsgiApp(object):
     @staticmethod
     def setup_logger(conf):
         """
-        Sets up file-based rotating logger. All the parameters are extracted
-        from conf argument:
-        path: /kontext/global/log_path
-        maximum file size (optional, default is 8MB): /kontext/global/log_file_size
-        number of backed-up files (optional, default is 10): /kontext/global/log_num_files
+        Sets up file-based rotating logger based on XML config.xml.
         """
-        #handler = logging.StreamHandler(sys.stderr)
+        if conf.contains('logging', 'stderr'):
+            handler = logging.StreamHandler(sys.stderr)
+        elif conf.contains('logging', 'stdout'):
+            handler = logging.StreamHandler(sys.stdout)
+        else:
+            try:
+                from concurrent_log_handler import ConcurrentRotatingFileHandler as HandlerClass
+            except ImportError:
+                from logging.handlers import RotatingFileHandler as HandlerClass
+            handler = HandlerClass(conf.get('logging', 'path').format(pid=os.getpid()),
+                                   maxBytes=conf.get_int(
+                                       'logging', 'file_size', 8000000),
+                                   backupCount=conf.get_int('logging', 'num_files', 10))
 
-        try:
-            from concurrent_log_handler import ConcurrentRotatingFileHandler as HandlerClass
-        except ImportError:
-            from logging.handlers import RotatingFileHandler as HandlerClass
-        handler = HandlerClass(conf.get('logging', 'path').format(pid=os.getpid()),
-                               maxBytes=conf.get_int(
-                                   'logging', 'file_size', 8000000),
-                               backupCount=conf.get_int('logging', 'num_files', 10))
-
-        handler.setFormatter(logging.Formatter(
-            fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+        handler.setFormatter(logging.Formatter(fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
         logger.addHandler(handler)
         logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
