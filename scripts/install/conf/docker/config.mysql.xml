@@ -53,9 +53,7 @@
         <conf>/opt/kontext/conf/rq-schedule-conf.json</conf>
     </job_scheduler>
     <logging>
-        <path>/var/log/kontext/application.log</path>
-        <file_size>5000000</file_size>
-        <num_files>10</num_files>
+        <stderr />
     </logging>
     <corpora>
         <manatee_registry>/var/lib/manatee/registry</manatee_registry>

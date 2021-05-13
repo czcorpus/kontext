@@ -478,21 +478,35 @@
                 </element>
             </optional>
             <element name="logging">
-                <interleave>
-                    <element name="path">
-                        <a:documentation>Path to KonText application log. A Python formatting string with 'pid' key can
-                        be used to create a file with pid in its name (e.g. my_log_{pid}.log).</a:documentation>
-                        <text />
+                <choice>
+                    <element name="stdout">
+                        <a:documentation>
+                            Logging to stdout. Useful e.g. when running within a Docker container.
+                        </a:documentation>
+                        <empty />
                     </element>
-                    <element name="file_size">
-                        <a:documentation>Maximum size of a log file (log rotation)</a:documentation>
-                        <data type="integer" />
+                    <element name="stderr">
+                        <a:documentation>
+                            Logging to stderr. Useful e.g. when running within a Docker container.
+                        </a:documentation>
+                        <empty />
                     </element>
-                    <element name="num_files">
-                        <a:documentation>Maximum number of log files (log rotation</a:documentation>
-                        <data type="positiveInteger" />
-                    </element>
-                </interleave>
+                    <interleave>
+                        <element name="path">
+                            <a:documentation>Path to KonText application log. A Python formatting string with 'pid' key can
+                            be used to create a file with pid in its name (e.g. my_log_{pid}.log).</a:documentation>
+                            <text />
+                        </element>
+                        <element name="file_size">
+                            <a:documentation>Maximum size of a log file (log rotation). Default is 8MB</a:documentation>
+                            <data type="integer" />
+                        </element>
+                        <element name="num_files">
+                            <a:documentation>Maximum number of log files (log rotation). Default is 10</a:documentation>
+                            <data type="positiveInteger" />
+                        </element>
+                    </interleave>
+                </choice>
             </element>
             <element name="corpora">
                 <interleave>
