@@ -1,0 +1,35 @@
+version: "3.7"
+
+services:
+  kontext:
+    environment:
+      - STATUS_SERVICE_URL=${STATUS_SERVICE_URL}
+
+  ws:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.ws
+    volumes:
+      - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
+      - corpora:/var/local/corpora
+    networks:
+      - redis
+      - kontext
+      - mariadb
+    depends_on: 
+      - redis
+      - kontext
+
+  nginx:
+    volumes:
+      - ./scripts/install/conf/docker/nginx.ws.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - ws
+
+volumes:
+  corpora: {}
+
+networks:
+  redis: {}
+  mariadb: {}
+  kontext: {}
