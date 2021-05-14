@@ -732,7 +732,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                         null
                     }
                     <div>
-                        <CorparchWidget />
+                        {CorparchWidget ? <CorparchWidget /> : null}
                     </div>
                     <S.MainFieldset>
                         <AttrSelector attrList={this.props.attrList}

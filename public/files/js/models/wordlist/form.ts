@@ -20,8 +20,8 @@
 
 import { Observable, Observer, of as rxOf } from 'rxjs';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
-import { concatMap, map } from 'rxjs/operators';
-import { Dict, List, Ident, pipe, tuple, HTTP } from 'cnc-tskit';
+import { concatMap } from 'rxjs/operators';
+import { List, Ident, HTTP } from 'cnc-tskit';
 
 
 import { Kontext } from '../../types/common';
@@ -32,7 +32,7 @@ import { ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as ACActions, ActionName as ACActionName } from '../../models/asyncTask/actions';
-import { FileTarget, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
+import { FileTarget, splitFilterWords, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
 import { IUnregistrable } from '../common/common';
 import { MultiDict } from '../../multidict';
 
@@ -92,6 +92,7 @@ export interface WordlistFormState {
     filtersVisible:boolean;
     precalcTasks:Array<Kontext.AsyncTaskInfo<{}>>;
     isBusy:boolean;
+    modalVisible:boolean;
 }
 
 export interface WordlistFormCorpSwitchPreserve {
@@ -175,7 +176,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 outputOptionsVisible: false,
                 filtersVisible: false,
                 precalcTasks: [],
-                isBusy: false
+                isBusy: false,
+                modalVisible: false
             }
         );
         this.layoutModel = layoutModel;
@@ -485,6 +487,20 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
+        this.addActionHandler<Actions.RegisterPrecalcTasks>(
+            ActionName.RegisterPrecalcTasks,
+            (state, action) => {
+                state.precalcTasks = action.payload.tasks;
+            }
+        );
+
+        this.addActionHandler<Actions.ToggleModalForm>(
+            ActionName.ToggleModalForm,
+            (state, action) => {
+                state.modalVisible = !state.modalVisible;
+            }
+        );
+
         this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
             GlobalActionName.CorpusSwitchModelRestore,
             (state, action)  => {
@@ -510,13 +526,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                         data: this.serialize(state)
                     }
                 });
-            }
-        );
-
-        this.addActionHandler<Actions.RegisterPrecalcTasks>(
-            ActionName.RegisterPrecalcTasks,
-            (state, action) => {
-                state.precalcTasks = action.payload.tasks;
             }
         );
 
@@ -669,13 +678,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         }
     }
 
-    private splitWords(s:string):Array<string> {
-        return pipe(
-            s.split(/\s+/),
-            List.filter(v => v !== '')
-        );
-    }
-
     createSubmitArgs(state:WordlistFormState):WordlistSubmitArgs {
         return {
             corpname: state.corpusId,
@@ -685,8 +687,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             wlminfreq: parseInt(state.wlminfreq.value),
             wlnums: state.wlnums,
             wltype: state.wltype,
-            pfilter_words: this.splitWords(state.pfilterWords),
-            nfilter_words: this.splitWords(state.nfilterWords),
+            pfilter_words: splitFilterWords(state.pfilterWords),
+            nfilter_words: splitFilterWords(state.nfilterWords),
             include_nonwords: state.includeNonwords,
             wlposattrs: List.map(v => v.value, state.wlposattrs)
         };

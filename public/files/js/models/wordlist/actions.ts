@@ -67,7 +67,8 @@ export enum ActionName {
     WordlistIntermediateBgCalcUpdated = 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED',
     ToggleOutputOptions = 'WORDLIST_TOGGLE_OUTPUT_OPTIONS',
     ToggleFilterOptions = 'WORDLIST_TOGGLE_FILTER_OPTIONS',
-    RegisterPrecalcTasks = 'WORDLIST_REGISTER_PRECALC_TASKS'
+    RegisterPrecalcTasks = 'WORDLIST_REGISTER_PRECALC_TASKS',
+    ToggleModalForm = 'WORDLIST_TOGGLE_MODAL_FORM'
 }
 
 
@@ -313,5 +314,10 @@ export namespace Actions {
         tasks:Array<Kontext.AsyncTaskInfo<{}>>;
     }> {
         name:ActionName.RegisterPrecalcTasks;
+    }
+
+    export interface ToggleModalForm extends Action<{
+    }> {
+        name:ActionName.ToggleModalForm;
     }
 }
