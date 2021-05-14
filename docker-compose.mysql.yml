@@ -17,6 +17,10 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.kontext-mariadb
+    environment:
+      - MYSQL_PASSWORD
+      - MYSQL_USER
+      - MYSQL_ROOT_PASSWORD
     volumes:
       - mdbdata:/var/lib/mysql
     ports:
