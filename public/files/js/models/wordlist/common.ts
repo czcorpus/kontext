@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { List, pipe } from 'cnc-tskit';
 import { SaveData } from '../../app/navigation';
 import { Kontext } from '../../types/common';
 
@@ -93,4 +94,12 @@ export interface SubmitResponse {
     wl_query_id:string;
     freq_files_avail:string;
     subtasks:Array<Kontext.AsyncTaskInfo<{}>>;
+}
+
+
+export function splitFilterWords(s:string):Array<string> {
+    return pipe(
+        s.split(/\s+/),
+        List.filter(v => v !== '')
+    );
 }

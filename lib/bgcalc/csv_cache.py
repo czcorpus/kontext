@@ -14,6 +14,7 @@
 
 import csv
 
+
 def load_cached_partial(path, offset, limit):
     with open(path, 'r') as fr:
         csv_reader = csv.reader(fr)

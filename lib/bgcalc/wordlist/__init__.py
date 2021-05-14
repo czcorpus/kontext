@@ -15,7 +15,7 @@
 from functools import wraps
 import hashlib
 import os
-from typing import List, Dict, Any, Tuple, Optional, Set
+from typing import List, Dict, Tuple
 from corplib.corpus import KCorpus
 from corplib import frq_db
 import re
@@ -25,8 +25,7 @@ import l10n
 from argmapping.wordlist import WordlistFormArgs
 from manatee import Structure   # TODO wrap this out
 from bgcalc.wordlist.errors import WordlistResultNotFound
-from corplib.errors import MissingSubCorpFreqFile
-from bgcalc.csv_cache import load_cached_partial, load_cached_full
+from bgcalc.csv_cache import load_cached_full
 import settings
 
 
@@ -57,15 +56,16 @@ def require_existing_wordlist(form: WordlistFormArgs, wlsort: str, reverse: bool
 
 def cached(f):
     """
-    A decorator for caching freq merge results (using "pickle" serialization)
+    A decorator for caching wordlist to a CSV file
     """
     @wraps(f)
     def wrapper(corp: KCorpus, args: WordlistFormArgs, max_items: int):
         path = _create_cache_path(args)
 
-        if os.path.exists(path):
+        if os.path.exists(path):  # TODO we do not use this branch
             with open(path, 'r') as fr:
                 csv_reader = csv.reader(fr)
+                next(csv_reader) # skip __total__ info
                 return [item for item in csv_reader]
         else:
             ans = f(corp, args, sys.maxsize)
@@ -73,13 +73,13 @@ def cached(f):
             with open(path, 'w') as fw:
                 csv_writer = csv.writer(fw)
                 csv_writer.writerow(('__total__', num_lines))
-                csv_writer.writerows(ans[1:])
-            return ans[1:max_items]
+                csv_writer.writerows(ans)
+            return ans[:max_items]
 
     return wrapper
 
 
-def _wordlist_from_list(attr, attrfreq, pfilter_words, nfilter_words, wlminfreq, wlnums):
+def _wordlist_from_list(attr, attrfreq, pfilter_words: List[str], nfilter_words: List[str], wlminfreq, wlnums):
     items = []
     for word in pfilter_words:
         id = attr.str2id(word)
@@ -147,7 +147,7 @@ def wordlist(corp: KCorpus, args: WordlistFormArgs, max_items: int) -> List[Tupl
     """
     attr = corp.get_attr(args.wlattr)
     attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=args.wlattr, wlnums=args.wlnums)
-    if args.pfilter_words and args.wlpat == '.*':  # word list just for given words
+    if args.pfilter_words and args.wlpat in ('.*', '.+', ''):  # word list just for given words
         items = _wordlist_from_list(attr=attr, attrfreq=attrfreq, pfilter_words=args.pfilter_words,
                                     nfilter_words=args.nfilter_words, wlminfreq=args.wlminfreq,
                                     wlnums=args.wlnums)
@@ -160,8 +160,7 @@ def wordlist(corp: KCorpus, args: WordlistFormArgs, max_items: int) -> List[Tupl
                                      wlminfreq=args.wlminfreq, pfilter_words=args.pfilter_words,
                                      nfilter_words=args.nfilter_words, wlnums=args.wlnums,
                                      attrfreq=attrfreq)
-    del items[max_items:]
-    return items
+    return items[:max_items]
 
 
 def make_wl_query(self, wlattr: str, wlpat: str, include_nonwords, pfilter_words, nfilter_words,

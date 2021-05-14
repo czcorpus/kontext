@@ -18,18 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable, interval as rxInterval } from 'rxjs';
-import { concatMap, scan, takeWhile, last } from 'rxjs/operators';
-import { HTTP } from 'cnc-tskit';
-
 import { Kontext } from '../types/common';
 import { PageModel, DownloadType } from '../app/page';
-import { MultiDict } from '../multidict';
 import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
 import { init as wordlistResultViewInit } from '../views/wordlist/result';
 import { init as wordlistSaveViewInit } from '../views/wordlist/save';
 import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form';
 import { WordlistSaveModel } from '../models/wordlist/save';
+import { init as queryOverviewInit } from '../views/wordlist/overview';
 import { KontextPage } from '../app/main';
 import { WordlistResultModel } from '../models/wordlist/main';
 import { ResultItem, WordlistSaveArgs } from '../models/wordlist/common';
@@ -38,10 +34,6 @@ import { Actions, ActionName } from '../models/wordlist/actions';
 
 interface AsyncProcessResponse {
     status:number;
-}
-
-interface AsyncProcessStatus extends AsyncProcessResponse {
-    numUnchanged:number;
 }
 
 /**
@@ -92,6 +84,23 @@ export class WordlistPage {
             url,
             'application/json',
             args
+        );
+    }
+
+    private initCorpnameLink(model:WordlistFormModel):void {
+        const queryOverviewViews = queryOverviewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.getComponentHelpers(),
+            model,
+            null,
+            this.layoutModel.getModels().mainMenuModel
+        );
+        this.layoutModel.renderReactComponent(
+            queryOverviewViews,
+            window.document.getElementById('query-overview-mount'),
+            {
+                queryId: this.layoutModel.getConf<string>('QueryId')
+            }
         );
     }
 
@@ -154,7 +163,7 @@ export class WordlistPage {
             const view = wordlistResultViewInit({
                 dispatcher: this.layoutModel.dispatcher,
                 utils: this.layoutModel.getComponentHelpers(),
-                wordlistSaveViews:saveViews,
+                wordlistSaveViews: saveViews,
                 wordlistResultModel: resultModel,
                 wordlistFormModel: formModel
             });
@@ -178,6 +187,8 @@ export class WordlistPage {
                     });
                 }
             });
+
+            this.initCorpnameLink(formModel);
         });
     }
 }
