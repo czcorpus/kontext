@@ -67,8 +67,8 @@ class AttrArgs(object):
         sql_values = []
         for key, values in self.data.items():
             key = key.replace('.', '_')
-            if key == self._bib_label and self._bib_label != self._autocomplete_attr:
-                key = self._bib_id
+            if self._autocomplete_attr == self._bib_label and key == self._bib_id:
+                continue
             cnf_item = []
             if type(values) in (list, tuple):
                 for value in values:
