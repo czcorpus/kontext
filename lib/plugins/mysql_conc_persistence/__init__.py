@@ -153,7 +153,7 @@ class MySqlConcPersistence(AbstractConcPersistence):
             return self.anonymous_user_ttl
         return self._ttl_days
 
-    def find_used_corpora(self, query_id):
+    def _find_used_corpora(self, query_id):
         """
         Because the operations are chained via 'prev_id' and the corpname
         information is not stored for all the steps, for any n-th step > 1
@@ -168,7 +168,7 @@ class MySqlConcPersistence(AbstractConcPersistence):
     def open(self, data_id):
         ans = self._load_query(data_id, save_access=True)
         if ans is not None and 'corpora' not in ans:
-            ans['corpora'] = self.find_used_corpora(ans.get('prev_id'))
+            ans['corpora'] = self._find_used_corpora(ans.get('prev_id'))
         return ans
 
     def _load_query(self, data_id: str, save_access: bool):

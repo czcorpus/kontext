@@ -155,14 +155,19 @@ class Archiver(object):
         i = 0
         try:
             cursor = self._to_db.cursor()
+            proc_keys = set()
             while i < num_proc:
                 qitem = self._from_db.list_pop(self._archive_queue_key)
                 if qitem is None:
                     break
-                data = self._from_db.get(qitem['key'])
-                if not is_archived(cursor, qitem['key']):
-                    inserts.append((qitem['key'][len(conc_prefix):], json.dumps(data), curr_time, 0))
+                key = qitem['key']
+                if key in proc_keys:  # there are possible duplicates in the queue
+                    continue
+                data = self._from_db.get(key)
+                if not is_archived(cursor, key):
+                    inserts.append((key[len(conc_prefix):], json.dumps(data), curr_time, 0))
                     i += 1
+                proc_keys.add(key)
             cursor.close()
             if not dry_run:
                 self._to_db.executemany(
