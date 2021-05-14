@@ -38,7 +38,7 @@
     "kombo": "^0.86.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "rxjs": "^6.6.7",
+    "rxjs": "^7.0.0",
     "styled-components": "^5.3.0"
   },
   "scripts": {

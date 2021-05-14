@@ -477,7 +477,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         op,
         pipeOp
     }:CreateOperationArgs):Observable<AjaxConcResponse|null> {
-        const prepareFormData:Observable<AjaxResponse.ConcFormArgs|null> = changedOpIdx !== opIdx ?
+        const prepareFormData:Observable<[AjaxResponse.ConcFormArgs|null, string]> = changedOpIdx !== opIdx ?
                 this.syncFormData(state, opIdx) : rxOf(null);
         if (opIdx === 0) {
             return rxOf([]).pipe(
