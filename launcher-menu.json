@@ -7,6 +7,12 @@
       "production:Builds your app for the production environment.": "build:production",
       "production-with-maps:Builds your app for the production environment with maps.": "build:production-with-maps",
       "production-notc:Builds your app for the production environment ???.": "build:production-notc"
+    },
+    "docker:Run container": {
+      "description": "docker profile",
+      "dev:Run development profile": "docker:dev",
+      "default:Run production profile": "docker:default",
+      "mysql:Run production profile with mysql": "docker:mysql"
     }
   }
 }

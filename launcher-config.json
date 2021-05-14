@@ -3,6 +3,9 @@
     "devel-server": "node node_modules/webpack/bin/webpack.js serve --config webpack.dev.js",
     "build:production": "node node_modules/webpack/bin/webpack.js --config webpack.prod.js",
     "build:production-with-maps": "node node_modules/webpack/bin/webpack.js --config webpack.prod.js --env.SOURCE_MAPS",
-    "build:production-notc": "node node_modules/webpack/bin/webpack.js --config webpack.prod.js --env.TS_TRANSPILE_ONLY"
+    "build:production-notc": "node node_modules/webpack/bin/webpack.js --config webpack.prod.js --env.TS_TRANSPILE_ONLY",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
+    "docker:default": "docker-compose -f docker-compose.yml -f docker-compose.ws.yml up",
+    "docker:mysql": "docker-compose -f docker-compose.yml -f docker-compose.ws.yml -f docker-compose.mysql.yml --env-file .env.mysql up"
   }
 }
