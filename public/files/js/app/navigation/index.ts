@@ -97,7 +97,7 @@ export namespace SaveData {
 interface AjaxRequestProps {
     accept:string,
     contentType:string,
-    responseType:string,
+    responseType:XMLHttpRequestResponseType,
     method:string,
     requestBody:string,
     url:string
@@ -315,7 +315,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
                 'Content-Type': callArgs.contentType
             }
         }).pipe(
-            map<RxAjaxResponse, T>(v => v.response)
+            map<RxAjaxResponse<T>, T>(v => v.response)
         );
     }
 

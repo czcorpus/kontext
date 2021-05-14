@@ -157,7 +157,7 @@ export class AudioPlayer {
 
         this.currentWaveformSource = List.head(this.waveformSources);
         if (this.currentWaveformSource) {
-            ajax(this.currentWaveformSource).subscribe(
+            ajax<number[]>(this.currentWaveformSource).subscribe(
                 next => {
                     this.status = {...this.status, waveform: next.response};
                 }

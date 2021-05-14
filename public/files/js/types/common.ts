@@ -316,7 +316,7 @@ export namespace Kontext {
 
     export interface AjaxOptions {
         contentType?:string;
-        responseType?:string;
+        responseType?:XMLHttpRequestResponseType;
         accept?:string;
     }
 
