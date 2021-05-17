@@ -73,7 +73,7 @@ from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 import logging
 from plugins.common.mysql import MySQLOps, MySQLConf
-from .archive import Archiver, get_iso_datetime, is_archived
+from .archive import get_iso_datetime, is_archived
 
 
 PERSIST_LEVEL_KEY = 'persist_level'

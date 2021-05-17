@@ -31,14 +31,11 @@ import logging
 import sqlite3
 import json
 import time
-from typing import Dict, Any, List
-from manatee import Corpus
 
 from plugins.abstract.query_persistence import AbstractQueryPersistence
 import plugins
 from plugins import inject
 from controller.errors import ForbiddenException, UserActionException
-from settings import import_bool
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
