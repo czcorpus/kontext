@@ -224,16 +224,14 @@ class Actions(Querying):
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
-        except plugins.abstract.conc_cache.CalcStatusException as ex:
+        except (plugins.abstract.conc_cache.CalcStatusException, RuntimeError) as ex:
             if 'syntax error' in f'{ex}'.lower():
                 self.add_system_message(
                     'error', translate('Syntax error. Please check the query and its type.'))
+            elif 'AttrNotFound' in str(ex):
+                raise UserActionException(ex)
             else:
                 raise ex
-        except RuntimeError as ex:
-            if 'AttrNotFound' in str(ex):
-                raise UserActionException(ex)
-            raise ex
         except UnknownConcordanceAction as ex:
             raise UserActionException(str(ex))
 
@@ -371,7 +369,7 @@ class Actions(Querying):
                 curr_corpora = [self.args.corpname] + self.args.align
                 if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
                     raise ImmediateRedirectException(self.create_url('query',
-                        [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
+                                                                     [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
                 try:
                     qf_args.apply_last_used_opts(
                         data=qdata.get('lastop_form', {}),
@@ -379,7 +377,8 @@ class Actions(Querying):
                         curr_corpora=curr_corpora,
                         curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
                 except Exception as ex:
-                    logging.getLogger(__name__).warning('Cannot restore prev. query form: {}'.format(ex))
+                    logging.getLogger(__name__).warning(
+                        'Cannot restore prev. query form: {}'.format(ex))
             qdata = qs.find_by_qkey(request.args.get('qkey'))
             if qdata is not None:
                 qf_args = qf_args.updated(qdata.get('lastop_form', {}), request.args.get('qkey'))
@@ -663,7 +662,8 @@ class Actions(Querying):
             ans['size'] = 0
             ans['finished'] = True
             if 'syntax error' in f'{ex}'.lower():
-                raise UserActionException(translate('Syntax error. Please check the query and its type.'))
+                raise UserActionException(
+                    translate('Syntax error. Please check the query and its type.'))
             elif 'AttrNotFound' in str(ex):
                 raise UserActionException(ex)
             else:
@@ -1466,7 +1466,8 @@ class Actions(Querying):
             def mkfilename(suffix): return f'{self.args.corpname}-concordance.{suffix}'
             if saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
-                self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(mkfilename('txt'))
+                self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(
+                    mkfilename('txt'))
                 output.update(data)
                 for item in data['Lines']:
                     item['ref'] = ', '.join(item['ref'])
