@@ -224,16 +224,14 @@ class Actions(Querying):
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
-        except ConcCacheStatusException as ex:
+        except (ConcCacheStatusException, RuntimeError) as ex:
             if 'syntax error' in f'{ex}'.lower():
                 self.add_system_message(
                     'error', translate('Syntax error. Please check the query and its type.'))
+            elif 'AttrNotFound' in str(ex):
+                raise UserActionException(ex)
             else:
                 raise ex
-        except RuntimeError as ex:
-            if 'AttrNotFound' in str(ex):
-                raise UserActionException(ex)
-            raise ex
         except UnknownConcordanceAction as ex:
             raise UserActionException(str(ex))
 
@@ -1094,12 +1092,12 @@ class Actions(Querying):
         if self.args.wlattr:
             pass
             # TODO !!!!!!!!!!!!!
-            #self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
+            # self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
             #                            include_nonwords=request.form['include_nonwords'],
             #                            pfilter_words=request.form['pfilter_words'],
             #                            nfilter_words=request.form['nfilter_words'],
             #                            non_word_re=self.corp.get_conf('NONWORDRE'))
-            #self._make_wl_query()  # multilevel wordlist
+            # self._make_wl_query()  # multilevel wordlist
 
         # following piece of sh.t has hidden parameter dependencies
         result = self.freqs(fcrit, flimit, freq_sort, ml)
