@@ -102,6 +102,7 @@
             <ttl_days>100</ttl_days>
             <anonymous_user_ttl_days>7</anonymous_user_ttl_days>
             <archive_queue_key>arch</archive_queue_key>
+            <implicit_archiving>true</implicit_archiving>
         </query_persistence>
         <corparch>
             <module>mysql_corparch</module>

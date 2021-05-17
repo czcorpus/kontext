@@ -29,6 +29,7 @@ import { HTTP, tuple } from 'cnc-tskit';
 
 interface IsArchivedResponse extends Kontext.AjaxResponse {
     is_archived:boolean;
+    will_be_archived:boolean;
 }
 
 interface MakePermanentResponse extends Kontext.AjaxResponse {
