@@ -286,6 +286,11 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
     def is_archived(self, conc_id):
         return self._archive_backend.is_archived(self._mk_key(conc_id))
 
+    def will_be_archived(self, plugin_ctx, conc_id: str):
+        return not self.is_archived(conc_id)\
+            and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', False)\
+            and not self._auth.is_anonymous(plugin_ctx.user_id)
+
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)
 def create_instance(settings, db, auth):

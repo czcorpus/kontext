@@ -116,7 +116,8 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         self._auth = auth
         if integration_db.is_active:
             self._archive = integration_db
-            logging.getLogger(__name__).info(f'mysql_query_persistence uses integration_db[{integration_db.info}]')
+            logging.getLogger(__name__).info(
+                f'mysql_query_persistence uses integration_db[{integration_db.info}]')
         else:
             self._archive = MySQLOps(MySQLConf(plugin_conf))
         self._settings = settings
@@ -277,6 +278,11 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
     def is_archived(self, conc_id):
         return is_archived(self._archive.cursor(), conc_id)
+
+    def will_be_archived(self, plugin_ctx, conc_id: str):
+        return not self.is_archived(conc_id)\
+            and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', False)\
+            and not self._auth.is_anonymous(plugin_ctx.user_id)
 
     def export_tasks(self):
         """
