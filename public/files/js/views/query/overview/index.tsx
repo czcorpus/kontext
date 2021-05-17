@@ -748,7 +748,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             <Style_PersistentConcordanceForm>
                                 <Style_SaveHintParagraph>
                                     <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
-                                    {this.props.concIsArchived ?
+                                    {this.props.concIsArchived || this.props.willBeArchived ?
                                         he.translate('concview__permanent_link_is_archived') + ':' :
                                         he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.props.concTTLDays})
                                     }

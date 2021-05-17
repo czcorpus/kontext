@@ -43,6 +43,7 @@ export interface QuerySaveAsFormModelState {
     isValidated:boolean;
     concTTLDays:number;
     concIsArchived:boolean;
+    willBeArchived:boolean;
     concExplicitPersistenceUI:boolean;
 }
 
@@ -69,6 +70,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 isValidated: false,
                 concTTLDays,
                 concIsArchived: false,
+                willBeArchived: false,
                 concExplicitPersistenceUI
             }
         );
@@ -146,7 +148,10 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     (data) => {
                         dispatch<Actions.GetConcArchivedStatusDone>({
                             name: ActionName.GetConcArchivedStatusDone,
-                            payload: {isArchived: data.is_archived}
+                            payload: {
+                                willBeArchived: data.will_be_archived,
+                                isArchived: data.is_archived
+                            }
                         });
 
                     },
@@ -165,6 +170,7 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             (state, action) => {
                 state.isBusy = false;
                 state.concIsArchived = action.payload.isArchived;
+                state.willBeArchived = action.payload.willBeArchived;
             }
         );
 
