@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
-         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
     <start>
         <element name="query_persistence">
             <element name="module">
@@ -40,6 +41,13 @@
             </optional>
             <optional>
                 <element name="implicit_archiving">
+                    <a:documentation>
+                        In case concordance requests are archived via a regular scheduled
+                        job, this value should be set to true so KonText knows how to
+                        present the "permanent" link function before the actual archiving
+                        is performed (i.e. during time the item is only scheduled to
+                        be archived).
+                    </a:documentation>
                     <choice>
                         <value>false</value>
                         <value>true</value>
