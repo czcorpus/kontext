@@ -241,7 +241,7 @@ export class QueryPage {
                 isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
                 suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
                 simpleQueryDefaultAttrs: pipe(
-                    this.layoutModel.getConf<Array<string>>('alignedCorpora'),
+                    [...this.layoutModel.getConf<Array<string>>('alignedCorpora')],
                     List.push(this.layoutModel.getCorpusIdent().id),
                     List.map(corp => tuple(
                         corp,
