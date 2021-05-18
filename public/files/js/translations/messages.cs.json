@@ -799,7 +799,7 @@
         "wordlist__no_result_for_{wlpat}": "Žádný odpovídající výsledek k dotazu \"{wlpat}\"",
         "wordlist__create_filter_list": "Vytvořit",
         "wordlist__use_ctrl_enter_for_newline": "Pro přechod na nový řádek použijte Ctrl+ENTER",
-        "wordlist__pattern_empty_err": "Vyhledávaný výraz nesmí být prázdný",
+        "wordlist__pattern_empty_err": "Musí být vyplněn vyhledávací výraz a/nebo seznam slov pro filtr",
         "wordlist__failed_to_precalculate": "Selhala příprava pomocných dat pro výpočet frekvence. Zkuste prosím akci opakovat později, případně kontaktujte administrátora.",
         "wordlist__aux_data_must_be_precalculated": "KonText musí připravit pomocná data pro výpočet frekvence. Mějte prosím chvíli strpení, výpočet by měl trvat max. několik minut.",
         "wordlist__remove_attribute": "Odstranit atribut",

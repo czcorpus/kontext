@@ -799,7 +799,7 @@
         "wordlist__no_result_for_{wlpat}": "No matching result for \"{wlpat}\" UNTRANSLATED",
         "wordlist__create_filter_list": "Create UNTRANSLATED",
         "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER UNTRANSLATED",
-        "wordlist__pattern_empty_err": "The search pattern cannot be empty UNTRANSLATED",
+        "wordlist__pattern_empty_err": "Search pattern and/or filter words must be entered UNTRANSLATED",
         "wordlist__failed_to_precalculate": "Failed to create auxiliary data required for the frequency distribution calculation. Please try again later or contact system administrator. UNTRANSLATED",
         "wordlist__aux_data_must_be_precalculated": "KonText must prepare auxiliary data for the frequency distribution calculation. The calculation should take at most a few minutes to complete. UNTRANSLATED",
         "wordlist__remove_attribute": "Remove attribute UNTRANSLATED",
