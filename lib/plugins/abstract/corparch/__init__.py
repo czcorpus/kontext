@@ -404,3 +404,9 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         Overriding this method allows you to use your own CorpusInfo implementations.
         """
         return CorpusInfo()
+
+    @abc.abstractmethod
+    def export_favorite(self, plugin_ctx: 'PluginCtx', favitems: List[Any]):
+        """
+        """
+        pass
