@@ -106,7 +106,7 @@
         </query_persistence>
         <corparch>
             <module>mysql_corparch</module>
-            <js_module>ucnkCorparch</js_module>
+            <js_module>defaultCorparch</js_module>
             <default_page_list_size>30</default_page_list_size>
             <tag_prefix>+</tag_prefix>
             <max_num_hints>10</max_num_hints>

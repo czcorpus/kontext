@@ -20,6 +20,10 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
 * fully **editable query chain**
     * any operation from a user defined sequence (e.g. query -&gt; filter -&gt; sample -&gt; sorting) can be changed
     and the whole sequence is then re-executed.
+* multiple search modes:
+    * concordance,
+    * paradigmatic query,
+    * word list
 * simple and advanced query types
     * **advanced CQL editor** with **syntax highlighting** and **attribute recognition**
     * **interactive PoS tag composing tool** for positional and key-value tagsets
@@ -59,17 +63,24 @@ KonText is an **advanced corpus query interface** and corpus data **integration 
 adapters, authentication method, corpus listing widgets, HTTP session management)
 
 
-## Requirements
+## Installation
 
-* Python *3.6* (or newer):
-    * WSGI-compatible server - [Gunicorn](http://gunicorn.org/) (recommended), [uWsgi](https://uwsgi-docs.readthedocs.io/en/latest/) (supported)
-    * [Werkzeug](http://werkzeug.pocoo.org/) web application library
-    * [Jinja2](https://jinja.palletsprojects.com/en/2.10.x/) template engine
-    * [lxml](http://lxml.de/) library
-    * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)
-    * [markdown](https://pypi.python.org/pypi/Markdown) library (optional, for formatted corpora references)
-    * [openpyxl](https://pythonhosted.org/openpyxl/) library (optional, for XLSX export)
-    * [Babel](http://babel.pocoo.org/en/latest/) library
+### Docker
+
+Running KonText as a set of Docker containers is the most convenient and flexible way.
+
+```shell
+docker-compose -f docker-compose.yml -f docker-compose.mysql.yml --env-file .env.mysql up
+```
+
+(the `.env.mysql` allows configuring custom MySQL/MariaDB credentials and KonText configuration file)
+
+
+### Manual installation
+
+#### Key requirements
+
+* Python *3.6* (or newer)
 * [Manatee](http://nlp.fi.muni.cz/trac/noske) corpus search engine - version *2.167.8* and onwards
 * a key-value storage
     * [Redis](http://redis.io/) (recommended), [SQLite](https://sqlite.org/) (supported), custom implementations possible
@@ -78,12 +89,10 @@ adapters, authentication method, corpus listing widgets, HTTP session management
   + [Nginx](http://nginx.org/) (recommended), [Apache](http://httpd.apache.org/),...
 
 
-## Build and installation
-
-KonText provides a [script](scripts/install/install.py) for automatic installation
-to an existing Ubuntu system. The easiest way to install KonText is to create an LXC/LXD container, clone
-the repository there and run the script. On a decently fast network, the whole process takes only a couple
-of seconds. Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details.
+For Ubuntu OS users, it is recommended to use the [install script](scripts/install/install.py) which should 
+perform most of the actions necessary to install and run KonText. For other Linux distributions we recommend
+running KonText within a container or a virtual machine. Please refer to the [doc/INSTALL.md](doc/INSTALL.md) 
+file for details.
 
 
 ## Customization and contribution

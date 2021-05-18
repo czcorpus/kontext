@@ -7,7 +7,10 @@
                 <value>mysql_corparch</value>
             </element>
             <element name="js_module">
-                <value>ucnkCorparch</value>
+                <choice>
+                    <value>ucnkCorparch</value>
+                    <value>defaultCorparch</value>
+                </choice>
             </element>
             <element name="default_page_list_size">
                 <data type="positiveInteger" />
