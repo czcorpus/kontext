@@ -76,7 +76,8 @@ class UcnkCorpusInfo(CorpusInfo):
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
-    return plugins.runtime.CORPARCH.instance.export_favorite(ctrl._plugin_ctx)
+    with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
+        return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
 
 
 @exposed(access_level=1, return_type='json', skip_corpus_init=True, http_method='POST')
@@ -126,18 +127,6 @@ class UcnkCorpArch3(MySQLCorparch):
                                                        min_size=min_size, max_size=max_size, requestable=requestable,
                                                        offset=offset, limit=limit if limit > -1 else 1000000000,
                                                        favourites=favourites)
-
-    def export_favorite(self, plugin_ctx):
-        ans = []
-        favitems = plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_ctx)
-        favitems_corpids = [x.corpora[0]['id'] for x in favitems]
-        descriptions = self.backend.load_corpora_descriptions(
-            favitems_corpids, plugin_ctx.user_lang)
-        for item in favitems:
-            tmp = item.to_dict()
-            tmp['description'] = descriptions.get(item.corpora[0]['id'], None)
-            ans.append(tmp)
-        return ans
 
     def export(self, plugin_ctx):
         ans = super(UcnkCorpArch3, self).export(plugin_ctx)

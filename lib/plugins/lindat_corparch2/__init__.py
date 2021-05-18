@@ -347,8 +347,8 @@ class DefaultCorplistProvider(CorplistProvider):
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
-    with plugins.runtime.CORPARCH as ca:
-        return ca.export_favorite(ctrl._plugin_ctx)
+    with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
+        return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
 
 
 class CorpusArchive(AbstractSearchableCorporaArchive):
@@ -742,9 +742,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 })
         return featured
 
-    def export_favorite(self, plugin_ctx: PluginCtx):
+    def export_favorite(self, plugin_ctx: PluginCtx, favitems):
         ans = []
-        for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_ctx):
+        for item in favitems:
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
                 plugin_ctx, plugin_ctx.corpus_manager.get_info(item.main_corpus_id).description)
@@ -759,7 +759,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             initial_keywords.extend(mapped_external_keywords)
 
         return dict(
-            favorite=self.export_favorite(plugin_ctx),
+            favorite=self.export_favorite(plugin_ctx, self._user_items.get_user_items(plugin_ctx)),
             featured=self._export_featured(plugin_ctx),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_ctx.user_lang)],

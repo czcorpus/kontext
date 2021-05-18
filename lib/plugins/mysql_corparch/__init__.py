@@ -43,8 +43,8 @@ except ImportError:
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
-    with plugins.runtime.CORPARCH as ca:
-        return ca.export_favorite(ctrl._plugin_ctx)
+    with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
+        return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
 
 
 class MySQLCorparch(AbstractSearchableCorporaArchive):
@@ -153,6 +153,17 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         so here we don't have to add any stuff here
         """
         return text
+
+    def export_favorite(self, plugin_ctx, favitems):
+        ans = []
+        favitems_corpids = [x.corpora[0]['id'] for x in favitems]
+        descriptions = self.backend.load_corpora_descriptions(
+            favitems_corpids, plugin_ctx.user_lang)
+        for item in favitems:
+            tmp = item.to_dict()
+            tmp['description'] = descriptions.get(item.corpora[0]['id'], None)
+            ans.append(tmp)
+        return ans
 
     def corpus_list_item_from_row(self, plugin_ctx, row):
         desc = row['description_cs'] if plugin_ctx.user_lang == 'cs_CZ' else row['description_en']
