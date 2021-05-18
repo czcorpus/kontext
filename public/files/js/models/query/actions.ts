@@ -681,6 +681,7 @@ export namespace Actions {
 
     export interface GetConcArchivedStatusDone extends Action<{
         isArchived:boolean;
+        willBeArchived:boolean;
     }> {
         name:ActionName.GetConcArchivedStatusDone
     }

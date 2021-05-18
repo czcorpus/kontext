@@ -114,6 +114,13 @@ class AbstractQueryPersistence(abc.ABC):
             True if the concordance is archived else False
         """
 
+    @abc.abstractmethod
+    def will_be_archived(self, plugin_ctx: Any, conc_id: str) -> bool:
+        """
+        returns:
+            True if the concordance will be archived else False
+        """
+
     @staticmethod
     def stored_query_type(data: Dict[str, Any]) -> Union[None, str]:
         """

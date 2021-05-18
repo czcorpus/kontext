@@ -324,7 +324,10 @@ class Actions(Querying):
     @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def get_stored_conc_archived_status(self, request):
         with plugins.runtime.QUERY_PERSISTENCE as cp:
-            return dict(is_archived=cp.is_archived(request.args['code']))
+            return {
+                'is_archived': cp.is_archived(request.args['code']),
+                'will_be_archived': cp.will_be_archived(self._plugin_ctx, request.args['code'])
+            }
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def save_query(self, request):

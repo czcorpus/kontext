@@ -748,7 +748,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             <Style_PersistentConcordanceForm>
                                 <Style_SaveHintParagraph>
                                     <layoutViews.StatusIcon status="info" inline={true} htmlClass="icon" />
-                                    {this.props.concIsArchived ?
+                                    {this.props.concIsArchived || this.props.willBeArchived ?
                                         he.translate('concview__permanent_link_is_archived') + ':' :
                                         he.translate('concview__permanent_link_hint_{ttl}', {ttl: this.props.concTTLDays})
                                     }
@@ -757,12 +757,12 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     <input type="text" readOnly={true}
                                             disabled={!this.props.concIsArchived}
                                             value={this.createPermanentUrl()}
-                                            className={this.props.concIsArchived ? 'archived' : ''}
-                                            onClick={e => this.props.concIsArchived ?
+                                            className={this.props.concIsArchived || this.props.willBeArchived ? 'archived' : ''}
+                                            onClick={e => this.props.concIsArchived || this.props.willBeArchived ?
                                                             (e.target as HTMLInputElement).select() : null} />
                                 </div>
                                 <p>
-                                    {this.props.concIsArchived ?
+                                    {this.props.concIsArchived || this.props.willBeArchived ?
                                         <button type="button" className="danger-button"
                                                 onClick={this.handleRevokeSubmit}>
                                             {he.translate('concview__make_conc_link_permanent_revoke_archived')}

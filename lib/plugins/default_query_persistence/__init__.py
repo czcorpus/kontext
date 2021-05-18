@@ -31,14 +31,11 @@ import logging
 import sqlite3
 import json
 import time
-from typing import Dict, Any, List
-from manatee import Corpus
 
 from plugins.abstract.query_persistence import AbstractQueryPersistence
 import plugins
 from plugins import inject
 from controller.errors import ForbiddenException, UserActionException
-from settings import import_bool
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
@@ -286,8 +283,15 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         else:
             self._archive_backend.archive(data, key)
 
+        return 1, data
+
     def is_archived(self, conc_id):
         return self._archive_backend.is_archived(self._mk_key(conc_id))
+
+    def will_be_archived(self, plugin_ctx, conc_id: str):
+        return not self.is_archived(conc_id)\
+            and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
+            and not self._auth.is_anonymous(plugin_ctx.user_id)
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)

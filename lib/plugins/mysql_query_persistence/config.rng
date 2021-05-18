@@ -38,6 +38,16 @@
                     <data type="positiveInteger" />
                 </element>
             </optional>
+            <optional>
+                <element name="implicit_archiving">
+                    <choice>
+                        <value>false</value>
+                        <value>true</value>
+                        <value>0</value>
+                        <value>1</value>
+                    </choice>
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>
