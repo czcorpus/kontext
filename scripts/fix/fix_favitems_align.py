@@ -20,30 +20,36 @@ if __name__ == "__main__":
         user = int(key.decode().split(':')[-1])
         if user <= args.max_user_id:
             entries = redis_client.hgetall(key)
-            for hash, data in entries.items():
-                data = json.loads(data)
+            for key2, data in entries.items():
+                try:
+                    data = json.loads(data)
 
-                names = data['name'].split(' || ')
-                unique_names = set(names)
+                    names = data['name'].split(' || ')
+                    unique_names = set(names)
 
-                for corp in list(unique_names):
-                    subcorp = f'{corp} / '
-                    if any(corp2.startswith(subcorp) for corp2 in unique_names):
-                        unique_names.remove(corp)
+                    for corp in list(unique_names):
+                        subcorp = f'{corp} / '
+                        if any(corp2.startswith(subcorp) for corp2 in unique_names):
+                            unique_names.remove(corp)
 
-                corpora = data['corpora']
-                unique_corpora = set(tuple(corp.items()) for corp in corpora)
+                    corpora = data.get('corpora', [])
+                    unique_corpora = set(tuple(corp.items()) for corp in corpora)
 
-                if len(names) > len(unique_names) or len(corpora) > len(unique_corpora):
-                    found_items += 1
-                    if args.dry_run:
-                        print(f'Found broken align corpora for user {user}')
-                        print(f'    name: {data["name"]}')
-                        print(f'    corpora: {data["corpora"]}')
-                    else:
-                        data['name'] = ' || '.join(unique_names)
-                        data['corpora'] = [dict(corp) for corp in unique_corpora]
-                        redis_client.hset(key, hash, json.dumps(data))
+                    if len(names) > len(unique_names) or len(corpora) > len(unique_corpora):
+                        found_items += 1
+                        if args.dry_run:
+                            print(f'Found broken align corpora for user {user}')
+                            print(f'    name: {data["name"]}')
+                            print(f'    corpora: {data["corpora"]}')
+                        else:
+                            data['name'] = ' || '.join(unique_names)
+                            data['corpora'] = [dict(corp) for corp in unique_corpora]
+                            redis_client.hset(key, key2, json.dumps(data))
+                except Exception as ex:
+                    print('--- ERROR -------------')
+                    print(f'key: {key}, subkey: {key2}')
+                    print(ex)
+                    print('-----------------------')
 
     if args.dry_run:
         print(f'Found {found_items} broken entries')
