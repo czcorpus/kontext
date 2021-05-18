@@ -385,10 +385,18 @@ class Actions(Querying):
                 with plugins.runtime.QUERY_PERSISTENCE as qp:
                     last_op_form = qp.open(last_op)
                     prev_corpora = last_op_form.get('corpora', [])
+                    prev_subcorp = last_op_form.get('usesubcorp', None)
                     curr_corpora = [self.args.corpname] + self.args.align
+                    curr_subcorp = self.args.usesubcorp
+
+                    args = [('corpname', prev_corpora[0])]
                     if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
-                        raise ImmediateRedirectException(self.create_url(
-                            'query', [('corpname', prev_corpora[0])] + [('align', a) for a in prev_corpora[1:]]))
+                        args += [('align', a) for a in prev_corpora[1:]]
+                    if prev_subcorp and not curr_subcorp:
+                        args += [('usesubcorp', prev_subcorp)]
+                    if len(args) > 1:
+                        raise ImmediateRedirectException(self.create_url('query', args))
+
                     if last_op_form:
                         qf_args.apply_last_used_opts(
                             data=last_op_form.get('lastop_form', {}),
