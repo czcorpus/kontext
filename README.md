@@ -66,7 +66,14 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 
 ### Docker
 
-Running KonText as a set of Docker containers is the most convenient and flexible way.
+Running KonText as a set of Docker containers is the most convenient and flexible way. To run a basic 
+configuration instance (i.e. no MySQL/MariaDB server, no WebSocket server) use:
+
+```shell
+docker-compose up
+```
+
+To run a production grade instance:
 
 ```shell
 docker-compose -f docker-compose.yml -f docker-compose.mysql.yml --env-file .env.mysql up
