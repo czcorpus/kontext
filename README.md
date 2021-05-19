@@ -5,8 +5,7 @@
 
 * [Introduction](#introduction)
 * [Features](#features)
-* [Requirements](#requirements)
-* [Build and installation](#build-and-installation)
+* [Installation](#installation)
 * [Customization and contribution](#customization-and-contribution)
 * [Notable users](#notable-users)
 * [How to cite](#how-to-cite-kontext)
