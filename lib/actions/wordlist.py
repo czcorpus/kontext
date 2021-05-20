@@ -187,44 +187,46 @@ class Wordlist(Kontext):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, result)
         return result
 
-    @exposed(template='freqs.html', page_model='freq', http_method='POST', mutates_result=True)
+    @exposed(http_method='POST', mutates_result=True, return_type='json')
     def struct_result(self, request):
         form_args = WordlistFormArgs()
         form_args.update_by_user_query(request.json)
+        self._curr_wlform_args = form_args
 
         if self.args.fcrit:
-            self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
-                                        include_nonwords=request.form['include_nonwords'],
-                                        pfilter_words=request.form['pfilter_words'],
-                                        nfilter_words=request.form['nfilter_words'],
-                                        non_word_re=self.corp.get_conf('NONWORDRE'))
-            args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
+            self.args.q = make_wl_query(
+                wlattr=form_args.wlattr, wlpat=form_args.wlpat,
+                include_nonwords=form_args.include_nonwords,
+                pfilter_words=form_args.pfilter_words,
+                nfilter_words=form_args.nfilter_words,
+                non_word_re=self.corp.get_conf('NONWORDRE'))
+            args = [('corpname', form_args.corpname), ('usesubcorp', form_args.usesubcorp),
                     ('fcrit', self.args.fcrit), ('flimit', self.args.flimit),
                     ('freq_sort', self.args.freq_sort), ('next', 'freqs')] + [('q', q) for q in self.args.q]
-            raise ImmediateRedirectException(self.create_url('restore_conc', args))
-
+            return dict(location=self.create_url('restore_conc', args))
         if '.' in form_args.wlattr:
             raise WordlistError('Text types are limited to Simple output')
         if form_args.wlnums != 'frq':
             raise WordlistError('Multilevel lists are limited to Word counts frequencies')
-        if len(form_args.wlposattrs):
+        if len(form_args.wlposattrs) == 0:
             raise WordlistError(translate('No output attribute specified'))
         if not form_args.wlpat and len(form_args.pfilter_words) == 0:
             raise WordlistError(
                 translate('You must specify either a pattern or a file to get the multilevel wordlist'))
-        self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
-                                    include_nonwords=request.form['include_nonwords'],
-                                    pfilter_words=request.form['pfilter_words'],
-                                    nfilter_words=request.form['nfilter_words'],
-                                    non_word_re=self.corp.get_conf('NONWORDRE'))
+        self.args.q = make_wl_query(
+            wlattr=form_args.wlattr, wlpat=form_args.wlpat,
+            include_nonwords=form_args.include_nonwords,
+            pfilter_words=form_args.pfilter_words,
+            nfilter_words=form_args.nfilter_words,
+            non_word_re=self.corp.get_conf('NONWORDRE'))
         self.args.flimit = form_args.wlminfreq
-        args = [('corpname', request.form.get('corpname')), ('usesubcorp', request.form.get('usesubcorp')),
-                ('flimit', self.args.flimit), ('freqlevel', len(form_args.wlattr)),
+        args = [('corpname', form_args.corpname), ('usesubcorp', form_args.usesubcorp),
+                ('flimit', self.args.flimit), ('freqlevel', len(form_args.wlposattrs)),
                 ('ml1attr', form_args.get_wlposattr(0)),
                 ('ml2attr', form_args.get_wlposattr(1)),
                 ('ml3attr', form_args.get_wlposattr(2)),
                 ('next', 'freqml')] + [('q', q) for q in self.args.q]
-        raise ImmediateRedirectException(self.create_url('restore_conc', args))
+        return dict(location=self.create_url('restore_conc', args))
 
     @exposed(access_level=1, template='txtexport/savewl.html', http_method='POST', return_type='plain')
     def savewl(self, request):

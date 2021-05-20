@@ -1101,15 +1101,6 @@ class Actions(Querying):
 
         self.args.fpage = 1
         self.args.fmaxitems = to_line - from_line + 1
-        if self.args.wlattr:
-            pass
-            # TODO !!!!!!!!!!!!!
-            # self.args.q = make_wl_query(wlattr=request.form['wlattr'], wlpat=request.form['wlpat'],
-            #                            include_nonwords=request.form['include_nonwords'],
-            #                            pfilter_words=request.form['pfilter_words'],
-            #                            nfilter_words=request.form['nfilter_words'],
-            #                            non_word_re=self.corp.get_conf('NONWORDRE'))
-            # self._make_wl_query()  # multilevel wordlist
 
         # following piece of sh.t has hidden parameter dependencies
         result = self.freqs(fcrit, flimit, freq_sort, ml)

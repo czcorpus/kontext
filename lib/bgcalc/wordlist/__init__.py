@@ -163,15 +163,14 @@ def wordlist(corp: KCorpus, args: WordlistFormArgs, max_items: int) -> List[Tupl
     return items[:max_items]
 
 
-def make_wl_query(self, wlattr: str, wlpat: str, include_nonwords, pfilter_words, nfilter_words,
-                  non_word_re: str = ''):
+def make_wl_query(
+        wlattr: str, wlpat: str, include_nonwords, pfilter_words, nfilter_words,
+        non_word_re: str = ''):
     qparts = []
-    if self.args.wlpat:
+    if wlpat:
         qparts.append(f'{wlattr}="{wlpat}"')
     if not include_nonwords:
         qparts.append(f'{wlattr}!="{non_word_re}"')
-    pfilter_words = [w for w in re.split('\s+', pfilter_words.strip()) if w]
-    nfilter_words = [w for w in re.split('\s+', nfilter_words.strip()) if w]
     if len(pfilter_words) > 0:
         qq = [f'{wlattr}=="{w.strip()}"' for w in pfilter_words]
         qparts.append('(' + '|'.join(qq) + ')')
