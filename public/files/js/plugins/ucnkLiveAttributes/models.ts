@@ -343,8 +343,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             }
                         }
                     )
-                ).subscribe(
-                    (resp) => {
+                ).subscribe({
+                    next: resp => {
                         const filterData = this.importFilter(resp.attr_values, dispatch);
                         const values = resp.attr_values[action.payload.attrName];
                         if (Array.isArray(values)) {
@@ -367,11 +367,11 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             });
                         }
                     },
-                    (err) => {
+                    error: err => {
                         console.error(err);
                         this.pluginApi.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
@@ -469,7 +469,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         if (newBibData.length > 0 && !!newBibData[0].ident) {
             state.bibliographyIds = pipe(
                 state.bibliographyIds,
-                List.concat(newBibData.map(v => v.ident)),
+                List.concat(List.map(v => v.ident, newBibData)),
                 List.groupBy(v => v),
                 List.map(([k,]) => k)
             );
