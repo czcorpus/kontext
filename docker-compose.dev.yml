@@ -33,7 +33,7 @@ services:
       - ./public/files/misc:/opt/kontext/public/files/misc
       - ./public/files/themes:/opt/kontext/public/files/themes
     networks:
-      - redis
+      - databases
       - kontext
     depends_on: 
       - redis
@@ -43,7 +43,7 @@ services:
     environment:
       - TZ=Europe/Prague
     networks:
-      - redis
+      - databases
     ports:
       - "16379:6379"
     volumes:
@@ -74,5 +74,5 @@ volumes:
 
 
 networks:
-  redis: {}
+  databases: {}
   kontext: {}
