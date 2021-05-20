@@ -937,7 +937,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         values:Array<TextTypes.AutoCompleteItem>
     ):void {
         const attrIdx = this.getAttributeIdx(state, attrName);
-        if (attrIdx) {
+        if (attrIdx > -1) {
             state.attributes[attrIdx] = TTSelOps.setAutoComplete(state.attributes[attrIdx], values);
         }
     }
