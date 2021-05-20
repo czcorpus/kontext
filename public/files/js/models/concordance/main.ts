@@ -41,7 +41,6 @@ import { Actions, ActionName, ConcGroupChangePayload,
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { SwitchMainCorpServerArgs } from '../query/common';
 
-
 /**
  *
  */
@@ -376,8 +375,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                         this.applyLineSelections(wakePayload);
                     })
 
-                ).subscribe(
-                    ([,[,pageNum]]) => {
+                ).subscribe({
+                    next: ([,[,pageNum]]) => {
                         if (!action.payload.isPopState) {
                             this.pushHistoryState({
                                 name: ActionName.ChangePage,
@@ -389,11 +388,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                         }
                         this.emitChange();
                     },
-                    (err) => {
+                    error: (err) => {
                         this.emitChange();
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
@@ -914,7 +913,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState>
                 update => {
                     this.changeState(state => {
                         this.importData(state, update);
-                        state.currentPage = pageNum
+                        state.currentPage = pageNum;
+                        state.lineGroupIds = attachColorsToIds(
+                            update.lines_groups_numbers,
+                            v => v,
+                            mapIdToIdWithColors
+                        );
                     });
                 }
             ),
