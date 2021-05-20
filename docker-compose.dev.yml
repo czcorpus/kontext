@@ -32,6 +32,8 @@ services:
       - ./public/files/js:/opt/kontext/public/files/js
       - ./public/files/misc:/opt/kontext/public/files/misc
       - ./public/files/themes:/opt/kontext/public/files/themes
+      - corpora-cache:/var/local/copora
+      - corpora-data:/var/lib/manatee
     networks:
       - databases
       - kontext
@@ -70,6 +72,8 @@ services:
 
 volumes:
   dist: {}
+  corpora-data: {}
+  corpora-cache: {}
   redisdata: {}
 
 
