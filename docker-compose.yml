@@ -14,7 +14,8 @@ services:
     volumes:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       - files:/opt/kontext/public/share
-      - corpora:/var/local/corpora
+      - corpora-data:/var/lib/manatee
+      - corpora-cache:/var/local/corpora
     networks:
       - databases
       - kontext
@@ -37,7 +38,8 @@ services:
       dockerfile: dockerfiles/Dockerfile.rqworker
     volumes:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
-      - corpora:/var/local/corpora
+      - corpora-data:/var/lib/manatee
+      - corpora-cache:/var/local/corpora
     networks:
       - databases
     depends_on:
@@ -67,7 +69,8 @@ services:
 
 volumes:
   files: {}
-  corpora: {}
+  corpora-data: {}
+  corpora-cache: {}
   redisdata: {}
 
 networks:

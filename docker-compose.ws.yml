@@ -11,7 +11,8 @@ services:
       dockerfile: dockerfiles/Dockerfile.ws
     volumes:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
-      - corpora:/var/local/corpora
+      - corpora-data:/var/lib/manatee
+      - corpora-cache:/var/local/copora
     networks:
       - databases
       - kontext
@@ -26,7 +27,8 @@ services:
       - ws
 
 volumes:
-  corpora: {}
+  corpora-data: {}
+  corpora-cache: {}
 
 networks:
   databases: {}
