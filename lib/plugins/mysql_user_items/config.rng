@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="user_items">
+            <element name="module">
+                <value>mysql_user_items</value>
+            </element>
+            <element name="max_num_favorites">
+                <attribute name="extension-by">
+                    <value>mysql</value>
+                </attribute>
+                <data type="positiveInteger" />
+            </element>
+        </element>
+    </start>
+</grammar>
