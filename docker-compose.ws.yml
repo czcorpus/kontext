@@ -13,9 +13,8 @@ services:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       - corpora:/var/local/corpora
     networks:
-      - redis
+      - databases
       - kontext
-      - mariadb
     depends_on: 
       - redis
       - kontext
@@ -30,6 +29,5 @@ volumes:
   corpora: {}
 
 networks:
-  redis: {}
-  mariadb: {}
+  databases: {}
   kontext: {}

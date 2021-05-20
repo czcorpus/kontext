@@ -16,7 +16,7 @@ services:
       - files:/opt/kontext/public/share
       - corpora:/var/local/corpora
     networks:
-      - redis
+      - databases
       - kontext
     depends_on: 
       - redis
@@ -27,10 +27,9 @@ services:
       dockerfile: dockerfiles/Dockerfile.rqscheduler
     command: rqscheduler --host kontext_redis_1 --db 2 -i 10
     networks:
-      - redis
+      - databases
     depends_on: 
       - redis
-      - kontext
 
   rq-worker:
     build:
@@ -40,7 +39,7 @@ services:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       - corpora:/var/local/corpora
     networks:
-      - redis
+      - databases
     depends_on:
       - redis
       - kontext
@@ -48,7 +47,7 @@ services:
   redis:
     image: redis:latest
     networks:
-      - redis
+      - databases
     ports:
       - "16379:6379"
     volumes:
@@ -72,5 +71,5 @@ volumes:
   redisdata: {}
 
 networks:
-  redis: {}
+  databases: {}
   kontext: {}

@@ -1,18 +1,6 @@
 version: '3.7'
 
 services:
-  kontext:
-    networks:
-      - mariadb
-    depends_on:
-      - mariadb
-
-  rq-worker:
-    networks:
-      - mariadb
-    depends_on:
-      - mariadb
-
   mariadb:
     build:
       context: .
@@ -26,10 +14,10 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - mariadb
+      - databases
 
 volumes:
   mdbdata: {}
 
 networks:
-  mariadb: {}
+  databases: {}
