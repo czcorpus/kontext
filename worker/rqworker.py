@@ -106,6 +106,7 @@ def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
 
 # ----------------------------- WORD LIST -------------------------------------
 
+
 def get_wordlist(args, max_items, user_id):
     return general.get_wordlist(args, max_items, user_id)
 
@@ -132,15 +133,23 @@ if __name__ == "__main__":
         port=settings.get('calc_backend', 'rq_redis_port'),
         db=settings.get('calc_backend', 'rq_redis_db')
     )):
-        logging_handlers = [logging.StreamHandler()]
-        if settings.get('calc_backend', 'rq_log_path'):
-            logging_handlers.append(
-                logging.FileHandler(settings.get('calc_backend', 'rq_log_path'))
-            )
+
+        logging_handlers = []
+        if settings.contains('logging', 'stderr'):
+            handler = logging.StreamHandler(sys.stderr)
+        elif settings.contains('logging', 'stdout'):
+            handler = logging.StreamHandler(sys.stdout)
+        elif settings.contains('calc_backend', 'rq_log_path'):
+            handler = logging.FileHandler(settings.get('calc_backend', 'rq_log_path'))
+
+        if handler:
+            handler.setFormatter(logging.Formatter(
+                fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+            logging_handlers.append(handler)
 
         logging.basicConfig(
-            format="%(asctime)s [%(levelname)s] %(message)s",
-            handlers=logging_handlers
+            handlers=logging_handlers,
+            level=logging.INFO if not settings.is_debug_mode() else logging.DEBUG
         )
 
         qs = sys.argv[1:] or ['default']
