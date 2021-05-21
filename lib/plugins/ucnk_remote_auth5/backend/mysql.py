@@ -196,7 +196,7 @@ class Backend(DatabaseBackend):
             'corpora AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'JOIN ('
+            'LEFT JOIN ('
             '  SELECT user_corpus_relation.corpus_id AS corpus_id, user_corpus_relation.limited AS limited '
             '  FROM user_corpus_relation WHERE (user_corpus_relation.user_id = %s) '
             '  UNION '
