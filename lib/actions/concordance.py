@@ -370,13 +370,13 @@ class Actions(Querying):
                 curr_corpora = [self.args.corpname] + self.args.align
                 curr_subcorp = self.args.usesubcorp
 
-                args = [('corpname', prev_corpora[0])]
-                if len(prev_corpora) > 1 and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
-                    args += [('align', a) for a in prev_corpora[1:]]
-                if prev_subcorp and not curr_subcorp:
-                    args += [('usesubcorp', prev_subcorp)]
-                if len(args) > 1:
-                    raise ImmediateRedirectException(self.create_url('query', args))
+                if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
+                    args = [('corpname', prev_corpora[0])] + [('align', a)
+                                                              for a in prev_corpora[1:]]
+                    if prev_subcorp and not curr_subcorp:
+                        args += [('usesubcorp', prev_subcorp)]
+                    if len(args) > 1:
+                        raise ImmediateRedirectException(self.create_url('query', args))
 
                 try:
                     qf_args.apply_last_used_opts(
