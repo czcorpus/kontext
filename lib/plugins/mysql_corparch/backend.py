@@ -208,7 +208,7 @@ class Backend(DatabaseBackend):
             f'{self._corp_table} AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'JOIN ('
+            'LEFT JOIN ('
             f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
             f'    {self._user_acc_table}.limited AS limited '
             f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
