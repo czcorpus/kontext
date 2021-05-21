@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <ref name="connection" />
+    </start>
+
+    <define name="connection">
+        <element name="mysql_host">
+            <text />
+        </element>
+        <element name="mysql_db">
+            <text />
+        </element>
+        <element name="mysql_user">
+            <text />
+        </element>
+        <element name="mysql_passwd">
+            <text />
+        </element>
+        <element name="mysql_pool_size">
+            <data type="positiveInteger" />
+        </element>
+        <element name="mysql_retry_delay">
+            <data type="positiveInteger" />
+        </element>
+        <element name="mysql_retry_attempts">
+            <data type="positiveInteger" />
+        </element>
+    </define>
+</grammar>
