@@ -296,9 +296,12 @@ def create_instance(settings, db, integration_db, auth):
     Creates a plugin instance.
     """
     plugin_conf = settings.get('plugins', 'query_persistence')
-    if integration_db.is_active:
+    if integration_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_query_persistence uses integration_db[{integration_db.info}]')
         return MySqlQueryPersistence(settings, db, integration_db, auth)
     else:
         from plugins.common.mysql import MySQLOps, MySQLConf
-        return MySqlQueryPersistence(settings, db, MySQLOps(MySQLConf(plugin_conf)).connection, auth)
+        logging.getLogger(__name__).info(
+            'mysql_query_persistence uses custom database configuration {}@{}'.format(
+                plugin_conf['mysql_user'], plugin_conf['mysql_host']))
+        return MySqlQueryPersistence(settings, db, MySQLOps(MySQLConf(plugin_conf)), auth)

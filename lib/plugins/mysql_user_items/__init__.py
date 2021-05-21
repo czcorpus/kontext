@@ -138,10 +138,13 @@ class MySQLUserItems(AbstractUserItems):
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
 def create_instance(settings, integ_db, auth):
     plugin_conf = settings.get('plugins', 'user_items')
-    if integ_db.is_active:
+    if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_user_items uses integration_db[{integ_db.info}]')
         db_backend = Backend(integ_db)
     else:
         from plugins.common.mysql import MySQLOps, MySQLConf
+        logging.getLogger(__name__).info(
+            'mysql_user_items uses custom database configuration {}@{}'.format(
+                plugin_conf['mysql_user'], plugin_conf['mysql_host']))
         db_backend = Backend(MySQLOps(MySQLConf(plugin_conf)).connection)
     return MySQLUserItems(settings, db_backend, auth)

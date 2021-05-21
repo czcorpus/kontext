@@ -357,8 +357,16 @@ def create_instance(conf, integ_db, sessions):
     authentication object. The settings module is passed as a parameter.
     """
     plugin_conf = conf.get('plugins', 'auth')
+    if integ_db and integ_db.is_active and 'mysql_host' not in plugin_conf:
+        dbx = integ_db
+        logging.getLogger(__name__).info(f'mysql_auth uses integration_db[{integ_db.info}]')
+    else:
+        dbx = MySQLOps(MySQLConf(plugin_conf))
+        logging.getLogger(__name__).info(
+            'mysql_auth uses custom database configuration {}@{}'.format(
+                plugin_conf['mysql_user'], plugin_conf['mysql_host']))
     return MysqlAuthHandler(
-        db=integ_db if integ_db and integ_db.is_active else MySQLOps(MySQLConf(plugin_conf)).connection,
+        db=dbx,
         sessions=sessions,
         anonymous_user_id=int(plugin_conf['anonymous_user_id']),
         case_sensitive_corpora_names=plugin_conf.get('case_sensitive_corpora_names', False),
