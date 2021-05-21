@@ -143,5 +143,5 @@ def create_instance(settings, integ_db, auth):
         db_backend = Backend(integ_db)
     else:
         from plugins.common.mysql import MySQLOps, MySQLConf
-        db_backend = MySQLOps(MySQLConf(plugin_conf))
+        db_backend = Backend(MySQLOps(MySQLConf(plugin_conf)).connection)
     return MySQLUserItems(settings, db_backend, auth)
