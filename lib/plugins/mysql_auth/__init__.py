@@ -351,14 +351,14 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.SESSIONS)
-def create_instance(conf, db, sessions):
+def create_instance(conf, integ_db, sessions):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
     """
     plugin_conf = conf.get('plugins', 'auth')
     return MysqlAuthHandler(
-        db=db if db and db.is_active else MySQLOps(MySQLConf(plugin_conf)),
+        db=integ_db if integ_db and integ_db.is_active else MySQLOps(MySQLConf(plugin_conf)).connection,
         sessions=sessions,
         anonymous_user_id=int(plugin_conf['anonymous_user_id']),
         case_sensitive_corpora_names=plugin_conf.get('case_sensitive_corpora_names', False),

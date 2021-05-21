@@ -105,7 +105,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
 
-    def __init__(self, settings, db, integration_db, auth):
+    def __init__(self, settings, db, sql_backend, auth):
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
@@ -114,12 +114,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         self._archive_queue_key = plugin_conf['archive_queue_key']
         self.db = db
         self._auth = auth
-        if integration_db.is_active:
-            self._archive = integration_db
-            logging.getLogger(__name__).info(
-                f'mysql_query_persistence uses integration_db[{integration_db.info}]')
-        else:
-            self._archive = MySQLOps(MySQLConf(plugin_conf))
+        self._archive = sql_backend
         self._settings = settings
 
     def _get_ttl_for(self, user_id):
@@ -300,4 +295,10 @@ def create_instance(settings, db, integration_db, auth):
     """
     Creates a plugin instance.
     """
-    return MySqlQueryPersistence(settings, db, integration_db, auth)
+    plugin_conf = settings.get('plugins', 'query_persistence')
+    if integration_db.is_active:
+        logging.getLogger(__name__).info(f'mysql_query_persistence uses integration_db[{integration_db.info}]')
+        return MySqlQueryPersistence(settings, db, integration_db, auth)
+    else:
+        from plugins.common.mysql import MySQLOps, MySQLConf
+        return MySqlQueryPersistence(settings, db, MySQLOps(MySQLConf(plugin_conf)).connection, auth)

@@ -60,7 +60,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
     LABEL_OVERLAY_TRANSPARENCY = 0.20
 
-    def __init__(self, backend, user_items, tag_prefix, max_num_hints, max_page_size, registry_lang):
+    def __init__(self, db_backend, user_items, tag_prefix, max_num_hints, max_page_size, registry_lang):
         """
 
         arguments:
@@ -71,7 +71,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             max_page_size --
             registry_lang --
         """
-        self._backend = backend
+        self._backend = db_backend
         self._user_items = user_items
         self._tag_prefix = tag_prefix
         self._max_num_hints = int(max_num_hints)
@@ -369,13 +369,13 @@ def create_instance(conf, user_items, integ_db):
     plugin_conf = conf.get('plugins', 'corparch')
     if integ_db.is_active:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
-        backend = Backend(integ_db)
+        db_backend = Backend(integ_db)
     else:
         from plugins.common.mysql import MySQLOps, MySQLConf
-        backend = MySQLOps(MySQLConf(plugin_conf))
+        db_backend = Backend(MySQLOps(MySQLConf(plugin_conf)).connection)
 
     return MySQLCorparch(
-        backend=backend,
+        db_backend=db_backend,
         user_items=user_items,
         tag_prefix=plugin_conf['tag_prefix'],
         max_num_hints=plugin_conf['max_num_hints'],
