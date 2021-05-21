@@ -7,9 +7,6 @@
                 <value>mysql_user_items</value>
             </element>
             <element name="max_num_favorites">
-                <attribute name="extension-by">
-                    <value>mysql</value>
-                </attribute>
                 <data type="positiveInteger" />
             </element>
             <optional>
