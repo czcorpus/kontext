@@ -98,12 +98,11 @@ class MySQLUserItems(AbstractUserItems):
     A mysql implementation of user_items plug-in.
     """
 
-    def __init__(self, settings, db, auth):
+    def __init__(self, settings, db_backend: Backend, auth):
         super(MySQLUserItems, self).__init__()
         self._settings = settings
-        self._db = db
         self._auth = auth
-        self._backend = Backend(db)
+        self._backend = db_backend
 
     def serialize(self, obj):
         """
@@ -133,9 +132,16 @@ class MySQLUserItems(AbstractUserItems):
 
     @property
     def max_num_favorites(self):
-        return int(self._settings.get('plugins', 'user_items')['mysql:max_num_favorites'])
+        return int(self._settings.get('plugins', 'user_items')['max_num_favorites'])
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
-def create_instance(settings, db, auth):
-    return MySQLUserItems(settings, db, auth)
+def create_instance(settings, integ_db, auth):
+    plugin_conf = settings.get('plugins', 'user_items')
+    if integ_db.is_active:
+        logging.getLogger(__name__).info(f'mysql_user_items uses integration_db[{integ_db.info}]')
+        db_backend = Backend(integ_db)
+    else:
+        from plugins.common.mysql import MySQLOps, MySQLConf
+        db_backend = MySQLOps(MySQLConf(plugin_conf))
+    return MySQLUserItems(settings, db_backend, auth)
