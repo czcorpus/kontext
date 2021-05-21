@@ -32,7 +32,7 @@ import { ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as ACActions, ActionName as ACActionName } from '../../models/asyncTask/actions';
-import { FileTarget, splitFilterWords, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
+import { ConcFreqRedirectResponse, FileTarget, isConcFreqRedirectResponse, splitFilterWords, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
 import { IUnregistrable } from '../common/common';
 import { MultiDict } from '../../multidict';
 
@@ -567,41 +567,49 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
     }
 
     private submitAction(state:WordlistFormState, dispatch:SEDispatcher):void {
-        this.submit(state).subscribe(
-            resp => {
-                if (resp.freq_files_avail) {
-                    window.location.href = this.layoutModel.createActionUrl(
-                        'wordlist/result',
-                        MultiDict.fromDict({
-                            q: `~${resp.wl_query_id}`
-                        })
-                    );
+        this.submit(state).subscribe({
+            next: resp => {
+                if (isConcFreqRedirectResponse(resp)) {
+                    window.location.href = resp.location;
 
                 } else {
-                    this.layoutModel.showMessage(
-                        'info',
-                        this.layoutModel.translate('wordlist__aux_data_must_be_precalculated')
-                    );
-                    if (!List.empty(resp.subtasks)) {
-                        List.forEach(
-                            payload => {
-                                dispatch<ACActions.InboxAddAsyncTask>({
-                                    name: ACActionName.InboxAddAsyncTask,
-                                    payload
-                                })
-                            },
-                            resp.subtasks
+                    if (resp.freq_files_avail) {
+                        window.location.href = this.layoutModel.createActionUrl(
+                            'wordlist/result',
+                            MultiDict.fromDict({
+                                q: `~${resp.wl_query_id}`
+                            })
                         );
-                        dispatch<Actions.RegisterPrecalcTasks>({
-                            name: ActionName.RegisterPrecalcTasks,
-                            payload: {
-                                tasks: resp.subtasks
-                            }
-                        });
+
+                    } else {
+                        this.layoutModel.showMessage(
+                            'info',
+                            this.layoutModel.translate('wordlist__aux_data_must_be_precalculated')
+                        );
+                        if (!List.empty(resp.subtasks)) {
+                            List.forEach(
+                                payload => {
+                                    dispatch<ACActions.InboxAddAsyncTask>({
+                                        name: ACActionName.InboxAddAsyncTask,
+                                        payload
+                                    })
+                                },
+                                resp.subtasks
+                            );
+                            dispatch<Actions.RegisterPrecalcTasks>({
+                                name: ActionName.RegisterPrecalcTasks,
+                                payload: {
+                                    tasks: resp.subtasks
+                                }
+                            });
+                        }
                     }
                 }
+            },
+            error: error => {
+                this.layoutModel.showMessage('error', error);
             }
-        );
+        });
     }
 
     private validateForm(state:WordlistFormState):void {
@@ -694,17 +702,25 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         };
     }
 
-    private submit(state:WordlistFormState):Observable<SubmitResponse> {
+    private submit(state:WordlistFormState):Observable<SubmitResponse|ConcFreqRedirectResponse> {
         const args = this.createSubmitArgs(state);
-        const action = state.wltype === 'multilevel' ? 'wordlist/struct_result' : 'wordlist/submit';
-        return this.layoutModel.ajax$<SubmitResponse>(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl(action),
-            args,
-            {
-                contentType: 'application/json'
-            }
-        );
+        return state.wltype === 'multilevel' ?
+            this.layoutModel.ajax$<ConcFreqRedirectResponse>(
+                HTTP.Method.POST,
+                this.layoutModel.createActionUrl('wordlist/struct_result'),
+                args,
+                {
+                    contentType: 'application/json'
+                }
+            ) :
+            this.layoutModel.ajax$<SubmitResponse>(
+                HTTP.Method.POST,
+                this.layoutModel.createActionUrl('wordlist/submit'),
+                args,
+                {
+                    contentType: 'application/json'
+                }
+            );
     }
 
     getAllowsMultilevelWltype(state:WordlistFormState):boolean {

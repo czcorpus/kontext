@@ -92,10 +92,17 @@ export interface SubmitResponse {
     corpname:string;
     usesubcorp:string;
     wl_query_id:string;
-    freq_files_avail:string;
+    freq_files_avail:boolean;
     subtasks:Array<Kontext.AsyncTaskInfo<{}>>;
 }
 
+export interface ConcFreqRedirectResponse {
+    location:string;
+}
+
+export function isConcFreqRedirectResponse(r:SubmitResponse|ConcFreqRedirectResponse):r is ConcFreqRedirectResponse {
+    return 'location' in r;
+}
 
 export function splitFilterWords(s:string):Array<string> {
     return pipe(
