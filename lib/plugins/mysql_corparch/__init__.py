@@ -367,12 +367,15 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
 def create_instance(conf, user_items, integ_db):
     plugin_conf = conf.get('plugins', 'corparch')
-    if integ_db.is_active:
+    if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
         db_backend = Backend(integ_db)
     else:
         from plugins.common.mysql import MySQLOps, MySQLConf
-        db_backend = Backend(MySQLOps(MySQLConf(plugin_conf)).connection)
+        logging.getLogger(__name__).info(
+            'mysql_user_items uses custom database configuration {}@{}'.format(
+                plugin_conf['mysql_user'], plugin_conf['mysql_host']))
+        db_backend = Backend(MySQLOps(MySQLConf(plugin_conf)))
 
     return MySQLCorparch(
         db_backend=db_backend,
