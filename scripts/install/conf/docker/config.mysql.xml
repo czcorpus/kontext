@@ -172,8 +172,8 @@
         <syntax_viewer/>
         <taghelper/>
         <user_items>
-            <module>default_user_items</module>
-            <max_num_favorites extension-by="default">15</max_num_favorites>
+            <module>mysql_user_items</module>
+            <max_num_favorites extension-by="mysql">15</max_num_favorites>
         </user_items>
         <chart_export>
             <module>default_chart_export</module>
