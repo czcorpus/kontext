@@ -173,7 +173,7 @@
         <taghelper/>
         <user_items>
             <module>mysql_user_items</module>
-            <max_num_favorites extension-by="mysql">15</max_num_favorites>
+            <max_num_favorites>15</max_num_favorites>
         </user_items>
         <chart_export>
             <module>default_chart_export</module>
