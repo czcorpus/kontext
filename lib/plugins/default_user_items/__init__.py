@@ -77,8 +77,7 @@ def set_favorite_item(ctrl, request):
         corpora=corpora,
         subcorpus_id=subcorpus_id,
         subcorpus_orig_id=subcorpus_orig_id,
-        size=main_size,
-        size_info=l10n.simplify_num(main_size)
+        size=main_size
     ))
     with plugins.runtime.USER_ITEMS as uit:
         uit.add_user_item(ctrl._plugin_ctx, item)
