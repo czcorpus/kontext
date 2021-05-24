@@ -43,13 +43,13 @@ try:
     def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
 
 except ImportError:
-    import cgi
+    import html
 
-    def k_markdown(s): return cgi.escape(s)
+    def k_markdown(s):
+        return html.escape(s)
 
 import l10n
 import manatee
-from functools import partial
 from translation import ugettext as _
 import plugins
 from functools import cmp_to_key
