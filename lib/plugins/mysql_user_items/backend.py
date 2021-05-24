@@ -81,12 +81,13 @@ class Backend:
                 'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
                 'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_orig_id, user_id))
 
-            favitem_id = cursor.lastrowid
+            favitem_id: int = cursor.lastrowid
             cursor.executemany(
                 'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name) '
                 'VALUES (%s, %s) ', [(favitem_id, corp['id']) for corp in item.corpora])
 
         self._db.commit()
+        item.ident = str(favitem_id)  # need to update new id
 
     def delete_favitem(self, item_id: int):
         with self._db.cursor() as cursor:
