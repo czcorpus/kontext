@@ -15,4 +15,6 @@ CREATE TABLE kontext_corpus_user_fav_item (
     corpus_name VARCHAR(63),
     CONSTRAINT kontext_corpus_user_fav_item_id FOREIGN KEY (user_fav_corpus_id) REFERENCES kontext_user_fav_item(id),
     CONSTRAINT kontext_corpus_user_fav_item_name FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
+    -- note: for the CNC installation, kontext_corpus is actually 'corpora':
+    -- CONSTRAINT kontext_corpus_user_fav_item_name FOREIGN KEY (corpus_name) REFERENCES corpora(name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
