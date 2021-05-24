@@ -24,22 +24,22 @@ import mysql.connector
 import argparse
 
 
-def import_sqlite_db(redis_client: redis.Redis, mysql_client: mysql.connector.MySQLConnection, dry_run: bool):
+def import_favitems(redis_db: redis.Redis, mysql_db: mysql.connector.MySQLConnection, dry_run: bool):
     inserted, skipped = 0, 0
 
-    cursor = mysql_client.cursor()
-    favitem_keys = redis_client.keys('favitems:user:*')
+    cursor = mysql_db.cursor()
+    favitem_keys = redis_db.keys('favitems:user:*')
     for favitem_key in favitem_keys:
         _, _, user_id = favitem_key.decode().split(':')
-        favitems = redis_client.hgetall(favitem_key)
+        favitems = redis_db.hgetall(favitem_key)
         for favitem in map(json.loads, favitems.values()):
             values = (favitem['name'], favitem['subcorpus_id'],
-                      favitem['subcorpus_orig_id'], int(user_id))
+                      favitem.get('subcorpus_orig_id'), int(user_id))
 
             cursor.execute(
-                'SELECT count(*) as count from kontext_user_fav_item where name = %s and subcorpus_id = %s and subcorpus_orig_id = %s and user_id = %s ',
-                values
-            )
+                'SELECT COUNT(*) AS count FROM kontext_user_fav_item '
+                'WHERE name = %s and subcorpus_id = %s and subcorpus_orig_id = %s and user_id = %s ',
+                values)
             if cursor.fetchone()[0] == 0:
                 inserted += 1
                 if not dry_run:
@@ -54,7 +54,7 @@ def import_sqlite_db(redis_client: redis.Redis, mysql_client: mysql.connector.My
                         'VALUES (%s, %s)',
                         [(favitem_id, corp['id']) for corp in favitem['corpora']]
                     )
-                    mysql_client.commit()
+                    mysql_db.commit()
             else:
                 skipped += 1
 
@@ -65,7 +65,7 @@ def import_sqlite_db(redis_client: redis.Redis, mysql_client: mysql.connector.My
     cursor.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Import user items from redis to mysql')
     parser.add_argument('--redis-host', type=str, default='localhost')
     parser.add_argument('--redis-port', type=int, default=6379)
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         host=args.mysql_host, port=args.mysql_port, user=args.mysql_user, password=args.mysql_pwd, database=args.mysql_db)
 
     try:
-        import_sqlite_db(redis_client, mysql_client, args.dry_run)
+        import_favitems(redis_client, mysql_client, args.dry_run)
         if not args.dry_run:
             print('Data imported')
     except Exception as ex:
