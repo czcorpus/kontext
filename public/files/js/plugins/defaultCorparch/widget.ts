@@ -336,7 +336,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                             payload: {
                                 trashedItemId: action.payload.itemId,
                                 rescuedItem: {
-                                    id: action.payload.itemId,
+                                    id: response.id, // might be regenerated
                                     name: response.name,
                                     subcorpus_id: response.subcorpus_id,
                                     // TODO !!! missing orig subc name
@@ -376,6 +376,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     } else {
                         delete state.dataFav[idx];
                     }
+                    state.currFavitemId = findCurrFavitemId(
+                        state.dataFav,
+                        this.getFullCorpusSelection(state)
+                    );
                 }
             }
         );
@@ -738,10 +742,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         if (this.trashTimerSubsc && state.dataFav.find(x => x.trashTTL !== null) === undefined) {
             this.trashTimerSubsc.unsubscribe();
         }
-        state.currFavitemId = findCurrFavitemId(
-            state.dataFav,
-            this.getFullCorpusSelection(state)
-        );
         const trashedItem = state.dataFav.find(x => x.id === itemId);
         if (trashedItem) {
             return this.pluginApi.ajax$<SetFavItemResponse>(
