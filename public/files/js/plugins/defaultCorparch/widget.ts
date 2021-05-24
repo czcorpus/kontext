@@ -68,7 +68,7 @@ interface SetFavItemResponse extends Kontext.AjaxResponse {
     name:string;
     size:number;
     size_info:string;
-    corpora:Array<string>;
+    corpora:Array<{id: string, name: string}>;
     subcorpus_id:string;
 }
 
@@ -324,7 +324,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 state.isBusy = true;
                 const idx = List.findIndex(x => x.id === action.payload.itemId, state.dataFav);
                 if (idx > -1) {
-                    const item = state.dataFav[idx];
                     state.dataFav[idx] = {...state.dataFav[idx], trashTTL: null};
                 }
             },
@@ -344,7 +343,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                                     size: response.size,
                                     size_info: response.size_info,
                                     // TODO missing name
-                                    corpora: List.map(v => ({id: v, name: v}), response.corpora),
+                                    corpora: response.corpora,
                                     description: '---' // TODO !!! missing desc.
                                 }
                             }
@@ -379,6 +378,10 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                     state.currFavitemId = findCurrFavitemId(
                         state.dataFav,
                         this.getFullCorpusSelection(state)
+                    );
+                    this.pluginApi.showMessage(
+                        'info',
+                        this.pluginApi.translate('defaultCorparch__item_added_to_fav')
                     );
                 }
             }
@@ -611,7 +614,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             GlobalActionName.CorpusSwitchModelRestore,
             (state, action) => {
                 if (!action.error) {
-                    const storedData:CorplistWidgetModelCorpusSwitchPreserve = action.payload.data[this.getRegistrationId()];
+                    const storedData:CorplistWidgetModelCorpusSwitchPreserve = action.payload.data[
+                        this.getRegistrationId()];
                     if (storedData) {
                         state.dataFav = storedData.dataFav.filter(v => v.trashTTL === null);
                         state.currFavitemId = findCurrFavitemId(
@@ -748,7 +752,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 {
-                    corpora: trashedItem.corpora.map(v => v.id),
+                    corpora: List.map(v => v.id, trashedItem.corpora),
                     subcorpus_id: trashedItem.subcorpus_id,
                     subcorpus_orig_id: trashedItem.subcorpus_orig_id,
                 }
@@ -762,7 +766,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     private moveItemToTrash(state:CorplistWidgetModelState, itemId:string):void {
         const idx = state.dataFav.findIndex(x => x.id === itemId);
         if (idx > -1) {
-            const item = state.dataFav[idx];
             state.dataFav[idx] = {
                 ...state.dataFav[idx],
                 trashTTL: CorplistWidgetModel.TRASH_TTL_TICKS
