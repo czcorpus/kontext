@@ -50,46 +50,47 @@ class Backend:
         self._group_acc_group_attr = group_acc_group_attr
 
     def get_favitems(self, user_id: int):
-        cursor = self._db.cursor()
-        cursor.execute(
-            'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id, '
-            ' JSON_ARRAYAGG(t1.corpus_name) as corpora '
-            'FROM kontext_user_fav_item as fav '
-            'JOIN kontext_corpus_user_fav_item AS t1 ON fav.id = t1.user_fav_corpus_id '
-            'WHERE user_id = %s '
-            'GROUP BY id ', (user_id,))
+        with self._db.cursor() as cursor:
+            cursor.execute(
+                'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id, '
+                " GROUP_CONCAT(t1.corpus_name SEPARATOR ',') as corpora "
+                'FROM kontext_user_fav_item as fav '
+                'JOIN kontext_corpus_user_fav_item AS t1 ON fav.id = t1.user_fav_corpus_id '
+                'WHERE user_id = %s '
+                'GROUP BY id ', (user_id,))
 
-        ans = []
-        for item in cursor:
-            item['corpora'] = [{'name': corp, 'id': corp} for corp in item['corpora'].split(',')]
-            ans.append(FavoriteItem(item))
+            ans = []
+            for item in cursor:
+                item['corpora'] = [{'name': corp, 'id': corp}
+                                   for corp in item['corpora'].split(',')]
+                ans.append(FavoriteItem(item))
 
         return ans
 
     def count_favitems(self, user_id: int) -> int:
-        cursor = self._db.cursor()
-        cursor.execute(
-            'SELECT COUNT(*) AS count '
-            'FROM kontext_user_fav_item '
-            'WHERE user_id = %s ', (user_id,))
-        return cursor.fetchone()
+        with self._db.cursor() as cursor:
+            cursor.execute(
+                'SELECT COUNT(*) AS count '
+                'FROM kontext_user_fav_item '
+                'WHERE user_id = %s ', (user_id,))
+            return cursor.fetchone()
 
     def insert_favitem(self, user_id: int, item: FavoriteItem):
-        cursor = self._db.cursor()
-        cursor.execute(
-            'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
-            'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_orig_id, user_id))
+        with self._db.cursor() as cursor:
+            cursor.execute(
+                'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
+                'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_orig_id, user_id))
 
-        favitem_id = cursor.lastrowid
-        cursor.executemany(
-            'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name) '
-            'VALUES (%s, %s) ', [(favitem_id, corp['id']) for corp in item.corpora])
+            favitem_id = cursor.lastrowid
+            cursor.executemany(
+                'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name) '
+                'VALUES (%s, %s) ', [(favitem_id, corp['id']) for corp in item.corpora])
 
         self._db.commit()
 
     def delete_favitem(self, item_id: int):
-        cursor = self._db.cursor()
-        cursor.execute(
-            'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
-        cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
+        with self._db.cursor() as cursor:
+            cursor.execute(
+                'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
+            cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
         self._db.commit()
