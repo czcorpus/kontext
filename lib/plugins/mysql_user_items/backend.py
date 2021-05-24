@@ -50,12 +50,15 @@ class Backend:
         self._group_acc_group_attr = group_acc_group_attr
 
     def get_favitems(self, user_id: int):
+        import logging
         with self._db.cursor() as cursor:
             cursor.execute(
                 'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id, '
-                " GROUP_CONCAT(t1.corpus_name SEPARATOR ',') as corpora "
+                " GROUP_CONCAT(t.corpus_name SEPARATOR ',') as corpora, "
+                " GROUP_CONCAT(c.size SEPARATOR ',') as sizes "
                 'FROM kontext_user_fav_item as fav '
-                'JOIN kontext_corpus_user_fav_item AS t1 ON fav.id = t1.user_fav_corpus_id '
+                'JOIN kontext_corpus_user_fav_item AS t ON fav.id = t.user_fav_corpus_id '
+                f'JOIN {self._corp_table} AS c ON t.corpus_name = c.name '
                 'WHERE user_id = %s '
                 'GROUP BY id ', (user_id,))
 
@@ -63,6 +66,7 @@ class Backend:
             for item in cursor:
                 item['corpora'] = [{'name': corp, 'id': corp}
                                    for corp in item['corpora'].split(',')]
+                item['size'] = int(item['sizes'].split(',')[0])
                 ans.append(FavoriteItem(item))
 
         return ans

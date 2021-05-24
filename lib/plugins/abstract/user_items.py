@@ -26,6 +26,7 @@ Expected factory method signature: create_instance(config, db)
 
 import abc
 import hashlib
+import l10n
 
 from controller.errors import UserActionException
 
@@ -49,7 +50,7 @@ class FavoriteItem(object):
         self.name = data.get('name', 'New item')
         self.corpora = data.get('corpora', [])
         self.size = data.get('size', None)
-        self.size_info = data.get('size_info', None)
+        self.size_info = l10n.simplify_num(self.size) if self.size else None
         self.subcorpus_id = data.get('subcorpus_id', None)
         self.subcorpus_orig_id = data.get('subcorpus_orig_id', self.subcorpus_id)
         self.ident = data.get('id', hashlib.md5(self.sort_key.encode()).hexdigest())

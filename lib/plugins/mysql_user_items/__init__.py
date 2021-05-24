@@ -20,7 +20,6 @@ from .backend import Backend
 from plugins.abstract.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
 import plugins
-import l10n
 from controller import exposed
 from actions.user import User as UserController
 
@@ -78,8 +77,7 @@ def set_favorite_item(ctrl, request):
         corpora=corpora,
         subcorpus_id=subcorpus_id,
         subcorpus_orig_id=subcorpus_orig_id,
-        size=main_size,
-        size_info=l10n.simplify_num(main_size)
+        size=main_size
     ))
     with plugins.runtime.USER_ITEMS as uit:
         uit.add_user_item(ctrl._plugin_ctx, item)
