@@ -719,7 +719,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
     def export(self, plugin_ctx):
         return dict(
-            favorite=self.export_favorite(plugin_ctx),
+            favorite=self.export_favorite(plugin_ctx, self._user_items.get_user_items(plugin_ctx)),
             featured=self._export_featured(plugin_ctx),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_ctx)],
