@@ -199,7 +199,8 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
             ActionName.ResultConfirmPageValue,
             ActionName.SaveFormSubmit,
             ActionName.ResultSortByColumn,
-            ActionName.PopHistory
+            ActionName.PopHistory,
+            ActionName.ResultReload
         );
     }
 
