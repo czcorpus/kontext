@@ -105,6 +105,13 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                     }
                 });
 
+                if (status >= 100) {
+                    this.calcWatchdog.stopWatching();
+                    dispatcher.dispatch<Actions.ResultReload>({
+                        name: ActionName.ResultReload
+                    });
+                }
+
             } else {
                 this.calcWatchdog.stopWatching();
                 dispatcher.dispatch<Actions.ResultUpdateCalculation>({
@@ -114,11 +121,6 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                     },
                     error: err
                 });
-                if (status >= 100) {
-                    dispatcher.dispatch<Actions.ResultReload>({
-                        name: ActionName.ResultReload
-                    });
-                }
             }
         });
         if (unfinished) {
