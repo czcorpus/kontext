@@ -71,7 +71,6 @@ def set_favorite_item(ctrl, request):
     subcorpus_id = request.form['subcorpus_id']
     subcorpus_orig_id = request.form['subcorpus_orig_id']
     item = FavoriteItem(dict(
-        id=None,  # will be updated after database insert (autoincrement)
         name=' || '.join(c['name'] for c in corpora) +
         (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
         corpora=corpora,
