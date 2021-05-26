@@ -138,6 +138,8 @@ def _compile_frq(corp, attr, logfile):
         return {'message': 'freq already compiled'}
     with stderr_redirector(open(logfile, 'a')):
         corp.compile_frq(attr)
+        with open(logfile, 'a') as f:
+            f.write('\n100 %\n')
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
