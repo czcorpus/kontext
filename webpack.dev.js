@@ -46,9 +46,9 @@ module.exports = (env) => merge(common.wpConf(env), {
         port: process.env.DEV_SERVER_PORT || 9000,
         host: process.env.DEV_SERVER_HOST || 'localhost',
         public: 'kontext6.korpus.test',
-        publicPath: common.PUBLIC_PATH + '/files/dist/',
+        publicPath: (process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH) + '/files/dist/',
         inline: false,
-        sockPath: common.PUBLIC_PATH + '/socket',
+        sockPath: (process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH) + '/socket',
         serveIndex: true,
         liveReload: false,
         disableHostCheck: true, // TODO
@@ -57,7 +57,7 @@ module.exports = (env) => merge(common.wpConf(env), {
             // but at the same time our hardcoded <link rel="stylesheet" ... />
             // elements cause browser to load non-available styles.
             // So we always return an empty stuff with proper content type.
-            app.get(common.PUBLIC_PATH + '/files/dist/*.css', function(req, res) {
+            app.get((process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH) + '/files/dist/*.css', function(req, res) {
                 res.set('Content-Type', 'text/css');
                 res.send('');
             });

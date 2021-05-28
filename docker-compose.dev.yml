@@ -8,9 +8,12 @@ services:
     environment:
       - TZ=Europe/Prague
       - DEV_SERVER_HOST=0.0.0.0
+      - DEV_PUBLIC_PATH=
     command: bash -c "./scripts/install/conf/docker/run.dev.sh"
     ports:
+      # kontext debug port
       - "5678:5678"
+      # rqworker debug port
       - "5679:5679"
     volumes:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
