@@ -63,7 +63,11 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
 
     def get_initial_values(self, lang):
         if lang not in self.initial_values:
-            self.initial_values[lang] = self._get_initial_values(lang)
+            try:
+                self.initial_values[lang] = self._get_initial_values(lang)
+            except Exception:
+                self.initial_values[lang] = {}
+
         return self.initial_values[lang]
 
     def is_enabled(self):
@@ -86,7 +90,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             ]
         }
         """
-        path = '%s/initial-values.%s.json' % (self.cache_dir, lang)
+        path = f'{self.cache_dir}/initial-values.{lang}.json'
         char_replac_tab = dict(self.SPEC_CHAR_REPLACEMENTS)
         tagset = self._load_tag_descriptions(self.tagset_name, lang)
         if tagset is None:
@@ -167,7 +171,8 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         else:
             tag_elms = re.findall(r'\[[^\]]+\]|.', required_pattern)
         import logging
-        logging.getLogger(__name__).debug('required_pattern: {}, tag_elms: {}'.format(required_pattern, tag_elms))
+        logging.getLogger(__name__).debug(
+            'required_pattern: {}, tag_elms: {}'.format(required_pattern, tag_elms))
         translation_tables = [dict(tagset['values'][i]) for i in range(len(tag_elms))]
 
         for item in matching_tags:
@@ -209,7 +214,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         lang = lang.split('_')[0]
         with open(self.taglist_path) as fr:
             xml = etree.parse(fr)
-        root = xml.find('/tagsets/tagset[@ident="%s"]' % tagset_name)
+        root = xml.find(f'/tagsets/tagset[@ident="{tagset_name}"]')
         if root is None:
             return None
 
