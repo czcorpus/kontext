@@ -38,6 +38,7 @@ element taghelper {
   }
 }
 """
+from controller.plg import PluginCtx
 from translation import ugettext as _
 from controller import exposed
 from controller.errors import UserActionException
@@ -53,22 +54,23 @@ from actions import corpora
 
 
 @exposed(return_type='json')
-def ajax_get_tag_variants(ctrl, request):
+def ajax_get_tag_variants(plugin_ctx: PluginCtx, request):
     """
     """
     corpname = request.args['corpname']
     tagset_name = request.args['tagset']
+
     values_selection = plugins.runtime.TAGHELPER.instance.fetcher(
-        corpname, tagset_name).fetch(request)
+        plugin_ctx, corpname, tagset_name).fetch(request)
     try:
-        tag_loader = plugins.runtime.TAGHELPER.instance.loader(corpname, tagset_name)
+        tag_loader = plugins.runtime.TAGHELPER.instance.loader(plugin_ctx, corpname, tagset_name)
     except IOError:
         raise UserActionException(
             _('Corpus %s is not supported by this widget.') % corpname)
-    if plugins.runtime.TAGHELPER.instance.fetcher(corpname, tagset_name).is_empty(values_selection):
-        ans = tag_loader.get_initial_values(ctrl.ui_lang)
+    if plugins.runtime.TAGHELPER.instance.fetcher(plugin_ctx, corpname, tagset_name).is_empty(values_selection):
+        ans = tag_loader.get_initial_values(plugin_ctx.ui_lang)
     else:
-        ans = tag_loader.get_variant(values_selection, ctrl.ui_lang)
+        ans = tag_loader.get_variant(values_selection, plugin_ctx.ui_lang)
     return ans
 
 
