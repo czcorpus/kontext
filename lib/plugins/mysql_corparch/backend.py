@@ -123,7 +123,8 @@ class Backend(DatabaseBackend):
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
-        values_cond2 = [user_id, user_id, 1]  # the first item belongs to setting a special @ variable
+        # the first item belongs to setting a special @ variable
+        values_cond2 = [user_id, user_id, 1]
         if substrs is not None:
             for substr in substrs:
                 where_cond1.append(
@@ -368,7 +369,7 @@ class Backend(DatabaseBackend):
         cursor.execute('SELECT corpus_name, pos_attr, feat_attr, tagset_type, tagset_name, '
                        'widget_enabled, doc_url_local, doc_url_en '
                        'FROM kontext_corpus_taghelper '
-                       'WHERE corpus_name = %s', (corpus_id,))
+                       'WHERE corpus_name = %s and widget_enabled = %s', (corpus_id, True))
         return cursor.fetchall()
 
     def load_interval_attrs(self, corpus_id):
