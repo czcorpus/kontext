@@ -87,7 +87,7 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    def is_enabled(self) -> bool:
+    def is_available(self) -> bool:
         """
         Return true if the loader is able to provide answers
         (e.g. source data files exist etc.)
@@ -123,11 +123,11 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
     can be enabled for one or more aligned corpora. So it is easier to
     enable the plug-in no matter what corpus in on and make some additional
     tests when instantiating query/filter form properties (there we
-    use tags_enabled_for method).
+    use tags_available_for method).
     """
 
     @abc.abstractmethod
-    def tags_enabled_for(self, plugin_ctx: PluginCtx, corpus_id: str, tagset_id: str) -> bool:
+    def tags_available_for(self, plugin_ctx: PluginCtx, corpus_id: str, tagset_id: str) -> bool:
         """
         Test whether tag variant data exist for a specified
         corpus.

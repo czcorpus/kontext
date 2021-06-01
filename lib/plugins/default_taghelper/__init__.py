@@ -115,11 +115,11 @@ class Taghelper(AbstractTaghelper):
                     self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
         return self._fetchers[(corpus_name, tagset_name)]
 
-    def tags_enabled_for(self, plugin_ctx, corpus_name, tagset_id):
+    def tags_available_for(self, plugin_ctx, corpus_name, tagset_id):
         for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
             if tagset.tagset_name == tagset_id:
                 loader = self.loader(plugin_ctx, corpus_name, tagset.tagset_name)
-                return loader.is_enabled()
+                return loader.is_available()
         return False
 
     def export_actions(self):

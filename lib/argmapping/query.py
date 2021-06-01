@@ -186,7 +186,8 @@ class QueryFormArgs(ConcFormArgs):
     def _test_data_type(data, type_key, type_id):
         data_type = data.get(type_key)
         if data_type != type_id:
-            raise ArgumentMappingError(f'Invalid form data type "{data_type}" for a query form mapping.')
+            raise ArgumentMappingError(
+                f'Invalid form data type "{data_type}" for a query form mapping.')
 
     def update_by_user_query(self, data, bib_mapping):
         self._test_data_type(data, 'type', 'concQueryArgs')
@@ -220,7 +221,8 @@ class QueryFormArgs(ConcFormArgs):
             self.has_lemma[corpus_id] = corp_info.manatee.has_lemma
             self.tagsets[corpus_id] = [d.to_dict() for d in corp_info.tagsets]
             for ts in self.tagsets[corpus_id]:
-                ts['widgetEnabled'] = th.tags_enabled_for(self._plugin_ctx, corpus_id, ts['ident'])
+                ts['widgetEnabled'] = ts['widgetEnabled'] and th.tags_available_for(
+                    self._plugin_ctx, corpus_id, ts['ident'])
 
     def serialize(self) -> Dict[str, Any]:
         ans = super().to_dict()
@@ -281,7 +283,8 @@ class FilterFormArgs(ConcFormArgs):
             self.has_lemma = corp_info.manatee.has_lemma
             self.tagsets = [d.to_dict() for d in corp_info.tagsets]
             for tagset in self.tagsets:
-                tagset['widgetEnabled'] = th.tags_enabled_for(self._plugin_ctx, self.maincorp, tagset['ident'])
+                tagset['widgetEnabled'] = tagset['widgetEnabled'] and th.tags_available_for(
+                    self._plugin_ctx, self.maincorp, tagset['ident'])
 
     def validate(self):
         try:

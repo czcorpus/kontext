@@ -30,7 +30,7 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
         self.variants_file_path = os.path.join(tags_src_dir, tagset_name, corpus_name)
-        self.initial_values = None if self.is_enabled() else []
+        self.initial_values = None if self.is_available() else []
 
     def _initialize_tags(self):
         with open(self.variants_file_path, 'r') as f:
@@ -57,7 +57,7 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
             self._initialize_tags()
         return {'keyval_tags': self.get_possible_values()}
 
-    def is_enabled(self):
+    def is_available(self):
         return os.path.exists(self.variants_file_path)
 
     def get_possible_values(self, filter_values=None):
