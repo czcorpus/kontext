@@ -360,8 +360,8 @@ class Actions(Querying):
         out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
         last_op = self.session_get('last_submitted_op')
-        qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
-            active_only=False), persist=False)
+        qf_args = QueryFormArgs(
+            plugin_ctx=self._plugin_api, corpora=self._select_current_aligned_corpora(active_only=False), persist=False)
         with plugins.runtime.QUERY_STORAGE as qs:
             qdata = qs.find_by_qkey(last_op)
             if qdata is not None:
@@ -553,7 +553,7 @@ class Actions(Querying):
     def _set_first_query(self, corpora: List[str], data: QueryFormArgs):
 
         def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
-            filter_args = ContextFilterArgsConv(data)(corpora[0], attrname, items, ctx, fctxtype)
+            filter_args = ContextFilterArgsConv(self._plugin_api, data)(corpora[0], attrname, items, ctx, fctxtype)
             self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
 
         def ctx_to_str(ctx):
@@ -642,7 +642,7 @@ class Actions(Querying):
         # 1) store query forms arguments for later reuse on client-side
         corpora = self._select_current_aligned_corpora(active_only=True)
         corpus_info = self.get_corpus_info(corpora[0])
-        qinfo = QueryFormArgs(corpora=corpora, persist=True)
+        qinfo = QueryFormArgs(plugin_ctx=self._plugin_api, corpora=corpora, persist=True)
         qinfo.update_by_user_query(
             request.json, self._get_tt_bib_mapping(request.json['text_types']))
         self.add_conc_form_args(qinfo)
@@ -686,7 +686,7 @@ class Actions(Querying):
         A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls pages).
         """
         new_q = request.args.getlist('q2')
-        q_conv = QuickFilterArgsConv(self.args)
+        q_conv = QuickFilterArgsConv(self._plugin_api, self.args)
 
         op_idx = len(self.args.q)
         if len(new_q) > 0:
@@ -717,8 +717,9 @@ class Actions(Querying):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a filter once a group of lines has been saved')
 
-        ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-                                 persist=True)
+        ff_args = FilterFormArgs(
+            plugin_ctx=self._plugin_api, maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+            persist=True)
         ff_args.update_by_user_query(request.json)
         err = ff_args.validate()
         if err is not None:
@@ -1768,8 +1769,9 @@ class Actions(Querying):
         poslist = self.cm.corpconf_pairs(self.corp, 'WPOSLIST')
         lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
 
-        self.add_conc_form_args(QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False),
-                                              persist=False))
+        self.add_conc_form_args(QueryFormArgs(
+            plugin_ctx=self._plugin_api, corpora=self._select_current_aligned_corpora(active_only=False),
+            persist=False))
         self._attach_query_params(tmp_out)
         self._attach_aligned_query_params(tmp_out)
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, tmp_out)

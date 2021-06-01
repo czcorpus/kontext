@@ -17,6 +17,7 @@ import re
 
 import plugins
 from plugins.abstract.corpora import TagsetInfo
+from controller.plg import PluginApi
 from .error import ArgumentMappingError, ValidationError
 
 
@@ -47,7 +48,7 @@ class ConcFormArgs(object):
         instance.
         """
         for k, v in attrs.items():
-            if k in vars(self):
+            if hasattr(self, k):
                 setattr(self, k, v)
         self._op_key = op_key
         return self
@@ -132,9 +133,10 @@ class QueryFormArgs(ConcFormArgs):
     to be JSON-serializable.
     """
 
-    def __init__(self, corpora: List[str], persist: bool) -> None:
+    def __init__(self, plugin_ctx: PluginApi, corpora: List[str], persist: bool) -> None:
         super().__init__(persist)
         self.form_type: str = 'query'
+        self._plugin_ctx = plugin_ctx
 
         empty_dict: Dict[str, Any] = {c: None for c in corpora}
         self.curr_query_types = {k: 'simple' for k in corpora}
@@ -183,7 +185,8 @@ class QueryFormArgs(ConcFormArgs):
     def _test_data_type(data, type_key, type_id):
         data_type = data.get(type_key)
         if data_type != type_id:
-            raise ArgumentMappingError(f'Invalid form data type "{data_type}" for a query form mapping.')
+            raise ArgumentMappingError(
+                f'Invalid form data type "{data_type}" for a query form mapping.')
 
     def update_by_user_query(self, data, bib_mapping):
         self._test_data_type(data, 'type', 'concQueryArgs')
@@ -216,7 +219,8 @@ class QueryFormArgs(ConcFormArgs):
             self.has_lemma[corpus_id] = corp_info.manatee.has_lemma
             self.tagsets[corpus_id] = [d.to_dict() for d in corp_info.tagsets]
             for ts in self.tagsets[corpus_id]:
-                ts['widgetEnabled'] = th.tags_enabled_for(corpus_id, ts['ident'])
+                ts['widgetEnabled'] = ts['widgetEnabled'] and th.tags_available_for(
+                    self._plugin_ctx, corpus_id, ts['ident'])
 
     def serialize(self) -> Dict[str, Any]:
         ans = super().to_dict()
@@ -235,8 +239,9 @@ class FilterFormArgs(ConcFormArgs):
     to be JSON-serializable.
     """
 
-    def __init__(self, maincorp: str, persist: bool) -> None:
+    def __init__(self, plugin_ctx: PluginApi, maincorp: str, persist: bool) -> None:
         super().__init__(persist)
+        self._plugin_ctx = plugin_ctx
         self.form_type: str = 'filter'
         self.query_type: str = 'simple'
         self.query: str = ''
@@ -276,7 +281,8 @@ class FilterFormArgs(ConcFormArgs):
             self.has_lemma = corp_info.manatee.has_lemma
             self.tagsets = [d.to_dict() for d in corp_info.tagsets]
             for tagset in self.tagsets:
-                tagset['widgetEnabled'] = th.tags_enabled_for(self.maincorp, tagset['ident'])
+                tagset['widgetEnabled'] = tagset['widgetEnabled'] and th.tags_available_for(
+                    self._plugin_ctx, self.maincorp, tagset['ident'])
 
     def validate(self):
         try:
@@ -394,7 +400,7 @@ class KwicSwitchArgs(ConcFormArgs):
         self.maincorp: str = maincorp
 
 
-def build_conc_form_args(corpora: List[str], data: Dict[str, Any], op_key: str) -> ConcFormArgs:
+def build_conc_form_args(plugin_ctx: PluginApi, corpora: List[str], data: Dict[str, Any], op_key: str) -> ConcFormArgs:
     """
     A factory method to create a conc form args
     instance based on deserialized data from
@@ -402,9 +408,9 @@ def build_conc_form_args(corpora: List[str], data: Dict[str, Any], op_key: str) 
     """
     tp = data['form_type']
     if tp == 'query':
-        return QueryFormArgs(corpora=corpora, persist=False).updated(data, op_key)
+        return QueryFormArgs(plugin_ctx=plugin_ctx, corpora=corpora, persist=False).updated(data, op_key)
     elif tp == 'filter':
-        return FilterFormArgs(maincorp=data['maincorp'], persist=False).updated(data, op_key)
+        return FilterFormArgs(plugin_ctx=plugin_ctx, maincorp=data['maincorp'], persist=False).updated(data, op_key)
     elif tp == 'sort':
         return SortFormArgs(persist=False).updated(data, op_key)
     elif tp == 'sample':
@@ -427,8 +433,9 @@ def build_conc_form_args(corpora: List[str], data: Dict[str, Any], op_key: str) 
 
 class QuickFilterArgsConv:
 
-    def __init__(self, args) -> None:  # TODO args type ???
+    def __init__(self, plugin_ctx: PluginApi, args) -> None:  # TODO args type ???
         self.args = args
+        self.plugin_ctx = plugin_ctx
 
     @staticmethod
     def _parse(q: str) -> Tuple[str, ...]:
@@ -444,7 +451,8 @@ class QuickFilterArgsConv:
 
     def __call__(self, query: str) -> FilterFormArgs:
         elms = self._parse(query)
-        ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+        ff_args = FilterFormArgs(plugin_ctx=self.plugin_ctx,
+                                 maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
         ff_args.query_type = 'advanced'
         ff_args.query = elms[-1]
@@ -464,7 +472,8 @@ class ContextFilterArgsConv(object):
     form arguments into the regular filter ones.
     """
 
-    def __init__(self, args: QueryFormArgs) -> None:
+    def __init__(self, plugin_ctx: PluginApi, args: QueryFormArgs) -> None:
+        self.plugin_ctx = plugin_ctx
         self.args = args
 
     @staticmethod
@@ -482,7 +491,7 @@ class ContextFilterArgsConv(object):
         raise ValueError(f'Unknown type fctxtype = {fctxtype}')
 
     def __call__(self, corpname: str, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:
-        ff_args = FilterFormArgs(maincorp=corpname, persist=True)
+        ff_args = FilterFormArgs(plugin_ctx=self.plugin_ctx, maincorp=corpname, persist=True)
         ff_args.maincorp = corpname
         ff_args.pnfilter = 'p' if fctxtype in ('any', 'all') else 'n'
         ff_args.filfpos = ctx[0]
