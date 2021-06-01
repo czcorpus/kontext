@@ -1,5 +1,6 @@
 jinja2 >= 2.10
 Werkzeug >= 1.0.1
+secure-cookie >= 0.1.0
 lxml >= 3.4
 Markdown >= 2.5
 openpyxl >= 2.1

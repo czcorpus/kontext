@@ -32,6 +32,7 @@ a new version of 'taghelper'.
 import abc
 from typing import TypeVar, Generic
 from werkzeug.wrappers import Request
+from controller.plg import PluginApi
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -86,7 +87,7 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    def is_enabled(self) -> bool:
+    def is_available(self) -> bool:
         """
         Return true if the loader is able to provide answers
         (e.g. source data files exist etc.)
@@ -122,11 +123,11 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
     can be enabled for one or more aligned corpora. So it is easier to
     enable the plug-in no matter what corpus in on and make some additional
     tests when instantiating query/filter form properties (there we
-    use tags_enabled_for method).
+    use tags_available_for method).
     """
 
     @abc.abstractmethod
-    def tags_enabled_for(self, corpus_id: str, tagset_id: str) -> bool:
+    def tags_available_for(self, plugin_ctx: PluginApi, corpus_id: str, tagset_id: str) -> bool:
         """
         Test whether tag variant data exist for a specified
         corpus.
@@ -136,13 +137,13 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
         """
 
     @abc.abstractmethod
-    def loader(self, corpus_name: str, tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
+    def loader(self, plugin_ctx: PluginApi, corpus_name: str, tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
         """
         Return a loader for the corpus_name
         """
 
     @abc.abstractmethod
-    def fetcher(self, corpus_name: str, tagset_name: str) -> AbstractValueSelectionFetcher[U]:
+    def fetcher(self, plugin_ctx: PluginApi, corpus_name: str, tagset_name: str) -> AbstractValueSelectionFetcher[U]:
         """
         Return a fetcher for the corpus_name
         """
