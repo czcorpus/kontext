@@ -235,8 +235,6 @@ class Actions(Querying):
         except UnknownConcordanceAction as ex:
             raise UserActionException(str(ex))
 
-        if self.args.viewmode == 'sen':
-            corplib.add_block_items(out['Lines'], block_size=1)
         if self.corp.get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
                                'label': self.cm.get_corpus(w).get_conf(
