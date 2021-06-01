@@ -31,5 +31,5 @@ class NullTagVariantLoader(AbstractTagsetInfoLoader):
     def get_initial_values(self, lang):
         return {}
 
-    def is_enabled(self):
+    def is_available(self):
         return False

@@ -112,8 +112,9 @@ class Querying(Kontext):
         if self._prev_q_data is not None and 'lastop_form' in self._prev_q_data:
             op_key = self._prev_q_data['id']
             conc_forms_args = {
-                op_key: build_conc_form_args(self._prev_q_data.get('corpora', []), self._prev_q_data['lastop_form'],
-                                             op_key).to_dict()
+                op_key: build_conc_form_args(
+                    self._plugin_api, self._prev_q_data.get('corpora', []), self._prev_q_data['lastop_form'],
+                    op_key).to_dict()
             }
         else:
             conc_forms_args = {}
@@ -127,8 +128,9 @@ class Querying(Kontext):
 
         corpora = self._select_current_aligned_corpora(active_only=True)
         tpl_out['conc_forms_initial_args'] = dict(
-            query=QueryFormArgs(corpora=corpora, persist=False).to_dict(),
+            query=QueryFormArgs(plugin_ctx=self._plugin_api, corpora=corpora, persist=False).to_dict(),
             filter=FilterFormArgs(
+                plugin_ctx=self._plugin_api,
                 maincorp=getattr(self.args, 'maincorp') if getattr(self.args, 'maincorp') else getattr(self.args, 'corpname'),
                 persist=False
             ).to_dict(),
@@ -183,7 +185,7 @@ class Querying(Kontext):
                     form_data = upgrade_stored_record(data.get('lastop_form', {}),
                                                       self.corp.get_conf('ATTRLIST').split(','))
                     ans.append(build_conc_form_args(
-                        data.get('corpora', []), form_data, data['id']))
+                        self._plugin_api, data.get('corpora', []), form_data, data['id']))
                 limit = 100
                 while data is not None and data.get('prev_id') and limit > 0:
                     data = cp.open(data['prev_id'])  # type: ignore
@@ -191,7 +193,7 @@ class Querying(Kontext):
                         form_data = upgrade_stored_record(data.get('lastop_form', {}),
                                                           self.corp.get_conf('ATTRLIST').split(','))
                         ans.insert(0, build_conc_form_args(
-                            data.get('corpora', []), form_data, data['id']))
+                            self._plugin_api, data.get('corpora', []), form_data, data['id']))
                     limit -= 1
                     if limit == 0:
                         logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(

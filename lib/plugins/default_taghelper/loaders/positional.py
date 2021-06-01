@@ -65,13 +65,13 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         if lang not in self.initial_values:
             try:
                 self.initial_values[lang] = self._get_initial_values(lang)
-            except Exception:
+            except FileNotFoundError:
                 self.initial_values[lang] = {}
 
         return self.initial_values[lang]
 
-    def is_enabled(self):
-        return len(self.get_initial_values('en_US')) > 0 and os.path.exists(self.variants_file_path)
+    def is_available(self):
+        return os.path.exists(self.variants_file_path) and len(self.get_initial_values('en_US')) > 0
 
     def _get_initial_values(self, lang):
         """

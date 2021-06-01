@@ -552,6 +552,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 'tagset_type': tagset.attrib.get('type', None),
                 'pos_attr': tagset.attrib.get('pos_attr', None),
                 'feat_attr': tagset.attrib.get('feat_attr', None),
+                'widget_enabled': bool(tagset.attrib.get('widget_enabled', 0)),
             })
             for tagset in node.findall('tagsets/tagset')
         ]
