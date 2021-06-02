@@ -392,7 +392,7 @@ class Actions(Querying):
                     if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
                         args = [('corpname', prev_corpora[0])] + [('align', a)
                                                                   for a in prev_corpora[1:]]
-                        if prev_subcorp and not curr_subcorp:
+                        if prev_subcorp and not curr_subcorp and any(subc['n'] == prev_subcorp for subc in self.cm.subcorp_names(prev_corpora[0])):
                             args += [('usesubcorp', prev_subcorp)]
 
                         if len(args) > 1:
