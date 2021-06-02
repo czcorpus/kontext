@@ -65,7 +65,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
     def __init__(self, conf, corparch):
         self._conf = conf
         self._corparch = corparch
-        self._db = SQLite3Ops(self._conf.get('plugins')['subc_restore']['ucnk:db_path'])
+        self._db = SQLite3Ops(self._conf.get('plugins')['subc_restore']['db_path'])
 
     def store_query(self,  user_id, corpname, subcname, cql):
         self._db.execute('INSERT INTO subc_archive (user_id, corpname, subcname, cql, timestamp) '

@@ -752,10 +752,10 @@ def create_instance(conf, auth, user_items):
     """
     return CorpusArchive(auth=auth,
                          user_items=user_items,
-                         file_path=conf.get('plugins', 'corparch')['default:file'],
-                         root_xpath=conf.get('plugins', 'corparch')['default:root_elm_path'],
-                         tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
-                         max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
+                         file_path=conf.get('plugins', 'corparch')['file'],
+                         root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
+                         tag_prefix=conf.get('plugins', 'corparch')['tag_prefix'],
+                         max_num_hints=conf.get('plugins', 'corparch')['max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get(
-                             'default:default_page_list_size', 20),
+                             'default_page_list_size', 20),
                          registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))

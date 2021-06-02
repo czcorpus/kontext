@@ -11,39 +11,27 @@
                 <value>defaultTaghelper</value>
             </element>
             <element name="clear_interval">
-                <attribute name="extension-by">
-                    <a:documentation>
-                        How old cache records should be removed (in seconds)
-                    </a:documentation>
-                    <value>default</value>
-                </attribute>
+                <a:documentation>
+                    How old cache records should be removed (in seconds)
+                </a:documentation>
                 <data type="positiveInteger" />
             </element>
             <element name="tags_cache_dir">
                 <a:documentation>
                     A directory where cached tag search results will be stored
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <element name="taglist_path">
                 <a:documentation>
                     A path to an XML file containing tagset specifications
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <element name="tags_src_dir">
                 <a:documentation>
                     A directory where extracted lists of possible tag values are stored
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
         </element>

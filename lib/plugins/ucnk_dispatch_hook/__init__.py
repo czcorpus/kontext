@@ -152,5 +152,5 @@ class UcnkDispatchHook(AbstractDispatchHook):
 @inject(plugins.runtime.DB)
 def create_instance(conf, db):
     plg_conf = conf.get('plugins', 'dispatch_hook')
-    queue_key = plg_conf['ucnk:queue_key']
+    queue_key = plg_conf['queue_key']
     return UcnkDispatchHook(db, queue_key)

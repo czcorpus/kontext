@@ -84,12 +84,12 @@ def create_instance(settings, auth):
         Auth must provide `get_logout_url`
     """
     plugin_conf = settings.get('plugins', 'application_bar')
-    main_css = plugin_conf.get('lindat:css_url')
-    external_css = settings.get_list('theme', 'lindat:external_css')
-    external_js = settings.get_list('theme', 'lindat:external_js')
+    main_css = plugin_conf.get('css_url')
+    external_css = settings.get_list('theme', 'external_css')
+    external_js = settings.get_list('theme', 'external_js')
     templates = {
-        'cs_CZ': plugin_conf['lindat:template_cs'],
-        'en_US': plugin_conf['lindat:template_en']
+        'cs_CZ': plugin_conf['template_cs'],
+        'en_US': plugin_conf['template_en']
     }
     css = [x for x in [main_css] + list(external_css) if x is not None]
     return LindatTopBar(

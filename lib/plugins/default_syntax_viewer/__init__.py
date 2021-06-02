@@ -30,7 +30,6 @@ element syntax_viewer {
     element module { "default_syntax_viewer" }
     element js_module { "defaultSyntaxViewer" }
     element config_path {
-        attribute extension-by { "default" }
         text # a path to JSON config file (see below)
     }
 }
@@ -102,9 +101,9 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
 
 
 def load_plugin_conf(conf):
-    conf_path = conf.get('plugins', 'syntax_viewer', {}).get('default:config_path')
+    conf_path = conf.get('plugins', 'syntax_viewer', {}).get('config_path')
     if not conf_path or not os.path.isfile(conf_path):
-        raise SyntaxDataProviderError('Plug-in configuration file [%s] not found. Please check default:config_path.' %
+        raise SyntaxDataProviderError('Plug-in configuration file [%s] not found. Please check config_path.' %
                                       (conf_path,))
     with open(conf_path, 'rb') as f:
         conf_data = json.load(f)

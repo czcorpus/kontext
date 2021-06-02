@@ -10,15 +10,9 @@
                 <value>ucnkAppBar3</value>
             </element>
             <element name="css_url">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
                 <data type="anyURI" />
             </element>
             <element name="css_url_ie">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
                 <data type="anyURI" />
             </element>
         </element>

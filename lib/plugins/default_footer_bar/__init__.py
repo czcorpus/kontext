@@ -95,8 +95,8 @@ class CustomContentFooterBar(AbstractFootbar):
 
 def create_instance(conf):
     plg_conf = conf.get('plugins', 'footer_bar')
-    content_dir = plg_conf.get('default:content_dir', None)
+    content_dir = plg_conf.get('content_dir', None)
     if content_dir:
         return CustomContentFooterBar(content_dir=content_dir, avail_langs=conf.get('global', 'translations'),
-                                      default_lang=plg_conf['default:default_lang'])
+                                      default_lang=plg_conf['default_lang'])
     return ImplicitFooterBar()

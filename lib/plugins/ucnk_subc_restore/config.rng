@@ -7,9 +7,6 @@
                 <value>ucnk_subc_restore</value>
             </element>
             <element name="db_path">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
                 <text />
             </element>
         </element>

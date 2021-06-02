@@ -97,27 +97,27 @@
         </action_log>
         <conc_cache>
             <module>default_conc_cache</module>
-            <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
+            <cache_dir>/var/local/corpora/cache</cache_dir>
         </conc_cache>
         <query_persistence>
             <module>default_query_persistence</module>
-            <ttl_days extension-by="default">100</ttl_days>
-            <archive_dir extension-by="default">/var/local/corpora/query_persistence</archive_dir>
+            <ttl_days>100</ttl_days>
+            <archive_dir>/var/local/corpora/query_persistence</archive_dir>
         </query_persistence>
         <corparch>
             <module>default_corparch</module>
             <js_module>defaultCorparch</js_module>
-            <file extension-by="default">/opt/kontext/conf/corplist.xml</file>
-            <root_elm_path extension-by="default">/corplist</root_elm_path>
-            <tag_prefix extension-by="default">+</tag_prefix>
-            <max_num_hints extension-by="default">10</max_num_hints>
-            <default_page_list_size extension-by="default">30</default_page_list_size>
+            <file>/opt/kontext/conf/corplist.xml</file>
+            <root_elm_path>/corplist</root_elm_path>
+            <tag_prefix>+</tag_prefix>
+            <max_num_hints>10</max_num_hints>
+            <default_page_list_size>30</default_page_list_size>
         </corparch>
         <db>
             <module>redis_db</module>
-            <host extension-by="default">localhost</host>
-            <port extension-by="default">6379</port>
-            <id extension-by="default">1</id>
+            <host>localhost</host>
+            <port>6379</port>
+            <id>1</id>
         </db>
         <integration_db>
             <module>default_integration_db</module>
@@ -137,23 +137,23 @@
         </footer_bar>
         <getlang>
             <module>default_getlang</module>
-            <cookie extension-by="default">kontext_toolbar_lang</cookie>
-            <fallback_lang extension-by="default">en-US</fallback_lang>
+            <cookie>kontext_toolbar_lang</cookie>
+            <fallback_lang>en-US</fallback_lang>
         </getlang>
         <live_attributes/>
         <menu_items>
             <module>default_menu_items</module>
-            <data_path extension-by="default">/opt/kontext/conf/main-menu.sample.json</data_path>
+            <data_path>/opt/kontext/conf/main-menu.sample.json</data_path>
         </menu_items>
         <query_history>
             <module>default_query_history</module>
             <page_num_records>10</page_num_records>
-            <ttl_days extension-by="default">10</ttl_days>
+            <ttl_days>10</ttl_days>
         </query_history>
         <query_suggest />
         <settings_storage>
             <module>default_settings_storage</module>
-            <excluded_users extension-by="default">
+            <excluded_users>
                 <item>1</item>
                 <item>3</item>
             </excluded_users>
@@ -168,7 +168,7 @@
         <taghelper/>
         <user_items>
             <module>default_user_items</module>
-            <max_num_favorites extension-by="default">15</max_num_favorites>
+            <max_num_favorites>15</max_num_favorites>
         </user_items>
         <chart_export>
             <module>default_chart_export</module>

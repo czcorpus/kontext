@@ -132,18 +132,18 @@ class Archiver(object):
 
 
 def run(conf, num_proc, dry_run):
-    from_db = redis_connection(conf.get('plugins', 'db')['default:host'],
-                               conf.get('plugins', 'db')['default:port'],
-                               conf.get('plugins', 'db')['default:id'])
-    to_db = SQLite3Ops(conf.get('plugins')['query_persistence']['default:archive_db_path'])
+    from_db = redis_connection(conf.get('plugins', 'db')['host'],
+                               conf.get('plugins', 'db')['port'],
+                               conf.get('plugins', 'db')['id'])
+    to_db = SQLite3Ops(conf.get('plugins')['query_persistence']['archive_db_path'])
 
-    archive_queue_key = conf.get('plugins')['query_persistence']['default:archive_queue_key']
+    archive_queue_key = conf.get('plugins')['query_persistence']['archive_queue_key']
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=archive_queue_key)
     return archiver.run(num_proc, dry_run)
 
 
 def _create_archive(conf, dry_run):
-    arch_db_path = conf.get('plugins')['query_persistence']['default:archive_db_path']
+    arch_db_path = conf.get('plugins')['query_persistence']['archive_db_path']
     if os.path.exists(arch_db_path):
         arch_filename = os.path.splitext(os.path.basename(arch_db_path))[0]
         dt = time.strftime('%Y-%m-%d', datetime.now().timetuple())

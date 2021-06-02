@@ -8,9 +8,6 @@
                 <value>ucnk_dispatch_hook</value>
             </element>
             <element name="queue_key">
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
                 <text />
             </element>
         </element>

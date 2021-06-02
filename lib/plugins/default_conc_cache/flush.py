@@ -46,7 +46,7 @@ if __name__ == '__main__':
                         help='How old files (in minutes) will be preserved yet. Default is %s min.'
                              % cleanup.DEFAULT_TTL)
     parser.add_argument('--subdir', '-s', type=str, default=None,
-                        help='Search will be performed in [default:cache_dir]/[subdir]')
+                        help='Search will be performed in [cache_dir]/[subdir]')
     parser.add_argument('--log-level', '-l', type=str, default='info',
                         help='Logging level (%s)' % ', '.join(list(autoconf.LOG_LEVELS.keys())))
     parser.add_argument('--log-path', '-p', type=str, default=None,
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     autoconf.setup_logger(log_path=args.log_path,
                           logger_name='conc_cache_cleanup',
                           logging_level=autoconf.LOG_LEVELS[args.log_level])
-    root_dir = autoconf.settings.get('plugins', 'conc_cache')['default:cache_dir']
+    root_dir = autoconf.settings.get('plugins', 'conc_cache')['cache_dir']
 
     cleanup.run(root_dir=root_dir, corpus_id=args.corpus, ttl=args.ttl, subdir=args.subdir,
                 dry_run=args.dry_run, db_plugin=plugins.runtime.DB.instance, entry_key_gen=mk_key)

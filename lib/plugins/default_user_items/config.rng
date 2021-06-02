@@ -7,9 +7,6 @@
                 <value>default_user_items</value>
             </element>
             <element name="max_num_favorites">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="positiveInteger" />
             </element>
         </element>

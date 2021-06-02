@@ -7,16 +7,10 @@
                 <value>stable_query_persistence</value>
             </element>
             <element name="ttl_days">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="nonNegativeInteger" />
             </element>
             <optional>
                 <element name="archive_db_path">
-                    <attribute name="extension-by">
-                        <value>default</value>
-                    </attribute>
                     <text />
                 </element>
             </optional>

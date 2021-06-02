@@ -25,7 +25,6 @@ configuration XML:
 element conc_cache {
   element module { "default_conc_cache" }
   element cache_dir {
-    attribute extension-by { "default" }
     { text }
   }
 }
@@ -143,13 +142,15 @@ class DefaultCacheMapping(AbstractConcCache):
         for k, stored in self._db.hash_get_all(self._mk_key()).items():
             if stored:
                 if type(stored) is not dict:
-                    logging.getLogger(__name__).warning('Removed unsupported conc cache value: {}'.format(stored))
+                    logging.getLogger(__name__).warning(
+                        'Removed unsupported conc cache value: {}'.format(stored))
                     self._db.hash_del(self._mk_key(), k)
                 else:
                     status = ConcCacheStatus(**stored)
                     if _uniqname(subchash, q[:1]) == status.q0hash:
                         # original record's key must be used (k ~ entry_key match can be partial)
-                        self._db.hash_del(self._mk_key(), k)  # must use direct access here (no del_entry())
+                        # must use direct access here (no del_entry())
+                        self._db.hash_del(self._mk_key(), k)
 
 
 class CacheMappingFactory(AbstractCacheMappingFactory):
@@ -201,4 +202,4 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
 
 @inject(plugins.runtime.DB)
 def create_instance(settings, db):
-    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['default:cache_dir'], db=db)
+    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['cache_dir'], db=db)

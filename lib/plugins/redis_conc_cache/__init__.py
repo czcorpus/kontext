@@ -26,4 +26,4 @@ def create_instance(settings, db):
     logging.getLogger(__name__).warning('Plug-in redis_conc_cache has been renamed to default_conc_cache '
                                         '- please update your config.xml. The old name will be removed '
                                         'in future versions')
-    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['default:cache_dir'], db=db)
+    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['cache_dir'], db=db)

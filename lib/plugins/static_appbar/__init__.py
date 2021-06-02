@@ -28,17 +28,17 @@ must use UTF-8 encoding. The name format is as follows:
 
 (e.g.: appbar.cs.html, appbar.en.html, appbar.pl.html)
 
-This is configured as <html_dir extension-by="default">/path/to/the/directory</html_dir>
+This is configured as <html_dir>/path/to/the/directory</html_dir>
 
 2) define a default language. Please note that a file from (1) must exist for this
 language - otherwise KonText will fail to run.
 
-This is configured as (e.g. for English): <default_lang extension-by="default">en</default_lang>
+This is configured as (e.g. for English): <default_lang>en</default_lang>
 
 3) (optional) one or more URLs where CSS files are located.
 
 This is configured as
-    <css_urls extension-by="default"><item>http://somedomain/somedir/some.css</item><item>...</item></css_urls>
+    <css_urls><item>http://somedomain/somedir/some.css</item><item>...</item></css_urls>
 
 Please note that KonText does not serve CSS for you via this plug-in. To provide a CSS,
 you can e.g. use an existing URL from your other website (e.g. your organization).
@@ -52,7 +52,7 @@ location /kontext/custom/ {
 4) (optional) one or more URLs where JavaScripts are located.
 
 This is configured as
-<js_urls extension-by="default"><item>http://somedomain/somedir/some.js</item><item>...</item></js_urls>
+<js_urls><item>http://somedomain/somedir/some.js</item><item>...</item></js_urls>
 
 There are the same rules applied for serving JS as for serving CSS. I.e. you must provide a working HTTP address
 for KonText to load from.
@@ -132,7 +132,7 @@ class StaticApplicationBar(AbstractApplicationBar):
 @plugins.inject(plugins.runtime.AUTH)
 def create_instance(settings, auth):
     plg_conf = settings.get('plugins', 'application_bar')
-    return StaticApplicationBar(html_dir=plg_conf['default:html_dir'], css_urls=plg_conf.get('default:css_urls', []),
-                                js_urls=plg_conf.get('default:js_urls', []),
-                                default_lang=plg_conf['default:default_lang'],
+    return StaticApplicationBar(html_dir=plg_conf['html_dir'], css_urls=plg_conf.get('css_urls', []),
+                                js_urls=plg_conf.get('js_urls', []),
+                                default_lang=plg_conf['default_lang'],
                                 avail_langs=settings.get('global', 'translations'), auth=auth)

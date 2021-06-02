@@ -96,8 +96,8 @@ class DefaultErrorReporting(AbstractIssueReporting):
 @inject(plugins.runtime.AUTH)
 def create_instance(settings, auth):
     plg_conf = settings.get('plugins', 'issue_reporting')
-    smtp_server = plg_conf['default:smtp_server']
-    sender = plg_conf['default:mail_sender']
-    recipients = plg_conf['default:mail_recipients']
+    smtp_server = plg_conf['smtp_server']
+    sender = plg_conf['mail_sender']
+    recipients = plg_conf['mail_recipients']
     return DefaultErrorReporting(auth=auth, smtp_server=smtp_server, mail_sender=sender,
                                  mail_recipients=recipients)

@@ -626,7 +626,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         simple_query_default_attrs_elm = node.find('simple_query_default_attrs')
         if simple_query_default_attrs_elm is not None:
-            ans.simple_query_default_attrs = [p.text for p in simple_query_default_attrs_elm.findall('attribute')]
+            ans.simple_query_default_attrs = [
+                p.text for p in simple_query_default_attrs_elm.findall('attribute')]
         else:
             ans.simple_query_default_attrs = []
 
@@ -794,11 +795,11 @@ def create_instance(conf, auth, user_items):
     """
     return CorpusArchive(auth=auth,
                          user_items=user_items,
-                         file_path=conf.get('plugins', 'corparch')['lindat:file'],
-                         root_xpath=conf.get('plugins', 'corparch')['lindat:root_elm_path'],
-                         tag_prefix=conf.get('plugins', 'corparch')['lindat:tag_prefix'],
-                         max_num_hints=conf.get('plugins', 'corparch')['lindat:max_num_hints'],
-                         max_page_size=conf.get('plugins', 'corparch').get('lindat:default_page_list_size',
+                         file_path=conf.get('plugins', 'corparch')['file'],
+                         root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
+                         tag_prefix=conf.get('plugins', 'corparch')['tag_prefix'],
+                         max_num_hints=conf.get('plugins', 'corparch')['max_num_hints'],
+                         max_page_size=conf.get('plugins', 'corparch').get('default_page_list_size',
                                                                            None),
-                         default_label=conf.get('plugins', 'corparch')['lindat:default_label'],
+                         default_label=conf.get('plugins', 'corparch')['default_label'],
                          registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))

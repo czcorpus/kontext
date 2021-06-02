@@ -18,7 +18,6 @@ Required config.xml/plugins entries:
 element getlang {
   element module { "ucnk_getlang" }
   element cookie {
-    attribute extension-by { "ucnk" }
     text # name of the cookie
   }
 }
@@ -86,6 +85,6 @@ def create_instance(conf):
     arguments:
     conf -- settings module or some compatible object (a compatible get() method is enough here)
     """
-    cookie_name = conf.get('plugins', 'getlang')['ucnk:cookie']
-    fallback_lang = conf.get('plugins', 'getlang').get('ucnk:fallback_lang', 'en-US')
+    cookie_name = conf.get('plugins', 'getlang')['cookie']
+    fallback_lang = conf.get('plugins', 'getlang').get('fallback_lang', 'en-US')
     return GetLang(cookie_name=cookie_name, fallback_lang=normalize_lang(fallback_lang))

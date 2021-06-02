@@ -22,8 +22,8 @@ from plugins.abstract.auth.hash import mk_pwd_hash_default
 
 def import_user_redis(data):
     import redis
-    db = redis.StrictRedis(host=db_conf['default:host'],
-                           port=db_conf['default:port'], db=db_conf['default:id'])
+    db = redis.StrictRedis(host=db_conf['host'],
+                           port=db_conf['port'], db=db_conf['id'])
     data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
     del data['pwd']
     db.set('corplist:user:{0}'.format(data['id']), json.dumps(data.get('permitted_corpora', [])))
@@ -35,7 +35,7 @@ def import_user_redis(data):
 
 def import_user_sqlite3(data):
     import sqlite3
-    db = sqlite3.connect(db_conf['default:db_path'])
+    db = sqlite3.connect(db_conf['db_path'])
     cursor = db.cursor()
     cursor.execute('BEGIN')
     data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None

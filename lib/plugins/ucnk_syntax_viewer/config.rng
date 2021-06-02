@@ -45,13 +45,6 @@
                         }
                     ]]>
                 </a:documentation>
-                <attribute name="extension-by">
-                    <a:documentation>
-                        Please note that here we don't use 'ucnk' prefix but 'default' because the plug-in
-                        extends most of its server-side code from the 'default_syntax_viewer'.
-                    </a:documentation>
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
         </element>

@@ -19,9 +19,6 @@
                     takes [work, world, word, worry, worker] and performs
                     queries for all these words.
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="positiveInteger" />
             </element>
             <element name="load_chunk_size">
@@ -32,9 +29,6 @@
                     to the same value (e.g. we search for 10 most frequent KWIC
                     words and we want all the answers fetched in a single chunk).
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="positiveInteger" />
             </element>
         </element>

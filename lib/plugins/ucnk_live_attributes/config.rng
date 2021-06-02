@@ -14,9 +14,6 @@
                 <a:documentation>
                     Cut longer attribute values to a specified size
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>ucnk</value>
-                </attribute>
                 <data type="positiveInteger" />
             </element>
         </element>

@@ -10,10 +10,10 @@
             <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
             <item>/files/themes/lindat/css/font-awesome.min.css</item>
         </fonts>
-        <external_css extension-by="lindat">
+        <external_css>
             <item>//lindat.mff.cuni.cz/aai/discojuice/discojuice.css</item>
         </external_css>
-        <external_js extension-by="lindat">
+        <external_js>
             <item>//code.jquery.com/jquery-3.3.1.min.js</item>
             <item>//lindat.mff.cuni.cz/aai/discojuice/discojuice-2.1.en.min.js</item>
             <item>//lindat.mff.cuni.cz/aai/aai.js</item>
@@ -102,9 +102,9 @@
     <plugins>
         <db>
             <module>lindat_db</module>
-            <host extension-by="default">127.0.0.1</host>
-            <port extension-by="default">6379</port>
-            <id extension-by="default">1</id>
+            <host>127.0.0.1</host>
+            <port>6379</port>
+            <id>1</id>
             <shards>auth:8</shards>
         </db>
         <auth>
@@ -114,15 +114,15 @@
             <anonymous_user_id>0</anonymous_user_id>
             <login_url>user/lindat_login?redirectTo=</login_url>
             <logout_url>/services/kontext/user/logoutx</logout_url>
-            <metadataFeed extension-by="lindat">https://lindat.mff.cuni.cz/repository/xmlui/discojuice/feeds</metadataFeed>
-            <service_name extension-by="lindat">LINDAT-KONTEXT Login</service_name>
-            <response_url extension-by="lindat"></response_url>
-            <local_action extension-by="lindat">/services/kontext/user/lindat_login</local_action>
+            <metadataFeed>https://lindat.mff.cuni.cz/repository/xmlui/discojuice/feeds</metadataFeed>
+            <service_name>LINDAT-KONTEXT Login</service_name>
+            <response_url></response_url>
+            <local_action>/services/kontext/user/lindat_login</local_action>
         </auth>
         <getlang>
             <module>ucnk_getlang</module>
-            <cookie extension-by="ucnk">language</cookie>
-            <fallback_lang extension-by="default">en_US</fallback_lang>
+            <cookie>language</cookie>
+            <fallback_lang>en_US</fallback_lang>
         </getlang>
         <query_history>
             <module>default_query_history</module>
@@ -134,19 +134,19 @@
         </query_history>
         <query_persistence>
             <module>default_query_persistence</module>
-            <ttl_days extension-by="default">100</ttl_days>
-            <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
+            <ttl_days>100</ttl_days>
+            <anonymous_user_ttl_days>7</anonymous_user_ttl_days>
         </query_persistence>
         <locking>
             <module>redis_locking</module>
-            <ttl extension-by="default">20</ttl>
-            <num_attempts extension-by="default">10</num_attempts>
+            <ttl>20</ttl>
+            <num_attempts>10</num_attempts>
         </locking>
         <conc_cache>
             <module>redis_conc_cache</module>
-            <ttl_hours extension-by="default">168</ttl_hours>
-            <log_access extension-by="default">true</log_access>
-            <cache_dir extension-by="default">/opt/kontext/cache</cache_dir>
+            <ttl_hours>168</ttl_hours>
+            <log_access>true</log_access>
+            <cache_dir>/opt/kontext/cache</cache_dir>
         </conc_cache>
         <live_attributes>
         </live_attributes>
@@ -162,16 +162,16 @@
         <syntax_viewer>
             <module>default_syntax_viewer</module>
             <js_module>defaultSyntaxViewer</js_module>
-            <config_path extension-by="default">/opt/kontext/installation/conf/syntax-viewer.json</config_path>
+            <config_path>/opt/kontext/installation/conf/syntax-viewer.json</config_path>
         </syntax_viewer>
         <corparch>
             <module>lindat_corparch</module>
             <js_module>lindatCorparch</js_module>
-            <file extension-by="lindat">/opt/kontext/installation/conf/corplist.xml</file>
+            <file>/opt/kontext/installation/conf/corplist.xml</file>
             <root_elm_path>/corplist</root_elm_path>
-            <tag_prefix extension-by="default">+</tag_prefix>
-            <max_num_hints extension-by="default">10</max_num_hints>
-            <default_page_list_size extension-by="default">20</default_page_list_size>
+            <tag_prefix>+</tag_prefix>
+            <max_num_hints>10</max_num_hints>
+            <default_page_list_size>20</default_page_list_size>
         </corparch>
         <export>
             <csv>default_csv</csv>
@@ -183,29 +183,29 @@
         <taghelper>
             <module>default_taghelper</module>
             <js_module>defaultTaghelper</js_module>
-            <clear_interval extension-by="default">86400</clear_interval>
-            <tags_cache_dir extension-by="default">/path/to/tags/cache</tags_cache_dir>
-            <taglist_path extension-by="default">/path/to/tag/xml/def</taglist_path>
-            <tags_src_dir extension-by="default">/path/to/tag/src/data</tags_src_dir>
+            <clear_interval>86400</clear_interval>
+            <tags_cache_dir>/path/to/tags/cache</tags_cache_dir>
+            <taglist_path>/path/to/tag/xml/def</taglist_path>
+            <tags_src_dir>/path/to/tag/src/data</tags_src_dir>
         </taghelper>
         <user_items>
             <module>default_user_items</module>
         </user_items>
         <menu_items>
             <module>default_menu_items</module>
-            <data_path extension-by="default">/opt/kontext/installation/conf/main-menu.sample.json</data_path>
+            <data_path>/opt/kontext/installation/conf/main-menu.sample.json</data_path>
         </menu_items>
         <application_bar>
             <module>lindat_appbar</module>
             <js_module>lindatAppBar</js_module>
-            <template_cs extension-by="lindat">/opt/kontext/installation/public/files/themes/lindat/lindat-common/cs/header.htm</template_cs>
-            <template_en extension-by="lindat">/opt/kontext/installation/public/files/themes/lindat/lindat-common/en/header.htm</template_en>
+            <template_cs>/opt/kontext/installation/public/files/themes/lindat/lindat-common/cs/header.htm</template_cs>
+            <template_en>/opt/kontext/installation/public/files/themes/lindat/lindat-common/en/header.htm</template_en>
         </application_bar>
         <footer_bar>
             <module>lindat_footer_bar</module>
             <js_module>lindatFooterBar</js_module>
-            <template_cs extension-by="lindat">/opt/kontext/installation/public/files/themes/lindat/lindat-common/cs/footer.htm</template_cs>
-            <template_en extension-by="lindat">/opt/kontext/installation/public/files/themes/lindat/lindat-common/en/footer.htm</template_en>
+            <template_cs>/opt/kontext/installation/public/files/themes/lindat/lindat-common/cs/footer.htm</template_cs>
+            <template_en>/opt/kontext/installation/public/files/themes/lindat/lindat-common/en/footer.htm</template_en>
         </footer_bar>
         <token_connect />
         <kwic_connect />

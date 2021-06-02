@@ -174,10 +174,6 @@ def get_plugin_custom_conf(plg_name) -> Dict[str, Any]:
     return pconf.get('__conf__')
 
 
-def custom_prefix(elm):
-    return '' if 'extension-by' not in elm.attrib else '{}:'.format(elm.attrib['extension-by'])
-
-
 def parse_config_section(section):
     """
     Parses a single level config section:
@@ -204,7 +200,7 @@ def parse_config_section(section):
         if item.tag is etree.Comment:
             continue
         else:
-            item_id = f'{custom_prefix(item)}{item.tag}'
+            item_id = item.tag
             if len(item.getchildren()) == 0:
                 ans[item_id] = item.text
                 meta[item_id] = dict(item.attrib)
@@ -238,7 +234,7 @@ def parse_config(path):
     for section in root:
         if section.tag in SECTIONS:
             if section.tag != 'plugins':
-                section_id = f'{custom_prefix(section)}{section.tag}'
+                section_id = section.tag
                 _conf[section_id], _meta[section_id] = parse_config_section(section)
             else:
                 for item in section:

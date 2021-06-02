@@ -18,22 +18,18 @@ Required XML snippet:
 element dispatch_hook {
 
     element site_id {
-        attribute extension-by { "lindat" }
         text
     }
 
     element rest_site_id {
-        attribute extension-by { "lindat" }
         text
     }
 
     element tracking_api_url {
-        attribute extension-by { "lindat" }
         text
     }
 
     element methods_to_track {
-        attribute extension-by { "lindat" }
 
         element item {
             text
@@ -41,7 +37,6 @@ element dispatch_hook {
     }
 
     element auth_token {
-        attribute extension-by { "lindat" }
         text
     }
 
@@ -67,21 +62,21 @@ def create_instance(conf):
     auth_token = None
     context_path = '/'
 
-    if conf.get('plugins', 'dispatch_hook').get('lindat:site_id'):
-        site_id = conf.get('plugins', 'dispatch_hook').get('lindat:site_id').strip()
+    if conf.get('plugins', 'dispatch_hook').get('site_id'):
+        site_id = conf.get('plugins', 'dispatch_hook').get('site_id').strip()
 
-    if conf.get('plugins', 'dispatch_hook').get('lindat:rest_site_id'):
-        rest_site_id = conf.get('plugins', 'dispatch_hook').get('lindat:rest_site_id').strip()
+    if conf.get('plugins', 'dispatch_hook').get('rest_site_id'):
+        rest_site_id = conf.get('plugins', 'dispatch_hook').get('rest_site_id').strip()
 
-    if conf.get('plugins', 'dispatch_hook').get('lindat:tracking_api_url'):
+    if conf.get('plugins', 'dispatch_hook').get('tracking_api_url'):
         tracking_api_url = conf.get('plugins', 'dispatch_hook').get(
-            'lindat:tracking_api_url').strip()
+            'tracking_api_url').strip()
 
-    if conf.get('plugins', 'dispatch_hook').get('lindat:methods_to_track'):
-        methods_to_track = conf.get('plugins', 'dispatch_hook').get('lindat:methods_to_track')
+    if conf.get('plugins', 'dispatch_hook').get('methods_to_track'):
+        methods_to_track = conf.get('plugins', 'dispatch_hook').get('methods_to_track')
 
-    if conf.get('plugins', 'dispatch_hook').get('lindat:auth_token'):
-        auth_token = conf.get('plugins', 'dispatch_hook').get('lindat:auth_token').strip()
+    if conf.get('plugins', 'dispatch_hook').get('auth_token'):
+        auth_token = conf.get('plugins', 'dispatch_hook').get('auth_token').strip()
 
     # if conf.get('global', 'root_url_path'):
     #    context_path = conf.get('global', 'root_url_path').strip()

@@ -377,8 +377,8 @@ def test_14_b(finfo):
         except ImportError as e:
             yield False, e
         try:
-            redis.StrictRedis(host=conf['default:host'], port=int(conf['default:port']),
-                              db=int(conf['default:id']))
+            redis.StrictRedis(host=conf['host'], port=int(conf['port']),
+                              db=int(conf['id']))
             yield True, None
         except Exception as e:
             yield False, e
@@ -440,7 +440,7 @@ def test_22(finfo):
 def test_22_b(finfo):
     conf = settings.get('plugins', 'menu_items')
     if conf['module'] == 'default_menu_items':
-        path = conf['default:data_path']
+        path = conf['data_path']
         yield finfo.file_exists(path)
         try:
             with open(path, 'rb') as f:

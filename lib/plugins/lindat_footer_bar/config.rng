@@ -15,18 +15,12 @@
                     <a:documentation>
                         Path to a Czech version of the footer
                     </a:documentation>
-                    <attribute name="extension-by">
-                        <value>lindat</value>
-                    </attribute>
                     <text />
                 </element>
                 <element name="template_en">
                     <a:documentation>
                         Path to an English version of the footer
                     </a:documentation>
-                    <attribute name="extension-by">
-                        <value>lindat</value>
-                    </attribute>
                     <text />
                 </element>
             </interleave>
